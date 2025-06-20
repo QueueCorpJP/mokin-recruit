@@ -1,0 +1,55 @@
+{
+  "name": "direct-template",
+  "version": "1.0.0",
+  "description": "転職プラットフォーム - Direct Template",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspaces",
+    "build:server": "npm run build --workspace=server",
+    "build:client": "npm run build --workspace=client",
+    "build-for-agent-debug": "npm run build --workspaces",
+    "start": "npm start --workspace=server",
+    "test": "npm test --workspaces",
+    "test:server": "npm test --workspace=server",
+    "test:client": "npm test --workspace=client",
+    "lint": "npm run lint --workspaces",
+    "lint:server": "npm run lint --workspace=server",
+    "lint:client": "npm run lint --workspace=client",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "setup": "npm install",
+    "db:generate": "npm run db:generate --workspace=server",
+    "db:migrate": "npm run db:migrate --workspace=server",
+    "db:seed": "npm run db:seed --workspace=server",
+    "db:reset": "npm run db:reset --workspace=server",
+    "db:studio": "npm run db:studio --workspace=server",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "clean:server": "npm run clean --workspace=server",
+    "clean:client": "npm run clean --workspace=client"
+  },
+  "keywords": ["転職", "求人", "スカウト", "プラットフォーム", "monorepo"],
+  "author": "Direct Template Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@eslint/js": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+} 

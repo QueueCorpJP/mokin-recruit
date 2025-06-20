@@ -1,0 +1,556 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 候補者テーブル
+model Candidate {
+  id                        String   @id @default(cuid())
+  email                     String   @unique
+  passwordHash              String   @map("password_hash")
+  lastName                  String   @map("last_name")
+  firstName                 String   @map("first_name")
+  lastNameKana              String   @map("last_name_kana")
+  firstNameKana             String   @map("first_name_kana")
+  gender                    Gender
+  currentResidence          String   @map("current_residence")
+  birthDate                 DateTime @map("birth_date")
+  phoneNumber               String   @map("phone_number")
+  currentSalary             String   @map("current_salary")
+  
+  // 転職活動状況
+  hasJobChangeExperience    Boolean  @map("has_job_change_experience")
+  desiredChangeTiming       String   @map("desired_change_timing")
+  jobSearchStatus           String   @map("job_search_status")
+  
+  // 職務経歴（直近）
+  recentCompanyName         String?  @map("recent_company_name")
+  recentDepartmentName      String?  @map("recent_department_name")
+  recentPositionName        String?  @map("recent_position_name")
+  employmentStartDate       DateTime? @map("employment_start_date")
+  employmentEndDate         DateTime? @map("employment_end_date")
+  recentIndustry            String?  @map("recent_industry")
+  recentJobType             String?  @map("recent_job_type")
+  jobDescription            String?  @map("job_description")
+  
+  // 学歴・語学・スキル
+  finalEducation            String   @map("final_education")
+  englishLevel              String   @map("english_level")
+  otherLanguage             String?  @map("other_language")
+  otherLanguageLevel        String?  @map("other_language_level")
+  skills                    String[] // 配列として保存
+  certifications            String?
+  
+  // 希望条件
+  desiredSalary             String   @map("desired_salary")
+  desiredIndustries         String[] @map("desired_industries")
+  desiredJobTypes           String[] @map("desired_job_types")
+  desiredLocations          String[] @map("desired_locations")
+  interestedWorkStyles      String[] @map("interested_work_styles")
+  
+  // その他
+  careerSummary             String?  @map("career_summary")
+  selfPr                    String?  @map("self_pr")
+  resumeFilePath            String?  @map("resume_file_path")
+  careerHistoryFilePath     String?  @map("career_history_file_path")
+  scoutReceptionEnabled     Boolean  @default(true) @map("scout_reception_enabled")
+  emailNotificationSettings Json     @map("email_notification_settings")
+  blockedCompanyIds         String[] @map("blocked_company_ids")
+  favoriteJobIds            String[] @map("favorite_job_ids")
+  
+  // システム情報
+  status                    UserStatus @default(ACTIVE)
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+  lastLoginAt               DateTime? @map("last_login_at")
+  deletedAt                 DateTime? @map("deleted_at")
+  deletionReason            String?   @map("deletion_reason")
+  
+  // リレーション
+  applicationStatuses       CandidateApplicationStatus[]
+  industryExperiences       CandidateIndustryExperience[]
+  jobTypeExperiences        CandidateJobTypeExperience[]
+  sentMessages              Message[] @relation("CandidateSentMessages")
+  receivedMessages          Message[] @relation("CandidateReceivedMessages")
+  applicationProgresses     ApplicationProgress[]
+  
+  @@map("candidates")
+}
+
+// 候補者の選考中企業リスト
+model CandidateApplicationStatus {
+  id                String    @id @default(cuid())
+  candidateId       String    @map("candidate_id")
+  companyName       String    @map("company_name")
+  departmentName    String    @map("department_name")
+  positionName      String?   @map("position_name")
+  selectionStatus   String    @map("selection_status")
+  disclosureConsent Boolean   @default(false) @map("disclosure_consent")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  candidate         Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  @@map("candidate_application_statuses")
+}
+
+// 候補者の経験業種
+model CandidateIndustryExperience {
+  id              String    @id @default(cuid())
+  candidateId     String    @map("candidate_id")
+  industry        String
+  experienceYears Int       @map("experience_years")
+  
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  @@map("candidate_industry_experiences")
+}
+
+// 候補者の経験職種
+model CandidateJobTypeExperience {
+  id              String    @id @default(cuid())
+  candidateId     String    @map("candidate_id")
+  jobType         String    @map("job_type")
+  experienceYears Int       @map("experience_years")
+  
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  @@map("candidate_job_type_experiences")
+}
+
+// 企業アカウント
+model CompanyAccount {
+  id                  String         @id @default(cuid())
+  companyName         String         @map("company_name")
+  headquartersAddress String         @map("headquarters_address")
+  representativeName  String         @map("representative_name")
+  industry            String
+  companyOverview     String?        @map("company_overview")
+  appealPoints        String?        @map("appeal_points")
+  logoImagePath       String?        @map("logo_image_path")
+  contractPlan        Json           @map("contract_plan")
+  status              CompanyStatus  @default(ACTIVE)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  
+  // リレーション
+  companyGroups       CompanyGroup[]
+  companyUsers        CompanyUser[]
+  
+  @@map("company_accounts")
+}
+
+// 企業グループ
+model CompanyGroup {
+  id               String        @id @default(cuid())
+  companyAccountId String        @map("company_account_id")
+  groupName        String        @map("group_name")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  
+  // リレーション
+  companyAccount   CompanyAccount @relation(fields: [companyAccountId], references: [id], onDelete: Cascade)
+  permissions      CompanyUserGroupPermission[]
+  jobPostings      JobPosting[]
+  scoutTickets     ScoutTicket[]
+  templates        Template[]
+  messages         Message[] @relation("CompanyGroupMessages")
+  applicationProgresses ApplicationProgress[]
+  
+  @@map("company_groups")
+}
+
+// 企業ユーザー
+model CompanyUser {
+  id                        String        @id @default(cuid())
+  companyAccountId          String        @map("company_account_id")
+  fullName                  String        @map("full_name")
+  positionTitle             String?       @map("position_title")
+  email                     String        @unique
+  passwordHash              String        @map("password_hash")
+  emailNotificationSettings Json          @map("email_notification_settings")
+  createdAt                 DateTime      @default(now()) @map("created_at")
+  updatedAt                 DateTime      @updatedAt @map("updated_at")
+  lastLoginAt               DateTime?     @map("last_login_at")
+  
+  // リレーション
+  companyAccount            CompanyAccount @relation(fields: [companyAccountId], references: [id], onDelete: Cascade)
+  permissions               CompanyUserGroupPermission[]
+  sentMessages              Message[] @relation("CompanyUserSentMessages")
+  createdTemplates          Template[]
+  updatedProgresses         ApplicationProgress[] @relation("UpdatedByUser")
+  statusHistories           SelectionStatusHistory[]
+  
+  @@map("company_users")
+}
+
+// 企業ユーザー・グループ権限
+model CompanyUserGroupPermission {
+  id              String           @id @default(cuid())
+  companyUserId   String           @map("company_user_id")
+  companyGroupId  String           @map("company_group_id")
+  permissionLevel PermissionLevel  @map("permission_level")
+  grantedAt       DateTime         @default(now()) @map("granted_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  
+  // リレーション
+  companyUser     CompanyUser      @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+  companyGroup    CompanyGroup     @relation(fields: [companyGroupId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyUserId, companyGroupId])
+  @@map("company_user_group_permissions")
+}
+
+// 求人
+model JobPosting {
+  id                      String              @id @default(cuid())
+  companyGroupId          String              @map("company_group_id")
+  jobTitle                String              @map("job_title")
+  jobDescription          String              @map("job_description")
+  requiredQualifications  String              @map("required_qualifications")
+  preferredQualifications String?             @map("preferred_qualifications")
+  
+  // 給与・勤務条件
+  salaryMin               Int                 @map("salary_min")
+  salaryMax               Int                 @map("salary_max")
+  salaryNegotiable        Boolean             @default(false) @map("salary_negotiable")
+  workLocationPrefecture  String              @map("work_location_prefecture")
+  workLocationDetail      String?             @map("work_location_detail")
+  jobType                 String              @map("job_type")
+  industry                String
+  remoteWorkAvailable     Boolean             @default(false) @map("remote_work_available")
+  smokingPolicy           String              @map("smoking_policy")
+  
+  // 企業アピール・設定
+  appealPoints            String?             @map("appeal_points")
+  internalMemo            String?             @map("internal_memo")
+  visibilityScope         VisibilityScope     @map("visibility_scope")
+  publicationStatus       PublicationStatus   @map("publication_status")
+  resumeRequired          Boolean             @default(false) @map("resume_required")
+  careerHistoryRequired   Boolean             @default(false) @map("career_history_required")
+  
+  // 日時・承認情報
+  createdAt               DateTime            @default(now()) @map("created_at")
+  updatedAt               DateTime            @updatedAt @map("updated_at")
+  publicationStartAt      DateTime?           @map("publication_start_at")
+  publicationEndAt        DateTime?           @map("publication_end_at")
+  approvedByAdminId       String?             @map("approved_by_admin_id")
+  approvedAt              DateTime?           @map("approved_at")
+  rejectionReason         String?             @map("rejection_reason")
+  
+  // リレーション
+  companyGroup            CompanyGroup        @relation(fields: [companyGroupId], references: [id], onDelete: Cascade)
+  messages                Message[]
+  templates               Template[]
+  applicationProgresses   ApplicationProgress[]
+  
+  @@map("job_postings")
+}
+
+// メッセージ・スカウト
+model Message {
+  id                      String          @id @default(cuid())
+  senderUserId            String          @map("sender_user_id")
+  senderUserType          UserType        @map("sender_user_type")
+  recipientUserId         String          @map("recipient_user_id")
+  recipientUserType       UserType        @map("recipient_user_type")
+  relatedJobPostingId     String          @map("related_job_posting_id")
+  companyGroupId          String?         @map("company_group_id")
+  messageType             MessageType     @map("message_type")
+  subject                 String?
+  content                 String
+  attachmentFilePaths     String[]        @map("attachment_file_paths")
+  sentAt                  DateTime        @default(now()) @map("sent_at")
+  openedAt                DateTime?       @map("opened_at")
+  status                  MessageStatus   @default(UNREAD)
+  ngWordCheckResult       Json?           @map("ng_word_check_result")
+  declineReason           String?         @map("decline_reason")
+  
+  // リレーション（制約名の重複を避けるために map を使用）
+  candidateSender         Candidate?      @relation("CandidateSentMessages", fields: [senderUserId], references: [id], map: "message_candidate_sender_fkey")
+  candidateRecipient      Candidate?      @relation("CandidateReceivedMessages", fields: [recipientUserId], references: [id], map: "message_candidate_recipient_fkey")
+  companyUserSender       CompanyUser?    @relation("CompanyUserSentMessages", fields: [senderUserId], references: [id], map: "message_company_user_sender_fkey")
+  relatedJobPosting       JobPosting      @relation(fields: [relatedJobPostingId], references: [id])
+  companyGroup            CompanyGroup?   @relation("CompanyGroupMessages", fields: [companyGroupId], references: [id])
+  
+  @@map("messages")
+}
+
+// スカウトチケット
+model ScoutTicket {
+  id                    String       @id @default(cuid())
+  companyGroupId        String       @map("company_group_id")
+  grantedAt             DateTime     @default(now()) @map("granted_at")
+  expiresAt             DateTime     @map("expires_at")
+  consumedAt            DateTime?    @map("consumed_at")
+  consumedScoutMessageId String?     @map("consumed_scout_message_id")
+  ticketType            TicketType   @map("ticket_type")
+  status                TicketStatus @default(ACTIVE)
+  
+  // リレーション
+  companyGroup          CompanyGroup @relation(fields: [companyGroupId], references: [id], onDelete: Cascade)
+  
+  @@map("scout_tickets")
+}
+
+// テンプレート
+model Template {
+  id                  String        @id @default(cuid())
+  companyGroupId      String?       @map("company_group_id")
+  templateType        TemplateType  @map("template_type")
+  templateName        String        @map("template_name")
+  content             String
+  targetJobPostingId  String?       @map("target_job_posting_id")
+  createdByUserId     String        @map("created_by_user_id")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+  
+  // リレーション
+  companyGroup        CompanyGroup? @relation(fields: [companyGroupId], references: [id], onDelete: Cascade)
+  targetJobPosting    JobPosting?   @relation(fields: [targetJobPostingId], references: [id])
+  createdByUser       CompanyUser   @relation(fields: [createdByUserId], references: [id])
+  
+  @@map("templates")
+}
+
+// 採用進捗
+model ApplicationProgress {
+  id                      String                    @id @default(cuid())
+  candidateId             String                    @map("candidate_id")
+  jobPostingId            String                    @map("job_posting_id")
+  companyGroupId          String                    @map("company_group_id")
+  appliedAt               DateTime?                 @map("applied_at")
+  scoutSentAt             DateTime?                 @map("scout_sent_at")
+  currentSelectionStatus  SelectionStatus           @map("current_selection_status")
+  offerDate               DateTime?                 @map("offer_date")
+  expectedStartDate       DateTime?                 @map("expected_start_date")
+  internalMemo            String?                   @map("internal_memo")
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+  updatedByUserId         String?                   @map("updated_by_user_id")
+  
+  // リレーション
+  candidate               Candidate                 @relation(fields: [candidateId], references: [id])
+  jobPosting              JobPosting                @relation(fields: [jobPostingId], references: [id])
+  companyGroup            CompanyGroup              @relation(fields: [companyGroupId], references: [id])
+  updatedByUser           CompanyUser?              @relation("UpdatedByUser", fields: [updatedByUserId], references: [id])
+  statusHistories         SelectionStatusHistory[]
+  interviewSchedules      InterviewSchedule[]
+  
+  @@unique([candidateId, jobPostingId])
+  @@map("application_progresses")
+}
+
+// 選考ステータス更新履歴
+model SelectionStatusHistory {
+  id              String              @id @default(cuid())
+  progressId      String              @map("progress_id")
+  previousStatus  SelectionStatus?    @map("previous_status")
+  newStatus       SelectionStatus     @map("new_status")
+  updatedAt       DateTime            @default(now()) @map("updated_at")
+  updatedByUserId String              @map("updated_by_user_id")
+  updateMemo      String?             @map("update_memo")
+  
+  // リレーション
+  progress        ApplicationProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  updatedByUser   CompanyUser         @relation(fields: [updatedByUserId], references: [id])
+  
+  @@map("selection_status_histories")
+}
+
+// 面接日程
+model InterviewSchedule {
+  id                String              @id @default(cuid())
+  progressId        String              @map("progress_id")
+  interviewDatetime DateTime            @map("interview_datetime")
+  interviewType     String              @map("interview_type")
+  interviewFormat   String              @map("interview_format")
+  interviewLocation String?             @map("interview_location")
+  interviewerNames  String?             @map("interviewer_names")
+  notes             String?
+  createdAt         DateTime            @default(now()) @map("created_at")
+  
+  // リレーション
+  progress          ApplicationProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  
+  @@map("interview_schedules")
+}
+
+// システム管理者
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name")
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+  
+  @@map("admins")
+}
+
+// NGキーワード
+model NgKeyword {
+  id          String   @id @default(cuid())
+  keyword     String
+  matchType   String   @map("match_type") // EXACT, PARTIAL
+  category    String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("ng_keywords")
+}
+
+// メディア記事
+model MediaArticle {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  summary     String?
+  categoryId  String   @map("category_id")
+  tags        String[]
+  status      String   @default("DRAFT")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // リレーション
+  category    MediaCategory @relation(fields: [categoryId], references: [id])
+  
+  @@map("media_articles")
+}
+
+// メディアカテゴリー
+model MediaCategory {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  displayOrder Int           @map("display_order")
+  parentId    String?       @map("parent_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  
+  // リレーション
+  parent      MediaCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    MediaCategory[] @relation("CategoryHierarchy")
+  articles    MediaArticle[]
+  
+  @@map("media_categories")
+}
+
+// お知らせ
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  targetUsers String    @map("target_users") // ALL, CANDIDATES, COMPANIES
+  isForced    Boolean   @default(false) @map("is_forced")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  @@map("announcements")
+}
+
+// Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum PermissionLevel {
+  SCOUT_STAFF
+  ADMINISTRATOR
+}
+
+enum VisibilityScope {
+  PUBLIC
+  MEMBERS_ONLY
+  SCOUT_ONLY
+  PRIVATE
+  DRAFT
+}
+
+enum PublicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PUBLISHED
+  ENDED
+}
+
+enum UserType {
+  CANDIDATE
+  COMPANY_USER
+}
+
+enum MessageType {
+  SCOUT
+  APPLICATION
+  GENERAL_MESSAGE
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  NG_WORD_CHECK
+  APPROVED
+  REJECTED
+}
+
+enum TicketType {
+  MONTHLY
+  SPOT
+  ADDITIONAL
+}
+
+enum TicketStatus {
+  ACTIVE
+  CONSUMED
+  EXPIRED
+}
+
+enum TemplateType {
+  SCOUT
+  MESSAGE
+}
+
+enum SelectionStatus {
+  DOCUMENT_REVIEW
+  FIRST_INTERVIEW
+  SECOND_INTERVIEW
+  FINAL_INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+  DECLINED
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+} 
