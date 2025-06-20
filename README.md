@@ -371,3 +371,4 @@ npm run docker:down             # サービス停止
 ## ライセンス
 
 MIT License # mokin-recruit
+# mokin-recruit
