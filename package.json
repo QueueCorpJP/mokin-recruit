@@ -1,7 +1,7 @@
 {
-  "name": "direct-template",
+  "name": "mokin-recruit",
   "version": "1.0.0",
-  "description": "転職プラットフォーム - Direct Template",
+  "description": "転職プラットフォーム - Mokin Recruit",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -39,7 +39,7 @@
     "clean:client": "npm run clean --workspace=client"
   },
   "keywords": ["転職", "求人", "スカウト", "プラットフォーム", "monorepo"],
-  "author": "Direct Template Team",
+  "author": "Mokin Recruit Team",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",

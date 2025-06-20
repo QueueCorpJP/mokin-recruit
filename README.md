@@ -1,8 +1,8 @@
-# Direct Template - 転職プラットフォーム
+# Mokin Recruit - 転職プラットフォーム
 
 ## 概要
 
-Direct Template は、候補者（求職者）と企業を直接つなぐ転職プラットフォームです。
+Mokin Recruit は、候補者（求職者）と企業を直接つなぐ転職プラットフォームです。
 スカウト機能、求人管理、メッセージング、採用進捗管理など、転職活動に必要な機能を包括的に提供します。
 
 ## 主要機能
@@ -65,7 +65,7 @@ Direct Template は、候補者（求職者）と企業を直接つなぐ転職�
 本プロジェクトは **ドメイン駆動設計 (DDD)** と **モノレポ構造** を採用し、スケーラブルで保守性の高いアーキテクチャを実現しています。
 
 ```
-direct-template/
+mokin-recruit/
 ├── 📁 packages/          # 共有パッケージ（型定義・ユーティリティ・UIコンポーネント）
 ├── 📁 client/            # フロントエンドアプリケーション（Next.js）
 ├── 📁 server/            # バックエンドアプリケーション（Express.js + DDD）
@@ -198,7 +198,7 @@ server/src/
 ### 1. リポジトリのクローン
 ```bash
 git clone <repository-url>
-cd direct-template
+cd mokin-recruit
 ```
 
 ### 2. 環境変数の設定
@@ -214,7 +214,7 @@ npm run setup
 
 ### 4. 共有パッケージのビルド
 ```bash
-npm run build --workspace=@direct-template/shared-types
+npm run build --workspace=@mokin-recruit/shared-types
 ```
 
 ### 5. データベースの初期化
@@ -257,7 +257,7 @@ npm run lint                     # 全パッケージリント
 # 特定ワークスペースでの操作
 npm run dev --workspace=server   # サーバーのみ開発モード
 npm run build --workspace=client # クライアントのみビルド
-npm test --workspace=@direct-template/shared-types
+npm test --workspace=@mokin-recruit/shared-types
 
 # 依存関係の追加
 npm install express --workspace=server
@@ -313,7 +313,7 @@ npm run test:coverage --workspace=client # カバレッジ測定
 
 ### 共有パッケージテスト
 ```bash
-npm test --workspace=@direct-template/shared-types
+npm test --workspace=@mokin-recruit/shared-types
 ```
 
 ## ビルド・デプロイ

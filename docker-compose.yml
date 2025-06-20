@@ -4,13 +4,13 @@ services:
   # Redis キャッシュ・セッションストア
   redis:
     image: redis:7-alpine
-    container_name: direct-template-redis
+    container_name: mokin-recruit-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - direct-template-network
+      - mokin-recruit-network
     restart: unless-stopped
 
   # バックエンドサーバー
@@ -18,7 +18,7 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile.dev
-    container_name: direct-template-server
+    container_name: mokin-recruit-server
     environment:
       NODE_ENV: development
       # Supabase Database設定
@@ -41,7 +41,7 @@ services:
     depends_on:
       - redis
     networks:
-      - direct-template-network
+      - mokin-recruit-network
     restart: unless-stopped
     command: npm run dev
 
@@ -50,7 +50,7 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile.dev
-    container_name: direct-template-client
+    container_name: mokin-recruit-client
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:3001
@@ -65,24 +65,24 @@ services:
     depends_on:
       - server
     networks:
-      - direct-template-network
+      - mokin-recruit-network
     restart: unless-stopped
     command: npm run dev
 
   # メール送信サービス（開発用）
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: direct-template-mailhog
+    container_name: mokin-recruit-mailhog
     ports:
       - "1025:1025"  # SMTP
       - "8025:8025"  # Web UI
     networks:
-      - direct-template-network
+      - mokin-recruit-network
     restart: unless-stopped
 
 volumes:
   redis_data:
 
 networks:
-  direct-template-network:
+  mokin-recruit-network:
     driver: bridge 

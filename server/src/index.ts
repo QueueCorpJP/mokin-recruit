@@ -33,9 +33,9 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Direct Template API',
+      title: 'Mokin Recruit API',
       version: '1.0.0',
-      description: '転職プラットフォーム Direct Template の API ドキュメント',
+      description: '転職プラットフォーム Mokin Recruit の API ドキュメント',
     },
     servers: [
       {

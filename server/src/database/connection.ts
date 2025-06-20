@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { initializeSupabase, testSupabaseConnection } from './supabase';
 import { initializeStorageBuckets } from '@/storage/supabaseStorage';
 import { logger } from '@/utils/logger';
@@ -20,7 +20,7 @@ function validateDatabaseUrl(): string {
 
 // Supabase用のPrisma設定
 function createPrismaConfig() {
-  const logLevels: Prisma.LogLevel[] = process.env.NODE_ENV === 'development' 
+  const logLevels: ('query' | 'info' | 'warn' | 'error')[] = process.env.NODE_ENV === 'development'
     ? ['query', 'info', 'warn', 'error']
     : ['warn', 'error'];
 

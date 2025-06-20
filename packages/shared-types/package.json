@@ -1,7 +1,7 @@
 {
-  "name": "@direct-template/shared-types",
+  "name": "@mokin-recruit/shared-types",
   "version": "1.0.0",
-  "description": "Shared TypeScript types for Direct Template",
+  "description": "Shared TypeScript types for Mokin Recruit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "keywords": ["typescript", "types", "shared"],
-  "author": "Direct Template Team",
+  "author": "Mokin Recruit Team",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.3.3"
