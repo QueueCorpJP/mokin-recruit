@@ -4,7 +4,9 @@ export interface AuthResult {
   user?: {
     id: string;
     email: string;
-    userType: 'candidate' | 'company_user' | 'admin';
+    userType?: 'candidate' | 'company_user' | 'admin';
+    type?: string;
+    profile?: any;
   };
   token?: string;
   error?: string;
