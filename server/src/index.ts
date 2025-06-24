@@ -12,7 +12,11 @@ import { errorHandler } from '@/middleware/errorHandler';
 import { notFoundHandler } from '@/middleware/notFoundHandler';
 import { authMiddleware } from '@/middleware/auth';
 import { logger } from '@/utils/logger';
-import { connectDatabase } from '@/database/connection';
+import {
+  initializeSupabase,
+  testSupabaseConnection,
+  checkDatabaseSchema,
+} from '@/database/supabase';
 
 // ルートインポート
 import authRoutes from '@/routes/auth';
@@ -70,26 +74,34 @@ const limiter = rateLimit({
 });
 
 // 基本ミドルウェア
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-}));
+  })
+);
 
 app.use(compression());
-app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
+app.use(
+  morgan('combined', {
+    stream: { write: message => logger.info(message.trim()) },
+  })
+);
 
 // CORS設定
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-  optionsSuccessStatus: 200,
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -100,14 +112,37 @@ app.use('/api/', limiter);
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// ヘルスチェック
-app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-  });
+// ヘルスチェック（強化版）
+app.get('/health', async (_req, res) => {
+  try {
+    // Supabase接続テスト
+    const supabaseConnected = await testSupabaseConnection();
+
+    // データベーススキーマチェック
+    const schemaStatus = await checkDatabaseSchema();
+
+    const healthStatus = {
+      status: supabaseConnected ? 'OK' : 'DEGRADED',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV,
+      services: {
+        supabase: {
+          connected: supabaseConnected,
+          schema: schemaStatus,
+        },
+      },
+    };
+
+    res.status(supabaseConnected ? 200 : 503).json(healthStatus);
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed',
+    });
+  }
 });
 
 // API ルート
@@ -128,18 +163,43 @@ app.use(errorHandler);
 // サーバー起動
 async function startServer() {
   try {
-    // データベース接続
-    await connectDatabase();
-    logger.info('Database connected successfully');
+    // Supabaseクライアント初期化
+    logger.info('Initializing Supabase client...');
+    initializeSupabase();
+
+    // Supabase接続テスト
+    logger.info('Testing Supabase connection...');
+    const connected = await testSupabaseConnection();
+
+    if (connected) {
+      logger.info('✅ Supabase connection successful');
+
+      // データベーススキーマチェック
+      const schemaStatus = await checkDatabaseSchema();
+      logger.info('📊 Database schema status:', schemaStatus);
+
+      if (!schemaStatus.tablesExist) {
+        logger.warn(
+          '⚠️  Some required tables are missing:',
+          schemaStatus.missingTables
+        );
+        logger.info(
+          '💡 Consider running database migrations or creating tables in Supabase Dashboard'
+        );
+      }
+    } else {
+      logger.warn('⚠️  Supabase connection failed, but starting server anyway');
+    }
 
     app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV}`);
-      logger.info(`API Documentation: http://localhost:${PORT}/api-docs`);
-      logger.info(`Health Check: http://localhost:${PORT}/health`);
+      logger.info(`🚀 Server is running on port ${PORT}`);
+      logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+      logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      logger.info(`❤️  Health Check: http://localhost:${PORT}/health`);
+      logger.info('✨ Server started successfully!');
     });
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }
@@ -161,9 +221,9 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Uncaught Exception:', error);
   process.exit(1);
 });
 
-startServer(); 
+startServer();
