@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '@/database/connection';
+
 import { logger } from '@/utils/logger';
 import {
   registerUserWithSupabase,
@@ -13,14 +13,39 @@ import {
   verifyCustomJWT,
   UserRegistrationData,
 } from '@/auth/supabaseAuth';
+import { CandidateRepository } from '@/infrastructure/database/CandidateRepository';
+import {
+  CompanyUserRepository,
+  CompanyAccountRepository,
+} from '@/infrastructure/database/CompanyUserRepository';
+import { SecurityConfig } from '@/config/security';
 
 export class AuthController {
+  private candidateRepository: CandidateRepository;
+  private companyUserRepository: CompanyUserRepository;
+  private companyAccountRepository: CompanyAccountRepository;
+  private securityConfig: SecurityConfig;
+
+  constructor() {
+    this.candidateRepository = new CandidateRepository();
+    this.companyUserRepository = new CompanyUserRepository();
+    this.companyAccountRepository = new CompanyAccountRepository();
+    this.securityConfig = new SecurityConfig();
+  }
   /**
    * 候補者の新規登録（Supabase Auth統合）
    */
   async registerCandidate(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password, lastName, firstName, lastNameKana, firstNameKana, gender } = req.body;
+      const {
+        email,
+        password,
+        lastName,
+        firstName,
+        lastNameKana,
+        firstNameKana,
+        gender,
+      } = req.body;
 
       // バリデーション
       if (!email || !password || !lastName || !firstName) {
@@ -31,9 +56,8 @@ export class AuthController {
       }
 
       // メールアドレス重複チェック
-      const existingCandidate = await prisma.candidate.findUnique({
-        where: { email },
-      });
+      const existingCandidate =
+        await this.candidateRepository.findByEmail(email);
 
       if (existingCandidate) {
         res.status(409).json({ error: 'Email already exists' });
@@ -58,33 +82,42 @@ export class AuthController {
         return;
       }
 
-      // Prismaでデータベースに候補者情報を保存
-      const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
-      
-      const candidate = await prisma.candidate.create({
-        data: {
-          id: authResult.user!.id, // Supabase Auth UIDを使用
-          email,
-          passwordHash: hashedPassword,
-          lastName,
-          firstName,
-          lastNameKana: lastNameKana || '',
-          firstNameKana: firstNameKana || '',
-          gender: gender || 'OTHER',
-          // その他のフィールドはデフォルト値または後で更新
-          currentResidence: '',
-          birthDate: new Date(),
-          phoneNumber: '',
-          currentSalary: '',
-          hasJobChangeExperience: false,
-          desiredChangeTiming: '',
-          jobSearchStatus: '',
-          finalEducation: '',
-          englishLevel: '',
-          desiredSalary: '',
-          emailNotificationSettings: {},
-        },
-      });
+      // Supabaseでデータベースに候補者情報を保存
+      const hashedPassword = await bcrypt.hash(
+        password,
+        this.securityConfig.bcryptRounds
+      );
+
+      const candidateData = {
+        id: authResult.user!.id, // Supabase Auth UIDを使用
+        email,
+        passwordHash: hashedPassword,
+        lastName,
+        firstName,
+        lastNameKana: lastNameKana || '',
+        firstNameKana: firstNameKana || '',
+        gender: gender || 'OTHER',
+        status: 'ACTIVE',
+        // その他のフィールドはデフォルト値または後で更新
+        currentResidence: '',
+        birthDate: new Date(),
+        phoneNumber: '',
+        currentSalary: '',
+        hasJobChangeExperience: false,
+        desiredChangeTiming: '',
+        jobSearchStatus: '',
+        finalEducation: '',
+        englishLevel: '',
+        desiredSalary: '',
+        emailNotificationSettings: {},
+      };
+
+      const candidate = await this.candidateRepository.create(candidateData);
+
+      if (!candidate) {
+        res.status(500).json({ error: 'Failed to create candidate record' });
+        return;
+      }
 
       logger.info(`Candidate registered successfully: ${email}`);
 
@@ -119,9 +152,7 @@ export class AuthController {
       }
 
       // メールアドレス重複チェック
-      const existingUser = await prisma.companyUser.findUnique({
-        where: { email },
-      });
+      const existingUser = await this.companyUserRepository.findByEmail(email);
 
       if (existingUser) {
         res.status(409).json({ error: 'Email already exists' });
@@ -129,9 +160,8 @@ export class AuthController {
       }
 
       // 企業アカウント存在チェック
-      const companyAccount = await prisma.companyAccount.findUnique({
-        where: { id: companyAccountId },
-      });
+      const companyAccount =
+        await this.companyAccountRepository.findById(companyAccountId);
 
       if (!companyAccount) {
         res.status(404).json({ error: 'Company account not found' });
@@ -156,19 +186,28 @@ export class AuthController {
         return;
       }
 
-      // Prismaでデータベースに企業ユーザー情報を保存
-      const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
-      
-      const companyUser = await prisma.companyUser.create({
-        data: {
-          id: authResult.user!.id, // Supabase Auth UIDを使用
-          email,
-          passwordHash: hashedPassword,
-          fullName,
-          companyAccountId,
-          emailNotificationSettings: {},
-        },
-      });
+      // Supabaseでデータベースに企業ユーザー情報を保存
+      const hashedPassword = await bcrypt.hash(
+        password,
+        this.securityConfig.bcryptRounds
+      );
+
+      const companyUserData = {
+        id: authResult.user!.id, // Supabase Auth UIDを使用
+        email,
+        passwordHash: hashedPassword,
+        fullName,
+        companyAccountId,
+        emailNotificationSettings: {},
+      };
+
+      const companyUser =
+        await this.companyUserRepository.create(companyUserData);
+
+      if (!companyUser) {
+        res.status(500).json({ error: 'Failed to create company user record' });
+        return;
+      }
 
       logger.info(`Company user registered successfully: ${email}`);
 
@@ -212,19 +251,15 @@ export class AuthController {
       let userType = null;
 
       // 候補者として検索
-      const candidate = await prisma.candidate.findUnique({
-        where: { email },
-      });
+      const candidate = await this.candidateRepository.findByEmail(email);
 
       if (candidate) {
         user = candidate;
         userType = 'candidate';
       } else {
         // 企業ユーザーとして検索
-        const companyUser = await prisma.companyUser.findUnique({
-          where: { email },
-          include: { companyAccount: true },
-        });
+        const companyUser =
+          await this.companyUserRepository.findByEmailWithCompany(email);
 
         if (companyUser) {
           user = companyUser;
@@ -239,28 +274,22 @@ export class AuthController {
 
       // 最終ログイン日時を更新
       if (userType === 'candidate') {
-        await prisma.candidate.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
+        await this.candidateRepository.updateLastLogin(user.id);
       } else if (userType === 'company_user') {
-        await prisma.companyUser.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
+        await this.companyUserRepository.updateLastLogin(user.id);
       }
 
       logger.info(`User logged in successfully: ${email}`);
 
-             res.status(200).json({
-         message: 'Login successful',
-         token: authResult.token,
-         user: {
-           id: user.id,
-           email: user.email,
-           type: userType,
-         },
-       });
+      res.status(200).json({
+        message: 'Login successful',
+        token: authResult.token,
+        user: {
+          id: user.id,
+          email: user.email,
+          type: userType,
+        },
+      });
     } catch (error) {
       logger.error('Login error:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -273,7 +302,7 @@ export class AuthController {
   async logout(_req: Request, res: Response): Promise<void> {
     try {
       await signOutUser();
-      
+
       res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
       logger.error('Logout error:', error);
@@ -294,21 +323,21 @@ export class AuthController {
         return;
       }
 
-             // カスタムJWTトークンの検証
-       const customJwtResult = verifyCustomJWT(token);
-       if (customJwtResult.valid) {
-         // 新しいトークンを生成
-         const newToken = jwt.sign(
-           customJwtResult.payload,
-           process.env.JWT_SECRET!
-         );
+      // カスタムJWTトークンの検証
+      const customJwtResult = verifyCustomJWT(token);
+      if (customJwtResult.valid) {
+        // 新しいトークンを生成
+        const newToken = jwt.sign(
+          customJwtResult.payload,
+          this.securityConfig.jwtSecret
+        );
 
-         res.status(200).json({
-           message: 'Token refreshed successfully',
-           token: newToken,
-         });
-         return;
-       }
+        res.status(200).json({
+          message: 'Token refreshed successfully',
+          token: newToken,
+        });
+        return;
+      }
 
       // Supabaseトークンの検証
       const supabaseResult = await verifySupabaseToken(token);
@@ -382,4 +411,4 @@ export class AuthController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
-} 
+}

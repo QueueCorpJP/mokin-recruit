@@ -6,12 +6,15 @@ services:
     image: redis:7-alpine
     container_name: mokin-recruit-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
       - mokin-recruit-network
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   # バックエンドサーバー
   server:
@@ -34,7 +37,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-in-production}
       PORT: 3001
     ports:
-      - "3001:3001"
+      - '3001:3001'
     volumes:
       - ./server:/app
       - /app/node_modules
@@ -44,6 +47,9 @@ services:
       - mokin-recruit-network
     restart: unless-stopped
     command: npm run dev
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   # フロントエンドクライアント
   client:
@@ -58,7 +64,7 @@ services:
       NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./client:/app
       - /app/node_modules
@@ -68,21 +74,32 @@ services:
       - mokin-recruit-network
     restart: unless-stopped
     command: npm run dev
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   # メール送信サービス（開発用）
   mailhog:
     image: mailhog/mailhog:latest
     container_name: mokin-recruit-mailhog
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
     networks:
       - mokin-recruit-network
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 volumes:
   redis_data:
 
 networks:
   mokin-recruit-network:
-    driver: bridge 
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+        - subnet: 2001:db8:1::/64

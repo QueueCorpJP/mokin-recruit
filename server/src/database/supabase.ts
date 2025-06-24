@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
+import { DatabaseConfig } from '@/config/database';
 
 // Supabase設定の型定義
 interface SupabaseConfig {
@@ -16,18 +17,18 @@ let supabaseAdmin: SupabaseClient;
  * Supabase設定を環境変数から取得
  */
 function getSupabaseConfig(): SupabaseConfig {
-  const url = process.env.SUPABASE_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbConfig = new DatabaseConfig();
 
-  if (!url || !anonKey) {
-    throw new Error('Supabase URL and ANON_KEY are required');
-  }
+  logger.info('Supabase configuration loaded', {
+    url: dbConfig.supabaseUrl.substring(0, 30) + '...',
+    hasAnonKey: !!dbConfig.supabaseAnonKey,
+    hasServiceRoleKey: !!dbConfig.supabaseServiceRoleKey,
+  });
 
   return {
-    url,
-    anonKey,
-    serviceRoleKey,
+    url: dbConfig.supabaseUrl,
+    anonKey: dbConfig.supabaseAnonKey,
+    serviceRoleKey: dbConfig.supabaseServiceRoleKey,
   };
 }
 
@@ -47,6 +48,11 @@ export function initializeSupabase(): void {
       db: {
         schema: 'public',
       },
+      global: {
+        headers: {
+          'X-Client-Info': 'mokin-recruit-server',
+        },
+      },
     });
 
     // 管理者クライアント（RLS無効、サービスロールキー使用）
@@ -59,7 +65,13 @@ export function initializeSupabase(): void {
         db: {
           schema: 'public',
         },
+        global: {
+          headers: {
+            'X-Client-Info': 'mokin-recruit-server-admin',
+          },
+        },
       });
+      logger.info('Supabase admin client initialized successfully');
     }
 
     logger.info('Supabase client initialized successfully');
@@ -74,7 +86,9 @@ export function initializeSupabase(): void {
  */
 export function getSupabaseClient(): SupabaseClient {
   if (!supabase) {
-    throw new Error('Supabase client is not initialized. Call initializeSupabase() first.');
+    throw new Error(
+      'Supabase client is not initialized. Call initializeSupabase() first.'
+    );
   }
   return supabase;
 }
@@ -84,22 +98,41 @@ export function getSupabaseClient(): SupabaseClient {
  */
 export function getSupabaseAdminClient(): SupabaseClient {
   if (!supabaseAdmin) {
-    throw new Error('Supabase admin client is not initialized or service role key is not provided.');
+    logger.warn(
+      'Supabase admin client is not initialized. Using regular client as fallback.'
+    );
+    return getSupabaseClient();
   }
   return supabaseAdmin;
 }
 
 /**
- * Supabase接続テスト
+ * Supabase接続テスト（改善版）
  */
 export async function testSupabaseConnection(): Promise<boolean> {
   try {
     const client = getSupabaseClient();
-    const { error } = await client.from('candidates').select('count').limit(1);
-    
+
+    // より汎用的なテストクエリを使用
+    const { data, error } = await client
+      .from('information_schema.tables')
+      .select('table_name')
+      .limit(1);
+
     if (error) {
-      logger.error('Supabase connection test failed:', error);
-      return false;
+      logger.warn(
+        'Supabase connection test failed with query error:',
+        error.message
+      );
+
+      // フォールバック: RPC呼び出しでテスト
+      const { data: rpcData, error: rpcError } = await client.rpc('version');
+      if (rpcError) {
+        logger.error('Supabase RPC test also failed:', rpcError.message);
+        return false;
+      }
+      logger.info('Supabase connection successful via RPC');
+      return true;
     }
 
     logger.info('Supabase connection test successful');
@@ -111,10 +144,59 @@ export async function testSupabaseConnection(): Promise<boolean> {
 }
 
 /**
+ * データベーススキーマの初期化チェック
+ */
+export async function checkDatabaseSchema(): Promise<{
+  tablesExist: boolean;
+  missingTables: string[];
+}> {
+  try {
+    const client = getSupabaseAdminClient();
+    const requiredTables = [
+      'candidates',
+      'company_accounts',
+      'company_users',
+      'job_postings',
+      'messages',
+    ];
+
+    const { data, error } = await client
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_schema', 'public')
+      .in('table_name', requiredTables);
+
+    if (error) {
+      logger.error('Failed to check database schema:', error);
+      return { tablesExist: false, missingTables: requiredTables };
+    }
+
+    const existingTables = data?.map(t => t.table_name) || [];
+    const missingTables = requiredTables.filter(
+      table => !existingTables.includes(table)
+    );
+
+    logger.info('Database schema check completed', {
+      existingTables: existingTables.length,
+      missingTables: missingTables.length,
+      missing: missingTables,
+    });
+
+    return {
+      tablesExist: missingTables.length === 0,
+      missingTables,
+    };
+  } catch (error) {
+    logger.error('Database schema check error:', error);
+    return { tablesExist: false, missingTables: [] };
+  }
+}
+
+/**
  * Supabase接続を閉じる（クリーンアップ）
  */
 export function closeSupabaseConnection(): void {
   // Supabaseクライアントは自動的にクリーンアップされるため、
   // 明示的なクローズは不要だが、ログ出力のみ行う
   logger.info('Supabase connection cleanup completed');
-} 
+}

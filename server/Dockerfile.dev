@@ -1,13 +1,20 @@
 FROM node:18-alpine
 
+# 必要なパッケージをインストール（OpenSSL、PostgreSQLクライアント等）
+RUN apk add --no-cache \
+    openssl \
+    postgresql-client \
+    bash \
+    curl
+
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# package.jsonとpackage-lock.jsonをコピー
+# package.jsonをコピー
 COPY package*.json ./
 
-# 依存関係をインストール
-RUN npm ci --only=production=false
+# 依存関係をインストール（package-lock.jsonが存在しない場合はnpm installを使用）
+RUN npm install
 
 # アプリケーションコードをコピー
 COPY . .
