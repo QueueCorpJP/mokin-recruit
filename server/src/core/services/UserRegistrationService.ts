@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import { injectable } from 'inversify';
 import { logger } from '@/utils/logger';
 import {
   registerUserWithSupabase,
@@ -5,18 +7,19 @@ import {
 } from '@/auth/supabaseAuth';
 import { CandidateRepository } from '@/infrastructure/database/CandidateRepository';
 import {
-  CompanyUserRepository,
   CompanyAccountRepository,
+  CompanyUserRepository,
 } from '@/infrastructure/database/CompanyUserRepository';
 import { PasswordService } from './PasswordService';
 import {
-  IUserRegistrationService,
   AuthResult,
   CandidateRegistrationData,
   CompanyUserRegistrationData,
+  IUserRegistrationService,
 } from '@/core/interfaces/IAuthService';
 
 // ユーザー登録サービスの実装 (SRP準拠)
+@injectable()
 export class UserRegistrationService implements IUserRegistrationService {
   private candidateRepository: CandidateRepository;
   private companyUserRepository: CompanyUserRepository;

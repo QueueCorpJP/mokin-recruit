@@ -86,27 +86,26 @@ export class CompanyUserRepository extends SupabaseRepository<CompanyUserEntity>
     }
   }
 
-  async updateLastLogin(id: string): Promise<CompanyUserEntity | null> {
+  async updateLastLogin(id: string): Promise<boolean> {
     try {
-      const { data, error } = await this.client
+      const { error } = await this.client
         .from(this.tableName)
         .update({
           last_login_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
-        logger.error('Error updating last login:', error);
-        return null;
+        logger.error('Error updating company user last login:', error);
+        return false;
       }
 
-      return data as CompanyUserEntity;
+      logger.debug(`Updated last login for company user: ${id}`);
+      return true;
     } catch (error) {
-      logger.error('Exception in updateLastLogin:', error);
-      return null;
+      logger.error('Exception in updateLastLogin for company user:', error);
+      return false;
     }
   }
 }

@@ -1,15 +1,19 @@
+import 'reflect-metadata';
+import { inject, injectable } from 'inversify';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/utils/logger';
 import { SecurityConfig } from '@/config/security';
 import { IPasswordService } from '@/core/interfaces/IAuthService';
 import { requestPasswordReset, updatePassword } from '@/auth/supabaseAuth';
+import { TYPES } from '@/container/types';
 
 // パスワード管理サービスの実装 (SRP準拠)
+@injectable()
 export class PasswordService implements IPasswordService {
   private securityConfig: SecurityConfig;
 
-  constructor() {
-    this.securityConfig = new SecurityConfig();
+  constructor(@inject(TYPES.Security) securityConfig?: SecurityConfig) {
+    this.securityConfig = securityConfig || new SecurityConfig();
   }
 
   async hashPassword(password: string): Promise<string> {

@@ -64,18 +64,6 @@ export type DITypes = typeof TYPES;
 export type ServiceIdentifier = keyof DITypes | symbol | string;
 
 /**
- * サービスライフサイクルの定義
- * 将来の拡張用に定義
- */
-/*
-export enum ServiceLifecycle {
-  SINGLETON = 'singleton',
-  TRANSIENT = 'transient',
-  REQUEST = 'request',
-}
-*/
-
-/**
  * サービス登録情報の型
  */
 export interface ServiceRegistration {

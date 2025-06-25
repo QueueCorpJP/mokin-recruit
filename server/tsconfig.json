@@ -19,6 +19,8 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "declaration": false,
     "declarationMap": false,
     "sourceMap": true,

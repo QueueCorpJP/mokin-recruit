@@ -1,7 +1,7 @@
 import {
   IBaseRepository,
-  ISearchableRepository,
   IPaginatedRepository,
+  ISearchableRepository,
 } from './IRepository';
 
 // ドメインエンティティの型定義
@@ -54,21 +54,22 @@ export interface ICandidateRepository
   extends IBaseRepository<CandidateEntity>,
     ISearchableRepository<CandidateEntity>,
     IPaginatedRepository<CandidateEntity> {
-  findByEmail(email: string): Promise<CandidateEntity | null>;
-  findByStatus(status: string): Promise<CandidateEntity[]>;
+  findByEmail(_email: string): Promise<CandidateEntity | null>;
+  findByStatus(_status: string): Promise<CandidateEntity[]>;
+  updateLastLogin(_id: string): Promise<boolean>;
 }
 
 export interface ICompanyRepository
   extends IBaseRepository<CompanyEntity>,
     ISearchableRepository<CompanyEntity>,
     IPaginatedRepository<CompanyEntity> {
-  findByIndustry(industry: string): Promise<CompanyEntity[]>;
+  findByIndustry(_industry: string): Promise<CompanyEntity[]>;
 }
 
 export interface IJobRepository
   extends IBaseRepository<JobEntity>,
     ISearchableRepository<JobEntity>,
     IPaginatedRepository<JobEntity> {
-  findByCompanyId(companyId: string): Promise<JobEntity[]>;
+  findByCompanyId(_companyId: string): Promise<JobEntity[]>;
   findActiveJobs(): Promise<JobEntity[]>;
 }

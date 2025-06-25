@@ -1,8 +1,8 @@
 import { SupabaseRepository } from './SupabaseRepository';
 import { logger } from '@/utils/logger';
 import {
-  ICandidateRepository,
   CandidateEntity,
+  ICandidateRepository,
 } from '@/core/interfaces/IDomainRepository';
 
 // 候補者リポジトリの実装 (LSP準拠)
@@ -90,27 +90,26 @@ export class CandidateRepository
     }
   }
 
-  async updateLastLogin(id: string): Promise<CandidateEntity | null> {
+  async updateLastLogin(id: string): Promise<boolean> {
     try {
-      const { data, error } = await this.client
+      const { error } = await this.client
         .from(this.tableName)
         .update({
           last_login_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
         logger.error('Error updating candidate last login:', error);
-        return null;
+        return false;
       }
 
-      return data as CandidateEntity;
+      logger.debug(`Updated last login for candidate: ${id}`);
+      return true;
     } catch (error) {
       logger.error('Exception in updateLastLogin for candidate:', error);
-      return null;
+      return false;
     }
   }
 

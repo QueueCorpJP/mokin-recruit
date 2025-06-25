@@ -1,8 +1,20 @@
 import { Router } from 'express';
 import { AuthController } from '@/controllers/AuthController';
+import { resolve } from '@/container';
 
 const router = Router();
-const authController = new AuthController();
+
+// DIコンテナからAuthControllerを解決するヘルパー関数
+const getAuthController = (): AuthController => {
+  try {
+    return resolve<AuthController>('AuthController');
+  } catch (error) {
+    // DIコンテナが初期化されていない場合のエラー
+    throw new Error(
+      'AuthController is not available. DI container may not be initialized.'
+    );
+  }
+};
 
 /**
  * @swagger
@@ -40,7 +52,9 @@ const authController = new AuthController();
  *       409:
  *         description: メールアドレス重複
  */
-router.post('/register/candidate', authController.registerCandidate);
+router.post('/register/candidate', (req, res) =>
+  getAuthController().registerCandidate(req, res)
+);
 
 /**
  * @swagger
@@ -78,7 +92,9 @@ router.post('/register/candidate', authController.registerCandidate);
  *       409:
  *         description: メールアドレス重複
  */
-router.post('/register/company', authController.registerCompanyUser);
+router.post('/register/company', (req, res) =>
+  getAuthController().registerCompanyUser(req, res)
+);
 
 /**
  * @swagger
@@ -116,7 +132,7 @@ router.post('/register/company', authController.registerCompanyUser);
  *       401:
  *         description: 認証失敗
  */
-router.post('/login', authController.login);
+router.post('/login', (req, res) => getAuthController().login(req, res));
 
 /**
  * @swagger
@@ -130,7 +146,7 @@ router.post('/login', authController.login);
  *       200:
  *         description: ログアウト成功
  */
-router.post('/logout', authController.logout);
+router.post('/logout', (req, res) => getAuthController().logout(req, res));
 
 /**
  * @swagger
@@ -146,7 +162,9 @@ router.post('/logout', authController.logout);
  *       401:
  *         description: 無効なトークン
  */
-router.post('/refresh', authController.refreshToken);
+router.post('/refresh', (req, res) =>
+  getAuthController().refreshToken(req, res)
+);
 
 /**
  * @swagger
@@ -172,7 +190,9 @@ router.post('/refresh', authController.refreshToken);
  *       404:
  *         description: ユーザーが見つからない
  */
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', (req, res) =>
+  getAuthController().forgotPassword(req, res)
+);
 
 /**
  * @swagger
@@ -201,9 +221,11 @@ router.post('/forgot-password', authController.forgotPassword);
  *       400:
  *         description: 無効なトークン
  */
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', (req, res) =>
+  getAuthController().resetPassword(req, res)
+);
 
 // メール認証は現在Supabase Authで自動処理されるため、エンドポイントは削除
 // 必要に応じてSupabase Auth Webhookを使用してメール認証完了を処理
 
-export default router; 
+export default router;

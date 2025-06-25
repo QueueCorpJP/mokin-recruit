@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import { injectable } from 'inversify';
 import { logger } from '@/utils/logger';
 
 // バリデーション結果の型定義
@@ -15,6 +17,7 @@ export interface MultiFieldValidationResult {
 }
 
 // バリデーションサービス (SRP準拠)
+@injectable()
 export class ValidationService {
   /**
    * メールアドレスの形式をバリデート

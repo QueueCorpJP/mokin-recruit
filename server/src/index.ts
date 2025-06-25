@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import * as process from 'process';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,10 +15,11 @@ import { notFoundHandler } from '@/middleware/notFoundHandler';
 import { authMiddleware } from '@/middleware/auth';
 import { logger } from '@/utils/logger';
 import {
+  checkDatabaseSchema,
   initializeSupabase,
   testSupabaseConnection,
-  checkDatabaseSchema,
 } from '@/database/supabase';
+import { checkDIHealth, initializeDI } from '@/container';
 
 // ルートインポート
 import authRoutes from '@/routes/auth';
@@ -121,8 +124,16 @@ app.get('/health', async (_req, res) => {
     // データベーススキーマチェック
     const schemaStatus = await checkDatabaseSchema();
 
+    // DIコンテナヘルスチェック
+    const diHealthResult = await checkDIHealth();
+
+    const overallStatus =
+      supabaseConnected && diHealthResult.status === 'healthy'
+        ? 'OK'
+        : 'DEGRADED';
+
     const healthStatus = {
-      status: supabaseConnected ? 'OK' : 'DEGRADED',
+      status: overallStatus,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV,
@@ -131,10 +142,11 @@ app.get('/health', async (_req, res) => {
           connected: supabaseConnected,
           schema: schemaStatus,
         },
+        dependencyInjection: diHealthResult,
       },
     };
 
-    res.status(supabaseConnected ? 200 : 503).json(healthStatus);
+    res.status(overallStatus === 'OK' ? 200 : 503).json(healthStatus);
   } catch (error) {
     logger.error('Health check failed:', error);
     res.status(503).json({
@@ -163,6 +175,11 @@ app.use(errorHandler);
 // サーバー起動
 async function startServer() {
   try {
+    // DIコンテナ初期化
+    logger.info('Initializing Dependency Injection container...');
+    await initializeDI();
+    logger.info('✅ DI Container initialized successfully');
+
     // Supabaseクライアント初期化
     logger.info('Initializing Supabase client...');
     initializeSupabase();
