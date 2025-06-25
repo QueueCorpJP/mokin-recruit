@@ -6,6 +6,17 @@ import { AuthController } from '@/lib/server/controllers/AuthController';
 import { initializeDI, resolve } from '@/lib/server/container';
 import { logger } from '@/lib/server/utils/logger';
 
+// リクエストボディの型定義
+interface CandidateRegistrationRequestBody {
+  email: string;
+  password: string;
+  lastName: string;
+  firstName: string;
+  lastNameKana?: string;
+  firstNameKana?: string;
+  gender?: string;
+}
+
 /**
  * 候補者新規登録 API Route
  * POST /api/auth/register/candidate
@@ -15,8 +26,17 @@ export async function POST(request: NextRequest) {
     // DIコンテナ初期化（必要に応じて）
     await initializeDI();
 
-    // リクエストボディの取得
-    const body = await request.json();
+    // リクエストボディの取得と型安全性の確保
+    const body: unknown = await request.json();
+
+    // 基本的なバリデーション
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
     const {
       email,
       password,
@@ -25,7 +45,15 @@ export async function POST(request: NextRequest) {
       lastNameKana,
       firstNameKana,
       gender,
-    } = body;
+    } = body as CandidateRegistrationRequestBody;
+
+    // 必須フィールドの確認
+    if (!email || !password || !lastName || !firstName) {
+      return NextResponse.json(
+        { error: 'Email, password, lastName, and firstName are required' },
+        { status: 400 }
+      );
+    }
 
     // AuthControllerの取得
     const authController = resolve<AuthController>('AuthController');

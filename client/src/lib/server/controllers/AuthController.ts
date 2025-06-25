@@ -1,12 +1,10 @@
 import 'reflect-metadata';
 import { inject, injectable } from 'inversify';
-import jwt from 'jsonwebtoken';
 
 import { logger } from '../utils/logger';
 import {
   signInWithSupabase,
   signOutUser,
-  verifyCustomJWT,
   verifySupabaseToken,
 } from '../auth/supabaseAuth';
 

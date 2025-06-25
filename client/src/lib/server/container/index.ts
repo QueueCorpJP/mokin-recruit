@@ -12,3 +12,5 @@ export type {
   ServiceRegistration,
   ContainerOptions,
 } from './types';
+export { ContainerBindings } from './bindings';
+export { ContainerInitializer } from './initializer';

@@ -6,6 +6,12 @@ import { AuthController } from '@/lib/server/controllers/AuthController';
 import { initializeDI, resolve } from '@/lib/server/container';
 import { logger } from '@/lib/server/utils/logger';
 
+// リクエストボディの型定義
+interface LoginRequestBody {
+  email: string;
+  password: string;
+}
+
 /**
  * ログイン API Route
  * POST /api/auth/login
@@ -15,9 +21,26 @@ export async function POST(request: NextRequest) {
     // DIコンテナ初期化（必要に応じて）
     await initializeDI();
 
-    // リクエストボディの取得
-    const body = await request.json();
-    const { email, password } = body;
+    // リクエストボディの取得と型安全性の確保
+    const body: unknown = await request.json();
+
+    // 基本的なバリデーション
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = body as LoginRequestBody;
+
+    // 必須フィールドの確認
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
 
     // AuthControllerの取得
     const authController = resolve<AuthController>('AuthController');

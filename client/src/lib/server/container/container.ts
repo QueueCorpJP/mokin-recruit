@@ -158,11 +158,14 @@ export const resolveOptional = <T>(
  * DIコンテナ初期化関数
  */
 export const initializeDI = async (): Promise<void> => {
-  // DIコンテナの初期化処理をここに実装
-  logger.info('DI Container initialization started');
+  try {
+    // ContainerInitializerを使用して完全な初期化を実行
+    const { ContainerInitializer } = await import('./initializer');
+    await ContainerInitializer.initialize();
 
-  // 実際のバインディング処理は別ファイルで実装
-  // await setupBindings();
-
-  logger.info('DI Container initialization completed');
+    logger.info('DI Container initialization completed successfully');
+  } catch (initError) {
+    logger.error('DI Container initialization failed:', initError);
+    throw initError;
+  }
 };

@@ -6,6 +6,15 @@ import { AuthController } from '@/lib/server/controllers/AuthController';
 import { initializeDI, resolve } from '@/lib/server/container';
 import { logger } from '@/lib/server/utils/logger';
 
+// リクエストボディの型定義
+interface CompanyUserRegistrationRequestBody {
+  email: string;
+  password: string;
+  fullName: string;
+  companyAccountId: string;
+  positionTitle?: string;
+}
+
 /**
  * 企業ユーザー新規登録 API Route
  * POST /api/auth/register/company
@@ -15,16 +24,36 @@ export async function POST(request: NextRequest) {
     // DIコンテナ初期化（必要に応じて）
     await initializeDI();
 
-    // リクエストボディの取得
-    const body = await request.json();
-    const { email, password, fullName, companyAccountId } = body;
+    // リクエストボディの取得と型安全性の確保
+    const body: unknown = await request.json();
+
+    // 基本的なバリデーション
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    const { email, password, fullName, companyAccountId, positionTitle } =
+      body as CompanyUserRegistrationRequestBody;
+
+    // 必須フィールドの確認
+    if (!email || !password || !fullName || !companyAccountId) {
+      return NextResponse.json(
+        {
+          error: 'Email, password, fullName, and companyAccountId are required',
+        },
+        { status: 400 }
+      );
+    }
 
     // AuthControllerの取得
     const authController = resolve<AuthController>('AuthController');
 
     // Express.jsのReq/Resオブジェクトを模擬
     const mockReq = {
-      body: { email, password, fullName, companyAccountId },
+      body: { email, password, fullName, companyAccountId, positionTitle },
     } as any;
 
     let responseData: any = null;
