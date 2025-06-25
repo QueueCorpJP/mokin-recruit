@@ -5,24 +5,26 @@
     "outDir": "dist",
     "noEmit": false,
     "jsx": "preserve",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/lib/server/*": ["./src/lib/server/*"],
+      "@/utils/*": ["./src/lib/server/utils/*"],
+      "@/config/*": ["./src/lib/server/config/*"],
+      "@/database/*": ["./src/lib/server/database/*"],
+      "@/auth/*": ["./src/lib/server/auth/*"],
+      "@/core/*": ["./src/lib/server/core/*"],
+      "@/infrastructure/*": ["./src/lib/server/infrastructure/*"],
+      "@/container/*": ["./src/lib/server/container/*"],
+      "@/controllers/*": ["./src/lib/server/controllers/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "dist"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "dist"]
 }

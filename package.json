@@ -5,40 +5,36 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "client",
-    "server"
+    "client"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "npm run dev --workspace=server",
+    "dev": "npm run dev --workspace=client",
     "dev:client": "npm run dev --workspace=client",
-    "build": "npm run build --workspaces",
-    "build:server": "npm run build --workspace=server",
+    "build": "npm run build --workspace=client",
     "build:client": "npm run build --workspace=client",
-    "build-for-agent-debug": "npm run build --workspaces",
-    "start": "npm start --workspace=server",
-    "test": "npm test --workspaces",
-    "test:server": "npm test --workspace=server",
+    "build-for-agent-debug": "npm run build --workspace=client",
+    "start": "npm start --workspace=client",
+    "test": "npm test --workspace=client",
     "test:client": "npm test --workspace=client",
-    "lint": "npm run lint --workspaces",
-    "lint:server": "npm run lint --workspace=server",
+    "lint": "npm run lint --workspace=client",
     "lint:client": "npm run lint --workspace=client",
-    "lint:fix": "npm run lint:fix --workspaces",
+    "lint:fix": "npm run lint:fix --workspace=client",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "setup": "npm install",
-    "db:generate": "npm run db:generate --workspace=server",
-    "db:migrate": "npm run db:migrate --workspace=server",
-    "db:seed": "npm run db:seed --workspace=server",
-    "db:reset": "npm run db:reset --workspace=server",
-    "db:studio": "npm run db:studio --workspace=server",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:build": "docker-compose build",
-    "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "clean:server": "npm run clean --workspace=server",
+    "clean": "npm run clean --workspace=client && rm -rf node_modules",
     "clean:client": "npm run clean --workspace=client"
   },
-  "keywords": ["転職", "求人", "スカウト", "プラットフォーム", "monorepo"],
+  "keywords": [
+    "転職",
+    "求人",
+    "スカウト",
+    "プラットフォーム",
+    "monorepo",
+    "next.js"
+  ],
   "author": "Mokin Recruit Team",
   "license": "MIT",
   "devDependencies": {
@@ -52,4 +48,4 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
-} 
+}

@@ -10,22 +10,37 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write src/**/*.{ts,tsx}",
     "clean": "rm -rf .next dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "supabase:types": "npx supabase gen types typescript --project-id ${SUPABASE_PROJECT_ID:-mjhqeagxibsklugikyma} > src/lib/server/types/supabase.ts",
+    "supabase:types:local": "npx supabase gen types typescript --local > src/lib/server/types/supabase.ts",
+    "db:schema": "echo 'Please execute database_schema.sql in Supabase Dashboard > SQL Editor'",
+    "db:reset": "echo 'Use Supabase Dashboard > Database > Reset to reset database'",
+    "db:migrate": "echo 'Use Supabase Dashboard > SQL Editor to execute migration scripts'"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "bcryptjs": "^2.4.3",
+    "inversify": "^6.2.2",
+    "jsonwebtoken": "^9.0.2",
+    "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.4"
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "@eslint/eslintrc": "^3"
+    "supabase": "^1.200.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
