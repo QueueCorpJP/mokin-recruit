@@ -305,7 +305,7 @@ export class AuthController {
       // Supabaseトークンの検証
       const verificationResult = await verifySupabaseToken(token);
 
-      if (!verificationResult.valid) {
+      if (!verificationResult.success) {
         res.status(401).json({ error: 'Invalid token' });
         return;
       }
