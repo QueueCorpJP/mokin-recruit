@@ -1,34 +1,34 @@
 # Mokin Recruit - Development Workflow
 
 ## 🏗️ Architecture Overview
-- **Backend**: Node.js + Express + TypeScript + Prisma
-- **Frontend**: Next.js + TypeScript + TailwindCSS
-- **Database**: Supabase (PostgreSQL)
+
+- **Full-Stack Framework**: Next.js 15 + API Routes + TypeScript
+- **Frontend**: Next.js + React 19 + TailwindCSS v4
+- **Database**: Supabase (PostgreSQL) + Supabase Client Library
 - **Development**: Docker Compose
 - **Authentication**: Supabase Auth + JWT
 
 ## 🚀 Quick Start Commands
+
 ```bash
 # Start all services
 docker-compose up -d
 
 # View logs
-docker-compose logs -f server
 docker-compose logs -f client
 
 # Stop all services
 docker-compose down
 
-# Rebuild specific service
-docker-compose build server
+# Rebuild client service
 docker-compose build client
 ```
 
 ## 📁 Project Structure
+
 ```
 mokin-recruit/
-├── client/          # Next.js frontend
-├── server/          # Node.js backend
+├── client/          # Next.js Full-Stack App (Frontend + API Routes)
 ├── packages/        # Shared packages
 │   └── shared-types/
 ├── docs/           # Documentation
@@ -36,8 +36,11 @@ mokin-recruit/
 ```
 
 ## 🔧 Development Best Practices
+
 1. Use Docker for consistent environment
-2. Supabase Client Library for DB operations
-3. TypeScript for type safety
-4. Shared types package for consistency
-5. Proper error handling and logging
+2. Next.js API Routes for server-side logic
+3. Supabase Client Library for DB operations
+4. TypeScript for type safety
+5. Shared types package for consistency
+6. Proper error handling and logging
+7. Dependency Injection with Inversify.js

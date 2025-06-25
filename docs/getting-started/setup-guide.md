@@ -18,30 +18,27 @@
 # アプリケーション状態の確認
 docker-compose ps
 
-# ヘルスチェック
-curl http://localhost:3001/health
+# Next.js アプリケーションの確認
+curl http://localhost:3000/api/health
 
-# API ドキュメント
-open http://localhost:3001/api-docs
+# アプリケーションをブラウザで開く
+open http://localhost:3000
 ```
 
 ### 3. 開発環境へのアクセス
 
-- **サーバー**: http://localhost:3001
-- **クライアント**: http://localhost:3000
-- **API ドキュメント**: http://localhost:3001/api-docs
-- **ヘルスチェック**: http://localhost:3001/health
+- **Next.js アプリケーション**: http://localhost:3000
+- **API Routes**: http://localhost:3000/api/\*
+- **ヘルスチェック**: http://localhost:3000/api/health
 - **MailHog (開発用メール)**: http://localhost:8025
 
 ### 4. 開発ワークフロー
 
 ```bash
 # ログの確認
-docker-compose logs -f server
 docker-compose logs -f client
 
 # サービスの再起動
-docker-compose restart server
 docker-compose restart client
 
 # アプリケーションの停止
@@ -54,15 +51,17 @@ docker-compose up -d
 ## 🎯 現在の開発状況
 
 ✅ **完了済み**:
+
 - Docker環境の構築
 - Supabase接続の設定
-- サーバーアプリケーションの起動
-- API基盤の構築
-- ヘルスチェック機能
-- Swagger API ドキュメント
+- Next.js フルスタックアプリケーションの構築
+- API Routes基盤の構築
+- 依存性注入コンテナ（Inversify.js）の実装
 - データベーススキーマの生成
+- Supabase Client Library への完全移行
 
 ⏳ **次のステップ**:
+
 - データベーステーブルの作成（手動実行が必要）
 - 認証機能の実装
 - API エンドポイントの実装
@@ -72,10 +71,12 @@ docker-compose up -d
 ## 🔧 トラブルシューティング
 
 ### データベース接続エラー
+
 - Supabase Pro planでは直接PostgreSQL接続が制限されています
 - Supabaseクライアントライブラリを使用してください
 
 ### Docker関連の問題
+
 ```bash
 # コンテナの再ビルド
 docker-compose build --no-cache
@@ -86,11 +87,12 @@ docker-compose up -d
 ```
 
 ### 環境変数の問題
+
 - `.env`ファイルが正しく設定されているか確認
 - Supabaseの認証情報が最新かチェック
 
 ## 📚 参考リンク
 
 - [Supabase Dashboard](https://supabase.com/dashboard/project/mjhqeagxibsklugikyma)
-- [API Documentation](http://localhost:3001/api-docs)
+- [Next.js Application](http://localhost:3000)
 - [Development Workflow](./DEVELOPMENT_WORKFLOW.md)
