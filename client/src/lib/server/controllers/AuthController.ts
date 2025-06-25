@@ -17,7 +17,7 @@ import { PasswordService } from '../core/services/PasswordService';
 import { UserRegistrationService } from '../core/services/UserRegistrationService';
 import { ValidationService } from '../core/services/ValidationService';
 import { TYPES } from '../container/types';
-import { ICandidateRepository } from '../core/interfaces/IDomainRepository';
+import type { ICandidateRepository } from '../core/interfaces/IDomainRepository';
 
 // Express.jsのRequest/Responseインターフェースを模擬
 interface MockRequest {
