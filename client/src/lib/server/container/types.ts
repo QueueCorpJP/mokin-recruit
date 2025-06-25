@@ -40,6 +40,9 @@ export const TYPES = {
   MessageUseCase: Symbol.for('MessageUseCase'),
   ApplicationUseCase: Symbol.for('ApplicationUseCase'),
 
+  // === Controller Layer ===
+  AuthController: Symbol.for('AuthController'),
+
   // === External Services ===
   SupabaseClient: Symbol.for('SupabaseClient'),
   EmailService: Symbol.for('EmailService'),

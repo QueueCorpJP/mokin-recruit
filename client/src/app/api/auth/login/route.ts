@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import 'reflect-metadata';
-
-// サーバーサイドロジックのインポート（移行対象）
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { initializeDI, resolve } from '@/lib/server/container';
+import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import { ValidationService } from '@/lib/server/core/services/ValidationService';
+import { container, TYPES } from '@/lib/server/container';
+import { AuthController } from '@/lib/server/controllers/AuthController';
 
 // リクエストボディの型定義
-interface LoginRequestBody {
-  email: string;
-  password: string;
-}
+const loginSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type LoginRequestBody = z.infer<typeof loginSchema>;
 
 /**
  * ログイン API Route
@@ -18,32 +19,30 @@ interface LoginRequestBody {
  */
 export async function POST(request: NextRequest) {
   try {
-    // DIコンテナ初期化（必要に応じて）
-    await initializeDI();
-
     // リクエストボディの取得と型安全性の確保
-    const body: unknown = await request.json();
+    const body = await request.json();
 
-    // 基本的なバリデーション
-    if (!body || typeof body !== 'object') {
+    // バリデーション
+    const validationResult = loginSchema.safeParse(body);
+    if (!validationResult.success) {
+      logger.warn(
+        'Login request validation failed:',
+        validationResult.error.errors
+      );
       return NextResponse.json(
-        { error: 'Invalid request body' },
+        {
+          success: false,
+          message: 'Invalid request data',
+          errors: validationResult.error.errors,
+        },
         { status: 400 }
       );
     }
 
-    const { email, password } = body as LoginRequestBody;
-
-    // 必須フィールドの確認
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
+    const { email, password } = validationResult.data;
 
     // AuthControllerの取得
-    const authController = resolve<AuthController>('AuthController');
+    const authController = container.get<AuthController>(TYPES.AuthController);
 
     // Express.jsのReq/Resオブジェクトを模擬
     const mockReq = {

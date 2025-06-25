@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import 'reflect-metadata';
-
-// サーバーサイドロジックのインポート（移行対象）
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { initializeDI, resolve } from '@/lib/server/container';
+import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import { ValidationService } from '@/lib/server/core/services/ValidationService';
+import { container, TYPES } from '@/lib/server/container';
+import { AuthController } from '@/lib/server/controllers/AuthController';
 
 /**
  * ログアウト API Route
@@ -12,11 +11,8 @@ import { logger } from '@/lib/server/utils/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    // DIコンテナ初期化（必要に応じて）
-    await initializeDI();
-
     // AuthControllerの取得
-    const authController = resolve<AuthController>('AuthController');
+    const authController = container.get<AuthController>(TYPES.AuthController);
 
     // Express.jsのReq/Resオブジェクトを模擬
     const mockReq = {

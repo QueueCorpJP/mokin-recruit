@@ -27,12 +27,14 @@ services:
       # Supabase設定（フロントエンド用）
       NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      # サーバーサイド用環境変数
+      # Supabase設定（サーバーサイド用）
       SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      # セキュリティ設定
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-in-production}
-      DATABASE_URL: ${DATABASE_URL}
-      DIRECT_URL: ${DIRECT_URL}
+      # Redis設定
+      REDIS_URL: redis://redis:6379
     ports:
       - '3000:3000'
     volumes:

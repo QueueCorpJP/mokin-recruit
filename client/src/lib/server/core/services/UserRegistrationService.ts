@@ -17,6 +17,7 @@ import {
   CompanyUserRegistrationData,
   IUserRegistrationService,
 } from '@/core/interfaces/IAuthService';
+import { CandidateEntity } from '@/core/interfaces/IDomainRepository';
 
 // ユーザー登録サービスの実装 (SRP準拠)
 @injectable()
@@ -128,18 +129,20 @@ export class UserRegistrationService implements IUserRegistrationService {
         };
       }
 
+      // レスポンス用の候補者情報を構築
+      const candidateResponse = {
+        id: (candidate as CandidateEntity).id,
+        email: (candidate as CandidateEntity).email,
+        profile: {
+          lastName: (candidate as CandidateEntity).lastName,
+          firstName: (candidate as CandidateEntity).firstName,
+        },
+      };
+
       logger.info(`Candidate registered successfully: ${data.email}`);
       return {
         success: true,
-        user: {
-          id: candidate.id,
-          email: candidate.email,
-          userType: 'candidate',
-          profile: {
-            lastName: candidate.lastName,
-            firstName: candidate.firstName,
-          },
-        },
+        user: candidateResponse,
       };
     } catch (error) {
       logger.error('Candidate registration error:', error);
@@ -243,18 +246,21 @@ export class UserRegistrationService implements IUserRegistrationService {
         };
       }
 
+      // レスポンス用の企業ユーザー情報を構築
+      const companyUserResponse = {
+        id: (companyUser as any).id,
+        email: (companyUser as any).email,
+        userType: 'company_user' as const,
+        profile: {
+          fullName: (companyUser as any).fullName,
+          companyAccountId: (companyUser as any).companyAccountId,
+        },
+      };
+
       logger.info(`Company user registered successfully: ${data.email}`);
       return {
         success: true,
-        user: {
-          id: companyUser.id,
-          email: companyUser.email,
-          userType: 'company_user',
-          profile: {
-            fullName: companyUser.fullName,
-            companyAccountId: companyUser.companyAccountId,
-          },
-        },
+        user: companyUserResponse,
       };
     } catch (error) {
       logger.error('Company user registration error:', error);

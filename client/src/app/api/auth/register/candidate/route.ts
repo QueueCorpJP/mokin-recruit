@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import 'reflect-metadata';
-
-// サーバーサイドロジックのインポート（移行対象）
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { initializeDI, resolve } from '@/lib/server/container';
+import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import { ValidationService } from '@/lib/server/core/services/ValidationService';
+import { container, TYPES } from '@/lib/server/container';
+import { AuthController } from '@/lib/server/controllers/AuthController';
 
 // リクエストボディの型定義
-interface CandidateRegistrationRequestBody {
-  email: string;
-  password: string;
-  lastName: string;
-  firstName: string;
-  lastNameKana?: string;
-  firstNameKana?: string;
-  gender?: string;
-}
+const candidateRegistrationSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastNameKana: z.string().optional(),
+  firstNameKana: z.string().optional(),
+  gender: z.string().optional(),
+});
+
+type CandidateRegistrationRequestBody = z.infer<
+  typeof candidateRegistrationSchema
+>;
 
 /**
  * 候補者新規登録 API Route
@@ -23,51 +26,41 @@ interface CandidateRegistrationRequestBody {
  */
 export async function POST(request: NextRequest) {
   try {
-    // DIコンテナ初期化（必要に応じて）
-    await initializeDI();
-
     // リクエストボディの取得と型安全性の確保
-    const body: unknown = await request.json();
+    const body = await request.json();
 
-    // 基本的なバリデーション
-    if (!body || typeof body !== 'object') {
+    // バリデーション
+    const validationResult = candidateRegistrationSchema.safeParse(body);
+    if (!validationResult.success) {
+      logger.warn(
+        'Candidate registration validation failed:',
+        validationResult.error.errors
+      );
       return NextResponse.json(
-        { error: 'Invalid request body' },
+        {
+          success: false,
+          message: 'Invalid request data',
+          errors: validationResult.error.errors,
+        },
         { status: 400 }
       );
     }
 
-    const {
-      email,
-      password,
-      lastName,
-      firstName,
-      lastNameKana,
-      firstNameKana,
-      gender,
-    } = body as CandidateRegistrationRequestBody;
-
-    // 必須フィールドの確認
-    if (!email || !password || !lastName || !firstName) {
-      return NextResponse.json(
-        { error: 'Email, password, lastName, and firstName are required' },
-        { status: 400 }
-      );
-    }
+    const registrationData = validationResult.data;
 
     // AuthControllerの取得
-    const authController = resolve<AuthController>('AuthController');
+    const authController = container.get<AuthController>(TYPES.AuthController);
 
     // Express.jsのReq/Resオブジェクトを模擬
     const mockReq = {
       body: {
-        email,
-        password,
-        lastName,
-        firstName,
-        lastNameKana,
-        firstNameKana,
-        gender,
+        email: registrationData.email,
+        password: registrationData.password,
+        lastName: registrationData.lastName,
+        firstName: registrationData.firstName,
+        lastNameKana: registrationData.lastNameKana,
+        firstNameKana: registrationData.firstNameKana,
+        gender: registrationData.gender,
       },
     } as any;
 
