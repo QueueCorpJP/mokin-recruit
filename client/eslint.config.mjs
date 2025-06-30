@@ -1,58 +1,42 @@
-import rootConfig from '../eslint.config.mjs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { FlatCompat } from '@eslint/eslintrc';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
+  baseDirectory: __dirname,
 });
 
-export default [
-  ...rootConfig,
-  ...compat.extends('next/core-web-vitals'),
+const eslintConfig = [
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: {
-      globals: {
-        React: 'readonly',
-      },
-    },
     rules: {
-      // Next.js specific rules
-      '@next/next/no-html-link-for-pages': 'error',
-      '@next/next/no-img-element': 'warn',
+      // Disable problematic rules that cause context errors
+      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
 
-      // React specific rules
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-
-      // React 19 compatibility
-      'no-undef': 'off', // React 19では自動的にReactがインポートされる
-    },
-  },
-  {
-    files: ['**/*.config.{js,mjs,ts}'],
-    rules: {
-      'no-console': 'off',
-    },
-  },
-  {
-    // サーバーサイドロジック用のルール調整
-    files: ['src/lib/server/**/*.ts', 'src/app/api/**/*.ts'],
-    rules: {
-      // 開発効率を考慮したルール緩和
+      // Set these as warnings instead of errors
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       'no-console': 'warn',
       'sort-imports': 'warn',
 
-      // インターフェース定義での未使用パラメータを許可
+      // Disable problematic rules for development
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // Configure unused parameter rules with proper patterns
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
       'no-unused-vars': [
@@ -60,9 +44,11 @@ export default [
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
     },
   },
 ];
+
+export default eslintConfig;

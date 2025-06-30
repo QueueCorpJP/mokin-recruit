@@ -13,21 +13,31 @@
     "type-check": "tsc --noEmit",
     "supabase:types": "npx supabase gen types typescript --project-id ${SUPABASE_PROJECT_ID:-mjhqeagxibsklugikyma} > src/lib/server/types/supabase.ts",
     "supabase:types:local": "npx supabase gen types typescript --local > src/lib/server/types/supabase.ts",
-    "db:schema": "echo 'Please execute database_schema.sql in Supabase Dashboard > SQL Editor'",
+    "db:schema": "node scripts/create-database-schema.js",
+    "db:schema:manual": "echo 'Please execute database_schema.sql in Supabase Dashboard > SQL Editor'",
     "db:reset": "echo 'Use Supabase Dashboard > Database > Reset to reset database'",
     "db:migrate": "echo 'Use Supabase Dashboard > SQL Editor to execute migration scripts'"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.39.3",
     "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.5.0",
     "inversify": "^6.2.2",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.525.0",
     "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.59.0",
     "reflect-metadata": "^0.2.2",
+    "tailwind-merge": "^3.3.1",
     "winston": "^3.11.0",
-    "zod": "^3.22.4"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -41,6 +51,7 @@
     "eslint-config-next": "15.3.4",
     "supabase": "^1.200.3",
     "tailwindcss": "^4",
+    "tw-animate-css": "^1.3.4",
     "typescript": "^5"
   }
 }

@@ -185,6 +185,60 @@ client/src/app/api/       # Next.js API Routes
 └── admin/                # 管理者関連API（予定）
 ```
 
+## 🚀 Vercelデプロイ・デモ環境構築
+
+### 1. 環境変数の設定
+
+```bash
+# 環境変数サンプルをコピー
+cp .env.example .env.local
+
+# 必要な環境変数を設定（catで確認）
+cat .env.local
+```
+
+**必要な環境変数:**
+
+```bash
+# Supabase設定
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# アプリケーション設定
+CORS_ORIGIN=https://your-app.vercel.app
+JWT_SECRET=your-jwt-secret
+NODE_ENV=production
+```
+
+### 2. Vercel CLIでデプロイ
+
+```bash
+# Vercel CLIインストール・ログイン
+npm i -g vercel
+vercel login
+
+# プロジェクト初期化・デプロイ
+vercel
+
+# 環境変数設定（CLI経由）
+vercel env add NEXT_PUBLIC_SUPABASE_URL
+vercel env add SUPABASE_ANON_KEY
+vercel env add SUPABASE_SERVICE_ROLE_KEY
+vercel env add CORS_ORIGIN
+vercel env add JWT_SECRET
+
+# 本番デプロイ
+vercel --prod
+```
+
+### 3. デモ確認
+
+デプロイ後、以下のURLでデモを確認:
+
+- **ログイン画面**: `https://your-app.vercel.app/auth/login`
+- **API Health**: `https://your-app.vercel.app/api/auth/login`
+
 ## 🚀 クイックスタート
 
 **5分で開発開始**: [Quick Start Guide](./docs/getting-started/quick-start.md)
