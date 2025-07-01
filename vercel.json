@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "client/$1"
     }
-  ],
-  "functions": {
-    "client/src/app/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  ]
 }
