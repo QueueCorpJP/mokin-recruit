@@ -77,6 +77,15 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  /* Design Tokens for Green Square Button */
+  --green-gradient-start: #198d76;
+  --green-gradient-end: #1ca74f;
+  --green-gradient-hover-start: #12614e;
+  --green-gradient-hover-end: #1a8946;
+  --green-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --green-button-square-radius: 10px;
+  --green-button-round-radius: 32px;
 }
 
 .dark {
