@@ -8,8 +8,8 @@
     "client"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=client",
-    "dev:client": "npm run dev --workspace=client",
+    "dev": "npm run dev --workspace=client -- --hostname 0.0.0.0",
+    "dev:client": "npm run dev --workspace=client -- --hostname 0.0.0.0",
     "build": "npm run build --workspace=client",
     "build:client": "npm run build --workspace=client",
     "build-for-agent-debug": "npm run build --workspace=client",

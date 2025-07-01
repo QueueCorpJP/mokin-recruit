@@ -78,7 +78,7 @@
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
 
-  /* Design Tokens for Green Square Button */
+  /* Design Tokens for Green Button System */
   --green-gradient-start: #198d76;
   --green-gradient-end: #1ca74f;
   --green-gradient-hover-start: #12614e;
@@ -86,6 +86,66 @@
   --green-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
   --green-button-square-radius: 10px;
   --green-button-round-radius: 32px;
+
+  /* Design Tokens for Green Outline Button */
+  --green-outline-border: #0f9058;
+  --green-outline-text: #0f9058;
+  --green-outline-hover-bg: rgba(15, 144, 88, 0.2);
+  --green-outline-radius: 32px;
+
+  /* Design Tokens for Blue Button System */
+  --blue-gradient-start: #26af94;
+  --blue-gradient-end: #3a93cb;
+  --blue-gradient-hover-start: #249881;
+  --blue-gradient-hover-end: #27668d;
+  --blue-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --blue-button-radius: 32px;
+
+  /* Design Tokens for Blue Outline Button */
+  --blue-outline-border: #26af94;
+  --blue-outline-text: #26af94;
+  --blue-outline-hover-bg: rgba(38, 175, 148, 0.2);
+  --blue-outline-radius: 32px;
+
+  /* Design Tokens for Yellow Button System */
+  --yellow-gradient-start: #ffd000;
+  --yellow-gradient-end: #fff278;
+  --yellow-gradient-hover-start: #eeab02;
+  --yellow-gradient-hover-end: #e1ca11;
+  --yellow-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --yellow-button-radius: 10px;
+  --yellow-button-text: #323232;
+  --yellow-button-icon: #323232;
+
+  /* Design Tokens for Yellow Outline Button */
+  --yellow-outline-border: #ffd000;
+  --yellow-outline-text: #323232;
+  --yellow-outline-hover-bg: rgba(255, 208, 0, 0.2);
+  --yellow-outline-radius: 10px;
+
+  /* Design Tokens for White Outline Square Button */
+  --white-outline-border: #ffffff;
+  --white-outline-text: #ffffff;
+  --white-outline-icon: #ffffff;
+  --white-outline-hover-bg: rgba(255, 255, 255, 0.3);
+  --white-outline-radius: 10px;
+
+  /* Design Tokens for Small Button System (リスト内緑) */
+  --small-button-bg: #0f9058;
+  --small-button-text: #ffffff;
+  --small-button-radius: 32px;
+  --small-button-padding-x: 16px;
+  --small-button-padding-y: 4px;
+  --small-button-font-size: 14px;
+  --small-button-font-weight: 700;
+  --small-button-line-height: 1.6;
+  --small-button-letter-spacing: 0.1em;
+
+  /* Small Button Outline Version */
+  --small-outline-border: #0f9058;
+  --small-outline-text: #0f9058;
+  --small-outline-hover-bg: rgba(15, 144, 88, 0.2);
+  --small-outline-radius: 32px;
 }
 
 .dark {
@@ -128,5 +188,20 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Navigation height enforcement */
+  .navigation-header {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+  }
+
+  .navigation-container {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
   }
 }

@@ -24,6 +24,22 @@ const buttonVariants = cva(
           'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white font-bold tracking-[0.1em] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:from-[#12614E] hover:to-[#1A8946] focus-visible:ring-[#198D76]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
         'green-square':
           'bg-gradient-to-r from-[var(--green-gradient-start)] to-[var(--green-gradient-end)] text-white font-bold tracking-[0.1em] shadow-[var(--green-button-shadow)] hover:from-[var(--green-gradient-hover-start)] hover:to-[var(--green-gradient-hover-end)] focus-visible:ring-[var(--green-gradient-start)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
+        'green-outline':
+          'border border-[var(--green-outline-border)] bg-transparent text-[var(--green-outline-text)] font-bold tracking-[0.1em] hover:bg-[var(--green-outline-hover-bg)] focus-visible:ring-[var(--green-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
+        'blue-gradient':
+          'bg-gradient-to-r from-[var(--blue-gradient-start)] to-[var(--blue-gradient-end)] text-white font-bold tracking-[0.1em] shadow-[var(--blue-button-shadow)] hover:from-[var(--blue-gradient-hover-start)] hover:to-[var(--blue-gradient-hover-end)] focus-visible:ring-[var(--blue-gradient-start)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
+        'blue-outline':
+          'border border-[var(--blue-outline-border)] bg-transparent text-[var(--blue-outline-text)] font-bold tracking-[0.1em] hover:bg-[var(--blue-outline-hover-bg)] focus-visible:ring-[var(--blue-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
+        'yellow-gradient':
+          'bg-gradient-to-r from-[var(--yellow-gradient-start)] to-[var(--yellow-gradient-end)] text-[var(--yellow-button-text)] font-bold tracking-[0.1em] shadow-[var(--yellow-button-shadow)] hover:from-[var(--yellow-gradient-hover-start)] hover:to-[var(--yellow-gradient-hover-end)] focus-visible:ring-[var(--yellow-gradient-start)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] [&_svg]:text-[var(--yellow-button-icon)]',
+        'yellow-outline':
+          'border border-[var(--yellow-outline-border)] bg-transparent text-[var(--yellow-outline-text)] font-bold tracking-[0.1em] hover:bg-[var(--yellow-outline-hover-bg)] focus-visible:ring-[var(--yellow-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] [&_svg]:text-[var(--yellow-button-icon)]',
+        'white-outline-square':
+          'border-2 border-[var(--white-outline-border)] bg-transparent text-[var(--white-outline-text)] font-bold tracking-[0.1em] hover:bg-[var(--white-outline-hover-bg)] focus-visible:ring-[var(--white-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] [&_svg]:text-[var(--white-outline-icon)] flex-col',
+        'small-green':
+          'bg-[var(--small-button-bg)] text-[var(--small-button-text)] font-[var(--small-button-font-weight)] tracking-[var(--small-button-letter-spacing)] transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
+        'small-green-outline':
+          'border border-[var(--small-outline-border)] bg-transparent text-[var(--small-outline-text)] font-[var(--small-button-font-weight)] tracking-[var(--small-button-letter-spacing)] hover:bg-[var(--small-outline-hover-bg)] focus-visible:ring-[var(--small-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -33,6 +49,22 @@ const buttonVariants = cva(
         'figma-default': 'h-auto px-10 py-3.5 rounded-[32px] has-[>svg]:px-8',
         'figma-square':
           'h-auto px-10 py-3.5 rounded-[var(--green-button-square-radius)] has-[>svg]:px-8',
+        'figma-outline':
+          'h-auto px-10 py-3.5 rounded-[var(--green-outline-radius)] has-[>svg]:px-8',
+        'figma-blue':
+          'h-auto px-10 py-3.5 rounded-[var(--blue-button-radius)] has-[>svg]:px-8',
+        'figma-blue-outline':
+          'h-auto px-10 py-3.5 rounded-[var(--blue-outline-radius)] has-[>svg]:px-8',
+        'figma-yellow':
+          'h-auto px-10 py-3.5 rounded-[var(--yellow-button-radius)] has-[>svg]:px-8 gap-2.5 [&_svg]:size-6',
+        'figma-yellow-outline':
+          'h-auto px-10 py-3.5 rounded-[var(--yellow-outline-radius)] has-[>svg]:px-8 gap-2.5 [&_svg]:size-6',
+        'figma-white-square':
+          'h-auto p-3.5 rounded-[var(--white-outline-radius)] gap-2.5 [&_svg]:size-6 min-w-[80px]',
+        'figma-small':
+          'h-auto px-[var(--small-button-padding-x)] py-[var(--small-button-padding-y)] rounded-[var(--small-button-radius)]',
+        'figma-small-outline':
+          'h-auto px-[var(--small-button-padding-x)] py-[var(--small-button-padding-y)] rounded-[var(--small-outline-radius)]',
       },
     },
     defaultVariants: {
