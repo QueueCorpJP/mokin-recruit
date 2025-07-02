@@ -4,32 +4,34 @@
  */
 
 /**
- * 現在の環境に応じたベースURLを取得
- * 新しいバリデーションシステムを使用
+ * 現在の環境に応じたベースURLを取得（本番環境対応・循環参照回避）
  */
 export function getBaseUrl(): string {
-  try {
-    const {
-      getValidatedEnv,
-      getDynamicUrls,
-    } = require('@/lib/server/config/env-validation');
-    const env = getValidatedEnv();
-    const urls = getDynamicUrls(env);
-    return urls.baseUrl;
-  } catch (error) {
-    // フォールバック: 従来の方式
-    if (process.env.NEXT_PUBLIC_BASE_URL) {
-      return process.env.NEXT_PUBLIC_BASE_URL;
-    }
-    if (process.env.VERCEL_URL) {
-      return `https://${process.env.VERCEL_URL}`;
-    }
-    if (process.env.NODE_ENV === 'development') {
-      const port = process.env.PORT || '3000';
-      return `http://localhost:${port}`;
-    }
-    return process.env.CORS_ORIGIN || 'http://localhost:3000';
+  // 優先順位に基づいた環境変数チェック
+
+  // 1. 明示的に設定されたベースURL
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
   }
+
+  // 2. Vercel環境での自動検出
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // 3. 開発環境
+  if (process.env.NODE_ENV === 'development') {
+    const port = process.env.PORT || '3000';
+    return `http://localhost:${port}`;
+  }
+
+  // 4. CORS設定からの取得
+  if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== '*') {
+    return process.env.CORS_ORIGIN;
+  }
+
+  // 5. フォールバック（本番環境でのデフォルト）
+  return 'https://mokin-recruit.vercel.app';
 }
 
 /**
@@ -37,7 +39,24 @@ export function getBaseUrl(): string {
  */
 export function getPasswordResetRedirectUrl(): string {
   const baseUrl = getBaseUrl();
-  return `${baseUrl}/auth/reset-password/new`;
+  const resetPath = '/auth/reset-password/new';
+
+  // URLの正規化
+  const normalizedBaseUrl = baseUrl.endsWith('/')
+    ? baseUrl.slice(0, -1)
+    : baseUrl;
+  const fullUrl = `${normalizedBaseUrl}${resetPath}`;
+
+  // 開発環境でのデバッグログ
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Password reset redirect URL generated:', {
+      baseUrl: normalizedBaseUrl,
+      resetPath,
+      fullUrl,
+    });
+  }
+
+  return fullUrl;
 }
 
 /**
@@ -45,17 +64,25 @@ export function getPasswordResetRedirectUrl(): string {
  */
 export function getAuthRedirectUrl(path: string): string {
   const baseUrl = getBaseUrl();
-  return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const normalizedBaseUrl = baseUrl.endsWith('/')
+    ? baseUrl.slice(0, -1)
+    : baseUrl;
+
+  return `${normalizedBaseUrl}${normalizedPath}`;
 }
 
 /**
- * 環境情報を取得（デバッグ用）
+ * 環境情報を取得（デバッグ用・簡素化版）
  */
 export function getEnvironmentInfo() {
+  const baseUrl = getBaseUrl();
+
   return {
-    baseUrl: getBaseUrl(),
+    baseUrl,
     isVercel: !!process.env.VERCEL_URL,
     isDevelopment: process.env.NODE_ENV === 'development',
+    isProduction: process.env.NODE_ENV === 'production',
     nodeEnv: process.env.NODE_ENV,
     vercelUrl: process.env.VERCEL_URL,
     corsOrigin: process.env.CORS_ORIGIN,

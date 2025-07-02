@@ -1,4 +1,3 @@
-import { logger } from '@/lib/server/utils/logger';
 import { initializeSupabase } from '@/lib/server/database/supabase';
 
 /**
@@ -16,15 +15,19 @@ export function ensureSupabaseInitialized(): void {
     // Supabaseクライアントの初期化
     initializeSupabase();
     isInitialized = true;
-    logger.info('✅ Supabase client initialized for API route');
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Supabase client initialized for API route');
+    }
   } catch (error) {
-    logger.error(
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    console.error(
       '❌ Failed to initialize Supabase client for API route:',
       error
     );
-    throw new Error(
-      `Supabase initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+
+    throw new Error(`Supabase initialization failed: ${errorMessage}`);
   }
 }
 
@@ -36,7 +39,12 @@ export function withSupabaseInit<T extends (...args: any[]) => any>(
   handler: T
 ): T {
   return ((...args: any[]) => {
-    ensureSupabaseInitialized();
-    return handler(...args);
+    try {
+      ensureSupabaseInitialized();
+      return handler(...args);
+    } catch (error) {
+      console.error('Supabase initialization error in wrapper:', error);
+      throw error;
+    }
   }) as T;
 }
