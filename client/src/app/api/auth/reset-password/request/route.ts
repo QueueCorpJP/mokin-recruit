@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requestPasswordReset } from '@/lib/server/auth/supabaseAuth';
 import { z } from 'zod';
-import { ensureSupabaseInitialized } from '@/lib/server/utils/api-init';
 
 // リクエストボディのバリデーションスキーマ
 const ForgotPasswordSchema = z.object({
@@ -9,21 +7,52 @@ const ForgotPasswordSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  console.log('🔄 Password reset request received');
+  // 最初のログ出力（最も基本的な機能のテスト）
+  console.log(
+    '🔄 Password reset request received at:',
+    new Date().toISOString()
+  );
 
   try {
-    // Supabase初期化を確実に実行
-    console.log('🔧 Initializing Supabase...');
-    ensureSupabaseInitialized();
-    console.log('✅ Supabase initialized successfully');
+    // ステップ1: 環境変数の確認
+    console.log('🔧 Step 1: Checking environment variables...');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // リクエストボディの解析
-    console.log('📥 Parsing request body...');
-    const body = await request.json();
-    console.log('📥 Request body parsed successfully');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('❌ Missing Supabase environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasAnonKey: !!supabaseAnonKey,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'サーバー設定エラーが発生しました。',
+        },
+        { status: 500 }
+      );
+    }
+    console.log('✅ Environment variables OK');
 
-    // バリデーション
-    console.log('🔍 Validating email format...');
+    // ステップ2: リクエストボディの解析
+    console.log('📥 Step 2: Parsing request body...');
+    let body;
+    try {
+      body = await request.json();
+      console.log('📥 Request body parsed successfully');
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: '無効なリクエスト形式です。',
+        },
+        { status: 400 }
+      );
+    }
+
+    // ステップ3: バリデーション
+    console.log('🔍 Step 3: Validating email format...');
     const validationResult = ForgotPasswordSchema.safeParse(body);
     if (!validationResult.success) {
       console.log('❌ Email validation failed:', validationResult.error.errors);
@@ -38,17 +67,112 @@ export async function POST(request: NextRequest) {
 
     const { email } = validationResult.data;
     console.log(
-      `📧 Processing password reset for email: ${email.substring(0, 3)}***`
+      `📧 Step 4: Processing password reset for email: ${email.substring(0, 3)}***`
     );
 
-    // Supabase Authを使用してパスワードリセットメールを送信
-    console.log('📤 Calling Supabase password reset...');
-    const result = await requestPasswordReset(email);
-    console.log('📤 Supabase password reset call completed:', {
-      success: result.success,
-    });
+    // ステップ4: Supabaseクライアントの動的インポートと初期化
+    console.log('🔧 Step 5: Dynamic import of Supabase...');
+    let createClient;
+    try {
+      const supabaseModule = await import('@supabase/supabase-js');
+      createClient = supabaseModule.createClient;
+      console.log('✅ Supabase module imported successfully');
+    } catch (importError) {
+      console.error('❌ Failed to import Supabase module:', importError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'サーバーライブラリの読み込みに失敗しました。',
+        },
+        { status: 500 }
+      );
+    }
 
-    if (result.success) {
+    // ステップ5: Supabaseクライアントの作成
+    console.log('🔧 Step 6: Creating Supabase client...');
+    let supabase;
+    try {
+      supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: false,
+        },
+        db: {
+          schema: 'public',
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'mokin-recruit-server',
+          },
+        },
+      });
+      console.log('✅ Supabase client created successfully');
+    } catch (clientError) {
+      console.error('❌ Failed to create Supabase client:', clientError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'データベース接続の初期化に失敗しました。',
+        },
+        { status: 500 }
+      );
+    }
+
+    // ステップ6: URL設定の動的取得
+    console.log('🔧 Step 7: Getting redirect URL...');
+    let redirectUrl;
+    try {
+      // 本番環境とVercelでの動的URL取得
+      if (process.env.VERCEL_URL) {
+        redirectUrl = `https://${process.env.VERCEL_URL}/auth/reset-password/new`;
+      } else if (process.env.NODE_ENV === 'production') {
+        redirectUrl =
+          'https://mokin-recruit.vercel.app/auth/reset-password/new';
+      } else {
+        redirectUrl = 'http://localhost:3000/auth/reset-password/new';
+      }
+      console.log('✅ Redirect URL configured:', redirectUrl);
+    } catch (urlError) {
+      console.error('❌ Failed to configure redirect URL:', urlError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'リダイレクトURL設定に失敗しました。',
+        },
+        { status: 500 }
+      );
+    }
+
+    // ステップ7: パスワードリセットメールの送信
+    console.log('📤 Step 8: Sending password reset email...');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        console.log(
+          `⚠️ Password reset request failed for email: ${email.substring(0, 3)}***, error:`,
+          error.message
+        );
+
+        // 本番環境でも詳細なエラー情報をログに記録
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Production password reset error details:', {
+            email: email.substring(0, 3) + '***',
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // エラーの詳細は返さず、一般的なメッセージを返す（セキュリティ考慮）
+        return NextResponse.json({
+          success: true,
+          message:
+            'パスワードリセット用のリンクを送信しました。メールをご確認ください。',
+        });
+      }
+
       console.log(
         `✅ Password reset email sent successfully to: ${email.substring(0, 3)}***`
       );
@@ -59,27 +183,15 @@ export async function POST(request: NextRequest) {
         message:
           'パスワードリセット用のリンクを送信しました。メールをご確認ください。',
       });
-    } else {
-      console.log(
-        `⚠️ Password reset request failed for email: ${email.substring(0, 3)}***, error:`,
-        result.error
+    } catch (resetError) {
+      console.error('❌ Password reset operation failed:', resetError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'パスワードリセット処理中にエラーが発生しました。',
+        },
+        { status: 500 }
       );
-
-      // 本番環境でも詳細なエラー情報をログに記録
-      if (process.env.NODE_ENV === 'production') {
-        console.error('Production password reset error details:', {
-          email: email.substring(0, 3) + '***',
-          error: result.error,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // エラーの詳細は返さず、一般的なメッセージを返す（セキュリティ考慮）
-      return NextResponse.json({
-        success: true,
-        message:
-          'パスワードリセット用のリンクを送信しました。メールをご確認ください。',
-      });
     }
   } catch (error) {
     console.error('💥 Critical error in password reset API:', error);
