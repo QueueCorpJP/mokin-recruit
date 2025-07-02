@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
       testInstructions: {
         loginUrl: `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/auth/login`,
-        forgotPasswordUrl: `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/auth/forgot-password`,
+        forgotPasswordUrl: `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/auth/reset-password`,
         credentials: {
           email,
           password: '[HIDDEN FOR SECURITY]',

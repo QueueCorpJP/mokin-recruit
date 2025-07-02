@@ -46,18 +46,10 @@ export function Footer({ variant = 'default' }: FooterProps) {
           <div className='flex-1 flex flex-col justify-between gap-10'>
             {/* ロゴとキャッチフレーズ */}
             <div className='flex flex-col gap-6'>
-              <div className='w-[180px] h-[37.8px] flex items-center'>
-                {/* 一旦テキストロゴで代用 - logo-white.pngが用意されたら置き換え */}
+              <div className='w-[180px]'>
                 <h2 className='text-white font-bold text-2xl tracking-wider'>
                   CuePoint
                 </h2>
-                {/* 
-                <img 
-                  src='/logo-white.png'
-                  alt='CuePoint'
-                  className='h-[37.8px] w-full object-contain'
-                />
-                */}
               </div>
               <p className='text-white font-bold text-base leading-8 tracking-[0.1em]'>
                 戦略的なスカウトを支える

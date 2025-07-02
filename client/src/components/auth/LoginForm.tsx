@@ -36,7 +36,10 @@ export function LoginForm() {
 
     startTransition(async () => {
       try {
-        console.log('🚀 Attempting login...');
+        // クライアントサイドでのみログ出力
+        if (typeof window !== 'undefined') {
+          console.log('🚀 Attempting login...');
+        }
 
         const response = await fetch('/api/auth/login', {
           method: 'POST',
@@ -52,11 +55,15 @@ export function LoginForm() {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error('❌ Login API error:', data);
+          if (typeof window !== 'undefined') {
+            console.error('❌ Login API error:', data);
+          }
           throw new Error(data.error || 'ログインに失敗しました');
         }
 
-        console.log('✅ Login successful');
+        if (typeof window !== 'undefined') {
+          console.log('✅ Login successful');
+        }
         setSuccess('ログインに成功しました！');
 
         // 成功時はダッシュボードにリダイレクト
@@ -67,7 +74,9 @@ export function LoginForm() {
         const errorMessage =
           err instanceof Error ? err.message : 'ログインに失敗しました';
         setError(errorMessage);
-        console.error('❌ Login error:', err);
+        if (typeof window !== 'undefined') {
+          console.error('❌ Login error:', err);
+        }
       }
     });
   };

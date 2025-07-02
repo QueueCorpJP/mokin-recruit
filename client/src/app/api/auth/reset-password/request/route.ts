@@ -69,16 +69,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// OPTIONSメソッドのサポート（CORS対応）
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin':
-        process.env.CORS_ORIGIN || 'http://localhost:3000',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}

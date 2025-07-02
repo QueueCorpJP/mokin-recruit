@@ -18,7 +18,7 @@ sequenceDiagram
     participant Email as メールサービス
 
     User->>Frontend: パスワードリセット要求
-    Frontend->>API: POST /api/auth/forgot-password
+    Frontend->>API: POST /api/auth/reset-password/request
     API->>Supabase: resetPasswordForEmail()
     Supabase->>Email: リセットリンク送信
     Email->>User: メール受信
@@ -57,15 +57,17 @@ sequenceDiagram
 client/src/
 ├── app/
 │   ├── auth/
-│   │   ├── forgot-password/
-│   │   │   └── page.tsx              # パスワードリセット要求ページ
 │   │   └── reset-password/
-│   │       └── page.tsx              # パスワードリセット実行ページ
+│   │       ├── page.tsx              # パスワードリセット要求ページ
+│   │       ├── new/
+│   │       │   └── page.tsx          # 新しいパスワード設定ページ
+│   │       └── complete/
+│   │           └── page.tsx          # 完了ページ
 │   └── api/
 │       └── auth/
-│           ├── forgot-password/
-│           │   └── route.ts          # リセット要求API
 │           └── reset-password/
+│               ├── request/
+│               │   └── route.ts      # リセット要求API
 │               └── route.ts          # リセット実行API
 ├── components/
 │   └── auth/
@@ -77,7 +79,7 @@ client/src/
 
 ### APIエンドポイント
 
-#### POST /api/auth/forgot-password
+#### POST /api/auth/reset-password/request
 
 パスワードリセット要求を処理します。
 
@@ -176,7 +178,7 @@ otp_expiry = 3600
 
 1. **パスワードリセット要求**
 
-   - `/auth/forgot-password`にアクセス
+   - `/auth/reset-password`にアクセス
    - メールアドレスを入力
    - 「リセットリンクを送信」をクリック
 
@@ -212,7 +214,7 @@ otp_expiry = 3600
    # 開発サーバー起動
    npm run dev
 
-   # ブラウザで http://localhost:3000/auth/forgot-password にアクセス
+   # ブラウザで http://localhost:3000/auth/reset-password にアクセス
    # 有効なメールアドレスでテスト
    ```
 
@@ -226,7 +228,7 @@ otp_expiry = 3600
 
 ```bash
 # パスワードリセット要求
-curl -X POST http://localhost:3000/api/auth/forgot-password \
+   curl -X POST http://localhost:3000/api/auth/reset-password/request \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
 export function SimpleLoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,8 +43,8 @@ export function SimpleLoginForm() {
       const data = await response.json();
 
       if (data.success) {
-        // ログイン成功時の処理
-        window.location.href = '/dashboard';
+        // ログイン成功時の処理 - Next.jsのルーターを使用
+        router.push('/dashboard');
       } else {
         setError(data.message || 'ログインに失敗しました');
       }
@@ -116,7 +118,7 @@ export function SimpleLoginForm() {
 
           <div className='text-center text-sm'>
             <a
-              href='/auth/forgot-password'
+              href='/auth/reset-password'
               className='text-primary hover:underline'
             >
               パスワードをお忘れですか？

@@ -1,11 +1,10 @@
 import { Metadata } from 'next';
-import { Suspense } from 'react';
 import { Navigation } from '@/components/ui/navigation';
-import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 
 export const metadata: Metadata = {
-  title: 'パスワードリセット | CuePoint',
-  description: '新しいパスワードを設定してください',
+  title: 'パスワードの再設定 | CuePoint',
+  description: 'パスワードをリセットするためのメールを送信します',
 };
 
 export default function ResetPasswordPage() {
@@ -23,9 +22,7 @@ export default function ResetPasswordPage() {
 
         {/* カードコンテナ */}
         <div className='relative bg-white rounded-[10px] shadow-lg p-20 w-full max-w-[800px]'>
-          <Suspense fallback={<div className='text-center'>読み込み中...</div>}>
-            <ResetPasswordForm />
-          </Suspense>
+          <ForgotPasswordForm />
         </div>
       </main>
 
