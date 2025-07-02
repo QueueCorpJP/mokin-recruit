@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NewPasswordFormProps {
   onSubmit: (password: string, confirmPassword: string) => Promise<void>;
@@ -17,177 +20,246 @@ export function NewPasswordForm({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{
-    password?: string;
-    confirmPassword?: string;
-    general?: string;
-  }>({});
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // パスワード強度チェック
-  const validatePassword = (pwd: string) => {
-    if (pwd.length < 8) {
-      return '8文字以上で入力してください';
-    }
-    if (!/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/.test(pwd)) {
-      return '半角英数字・記号のみ使用できます';
-    }
-    if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(pwd)) {
-      return '英数字を含めてください';
-    }
-    return null;
+  const getPasswordStrength = (pwd: string) => {
+    const checks = {
+      length: pwd.length >= 8,
+      hasLetter: /[a-zA-Z]/.test(pwd),
+      hasNumber: /[0-9]/.test(pwd),
+      hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+    };
+
+    const score = Object.values(checks).filter(Boolean).length;
+    return { checks, score };
   };
 
-  // リアルタイムバリデーション
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    const error = validatePassword(value);
-    setErrors(prev => ({ ...prev, password: error || undefined }));
-
-    // 確認パスワードもチェック
-    if (confirmPassword && value !== confirmPassword) {
-      setErrors(prev => ({
-        ...prev,
-        confirmPassword: 'パスワードが一致しません',
-      }));
-    } else if (confirmPassword && value === confirmPassword) {
-      setErrors(prev => ({ ...prev, confirmPassword: undefined }));
-    }
-  };
-
-  const handleConfirmPasswordChange = (value: string) => {
-    setConfirmPassword(value);
-    if (password && value !== password) {
-      setErrors(prev => ({
-        ...prev,
-        confirmPassword: 'パスワードが一致しません',
-      }));
-    } else {
-      setErrors(prev => ({ ...prev, confirmPassword: undefined }));
-    }
-  };
+  const passwordStrength = getPasswordStrength(password);
+  const isPasswordValid = passwordStrength.score >= 3 && password.length >= 8;
+  const isConfirmPasswordValid =
+    confirmPassword && password === confirmPassword;
+  const isFormValid = isPasswordValid && isConfirmPasswordValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // バリデーション
-    const passwordError = validatePassword(password);
-    const confirmError =
-      password !== confirmPassword ? 'パスワードが一致しません' : null;
-
-    if (passwordError || confirmError) {
-      setErrors({
-        password: passwordError || undefined,
-        confirmPassword: confirmError || undefined,
-      });
+    if (!isFormValid) {
+      setError('すべての要件を満たしてください');
       return;
     }
 
-    setErrors({});
+    setError(null);
+    setSuccess(null);
 
     startTransition(async () => {
       try {
         await onSubmit(password, confirmPassword);
-      } catch (error) {
-        setErrors({
-          general:
-            error instanceof Error ? error.message : 'エラーが発生しました',
-        });
+        setSuccess('パスワードが正常に更新されました！');
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'パスワードの設定に失敗しました';
+        setError(errorMessage);
+        console.error('Password reset form error:', err);
       }
     });
   };
 
-  const isFormValid =
-    password && confirmPassword && !errors.password && !errors.confirmPassword;
-  const loading = isLoading || isPending;
+  const getStrengthColor = (score: number) => {
+    if (score <= 1) return 'bg-red-500';
+    if (score === 2) return 'bg-yellow-500';
+    if (score === 3) return 'bg-blue-500';
+    return 'bg-green-500';
+  };
+
+  const getStrengthText = (score: number) => {
+    if (score <= 1) return '弱い';
+    if (score === 2) return '普通';
+    if (score === 3) return '良い';
+    return '強い';
+  };
 
   return (
-    <form onSubmit={handleSubmit} className='w-full space-y-6'>
-      {/* 新規パスワード */}
-      <div className='space-y-4'>
-        <div className='space-y-4'>
-          <label className='block text-[#323232] font-bold text-base leading-8 tracking-[0.1em]'>
-            新規パスワード
-          </label>
-          <div className='relative w-[400px]'>
-            <input
+    <div className='w-full max-w-md'>
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        {/* エラー表示 */}
+        {error && (
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription className='whitespace-pre-line'>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* 成功表示 */}
+        {success && (
+          <Alert className='border-green-200 bg-green-50 text-green-800'>
+            <CheckCircle className='h-4 w-4 text-green-600' />
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* 新しいパスワード */}
+        <div className='space-y-2'>
+          <Label htmlFor='password' className='text-sm font-medium'>
+            新しいパスワード
+          </Label>
+          <div className='relative'>
+            <Input
+              id='password'
               type={showPassword ? 'text' : 'password'}
               value={password}
-              onChange={e => handlePasswordChange(e.target.value)}
-              placeholder='半角英数字・記号のみ、8文字以上'
-              className={`w-full px-3 py-3 bg-white border rounded-[5px] text-base leading-8 tracking-[0.1em] placeholder:text-[#999999] placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent ${
-                errors.password ? 'border-red-500' : 'border-[#999999]'
-              }`}
-              disabled={loading}
+              onChange={e => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
+              className='pr-10'
+              placeholder='新しいパスワードを入力'
+              disabled={isLoading || isPending}
+              required
             />
             <button
               type='button'
               onClick={() => setShowPassword(!showPassword)}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-[#0F9058] hover:text-[#0d7a4a] transition-colors'
-              disabled={loading}
+              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              disabled={isLoading || isPending}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? (
+                <EyeOff className='h-4 w-4' />
+              ) : (
+                <Eye className='h-4 w-4' />
+              )}
             </button>
           </div>
-          {errors.password && (
-            <p className='text-red-500 text-sm font-medium'>
-              {errors.password}
-            </p>
+
+          {/* パスワード強度インジケーター */}
+          {password && (
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2'>
+                <div className='flex-1 bg-gray-200 rounded-full h-2'>
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor(passwordStrength.score)}`}
+                    style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
+                  />
+                </div>
+                <span className='text-xs font-medium'>
+                  {getStrengthText(passwordStrength.score)}
+                </span>
+              </div>
+
+              {/* 要件チェックリスト */}
+              <div className='space-y-1 text-xs'>
+                <div
+                  className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-600' : 'text-gray-400'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${passwordStrength.checks.length ? 'bg-green-500' : 'bg-gray-300'}`}
+                  />
+                  8文字以上
+                </div>
+                <div
+                  className={`flex items-center gap-1 ${passwordStrength.checks.hasLetter ? 'text-green-600' : 'text-gray-400'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${passwordStrength.checks.hasLetter ? 'bg-green-500' : 'bg-gray-300'}`}
+                  />
+                  英字を含む
+                </div>
+                <div
+                  className={`flex items-center gap-1 ${passwordStrength.checks.hasNumber ? 'text-green-600' : 'text-gray-400'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${passwordStrength.checks.hasNumber ? 'bg-green-500' : 'bg-gray-300'}`}
+                  />
+                  数字を含む
+                </div>
+                <div
+                  className={`flex items-center gap-1 ${passwordStrength.checks.hasSymbol ? 'text-green-600' : 'text-gray-400'}`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${passwordStrength.checks.hasSymbol ? 'bg-green-500' : 'bg-gray-300'}`}
+                  />
+                  記号を含む（推奨）
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* 新規パスワード再入力 */}
-        <div className='space-y-4'>
-          <label className='block text-[#323232] font-bold text-base leading-8 tracking-[0.1em]'>
-            新規パスワード再入力
-          </label>
-          <div className='relative w-[400px]'>
-            <input
+        {/* パスワード確認 */}
+        <div className='space-y-2'>
+          <Label htmlFor='confirmPassword' className='text-sm font-medium'>
+            パスワード確認
+          </Label>
+          <div className='relative'>
+            <Input
+              id='confirmPassword'
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword}
-              onChange={e => handleConfirmPasswordChange(e.target.value)}
-              placeholder='確認のためもう一度入力'
-              className={`w-full px-3 py-3 bg-white border rounded-[5px] text-base leading-8 tracking-[0.1em] placeholder:text-[#999999] placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent ${
-                errors.confirmPassword ? 'border-red-500' : 'border-[#999999]'
-              }`}
-              disabled={loading}
+              onChange={e => {
+                setConfirmPassword(e.target.value);
+                setError(null);
+              }}
+              className='pr-10'
+              placeholder='パスワードを再入力'
+              disabled={isLoading || isPending}
+              required
             />
             <button
               type='button'
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-[#0F9058] hover:text-[#0d7a4a] transition-colors'
-              disabled={loading}
+              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              disabled={isLoading || isPending}
             >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showConfirmPassword ? (
+                <EyeOff className='h-4 w-4' />
+              ) : (
+                <Eye className='h-4 w-4' />
+              )}
             </button>
           </div>
-          {errors.confirmPassword && (
-            <p className='text-red-500 text-sm font-medium'>
-              {errors.confirmPassword}
-            </p>
+
+          {/* パスワード一致チェック */}
+          {confirmPassword && (
+            <div
+              className={`flex items-center gap-1 text-xs ${isConfirmPasswordValid ? 'text-green-600' : 'text-red-600'}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${isConfirmPasswordValid ? 'bg-green-500' : 'bg-red-500'}`}
+              />
+              {isConfirmPasswordValid
+                ? 'パスワードが一致しています'
+                : 'パスワードが一致しません'}
+            </div>
           )}
         </div>
-      </div>
 
-      {/* エラーメッセージ */}
-      {errors.general && (
-        <div className='text-red-500 text-sm font-medium text-center'>
-          {errors.general}
-        </div>
-      )}
-
-      {/* 設定するボタン */}
-      <div className='flex justify-end'>
+        {/* 送信ボタン */}
         <Button
           type='submit'
-          variant='green-gradient'
-          size='figma-default'
-          disabled={!isFormValid || loading}
-          className='min-w-[120px]'
+          className='w-full bg-[#0F9058] hover:bg-[#0D7A4A] text-white font-bold py-3 px-6 rounded-lg transition-colors'
+          disabled={!isFormValid || isLoading || isPending}
         >
-          {loading ? '設定中...' : '設定する'}
+          {isLoading || isPending ? (
+            <div className='flex items-center gap-2'>
+              <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+              更新中...
+            </div>
+          ) : (
+            'パスワードを更新'
+          )}
         </Button>
-      </div>
-    </form>
+
+        {/* 注意事項 */}
+        <div className='text-xs text-gray-600 text-center space-y-1'>
+          <p>• パスワードは8文字以上で設定してください</p>
+          <p>• 英数字を含むパスワードを推奨します</p>
+          <p>• 記号を含むとより安全です</p>
+        </div>
+      </form>
+    </div>
   );
 }

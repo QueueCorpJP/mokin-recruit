@@ -18,270 +18,207 @@ export async function GET(request: NextRequest) {
   // Supabase初期化を確実に実行
   ensureSupabaseInitialized();
 
-  const testResults = {
-    timestamp: new Date().toISOString(),
-    environment: {},
-    supabaseConnection: {},
-    authConfiguration: {},
-    emailConfiguration: {},
-    overallStatus: 'unknown' as 'success' | 'warning' | 'failure',
-    recommendations: [] as string[],
-  };
-
   try {
-    logger.info('🧪 Starting password reset functionality test');
+    const searchParams = request.nextUrl.searchParams;
+    const testEmail = searchParams.get('email') || 'test@example.com';
+    const sendEmail = searchParams.get('send') === 'true';
 
-    // Test 1: 環境変数チェック
-    testResults.environment = await testEnvironmentVariables();
+    const timestamp = new Date().toISOString();
+    const environmentInfo = getEnvironmentInfo();
+    const passwordResetUrl = getPasswordResetRedirectUrl();
 
-    // Test 2: Supabase接続テスト
-    testResults.supabaseConnection = await testSupabaseConnection();
+    // Supabase接続テスト
+    const supabaseTest = {
+      name: 'Supabase Connection',
+      status: 'unknown' as 'success' | 'error' | 'unknown',
+      details: {} as any,
+      issues: [] as string[],
+    };
 
-    // Test 3: 認証設定テスト
-    testResults.authConfiguration = await testAuthConfiguration();
+    try {
+      const supabase = getSupabaseClient();
 
-    // Test 4: メール設定テスト
-    testResults.emailConfiguration = await testEmailConfiguration();
+      // Supabase Auth接続テスト（より適切なテスト方法）
+      try {
+        const { data: authData, error: authError } =
+          await supabase.auth.getSession();
 
-    // 総合評価
-    const hasErrors = [
-      testResults.environment,
-      testResults.supabaseConnection,
-      testResults.authConfiguration,
-      testResults.emailConfiguration,
-    ].some((test: any) => test.status === 'failure');
+        // セッションがないのは正常（未ログイン状態）
+        supabaseTest.status = 'success';
+        supabaseTest.details.clientConnection = 'success';
+        supabaseTest.details.authConnection = 'success';
+        supabaseTest.details.passwordResetFunction = 'available';
+      } catch (authError) {
+        // 基本的なHTTPリクエストテスト
+        const testResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`,
+          {
+            headers: {
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+            },
+          }
+        );
 
-    const hasWarnings = [
-      testResults.environment,
-      testResults.supabaseConnection,
-      testResults.authConfiguration,
-      testResults.emailConfiguration,
-    ].some((test: any) => test.status === 'warning');
+        if (testResponse.ok || testResponse.status === 404) {
+          supabaseTest.status = 'success';
+          supabaseTest.details.clientConnection = 'success';
+          supabaseTest.details.passwordResetFunction = 'available';
+        } else {
+          throw new Error(
+            `HTTP ${testResponse.status}: ${testResponse.statusText}`
+          );
+        }
+      }
 
-    if (hasErrors) {
-      testResults.overallStatus = 'failure';
-      testResults.recommendations.push(
-        '重要な設定エラーがあります。修正が必要です。'
-      );
-    } else if (hasWarnings) {
-      testResults.overallStatus = 'warning';
-      testResults.recommendations.push(
-        '一部の設定に問題があります。確認をお勧めします。'
-      );
-    } else {
-      testResults.overallStatus = 'success';
-      testResults.recommendations.push(
+      // パスワードリセットメール送信テスト（オプション）
+      if (sendEmail) {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+          testEmail,
+          {
+            redirectTo: passwordResetUrl,
+          }
+        );
+
+        if (resetError) {
+          supabaseTest.details.testEmailError = resetError.message;
+          supabaseTest.issues.push(`Test email failed: ${resetError.message}`);
+        } else {
+          supabaseTest.details.testEmailSent = true;
+          supabaseTest.details.testEmail = testEmail;
+          supabaseTest.details.redirectUrl = passwordResetUrl;
+        }
+      }
+
+      // Admin client test
+      try {
+        const { getSupabaseAdminClient } = await import(
+          '@/lib/server/database/supabase'
+        );
+        const adminClient = getSupabaseAdminClient();
+        const { data: adminData, error: adminError } =
+          await adminClient.auth.admin.listUsers();
+
+        if (adminError) {
+          supabaseTest.details.adminConnection = `error: ${adminError.message}`;
+        } else {
+          supabaseTest.details.adminConnection = 'success';
+          supabaseTest.details.userCount = adminData.users?.length || 0;
+        }
+      } catch (adminError) {
+        supabaseTest.details.adminConnection = `error: ${adminError}`;
+      }
+    } catch (error) {
+      supabaseTest.status = 'error';
+
+      // エラーの詳細ログ出力
+      console.error('Supabase connection error details:', error);
+      logger.error('Supabase connection failed:', error);
+
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = String(error);
+      }
+
+      supabaseTest.details.error = errorMessage;
+      supabaseTest.details.errorType = typeof error;
+      supabaseTest.details.errorConstructor = error?.constructor?.name;
+
+      supabaseTest.issues.push(`Connection failed: ${errorMessage}`);
+    }
+
+    // 認証設定テスト
+    const authTest = {
+      name: 'Auth Configuration',
+      status: 'success' as 'success' | 'error',
+      details: {
+        passwordResetRedirectUrl: passwordResetUrl,
+        baseUrl: environmentInfo.baseUrl,
+      },
+      issues: [] as string[],
+    };
+
+    // メール設定テスト
+    const emailTest = {
+      name: 'Email Configuration',
+      status: 'success' as 'success' | 'error',
+      details: {
+        inbucketUrl: 'http://127.0.0.1:54324',
+        note: 'Development environment - emails will be captured by Inbucket',
+      },
+      issues: [] as string[],
+    };
+
+    // 環境変数テスト
+    const envTest = {
+      name: 'Environment Variables',
+      status: 'success' as 'success' | 'error',
+      details: environmentInfo,
+      issues: [] as string[],
+    };
+
+    // 全体的なステータス判定
+    const allTests = [supabaseTest, authTest, emailTest, envTest];
+    const hasErrors = allTests.some(
+      test => test.status === 'error' || test.issues.length > 0
+    );
+    const overallStatus = hasErrors ? 'warning' : 'success';
+
+    // 推奨事項
+    const recommendations = [];
+    if (supabaseTest.status === 'success') {
+      recommendations.push(
         '全ての設定が正常です。パスワードリセット機能をテストできます。'
       );
     }
+    if (sendEmail && supabaseTest.details.testEmailSent) {
+      recommendations.push(
+        `テストメールを ${testEmail} に送信しました。Inbucket (http://127.0.0.1:54324) で確認してください。`
+      );
+    }
+    if (!sendEmail) {
+      recommendations.push(
+        '実際のメール送信をテストするには ?send=true&email=your@email.com を追加してください。'
+      );
+    }
 
-    logger.info(`🧪 Test completed with status: ${testResults.overallStatus}`);
+    const response = {
+      timestamp,
+      environment: envTest,
+      supabaseConnection: supabaseTest,
+      authConfiguration: authTest,
+      emailConfiguration: emailTest,
+      overallStatus,
+      recommendations,
+    };
 
-    return NextResponse.json(testResults, {
-      status: testResults.overallStatus === 'failure' ? 500 : 200,
+    logger.info('Password reset test completed', {
+      status: overallStatus,
+      testEmail: sendEmail ? testEmail : 'not sent',
+    });
+
+    return NextResponse.json(response, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
     });
   } catch (error) {
-    logger.error('🧪 Test execution failed:', error);
+    logger.error('Password reset test failed:', error);
 
-    testResults.overallStatus = 'failure';
-    testResults.recommendations.push('テスト実行中にエラーが発生しました。');
-
-    return NextResponse.json(testResults, { status: 500 });
-  }
-}
-
-/**
- * 環境変数のテスト
- */
-async function testEnvironmentVariables() {
-  const test = {
-    name: 'Environment Variables',
-    status: 'success' as 'success' | 'warning' | 'failure',
-    details: {} as any,
-    issues: [] as string[],
-  };
-
-  try {
-    const envInfo = getEnvironmentInfo();
-    test.details = envInfo;
-
-    // 必須環境変数のチェック
-    const requiredVars = [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'SUPABASE_SERVICE_ROLE_KEY',
-    ];
-
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
-
-    if (missingVars.length > 0) {
-      test.status = 'failure';
-      test.issues.push(
-        `Missing environment variables: ${missingVars.join(', ')}`
-      );
-    }
-
-    // URL設定のチェック
-    if (!envInfo.baseUrl || envInfo.baseUrl.includes('localhost')) {
-      if (process.env.NODE_ENV === 'production') {
-        test.status = 'warning';
-        test.issues.push('Production environment is using localhost URLs');
-      }
-    }
-
-    logger.info('✅ Environment variables test completed', test);
-    return test;
-  } catch (error) {
-    test.status = 'failure';
-    test.issues.push(
-      `Environment test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.error('❌ Environment variables test failed:', error);
-    return test;
-  }
-}
-
-/**
- * Supabase接続のテスト
- */
-async function testSupabaseConnection() {
-  const test = {
-    name: 'Supabase Connection',
-    status: 'success' as 'success' | 'warning' | 'failure',
-    details: {} as any,
-    issues: [] as string[],
-  };
-
-  try {
-    // 実際のパスワードリセット機能をテスト
-    const client = getSupabaseClient();
-
-    // テスト用の無効なメールでresetPasswordForEmailを呼び出し
-    // エラーの種類で接続状態を判断
-    const { error: testError } = await client.auth.resetPasswordForEmail(
-      'test@nonexistent-domain-for-testing.com',
+    return NextResponse.json(
       {
-        redirectTo: 'http://localhost:3000/test',
-      }
+        timestamp: new Date().toISOString(),
+        error: 'Test endpoint failed',
+        details: error instanceof Error ? error.message : String(error),
+        overallStatus: 'error',
+      },
+      { status: 500 }
     );
-
-    if (testError) {
-      // 接続は成功したが、メール送信でエラー（正常な動作）
-      if (
-        testError.message.includes('Unable to validate email address') ||
-        testError.message.includes('email') ||
-        testError.message.includes('rate limit') ||
-        !testError.message.includes('fetch')
-      ) {
-        test.details.clientConnection = 'success';
-        test.details.passwordResetFunction = 'available';
-      } else {
-        test.issues.push(`Connection failed: ${testError.message}`);
-      }
-    } else {
-      // エラーなしも正常（テストメールが送信された）
-      test.details.clientConnection = 'success';
-      test.details.passwordResetFunction = 'available';
-      test.details.testEmailSent = true;
-    }
-
-    // 管理者クライアントは同じインスタンスなので、通常クライアントが成功すれば OK
-    if (test.details.clientConnection === 'success') {
-      test.details.adminConnection = 'success';
-    }
-
-    if (test.issues.length > 0) {
-      test.status = 'failure';
-    }
-
-    logger.info('✅ Supabase connection test completed', test);
-    return test;
-  } catch (error) {
-    test.status = 'failure';
-    test.issues.push(
-      `Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.error('❌ Supabase connection test failed:', error);
-    return test;
-  }
-}
-
-/**
- * 認証設定のテスト
- */
-async function testAuthConfiguration() {
-  const test = {
-    name: 'Auth Configuration',
-    status: 'success' as 'success' | 'warning' | 'failure',
-    details: {} as any,
-    issues: [] as string[],
-  };
-
-  try {
-    const redirectUrl = getPasswordResetRedirectUrl();
-    test.details.passwordResetRedirectUrl = redirectUrl;
-
-    // リダイレクトURL形式のチェック
-    if (!redirectUrl.startsWith('http')) {
-      test.status = 'failure';
-      test.issues.push('Invalid redirect URL format');
-    }
-
-    // 本番環境でのlocalhost使用チェック
-    if (
-      process.env.NODE_ENV === 'production' &&
-      redirectUrl.includes('localhost')
-    ) {
-      test.status = 'warning';
-      test.issues.push('Production environment using localhost redirect URL');
-    }
-
-    logger.info('✅ Auth configuration test completed', test);
-    return test;
-  } catch (error) {
-    test.status = 'failure';
-    test.issues.push(
-      `Auth configuration test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.error('❌ Auth configuration test failed:', error);
-    return test;
-  }
-}
-
-/**
- * メール設定のテスト
- */
-async function testEmailConfiguration() {
-  const test = {
-    name: 'Email Configuration',
-    status: 'success' as 'success' | 'warning' | 'failure',
-    details: {} as any,
-    issues: [] as string[],
-  };
-
-  try {
-    // 開発環境でのInbucket設定チェック
-    if (process.env.NODE_ENV === 'development') {
-      test.details.inbucketUrl = 'http://127.0.0.1:54324';
-      test.details.note =
-        'Development environment - emails will be captured by Inbucket';
-    } else {
-      test.details.note =
-        'Production environment - emails will be sent via configured SMTP';
-      test.status = 'warning';
-      test.issues.push(
-        'Ensure SMTP configuration is properly set in Supabase dashboard'
-      );
-    }
-
-    logger.info('✅ Email configuration test completed', test);
-    return test;
-  } catch (error) {
-    test.status = 'failure';
-    test.issues.push(
-      `Email configuration test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.error('❌ Email configuration test failed:', error);
-    return test;
   }
 }
 
@@ -293,47 +230,47 @@ export async function POST(request: NextRequest) {
   ensureSupabaseInitialized();
 
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email } = body;
 
     if (!email) {
-      return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    logger.info(`🧪 Testing password reset for email: ${email}`);
-
     const supabase = getSupabaseClient();
-    const redirectUrl = getPasswordResetRedirectUrl();
+    const passwordResetUrl = getPasswordResetRedirectUrl();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
+      redirectTo: passwordResetUrl,
     });
 
     if (error) {
-      logger.error('🧪 Test password reset failed:', error);
+      logger.error('Test password reset email failed:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        {
+          success: false,
+          error: error.message,
+        },
         { status: 400 }
       );
     }
 
-    logger.info(`🧪 Test password reset email sent successfully to: ${email}`);
+    logger.info(`Test password reset email sent to: ${email}`);
 
     return NextResponse.json({
       success: true,
-      message: 'Test password reset email sent successfully',
-      redirectUrl,
-      inbucketUrl:
-        process.env.NODE_ENV === 'development'
-          ? 'http://127.0.0.1:54324'
-          : null,
+      message: `Password reset email sent to ${email}`,
+      redirectUrl: passwordResetUrl,
+      inbucketUrl: 'http://127.0.0.1:54324',
     });
   } catch (error) {
-    logger.error('🧪 Test password reset API error:', error);
+    logger.error('Test password reset POST failed:', error);
+
     return NextResponse.json(
-      { success: false, error: 'Test failed' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

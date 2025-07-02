@@ -1,60 +1,154 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useCallback, useState, useEffect } from 'react';
 import { Navigation } from '@/components/ui/navigation';
+import { Footer } from '@/components/ui/footer';
 import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
 
 function NewPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<Record<string, string>>({});
+
+  // URLパラメータのデバッグ情報を収集
+  useEffect(() => {
+    const params: Record<string, string> = {};
+
+    // すべてのURLパラメータを収集
+    for (const [key, value] of searchParams.entries()) {
+      params[key] = value;
+    }
+
+    setDebugInfo(params);
+
+    // 開発環境でのデバッグログ
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Password Reset URL Parameters:', params);
+      console.log('🔍 Full URL:', window.location.href);
+    }
+  }, [searchParams]);
 
   const handleSubmit = useCallback(
     async (password: string, confirmPassword: string) => {
       setIsLoading(true);
 
       try {
-        const token = searchParams.get('token');
-        const tokenHash = searchParams.get('token_hash');
+        // Supabaseの様々なパラメータ形式に対応
+        const tokenHash =
+          searchParams.get('token_hash') || searchParams.get('token');
         const type = searchParams.get('type');
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
 
-        if (!token || !tokenHash || type !== 'recovery') {
+        // 追加のパラメータもチェック（Supabaseの新しいバージョン対応）
+        const code = searchParams.get('code');
+        const state = searchParams.get('state');
+        const error = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
+
+        console.log('🔍 Password reset parameters (詳細):', {
+          tokenHash: tokenHash ? `${tokenHash.substring(0, 10)}...` : null,
+          type,
+          accessToken: accessToken
+            ? `${accessToken.substring(0, 10)}...`
+            : null,
+          refreshToken: refreshToken
+            ? `${refreshToken.substring(0, 10)}...`
+            : null,
+          code: code ? `${code.substring(0, 10)}...` : null,
+          state,
+          error,
+          errorDescription,
+          allParams: debugInfo,
+        });
+
+        // エラーパラメータがある場合の処理
+        if (error) {
+          let errorMessage = 'パスワードリセットリンクでエラーが発生しました。';
+
+          switch (error) {
+            case 'access_denied':
+              errorMessage =
+                'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
+              break;
+            case 'invalid_request':
+              errorMessage =
+                '無効なリクエストです。正しいリンクを使用してください。';
+              break;
+            case 'expired_token':
+              errorMessage =
+                'リンクの有効期限が切れています。新しいパスワードリセットを要求してください。';
+              break;
+            default:
+              if (errorDescription) {
+                errorMessage = `エラー: ${errorDescription}`;
+              }
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        // 必須パラメータの確認（複数の形式に対応）
+        if (!tokenHash && !code) {
           throw new Error(
-            '無効なリンクです。パスワードリセットを再度お試しください。'
+            '無効なリンクです。パスワードリセットを再度お試しください。\n' +
+              '（トークンまたはコードが見つかりません）'
           );
         }
+
+        if (type && type !== 'recovery') {
+          throw new Error(
+            `無効なリンクタイプです: ${type}\n` +
+              'パスワードリセット用のリンクを使用してください。'
+          );
+        }
+
+        // APIリクエストのペイロード構築
+        const requestBody = {
+          // 従来のパラメータ
+          tokenHash,
+          type: type || 'recovery',
+          accessToken,
+          refreshToken,
+          // 新しい形式のパラメータ
+          code,
+          state,
+          // パスワード情報
+          password,
+          confirmPassword,
+        };
+
+        console.log('🚀 Sending password reset request...');
 
         const response = await fetch('/api/auth/reset-password', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            token,
-            tokenHash,
-            type,
-            password,
-            confirmPassword,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         const data = await response.json();
 
         if (!response.ok) {
+          console.error('❌ Password reset API error:', data);
           throw new Error(data.error || 'パスワードの設定に失敗しました');
         }
+
+        console.log('✅ Password reset successful');
 
         // 成功時は完了ページにリダイレクト
         router.push('/auth/reset-password/complete');
       } catch (error) {
-        console.error('Password reset error:', error);
+        console.error('❌ Password reset error:', error);
         throw error;
       } finally {
         setIsLoading(false);
       }
     },
-    [router, searchParams]
+    [router, searchParams, debugInfo]
   );
 
   return (
@@ -75,6 +169,19 @@ function NewPasswordContent() {
             </p>
           </div>
 
+          {/* 開発環境でのデバッグ情報表示 */}
+          {process.env.NODE_ENV === 'development' &&
+            Object.keys(debugInfo).length > 0 && (
+              <div className='mb-6 p-4 bg-gray-100 rounded-lg'>
+                <h3 className='text-sm font-bold mb-2'>
+                  🔍 Debug Info (開発環境のみ):
+                </h3>
+                <pre className='text-xs overflow-x-auto'>
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </div>
+            )}
+
           {/* フォーム */}
           <div className='flex justify-center'>
             <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} />
@@ -83,48 +190,7 @@ function NewPasswordContent() {
       </main>
 
       {/* フッター */}
-      <footer className='bg-[#323232] text-white py-12'>
-        <div className='max-w-6xl mx-auto px-4'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-            {/* 会社情報 */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>株式会社Mokin</h3>
-              <div className='space-y-2 text-sm'>
-                <p>〒100-0000</p>
-                <p>東京都千代田区丸の内1-1-1</p>
-                <p>TEL: 03-0000-0000</p>
-                <p>FAX: 03-0000-0001</p>
-              </div>
-            </div>
-
-            {/* サービス */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>サービス</h3>
-              <div className='space-y-2 text-sm'>
-                <p>転職支援サービス</p>
-                <p>キャリア相談</p>
-                <p>企業紹介</p>
-                <p>面接対策</p>
-              </div>
-            </div>
-
-            {/* サポート */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>サポート</h3>
-              <div className='space-y-2 text-sm'>
-                <p>よくある質問</p>
-                <p>お問い合わせ</p>
-                <p>利用規約</p>
-                <p>プライバシーポリシー</p>
-              </div>
-            </div>
-          </div>
-
-          <div className='border-t border-gray-600 mt-8 pt-8 text-center text-sm'>
-            <p>&copy; 2024 Mokin Recruit. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant='login-before' />
     </div>
   );
 }

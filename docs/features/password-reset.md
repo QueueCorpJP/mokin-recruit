@@ -233,8 +233,38 @@ curl -X POST http://localhost:3000/api/auth/forgot-password \
 # パスワードリセット実行（トークンが必要）
 curl -X POST http://localhost:3000/api/auth/reset-password \
   -H "Content-Type: application/json" \
-  -d '{"accessToken":"xxx","newPassword":"NewPassword123!"}'
+  -d '{
+    "tokenHash":"token_hash_from_email",
+    "type":"recovery",
+    "accessToken":"access_token_from_url",
+    "refreshToken":"refresh_token_from_url",
+    "password":"NewPassword123!",
+    "confirmPassword":"NewPassword123!"
+  }'
 ```
+
+### 開発・デバッグ用テストAPI
+
+開発環境では以下のテストエンドポイントが利用可能です：
+
+```bash
+# システム全体のテスト
+curl "http://localhost:3000/api/test/password-reset"
+
+# メール送信テスト
+curl "http://localhost:3000/api/test/password-reset?send=true&email=test@example.com"
+
+# テスト用メール送信API
+curl -X POST http://localhost:3000/api/test/password-reset \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+```
+
+**テスト結果の確認**
+
+- **Inbucket**: http://127.0.0.1:54324 でテストメールを確認
+- **Supabase Studio**: http://127.0.0.1:54323 でユーザー状態を確認
+- **ログ**: アプリケーションログでデバッグ情報を確認
 
 ## トラブルシューティング
 
