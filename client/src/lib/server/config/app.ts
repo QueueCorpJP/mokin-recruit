@@ -18,18 +18,35 @@ export class AppConfig implements IAppConfig {
   readonly rateLimitMaxRequests: number;
 
   constructor() {
-    this.port = parseInt(process.env.PORT || '3001', 10);
-    this.nodeEnv = process.env.NODE_ENV || 'development';
-    this.corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
-    this.apiPrefix = process.env.API_PREFIX || '/api';
-    this.rateLimitWindowMs = parseInt(
-      process.env.RATE_LIMIT_WINDOW_MS || '900000',
-      10
-    );
-    this.rateLimitMaxRequests = parseInt(
-      process.env.RATE_LIMIT_MAX_REQUESTS || '100',
-      10
-    );
+    // バリデーション済み環境変数から取得
+    const env = this.getValidatedEnv();
+
+    this.port = env.PORT;
+    this.nodeEnv = env.NODE_ENV;
+    this.corsOrigin = env.CORS_ORIGIN || `http://localhost:${env.PORT}`;
+    this.apiPrefix = '/api'; // 固定値
+    this.rateLimitWindowMs = env.RATE_LIMIT_WINDOW;
+    this.rateLimitMaxRequests = env.RATE_LIMIT_MAX;
+  }
+
+  private getValidatedEnv() {
+    try {
+      // 新しいバリデーションシステムを使用
+      const { getValidatedEnv } = require('@/lib/server/config/env-validation');
+      return getValidatedEnv();
+    } catch (error) {
+      // フォールバック: 従来の方式
+      return {
+        PORT: parseInt(process.env.PORT || '3000', 10),
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        CORS_ORIGIN: process.env.CORS_ORIGIN,
+        RATE_LIMIT_WINDOW: parseInt(
+          process.env.RATE_LIMIT_WINDOW || '900000',
+          10
+        ),
+        RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+      };
+    }
   }
 
   get isDevelopment(): boolean {

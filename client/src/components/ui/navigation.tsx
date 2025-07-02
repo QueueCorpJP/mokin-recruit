@@ -45,7 +45,7 @@ export function Navigation({
             <Button
               variant='green-gradient'
               size='lg'
-              className='rounded-[32px] px-8 font-bold tracking-[0.1em] !h-[60px] max-h-[60px]'
+              className='rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
               asChild
             >
               <Link href='/signup'>資料請求</Link>
@@ -76,7 +76,7 @@ export function Navigation({
               <Button
                 variant='green-gradient'
                 size='lg'
-                className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] !h-[60px] max-h-[60px]'
+                className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
                 asChild
               >
                 <Link href='/signup' onClick={() => setIsMenuOpen(false)}>

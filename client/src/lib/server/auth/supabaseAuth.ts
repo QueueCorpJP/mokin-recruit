@@ -1,5 +1,8 @@
-import { getSupabaseClient, getSupabaseAdminClient } from '@/database/supabase';
-import { logger } from '@/utils/logger';
+import {
+  getSupabaseClient,
+  getSupabaseAdminClient,
+} from '@/lib/server/database/supabase';
+import { logger } from '@/lib/server/utils/logger';
 import { User } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 
@@ -31,7 +34,7 @@ export async function registerUserWithSupabase(
 ): Promise<AuthResult> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { data, error } = await supabase.auth.admin.createUser({
       email: userData.email,
       password: userData.password,
@@ -70,7 +73,7 @@ export async function signInWithSupabase(
 ): Promise<AuthResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -108,7 +111,7 @@ export async function signInWithSupabase(
 export async function verifySupabaseToken(token: string): Promise<AuthResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error) {
@@ -138,9 +141,15 @@ export async function verifySupabaseToken(token: string): Promise<AuthResult> {
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
+    // 動的URL取得機能を使用
+    const { getPasswordResetRedirectUrl } = await import(
+      '@/lib/server/utils/url'
+    );
+    const redirectUrl = getPasswordResetRedirectUrl();
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.CORS_ORIGIN}/reset-password`,
+      redirectTo: redirectUrl,
     });
 
     if (error) {
@@ -151,7 +160,9 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
       };
     }
 
-    logger.info(`Password reset requested for: ${email}`);
+    logger.info(
+      `Password reset requested for: ${email}, redirect: ${redirectUrl}`
+    );
     return {
       success: true,
     };
@@ -173,7 +184,7 @@ export async function updatePassword(
 ): Promise<AuthResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     // アクセストークンを設定
     await supabase.auth.setSession({
       access_token: accessToken,
@@ -212,7 +223,7 @@ export async function updatePassword(
 export async function signOutUser(): Promise<AuthResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     const { error } = await supabase.auth.signOut();
 
     if (error) {
@@ -254,7 +265,10 @@ function generateCustomJWT(user: User): string {
 /**
  * カスタムJWTトークンを検証
  */
-export function verifyCustomJWT(token: string): { valid: boolean; payload?: any } {
+export function verifyCustomJWT(token: string): {
+  valid: boolean;
+  payload?: any;
+} {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!);
     return { valid: true, payload };
@@ -262,4 +276,4 @@ export function verifyCustomJWT(token: string): { valid: boolean; payload?: any 
     logger.error('Custom JWT verification failed:', error);
     return { valid: false };
   }
-} 
+}

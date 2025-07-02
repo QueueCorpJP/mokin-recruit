@@ -1,72 +1,60 @@
 import Link from 'next/link';
 import { Navigation } from '@/components/ui/navigation';
 import { Logo } from '@/components/ui/logo';
+import { HeroSection } from '@/components/ui/hero-section';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100'>
+    <div className='min-h-screen'>
       {/* Header */}
       <Navigation />
 
-      {/* Main Content */}
-      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
-        <div className='text-center'>
-          <h2 className='text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl'>
-            理想の転職を
-            <span className='text-indigo-600'>実現</span>
-          </h2>
-          <p className='mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl'>
-            ダイレクトリクルーティングで、あなたにぴったりの企業と出会える転職プラットフォーム
-          </p>
-          <div className='mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8'>
-            <div className='rounded-md shadow'>
-              <Link
-                href='/signup'
-                className='w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10'
-              >
-                無料で始める
-              </Link>
-            </div>
-            <div className='mt-3 rounded-md shadow sm:mt-0 sm:ml-3'>
-              <Link
-                href='/search'
-                className='w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10'
-              >
-                求人を探す
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* Hero Section */}
+      <HeroSection />
 
-        {/* Features */}
-        <div className='mt-20'>
-          <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3'>
-            <div className='bg-white rounded-lg shadow-md p-6'>
-              <h3 className='text-lg font-semibold text-gray-900'>
-                スカウト機能
-              </h3>
-              <p className='mt-2 text-gray-600'>
-                企業から直接スカウトが届く。あなたのスキルを評価してくれる企業と出会えます。
+      {/* Additional Content Sections */}
+      <main className='bg-white'>
+        {/* Services Features Section */}
+        <section className='py-16 bg-gray-50'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='text-center mb-12'>
+              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
+                サービスの特徴
+              </h2>
+              <p className='mt-4 text-lg text-gray-600'>
+                革新的なダイレクトリクルーティングで理想の転職を実現
               </p>
             </div>
-            <div className='bg-white rounded-lg shadow-md p-6'>
-              <h3 className='text-lg font-semibold text-gray-900'>
-                詳細な求人情報
-              </h3>
-              <p className='mt-2 text-gray-600'>
-                職種、業種、勤務条件など詳細な情報で、理想の求人を見つけられます。
-              </p>
-            </div>
-            <div className='bg-white rounded-lg shadow-md p-6'>
-              <h3 className='text-lg font-semibold text-gray-900'>
-                転職サポート
-              </h3>
-              <p className='mt-2 text-gray-600'>
-                履歴書作成から面接対策まで、転職活動を全面的にサポートします。
-              </p>
+
+            {/* Features Grid */}
+            <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3'>
+              <div className='bg-white rounded-lg shadow-md p-6'>
+                <h3 className='text-lg font-semibold text-gray-900'>
+                  スカウト機能
+                </h3>
+                <p className='mt-2 text-gray-600'>
+                  企業から直接スカウトが届く。あなたのスキルを評価してくれる企業と出会えます。
+                </p>
+              </div>
+              <div className='bg-white rounded-lg shadow-md p-6'>
+                <h3 className='text-lg font-semibold text-gray-900'>
+                  詳細な求人情報
+                </h3>
+                <p className='mt-2 text-gray-600'>
+                  職種、業種、勤務条件など詳細な情報で、理想の求人を見つけられます。
+                </p>
+              </div>
+              <div className='bg-white rounded-lg shadow-md p-6'>
+                <h3 className='text-lg font-semibold text-gray-900'>
+                  転職サポート
+                </h3>
+                <p className='mt-2 text-gray-600'>
+                  履歴書作成から面接対策まで、転職活動を全面的にサポートします。
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </main>
 
       {/* Footer */}

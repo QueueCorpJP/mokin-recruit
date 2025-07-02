@@ -16,17 +16,35 @@ export class SupabaseConfig implements ISupabaseConfig {
   readonly isProduction: boolean;
 
   constructor() {
-    // 必須環境変数の取得
-    this.supabaseUrl = process.env.SUPABASE_URL || '';
-    this.supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
-    this.supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    // バリデーション済み環境変数から取得
+    const env = this.getValidatedEnv();
+
+    this.supabaseUrl = env.SUPABASE_URL;
+    this.supabaseAnonKey = env.SUPABASE_ANON_KEY;
+    this.supabaseServiceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
     // 環境判定
-    this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.isProduction = process.env.NODE_ENV === 'production';
+    this.isDevelopment = env.NODE_ENV === 'development';
+    this.isProduction = env.NODE_ENV === 'production';
 
-    // 必須チェック
+    // 必須チェック（既にバリデーション済みだが念のため）
     this.validateConfiguration();
+  }
+
+  private getValidatedEnv() {
+    try {
+      // 新しいバリデーションシステムを使用
+      const { getValidatedEnv } = require('@/lib/server/config/env-validation');
+      return getValidatedEnv();
+    } catch (error) {
+      // フォールバック: 従来の方式
+      return {
+        SUPABASE_URL: process.env.SUPABASE_URL || '',
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+        NODE_ENV: process.env.NODE_ENV || 'development',
+      };
+    }
   }
 
   private validateConfiguration(): void {
