@@ -8,6 +8,9 @@ import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
+// Note: metadata and viewport exports should be in a separate file for client components
+// For now, we'll handle viewport in the component itself
+
 // ローディング画面コンポーネント
 function LoadingScreen({ message = '読み込み中...' }: { message?: string }) {
   return (

@@ -1,10 +1,15 @@
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { Navigation } from '@/components/ui/navigation';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 
 export const metadata: Metadata = {
   title: 'パスワードの再設定 | CuePoint',
   description: 'パスワードをリセットするためのメールを送信します',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function ResetPasswordPage() {

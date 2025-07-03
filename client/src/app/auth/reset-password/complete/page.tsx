@@ -11,37 +11,72 @@ export default function ResetPasswordCompletePage() {
     router.push('/auth/login');
   };
 
+  const handleHomeRedirect = () => {
+    router.push('/');
+  };
+
   return (
-    <div className='min-h-screen bg-gradient-to-br from-[#17856F] to-[#229A4E] flex flex-col'>
-      {/* ナビゲーション */}
+    <div className='min-h-screen flex flex-col'>
+      {/* ヘッダー */}
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 flex items-center justify-center px-4 py-12'>
-        <div className='w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20'>
-          {/* 見出し+説明 */}
-          <div className='text-center mb-10 space-y-6'>
+      <main className='flex-1 bg-gradient-to-b from-[#17856F] to-[#229A4E] flex items-center justify-center px-4 py-12'>
+        {/* 背景装飾 */}
+        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+          <div className='absolute -left-56 top-[395px] w-[1889.89px] h-[335px] bg-gradient-to-b from-[#198D76] to-[#1CA74F] rounded-full opacity-30'></div>
+        </div>
+
+        {/* カードコンテナ */}
+        <div className='relative bg-white rounded-[10px] shadow-lg p-8 md:p-12 lg:p-20 w-full max-w-[800px]'>
+          <div className='text-center space-y-8'>
+            {/* 成功アイコン */}
+            <div className='flex justify-center'>
+              <div className='w-16 h-16 bg-[#0F9058] rounded-full flex items-center justify-center'>
+                <svg
+                  className='w-8 h-8 text-white'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M5 13l4 4L19 7'
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* 見出し */}
             <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] tracking-[0.1em]'>
-              パスワードの再設定
+              パスワード再設定完了
             </h1>
-            <p className='text-[#323232] font-bold text-base leading-8 tracking-[0.1em]'>
+
+            {/* 説明 */}
+            <p className='text-[#323232] font-medium text-base leading-8'>
               パスワードの再設定が完了しました。
               <br />
-              セキュリティのため、定期的な変更をおすすめします。
+              新しいパスワードでログインしてください。
             </p>
-          </div>
 
-          {/* ログインページへボタン */}
-          <div className='flex justify-center'>
-            <Button
-              type='button'
-              variant='green-gradient'
-              size='figma-default'
-              onClick={handleLoginRedirect}
-              className='min-w-[160px]'
-            >
-              ログインページへ
-            </Button>
+            {/* ボタン */}
+            <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+              <Button
+                onClick={handleLoginRedirect}
+                className='bg-[#0F9058] text-white px-8 py-3 rounded-md hover:bg-[#0D7A4A] transition-colors'
+              >
+                ログインページへ
+              </Button>
+              <Button
+                onClick={handleHomeRedirect}
+                variant='outline'
+                className='border border-[#0F9058] text-[#0F9058] px-8 py-3 rounded-md hover:bg-[#0F9058] hover:text-white transition-colors'
+              >
+                ホームページへ
+              </Button>
+            </div>
           </div>
         </div>
       </main>

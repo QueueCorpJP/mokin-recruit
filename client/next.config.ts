@@ -19,29 +19,25 @@ const nextConfig: NextConfig = {
 
   // Vercel deployment optimization
   experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
     // パフォーマンス最適化
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-slot',
       '@radix-ui/react-label',
     ],
-    // Turbopack最適化（コメントアウト - Next.js 15では未対応）
-    // turbotrace: {
-    //   logLevel: 'bug',
-    // },
     // ページ遷移の最適化
     scrollRestoration: true,
-    // 静的生成の最適化（Next.js 15では未対応のため無効化）
-    // staticWorkerRequestDeduping: true,
   },
+
+  // Turbopack configuration (simplified for compatibility)
+  // turbopack: {
+  //   rules: {
+  //     '*.svg': {
+  //       loaders: ['@svgr/webpack'],
+  //       as: '*.js',
+  //     },
+  //   },
+  // },
 
   // 画像最適化の強化
   images: {
@@ -133,20 +129,14 @@ const nextConfig: NextConfig = {
     let corsOrigin = 'http://localhost:3000';
 
     try {
-      // 新しいバリデーションシステムを使用
-      const {
-        getValidatedEnv,
-        getDynamicUrls,
-      } = require('./src/lib/server/config/env-validation');
-      const env = getValidatedEnv();
-      const urls = getDynamicUrls(env);
-      corsOrigin = urls.corsOrigin;
-    } catch (error) {
-      // フォールバック
+      // フォールバック設定のみ使用（ビルド時の安定性のため）
       corsOrigin =
         process.env.CORS_ORIGIN || process.env.VERCEL_URL
           ? `https://${process.env.VERCEL_URL}`
           : 'http://localhost:3000';
+    } catch (error) {
+      // フォールバック
+      corsOrigin = 'http://localhost:3000';
     }
 
     return [
@@ -201,7 +191,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Link',
             value:
-              '</fonts/inter.woff2>; rel=preload; as=font; type=font/woff2; crossorigin',
+              '<https://fonts.googleapis.com>; rel=preconnect; crossorigin, <https://fonts.gstatic.com>; rel=preconnect; crossorigin',
           },
         ],
       },

@@ -109,16 +109,12 @@ async function generateEnvironmentAudit() {
   };
 
   try {
-    // 新しいバリデーションシステムを使用
-    const {
-      getValidatedEnv,
-      generateEnvAuditReport,
-      getSafeEnvDisplay,
-    } = require('@/lib/server/config/env-validation');
+    // 動的インポートを使用してバリデーションシステムを読み込み
+    const envValidation = await import('@/lib/server/config/env-validation');
 
-    const env = getValidatedEnv();
-    const auditData = generateEnvAuditReport();
-    const safeDisplay = getSafeEnvDisplay(env);
+    const env = envValidation.getValidatedEnv();
+    const _auditData = envValidation.generateEnvAuditReport(); // 将来使用予定
+    const safeDisplay = envValidation.getSafeEnvDisplay(env);
 
     // 基本情報の設定
     report.summary.environment = env.NODE_ENV;
@@ -162,7 +158,7 @@ async function generateEnvironmentAudit() {
         new URL(env.NEXT_PUBLIC_BASE_URL);
       }
       report.security.urlConfiguration = 'valid';
-    } catch (error) {
+    } catch (_urlError) {
       report.security.urlConfiguration = 'invalid';
       report.validation.errors.push('Invalid URL configuration detected');
     }

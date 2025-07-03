@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import { Navigation } from '@/components/ui/navigation';
 import { Footer } from '@/components/ui/footer';
@@ -7,6 +7,11 @@ import { LoginForm } from '@/components/auth/LoginForm';
 export const metadata: Metadata = {
   title: 'ログイン | CuePoint',
   description: 'CuePointにログインしてダイレクトリクルーティングを開始',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function LoginPage() {
