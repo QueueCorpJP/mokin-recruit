@@ -1,16 +1,21 @@
 import 'reflect-metadata';
 import { inject, injectable } from 'inversify';
-import bcrypt from 'bcryptjs';
+import { createHash, randomBytes, scrypt, timingSafeEqual } from 'crypto';
+import { promisify } from 'util';
 import { logger } from '@/utils/logger';
 import { SecurityConfig } from '@/config/security';
 import { IPasswordService } from '@/core/interfaces/IAuthService';
 import { requestPasswordReset, updatePassword } from '@/auth/supabaseAuth';
 import { TYPES } from '@/container/types';
 
-// パスワード管理サービスの実装 (SRP準拠)
+const scryptAsync = promisify(scrypt);
+
+// パスワード管理サービスの実装 (SRP準拠) - Node.js標準ライブラリ使用
 @injectable()
 export class PasswordService implements IPasswordService {
   private securityConfig: SecurityConfig;
+  private readonly SALT_LENGTH = 32;
+  private readonly KEY_LENGTH = 64;
 
   constructor(@inject(TYPES.Security) securityConfig?: SecurityConfig) {
     this.securityConfig = securityConfig || new SecurityConfig();
@@ -18,11 +23,20 @@ export class PasswordService implements IPasswordService {
 
   async hashPassword(password: string): Promise<string> {
     try {
-      const hashedPassword = await bcrypt.hash(
+      // ランダムソルトを生成
+      const salt = randomBytes(this.SALT_LENGTH);
+
+      // scryptを使用してパスワードをハッシュ化
+      const derivedKey = (await scryptAsync(
         password,
-        this.securityConfig.bcryptRounds
-      );
-      logger.debug('Password hashed successfully');
+        salt,
+        this.KEY_LENGTH
+      )) as Buffer;
+
+      // ソルトとハッシュを結合して保存
+      const hashedPassword = `${salt.toString('hex')}:${derivedKey.toString('hex')}`;
+
+      logger.debug('Password hashed successfully using Node.js crypto');
       return hashedPassword;
     } catch (error) {
       logger.error('Password hashing error:', error);
@@ -32,7 +46,27 @@ export class PasswordService implements IPasswordService {
 
   async verifyPassword(password: string, hash: string): Promise<boolean> {
     try {
-      const isValid = await bcrypt.compare(password, hash);
+      // ハッシュからソルトと派生キーを分離
+      const [saltHex, keyHex] = hash.split(':');
+
+      if (!saltHex || !keyHex) {
+        logger.warn('Invalid hash format');
+        return false;
+      }
+
+      const salt = Buffer.from(saltHex, 'hex');
+      const storedKey = Buffer.from(keyHex, 'hex');
+
+      // 入力されたパスワードを同じソルトでハッシュ化
+      const derivedKey = (await scryptAsync(
+        password,
+        salt,
+        this.KEY_LENGTH
+      )) as Buffer;
+
+      // タイミング攻撃を防ぐために定数時間比較を使用
+      const isValid = timingSafeEqual(storedKey, derivedKey);
+
       logger.debug(`Password verification result: ${isValid}`);
       return isValid;
     } catch (error) {
@@ -114,5 +148,19 @@ export class PasswordService implements IPasswordService {
       isValid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * セキュアなランダム文字列を生成（トークン生成用）
+   */
+  generateSecureToken(length: number = 32): string {
+    return randomBytes(length).toString('hex');
+  }
+
+  /**
+   * SHA-256ハッシュを生成（軽量なハッシュが必要な場合）
+   */
+  generateSHA256Hash(data: string): string {
+    return createHash('sha256').update(data).digest('hex');
   }
 }

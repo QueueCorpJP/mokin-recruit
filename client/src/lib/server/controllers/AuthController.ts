@@ -7,6 +7,8 @@ import {
   signOutUser,
   verifySupabaseToken,
 } from '../auth/supabaseAuth';
+import { SessionService } from '../core/services/SessionService';
+import type { ISessionService } from '../core/services/SessionService';
 
 import {
   CompanyAccountRepository,
@@ -41,6 +43,7 @@ export class AuthController {
   private userRegistrationService: UserRegistrationService;
   private passwordService: PasswordService;
   private validationService: ValidationService;
+  private sessionService: ISessionService;
 
   constructor(
     @inject(TYPES.CandidateRepository)
@@ -53,7 +56,8 @@ export class AuthController {
     @inject('IUserRegistrationService')
     userRegistrationService: UserRegistrationService,
     @inject('IPasswordService') passwordService: PasswordService,
-    @inject('ValidationService') validationService: ValidationService
+    @inject('ValidationService') validationService: ValidationService,
+    @inject(TYPES.SessionService) sessionService: ISessionService
   ) {
     this.candidateRepository = candidateRepository;
     this.companyUserRepository = companyUserRepository;
@@ -62,6 +66,7 @@ export class AuthController {
     this.userRegistrationService = userRegistrationService;
     this.passwordService = passwordService;
     this.validationService = validationService;
+    this.sessionService = sessionService;
   }
 
   /**

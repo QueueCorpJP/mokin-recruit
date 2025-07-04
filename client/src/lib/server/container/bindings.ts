@@ -25,6 +25,7 @@ import {
 
 // Services
 import { PasswordService } from '@/core/services/PasswordService';
+import { SessionService } from '@/core/services/SessionService';
 import { UserRegistrationService } from '@/core/services/UserRegistrationService';
 import { ValidationService } from '@/core/services/ValidationService';
 
@@ -36,6 +37,7 @@ import {
   IPasswordService,
   IUserRegistrationService,
 } from '@/core/interfaces/IAuthService';
+import type { ISessionService } from '@/core/services/SessionService';
 import { ICandidateRepository } from '@/core/interfaces/IDomainRepository';
 
 // DIコンテナ設定 (SOLID原則準拠)
@@ -93,6 +95,8 @@ if (process.env.NEXT_PHASE === 'phase-production-build') {
 
     // === サービスバインディング ===
     container.bind<IPasswordService>(TYPES.PasswordService).to(PasswordService);
+
+    container.bind<ISessionService>(TYPES.SessionService).to(SessionService);
 
     container
       .bind<IUserRegistrationService>(TYPES.UserRegistrationService)

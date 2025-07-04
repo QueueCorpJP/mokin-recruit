@@ -3,18 +3,18 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
 
-  // ESLint configuration for build
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-
   // TypeScript configuration for build
   typescript: {
     // Dangerously allow production builds to successfully complete even if
     // your project has type errors.
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
+  },
+
+  // ESLint configuration for build
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: false,
   },
 
   // Vercel deployment optimization
@@ -27,7 +27,11 @@ const nextConfig: NextConfig = {
     ],
     // ページ遷移の最適化
     scrollRestoration: true,
+    // esmExternals: true, // 一時的にコメントアウト
   },
+
+  // サーバー外部パッケージ（Next.js 15の新しい設定）
+  serverExternalPackages: ['bcryptjs'],
 
   // Turbopack configuration (simplified for compatibility)
   // turbopack: {
@@ -102,16 +106,24 @@ const nextConfig: NextConfig = {
       use: ['@svgr/webpack'],
     });
 
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
     return config;
   },
 
   // Environment variables validation
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+    CUSTOM_PORT: '3000',
+    NEXT_PUBLIC_API_URL: 'http://localhost:3000/api',
   },
-
-  // Output configuration for Vercel
-  output: 'standalone',
 
   // API routes configuration
   async rewrites() {
@@ -137,6 +149,22 @@ const nextConfig: NextConfig = {
     } catch (error) {
       // フォールバック
       corsOrigin = 'http://localhost:3000';
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: '/api/:path*',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'no-cache, no-store, must-revalidate',
+            },
+            { key: 'Pragma', value: 'no-cache' },
+            { key: 'Expires', value: '0' },
+          ],
+        },
+      ];
     }
 
     return [
@@ -197,6 +225,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // 出力設定
+  output: 'standalone',
+
+  // パワードバイの非表示
+  poweredByHeader: false,
+
+  // 圧縮の有効化
+  compress: true,
+
+  // ページ拡張子の設定
+  pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
 };
 
 export default nextConfig;

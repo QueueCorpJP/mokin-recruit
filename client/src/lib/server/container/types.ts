@@ -23,6 +23,7 @@ export const TYPES = {
 
   // === Service Layer ===
   AuthService: Symbol.for('AuthService'),
+  SessionService: Symbol.for('SessionService'),
   PasswordService: Symbol.for('PasswordService'),
   UserRegistrationService: Symbol.for('UserRegistrationService'),
   ValidationService: Symbol.for('ValidationService'),
