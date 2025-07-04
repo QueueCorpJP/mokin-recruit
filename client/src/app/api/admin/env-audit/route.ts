@@ -329,6 +329,7 @@ export async function POST(request: NextRequest) {
  */
 async function testSupabaseConnection() {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { createClient } = require('@supabase/supabase-js');
     const supabase = createClient(
       process.env.SUPABASE_URL!,
@@ -362,6 +363,7 @@ async function testSupabaseConnection() {
  */
 async function testJwtConfiguration() {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const jwt = require('jsonwebtoken');
     const secret = process.env.JWT_SECRET!;
 
@@ -391,6 +393,7 @@ async function testJwtConfiguration() {
  */
 async function testUrlConfiguration() {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getBaseUrl, getCorsOrigin } = require('@/lib/server/utils/url');
 
     const baseUrl = getBaseUrl();

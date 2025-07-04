@@ -19,6 +19,21 @@ function getSupabaseConfig(): SupabaseConfig {
   const anonKey = process.env.SUPABASE_ANON_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  // ビルド時は環境変数チェックをスキップ
+  if (
+    process.env.NODE_ENV === undefined ||
+    process.env.NEXT_PHASE === 'phase-production-build'
+  ) {
+    console.log(
+      '🔧 Skipping Supabase environment variable check during build phase'
+    );
+    return {
+      url: url || 'https://placeholder.supabase.co',
+      anonKey: anonKey || 'placeholder-anon-key',
+      serviceRoleKey: serviceRoleKey || 'placeholder-service-role-key',
+    };
+  }
+
   // 必須環境変数の検証
   if (!url || !anonKey) {
     const missing = [];
