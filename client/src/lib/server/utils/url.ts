@@ -4,7 +4,7 @@
  */
 
 /**
- * 現在の環境に応じたベースURLを取得（本番環境対応・循環参照回避）
+ * 現在の環境に応じたベースURLを取得（シンプル・確実性重視）
  */
 export function getBaseUrl(): string {
   // 優先順位に基づいた環境変数チェック
@@ -19,10 +19,9 @@ export function getBaseUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  // 3. 開発環境
+  // 3. 開発環境（3000ポート固定）
   if (process.env.NODE_ENV === 'development') {
-    const port = process.env.PORT || '3000';
-    return `http://localhost:${port}`;
+    return 'http://localhost:3000';
   }
 
   // 4. CORS設定からの取得

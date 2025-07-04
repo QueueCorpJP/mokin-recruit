@@ -9,9 +9,10 @@ const ResetPasswordSchema = z.object({
   // 従来のパラメータ（token_hashベース）
   tokenHash: z.string().optional(),
   type: z.string().optional(),
+  // 新しいパラメータ（access_token + refresh_tokenベース）
   accessToken: z.string().optional(),
   refreshToken: z.string().optional(),
-  // 新しいパラメータ（codeベース）
+  // OAuth/PKCEパラメータ（codeベース）
   code: z.string().optional(),
   state: z.string().optional(),
   // パスワード情報
@@ -33,8 +34,8 @@ const ResetPasswordSchemaWithConfirm = ResetPasswordSchema.refine(
     message: 'パスワードが一致しません',
     path: ['confirmPassword'],
   }
-).refine(data => data.tokenHash || data.code, {
-  message: 'トークンハッシュまたはコードが必要です',
+).refine(data => data.tokenHash || data.code || data.accessToken, {
+  message: '認証パラメータ（tokenHash、code、またはaccessToken）が必要です',
   path: ['tokenHash'],
 });
 
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
     logger.info('🔍 Password reset request received:', {
       hasTokenHash: !!body.tokenHash,
       hasCode: !!body.code,
+      hasAccessToken: !!body.accessToken,
+      hasRefreshToken: !!body.refreshToken,
       type: body.type,
       state: body.state,
     });
@@ -85,8 +88,37 @@ export async function POST(request: NextRequest) {
       let sessionData: any = null;
       let sessionError: any = null;
 
-      // 方法1: token_hashを使用したOTP検証（従来の方法）
-      if (tokenHash) {
+      // 方法1: access_token + refresh_tokenを使用した直接セッション設定（最優先）
+      if (accessToken && refreshToken) {
+        logger.info(
+          '🔑 Attempting access_token + refresh_token based authentication...'
+        );
+
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          sessionData = data;
+          sessionError = error;
+
+          if (sessionError) {
+            logger.warn(
+              '❌ Access token authentication failed:',
+              sessionError.message
+            );
+          } else {
+            logger.info('✅ Access token authentication successful');
+          }
+        } catch (tokenError) {
+          logger.warn('❌ Access token processing failed:', tokenError);
+          sessionError = tokenError;
+        }
+      }
+
+      // 方法2: token_hashを使用したOTP検証（従来の方法）
+      if (!sessionData && tokenHash) {
         logger.info('🔑 Attempting token_hash based verification...');
 
         const result = await supabase.auth.verifyOtp({
@@ -107,7 +139,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 方法2: codeを使用したOAuth/PKCE検証（新しい方法）
+      // 方法3: codeを使用したOAuth/PKCE検証（新しい方法）
       if (!sessionData && code) {
         logger.info('🔑 Attempting code based verification...');
 
@@ -124,30 +156,6 @@ export async function POST(request: NextRequest) {
         } catch (codeError) {
           logger.warn('❌ Code exchange failed:', codeError);
           sessionError = codeError;
-        }
-      }
-
-      // 方法3: accessTokenとrefreshTokenを使用したセッション復元
-      if (!sessionData && accessToken && refreshToken) {
-        logger.info('🔑 Attempting session restoration with tokens...');
-
-        try {
-          const result = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          sessionData = result.data;
-          sessionError = result.error;
-
-          if (sessionError) {
-            logger.warn('❌ Session restoration failed:', sessionError.message);
-          } else {
-            logger.info('✅ Session restoration successful');
-          }
-        } catch (sessionRestoreError) {
-          logger.warn('❌ Session restoration failed:', sessionRestoreError);
-          sessionError = sessionRestoreError;
         }
       }
 
@@ -170,6 +178,9 @@ export async function POST(request: NextRequest) {
           } else if (sessionError.message.includes('code')) {
             errorMessage =
               '認証コードが無効です。新しいパスワードリセットを要求してください。';
+          } else if (sessionError.message.includes('session')) {
+            errorMessage =
+              'セッションの設定に失敗しました。新しいパスワードリセットを要求してください。';
           }
         }
 
@@ -184,6 +195,14 @@ export async function POST(request: NextRequest) {
                     hasTokenHash: !!tokenHash,
                     hasCode: !!code,
                     hasAccessToken: !!accessToken,
+                    hasRefreshToken: !!refreshToken,
+                    authenticationMethod: accessToken
+                      ? 'access_token'
+                      : tokenHash
+                        ? 'token_hash'
+                        : code
+                          ? 'code'
+                          : 'none',
                   }
                 : undefined,
           },
@@ -194,13 +213,20 @@ export async function POST(request: NextRequest) {
       logger.info('✅ Authentication successful, updating password for user:', {
         userId: sessionData.user.id,
         email: sessionData.user.email,
+        authMethod: accessToken
+          ? 'access_token'
+          : tokenHash
+            ? 'token_hash'
+            : 'code',
       });
 
-      // セッションを確実に設定
-      await supabase.auth.setSession({
-        access_token: sessionData.session.access_token,
-        refresh_token: sessionData.session.refresh_token,
-      });
+      // セッションを確実に設定（既にセッションが設定されている場合はスキップ）
+      if (!accessToken) {
+        await supabase.auth.setSession({
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        });
+      }
 
       // パスワードを更新
       const { data: updateData, error: updateError } =

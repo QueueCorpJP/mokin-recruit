@@ -149,12 +149,16 @@ export default function ForgotPasswordForm() {
 
         {/* メールアドレス入力 */}
         <div className='flex justify-center'>
-          <div className='w-[400px]'>
+          <div className='w-[400px] space-y-4'>
             <div className='bg-white border border-[#999999] rounded-[5px] p-[11px]'>
               <input
                 id='email'
                 type='email'
-                placeholder='メールアドレスを入力'
+                placeholder={
+                  process.env.NODE_ENV === 'development'
+                    ? 'test-candidate@example.com (開発用)'
+                    : 'メールアドレスを入力'
+                }
                 value={formData.email}
                 onChange={handleEmailChange}
                 className='w-full text-[#999999] font-medium text-base leading-8 outline-none placeholder-[#999999]'
@@ -162,6 +166,32 @@ export default function ForgotPasswordForm() {
                 disabled={isLoading}
               />
             </div>
+
+            {/* 開発環境でのテストユーザー自動入力ボタン */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className='flex gap-2 justify-center'>
+                <button
+                  type='button'
+                  onClick={() =>
+                    setFormData({ email: 'test-candidate@example.com' })
+                  }
+                  className='text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded transition-colors'
+                  disabled={isLoading}
+                >
+                  候補者用メール
+                </button>
+                <button
+                  type='button'
+                  onClick={() =>
+                    setFormData({ email: 'test-company@example.com' })
+                  }
+                  className='text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded transition-colors'
+                  disabled={isLoading}
+                >
+                  企業用メール
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
