@@ -3,42 +3,42 @@ import { Container } from 'inversify';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 import { TYPES } from './types';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 
 // Config
-import { AppConfig } from '@/config/app';
-import { SupabaseConfig } from '@/config/database';
-import { SecurityConfig } from '@/config/security';
+import { AppConfig } from '@/lib/server/config/app';
+import { SupabaseConfig } from '@/lib/server/config/database';
+import { SecurityConfig } from '@/lib/server/config/security';
 
 // Database
 import {
   initializeSupabase,
   getSupabaseAdminClient,
-} from '@/database/supabase';
+} from '@/lib/server/database/supabase';
 
 // Repositories
-import { CandidateRepository } from '@/infrastructure/database/CandidateRepository';
+import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
 import {
   CompanyAccountRepository,
   CompanyUserRepository,
-} from '@/infrastructure/database/CompanyUserRepository';
+} from '@/lib/server/infrastructure/database/CompanyUserRepository';
 
 // Services
-import { PasswordService } from '@/core/services/PasswordService';
-import { SessionService } from '@/core/services/SessionService';
-import { UserRegistrationService } from '@/core/services/UserRegistrationService';
-import { ValidationService } from '@/core/services/ValidationService';
+import { PasswordService } from '@/lib/server/core/services/PasswordService';
+import { SessionService } from '@/lib/server/core/services/SessionService';
+import { UserRegistrationService } from '@/lib/server/core/services/UserRegistrationService';
+import { ValidationService } from '@/lib/server/core/services/ValidationService';
 
 // Controllers
-import { AuthController } from '@/controllers/AuthController';
+import { AuthController } from '@/lib/server/controllers/AuthController';
 
 // Interfaces
 import {
   IPasswordService,
   IUserRegistrationService,
-} from '@/core/interfaces/IAuthService';
-import type { ISessionService } from '@/core/services/SessionService';
-import { ICandidateRepository } from '@/core/interfaces/IDomainRepository';
+} from '@/lib/server/core/interfaces/IAuthService';
+import type { ISessionService } from '@/lib/server/core/services/SessionService';
+import { ICandidateRepository } from '@/lib/server/core/interfaces/IDomainRepository';
 
 // DIコンテナ設定 (SOLID原則準拠)
 export const container = new Container({

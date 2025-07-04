@@ -50,13 +50,13 @@ export class AuthController {
     candidateRepository: ICandidateRepository,
     @inject(TYPES.CompanyRepository)
     companyUserRepository: CompanyUserRepository,
-    @inject('CompanyAccountRepository')
+    @inject(TYPES.CompanyAccountRepository)
     companyAccountRepository: CompanyAccountRepository,
     @inject(TYPES.Security) securityConfig: SecurityConfig,
-    @inject('IUserRegistrationService')
+    @inject(TYPES.UserRegistrationService)
     userRegistrationService: UserRegistrationService,
-    @inject('IPasswordService') passwordService: PasswordService,
-    @inject('ValidationService') validationService: ValidationService,
+    @inject(TYPES.PasswordService) passwordService: PasswordService,
+    @inject(TYPES.ValidationService) validationService: ValidationService,
     @inject(TYPES.SessionService) sessionService: ISessionService
   ) {
     this.candidateRepository = candidateRepository;
@@ -198,48 +198,107 @@ export class AuthController {
     try {
       const { email, password } = req.body;
 
-      // バリデーション
+      // 入力データのバリデーション
       const validationResult = this.validationService.validateLoginData({
         email,
         password,
       });
 
       if (!validationResult.isValid) {
+        logger.warn('Login validation failed', {
+          email,
+          fieldErrors: validationResult.fieldErrors,
+          generalErrors: validationResult.generalErrors,
+        });
+
+        const errorMessages: string[] = [];
+
+        // フィールドエラーを収集
+        Object.entries(validationResult.fieldErrors).forEach(
+          ([field, errors]) => {
+            errorMessages.push(...errors);
+          }
+        );
+
+        // 一般エラーを収集
+        errorMessages.push(...validationResult.generalErrors);
+
         res.status(400).json({
-          error: 'Validation failed',
-          details: validationResult.fieldErrors,
+          success: false,
+          error: 'バリデーションエラー',
+          message: errorMessages.join(', '),
+          details: {
+            fieldErrors: validationResult.fieldErrors,
+            generalErrors: validationResult.generalErrors,
+          },
         });
         return;
       }
 
-      logger.info(`Login attempt for email: ${email}`);
+      logger.info(`Login attempt for user: ${email}`);
 
-      // Supabase Authでログイン
+      // Supabase認証
       const authResult = await signInWithSupabase(email, password);
-
       if (!authResult.success) {
-        logger.warn(`Login failed for email: ${email}`);
+        logger.warn(`Authentication failed for user: ${email}`, {
+          error: authResult.error,
+        });
+
+        // 認証エラーの詳細分類
+        let errorMessage = 'ログインに失敗しました';
+        let errorCode = 'AUTH_FAILED';
+
+        if (authResult.error) {
+          const errorStr = authResult.error.toLowerCase();
+          if (
+            errorStr.includes('invalid_credentials') ||
+            errorStr.includes('invalid login')
+          ) {
+            errorMessage = 'メールアドレスまたはパスワードが正しくありません';
+            errorCode = 'INVALID_CREDENTIALS';
+          } else if (errorStr.includes('email not confirmed')) {
+            errorMessage = 'メールアドレスが確認されていません';
+            errorCode = 'EMAIL_NOT_CONFIRMED';
+          } else if (errorStr.includes('too many requests')) {
+            errorMessage =
+              'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください';
+            errorCode = 'TOO_MANY_REQUESTS';
+          }
+        }
+
         res.status(401).json({
-          error: 'Invalid credentials',
+          success: false,
+          error: errorMessage,
+          message: errorMessage,
+          code: errorCode,
+          details: {
+            originalError: authResult.error,
+          },
         });
         return;
       }
 
-      // ユーザー情報の取得と最終ログイン時刻の更新
-      let userInfo = null;
+      // データベースからユーザー情報を取得
+      let userInfo: any = null;
       try {
-        // 候補者として検索
+        // 候補者テーブルから検索
         const candidate = await this.candidateRepository.findByEmail(email);
         if (candidate) {
-          await this.candidateRepository.updateLastLogin(candidate.id);
           userInfo = {
             id: candidate.id,
             email: candidate.email,
             type: 'candidate',
             name: `${candidate.lastName} ${candidate.firstName}`,
+            profile: {
+              lastName: candidate.lastName,
+              firstName: candidate.firstName,
+              lastNameKana: candidate.lastNameKana,
+              firstNameKana: candidate.firstNameKana,
+              gender: candidate.gender,
+            },
           };
         } else {
-          // 企業ユーザーとして検索
+          // 企業ユーザーテーブルから検索
           const companyUser =
             await this.companyUserRepository.findByEmail(email);
           if (companyUser) {
@@ -247,19 +306,37 @@ export class AuthController {
               id: companyUser.id,
               email: companyUser.email,
               type: 'company_user',
-              name: companyUser.fullName,
-              companyAccountId: companyUser.companyAccountId,
+              name: companyUser.fullName || companyUser.email,
+              profile: {
+                fullName: companyUser.fullName,
+                companyAccountId: companyUser.companyAccountId,
+              },
             };
           }
         }
-      } catch (error) {
-        logger.error('Error fetching user info during login:', error);
+      } catch (dbError) {
+        logger.error('Database error during user lookup', {
+          email,
+          error: dbError,
+        });
+
+        res.status(500).json({
+          success: false,
+          error: 'データベースエラーが発生しました',
+          message: 'ユーザー情報の取得に失敗しました',
+          code: 'DATABASE_ERROR',
+        });
+        return;
       }
 
       if (!userInfo) {
         logger.error(`User not found in database: ${email}`);
-        res.status(401).json({
-          error: 'User not found',
+        res.status(404).json({
+          success: false,
+          error: 'ユーザーが見つかりません',
+          message:
+            'アカウント情報が見つかりません。サポートにお問い合わせください',
+          code: 'USER_NOT_FOUND',
         });
         return;
       }
@@ -267,13 +344,35 @@ export class AuthController {
       logger.info(`Login successful for user: ${userInfo.id}`);
 
       res.status(200).json({
-        message: 'Login successful',
+        success: true,
+        message: 'ログインに成功しました',
+        data: {
+          token: authResult.token,
+          user: userInfo,
+        },
+        // 後方互換性のため
         token: authResult.token,
         user: userInfo,
       });
     } catch (error) {
       logger.error('Login controller error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+
+      const errorMessage =
+        error instanceof Error ? error.message : 'Internal server error';
+
+      res.status(500).json({
+        success: false,
+        error: 'サーバーエラーが発生しました',
+        message:
+          'システムエラーが発生しました。しばらくしてから再度お試しください',
+        code: 'INTERNAL_SERVER_ERROR',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? {
+                originalError: errorMessage,
+              }
+            : undefined,
+      });
     }
   }
 

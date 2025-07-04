@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     '/contact',
     '/privacy',
     '/terms',
+    '/dev-tools', // 開発者ツールページ
   ];
 
   // 認証が必要なパス
@@ -64,6 +65,39 @@ export async function middleware(request: NextRequest) {
 
       // セッションの確認
       const token = request.cookies.get('supabase-auth-token')?.value;
+      const bypassToken = request.cookies.get('auth-bypass-token')?.value;
+
+      // 開発環境での認証バイパスチェック
+      if (process.env.NODE_ENV === 'development' && bypassToken) {
+        try {
+          // バイパストークンの検証
+          if (bypassToken.startsWith('bypass.')) {
+            const payload = JSON.parse(
+              Buffer.from(
+                bypassToken.replace('bypass.', ''),
+                'base64'
+              ).toString()
+            );
+
+            if (payload.bypass && payload.exp > Math.floor(Date.now() / 1000)) {
+              logger.info(
+                `🔓 Auth bypass used for ${pathname} by ${payload.userType}`
+              );
+
+              // バイパスユーザー情報をヘッダーに追加
+              const response = NextResponse.next();
+              response.headers.set('x-user-id', payload.userId);
+              response.headers.set('x-user-email', payload.email);
+              response.headers.set('x-user-type', payload.userType);
+              response.headers.set('x-auth-bypass', 'true');
+
+              return response;
+            }
+          }
+        } catch (error) {
+          logger.warn('Invalid bypass token:', error);
+        }
+      }
 
       if (!token) {
         logger.info(`Unauthorized access attempt to ${pathname}`);

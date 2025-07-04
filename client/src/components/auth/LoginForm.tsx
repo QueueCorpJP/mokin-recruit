@@ -38,7 +38,7 @@ export function LoginForm() {
       try {
         // クライアントサイドでのみログ出力
         if (typeof window !== 'undefined') {
-          console.log('🚀 Attempting login...');
+          console.log('🚀 Attempting login for:', email);
         }
 
         const response = await fetch('/api/auth/login', {
@@ -52,30 +52,138 @@ export function LoginForm() {
           }),
         });
 
-        const data = await response.json();
+        let data: any = null;
+        let responseText = '';
+
+        try {
+          responseText = await response.text();
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('❌ Failed to parse response JSON:', {
+            status: response.status,
+            statusText: response.statusText,
+            responseText: responseText.substring(0, 500), // 最初の500文字のみ
+            parseError:
+              parseError instanceof Error
+                ? {
+                    name: parseError.name,
+                    message: parseError.message,
+                    stack: parseError.stack,
+                  }
+                : parseError,
+          });
+          throw new Error(
+            `サーバーから無効なレスポンスが返されました (${response.status})`
+          );
+        }
+
+        if (typeof window !== 'undefined') {
+          console.log('📝 API Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            headers: {
+              contentType: response.headers.get('content-type'),
+              contentLength: response.headers.get('content-length'),
+            },
+            data: {
+              ...data,
+              token: data?.token ? '[TOKEN_PRESENT]' : '[NO_TOKEN]',
+            },
+          });
+        }
 
         if (!response.ok) {
-          if (typeof window !== 'undefined') {
-            console.error('❌ Login API error:', data);
+          // 詳細なエラーメッセージを表示
+          let errorMessage = 'ログインに失敗しました';
+
+          if (data?.message) {
+            errorMessage = data.message;
+          } else if (data?.error) {
+            errorMessage = data.error;
+          } else if (response.status === 404) {
+            errorMessage = 'ログインAPIが見つかりません';
+          } else if (response.status === 500) {
+            errorMessage = 'サーバーエラーが発生しました';
+          } else if (response.status >= 400) {
+            errorMessage = `ログインエラー (${response.status})`;
           }
-          throw new Error(data.error || 'ログインに失敗しました');
+
+          // 開発環境では詳細情報も表示
+          if (process.env.NODE_ENV === 'development' && data?.details) {
+            console.error('❌ Login API error details:', data.details);
+          }
+
+          if (typeof window !== 'undefined') {
+            console.error('❌ Login API error:', {
+              status: response.status,
+              statusText: response.statusText,
+              message: errorMessage,
+              code: data?.code,
+              details: data?.details,
+              originalData: data,
+            });
+          }
+
+          throw new Error(errorMessage);
         }
 
-        if (typeof window !== 'undefined') {
-          console.log('✅ Login successful');
-        }
-        setSuccess('ログインに成功しました！');
+        // 成功判定の改善
+        if (data?.success === true || (data?.token && data?.user)) {
+          if (typeof window !== 'undefined') {
+            console.log('✅ Login successful for user:', data?.user?.email);
+          }
 
-        // 成功時はダッシュボードにリダイレクト
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+          setSuccess('ログインに成功しました！');
+
+          // トークンをlocalStorageに保存（必要に応じて）
+          if (data?.token) {
+            try {
+              localStorage.setItem('auth_token', data.token);
+              console.log('💾 Token saved to localStorage');
+            } catch (storageError) {
+              console.warn(
+                '⚠️ Failed to save token to localStorage:',
+                storageError
+              );
+            }
+          }
+
+          // 成功時はダッシュボードにリダイレクト
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1000);
+        } else {
+          // 予期しないレスポンス形式
+          const errorMessage = data?.message || 'ログインに失敗しました';
+          console.error('❌ Unexpected response format:', data);
+          throw new Error(errorMessage);
+        }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'ログインに失敗しました';
+        // エラーオブジェクトの詳細な情報を取得
+        const errorInfo = {
+          name: err instanceof Error ? err.name : 'Unknown',
+          message:
+            err instanceof Error ? err.message : 'ログインに失敗しました',
+          stack: err instanceof Error ? err.stack : undefined,
+          cause: err instanceof Error ? err.cause : undefined,
+          originalError: err,
+        };
+
+        const errorMessage = errorInfo.message;
         setError(errorMessage);
+
         if (typeof window !== 'undefined') {
-          console.error('❌ Login error:', err);
+          console.error('❌ Login error:', errorInfo);
+
+          // ネットワークエラーの詳細診断
+          if (err instanceof TypeError && err.message.includes('fetch')) {
+            console.error('🌐 Network error detected:', {
+              message: 'ネットワーク接続に問題があります',
+              suggestion: 'サーバーが起動しているか確認してください',
+              url: '/api/auth/login',
+            });
+          }
         }
       }
     });
@@ -91,6 +199,47 @@ export function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit} className='space-y-6'>
+        {/* 開発環境でのテストユーザー情報表示 */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4'>
+            <h3 className='text-sm font-medium text-blue-900 mb-2'>
+              🧪 開発環境 - テストユーザー情報
+            </h3>
+            <div className='text-xs text-blue-800 space-y-1'>
+              <p>
+                <strong>候補者:</strong> test-candidate@example.com /
+                TestPassword123!
+              </p>
+              <p>
+                <strong>企業:</strong> test-company@example.com /
+                TestPassword123!
+              </p>
+            </div>
+            <div className='mt-2 flex gap-2'>
+              <button
+                type='button'
+                onClick={() => {
+                  setEmail('test-candidate@example.com');
+                  setPassword('TestPassword123!');
+                }}
+                className='text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded transition-colors'
+              >
+                候補者でテスト
+              </button>
+              <button
+                type='button'
+                onClick={() => {
+                  setEmail('test-company@example.com');
+                  setPassword('TestPassword123!');
+                }}
+                className='text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition-colors'
+              >
+                企業でテスト
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* エラー表示 */}
         {error && (
           <Alert variant='destructive'>
@@ -129,7 +278,11 @@ export function LoginForm() {
                     setError(null);
                   }}
                   className='w-full px-3 py-3 bg-white border border-[#999999] rounded-[5px] text-base leading-8 tracking-[0.1em] placeholder:text-[#999999] placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent'
-                  placeholder='name@example.com'
+                  placeholder={
+                    process.env.NODE_ENV === 'development'
+                      ? 'test-candidate@example.com'
+                      : 'name@example.com'
+                  }
                   disabled={isPending}
                   required
                 />
@@ -157,7 +310,11 @@ export function LoginForm() {
                       setError(null);
                     }}
                     className='w-full px-3 py-3 bg-white border border-[#999999] rounded-[5px] text-base leading-8 tracking-[0.1em] placeholder:text-[#999999] placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent pr-12'
-                    placeholder='半角英数字・記号のみ、8文字以上'
+                    placeholder={
+                      process.env.NODE_ENV === 'development'
+                        ? 'TestPassword123! (開発用)'
+                        : '半角英数字・記号のみ、8文字以上'
+                    }
                     disabled={isPending}
                     required
                   />
