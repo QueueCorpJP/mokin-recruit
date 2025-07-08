@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { PasswordInput } from '@/components/ui/password-input';
 
 interface NewPasswordFormProps {
   onSubmit: (password: string, confirmPassword: string) => Promise<void>;
@@ -18,38 +18,41 @@ export function NewPasswordForm({
 }: NewPasswordFormProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // パスワード強度チェック
-  const getPasswordStrength = (pwd: string) => {
+  const checkPasswordStrength = (password: string) => {
     const checks = {
-      length: pwd.length >= 8,
-      hasLetter: /[a-zA-Z]/.test(pwd),
-      hasNumber: /[0-9]/.test(pwd),
-      hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+      length: password.length >= 8,
+      hasLetter: /[a-zA-Z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
     };
 
-    const score = Object.values(checks).filter(Boolean).length;
-    return { checks, score };
+    let score = 0;
+    if (checks.length) score++;
+    if (checks.hasLetter) score++;
+    if (checks.hasNumber) score++;
+    if (checks.hasSymbol) score++;
+
+    return {
+      score,
+      checks,
+    };
   };
 
-  const passwordStrength = getPasswordStrength(password);
-  const isPasswordValid = passwordStrength.score >= 3 && password.length >= 8;
+  const passwordStrength = checkPasswordStrength(password);
+  const isPasswordValid =
+    passwordStrength.score >= 3 && passwordStrength.checks.length;
   const isConfirmPasswordValid =
     confirmPassword && password === confirmPassword;
   const isFormValid = isPasswordValid && isConfirmPasswordValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isFormValid) {
-      setError('すべての要件を満たしてください');
-      return;
-    }
+    if (!isFormValid || isLoading || isPending) return;
 
     setError(null);
     setSuccess(null);
@@ -57,12 +60,15 @@ export function NewPasswordForm({
     startTransition(async () => {
       try {
         await onSubmit(password, confirmPassword);
-        setSuccess('パスワードが正常に更新されました！');
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'パスワードの設定に失敗しました';
-        setError(errorMessage);
-        console.error('Password reset form error:', err);
+        setSuccess('パスワードが正常に更新されました。');
+        setPassword('');
+        setConfirmPassword('');
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'パスワードの更新に失敗しました。'
+        );
       }
     });
   };
@@ -107,33 +113,18 @@ export function NewPasswordForm({
           <Label htmlFor='password' className='text-sm font-medium'>
             新しいパスワード
           </Label>
-          <div className='relative'>
-            <Input
-              id='password'
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={e => {
-                setPassword(e.target.value);
-                setError(null);
-              }}
-              className='pr-10'
-              placeholder='新しいパスワードを入力'
-              disabled={isLoading || isPending}
-              required
-            />
-            <button
-              type='button'
-              onClick={() => setShowPassword(!showPassword)}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
-              disabled={isLoading || isPending}
-            >
-              {showPassword ? (
-                <EyeOff className='h-4 w-4' />
-              ) : (
-                <Eye className='h-4 w-4' />
-              )}
-            </button>
-          </div>
+          <PasswordInput
+            id='password'
+            value={password}
+            onChange={e => {
+              setPassword(e.target.value);
+              setError(null);
+            }}
+            placeholder='新しいパスワードを入力'
+            disabled={isLoading || isPending}
+            required
+            showToggle={true}
+          />
 
           {/* パスワード強度インジケーター */}
           {password && (
@@ -194,33 +185,18 @@ export function NewPasswordForm({
           <Label htmlFor='confirmPassword' className='text-sm font-medium'>
             パスワード確認
           </Label>
-          <div className='relative'>
-            <Input
-              id='confirmPassword'
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={e => {
-                setConfirmPassword(e.target.value);
-                setError(null);
-              }}
-              className='pr-10'
-              placeholder='パスワードを再入力'
-              disabled={isLoading || isPending}
-              required
-            />
-            <button
-              type='button'
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
-              disabled={isLoading || isPending}
-            >
-              {showConfirmPassword ? (
-                <EyeOff className='h-4 w-4' />
-              ) : (
-                <Eye className='h-4 w-4' />
-              )}
-            </button>
-          </div>
+          <PasswordInput
+            id='confirmPassword'
+            value={confirmPassword}
+            onChange={e => {
+              setConfirmPassword(e.target.value);
+              setError(null);
+            }}
+            placeholder='パスワードを再入力'
+            disabled={isLoading || isPending}
+            required
+            showToggle={true}
+          />
 
           {/* パスワード一致チェック */}
           {confirmPassword && (

@@ -1,4 +1,17 @@
+# ==============================================================================
+# Development Dockerfile for Next.js 15 + Supabase Application
+# Optimized for Docker development environment with network connectivity
+# ==============================================================================
+
 FROM node:18-alpine
+
+# Install system dependencies for network connectivity and SSL
+RUN apk update && apk upgrade && apk add --no-cache \
+    ca-certificates \
+    curl \
+    wget \
+    bind-tools \
+    && rm -rf /var/cache/apk/*
 
 # 作業ディレクトリを設定
 WORKDIR /app
@@ -12,8 +25,21 @@ RUN npm install
 # アプリケーションのソースコードをコピー
 COPY . .
 
+# 環境変数の設定
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # ポートを公開
 EXPOSE 3000
+
+# ヘルスチェック用のスクリプト
+RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/api/health || exit 1' > /usr/local/bin/healthcheck.sh && \
+    chmod +x /usr/local/bin/healthcheck.sh
+
+# 接続テスト用のスクリプト
+RUN echo '#!/bin/sh\necho "Testing Supabase connectivity..."\ncurl -I https://mjhqeagxibsklugikyma.supabase.co/rest/v1/ || echo "Supabase connection test failed"\necho "Testing DNS resolution..."\nnslookup mjhqeagxibsklugikyma.supabase.co || echo "DNS resolution failed"' > /usr/local/bin/connectivity-test.sh && \
+    chmod +x /usr/local/bin/connectivity-test.sh
 
 # 開発サーバーを起動
 CMD ["npm", "run", "dev"] 

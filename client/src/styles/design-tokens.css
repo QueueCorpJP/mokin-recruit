@@ -1,0 +1,37 @@
+/* Design Tokens for Input System */
+
+/* Input Base Variables */
+:root {
+  /* Colors */
+  --input-text-color: #323232;
+  --input-border-color: #d1d5db;
+  --input-placeholder-color: #9ca3af;
+  --input-background-color: #ffffff;
+
+  /* Spacing & Layout */
+  --input-padding-x: 11px;
+  --input-padding-y: 8px;
+  --input-border-radius: 5px;
+  --input-border-width: 1px;
+
+  /* Typography */
+  --input-font-size: 16px;
+  --input-font-family: 'Noto Sans JP', sans-serif;
+
+  /* Label Styling */
+  --input-label-width: 140px;
+  --input-label-width-mobile: 120px;
+
+  /* Password Toggle Icon */
+  --password-toggle-icon-right: 12px;
+  --password-toggle-icon-color: #0f9058;
+  /* Password Icon */
+  --password-icon-size: 28px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :root {
+    --input-label-width: var(--input-label-width-mobile);
+  }
+}

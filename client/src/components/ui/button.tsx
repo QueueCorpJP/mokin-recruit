@@ -37,9 +37,9 @@ const buttonVariants = cva(
         'white-outline-square':
           'border-2 border-[var(--white-outline-border)] bg-transparent text-[var(--white-outline-text)] font-bold tracking-[0.1em] hover:bg-[var(--white-outline-hover-bg)] focus-visible:ring-[var(--white-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] [&_svg]:text-[var(--white-outline-icon)] flex-col',
         'small-green':
-          'bg-[var(--small-button-bg)] text-[var(--small-button-text)] font-[var(--small-button-font-weight)] tracking-[var(--small-button-letter-spacing)] transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
+          'bg-[var(--small-button-bg)] text-[var(--small-button-text)] font-bold tracking-[var(--small-button-letter-spacing)] transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
         'small-green-outline':
-          'border border-[var(--small-outline-border)] bg-transparent text-[var(--small-outline-text)] font-[var(--small-button-font-weight)] tracking-[var(--small-button-letter-spacing)] hover:bg-[var(--small-outline-hover-bg)] focus-visible:ring-[var(--small-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
+          'border border-[var(--small-outline-border)] bg-transparent text-[var(--small-outline-text)] font-bold tracking-[var(--small-button-letter-spacing)] hover:bg-[var(--small-outline-hover-bg)] focus-visible:ring-[var(--small-outline-border)]/30 transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] leading-[var(--small-button-line-height)]',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

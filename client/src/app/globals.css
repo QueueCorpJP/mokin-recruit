@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Tailwind CSS v4.0のホバー制限を回避するカスタムバリアント */
+@variant hover-always (&:hover);
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -137,7 +140,7 @@
   --small-button-padding-x: 16px;
   --small-button-padding-y: 4px;
   --small-button-font-size: 14px;
-  --small-button-font-weight: 700;
+
   --small-button-line-height: 1.6;
   --small-button-letter-spacing: 0.1em;
 
@@ -146,6 +149,81 @@
   --small-outline-text: #0f9058;
   --small-outline-hover-bg: rgba(15, 144, 88, 0.2);
   --small-outline-radius: 32px;
+
+  /* Design Tokens for Email Input Form */
+  --email-input-width: 400px;
+  --email-input-padding: 11px;
+  --email-input-border-radius: 5px;
+  --email-input-border-color: #999999;
+  --email-input-border-width: 1px;
+  --email-input-bg: #ffffff;
+  --email-input-text-color: #323232;
+  --email-input-placeholder-color: #999999;
+  --email-input-focus-border-color: #0f9058;
+  --email-input-focus-ring-color: rgba(15, 144, 88, 0.2);
+  --email-input-error-border-color: #dc2626;
+  --email-input-error-ring-color: rgba(220, 38, 38, 0.2);
+
+  /* Email Form Label */
+  --email-label-color: #323232;
+
+  --email-label-font-size: 16px;
+  --email-label-line-height: 2em;
+  --email-label-letter-spacing: 0.1em;
+
+  /* Email Form Layout */
+  --email-form-gap: 16px;
+  --email-form-field-gap: 8px;
+  --email-label-padding-top: 11px;
+
+  /* Design Tokens for Base Input System (共通) */
+  --input-width: 400px;
+  --input-padding: 11px;
+  --input-border-radius: 5px;
+  --input-border-color: #999999;
+  --input-border-width: 1px;
+  --input-bg: #ffffff;
+  --input-text-color: #323232;
+  --input-placeholder-color: #999999;
+  --input-focus-border-color: #0f9058;
+  --input-focus-ring-color: rgba(15, 144, 88, 0.2);
+  --input-error-border-color: #dc2626;
+  --input-error-ring-color: rgba(220, 38, 38, 0.2);
+
+  /* Input Form Text Styles (共通) */
+  --input-text-font-size: 16px;
+  --input-text-line-height: 1.5;
+  --input-text-letter-spacing: 0.025em;
+
+  /* Input Form Label (共通) */
+  --input-label-color: #323232;
+  --input-label-font-size: 16px;
+  --input-label-line-height: 2em;
+  --input-label-letter-spacing: 0.1em;
+  --input-label-width: 140px;
+  --input-label-width-mobile: 120px;
+  --input-label-text-align: right;
+  --input-label-padding-top: 11px;
+
+  /* Input Form Layout (共通) */
+  --input-form-gap: 16px;
+  --input-form-field-gap: 8px;
+
+  /* Error Color */
+  --error-color: #ef4444;
+
+  /* Input Description */
+  --input-description-color: #666666;
+  --input-description-font-size: 14px;
+  --input-description-line-height: 1.4;
+  --input-description-letter-spacing: 0.025em;
+
+  /* Password Icon */
+  --password-icon-size: 20px;
+  --password-icon-color: #666666;
+  --password-icon-hover-color: #323232;
+  --password-icon-right: 11px;
+  --password-icon-padding: 11px;
 }
 
 .dark {

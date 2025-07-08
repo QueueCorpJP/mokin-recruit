@@ -15,6 +15,7 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+      - 1.1.1.1
 
   # Next.js フルスタックアプリケーション
   client:
@@ -22,19 +23,30 @@ services:
       context: ./client
       dockerfile: Dockerfile.dev
     container_name: mokin-recruit-client
+    env_file:
+      - .env
+      - docker.env
     environment:
       NODE_ENV: development
+      PORT: 3000
       # Supabase設定（フロントエンド用）
       NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
       # Supabase設定（サーバーサイド用）
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       # セキュリティ設定
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       # Redis設定
       REDIS_URL: redis://redis:6379
+      # CORS設定
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      # デバッグ設定
+      DEBUG: ${DEBUG:-mokin-recruit:*}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     ports:
       - '3000:3000'
     volumes:
@@ -47,8 +59,15 @@ services:
     restart: unless-stopped
     command: npm run dev
     dns:
+      - 1.1.1.1
       - 8.8.8.8
       - 8.8.4.4
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # メール送信サービス（開発用）
   mailhog:
@@ -70,8 +89,7 @@ volumes:
 networks:
   mokin-recruit-network:
     driver: bridge
-    enable_ipv6: true
+    enable_ipv6: false
     ipam:
       config:
         - subnet: 172.20.0.0/16
-        - subnet: 2001:db8:1::/64
