@@ -4,31 +4,45 @@ import {
   ISearchableRepository,
 } from './IRepository';
 
-// ドメインエンティティの型定義
+// MVPスキーマに対応したシンプルな候補者エンティティ
 export interface CandidateEntity {
   id: string;
   email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  firstNameKana: string;
-  lastNameKana: string;
-  gender: string;
-  status: string;
-  currentResidence: string;
-  birthDate: Date;
-  phoneNumber: string;
-  currentSalary: string;
-  hasJobChangeExperience: boolean;
-  desiredChangeTiming: string;
-  jobSearchStatus: string;
-  finalEducation: string;
-  englishLevel: string;
-  desiredSalary: string;
-  emailNotificationSettings: Record<string, unknown>;
-  lastLoginAt?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  password_hash: string;
+  last_name: string;
+  first_name: string;
+  phone_number?: string;
+  current_residence?: string;
+  current_salary?: string;
+  desired_salary?: string;
+  skills: string[];
+  experience_years: number;
+  desired_industries: string[];
+  desired_job_types: string[];
+  desired_locations: string[];
+  scout_reception_enabled: boolean;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  created_at: string;
+  updated_at: string;
+  last_login_at?: string;
+}
+
+// MVPスキーマ対応の候補者作成データ
+export interface CreateCandidateData {
+  email: string;
+  password_hash: string;
+  last_name: string;
+  first_name: string;
+  phone_number?: string;
+  current_residence?: string;
+  current_salary?: string;
+  desired_salary?: string;
+  skills?: string[];
+  experience_years?: number;
+  desired_industries?: string[];
+  desired_job_types?: string[];
+  desired_locations?: string[];
+  scout_reception_enabled?: boolean;
 }
 
 export interface CompanyEntity {
@@ -50,13 +64,25 @@ export interface JobEntity {
 }
 
 // ドメイン固有リポジトリインターフェース
-export interface ICandidateRepository
-  extends IBaseRepository<CandidateEntity>,
-    ISearchableRepository<CandidateEntity>,
-    IPaginatedRepository<CandidateEntity> {
+export interface ICandidateRepository {
+  findById(id: string): Promise<CandidateEntity | null>;
   findByEmail(email: string): Promise<CandidateEntity | null>;
-  findByStatus(status: string): Promise<CandidateEntity[]>;
+  create(candidateData: CreateCandidateData): Promise<CandidateEntity>;
+  update(
+    id: string,
+    updates: Partial<CandidateEntity>
+  ): Promise<CandidateEntity>;
+  delete(id: string): Promise<boolean>;
   updateLastLogin(id: string): Promise<boolean>;
+  search(filters: {
+    skills?: string[];
+    desired_industries?: string[];
+    desired_locations?: string[];
+    experience_years_min?: number;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<CandidateEntity[]>;
 }
 
 export interface ICompanyRepository

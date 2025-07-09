@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       } catch (authError) {
         // 基本的なHTTPリクエストテスト
         const testResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`,
+          `${process.env.SUPABASE_URL}/rest/v1/`,
           {
             headers: {
               apikey: process.env.SUPABASE_ANON_KEY || '',

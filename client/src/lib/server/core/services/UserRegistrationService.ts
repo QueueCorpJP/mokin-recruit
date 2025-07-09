@@ -5,19 +5,47 @@ import {
   registerUserWithSupabase,
   UserRegistrationData,
 } from '@/auth/supabaseAuth';
-import { CandidateRepository } from '@/infrastructure/database/CandidateRepository';
+import {
+  CandidateRepository,
+  CreateCandidateData,
+} from '@/infrastructure/database/CandidateRepository';
 import {
   CompanyAccountRepository,
   CompanyUserRepository,
+  CreateCompanyUserData,
 } from '@/infrastructure/database/CompanyUserRepository';
 import { PasswordService } from './PasswordService';
 import {
   AuthResult,
-  CandidateRegistrationData,
-  CompanyUserRegistrationData,
   IUserRegistrationService,
 } from '@/core/interfaces/IAuthService';
-import { CandidateEntity } from '@/core/interfaces/IDomainRepository';
+
+// MVPスキーマ対応の候補者登録データ
+export interface CandidateRegistrationData {
+  email: string;
+  password: string;
+  lastName: string;
+  firstName: string;
+  phoneNumber?: string;
+  currentResidence?: string;
+  currentSalary?: string;
+  desiredSalary?: string;
+  skills?: string[];
+  experienceYears?: number;
+  desiredIndustries?: string[];
+  desiredJobTypes?: string[];
+  desiredLocations?: string[];
+  scoutReceptionEnabled?: boolean;
+}
+
+// MVPスキーマ対応の企業ユーザー登録データ
+export interface CompanyUserRegistrationData {
+  email: string;
+  password: string;
+  fullName: string;
+  companyAccountId: string;
+  positionTitle?: string;
+}
 
 // ユーザー登録サービスの実装 (SRP準拠)
 @injectable()
@@ -93,62 +121,47 @@ export class UserRegistrationService implements IUserRegistrationService {
         data.password
       );
 
-      // データベースに候補者情報を保存
-      const candidateData = {
-        id: authResult.user!.id,
+      // 候補者テーブルにデータ挿入
+      const candidateData: CreateCandidateData = {
         email: data.email,
-        passwordHash: hashedPassword,
-        lastName: data.lastName,
-        firstName: data.firstName,
-        lastNameKana: data.lastNameKana || '',
-        firstNameKana: data.firstNameKana || '',
-        gender: data.gender || 'OTHER',
-        status: 'ACTIVE',
-        // デフォルト値
-        currentResidence: '',
-        birthDate: new Date(),
-        phoneNumber: '',
-        currentSalary: '',
-        hasJobChangeExperience: false,
-        desiredChangeTiming: '',
-        jobSearchStatus: '',
-        finalEducation: '',
-        englishLevel: '',
-        desiredSalary: '',
-        emailNotificationSettings: {},
+        password_hash: hashedPassword,
+        last_name: data.lastName,
+        first_name: data.firstName,
+        phone_number: data.phoneNumber,
+        current_residence: data.currentResidence,
+        current_salary: data.currentSalary,
+        desired_salary: data.desiredSalary,
+        skills: data.skills || [],
+        experience_years: data.experienceYears || 0,
+        desired_industries: data.desiredIndustries || [],
+        desired_job_types: data.desiredJobTypes || [],
+        desired_locations: data.desiredLocations || [],
+        scout_reception_enabled: data.scoutReceptionEnabled ?? true,
       };
 
       const candidate = await this.candidateRepository.create(candidateData);
-      if (!candidate) {
-        logger.error(
-          `Failed to create candidate record for email: ${data.email}`
-        );
-        return {
-          success: false,
-          error: 'Failed to create candidate record',
-        };
-      }
 
-      // レスポンス用の候補者情報を構築
-      const candidateResponse = {
-        id: (candidate as CandidateEntity).id,
-        email: (candidate as CandidateEntity).email,
-        profile: {
-          lastName: (candidate as CandidateEntity).lastName,
-          firstName: (candidate as CandidateEntity).firstName,
-        },
-      };
+      logger.info(`Candidate registration successful: ${candidate.email}`);
 
-      logger.info(`Candidate registered successfully: ${data.email}`);
       return {
         success: true,
-        user: candidateResponse,
+        user: {
+          id: authResult.user!.id,
+          email: authResult.user!.email!,
+          userType: 'candidate',
+          type: 'candidate',
+          profile: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+          },
+        },
+        token: authResult.token,
       };
     } catch (error) {
       logger.error('Candidate registration error:', error);
       return {
         success: false,
-        error: 'Registration service error',
+        error: 'Registration failed',
       };
     }
   }
@@ -224,49 +237,39 @@ export class UserRegistrationService implements IUserRegistrationService {
         data.password
       );
 
-      // データベースに企業ユーザー情報を保存
-      const companyUserData = {
-        id: authResult.user!.id,
+      // 企業ユーザーテーブルにデータ挿入
+      const companyUserData: CreateCompanyUserData = {
         email: data.email,
-        passwordHash: hashedPassword,
-        fullName: data.fullName,
-        companyAccountId: data.companyAccountId,
-        emailNotificationSettings: {},
+        password_hash: hashedPassword,
+        full_name: data.fullName,
+        company_account_id: data.companyAccountId,
+        position_title: data.positionTitle,
       };
 
       const companyUser =
         await this.companyUserRepository.create(companyUserData);
-      if (!companyUser) {
-        logger.error(
-          `Failed to create company user record for email: ${data.email}`
-        );
-        return {
-          success: false,
-          error: 'Failed to create company user record',
-        };
-      }
 
-      // レスポンス用の企業ユーザー情報を構築
-      const companyUserResponse = {
-        id: (companyUser as any).id,
-        email: (companyUser as any).email,
-        userType: 'company_user' as const,
-        profile: {
-          fullName: (companyUser as any).fullName,
-          companyAccountId: (companyUser as any).companyAccountId,
-        },
-      };
+      logger.info(`Company user registration successful: ${companyUser.email}`);
 
-      logger.info(`Company user registered successfully: ${data.email}`);
       return {
         success: true,
-        user: companyUserResponse,
+        user: {
+          id: authResult.user!.id,
+          email: authResult.user!.email!,
+          userType: 'company_user',
+          type: 'company_user',
+          profile: {
+            fullName: data.fullName,
+            companyAccountId: data.companyAccountId,
+          },
+        },
+        token: authResult.token,
       };
     } catch (error) {
       logger.error('Company user registration error:', error);
       return {
         success: false,
-        error: 'Registration service error',
+        error: 'Registration failed',
       };
     }
   }

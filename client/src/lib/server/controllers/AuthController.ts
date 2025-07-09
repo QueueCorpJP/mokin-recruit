@@ -16,7 +16,11 @@ import {
 } from '../infrastructure/database/CompanyUserRepository';
 import { SecurityConfig } from '../config/security';
 import { PasswordService } from '../core/services/PasswordService';
-import { UserRegistrationService } from '../core/services/UserRegistrationService';
+import {
+  UserRegistrationService,
+  CandidateRegistrationData,
+  CompanyUserRegistrationData,
+} from '../core/services/UserRegistrationService';
 import { ValidationService } from '../core/services/ValidationService';
 import { TYPES } from '../container/types';
 import type { ICandidateRepository } from '../core/interfaces/IDomainRepository';
@@ -111,9 +115,6 @@ export class AuthController {
           password,
           lastName,
           firstName,
-          lastNameKana,
-          firstNameKana,
-          gender,
         });
 
       if (!registrationResult.success) {
@@ -192,11 +193,11 @@ export class AuthController {
   }
 
   /**
-   * ログイン（責任分離版）
+   * ログイン（責任分離版・ロール別認証対応）
    */
   async login(req: MockRequest, res: MockResponse): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password, userType } = req.body;
 
       // 入力データのバリデーション
       const validationResult = this.validationService.validateLoginData({
@@ -207,6 +208,7 @@ export class AuthController {
       if (!validationResult.isValid) {
         logger.warn('Login validation failed', {
           email,
+          userType: userType || 'default',
           fieldErrors: validationResult.fieldErrors,
           generalErrors: validationResult.generalErrors,
         });
@@ -235,12 +237,15 @@ export class AuthController {
         return;
       }
 
-      logger.info(`Login attempt for user: ${email}`);
+      logger.info(
+        `Login attempt for user: ${email} (userType: ${userType || 'default'})`
+      );
 
       // Supabase認証
       const authResult = await signInWithSupabase(email, password);
       if (!authResult.success) {
         logger.warn(`Authentication failed for user: ${email}`, {
+          userType: userType || 'default',
           error: authResult.error,
         });
 
@@ -278,45 +283,134 @@ export class AuthController {
         return;
       }
 
-      // データベースからユーザー情報を取得
+      // ロール別ユーザー検索とバリデーション
       let userInfo: any = null;
       try {
-        // 候補者テーブルから検索
-        const candidate = await this.candidateRepository.findByEmail(email);
-        if (candidate) {
-          userInfo = {
-            id: candidate.id,
-            email: candidate.email,
-            type: 'candidate',
-            name: `${candidate.lastName} ${candidate.firstName}`,
-            profile: {
-              lastName: candidate.lastName,
-              firstName: candidate.firstName,
-              lastNameKana: candidate.lastNameKana,
-              firstNameKana: candidate.firstNameKana,
-              gender: candidate.gender,
-            },
-          };
+        // userTypeが指定されている場合はロール別検索
+        if (userType) {
+          switch (userType) {
+            case 'candidate':
+              const candidate =
+                await this.candidateRepository.findByEmail(email);
+              if (candidate) {
+                userInfo = {
+                  id: candidate.id,
+                  email: candidate.email,
+                  type: 'candidate',
+                  name: `${candidate.last_name} ${candidate.first_name}`,
+                  profile: {
+                    lastName: candidate.last_name,
+                    firstName: candidate.first_name,
+                    phoneNumber: candidate.phone_number,
+                    currentResidence: candidate.current_residence,
+                  },
+                };
+              } else {
+                // 候補者として認証を試みたが、候補者テーブルに存在しない
+                logger.warn(
+                  `Candidate login failed - user not found in candidates table: ${email}`
+                );
+                res.status(401).json({
+                  success: false,
+                  error: '候補者としてのログインに失敗しました',
+                  message:
+                    '候補者アカウントが見つかりません。企業アカウントをお持ちの場合は、企業ログインページをご利用ください。',
+                  code: 'CANDIDATE_NOT_FOUND',
+                });
+                return;
+              }
+              break;
+
+            case 'company':
+              const companyUser =
+                await this.companyUserRepository.findByEmail(email);
+              if (companyUser) {
+                userInfo = {
+                  id: companyUser.id,
+                  email: companyUser.email,
+                  type: 'company_user',
+                  name: companyUser.full_name || companyUser.email,
+                  profile: {
+                    fullName: companyUser.full_name,
+                    companyAccountId: companyUser.company_account_id,
+                  },
+                };
+              } else {
+                // 企業ユーザーとして認証を試みたが、企業ユーザーテーブルに存在しない
+                logger.warn(
+                  `Company login failed - user not found in company_users table: ${email}`
+                );
+                res.status(401).json({
+                  success: false,
+                  error: '企業ユーザーとしてのログインに失敗しました',
+                  message:
+                    '企業アカウントが見つかりません。候補者アカウントをお持ちの場合は、候補者ログインページをご利用ください。',
+                  code: 'COMPANY_USER_NOT_FOUND',
+                });
+                return;
+              }
+              break;
+
+            case 'admin':
+              // 管理者認証は今後実装予定
+              logger.warn(
+                `Admin login attempted but not implemented: ${email}`
+              );
+              res.status(501).json({
+                success: false,
+                error: '管理者ログインは現在実装されていません',
+                message: '管理者機能は準備中です。',
+                code: 'ADMIN_NOT_IMPLEMENTED',
+              });
+              return;
+
+            default:
+              logger.error(`Unknown userType: ${userType}`);
+              res.status(400).json({
+                success: false,
+                error: '不正なユーザータイプです',
+                message: '有効なユーザータイプを指定してください。',
+                code: 'INVALID_USER_TYPE',
+              });
+              return;
+          }
         } else {
-          // 企業ユーザーテーブルから検索
-          const companyUser =
-            await this.companyUserRepository.findByEmail(email);
-          if (companyUser) {
+          // userTypeが未指定の場合は従来通りの検索（後方互換性）
+          const candidate = await this.candidateRepository.findByEmail(email);
+          if (candidate) {
             userInfo = {
-              id: companyUser.id,
-              email: companyUser.email,
-              type: 'company_user',
-              name: companyUser.fullName || companyUser.email,
+              id: candidate.id,
+              email: candidate.email,
+              type: 'candidate',
+              name: `${candidate.last_name} ${candidate.first_name}`,
               profile: {
-                fullName: companyUser.fullName,
-                companyAccountId: companyUser.companyAccountId,
+                lastName: candidate.last_name,
+                firstName: candidate.first_name,
+                phoneNumber: candidate.phone_number,
+                currentResidence: candidate.current_residence,
               },
             };
+          } else {
+            const companyUser =
+              await this.companyUserRepository.findByEmail(email);
+            if (companyUser) {
+              userInfo = {
+                id: companyUser.id,
+                email: companyUser.email,
+                type: 'company_user',
+                name: companyUser.full_name || companyUser.email,
+                profile: {
+                  fullName: companyUser.full_name,
+                  companyAccountId: companyUser.company_account_id,
+                },
+              };
+            }
           }
         }
       } catch (dbError) {
         logger.error('Database error during user lookup', {
           email,
+          userType: userType || 'default',
           error: dbError,
         });
 
@@ -330,7 +424,9 @@ export class AuthController {
       }
 
       if (!userInfo) {
-        logger.error(`User not found in database: ${email}`);
+        logger.error(
+          `User not found in database: ${email} (userType: ${userType || 'default'})`
+        );
         res.status(404).json({
           success: false,
           error: 'ユーザーが見つかりません',
@@ -341,7 +437,9 @@ export class AuthController {
         return;
       }
 
-      logger.info(`Login successful for user: ${userInfo.id}`);
+      logger.info(
+        `Login successful for user: ${userInfo.id} (type: ${userInfo.type})`
+      );
 
       res.status(200).json({
         success: true,

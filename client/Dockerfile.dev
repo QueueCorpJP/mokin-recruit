@@ -1,9 +1,9 @@
 # ==============================================================================
-# Development Dockerfile for Next.js 15 + Supabase Application
-# Optimized for Docker development environment with network connectivity
+# Development Dockerfile for Next.js 15 + Supabase Application (pnpm対応)
+# MVPスキーマ対応 + pnpmワークスペース最適化
 # ==============================================================================
 
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install system dependencies for network connectivity and SSL
 RUN apk update && apk upgrade && apk add --no-cache \
@@ -11,16 +11,20 @@ RUN apk update && apk upgrade && apk add --no-cache \
     curl \
     wget \
     bind-tools \
+    jq \
     && rm -rf /var/cache/apk/*
+
+# Install pnpm globally
+RUN npm install -g pnpm@latest
 
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# package.jsonをコピー
-COPY package*.json ./
+# package.jsonをコピー（clientディレクトリのもの）
+COPY package.json ./
 
 # 依存関係をインストール
-RUN npm install
+RUN pnpm install --no-frozen-lockfile
 
 # アプリケーションのソースコードをコピー
 COPY . .
@@ -29,17 +33,89 @@ COPY . .
 ENV NODE_ENV=development
 ENV PORT=3000
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
 
 # ポートを公開
 EXPOSE 3000
 
-# ヘルスチェック用のスクリプト
-RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/api/health || exit 1' > /usr/local/bin/healthcheck.sh && \
+# ヘルスチェック用のスクリプト（改良版）
+RUN echo '#!/bin/sh\n\
+echo "🔍 Health check starting..."\n\
+if curl -f --max-time 10 http://localhost:3000/api/health; then\n\
+  echo "✅ Health check passed"\n\
+  exit 0\n\
+else\n\
+  echo "❌ Health check failed"\n\
+  exit 1\n\
+fi' > /usr/local/bin/healthcheck.sh && \
     chmod +x /usr/local/bin/healthcheck.sh
 
-# 接続テスト用のスクリプト
-RUN echo '#!/bin/sh\necho "Testing Supabase connectivity..."\ncurl -I https://mjhqeagxibsklugikyma.supabase.co/rest/v1/ || echo "Supabase connection test failed"\necho "Testing DNS resolution..."\nnslookup mjhqeagxibsklugikyma.supabase.co || echo "DNS resolution failed"' > /usr/local/bin/connectivity-test.sh && \
+# 接続テスト用のスクリプト（改良版）
+RUN echo '#!/bin/sh\n\
+echo "🌐 Testing network connectivity..."\n\
+echo "----------------------------------------"\n\
+\n\
+# DNS解決テスト\n\
+echo "📋 DNS Resolution Test:"\n\
+if nslookup mjhqeagxibsklugikyma.supabase.co; then\n\
+  echo "✅ DNS resolution successful"\n\
+else\n\
+  echo "❌ DNS resolution failed"\n\
+fi\n\
+\n\
+# Supabase接続テスト\n\
+echo "🔗 Supabase Connection Test:"\n\
+if curl -I --max-time 10 https://mjhqeagxibsklugikyma.supabase.co/rest/v1/; then\n\
+  echo "✅ Supabase connection successful"\n\
+else\n\
+  echo "❌ Supabase connection failed"\n\
+fi\n\
+\n\
+# 環境変数チェック\n\
+echo "🔧 Environment Variables:"\n\
+echo "SUPABASE_URL: ${SUPABASE_URL:-NOT_SET}"\n\
+echo "NODE_ENV: ${NODE_ENV:-NOT_SET}"\n\
+echo "PORT: ${PORT:-NOT_SET}"\n\
+\n\
+echo "----------------------------------------"\n\
+echo "🎯 Connectivity test completed"' > /usr/local/bin/connectivity-test.sh && \
     chmod +x /usr/local/bin/connectivity-test.sh
 
-# 開発サーバーを起動
-CMD ["npm", "run", "dev"] 
+# MVPスキーマ確認用スクリプト
+RUN echo '#!/bin/sh\n\
+echo "📊 MVP Schema Status Check..."\n\
+echo "----------------------------------------"\n\
+\n\
+# データベース接続テスト\n\
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then\n\
+  echo "🔗 Testing MVP schema tables..."\n\
+  \n\
+  # 候補者テーブル確認\n\
+  if curl -s --max-time 10 \\\n\
+    -H "apikey: $SUPABASE_ANON_KEY" \\\n\
+    -H "Authorization: Bearer $SUPABASE_ANON_KEY" \\\n\
+    "$SUPABASE_URL/rest/v1/candidates?select=id&limit=1" > /dev/null; then\n\
+    echo "✅ Candidates table accessible"\n\
+  else\n\
+    echo "❌ Candidates table not accessible"\n\
+  fi\n\
+  \n\
+  # 企業アカウントテーブル確認\n\
+  if curl -s --max-time 10 \\\n\
+    -H "apikey: $SUPABASE_ANON_KEY" \\\n\
+    -H "Authorization: Bearer $SUPABASE_ANON_KEY" \\\n\
+    "$SUPABASE_URL/rest/v1/company_accounts?select=id&limit=1" > /dev/null; then\n\
+    echo "✅ Company accounts table accessible"\n\
+  else\n\
+    echo "❌ Company accounts table not accessible"\n\
+  fi\n\
+else\n\
+  echo "❌ Supabase environment variables not set"\n\
+fi\n\
+\n\
+echo "----------------------------------------"\n\
+echo "🎯 MVP Schema check completed"' > /usr/local/bin/mvp-schema-check.sh && \
+    chmod +x /usr/local/bin/mvp-schema-check.sh
+
+# pnpm開発サーバーを起動
+CMD ["pnpm", "run", "dev"] 

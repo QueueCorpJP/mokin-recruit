@@ -8,7 +8,11 @@ import { InputField } from '@/components/ui/input-field';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
 
-export function LoginForm() {
+interface LoginFormProps {
+  userType?: 'candidate' | 'company' | 'admin';
+}
+
+export function LoginForm({ userType }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +24,34 @@ export function LoginForm() {
   const isEmailValid = email.includes('@') && email.length > 0;
   const isPasswordValid = password.length >= 8;
   const isFormValid = isEmailValid && isPasswordValid;
+
+  // ユーザータイプに応じたリダイレクト先を決定
+  const getRedirectPath = () => {
+    switch (userType) {
+      case 'candidate':
+        return '/candidate/dashboard';
+      case 'company':
+        return '/company/dashboard';
+      case 'admin':
+        return '/admin/dashboard';
+      default:
+        return '/dashboard';
+    }
+  };
+
+  // ユーザータイプに応じたパスワードリセットリンクを決定
+  const getPasswordResetPath = () => {
+    switch (userType) {
+      case 'candidate':
+        return '/candidate/auth/reset-password';
+      case 'company':
+        return '/company/auth/reset-password';
+      case 'admin':
+        return '/admin/auth/reset-password';
+      default:
+        return '/auth/reset-password';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +68,7 @@ export function LoginForm() {
       try {
         // クライアントサイドでのみログ出力
         if (typeof window !== 'undefined') {
-          console.log('🚀 Attempting login for:', email);
+          console.log('🚀 Attempting login for:', email, 'userType:', userType);
         }
 
         const response = await fetch('/api/auth/login', {
@@ -47,6 +79,7 @@ export function LoginForm() {
           body: JSON.stringify({
             email: email.trim(),
             password,
+            userType, // ユーザータイプを送信
           }),
         });
 
@@ -147,9 +180,9 @@ export function LoginForm() {
             }
           }
 
-          // 成功時はダッシュボードにリダイレクト
+          // 成功時は適切なダッシュボードにリダイレクト
           setTimeout(() => {
-            router.push('/dashboard');
+            router.push(getRedirectPath());
           }, 1000);
         } else {
           // 予期しないレスポンス形式
@@ -201,93 +234,123 @@ export function LoginForm() {
         {error && (
           <Alert variant='destructive'>
             <AlertCircle className='h-4 w-4' />
-            <AlertDescription className='whitespace-pre-line'>
-              {error}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
         {/* 成功表示 */}
         {success && (
-          <Alert className='border-green-200 bg-green-50 text-green-800'>
+          <Alert className='border-green-200 bg-green-50'>
             <CheckCircle className='h-4 w-4 text-green-600' />
-            <AlertDescription>{success}</AlertDescription>
+            <AlertDescription className='text-green-800'>
+              {success}
+            </AlertDescription>
           </Alert>
         )}
 
-        {/* フォーム要素コンテナ */}
-        <div className='w-full max-w-[538px] mx-auto'>
-          <div className='flex flex-col items-center space-y-[24px]'>
-            {/* メールアドレス */}
-            <div className='w-full'>
-              <InputField
-                inputType='email'
-                label='メールアドレス'
-                layout='horizontal'
-                required={false}
-                inputProps={{
-                  value: email,
-                  onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                    setEmail(e.target.value);
-                    setError(null);
-                  },
-                  placeholder: 'name@example.com',
-                  disabled: isPending,
-                }}
-              />
-            </div>
+        {/* メールアドレス入力 */}
+        <div className='space-y-2'>
+          <InputField
+            id='email'
+            inputType='email'
+            label='メールアドレス'
+            layout='vertical'
+            required={true}
+            className={`${
+              email && !isEmailValid
+                ? 'border-red-300 focus:border-red-500'
+                : ''
+            }`}
+            inputProps={{
+              value: email,
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value),
+              placeholder: 'example@domain.com',
+            }}
+          />
+          {email && !isEmailValid && (
+            <p className='text-sm text-red-600'>
+              有効なメールアドレスを入力してください
+            </p>
+          )}
+        </div>
 
-            {/* パスワード */}
-            <div className='w-full'>
-              <InputField
-                inputType='password'
-                label='パスワード'
-                layout='horizontal'
-                required={false}
-                showToggle={true}
-                inputProps={{
-                  value: password,
-                  onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                    setPassword(e.target.value);
-                    setError(null);
-                  },
-                  placeholder: '半角英数字・記号のみ、8文字以上',
-                  disabled: isPending,
-                }}
-              />
-            </div>
+        {/* パスワード入力 */}
+        <div className='space-y-2'>
+          <InputField
+            id='password'
+            inputType='password'
+            label='パスワード'
+            layout='vertical'
+            required={true}
+            showToggle={true}
+            className={`${
+              password && !isPasswordValid
+                ? 'border-red-300 focus:border-red-500'
+                : ''
+            }`}
+            inputProps={{
+              value: password,
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value),
+              placeholder: '8文字以上のパスワード',
+            }}
+          />
+          {password && !isPasswordValid && (
+            <p className='text-sm text-red-600'>
+              パスワードは8文字以上で入力してください
+            </p>
+          )}
+        </div>
 
-            {/* パスワード忘れリンク */}
-            <div className='w-full flex justify-center'>
-              <Link
-                href='/auth/reset-password'
-                className='text-[color:var(--input-label-color)] font-bold text-[14px] leading-[1.6em] tracking-[0.1em] underline hover-always:text-[color:var(--input-focus-border-color)] transition-all duration-200 text-center'
-              >
-                パスワードをお忘れの方はこちら
-              </Link>
-            </div>
-          </div>
+        {/* パスワードを忘れた場合 */}
+        <div className='text-center'>
+          <Link
+            href={getPasswordResetPath()}
+            className='text-sm text-[#0F9058] hover:text-[#0d7a4a] font-medium'
+          >
+            パスワードをお忘れですか？
+          </Link>
         </div>
 
         {/* ログインボタン */}
-        <div className='flex justify-center pt-4'>
-          <Button
-            type='submit'
-            variant='green-gradient'
-            size='figma-default'
-            disabled={!isFormValid || isPending}
-          >
-            {isPending ? (
-              <div className='flex items-center gap-2'>
-                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                ログイン中...
-              </div>
-            ) : (
-              'ログイン'
-            )}
-          </Button>
-        </div>
+        <Button
+          type='submit'
+          disabled={!isFormValid || isPending}
+          className='w-full bg-[#0F9058] hover:bg-[#0d7a4a] text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        >
+          {isPending ? 'ログイン中...' : 'ログイン'}
+        </Button>
       </form>
+
+      {/* デバッグ情報（開発環境のみ） */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className='mt-8 p-4 bg-gray-100 rounded-lg text-sm'>
+          <h3 className='font-medium text-gray-800 mb-2'>
+            🔧 開発者情報（本番環境では非表示）
+          </h3>
+          <div className='space-y-1 text-gray-600'>
+            <p>
+              <strong>API URL:</strong>{' '}
+              <code className='bg-gray-200 px-1 rounded'>
+                {typeof window !== 'undefined'
+                  ? `${window.location.origin}/api/auth/login`
+                  : '/api/auth/login'}
+              </code>
+            </p>
+            <p>
+              <strong>User Type:</strong> {userType || 'default'}
+            </p>
+            <p>
+              <strong>Redirect Path:</strong> {getRedirectPath()}
+            </p>
+            <p>
+              <strong>フォーム状態:</strong> Email: {isEmailValid ? '✅' : '❌'}
+              , Password: {isPasswordValid ? '✅' : '❌'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

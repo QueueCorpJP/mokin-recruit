@@ -61,7 +61,7 @@ async function checkSupabaseConnection(): Promise<{
     const start = Date.now();
 
     // Simple connectivity check - can be enhanced with actual Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL;
     if (!supabaseUrl) {
       return { status: 'not_configured' };
     }

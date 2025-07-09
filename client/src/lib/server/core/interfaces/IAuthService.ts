@@ -1,6 +1,7 @@
 // 認証結果の型定義
 export interface AuthResult {
   success: boolean;
+  error?: string;
   user?: {
     id: string;
     email: string;
@@ -9,7 +10,6 @@ export interface AuthResult {
     profile?: any;
   };
   token?: string;
-  error?: string;
 }
 
 // 認証サービスインターフェース (SRP準拠)
@@ -51,17 +51,25 @@ export interface IUserRegistrationService {
   registerCompanyUser(data: CompanyUserRegistrationData): Promise<AuthResult>;
 }
 
-// 登録データの型定義
+// MVPスキーマ対応の候補者登録データ
 export interface CandidateRegistrationData {
   email: string;
   password: string;
-  firstName: string;
   lastName: string;
-  firstNameKana?: string;
-  lastNameKana?: string;
-  gender?: string;
+  firstName: string;
+  phoneNumber?: string;
+  currentResidence?: string;
+  currentSalary?: string;
+  desiredSalary?: string;
+  skills?: string[];
+  experienceYears?: number;
+  desiredIndustries?: string[];
+  desiredJobTypes?: string[];
+  desiredLocations?: string[];
+  scoutReceptionEnabled?: boolean;
 }
 
+// MVPスキーマ対応の企業ユーザー登録データ
 export interface CompanyUserRegistrationData {
   email: string;
   password: string;

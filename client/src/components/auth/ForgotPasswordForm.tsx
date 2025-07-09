@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { InputField } from '@/components/ui/input-field';
 import {
   Card,
   CardContent,
@@ -23,26 +22,57 @@ interface ForgotPasswordFormData {
 interface ForgotPasswordResponse {
   success: boolean;
   message?: string;
+  error?: string;
 }
 
-export default function ForgotPasswordForm() {
+interface ForgotPasswordFormProps {
+  userType?: 'candidate' | 'company' | 'admin';
+}
+
+export default function ForgotPasswordForm({
+  userType = 'candidate',
+}: ForgotPasswordFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<ForgotPasswordFormData>({
     email: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const router = useRouter();
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'success' | 'error'
+  >('idle');
+  const [message, setMessage] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (email: string): boolean => {
+    if (!email) {
+      setEmailError('メールアドレスは必須です');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('有効なメールアドレスを入力してください');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, email: e.target.value }));
-    if (error) setError(null);
+    const value = e.target.value;
+    setFormData({ email: value });
+    if (emailError) {
+      setEmailError('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateEmail(formData.email)) {
+      return;
+    }
+
     setIsLoading(true);
-    setError(null);
+    setSubmitStatus('idle');
 
     try {
       const response = await fetch('/api/auth/reset-password/request', {
@@ -50,170 +80,140 @@ export default function ForgotPasswordForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          userType,
+        }),
       });
 
       const result: ForgotPasswordResponse = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          result.message || 'パスワードリセットの要求に失敗しました'
+      if (response.ok) {
+        setSubmitStatus('success');
+        setMessage(
+          result.message ||
+            'パスワードリセットリンクをメールで送信しました。メールをご確認ください。'
         );
-      }
-
-      if (result.success) {
-        setIsSuccess(true);
       } else {
-        throw new Error(
-          result.message || 'パスワードリセットの要求に失敗しました'
+        setSubmitStatus('error');
+        setMessage(
+          result.error || 'パスワードリセット要求の送信に失敗しました。'
         );
       }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'パスワードリセットの要求に失敗しました'
+    } catch (error) {
+      console.error('Password reset request error:', error);
+      setSubmitStatus('error');
+      setMessage(
+        'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isFormValid =
-    formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+  const getBackUrl = () => {
+    switch (userType) {
+      case 'candidate':
+        return '/candidate/auth/login';
+      case 'company':
+        return '/company/auth/login';
+      case 'admin':
+        return '/admin/auth/login';
+      default:
+        return '/auth/login';
+    }
+  };
 
-  if (isSuccess) {
-    return (
-      <div className='text-center space-y-6'>
-        <div className='mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4'>
-          <CheckCircle className='w-6 h-6 text-green-600' />
-        </div>
-        <div>
-          <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] text-center mb-6'>
-            メールを送信しました
-          </h1>
-          <p className='text-[#323232] font-bold text-base leading-8 text-center'>
-            {formData.email} にパスワードリセット用のリンクを送信しました。
-            <br />
-            メールをご確認ください。
-          </p>
-        </div>
-
-        <div className='space-y-4'>
-          <div className='bg-gray-50 p-4 rounded-md'>
-            <p className='text-sm text-gray-600'>
-              メールが届かない場合は、迷惑メールフォルダもご確認ください。
-              <br />
-              リンクの有効期限は1時間です。
-            </p>
-          </div>
-
-          <div className='text-center'>
-            <Button
-              variant='link'
-              asChild
-              className='text-[#0F9058] hover:text-[#0F9058]'
-            >
-              <Link href='/auth/login'>
-                <ArrowLeft className='w-4 h-4 mr-1' />
-                ログインページに戻る
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getUserTypeLabel = () => {
+    switch (userType) {
+      case 'candidate':
+        return '候補者';
+      case 'company':
+        return '企業';
+      case 'admin':
+        return '管理者';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <div className='space-y-10'>
-      {/* ヘッダー */}
-      <div className='text-center space-y-6'>
-        <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] text-center'>
-          パスワードの再設定
-        </h1>
-        <p className='text-[#323232] font-bold text-base leading-8 text-center'>
-          サービスに登録されているメールアドレスを入力してください。
-          <br />
-          パスワード再設定のご案内のメールをお送りいたします。
-        </p>
-      </div>
-
-      {/* フォーム */}
-      <form onSubmit={handleSubmit} className='space-y-10'>
-        {error && (
-          <Alert variant='destructive'>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* メールアドレス入力 */}
-        <div className='flex justify-center'>
-          <div className='w-[400px] space-y-4'>
-            <div className='bg-white border border-[#999999] rounded-[5px] p-[11px]'>
-              <input
-                id='email'
-                type='email'
-                placeholder={
-                  process.env.NODE_ENV === 'development'
-                    ? 'test-candidate@example.com (開発用)'
-                    : 'メールアドレスを入力'
-                }
-                value={formData.email}
-                onChange={handleEmailChange}
-                className='w-full text-[#999999] font-medium text-base leading-8 outline-none placeholder-[#999999]'
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* 開発環境でのテストユーザー自動入力ボタン */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className='flex gap-2 justify-center'>
-                <button
-                  type='button'
-                  onClick={() =>
-                    setFormData({ email: 'test-candidate@example.com' })
-                  }
-                  className='text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded transition-colors'
-                  disabled={isLoading}
-                >
-                  候補者用メール
-                </button>
-                <button
-                  type='button'
-                  onClick={() =>
-                    setFormData({ email: 'test-company@example.com' })
-                  }
-                  className='text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded transition-colors'
-                  disabled={isLoading}
-                >
-                  企業用メール
-                </button>
-              </div>
-            )}
-          </div>
+    <Card className='w-full max-w-md mx-auto'>
+      <CardHeader className='space-y-1'>
+        <div className='flex items-center gap-2'>
+          <Link
+            href={getBackUrl()}
+            className='text-gray-500 hover:text-gray-700 transition-colors'
+          >
+            <ArrowLeft className='h-4 w-4' />
+          </Link>
+          <CardTitle className='text-2xl'>パスワードリセット</CardTitle>
         </div>
+        <CardDescription>
+          {getUserTypeLabel()}アカウントのパスワードをリセットします
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='space-y-2'>
+            <InputField
+              label='メールアドレス'
+              inputType='email'
+              layout='vertical'
+              required={true}
+              errorMessage={emailError}
+              inputProps={{
+                value: formData.email,
+                onChange: handleEmailChange,
+                placeholder: 'example@email.com',
+                error: !!emailError,
+                disabled: isLoading,
+              }}
+            />
+          </div>
 
-        {/* 送信ボタン */}
-        <div className='flex justify-center'>
+          {submitStatus === 'success' && (
+            <Alert className='border-green-200 bg-green-50'>
+              <CheckCircle className='h-4 w-4 text-green-600' />
+              <AlertDescription className='text-green-800'>
+                {message}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {submitStatus === 'error' && (
+            <Alert className='border-red-200 bg-red-50'>
+              <Mail className='h-4 w-4 text-red-600' />
+              <AlertDescription className='text-red-800'>
+                {message}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button
             type='submit'
-            variant='green-gradient'
-            size='figma-default'
-            disabled={!isFormValid || isLoading}
+            className='w-full'
+            disabled={isLoading || submitStatus === 'success'}
           >
             {isLoading ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 送信中...
               </>
+            ) : submitStatus === 'success' ? (
+              '送信完了'
             ) : (
-              '送信する'
+              'リセットリンクを送信'
             )}
           </Button>
-        </div>
-      </form>
-    </div>
+
+          <div className='text-center text-sm'>
+            <Link href={getBackUrl()} className='text-primary hover:underline'>
+              ログインに戻る
+            </Link>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

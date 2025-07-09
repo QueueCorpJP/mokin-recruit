@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 interface NavigationProps {
   className?: string;
-  variant?: 'default' | 'transparent';
+  variant?: 'default' | 'transparent' | 'company' | 'candidate';
 }
 
 export function Navigation({
@@ -21,11 +21,34 @@ export function Navigation({
   // ナビゲーション項目を削除（ログインと資料請求のみ表示）
   const navItems: { href: string; label: string }[] = [];
 
+  // variant に応じたCTAボタンの設定
+  const getCTAButton = () => {
+    switch (variant) {
+      case 'company':
+        return {
+          href: '/company/auth/login',
+          label: '企業ログイン',
+        };
+      case 'candidate':
+        return {
+          href: '/candidate/auth/login',
+          label: '候補者ログイン',
+        };
+      default:
+        return {
+          href: '/signup',
+          label: '資料請求',
+        };
+    }
+  };
+
+  const ctaButton = getCTAButton();
+
   return (
     <header
       className={cn(
         'w-full border-b border-gray-200 navigation-header',
-        variant === 'default' ? 'bg-white' : 'bg-transparent',
+        variant === 'transparent' ? 'bg-transparent' : 'bg-white',
         className
       )}
       style={{ height: '80px' }}
@@ -48,7 +71,7 @@ export function Navigation({
               className='rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
               asChild
             >
-              <Link href='/signup'>資料請求</Link>
+              <Link href={ctaButton.href}>{ctaButton.label}</Link>
             </Button>
           </div>
 
@@ -79,8 +102,11 @@ export function Navigation({
                 className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
                 asChild
               >
-                <Link href='/signup' onClick={() => setIsMenuOpen(false)}>
-                  資料請求
+                <Link
+                  href={ctaButton.href}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {ctaButton.label}
                 </Link>
               </Button>
             </div>

@@ -5,16 +5,17 @@ import { ValidationService } from '@/lib/server/core/services/ValidationService'
 import { container, TYPES } from '@/lib/server/container';
 import { AuthController } from '@/lib/server/controllers/AuthController';
 
-// リクエストボディの型定義
+// リクエストボディの型定義（ロール別認証対応）
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(1, 'Password is required'),
+  userType: z.enum(['candidate', 'company', 'admin']).optional(),
 });
 
 type LoginRequestBody = z.infer<typeof loginSchema>;
 
 /**
- * ログイン API Route
+ * ログイン API Route（ロール別認証対応）
  * POST /api/auth/login
  */
 export async function POST(request: NextRequest) {
@@ -39,14 +40,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validationResult.data;
+    const { email, password, userType } = validationResult.data;
+
+    // ログイン試行のロギング
+    logger.info('Login attempt:', {
+      email,
+      userType: userType || 'default',
+      timestamp: new Date().toISOString(),
+    });
 
     // AuthControllerの取得
     const authController = container.get<AuthController>(TYPES.AuthController);
 
-    // Express.jsのReq/Resオブジェクトを模擬
+    // Express.jsのReq/Resオブジェクトを模擬（ロール情報を含む）
     const mockReq = {
-      body: { email, password },
+      body: { email, password, userType },
     } as any;
 
     let responseData: any = null;

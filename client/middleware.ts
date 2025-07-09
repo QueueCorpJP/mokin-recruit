@@ -27,6 +27,15 @@ export async function middleware(request: NextRequest) {
     '/auth/register',
     '/auth/forgot-password',
     '/auth/reset-password',
+    '/candidate/auth/login',
+    '/candidate/auth/register',
+    '/candidate/auth/reset-password',
+    '/company/auth/login',
+    '/company/auth/register',
+    '/company/auth/reset-password',
+    '/admin/auth/login',
+    '/admin/auth/register',
+    '/admin/auth/reset-password',
     '/about',
     '/contact',
     '/privacy',
@@ -99,68 +108,79 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      if (!token) {
-        logger.info(`Unauthorized access attempt to ${pathname}`);
-        return NextResponse.redirect(new URL('/auth/login', request.url));
+      // 実際の認証チェック
+      if (token) {
+        try {
+          const { data, error } = await supabase.auth.getUser(token);
+          if (error || !data.user) {
+            throw new Error('Invalid token');
+          }
+
+          // ユーザー情報をヘッダーに追加
+          const response = NextResponse.next();
+          response.headers.set('x-user-id', data.user.id);
+          response.headers.set('x-user-email', data.user.email || '');
+          response.headers.set('x-auth-bypass', 'false');
+
+          return response;
+        } catch (error) {
+          logger.warn('Token validation failed:', error);
+        }
       }
 
-      // トークンの検証
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token);
+      // 認証失敗時のリダイレクト先を決定
+      const getLoginRedirect = () => {
+        if (pathname.startsWith('/candidate')) {
+          return new URL('/candidate/auth/login', request.url);
+        } else if (pathname.startsWith('/company')) {
+          return new URL('/company/auth/login', request.url);
+        } else if (pathname.startsWith('/admin')) {
+          return new URL('/admin/auth/login', request.url);
+        } else {
+          return new URL('/auth/login', request.url);
+        }
+      };
 
-      if (error || !user) {
-        logger.warn(`Invalid token for ${pathname}: ${error?.message}`);
-        // 無効なトークンをクリア
-        const response = NextResponse.redirect(
-          new URL('/auth/login', request.url)
-        );
-        response.cookies.delete('supabase-auth-token');
-        return response;
-      }
-
-      // ユーザータイプによるアクセス制御
-      const userType = user.user_metadata?.userType;
-
-      // 管理者専用パス
-      if (pathname.startsWith('/admin') && userType !== 'admin') {
-        logger.warn(`Unauthorized admin access attempt by user ${user.id}`);
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-
-      // 企業ユーザー専用パス
-      if (pathname.startsWith('/company') && userType !== 'company_user') {
-        logger.warn(`Unauthorized company access attempt by user ${user.id}`);
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-
-      // 候補者専用パス
-      if (pathname.startsWith('/candidate') && userType !== 'candidate') {
-        logger.warn(`Unauthorized candidate access attempt by user ${user.id}`);
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-
-      // 認証済みユーザーの情報をヘッダーに追加
-      const response = NextResponse.next();
-      response.headers.set('x-user-id', user.id);
-      response.headers.set('x-user-email', user.email || '');
-      response.headers.set('x-user-type', userType || 'unknown');
-
-      return response;
+      return NextResponse.redirect(getLoginRedirect());
     } catch (error) {
       logger.error('Middleware authentication error:', error);
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 
+  // レガシーURL のリダイレクト処理
+  if (
+    pathname === '/auth/login' ||
+    pathname === '/auth/register' ||
+    pathname === '/auth/reset-password'
+  ) {
+    // クエリパラメータでユーザータイプを判定
+    const userType = request.nextUrl.searchParams.get('type');
+
+    if (userType === 'candidate') {
+      return NextResponse.redirect(
+        new URL(pathname.replace('/auth/', '/candidate/auth/'), request.url)
+      );
+    } else if (userType === 'company') {
+      return NextResponse.redirect(
+        new URL(pathname.replace('/auth/', '/company/auth/'), request.url)
+      );
+    } else if (userType === 'admin') {
+      return NextResponse.redirect(
+        new URL(pathname.replace('/auth/', '/admin/auth/'), request.url)
+      );
+    }
+
+    // デフォルトは候補者ログインにリダイレクト
+    return NextResponse.redirect(
+      new URL(pathname.replace('/auth/', '/candidate/auth/'), request.url)
+    );
+  }
+
   // デフォルトは通過
   return NextResponse.next();
 }
 
-/**
- * ミドルウェアの適用範囲を設定
- */
 export const config = {
   matcher: [
     /*
@@ -169,8 +189,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder files
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

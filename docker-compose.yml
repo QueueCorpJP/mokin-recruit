@@ -57,7 +57,7 @@ services:
     networks:
       - mokin-recruit-network
     restart: unless-stopped
-    command: npm run dev
+    command: pnpm run dev
     dns:
       - 1.1.1.1
       - 8.8.8.8
