@@ -4,10 +4,11 @@ import { BaseInput, BaseInputProps } from './base-input';
 
 export interface PasswordInputProps extends Omit<BaseInputProps, 'type'> {
   showToggle?: boolean;
+  type?: React.HTMLInputTypeAttribute;
 }
 
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ showToggle = true, className = '', ...props }, ref) => {
+  ({ showToggle = true, className = '', type = 'password', ...props }, ref) => {
     const [isVisible, setIsVisible] = useState(false);
 
     const toggleVisibility = () => {
@@ -16,7 +17,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 
     if (!showToggle) {
       return (
-        <BaseInput ref={ref} type='password' className={className} {...props} />
+        <BaseInput ref={ref} type={type} className={className} {...props} />
       );
     }
 
@@ -24,7 +25,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       <div className='relative w-full'>
         <BaseInput
           ref={ref}
-          type={isVisible ? 'text' : 'password'}
+          type={isVisible ? 'text' : type}
           className={`pr-12 ${className}`}
           {...props}
         />

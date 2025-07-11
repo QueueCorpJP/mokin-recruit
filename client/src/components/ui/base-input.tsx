@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 
 export interface BaseInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  type?: 'text' | 'email' | 'password';
+  type?: React.HTMLInputTypeAttribute;
   error?: boolean;
   className?: string;
 }

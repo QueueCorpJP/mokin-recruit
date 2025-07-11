@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 // InputField layout types
 type InputFieldLayout = 'horizontal' | 'vertical';
-type InputType = 'text' | 'email' | 'password';
+type InputType = React.HTMLInputTypeAttribute;
 
 // Base InputField props
 interface BaseInputFieldProps {
@@ -22,7 +22,8 @@ interface BaseInputFieldProps {
 
 // Generic InputField props with input props
 export interface InputFieldProps<T extends BaseInputProps = BaseInputProps>
-  extends BaseInputFieldProps {
+  extends BaseInputFieldProps,
+    React.InputHTMLAttributes<HTMLInputElement> {
   inputProps?: Omit<T, 'id' | 'className'>;
 }
 
@@ -85,12 +86,12 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             ref={ref}
             showToggle={showToggle}
             className='w-full'
+            type={inputType}
             {...inputProps}
             {...props}
           />
         );
       }
-
       return (
         <BaseInput
           id={fieldId}
