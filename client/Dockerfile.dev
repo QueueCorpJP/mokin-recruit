@@ -26,8 +26,8 @@ COPY package.json ./
 # 依存関係をインストール
 RUN pnpm install --no-frozen-lockfile
 
-# アプリケーションのソースコードをコピー
-COPY . .
+# アプリケーションのソースコードをコピー（開発時は volumes でマウントするため最小限）
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
 
 # 環境変数の設定
 ENV NODE_ENV=development
@@ -118,4 +118,9 @@ echo "🎯 MVP Schema check completed"' > /usr/local/bin/mvp-schema-check.sh && 
     chmod +x /usr/local/bin/mvp-schema-check.sh
 
 # pnpm開発サーバーを起動
-CMD ["pnpm", "run", "dev"] 
+# Node ベースイメージはデフォルトで ENTRYPOINT として `node` を設定しているため、そのままでは
+# `node pnpm run dev` のように解釈されてしまい、`/app/pnpm` が見つからないというエラーが発生します。
+# これを防ぐため、エントリポイントを pnpm に置き換え、コマンドで `run dev` を渡します。
+
+ENTRYPOINT ["pnpm"]
+CMD ["run", "dev"] 

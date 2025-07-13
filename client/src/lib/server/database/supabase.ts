@@ -120,9 +120,15 @@ export function initializeSupabase(): void {
  */
 export function getSupabaseClient(): SupabaseClient {
   if (!supabase) {
-    throw new Error(
-      'Supabase client is not initialized. Call initializeSupabase() first.'
-    );
+    // 自動初期化を試行
+    try {
+      initializeSupabase();
+    } catch (error) {
+      console.error('Failed to auto-initialize Supabase:', error);
+      throw new Error(
+        'Supabase client is not initialized. Call initializeSupabase() first.'
+      );
+    }
   }
   return supabase;
 }
@@ -132,12 +138,21 @@ export function getSupabaseClient(): SupabaseClient {
  */
 export function getSupabaseAdminClient(): SupabaseClient {
   if (!supabaseAdmin) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(
-        'Supabase admin client is not initialized. Using regular client as fallback.'
-      );
+    // 自動初期化を試行
+    try {
+      initializeSupabase();
+    } catch (error) {
+      console.error('Failed to auto-initialize Supabase:', error);
     }
-    return getSupabaseClient();
+    
+    if (!supabaseAdmin) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          'Supabase admin client is not initialized. Using regular client as fallback.'
+        );
+      }
+      return getSupabaseClient();
+    }
   }
   return supabaseAdmin;
 }

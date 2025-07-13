@@ -41,6 +41,7 @@ JWT_SECRET=your-jwt-secret
 ```bash
 # Docker環境で起動
 docker-compose up -d
+docker compose up -d
 
 # または直接起動
 npm install

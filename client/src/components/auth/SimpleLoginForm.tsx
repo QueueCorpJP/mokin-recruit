@@ -43,6 +43,10 @@ export function SimpleLoginForm() {
       const data = await response.json();
 
       if (data.success) {
+        // トークンをlocalStorageに保存
+        if (data.token) {
+          localStorage.setItem('auth-token', data.token);
+        }
         // ログイン成功時の処理 - Next.jsのルーターを使用
         router.push('/dashboard');
       } else {

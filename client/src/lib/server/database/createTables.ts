@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "company_users" (
 
 CREATE TABLE IF NOT EXISTS "job_postings" (
     "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "company_account_id" UUID NOT NULL REFERENCES "company_accounts"("id") ON DELETE CASCADE,
+    "company_group_id" UUID NOT NULL REFERENCES "company_groups"("id") ON DELETE CASCADE,
     "title" TEXT NOT NULL,
     "department_name" TEXT,
     "job_description" TEXT NOT NULL,

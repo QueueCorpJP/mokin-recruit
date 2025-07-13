@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
     // ページ遷移の最適化
     scrollRestoration: true,
     // esmExternals: true, // 一時的にコメントアウト
+    // フォント最適化の設定
+    fontLoaders: [
+      { loader: '@next/font/google', options: { subsets: ['latin'] } }
+    ],
   },
 
   // サーバー外部パッケージ（Next.js 15の新しい設定）

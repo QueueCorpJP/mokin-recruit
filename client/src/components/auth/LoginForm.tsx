@@ -333,9 +333,7 @@ export function LoginForm({ userType }: LoginFormProps) {
             <p>
               <strong>API URL:</strong>{' '}
               <code className='bg-gray-200 px-1 rounded'>
-                {typeof window !== 'undefined'
-                  ? `${window.location.origin}/api/auth/login`
-                  : '/api/auth/login'}
+                /api/auth/login
               </code>
             </p>
             <p>

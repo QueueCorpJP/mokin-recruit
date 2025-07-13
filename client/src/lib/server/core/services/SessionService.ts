@@ -93,46 +93,44 @@ export class SessionService {
         };
       }
 
-      // Supabaseセッションを取得
-      const supabase = getSupabaseClient();
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser(token);
-
-      if (error || !user) {
-        logger.warn('Supabase session validation failed:', error?.message);
-        return {
-          success: false,
-          error: 'Invalid session',
-        };
-      }
-
-      // セッション情報を取得
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        return {
-          success: false,
-          error: 'Session not found',
-        };
-      }
+      // JWTペイロードからユーザー情報を構築
+      const user: User = {
+        id: jwtPayload.sub,
+        email: jwtPayload.email,
+        user_metadata: jwtPayload.user_metadata || {},
+        app_metadata: jwtPayload.app_metadata || {},
+        aud: jwtPayload.aud,
+        created_at: '',
+        updated_at: '',
+        email_confirmed_at: '',
+        phone_confirmed_at: '',
+        confirmed_at: '',
+        last_sign_in_at: '',
+        role: '',
+      };
 
       // セッション期限をチェック
       const now = new Date();
-      const expiresAt = new Date(session.expires_at! * 1000);
+      const expiresAt = new Date(jwtPayload.exp * 1000);
       const needsRefresh =
         expiresAt.getTime() - now.getTime() < this.REFRESH_THRESHOLD;
 
+      // セッション情報を構築（JWTベース）
+      const mockSession: Session = {
+        access_token: token,
+        refresh_token: '',
+        expires_at: jwtPayload.exp,
+        expires_in: Math.floor((expiresAt.getTime() - now.getTime()) / 1000),
+        token_type: 'bearer',
+        user,
+      };
+
       const sessionInfo: SessionInfo = {
         user,
-        session,
+        session: mockSession,
         customToken: token,
         expiresAt,
-        refreshToken: session.refresh_token,
+        refreshToken: '',
       };
 
       return {

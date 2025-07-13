@@ -74,7 +74,20 @@ export async function POST(request: NextRequest) {
     await authController.login(mockReq, mockRes);
 
     // Next.js Response形式で返却
-    return NextResponse.json(responseData, { status: statusCode });
+    const response = NextResponse.json(responseData, { status: statusCode });
+    
+    // ログイン成功時にクッキーを設定
+    if (responseData?.success && responseData?.token) {
+      response.cookies.set('supabase-auth-token', responseData.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 // 7日間
+      });
+    }
+    
+    return response;
   } catch (error) {
     logger.error('API Route error - login:', error);
     return NextResponse.json(
