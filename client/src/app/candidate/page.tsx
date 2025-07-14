@@ -41,190 +41,107 @@ export default function CandidateLandingPage() {
 
       {/* Additional Content Sections */}
       <main className='bg-white'>
-        {/* Services Features Section */}
-        <section className='py-16 bg-gray-50'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center mb-12'>
-              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
-                あなたのキャリアを加速させる
+        {/* Figma準拠：スカウトサービス新セクション */}
+        <section className='py-16 flex flex-col items-center relative overflow-hidden'>
+          {/* セクション全体を最大幅1200pxで中央寄せ */}
+          <div className='w-full max-w-[1200px] flex flex-col items-center z-20'>
+            {/* メインキャッチ＋背景帯＋ドット装飾 */}
+            <div className='relative flex flex-col items-center w-full'>
+              {/* 背景帯: Figmaピクセルパーフェクト対応（高さ20pxを明示） */}
+              <div className='absolute left-1/2 -translate-x-1/2 top-[73px] w-[688px] h-[20px] bg-[#FFF6A9] rounded-md z-0'></div>
+              {/* メインキャッチ */}
+              <h2
+                className='relative z-10 text-center font-bold text-[24px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)]'
+                style={{ letterSpacing: '0.1em' }}
+              >
+                経歴だけに頼らない
+                <br />
+                <span className='block text-[32px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]'>
+                  志向と選考状況に基づくスカウトサービス
+                </span>
               </h2>
-              <p className='mt-4 text-lg text-gray-600'>
-                理想の転職を実現するためのサポート機能
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3'>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  スカウト受信
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  あなたのスキルに興味を持った企業から直接スカウトを受け取れます。
-                </p>
-              </div>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  キャリア分析
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  あなたのスキルと経験を分析し、最適なキャリアパスを提案します。
-                </p>
-              </div>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  面接サポート
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  面接対策から条件交渉まで、転職活動を全面的にサポートします。
-                </p>
+              {/* ドット装飾: Figmaピクセルパーフェクト対応（12px円, テキストとの間隔16px） */}
+              <div className='relative z-10 flex flex-row gap-7 mt-4'>
+                <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
+                <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
+                <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
               </div>
             </div>
+            {/* サブリード文: Figmaピクセルパーフェクト対応（margin-top:24px, 最大幅1200px） */}
+            <p
+              className='mt-6 text-center text-[16px] leading-[2] tracking-wider text-[#323232] font-medium font-[family-name:var(--font-noto-sans-jp)] max-w-[1200px]'
+              style={{ letterSpacing: '0.1em' }}
+            >
+              あなたの志向や転職活動の進捗状況、比較検討している企業の情報をもとに、本当にマッチする企業から戦略的なスカウトが届きます。
+              <br />
+              複数の選択肢を見極め、納得して進めたいあなたに。新しい転職の起点をCuePointで。
+            </p>
           </div>
-        </section>
-
-        {/* Candidate Benefits Section */}
-        <section className='py-16 bg-white'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center mb-12'>
-              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
-                CuePointで理想の転職を実現
-              </h2>
-              <p className='mt-4 text-lg text-gray-600'>
-                転職成功を支える3つの特徴
-              </p>
-            </div>
-
-            <div className='grid grid-cols-1 gap-12 lg:grid-cols-3'>
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-green-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
-                    />
-                  </svg>
+          {/* カードUI: Figmaピクセルパーフェクト対応（3つ横並び） */}
+          <div className='mt-12 flex flex-wrap justify-center gap-8 w-full z-20'>
+            {[
+              {
+                img: '/images/card-1.jpg',
+                title: 'あなたの"今"を企業に伝える、<br />新しいスカウト体験',
+                text: '志望業界や応募先、検討フェーズなど、いまの動きを企業側に伝えられる新しい仕組みです。経歴だけではわからない、あなたの転職のリアルをもとに、納得感あるスカウトが届きます。',
+                grad: 'bg-gradient-to-b from-[#43C6AC] to-[#3B91C7]',
+              },
+              {
+                img: '/images/card-2.jpg',
+                title: 'しっかり選びたいあなたに',
+                text: 'ただ声がかかるだけじゃなく、本当に比較検討できる選択肢がほしい。\nCuePointでは、あなたがどこを受けているかをふまえ、企業が戦略的にスカウトを設計。だから納得して選べます。',
+                grad: 'bg-gradient-to-b from-[#86C36A] to-[#63BFAD]',
+              },
+              {
+                img: '/images/card-3.jpg',
+                title: '気づかなかった企業との出会い',
+                text: '似たような企業を受けているから…といった「比較先」を共有することで、あなたの選考状況を見た企業から新しいオファーが届きます。思ってもみなかったチャンスが見つかることも。',
+                grad: 'bg-gradient-to-b from-[#CADA65] to-[#95CA7D]',
+              },
+            ].map((card, i) => (
+              <div
+                key={i}
+                className='bg-white rounded-[10px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] p-[40px] pb-[72px] flex flex-col items-center gap-10 max-w-[400px] w-full sm:w-[360px]'
+              >
+                {/* イメージエリア */}
+                <div className='relative w-[240px] h-[240px] flex items-center justify-center'>
+                  {/* メイン円形画像（Figmaエクスポート画像） */}
+                  <img
+                    src={card.img}
+                    alt='カードイメージ'
+                    className='w-[220px] h-[220px] rounded-full object-cover'
+                  />
+                  {/* サブ円（グラデーション） */}
+                  <div
+                    className={`absolute left-0 bottom-0 w-[79px] h-[79px] rounded-full ${card.grad}`}
+                  ></div>
                 </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  個別最適化
-                </h3>
-                <p className='text-gray-600'>
-                  あなたのスキルと希望に合わせた、個別最適化されたキャリア提案
-                </p>
-              </div>
-
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-blue-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
+                {/* テキストエリア: 幅304pxに固定 */}
+                <div className='flex flex-col items-center gap-4 w-[304px]'>
+                  <h3
+                    className='text-center font-bold text-[18px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)] flex items-center justify-center h-[58px]'
+                    style={{ letterSpacing: '0.1em' }}
+                    dangerouslySetInnerHTML={{ __html: card.title }}
+                  />
+                  <p
+                    className='text-left text-[16px] leading-[2] tracking-wider text-[#323232] font-medium font-[family-name:var(--font-noto-sans-jp)] whitespace-pre-line'
+                    style={{ letterSpacing: '0.1em' }}
                   >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
-                    />
-                  </svg>
+                    {card.text}
+                  </p>
                 </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  企業直接アプローチ
-                </h3>
-                <p className='text-gray-600'>
-                  厳選された企業から直接スカウトを受け、効率的な転職活動を実現
-                </p>
               </div>
-
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-purple-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M13 10V3L4 14h7v7l9-11h-7z'
-                    />
-                  </svg>
-                </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  スピード転職
-                </h3>
-                <p className='text-gray-600'>
-                  効率的なマッチングで、最短での転職成功をサポート
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
-        </section>
-
-        {/* Success Stories Section */}
-        <section className='py-16 bg-gray-50'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center mb-12'>
-              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
-                転職成功事例
-              </h2>
-              <p className='mt-4 text-lg text-gray-600'>
-                CuePointを利用して転職に成功した方々の声
-              </p>
-            </div>
-
-            <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <div className='flex items-center mb-4'>
-                  <div className='w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center'>
-                    <span className='text-sm font-semibold text-gray-600'>
-                      A.T
-                    </span>
-                  </div>
-                  <div className='ml-4'>
-                    <h4 className='text-lg font-semibold text-gray-900'>
-                      エンジニア → テックリード
-                    </h4>
-                    <p className='text-sm text-gray-600'>年収 +150万円</p>
-                  </div>
-                </div>
-                <p className='text-gray-600'>
-                  「スカウト機能で理想の企業と出会えました。技術力を正当に評価してもらい、大幅な年収アップを実現できました。」
-                </p>
-              </div>
-
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <div className='flex items-center mb-4'>
-                  <div className='w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center'>
-                    <span className='text-sm font-semibold text-gray-600'>
-                      M.S
-                    </span>
-                  </div>
-                  <div className='ml-4'>
-                    <h4 className='text-lg font-semibold text-gray-900'>
-                      営業 → プロダクトマネージャー
-                    </h4>
-                    <p className='text-sm text-gray-600'>
-                      キャリアチェンジ成功
-                    </p>
-                  </div>
-                </div>
-                <p className='text-gray-600'>
-                  「キャリア分析機能で自分の強みを再発見。未経験分野への転職も、的確なサポートで成功できました。」
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* === グラデーション円（装飾） === */}
+          <div
+            className='absolute left-1/2 -translate-x-1/2 bottom-[-2630px] w-[3000px] h-[3000px] z-10 hidden md:block'
+            style={{
+              background: 'linear-gradient(360deg, #1CA74F 0%, #198D76 100%)',
+              borderRadius: '50%',
+            }}
+            aria-hidden='true'
+          ></div>
         </section>
       </main>
 
