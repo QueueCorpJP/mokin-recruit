@@ -1,5 +1,5 @@
 import { Navigation } from '@/components/ui/navigation';
-import { CandidateHeroSection } from '@/components/ui/candidate-hero-section';
+import { FVWrapper } from '@/components/ui/FVWrapper';
 import { Footer } from '@/components/ui/footer';
 import { Metadata } from 'next';
 
@@ -17,7 +17,27 @@ export default function CandidateLandingPage() {
       <Navigation variant='candidate' />
 
       {/* Hero Section */}
-      <CandidateHeroSection />
+      <FVWrapper>
+        {/* 背景画像：左女性（左右反転） */}
+        <img
+          src='/images/woman-bg.jpg'
+          alt='背景付き女性画像'
+          width={800}
+          height={690}
+          className='absolute left-0 top-0 w-[800px] h-[690px] object-cover z-10 -scale-x-100'
+          style={{ borderTopRightRadius: 80, borderBottomRightRadius: 80 }}
+        />
+        {/* 背景画像：右男性 */}
+        <img
+          src='/images/man-bg.png'
+          alt='背景付き男性画像'
+          width={800}
+          height={690}
+          className='absolute right-0 top-0 w-[800px] h-[690px] object-cover z-0'
+          style={{ borderTopRightRadius: 80, borderBottomRightRadius: 80 }}
+        />
+        {/* 今後：切り抜き画像・テキスト・ボタン等をここに追加 */}
+      </FVWrapper>
 
       {/* Additional Content Sections */}
       <main className='bg-white'>

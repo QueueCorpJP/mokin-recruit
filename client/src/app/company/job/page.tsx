@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Search,
   Plus,
@@ -26,134 +26,48 @@ interface JobPosting {
   updatedAt: string;
 }
 
-// 二つ目のファイルのAPI型定義
-interface APIJobPosting {
-  id: string;
-  title: string;
-  job_description: string;
-  required_skills: string[];
-  preferred_skills: string[];
-  salary_min: number | null;
-  salary_max: number | null;
-  employment_type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN';
-  work_location: string;
-  remote_work_available: boolean;
-  job_type: string;
-  industry: string;
-  status: 'DRAFT' | 'PUBLISHED' | 'CLOSED';
-  application_deadline: string | null;
-  created_at: string;
-  updated_at: string;
-  published_at: string | null;
-  company_group_id: string;
-}
-
-interface CompanyGroup {
-  id: string;
-  group_name: string;
-  description: string;
-}
-
-// 雇用形態表示用のヘルパー関数
-const getEmploymentTypeDisplay = (type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN') => {
-  switch (type) {
-    case 'FULL_TIME':
-      return '正社員';
-    case 'PART_TIME':
-      return 'パートタイム';
-    case 'CONTRACT':
-      return '契約社員';
-    case 'INTERN':
-      return 'インターン';
-    default:
-      return type;
-  }
-};
-
-// APIデータを一つ目のファイルの形式に変換する関数
-const convertAPIJobToDisplayJob = (apiJob: APIJobPosting, groups: CompanyGroup[]): JobPosting => {
-  const group = groups.find(g => g.id === apiJob.company_group_id);
-  
-  // APIのステータスを表示用ステータスに変換
-  let displayStatus: JobStatus;
-  switch (apiJob.status) {
-    case 'DRAFT':
-      displayStatus = 'DRAFT';
-      break;
-    case 'PUBLISHED':
-      displayStatus = 'PUBLISHED';
-      break;
-    case 'CLOSED':
-      displayStatus = 'CLOSED';
-      break;
-    default:
-      displayStatus = 'DRAFT';
-  }
-
-  return {
-    id: apiJob.id,
-    groupName: group?.group_name || 'グループなし',
-    jobTypes: [apiJob.job_type, apiJob.industry, getEmploymentTypeDisplay(apiJob.employment_type)],
-    title: apiJob.title,
-    status: displayStatus,
-    publicationType: 'SCOUT_ONLY', // デフォルト値
-    internalMemo: apiJob.job_description,
-    publishedAt: apiJob.published_at,
-    updatedAt: apiJob.updated_at,
-  };
-};
-
-// データ取得用フック
-const useCompanyJobs = () => {
-  const [jobs, setJobs] = useState<JobPosting[]>([]);
-  const [groups, setGroups] = useState<CompanyGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchJobs = async (filters?: { status?: string; groupId?: string; keyword?: string }) => {
-    try {
-      setLoading(true);
-      
-      const params = new URLSearchParams();
-      
-      if (filters?.status) {
-        params.append('status', filters.status);
-      }
-      if (filters?.groupId) {
-        params.append('groupId', filters.groupId);
-      }
-      if (filters?.keyword) {
-        params.append('keyword', filters.keyword);
-      }
-
-      const finalUrl = `/api/company/jobs?${params.toString()}`;
-
-      const response = await fetch(finalUrl);
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // APIデータを表示用データに変換
-        const displayJobs = result.data.jobs.map((apiJob: APIJobPosting) => 
-          convertAPIJobToDisplayJob(apiJob, result.data.groups)
-        );
-        
-        setJobs(displayJobs);
-        setGroups(result.data.groups);
-        setError(null);
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      console.error('Error fetching jobs:', err);
-      setError('データの取得に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { jobs, groups, loading, error, fetchJobs };
-};
+// サンプルデータ
+const sampleJobs: JobPosting[] = [
+  {
+    id: '1',
+    groupName: 'グループ名テキストグループ名テキスト',
+    jobTypes: ['職種テキスト', '職種テキスト', '職種テキスト'],
+    title:
+      '求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま',
+    status: 'PENDING_APPROVAL',
+    publicationType: 'SCOUT_ONLY',
+    internalMemo:
+      'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。',
+    publishedAt: null,
+    updatedAt: '2024/01/15',
+  },
+  {
+    id: '2',
+    groupName: 'グループ名テキストグループ名テキスト',
+    jobTypes: ['職種テキスト', '職種テキスト', '職種テキスト'],
+    title:
+      '求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま',
+    status: 'DRAFT',
+    publicationType: 'SCOUT_ONLY',
+    internalMemo:
+      'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。',
+    publishedAt: null,
+    updatedAt: '2024/01/15',
+  },
+  {
+    id: '3',
+    groupName: 'グループ名テキストグループ名テキスト',
+    jobTypes: ['職種テキスト', '職種テキスト', '職種テキスト'],
+    title:
+      '求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま求人タイトルが入ります。求人タイトルが入ります。求人タイトルが入りま',
+    status: 'PUBLISHED',
+    publicationType: 'SCOUT_ONLY',
+    internalMemo:
+      'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。',
+    publishedAt: '2024/01/10',
+    updatedAt: '2024/01/15',
+  },
+];
 
 // ステータス表示用のヘルパー関数
 const getStatusDisplay = (status: JobStatus) => {
@@ -203,7 +117,6 @@ const getPublicationTypeDisplay = (type: PublicationType) => {
 };
 
 export default function CompanyJobsPage() {
-  const { jobs, groups, loading, error, fetchJobs } = useCompanyJobs();
   const [selectedStatus, setSelectedStatus] = useState('すべて');
   const statusTabs = ['すべて', '下書き', '掲載待ち', '掲載済'];
   const [selectedScope, setSelectedScope] = useState('すべて');
@@ -214,53 +127,6 @@ export default function CompanyJobsPage() {
     'スカウト限定',
     '公開停止',
   ];
-  const [selectedGroup, setSelectedGroup] = useState('すべて');
-  const [keyword, setKeyword] = useState('');
-
-  // 初回データ取得
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  // フィルター変更時のデータ再取得
-  const handleFilterChange = () => {
-    const filters: { status?: string; groupId?: string; keyword?: string } = {};
-    
-    if (selectedStatus !== 'すべて') {
-      // 表示用のラベルをAPIのステータスに変換
-      let apiStatus = selectedStatus;
-      if (selectedStatus === '下書き') apiStatus = 'DRAFT';
-      if (selectedStatus === '掲載済') apiStatus = 'PUBLISHED';
-      if (selectedStatus === '掲載終了') apiStatus = 'CLOSED';
-      filters.status = apiStatus;
-    }
-    if (selectedGroup !== 'すべて') {
-      filters.groupId = selectedGroup;
-    }
-    if (keyword.trim()) {
-      filters.keyword = keyword.trim();
-    }
-    
-    fetchJobs(filters);
-  };
-
-  // ステータス変更時
-  const handleStatusChange = (status: string) => {
-    setSelectedStatus(status);
-    setTimeout(handleFilterChange, 0);
-  };
-
-  // グループ変更時
-  const handleGroupChange = (groupId: string) => {
-    setSelectedGroup(groupId);
-    setTimeout(handleFilterChange, 0);
-  };
-
-  // 検索実行
-  const handleSearch = () => {
-    handleFilterChange();
-  };
-
   return (
     <div className='min-h-screen bg-white flex flex-col gap-10'>
       {/* グラデーション背景（画面全体） */}
@@ -296,7 +162,7 @@ export default function CompanyJobsPage() {
                   {statusTabs.map((label, idx) => (
                     <button
                       key={label}
-                      onClick={() => handleStatusChange(label)}
+                      onClick={() => setSelectedStatus(label)}
                       className={[
                         'h-[32px] px-4 font-bold text-[16px] tracking-[0.1em] whitespace-nowrap focus:z-10 focus:outline-none [padding-left:16px] [padding-right:16px]',
                         idx === 0
@@ -351,17 +217,10 @@ export default function CompanyJobsPage() {
                 <span className='block text-[16px] font-bold text-[#323232] tracking-[0.1em] text-right w-[72px]'>
                   グループ
                 </span>
-                <select 
-                  className='h-[40px] w-[240px] rounded-[5px] border border-[#999] px-4 py-2 text-[14px] font-bold text-[#323232] tracking-[0.1em] bg-white'
-                  value={selectedGroup}
-                  onChange={(e) => handleGroupChange(e.target.value)}
-                >
-                  <option value="すべて">すべて</option>
-                  {groups.map(group => (
-                    <option key={group.id} value={group.id}>
-                      {group.group_name}
-                    </option>
-                  ))}
+                <select className='h-[40px] w-[240px] rounded-[5px] border border-[#999] px-4 py-2 text-[14px] font-bold text-[#323232] tracking-[0.1em] bg-white'>
+                  <option>すべて</option>
+                  <option>グループA</option>
+                  <option>グループB</option>
                 </select>
               </div>
               {/* キーワード検索 */}
@@ -373,120 +232,56 @@ export default function CompanyJobsPage() {
                   type='text'
                   className='h-[40px] w-[240px] rounded-[5px] border border-[#999] px-4 py-2 text-[14px] font-bold text-[#323232] tracking-[0.1em] bg-white'
                   placeholder='キーワードで検索'
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <button 
-                  className='h-[40px] px-6 rounded-[5px] bg-[#0F9058] text-white font-bold text-[14px] tracking-[0.1em]'
-                  onClick={handleSearch}
-                >
+                <button className='h-[40px] px-6 rounded-[5px] bg-[#0F9058] text-white font-bold text-[14px] tracking-[0.1em]'>
                   検索
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* 求人一覧エリア - 完全に新しく追加 */}
-      <div className='w-[1280px] mx-auto px-10 pb-10'>
-        {/* ヘッダー */}
-        <div className='flex justify-between items-center mb-6'>
-          <h2 className='text-[20px] font-bold text-[#323232] tracking-[0.1em]'>
-            求人一覧 ({jobs.length}件)
-          </h2>
-          <button className='flex items-center gap-2 h-[40px] px-6 rounded-[5px] bg-[#0F9058] text-white font-bold text-[14px] tracking-[0.1em] hover:bg-[#0D7A4A] transition-colors'>
-            <Plus className='w-4 h-4' />
-            新規作成
-          </button>
-        </div>
-
-        {/* エラー表示 */}
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4'>
-            {error}
-          </div>
-        )}
-
-        {/* ローディング表示 */}
-        {loading ? (
-          <div className='text-center py-8'>
-            <div className='inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058]'></div>
-            <p className='mt-2 text-gray-600'>読み込み中...</p>
-          </div>
-        ) : (
-          <div className='space-y-4'>
-            {jobs.length === 0 ? (
-              <div className='text-center py-12 bg-gray-50 rounded-lg'>
-                <p className='text-gray-500'>条件に一致する求人が見つかりませんでした。</p>
-              </div>
-            ) : (
-              jobs.map((job) => (
-                <div
-                  key={job.id}
-                  className='bg-white border border-[#E5E5E5] rounded-[10px] p-6 shadow-sm hover:shadow-md transition-shadow'
-                >
-                  <div className='flex justify-between items-start mb-4'>
-                    {/* 左側：求人情報 */}
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-4 mb-3'>
-                        <span className='text-[14px] font-bold text-[#666] tracking-[0.1em]'>
-                          {job.groupName}
-                        </span>
-                        <div className='flex gap-2'>
-                          {job.jobTypes.map((type, idx) => (
-                            <span
-                              key={idx}
-                              className='text-[12px] bg-[#F5F5F5] text-[#666] px-2 py-1 rounded-sm'
-                            >
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <h3 className='text-[16px] font-bold text-[#323232] tracking-[0.1em] mb-3 leading-[1.4]'>
-                        {job.title}
-                      </h3>
-                      <p className='text-[14px] text-[#666] line-clamp-2 mb-3'>
-                        {job.internalMemo}
-                      </p>
-                      <div className='flex items-center gap-4 text-[12px] text-[#999]'>
-                        <span>更新日: {job.updatedAt}</span>
-                        {job.publishedAt && (
-                          <span>公開日: {job.publishedAt}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* 右側：ステータス・公開範囲・操作 */}
-                    <div className='ml-6 flex flex-col items-end gap-3'>
-                      <div className='flex gap-2'>
-                        <span
-                          className={`inline-block px-3 py-1 rounded text-[12px] font-bold whitespace-pre-line text-center ${
-                            getStatusDisplay(job.status).className
-                          }`}
-                        >
-                          {getStatusDisplay(job.status).text}
-                        </span>
-                        <span
-                          className={`inline-block px-3 py-1 rounded text-[12px] font-bold ${
-                            getPublicationTypeDisplay(job.publicationType).className
-                          }`}
-                        >
-                          {getPublicationTypeDisplay(job.publicationType).text}
-                        </span>
-                      </div>
-                      <button className='text-[#666] hover:text-[#323232] transition-colors'>
-                        <MoreHorizontal className='w-5 h-5' />
-                      </button>
-                    </div>
-                  </div>
+          {/* 求人一覧リスト（Figma準拠） */}
+          <div className='w-[1280px] mx-auto mt-8'>
+            {/* ヘッダー行 */}
+            <div className='flex items-center h-[56px] bg-[#F7F7F7] border-b border-[#E5E5E5] text-[#323232] text-[15px] font-bold tracking-[0.1em]'>
+              <div className='px-[24px] flex-1 min-w-[220px]'>求人タイトル</div>
+              <div className='px-[24px] w-[140px] text-center'>雇用形態</div>
+              <div className='px-[24px] w-[140px] text-center'>勤務地</div>
+              <div className='px-[24px] w-[140px] text-center'>給与</div>
+              <div className='px-[24px] w-[120px] text-center'>ステータス</div>
+              <div className='px-[24px] w-[120px] text-center'>操作</div>
+            </div>
+            {/* 本体行 */}
+            {sampleJobs.map((job, idx) => (
+              <div
+                key={job.id}
+                className={`flex items-center h-[72px] border-b border-[#E5E5E5] bg-white text-[15px] tracking-[0.1em] ${idx === 0 ? '' : ''}`}
+              >
+                <div className='px-[24px] flex-1 min-w-[220px] truncate font-bold text-[#323232]'>
+                  {job.title}
                 </div>
-              ))
-            )}
+                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
+                  {job.jobTypes.join(', ')}
+                </div>
+                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
+                  東京
+                </div>
+                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
+                  400万〜600万
+                </div>
+                <div className='px-[24px] w-[120px] text-center'>
+                  <span className='inline-block px-2 py-1 rounded-[4px] border border-[#EFEFEF] text-[13px] font-bold bg-[#F7F7F7] text-[#0F9058]'>
+                    {getStatusDisplay(job.status).text}
+                  </span>
+                </div>
+                <div className='px-[24px] w-[120px] text-center'>
+                  <button className='px-3 py-1 rounded-[5px] bg-[#0F9058] text-white text-[13px] font-bold hover:bg-[#17856F]'>
+                    詳細
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
