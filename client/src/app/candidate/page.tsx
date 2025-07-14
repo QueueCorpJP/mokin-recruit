@@ -143,6 +143,122 @@ export default function CandidateLandingPage() {
             aria-hidden='true'
           ></div>
         </section>
+        {/* === 転職活動の流れセクション === */}
+        <section className='py-20 flex flex-col items-center'>
+          <div className='w-full max-w-[1200px] flex flex-col items-center'>
+            {/* 見出し */}
+            <h2
+              className='text-center font-bold text-[32px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)]'
+              style={{ letterSpacing: '0.1em' }}
+            >
+              転職活動の流れ
+            </h2>
+            {/* ドット装飾 */}
+            <div className='flex flex-row gap-7 mt-4'>
+              <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
+              <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
+              <span className='w-[12px] h-[12px] rounded-full bg-[#0F9058]'></span>
+            </div>
+            {/* === フロー部分は次ステップで実装 === */}
+            {/* === フロー部分：1つ目「会員情報を登録」 === */}
+            <div className='mt-16 flex justify-center w-full items-center'>
+              {/* 1つ目 */}
+              <div className='flex flex-col items-center w-[288px] h-[128px]'>
+                {/* アイコン部 */}
+                <div className='w-[80px] h-[80px] rounded-full border-2 border-[#0F9058] flex items-center justify-center'>
+                  {/* 仮SVGアイコン */}
+                  <img
+                    src='/images/flow-1.svg'
+                    alt=''
+                    className='w-[44px] h-[44px]'
+                  />
+                </div>
+                {/* テキスト部 */}
+                <div
+                  className='mt-auto text-[16px] font-bold text-[#0F9058] leading-[2] tracking-wider text-center font-[family-name:var(--font-noto-sans-jp)]'
+                  style={{ letterSpacing: '0.1em' }}
+                >
+                  会員情報を登録
+                </div>
+              </div>
+              {/* 矢印アイコン */}
+              <img
+                src='/images/flow-arrow.svg'
+                alt=''
+                className='w-[16px] h-[32px]'
+              />
+              {/* 2つ目 */}
+              <div className='flex flex-col items-center w-[288px] h-[128px]'>
+                {/* アイコン部 */}
+                <div className='w-[80px] h-[80px] rounded-full border-2 border-[#0F9058] flex items-center justify-center'>
+                  {/* 仮SVGアイコン */}
+                  <img
+                    src='/images/flow-2.svg'
+                    alt=''
+                    className='w-[44px] h-[44px]'
+                  />
+                </div>
+                {/* テキスト部 */}
+                <div
+                  className='mt-auto text-[16px] font-bold text-[#0F9058] leading-[2] tracking-wider text-center font-[family-name:var(--font-noto-sans-jp)]'
+                  style={{ letterSpacing: '0.1em' }}
+                >
+                  スカウトを受け取る
+                </div>
+              </div>
+              {/* 矢印アイコン */}
+              <img
+                src='/images/flow-arrow.svg'
+                alt=''
+                className='w-[16px] h-[32px]'
+              />
+              {/* 3つ目 */}
+              <div className='flex flex-col items-center w-[288px] h-[128px]'>
+                {/* アイコン部 */}
+                <div className='w-[80px] h-[80px] rounded-full border-2 border-[#0F9058] flex items-center justify-center'>
+                  {/* 仮SVGアイコン */}
+                  <img
+                    src='/images/flow-3.svg'
+                    alt=''
+                    className='w-[44px] h-[44px]'
+                  />
+                </div>
+                {/* テキスト部 */}
+                <div
+                  className='mt-auto text-[16px] font-bold text-[#0F9058] leading-[2] tracking-wider text-center font-[family-name:var(--font-noto-sans-jp)]'
+                  style={{ letterSpacing: '0.1em' }}
+                >
+                  面談・面接
+                </div>
+              </div>
+              {/* 矢印アイコン */}
+              <img
+                src='/images/flow-arrow.svg'
+                alt=''
+                className='w-[16px] h-[32px]'
+              />
+              {/* 4つ目 */}
+              <div className='flex flex-col items-center w-[288px] h-[128px]'>
+                {/* アイコン部 */}
+                <div className='w-[80px] h-[80px] rounded-full border-2 border-[#0F9058] flex items-center justify-center'>
+                  {/* 仮SVGアイコン */}
+                  <img
+                    src='/images/flow-4.svg'
+                    alt=''
+                    className='w-[44px] h-[44px]'
+                  />
+                </div>
+                {/* テキスト部 */}
+                <div
+                  className='mt-auto text-[16px] font-bold text-[#0F9058] leading-[2] tracking-wider text-center font-[family-name:var(--font-noto-sans-jp)]'
+                  style={{ letterSpacing: '0.1em' }}
+                >
+                  内定・入社
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
