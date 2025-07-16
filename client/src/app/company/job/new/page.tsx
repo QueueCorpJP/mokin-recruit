@@ -716,7 +716,7 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* 雇用形態 */}
+                {/* 雇用形 */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
