@@ -1,81 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { InputField } from '@/components/ui/input-field';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import {
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-  FormField,
-} from '@/components/ui/form';
 import { ImageUpload } from '@/components/ui/ImageUpload';
+import NewJobHeader from '@/components/company/job/NewJobHeader';
+import LocationModal from '@/components/company/job/LocationModal';
+import JobTypeModal from '@/components/company/job/JobTypeModal';
+import IndustryModal from '@/components/company/job/IndustryModal';
 
-// 型定義（必要に応じて拡張）
-interface JobFormValues {
-  title: string;
-  images: File[]; // ←複数画像対応
-  jobType: string;
-  industry: string;
-  positionSummary: string;
-  jobDescription: string;
-  jobAppeal: string;
-  requiredSkills: string;
-  otherRequirements: string;
-  salaryMin: string;
-  salaryMax: string;
-  salaryNote: string;
-  location: string;
-  locationNote: string;
-  employmentType: string;
-  employmentTypeNote: string;
-  workingHours: string;
-  overtime: string;
-  holidays: string;
-  selectionProcess: string;
-  appealPoints: string[];
-  resumeRequired: string[];
-  memo: string;
-}
-
-const defaultValues: JobFormValues = {
-  title: '',
-  images: [], // ←複数画像対応
-  jobType: '',
-  industry: '',
-  positionSummary: '',
-  jobDescription: '',
-  jobAppeal: '',
-  requiredSkills: '',
-  otherRequirements: '',
-  salaryMin: '',
-  salaryMax: '',
-  salaryNote: '',
-  location: '',
-  locationNote: '',
-  employmentType: '',
-  employmentTypeNote: '',
-  workingHours: '',
-  overtime: '',
-  holidays: '',
-  selectionProcess: '',
-  appealPoints: [],
-  resumeRequired: [],
-  memo: '',
-};
-
+// 企業グループの型定義
 interface CompanyGroup {
   id: string;
   group_name: string;
@@ -102,7 +35,6 @@ export default function JobNewPage() {
   const [employmentTypeNote, setEmploymentTypeNote] = useState('');
   const [workingHours, setWorkingHours] = useState('');
   const [overtime, setOvertime] = useState('');
-  const [remarks, setRemarks] = useState('');
   const [holidays, setHolidays] = useState('');
   const [selectionProcess, setSelectionProcess] = useState('');
   const [appealPoints, setAppealPoints] = useState<string[]>([]);
@@ -111,6 +43,14 @@ export default function JobNewPage() {
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
   const [memo, setMemo] = useState('');
   
+  // モーダルの状態
+  const [isLocationModalOpen, setLocationModalOpen] = useState(false);
+  const [isJobTypeModalOpen, setJobTypeModalOpen] = useState(false);
+  const [isIndustryModalOpen, setIndustryModalOpen] = useState(false);
+
+  // 確認モードの状態
+  const [isConfirmMode, setIsConfirmMode] = useState(false);
+
   // バリデーション状態
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
@@ -144,15 +84,12 @@ export default function JobNewPage() {
     fetchCompanyGroups();
   }, []);
 
-  // 選択肢追加・削除の例（職種・業種・勤務地）
-  const addJobType = (val: string) => setJobTypes([...jobTypes, val]);
+  // 選択肢追加・削除
   const removeJobType = (val: string) => setJobTypes(jobTypes.filter(v => v !== val));
-  const addIndustry = (val: string) => setIndustries([...industries, val]);
   const removeIndustry = (val: string) => setIndustries(industries.filter(v => v !== val));
-  const addLocation = (val: string) => setLocations([...locations, val]);
   const removeLocation = (val: string) => setLocations(locations.filter(v => v !== val));
 
-  // チェックボックス（アピールポイント・レジュメ提出）
+  // チェックボックス
   const toggleAppealPoint = (val: string) => setAppealPoints(ap => ap.includes(val) ? ap.filter(v => v !== val) : ap.length < 6 ? [...ap, val] : ap);
   const toggleResumeRequired = (val: string) => setResumeRequired(rq => rq.includes(val) ? rq.filter(v => v !== val) : [...rq, val]);
 
@@ -172,10 +109,24 @@ export default function JobNewPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 確認モードに切り替え
+  const handleConfirm = () => {
+    if (validateForm()) {
+      setIsConfirmMode(true);
+      setShowErrors(false);
+    } else {
+      setShowErrors(true);
+    }
+  };
+
+  // 編集モードに戻る
+  const handleBack = () => {
+    setIsConfirmMode(false);
+    setShowErrors(false);
+  };
+
   // 送信処理
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     const data = {
       company_group_id: group,
       title: title || '未設定',
@@ -194,10 +145,7 @@ export default function JobNewPage() {
       published_at: null
     };
     
-    // 認証トークンを取得
     const token = localStorage.getItem('auth-token');
-    
-    console.log('Sending data to API:', data);
     
     try {
       const res = await fetch('/api/job/new', {
@@ -209,9 +157,6 @@ export default function JobNewPage() {
         body: JSON.stringify(data),
       });
       const result = await res.json();
-      
-      console.log('API Response:', result);
-      console.log('Status Code:', res.status);
       
       if (result.success) {
         alert('求人が正常に作成されました！');
@@ -225,6 +170,7 @@ export default function JobNewPage() {
         setEmploymentType('');
         setLocations([]);
         setErrors({});
+        setIsConfirmMode(false);
       } else {
         console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
@@ -235,193 +181,915 @@ export default function JobNewPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-green-700 to-green-500 py-10 px-4 flex flex-col items-center">
-      <div className="w-full max-w-5xl space-y-8">
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-8 space-y-8">
-          {/* グループ */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">グループ <span className="text-red-500">*</span></label>
-            <select className={`border rounded px-3 py-2 w-60 ${showErrors && errors.group ? 'border-red-500 bg-red-50' : ''}`} value={group} onChange={e => setGroup(e.target.value)}>
-              <option value="">未選択</option>
-              {companyGroups.map(group => (
-                <option key={group.id} value={group.id}>{group.group_name}</option>
-              ))}
-            </select>
-            {showErrors && errors.group && <span className="text-red-500 text-sm">{errors.group}</span>}
-          </div>
-                  {/* 求人タイトル */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">求人タイトル <span className="text-red-500">*</span></label>
-            <input className={`border rounded px-3 py-2 ${showErrors && errors.title ? 'border-red-500 bg-red-50' : ''}`} placeholder="求人タイトルを入力" value={title} onChange={e => setTitle(e.target.value)} />
-            {showErrors && errors.title && <span className="text-red-500 text-sm">{errors.title}</span>}
-          </div>
-          {/* イメージ画像 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">イメージ画像</label>
-            <ImageUpload 
-              images={images} 
-              onChange={setImages}
-              maxImages={5}
-            />
-          </div>
-          {/* 職種 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">職種 <span className="text-red-500">*</span></label>
-            <button type="button" className={`border rounded px-3 py-2 w-60 ${showErrors && errors.jobTypes ? 'border-red-500 bg-red-50' : ''}`} onClick={() => addJobType('新しい職種')}>職種を選択</button>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {jobTypes.map(type => (
-                <span key={type} className="bg-green-100 text-green-800 rounded px-2 py-1 cursor-pointer" onClick={() => removeJobType(type)}>{type} ×</span>
-              ))}
-            </div>
-            {showErrors && errors.jobTypes && <span className="text-red-500 text-sm">{errors.jobTypes}</span>}
-          </div>
-          {/* 業種 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">業種 <span className="text-red-500">*</span></label>
-            <button type="button" className={`border rounded px-3 py-2 w-60 ${showErrors && errors.industries ? 'border-red-500 bg-red-50' : ''}`} onClick={() => addIndustry('新しい業種')}>業種を選択</button>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {industries.map(type => (
-                <span key={type} className="bg-green-100 text-green-800 rounded px-2 py-1 cursor-pointer" onClick={() => removeIndustry(type)}>{type} ×</span>
-              ))}
-            </div>
-            {showErrors && errors.industries && <span className="text-red-500 text-sm">{errors.industries}</span>}
-          </div>
-          {/* 業務内容 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">業務内容 <span className="text-red-500">*</span></label>
-            <textarea className={`border rounded px-3 py-2 min-h-[100px] ${showErrors && errors.jobDescription ? 'border-red-500 bg-red-50' : ''}`} placeholder="具体的な業務内容・期待する役割/成果・募集背景などを入力してください。" value={jobDescription} onChange={e => setJobDescription(e.target.value)} />
-            {showErrors && errors.jobDescription && <span className="text-red-500 text-sm">{errors.jobDescription}</span>}
-                  </div>
-                  {/* ポジション概要 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">ポジション概要</label>
-            <textarea className="border rounded px-3 py-2 min-h-[100px]" placeholder="当ポジションの魅力を入力してください。" value={positionSummary} onChange={e => setPositionSummary(e.target.value)} />
-          </div>
-          {/* スキル・経験 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">スキル・経験</label>
-            <textarea className="border rounded px-3 py-2 min-h-[80px]" placeholder="必要または歓迎するスキル・経験について入力してください。" value={skills} onChange={e => setSkills(e.target.value)} />
-          </div>
-          {/* その他・求める人物像など */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">その他・求める人物像など</label>
-            <textarea className="border rounded px-3 py-2 min-h-[80px]" placeholder="スキル以外に求める人物像や価値観などを入力してください。" value={otherRequirements} onChange={e => setOtherRequirements(e.target.value)} />
-          </div>
-          {/* 想定年収 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">想定年収</label>
-            <div className="flex gap-2 items-center">
-              <select className="border rounded px-3 py-2 w-32" value={salaryMin} onChange={e => setSalaryMin(e.target.value)}>
-                <option value="">未選択</option>
-              </select>
-              <span>〜</span>
-              <select className="border rounded px-3 py-2 w-32" value={salaryMax} onChange={e => setSalaryMax(e.target.value)}>
-                <option value="">未選択</option>
-              </select>
-            </div>
-            <input className="border rounded px-3 py-2 mt-2" placeholder="ストックオプションなどについてはこちらに入力してください。" value={salaryNote} onChange={e => setSalaryNote(e.target.value)} />
-          </div>
-          {/* 勤務地 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">勤務地 <span className="text-red-500">*</span></label>
-            <button type="button" className={`border rounded px-3 py-2 w-60 ${showErrors && errors.locations ? 'border-red-500 bg-red-50' : ''}`} onClick={() => addLocation('新しい勤務地')}>勤務地を選択</button>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {locations.map(loc => (
-                <span key={loc} className="bg-green-100 text-green-800 rounded px-2 py-1 cursor-pointer" onClick={() => removeLocation(loc)}>{loc} ×</span>
-              ))}
-            </div>
-            {showErrors && errors.locations && <span className="text-red-500 text-sm">{errors.locations}</span>}
-            <input className="border rounded px-3 py-2 mt-2" placeholder="転勤有無・リモート可否・手当の有無など、勤務地に関する補足情報を入力してください。" value={locationNote} onChange={e => setLocationNote(e.target.value)} />
-                  </div>
-          {/* 雇用形態 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">雇用形態 <span className="text-red-500">*</span></label>
-            <select className={`border rounded px-3 py-2 w-60 ${showErrors && errors.employmentType ? 'border-red-500 bg-red-50' : ''}`} value={employmentType} onChange={e => setEmploymentType(e.target.value)}>
-              <option value="">選択してください</option>
-              <option value="正社員">正社員</option>
-              <option value="契約社員">契約社員</option>
-              <option value="アルバイト">アルバイト</option>
-            </select>
-            {showErrors && errors.employmentType && <span className="text-red-500 text-sm">{errors.employmentType}</span>}
-            <input className="border rounded px-3 py-2 mt-2" placeholder="契約期間・試用期間など" value={employmentTypeNote} onChange={e => setEmploymentTypeNote(e.target.value)} />
-                  </div>
-          {/* 就業時間 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">就業時間</label>
-            <textarea className="border rounded px-3 py-2 min-h-[80px]" placeholder="9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有" value={workingHours} onChange={e => setWorkingHours(e.target.value)} />
-                    </div>
-          {/* 所定外労働の有無 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">所定外労働の有無</label>
-            <div className="flex gap-4 items-center">
-              <label className="flex items-center gap-1"><input type="radio" name="overtime" value="あり" checked={overtime === 'あり'} onChange={e => setOvertime(e.target.value)} />あり</label>
-              <label className="flex items-center gap-1"><input type="radio" name="overtime" value="なし" checked={overtime === 'なし'} onChange={e => setOvertime(e.target.value)} />なし</label>
-                  </div>
-                  </div>
-          {/* 備考 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">備考</label>
-            <textarea className="border rounded px-3 py-2 min-h-[60px]" placeholder="月平均20時間程度／固定残業代45時間分を含む" value={remarks} onChange={e => setRemarks(e.target.value)} />
-                  </div>
-          {/* 休日・休暇 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">休日・休暇</label>
-            <textarea className="border rounded px-3 py-2 min-h-[60px]" placeholder="完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇" value={holidays} onChange={e => setHolidays(e.target.value)} />
-                  </div>
-                  {/* 選考情報 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">選考情報</label>
-            <textarea className="border rounded px-3 py-2 min-h-[60px]" placeholder="選考フローや面接回数などの情報を入力してください。" value={selectionProcess} onChange={e => setSelectionProcess(e.target.value)} />
-          </div>
-          {/* アピールポイント */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">アピールポイント <span className="text-xs text-gray-400">最大6つまで選択可能</span></label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                'CxO候補','新規事業立ち上げ','経営戦略に関与','裁量が大きい','スピード感がある','グローバル事業に関与','成長フェーズ','上場準備中','社会課題に貢献','少数精鋭','代表と距離が近い','20~30代中心','フラットな組織','多様な人材が活躍','フレックス制度','リモートあり','副業OK','残業少なめ','育児/介護と両立しやすい'
-              ].map(val => (
-                <label key={val} className="flex items-center gap-1">
-                  <input type="checkbox" checked={appealPoints.includes(val)} onChange={() => toggleAppealPoint(val)} disabled={!appealPoints.includes(val) && appealPoints.length >= 6} />{val}
-                </label>
-              ))}
-            </div>
-          </div>
-          {/* 受動喫煙防止措置 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">受動喫煙防止措置</label>
-            <div className="flex gap-4 items-center flex-wrap">
-              {['屋内禁煙','喫煙室設置','対策なし','その他'].map(val => (
-                <label key={val} className="flex items-center gap-1">
-                  <input type="radio" name="smoke" value={val} checked={smoke === val} onChange={e => setSmoke(e.target.value)} />{val}
-                </label>
-              ))}
-            </div>
-            <input className="border rounded px-3 py-2 mt-2" placeholder="就業場所が異なる、就業場所によって対策内容が異なる、対策内容を断言できないなどの場合は、「その他」を選択し、面談・面接時に候補者にお伝えください。" value={smokeNote} onChange={e => setSmokeNote(e.target.value)} />
-          </div>
-          {/* 応募時のレジュメ提出 */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">応募時のレジュメ提出</label>
-            {['履歴書の提出が必須','職務経歴書の提出が必須'].map(val => (
-              <label key={val} className="flex items-center gap-1">
-                <input type="checkbox" checked={resumeRequired.includes(val)} onChange={() => toggleResumeRequired(val)} />{val}
-              </label>
-            ))}
-            <div className="text-xs text-gray-400">応募後に別途提出を依頼することも可能です。</div>
-          </div>
-                  {/* 社内メモ */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold">社内メモ</label>
-            <textarea className="border rounded px-3 py-2 min-h-[60px]" placeholder="この求人に関して、社内で共有しておきたい事項などがあれば、こちらを活用してください。" value={memo} onChange={e => setMemo(e.target.value)} />
-            <div className="text-xs text-gray-400">社内メモは候補者に共有されません。</div>
-                </div>
-                {/* ボタンエリア */}
-          <div className="flex justify-end gap-4 mt-8">
-            <Button type="button" variant="green-outline">下書き保存</Button>
-            <Button type="submit" variant="green-gradient">確認する</Button>
-          </div>
-        </form>
+  // 確認モード用の表示コンポーネント
+  const ConfirmField = ({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) => (
+    <div className="flex flex-row gap-6 items-start justify-start w-full">
+      <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+          {label}
+        </div>
       </div>
+      <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+        {children || (
+          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+            {value || '未設定'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <NewJobHeader />
+      <div className="flex min-h-[577px] pt-10 pr-20 pb-20 pl-20 flex-col items-center gap-10 self-stretch bg-[#F9F9F9]">
+        <div className="w-full max-w-5xl space-y-8">
+          <div className="flex p-10 flex-col items-start gap-2 self-stretch rounded-[10px] bg-white">
+            {isConfirmMode ? (
+              /* 確認モード */
+              <>
+                <ConfirmField 
+                  label="グループ" 
+                  value={companyGroups.find(g => g.id === group)?.group_name || '未設定'} 
+                />
+                <ConfirmField label="求人タイトル" value={title} />
+                <ConfirmField label="職種">
+                  <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                    {jobTypes.map(type => (
+                      <div key={type} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                          {type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="業種">
+                  <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                    {industries.map(type => (
+                      <div key={type} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                          {type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="画像">
+                  <div className="flex flex-wrap gap-4 items-center justify-start w-full">
+                    {images.map((image, idx) => {
+                      const url = URL.createObjectURL(image);
+                      return (
+                        <div key={idx} className="relative w-40 h-28 border rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                          <img src={url} alt={`preview-${idx}`} className="object-cover w-full h-full" />
+                        </div>
+                      );
+                    })}
+                    {images.length === 0 && (
+                      <div className="text-[#666666] text-sm">画像が選択されていません</div>
+                    )}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="仕事内容" value={jobDescription} />
+                <ConfirmField label="ポジション概要" value={positionSummary} />
+                <ConfirmField label="必要なスキル・経験" value={skills} />
+                <ConfirmField label="その他の要件" value={otherRequirements} />
+                <ConfirmField label="給与（最小）" value={salaryMin ? `${salaryMin}万円` : ''} />
+                <ConfirmField label="給与（最大）" value={salaryMax ? `${salaryMax}万円` : ''} />
+                <ConfirmField label="給与備考" value={salaryNote} />
+                <ConfirmField label="雇用形態" value={employmentType} />
+                <ConfirmField label="雇用形態備考" value={employmentTypeNote} />
+                <ConfirmField label="勤務地">
+                  <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                    {locations.map(loc => (
+                      <div key={loc} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                          {loc}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="勤務地備考" value={locationNote} />
+                <ConfirmField label="勤務時間" value={workingHours} />
+                <ConfirmField label="残業" value={overtime} />
+                <ConfirmField label="休日・休暇" value={holidays} />
+                <ConfirmField label="選考プロセス" value={selectionProcess} />
+                <ConfirmField label="アピールポイント">
+                  <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                    {appealPoints.map(point => (
+                      <div key={point} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                          {point}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="喫煙" value={smoke} />
+                <ConfirmField label="喫煙備考" value={smokeNote} />
+                <ConfirmField label="応募時提出物">
+                  <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                    {resumeRequired.map(item => (
+                      <div key={item} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmField>
+                <ConfirmField label="メモ" value={memo} />
+              </>
+            ) : (
+              /* 編集モード */
+              <>
+                {/* グループ */}
+                <div className="flex flex-row gap-6 items-start justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      グループ
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-center w-[400px]">
+                      <div className="relative w-full">
+                        <select 
+                          className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none ${showErrors && errors.group ? 'border-red-500 bg-red-50' : ''}`}
+                          value={group} 
+                          onChange={e => setGroup(e.target.value)}
+                        >
+                          <option value="">未選択</option>
+                          {companyGroups.map(group => (
+                            <option key={group.id} value={group.id}>{group.group_name}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-3.5 h-[9.333px]" fill="none" viewBox="0 0 14 10">
+                            <path
+                              d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                              fill="#0F9058"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      {showErrors && errors.group && <span className="text-red-500 text-sm">{errors.group}</span>}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 求人タイトル */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      求人タイトル
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <input 
+                        className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] ${showErrors && errors.title ? 'border-red-500 bg-red-50' : ''}`}
+                        placeholder="求人タイトルを入力" 
+                        value={title} 
+                        onChange={e => setTitle(e.target.value)} 
+                      />
+                      {showErrors && errors.title && <span className="text-red-500 text-sm">{errors.title}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 画像 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      画像
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <ImageUpload
+                        images={images}
+                        onChange={setImages}
+                        maxImages={5}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 概要 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      概要
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="求人の概要を入力してください。" 
+                        value={positionSummary} 
+                        onChange={e => setPositionSummary(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 給与 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      給与
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-4 items-start justify-start w-full">
+                      <div className="flex gap-4 items-center w-full">
+                        <div className="flex items-center gap-2">
+                          <input 
+                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
+                            placeholder="300" 
+                            type="number"
+                            value={salaryMin} 
+                            onChange={e => setSalaryMin(e.target.value)} 
+                          />
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
+                        </div>
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</span>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
+                            placeholder="500" 
+                            type="number"
+                            value={salaryMax} 
+                            onChange={e => setSalaryMax(e.target.value)} 
+                          />
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 職種 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      職種
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <div className="flex flex-row gap-6 items-center justify-start w-full">
+                        <button
+                          type="button"
+                          onClick={() => setJobTypeModalOpen(true)}
+                          className={`flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] ${showErrors && errors.jobTypes ? 'border-red-500 bg-red-50' : ''}`}
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            職種を選択
+                          </span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {jobTypes.map(type => (
+                          <div
+                            key={type}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => removeJobType(type)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {type}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                      {showErrors && errors.jobTypes && <span className="text-red-500 text-sm">{errors.jobTypes}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 業務内容 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      業務内容
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[147px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none ${showErrors && errors.jobDescription ? 'border-red-500 bg-red-50' : ''}`}
+                        placeholder="具体的な業務内容を入力してください。" 
+                        value={jobDescription} 
+                        onChange={e => setJobDescription(e.target.value)} 
+                      />
+                      {showErrors && errors.jobDescription && <span className="text-red-500 text-sm">{errors.jobDescription}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 勤務地 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      勤務地
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <div className="flex flex-row gap-6 items-center justify-start w-full">
+                        <button
+                          type="button"
+                          onClick={() => setLocationModalOpen(true)}
+                          className={`flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] ${showErrors && errors.locations ? 'border-red-500 bg-red-50' : ''}`}
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            勤務地を選択
+                          </span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {locations.map(loc => (
+                          <div
+                            key={loc}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => removeLocation(loc)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {loc}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                      {showErrors && errors.locations && <span className="text-red-500 text-sm">{errors.locations}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 必須条件 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      必須条件
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="必須条件を入力してください。" 
+                        value={skills} 
+                        onChange={e => setSkills(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 歓迎条件 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      歓迎条件
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="歓迎条件を入力してください。" 
+                        value={otherRequirements} 
+                        onChange={e => setOtherRequirements(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 福利厚生 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      福利厚生
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="福利厚生を入力してください。" 
+                        value={salaryNote} 
+                        onChange={e => setSalaryNote(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 選考フロー */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      選考フロー
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="選考プロセスを入力してください。" 
+                        value={selectionProcess} 
+                        onChange={e => setSelectionProcess(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* アピールポイント */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      アピールポイント
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-4 items-start justify-start w-full">
+                      <div className="grid grid-cols-2 gap-4 w-full">
+                        {['リモートワーク可', '残業少なめ', '副業OK', '服装自由', '年間休日120日以上', '未経験歓迎'].map(point => (
+                          <label key={point} className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={appealPoints.includes(point)}
+                              onChange={() => toggleAppealPoint(point)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${appealPoints.includes(point) ? 'bg-[#0F9058] border-[#0F9058]' : 'border-[#999999]'}`}>
+                              {appealPoints.includes(point) && (
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 9">
+                                  <path
+                                    d="M11.2071 1.20711C11.5976 0.816607 11.5976 0.183386 11.2071 -0.207113C10.8166 -0.597613 10.1834 -0.597613 9.79289 -0.207113L4.5 4.08579L2.20711 1.79289C1.81658 1.40237 1.18337 1.40237 0.792893 1.79289C0.402369 2.18342 0.402369 2.81658 0.792893 3.20711L3.79289 6.20711C4.18342 6.59763 4.81658 6.59763 5.20711 6.20711L11.2071 1.20711Z"
+                                    fill="white"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                              {point}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {appealPoints.map(point => (
+                          <div
+                            key={point}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => toggleAppealPoint(point)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {point}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 業種 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      業種
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <div className="flex flex-row gap-6 items-center justify-start w-full">
+                        <button
+                          type="button"
+                          onClick={() => setIndustryModalOpen(true)}
+                          className={`flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] ${showErrors && errors.industries ? 'border-red-500 bg-red-50' : ''}`}
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            業種を選択
+                          </span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {industries.map(industry => (
+                          <div
+                            key={industry}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => removeIndustry(industry)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {industry}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                      {showErrors && errors.industries && <span className="text-red-500 text-sm">{errors.industries}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 雇用形態 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      雇用形態
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-center w-[400px]">
+                      <div className="relative w-full">
+                        <select 
+                          className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none ${showErrors && errors.employmentType ? 'border-red-500 bg-red-50' : ''}`}
+                          value={employmentType} 
+                          onChange={e => setEmploymentType(e.target.value)}
+                        >
+                          <option value="">未選択</option>
+                          <option value="正社員">正社員</option>
+                          <option value="契約社員">契約社員</option>
+                          <option value="派遣社員">派遣社員</option>
+                          <option value="アルバイト・パート">アルバイト・パート</option>
+                          <option value="業務委託">業務委託</option>
+                          <option value="インターン">インターン</option>
+                        </select>
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-3.5 h-[9.333px]" fill="none" viewBox="0 0 14 10">
+                            <path
+                              d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                              fill="#0F9058"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      {showErrors && errors.employmentType && <span className="text-red-500 text-sm">{errors.employmentType}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 雇用形態備考 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      雇用形態備考
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="雇用形態の詳細を入力してください。" 
+                        value={employmentTypeNote} 
+                        onChange={e => setEmploymentTypeNote(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 勤務地備考 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      勤務地備考
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="勤務地の詳細を入力してください。" 
+                        value={locationNote} 
+                        onChange={e => setLocationNote(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 勤務時間 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      勤務時間
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="勤務時間を入力してください。" 
+                        value={workingHours} 
+                        onChange={e => setWorkingHours(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 残業 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      残業
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="残業について入力してください。" 
+                        value={overtime} 
+                        onChange={e => setOvertime(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 休日・休暇 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      休日・休暇
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="休日・休暇を入力してください。" 
+                        value={holidays} 
+                        onChange={e => setHolidays(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 喫煙 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      喫煙
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-center w-[400px]">
+                      <div className="relative w-full">
+                        <select 
+                          className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none"
+                          value={smoke} 
+                          onChange={e => setSmoke(e.target.value)}
+                        >
+                          <option value="">未選択</option>
+                          <option value="禁煙">禁煙</option>
+                          <option value="分煙">分煙</option>
+                          <option value="喫煙可">喫煙可</option>
+                        </select>
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-3.5 h-[9.333px]" fill="none" viewBox="0 0 14 10">
+                            <path
+                              d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                              fill="#0F9058"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 喫煙備考 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      喫煙備考
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="喫煙に関する詳細を入力してください。" 
+                        value={smokeNote} 
+                        onChange={e => setSmokeNote(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 応募時提出物 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      応募時提出物
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-4 items-start justify-start w-full">
+                      <div className="grid grid-cols-2 gap-4 w-full">
+                        {['履歴書', '職務経歴書', 'ポートフォリオ', '志望動機書', '自己PR書', 'その他'].map(item => (
+                          <label key={item} className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={resumeRequired.includes(item)}
+                              onChange={() => toggleResumeRequired(item)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${resumeRequired.includes(item) ? 'bg-[#0F9058] border-[#0F9058]' : 'border-[#999999]'}`}>
+                              {resumeRequired.includes(item) && (
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 9">
+                                  <path
+                                    d="M11.2071 1.20711C11.5976 0.816607 11.5976 0.183386 11.2071 -0.207113C10.8166 -0.597613 10.1834 -0.597613 9.79289 -0.207113L4.5 4.08579L2.20711 1.79289C1.81658 1.40237 1.18337 1.40237 0.792893 1.79289C0.402369 2.18342 0.402369 2.81658 0.792893 3.20711L3.79289 6.20711C4.18342 6.59763 4.81658 6.59763 5.20711 6.20711L11.2071 1.20711Z"
+                                    fill="white"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                              {item}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {resumeRequired.map(item => (
+                          <div
+                            key={item}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => toggleResumeRequired(item)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {item}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* メモ */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      メモ
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="メモを入力してください。" 
+                        value={memo} 
+                        onChange={e => setMemo(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+
+              </>
+            )}
+          </div>
+        
+          {/* ボタンエリア */}
+          <div className="flex justify-center items-center gap-4 mt-8 w-full">
+            {isConfirmMode ? (
+              <>
+                <Button 
+                  type="button" 
+                  onClick={handleBack}
+                  style={{
+                    borderRadius: '32px',
+                    background: 'transparent',
+                    border: '2px solid #198D76',
+                    color: '#198D76',
+                    fontWeight: 'bold',
+                    padding: '10px 40px',
+                    minWidth: '160px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  戻る
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleSubmit}
+                  style={{
+                    borderRadius: '32px',
+                    background: 'linear-gradient(83deg, #198D76 0%, #1CA74F 100%)',
+                    boxShadow: '0px 5px 10px 0px rgba(0, 0, 0, 0.15)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    padding: '10px 40px',
+                    minWidth: '160px',
+                    border: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  この投稿を確認する
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  type="button" 
+                  style={{
+                    borderRadius: '32px',
+                    background: 'transparent',
+                    border: '2px solid #198D76',
+                    color: '#198D76',
+                    fontWeight: 'bold',
+                    padding: '10px 40px',
+                    minWidth: '160px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  下書き保存
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={handleConfirm}
+                  style={{
+                    borderRadius: '32px',
+                    background: 'linear-gradient(83deg, #198D76 0%, #1CA74F 100%)',
+                    boxShadow: '0px 5px 10px 0px rgba(0, 0, 0, 0.15)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    padding: '10px 40px',
+                    minWidth: '160px',
+                    border: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  確認する
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* モーダル */}
+      {!isConfirmMode && (
+        <>
+          <LocationModal
+            isOpen={isLocationModalOpen}
+            onClose={() => setLocationModalOpen(false)}
+            selectedLocations={locations}
+            setSelectedLocations={setLocations}
+          />
+          <JobTypeModal
+            isOpen={isJobTypeModalOpen}
+            onClose={() => setJobTypeModalOpen(false)}
+            selectedJobTypes={jobTypes}
+            setSelectedJobTypes={setJobTypes}
+          />
+          <IndustryModal
+            isOpen={isIndustryModalOpen}
+            onClose={() => setIndustryModalOpen(false)}
+            selectedIndustries={industries}
+            setSelectedIndustries={setIndustries}
+          />
+        </>
+      )}
     </div>
   );
 }

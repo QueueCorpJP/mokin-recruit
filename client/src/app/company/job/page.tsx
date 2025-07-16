@@ -1,13 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 // 求人ステータスの型定義
 type JobStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'CLOSED';
@@ -69,56 +63,9 @@ const sampleJobs: JobPosting[] = [
   },
 ];
 
-// ステータス表示用のヘルパー関数
-const getStatusDisplay = (status: JobStatus) => {
-  switch (status) {
-    case 'DRAFT':
-      return {
-        text: '下書き',
-        className: 'bg-white text-gray-500 border border-gray-300',
-      };
-    case 'PENDING_APPROVAL':
-      return {
-        text: '掲載待ち\n(承認待ち)',
-        className: 'bg-white text-red-500 border border-gray-300',
-      };
-    case 'PUBLISHED':
-      return {
-        text: '掲載済',
-        className: 'bg-white text-green-600 border border-gray-300',
-      };
-    case 'CLOSED':
-      return {
-        text: '掲載終了',
-        className: 'bg-gray-100 text-gray-500 border border-gray-300',
-      };
-    default:
-      return {
-        text: '不明',
-        className: 'bg-gray-100 text-gray-500 border border-gray-300',
-      };
-  }
-};
-
-// 公開範囲表示用のヘルパー関数
-const getPublicationTypeDisplay = (type: PublicationType) => {
-  switch (type) {
-    case 'PUBLIC':
-      return { text: '一般公開', className: 'bg-green-600 text-white' };
-    case 'MEMBERS_ONLY':
-      return { text: '登録会員限定', className: 'bg-blue-600 text-white' };
-    case 'SCOUT_ONLY':
-      return { text: 'スカウト限定', className: 'bg-green-600 text-white' };
-    case 'PRIVATE':
-      return { text: '公開停止', className: 'bg-gray-500 text-white' };
-    default:
-      return { text: '不明', className: 'bg-gray-500 text-white' };
-  }
-};
-
 export default function CompanyJobsPage() {
   const [selectedStatus, setSelectedStatus] = useState('すべて');
-  const statusTabs = ['すべて', '下書き', '掲載待ち', '掲載済'];
+  const statusTabs = ['すべて', '下書き', '掲載待ち（承認待ち）', '掲載済'];
   const [selectedScope, setSelectedScope] = useState('すべて');
   const scopeTabs = [
     'すべて',
@@ -127,159 +74,159 @@ export default function CompanyJobsPage() {
     'スカウト限定',
     '公開停止',
   ];
+
   return (
-    <div className='min-h-screen bg-white flex flex-col gap-10'>
-      {/* グラデーション背景（画面全体） */}
-      <div className='w-full h-[334px] bg-gradient-to-b from-[#17856F] to-[#229A4E] flex items-center'>
-        {/* 中央寄せ・幅1280pxのボックス */}
-        <div className='w-[1280px] mx-auto'>
-          {/* タイトル行 */}
-          <div className='flex items-center gap-4 mb-6 pt-10 px-10'>
-            <div className='w-8 h-8 flex items-center justify-center bg-gradient-to-b from-[#17856F] to-[#229A4E] rounded'>
-              {/* SVGアイコン（ボード型） */}
-              <svg
-                className='w-6 h-6 text-white'
-                fill='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path d='M3 4V2H21V4H20V6C20 7.1 19.1 8 18 8H17V20C17 21.1 16.1 22 15 22H9C7.9 22 7 21.1 7 20V8H6C4.9 8 4 7.1 4 6V4H3ZM6 6V4H18V6H16V20H8V6H6ZM9 8V18H11V8H9ZM13 8V18H15V8H13Z' />
-              </svg>
+    <div className="bg-gradient-to-b from-[#17856F] to-[#229A4E] relative size-full">
+      <div className="flex flex-col items-center relative size-full">
+        <div className="box-border content-stretch flex flex-col gap-10 items-center justify-start px-20 py-10 relative size-full">
+          {/* ページヘッダー */}
+          <div className="box-border content-stretch flex flex-col gap-4 items-start justify-start p-0 relative shrink-0 w-full">
+            <div className="box-border content-stretch flex flex-row gap-4 items-center justify-start p-0 relative shrink-0 w-full">
+              <div className="relative shrink-0 size-8">
+                <div className="absolute aspect-[38/50] left-[12%] right-[12%] top-0">
+                  <svg
+                    className="block size-full"
+                    fill="none"
+                    preserveAspectRatio="none"
+                    viewBox="0 0 25 32"
+                  >
+                    <path
+                      d="M12.16 0C9.51267 0 7.258 1.66875 6.42833 4H4.05333C1.81767 4 0 5.79375 0 8V28C0 30.2062 1.81767 32 4.05333 32H20.2667C22.5023 32 24.32 30.2062 24.32 28V8C24.32 5.79375 22.5023 4 20.2667 4H17.8917C17.062 1.66875 14.8073 0 12.16 0ZM12.16 4C12.6975 4 13.213 4.21071 13.5931 4.58579C13.9731 4.96086 14.1867 5.46957 14.1867 6C14.1867 6.53043 13.9731 7.03914 13.5931 7.41421C13.213 7.78929 12.6975 8 12.16 8C11.6225 8 11.107 7.78929 10.7269 7.41421C10.3469 7.03914 10.1333 6.53043 10.1333 6C10.1333 5.46957 10.3469 4.96086 10.7269 4.58579C11.107 4.21071 11.6225 4 12.16 4ZM4.56 17C4.56 16.6022 4.72014 16.2206 5.0052 15.9393C5.29025 15.658 5.67687 15.5 6.08 15.5C6.48313 15.5 6.86975 15.658 7.1548 15.9393C7.43986 16.2206 7.6 16.6022 7.6 17C7.6 17.3978 7.43986 17.7794 7.1548 18.0607C6.86975 18.342 6.48313 18.5 6.08 18.5C5.67687 18.5 5.29025 18.342 5.0052 18.0607C4.72014 17.7794 4.56 17.3978 4.56 17ZM11.1467 16H19.2533C19.8107 16 20.2667 16.45 20.2667 17C20.2667 17.55 19.8107 18 19.2533 18H11.1467C10.5893 18 10.1333 17.55 10.1333 17C10.1333 16.45 10.5893 16 11.1467 16ZM4.56 23C4.56 22.6022 4.72014 22.2206 5.0052 21.9393C5.29025 21.658 5.67687 21.5 6.08 21.5C6.48313 21.5 6.86975 21.658 7.1548 21.9393C7.43986 22.2206 7.6 22.6022 7.6 23C7.6 23.3978 7.43986 23.7794 7.1548 24.0607C6.86975 24.342 6.48313 24.5 6.08 24.5C5.67687 24.5 5.29025 24.342 5.0052 24.0607C4.72014 23.7794 4.56 23.3978 4.56 23ZM10.1333 23C10.1333 22.45 10.5893 22 11.1467 22H19.2533C19.8107 22 20.2667 22.45 20.2667 23C20.2667 23.55 19.8107 24 19.2533 24H11.1467C10.5893 24 10.1333 23.55 10.1333 23Z"
+                      fill="white"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="basis-0 font-bold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[#ffffff] text-[24px] text-left font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '2.4px', lineHeight: '1.6' }}>
+                求人一覧
+              </div>
             </div>
-            <h1 className='text-[24px] font-bold text-[#323232] tracking-[0.1em] font-sans'>
-              求人一覧
-            </h1>
           </div>
+
           {/* フィルター・検索エリア */}
-          <div className='bg-white rounded-[10px] w-[1280px] mx-auto p-[40px] flex flex-col gap-y-6 shadow-md'>
-            {/* 上段フィルター */}
-            <div className='flex gap-x-10 items-center'>
-              {/* ステータスフィルター */}
-              <div className='flex items-center gap-x-4 min-w-[120px]'>
-                <span className='w-[87px] h-[32px] flex items-center justify-end text-[16px] font-bold text-[#323232] tracking-[0.1em] whitespace-nowrap'>
-                  ステータス
-                </span>
-                <div className='flex'>
-                  {statusTabs.map((label, idx) => (
-                    <button
-                      key={label}
-                      onClick={() => setSelectedStatus(label)}
-                      className={[
-                        'h-[32px] px-4 font-bold text-[16px] tracking-[0.1em] whitespace-nowrap focus:z-10 focus:outline-none [padding-left:16px] [padding-right:16px]',
-                        idx === 0
-                          ? 'rounded-l-[5px] border border-[#EFEFEF] border-r-0'
-                          : idx === statusTabs.length - 1
-                            ? 'rounded-r-[5px] border border-[#EFEFEF]'
-                            : 'border-t border-b border-[#EFEFEF] border-r-0',
-                        selectedStatus === label
-                          ? 'bg-[#D2F1DA] text-[#0F9058]'
-                          : 'bg-white text-[#999] hover:bg-[#E6F7EC] hover:text-[#0F9058] active:bg-[#B8E6C7]',
-                      ].join(' ')}
-                      aria-pressed={selectedStatus === label}
-                    >
-                      {label}
-                    </button>
-                  ))}
+          <div className="bg-[#ffffff] relative rounded-[10px] shrink-0 w-full">
+            <div className="relative size-full">
+              <div className="box-border content-stretch flex flex-col gap-6 items-start justify-start p-[40px] relative w-full">
+                {/* 上段フィルター行 */}
+                <div className="box-border content-stretch flex flex-row gap-10 items-start justify-start p-0 relative shrink-0 w-full">
+                  {/* ステータスフィルター */}
+                  <div className="flex gap-4 items-center justify-start p-0 relative shrink-0">
+                    <div className="font-bold leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-right whitespace-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.6px', lineHeight: '2' }}>
+                      ステータス
+                    </div>
+                    <div className="flex gap-0 items-center justify-start p-0 relative shrink-0">
+                      {statusTabs.map((label, idx) => (
+                        <div
+                          key={label}
+                          className={`${
+                            selectedStatus === label
+                              ? 'bg-[#d2f1da]'
+                              : 'bg-[#ffffff]'
+                          } box-border content-stretch flex flex-row gap-2.5 items-center justify-center min-w-[62px] px-4 py-1 relative shrink-0 cursor-pointer`}
+                          onClick={() => setSelectedStatus(label)}
+                        >
+                          <div className="absolute border border-[#efefef] border-solid inset-[-0.5px] pointer-events-none" />
+                          <div className={`font-bold leading-[0] not-italic relative shrink-0 ${
+                            selectedStatus === label
+                              ? 'text-[#0f9058]'
+                              : 'text-[#999999]'
+                          } text-[14px] text-center text-nowrap font-['Noto_Sans_JP',_sans-serif]`} style={{ letterSpacing: '1.4px', lineHeight: '1.6' }}>
+                            {label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 公開範囲フィルター */}
+                  <div className="flex gap-4 items-center justify-start p-0 relative shrink-0">
+                    <div className="font-bold leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-right whitespace-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.6px', lineHeight: '2' }}>
+                      公開範囲
+                    </div>
+                    <div className="flex gap-0 items-center justify-start p-0 relative shrink-0">
+                      {scopeTabs.map((label, idx) => (
+                        <div
+                          key={label}
+                          className={`${
+                            selectedScope === label
+                              ? 'bg-[#d2f1da]'
+                              : 'bg-[#ffffff]'
+                          } box-border content-stretch flex flex-row gap-2.5 items-center justify-center min-w-[62px] px-4 py-1 relative shrink-0 cursor-pointer`}
+                          onClick={() => setSelectedScope(label)}
+                        >
+                          <div className="absolute border border-[#efefef] border-solid inset-[-0.5px] pointer-events-none" />
+                          <div className={`font-bold leading-[0] not-italic relative shrink-0 ${
+                            selectedScope === label
+                              ? 'text-[#0f9058]'
+                              : 'text-[#999999]'
+                          } text-[14px] text-center text-nowrap font-['Noto_Sans_JP',_sans-serif]`} style={{ letterSpacing: '1.4px', lineHeight: '1.6' }}>
+                            {label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {/* 公開範囲フィルター */}
-              <div className='flex items-center gap-x-4 min-w-[180px]'>
-                <span className='block text-[16px] font-bold text-[#323232] tracking-[0.1em] text-right w-[72px]'>
-                  公開範囲
-                </span>
-                <div className='flex'>
-                  {scopeTabs.map((label, idx) => (
-                    <button
-                      key={label}
-                      onClick={() => setSelectedScope(label)}
-                      className={[
-                        'h-[32px] px-4 font-bold text-[16px] tracking-[0.1em] whitespace-nowrap focus:z-10 focus:outline-none [padding-left:16px] [padding-right:16px]',
-                        idx === 0
-                          ? 'rounded-l-[5px] border border-[#EFEFEF] border-r-0'
-                          : idx === scopeTabs.length - 1
-                            ? 'rounded-r-[5px] border border-[#EFEFEF]'
-                            : 'border-t border-b border-[#EFEFEF] border-r-0',
-                        selectedScope === label
-                          ? 'bg-[#D2F1DA] text-[#0F9058]'
-                          : 'bg-white text-[#999] hover:bg-[#E6F7EC] hover:text-[#0F9058] active:bg-[#B8E6C7]',
-                      ].join(' ')}
-                      aria-pressed={selectedScope === label}
-                    >
-                      {label}
-                    </button>
-                  ))}
+
+                {/* 下段フィルター行 */}
+                <div className="box-border content-stretch flex flex-row gap-10 items-start justify-start p-0 relative shrink-0 w-full">
+                  {/* グループセレクト */}
+                  <div className="box-border content-stretch flex flex-row gap-4 items-center justify-start p-0 relative shrink-0">
+                    <div className="font-bold leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.6px', lineHeight: '2' }}>
+                      グループ
+                    </div>
+                    <div className="bg-[#ffffff] box-border content-stretch flex flex-row gap-4 items-center justify-start pl-[11px] pr-4 py-2 relative rounded-[5px] shrink-0 w-60">
+                      <div className="absolute border border-[#999999] border-solid inset-0 pointer-events-none rounded-[5px]" />
+                      <div className="basis-0 font-bold leading-[0] grow min-h-px min-w-px not-italic overflow-ellipsis overflow-hidden relative shrink-0 text-[#323232] text-[14px] text-left text-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.4px', lineHeight: '1.6' }}>
+                        すべて
+                      </div>
+                      <div className="flex flex-row items-center self-stretch">
+                        <div className="box-border content-stretch flex flex-col h-full items-center justify-start pb-0 pt-1.5 px-0 relative shrink-0 w-3.5">
+                          <div className="h-[9.333px] relative shrink-0 w-3.5">
+                            <svg
+                              className="block size-full"
+                              fill="none"
+                              preserveAspectRatio="none"
+                              viewBox="0 0 14 10"
+                            >
+                              <path
+                                d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 検索用 */}
+                  <div className="box-border content-stretch flex flex-row gap-4 items-center justify-start p-0 relative shrink-0 w-[297px]">
+                    <div className="font-bold leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.6px', lineHeight: '2' }}>
+                      求人タイトル、職種から検索
+                    </div>
+                    <div className="box-border content-stretch flex flex-row gap-2 items-center justify-start p-0 relative shrink-0">
+                      <div className="bg-[#ffffff] box-border content-stretch flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 relative rounded-[5px] shrink-0 w-60">
+                        <div className="absolute border border-[#999999] border-solid inset-0 pointer-events-none rounded-[5px]" />
+                        <div className="basis-0 font-medium grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[#999999] text-[16px] text-left font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.6px', lineHeight: '2' }}>
+                          キーワード検索
+                        </div>
+                      </div>
+                      <div
+                        className="box-border content-stretch flex flex-row gap-2 items-center justify-center px-6 py-2 relative rounded-[32px] shrink-0 cursor-pointer"
+                        style={{
+                          background: 'linear-gradient(180deg, #17856F 0%, #229A4E 100%)',
+                        }}
+                      >
+                        <div className="font-bold leading-[0] not-italic relative shrink-0 text-[#ffffff] text-[14px] text-center text-nowrap font-['Noto_Sans_JP',_sans-serif]" style={{ letterSpacing: '1.4px', lineHeight: '1.6' }}>
+                          検索
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            {/* 下段フィルター */}
-            <div className='flex gap-x-10 items-center'>
-              {/* グループセレクト */}
-              <div className='flex items-center gap-x-4 min-w-[180px]'>
-                <span className='block text-[16px] font-bold text-[#323232] tracking-[0.1em] text-right w-[72px]'>
-                  グループ
-                </span>
-                <select className='h-[40px] w-[240px] rounded-[5px] border border-[#999] px-4 py-2 text-[14px] font-bold text-[#323232] tracking-[0.1em] bg-white'>
-                  <option>すべて</option>
-                  <option>グループA</option>
-                  <option>グループB</option>
-                </select>
-              </div>
-              {/* キーワード検索 */}
-              <div className='flex items-center gap-x-4 min-w-[180px]'>
-                <span className='block text-[16px] font-bold text-[#323232] tracking-[0.1em] text-right w-[72px]'>
-                  キーワード
-                </span>
-                <input
-                  type='text'
-                  className='h-[40px] w-[240px] rounded-[5px] border border-[#999] px-4 py-2 text-[14px] font-bold text-[#323232] tracking-[0.1em] bg-white'
-                  placeholder='キーワードで検索'
-                />
-                <button className='h-[40px] px-6 rounded-[5px] bg-[#0F9058] text-white font-bold text-[14px] tracking-[0.1em]'>
-                  検索
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* 求人一覧リスト（Figma準拠） */}
-          <div className='w-[1280px] mx-auto mt-8'>
-            {/* ヘッダー行 */}
-            <div className='flex items-center h-[56px] bg-[#F7F7F7] border-b border-[#E5E5E5] text-[#323232] text-[15px] font-bold tracking-[0.1em]'>
-              <div className='px-[24px] flex-1 min-w-[220px]'>求人タイトル</div>
-              <div className='px-[24px] w-[140px] text-center'>雇用形態</div>
-              <div className='px-[24px] w-[140px] text-center'>勤務地</div>
-              <div className='px-[24px] w-[140px] text-center'>給与</div>
-              <div className='px-[24px] w-[120px] text-center'>ステータス</div>
-              <div className='px-[24px] w-[120px] text-center'>操作</div>
-            </div>
-            {/* 本体行 */}
-            {sampleJobs.map((job, idx) => (
-              <div
-                key={job.id}
-                className={`flex items-center h-[72px] border-b border-[#E5E5E5] bg-white text-[15px] tracking-[0.1em] ${idx === 0 ? '' : ''}`}
-              >
-                <div className='px-[24px] flex-1 min-w-[220px] truncate font-bold text-[#323232]'>
-                  {job.title}
-                </div>
-                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
-                  {job.jobTypes.join(', ')}
-                </div>
-                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
-                  東京
-                </div>
-                <div className='px-[24px] w-[140px] text-center text-[#323232]'>
-                  400万〜600万
-                </div>
-                <div className='px-[24px] w-[120px] text-center'>
-                  <span className='inline-block px-2 py-1 rounded-[4px] border border-[#EFEFEF] text-[13px] font-bold bg-[#F7F7F7] text-[#0F9058]'>
-                    {getStatusDisplay(job.status).text}
-                  </span>
-                </div>
-                <div className='px-[24px] w-[120px] text-center'>
-                  <button className='px-3 py-1 rounded-[5px] bg-[#0F9058] text-white text-[13px] font-bold hover:bg-[#17856F]'>
-                    詳細
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>

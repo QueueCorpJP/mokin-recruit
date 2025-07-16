@@ -17,10 +17,21 @@ export const metadata: Metadata = {
 };
 
 export default function CompanyLandingPage() {
+  // TODO: 実際のログイン状態を取得するロジックを実装
+  const isLoggedIn = true; // 仮の値（後で実装）
+  const userInfo = {
+    companyName: '株式会社サンプル',
+    userName: '田中太郎',
+  };
+
   return (
     <div className='min-h-screen'>
       {/* Header */}
-      <Navigation variant='company' />
+      <Navigation 
+        variant='company' 
+        isLoggedIn={isLoggedIn}
+        userInfo={userInfo}
+      />
 
       {/* Hero Section */}
       <CompanyHeroSection />
