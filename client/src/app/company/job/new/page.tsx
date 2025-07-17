@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import NewJobHeader from '@/components/company/job/NewJobHeader';
@@ -15,6 +16,8 @@ interface CompanyGroup {
 }
 
 export default function JobNewPage() {
+  const router = useRouter();
+  
   // 各項目の状態
   const [group, setGroup] = useState('');
   const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>([]);
@@ -59,13 +62,26 @@ export default function JobNewPage() {
   useEffect(() => {
     const fetchCompanyGroups = async () => {
       try {
-        const token = localStorage.getItem('auth-token');
+        const token = localStorage.getItem('auth-token') || 
+                     localStorage.getItem('auth_token') || 
+                     localStorage.getItem('supabase-auth-token');
+        
+        console.log('Token found for groups API:', !!token);
+        if (!token) {
+          console.error('No authentication token found');
+          return;
+        }
+        
         const response = await fetch('/api/company/groups', {
           headers: {
-            ...(token && { 'Authorization': `Bearer ${token}` })
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
+        
+        console.log('Groups API response status:', response.status);
         const result = await response.json();
+        console.log('Groups API result:', result);
         
         if (result.success) {
           setCompanyGroups(result.data);
@@ -75,9 +91,11 @@ export default function JobNewPage() {
           }
         } else {
           console.error('Failed to fetch company groups:', result.error);
+          alert(`グループ取得エラー: ${result.error}`);
         }
       } catch (error) {
         console.error('Error fetching company groups:', error);
+        alert(`通信エラー: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
 
@@ -145,7 +163,9 @@ export default function JobNewPage() {
       published_at: null
     };
     
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem('auth-token') || 
+                 localStorage.getItem('auth_token') || 
+                 localStorage.getItem('supabase-auth-token');
     
     try {
       const res = await fetch('/api/job/new', {
@@ -159,18 +179,8 @@ export default function JobNewPage() {
       const result = await res.json();
       
       if (result.success) {
-        alert('求人が正常に作成されました！');
-        // フォームリセット
-        setGroup('');
-        setTitle('');
-        setImages([]);
-        setJobTypes([]);
-        setIndustries([]);
-        setJobDescription('');
-        setEmploymentType('');
-        setLocations([]);
-        setErrors({});
-        setIsConfirmMode(false);
+        // 完了ページにリダイレクト
+        router.push('/company/job/complete');
       } else {
         console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
@@ -213,6 +223,21 @@ export default function JobNewPage() {
                   value={companyGroups.find(g => g.id === group)?.group_name || '未設定'} 
                 />
                 <ConfirmField label="求人タイトル" value={title} />
+                <ConfirmField label="写真">
+                  <div className="flex flex-wrap gap-4 items-center justify-start w-full">
+                    {images.map((image, idx) => {
+                      const url = URL.createObjectURL(image);
+                      return (
+                        <div key={idx} className="relative w-40 h-28 border rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                          <img src={url} alt={`preview-${idx}`} className="object-cover w-full h-full" />
+                        </div>
+                      );
+                    })}
+                    {images.length === 0 && (
+                      <div className="text-[#666666] text-sm">写真が選択されていません</div>
+                    )}
+                  </div>
+                </ConfirmField>
                 <ConfirmField label="職種">
                   <div className="flex flex-wrap gap-2 items-center justify-start w-full">
                     {jobTypes.map(type => (
@@ -235,30 +260,10 @@ export default function JobNewPage() {
                     ))}
                   </div>
                 </ConfirmField>
-                <ConfirmField label="画像">
-                  <div className="flex flex-wrap gap-4 items-center justify-start w-full">
-                    {images.map((image, idx) => {
-                      const url = URL.createObjectURL(image);
-                      return (
-                        <div key={idx} className="relative w-40 h-28 border rounded overflow-hidden bg-gray-100 flex items-center justify-center">
-                          <img src={url} alt={`preview-${idx}`} className="object-cover w-full h-full" />
-                        </div>
-                      );
-                    })}
-                    {images.length === 0 && (
-                      <div className="text-[#666666] text-sm">画像が選択されていません</div>
-                    )}
-                  </div>
-                </ConfirmField>
-                <ConfirmField label="仕事内容" value={jobDescription} />
-                <ConfirmField label="ポジション概要" value={positionSummary} />
-                <ConfirmField label="必要なスキル・経験" value={skills} />
-                <ConfirmField label="その他の要件" value={otherRequirements} />
-                <ConfirmField label="給与（最小）" value={salaryMin ? `${salaryMin}万円` : ''} />
-                <ConfirmField label="給与（最大）" value={salaryMax ? `${salaryMax}万円` : ''} />
-                <ConfirmField label="給与備考" value={salaryNote} />
-                <ConfirmField label="雇用形態" value={employmentType} />
-                <ConfirmField label="雇用形態備考" value={employmentTypeNote} />
+                <ConfirmField label="業務内容" value={jobDescription} />
+                <ConfirmField label="想定年収（最小）" value={salaryMin ? `${salaryMin}万円` : ''} />
+                <ConfirmField label="想定年収（最大）" value={salaryMax ? `${salaryMax}万円` : ''} />
+                <ConfirmField label="概要" value={positionSummary} />
                 <ConfirmField label="勤務地">
                   <div className="flex flex-wrap gap-2 items-center justify-start w-full">
                     {locations.map(loc => (
@@ -270,11 +275,16 @@ export default function JobNewPage() {
                     ))}
                   </div>
                 </ConfirmField>
+                <ConfirmField label="必須条件" value={skills} />
+                <ConfirmField label="歓迎条件" value={otherRequirements} />
+                <ConfirmField label="福利厚生" value={salaryNote} />
+                <ConfirmField label="選考フロー" value={selectionProcess} />
+                <ConfirmField label="雇用形態" value={employmentType} />
+                <ConfirmField label="雇用形態備考" value={employmentTypeNote} />
                 <ConfirmField label="勤務地備考" value={locationNote} />
                 <ConfirmField label="勤務時間" value={workingHours} />
                 <ConfirmField label="残業" value={overtime} />
                 <ConfirmField label="休日・休暇" value={holidays} />
-                <ConfirmField label="選考プロセス" value={selectionProcess} />
                 <ConfirmField label="アピールポイント">
                   <div className="flex flex-wrap gap-2 items-center justify-start w-full">
                     {appealPoints.map(point => (
@@ -286,9 +296,9 @@ export default function JobNewPage() {
                     ))}
                   </div>
                 </ConfirmField>
-                <ConfirmField label="喫煙" value={smoke} />
+                <ConfirmField label="受動喫煙防止措置" value={smoke} />
                 <ConfirmField label="喫煙備考" value={smokeNote} />
-                <ConfirmField label="応募時提出物">
+                <ConfirmField label="応募時のレジュメ提出">
                   <div className="flex flex-wrap gap-2 items-center justify-start w-full">
                     {resumeRequired.map(item => (
                       <div key={item} className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px]">
@@ -299,7 +309,7 @@ export default function JobNewPage() {
                     ))}
                   </div>
                 </ConfirmField>
-                <ConfirmField label="メモ" value={memo} />
+                <ConfirmField label="社内メモ" value={memo} />
               </>
             ) : (
               /* 編集モード */
@@ -358,11 +368,11 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* 画像 */}
+                {/* 写真 */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      画像
+                      写真
                     </div>
                   </div>
                   <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
@@ -372,61 +382,6 @@ export default function JobNewPage() {
                         onChange={setImages}
                         maxImages={5}
                       />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 概要 */}
-                <div className="flex flex-row gap-6 items-center justify-start w-full">
-                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
-                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      概要
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-                    <div className="flex flex-col gap-2 items-start justify-start w-full">
-                      <textarea 
-                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
-                        placeholder="求人の概要を入力してください。" 
-                        value={positionSummary} 
-                        onChange={e => setPositionSummary(e.target.value)} 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 給与 */}
-                <div className="flex flex-row gap-6 items-center justify-start w-full">
-                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
-                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      給与
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
-                    <div className="flex flex-col gap-4 items-start justify-start w-full">
-                      <div className="flex gap-4 items-center w-full">
-                        <div className="flex items-center gap-2">
-                          <input 
-                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
-                            placeholder="300" 
-                            type="number"
-                            value={salaryMin} 
-                            onChange={e => setSalaryMin(e.target.value)} 
-                          />
-                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
-                        </div>
-                        <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</span>
-                        <div className="flex items-center gap-2">
-                          <input 
-                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
-                            placeholder="500" 
-                            type="number"
-                            value={salaryMax} 
-                            onChange={e => setSalaryMax(e.target.value)} 
-                          />
-                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -475,6 +430,50 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
+                {/* 業種 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      業種
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <div className="flex flex-row gap-6 items-center justify-start w-full">
+                        <button
+                          type="button"
+                          onClick={() => setIndustryModalOpen(true)}
+                          className={`flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] ${showErrors && errors.industries ? 'border-red-500 bg-red-50' : ''}`}
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            業種を選択
+                          </span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {industries.map(industry => (
+                          <div
+                            key={industry}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => removeIndustry(industry)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {industry}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                      {showErrors && errors.industries && <span className="text-red-500 text-sm">{errors.industries}</span>}
+                    </div>
+                  </div>
+                </div>
+
                 {/* 業務内容 */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
@@ -491,6 +490,61 @@ export default function JobNewPage() {
                         onChange={e => setJobDescription(e.target.value)} 
                       />
                       {showErrors && errors.jobDescription && <span className="text-red-500 text-sm">{errors.jobDescription}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 想定年収 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      想定年収
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
+                    <div className="flex flex-col gap-4 items-start justify-start w-full">
+                      <div className="flex gap-4 items-center w-full">
+                        <div className="flex items-center gap-2">
+                          <input 
+                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
+                            placeholder="300" 
+                            type="number"
+                            value={salaryMin} 
+                            onChange={e => setSalaryMin(e.target.value)} 
+                          />
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
+                        </div>
+                        <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</span>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            className="w-32 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999]"
+                            placeholder="500" 
+                            type="number"
+                            value={salaryMax} 
+                            onChange={e => setSalaryMax(e.target.value)} 
+                          />
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">万円</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 概要 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      概要
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-2 items-start justify-start w-full">
+                      <textarea 
+                        className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+                        placeholder="求人の概要を入力してください。" 
+                        value={positionSummary} 
+                        onChange={e => setPositionSummary(e.target.value)} 
+                      />
                     </div>
                   </div>
                 </div>
@@ -615,108 +669,7 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* アピールポイント */}
-                <div className="flex flex-row gap-6 items-center justify-start w-full">
-                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
-                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      アピールポイント
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-                    <div className="flex flex-col gap-4 items-start justify-start w-full">
-                      <div className="grid grid-cols-2 gap-4 w-full">
-                        {['リモートワーク可', '残業少なめ', '副業OK', '服装自由', '年間休日120日以上', '未経験歓迎'].map(point => (
-                          <label key={point} className="flex items-center gap-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={appealPoints.includes(point)}
-                              onChange={() => toggleAppealPoint(point)}
-                              className="sr-only"
-                            />
-                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${appealPoints.includes(point) ? 'bg-[#0F9058] border-[#0F9058]' : 'border-[#999999]'}`}>
-                              {appealPoints.includes(point) && (
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 9">
-                                  <path
-                                    d="M11.2071 1.20711C11.5976 0.816607 11.5976 0.183386 11.2071 -0.207113C10.8166 -0.597613 10.1834 -0.597613 9.79289 -0.207113L4.5 4.08579L2.20711 1.79289C1.81658 1.40237 1.18337 1.40237 0.792893 1.79289C0.402369 2.18342 0.402369 2.81658 0.792893 3.20711L3.79289 6.20711C4.18342 6.59763 4.81658 6.59763 5.20711 6.20711L11.2071 1.20711Z"
-                                    fill="white"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                            <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                              {point}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
-                        {appealPoints.map(point => (
-                          <div
-                            key={point}
-                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
-                            onClick={() => toggleAppealPoint(point)}
-                          >
-                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                              {point}
-                            </span>
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
-                              <path
-                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 業種 */}
-                <div className="flex flex-row gap-6 items-center justify-start w-full">
-                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
-                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      業種
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-                    <div className="flex flex-col gap-2 items-start justify-start w-full">
-                      <div className="flex flex-row gap-6 items-center justify-start w-full">
-                        <button
-                          type="button"
-                          onClick={() => setIndustryModalOpen(true)}
-                          className={`flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] ${showErrors && errors.industries ? 'border-red-500 bg-red-50' : ''}`}
-                        >
-                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                            業種を選択
-                          </span>
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
-                        {industries.map(industry => (
-                          <div
-                            key={industry}
-                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
-                            onClick={() => removeIndustry(industry)}
-                          >
-                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                              {industry}
-                            </span>
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
-                              <path
-                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </div>
-                        ))}
-                      </div>
-                      {showErrors && errors.industries && <span className="text-red-500 text-sm">{errors.industries}</span>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 雇用形 */}
+                {/* 雇用形態 */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -848,11 +801,68 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* 喫煙 */}
+                {/* アピールポイント */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      喫煙
+                      アピールポイント
+                    </div>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
+                    <div className="flex flex-col gap-4 items-start justify-start w-full">
+                      <div className="grid grid-cols-2 gap-4 w-full">
+                        {['リモートワーク可', '残業少なめ', '副業OK', '服装自由', '年間休日120日以上', '未経験歓迎'].map(point => (
+                          <label key={point} className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={appealPoints.includes(point)}
+                              onChange={() => toggleAppealPoint(point)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${appealPoints.includes(point) ? 'bg-[#0F9058] border-[#0F9058]' : 'border-[#999999]'}`}>
+                              {appealPoints.includes(point) && (
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 9">
+                                  <path
+                                    d="M11.2071 1.20711C11.5976 0.816607 11.5976 0.183386 11.2071 -0.207113C10.8166 -0.597613 10.1834 -0.597613 9.79289 -0.207113L4.5 4.08579L2.20711 1.79289C1.81658 1.40237 1.18337 1.40237 0.792893 1.79289C0.402369 2.18342 0.402369 2.81658 0.792893 3.20711L3.79289 6.20711C4.18342 6.59763 4.81658 6.59763 5.20711 6.20711L11.2071 1.20711Z"
+                                    fill="white"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                              {point}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center justify-start w-full">
+                        {appealPoints.map(point => (
+                          <div
+                            key={point}
+                            className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                            onClick={() => toggleAppealPoint(point)}
+                          >
+                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                              {point}
+                            </span>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                              <path
+                                d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                fill="#0F9058"
+                              />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 受動喫煙防止措置 */}
+                <div className="flex flex-row gap-6 items-center justify-start w-full">
+                  <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      受動喫煙防止措置
                     </div>
                   </div>
                   <div className="flex-1 flex flex-col gap-2.5 items-start justify-center px-0 py-6">
@@ -900,11 +910,11 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* 応募時提出物 */}
+                {/* 応募時のレジュメ提出 */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      応募時提出物
+                      応募時のレジュメ提出
                     </div>
                   </div>
                   <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
@@ -957,18 +967,18 @@ export default function JobNewPage() {
                   </div>
                 </div>
 
-                {/* メモ */}
+                {/* 社内メモ */}
                 <div className="flex flex-row gap-6 items-center justify-start w-full">
                   <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-0 rounded-[5px] w-[200px]">
                     <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      メモ
+                      社内メモ
                     </div>
                   </div>
                   <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
                     <div className="flex flex-col gap-2 items-start justify-start w-full">
                       <textarea 
                         className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[100px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
-                        placeholder="メモを入力してください。" 
+                        placeholder="社内メモを入力してください。" 
                         value={memo} 
                         onChange={e => setMemo(e.target.value)} 
                       />

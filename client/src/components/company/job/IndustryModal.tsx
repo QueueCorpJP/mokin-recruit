@@ -3,8 +3,78 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const industryCategories = [
-    { name: '業種カテゴリテキスト', industries: ['業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります', '業種名テキストが入ります'] },
-    // 他の業種カテゴリがあればここに追加
+    { 
+        name: 'IT・テクノロジー', 
+        industries: [
+            'IT・インターネット',
+            'ソフトウェア',
+            'ゲーム・エンタメ',
+            'AI・機械学習',
+            'データサイエンス',
+            'セキュリティ',
+            'クラウド・インフラ',
+            'モバイル・アプリ'
+        ] 
+    },
+    { 
+        name: 'メディア・広告', 
+        industries: [
+            'マスメディア',
+            '広告・マーケティング',
+            '出版・印刷',
+            'デザイン・クリエイティブ',
+            '映像・音響',
+            'インターネットメディア'
+        ] 
+    },
+    { 
+        name: '金融・保険', 
+        industries: [
+            '銀行・信託',
+            '証券・投資',
+            '保険',
+            'FinTech',
+            '不動産金融',
+            'リース・クレジット'
+        ] 
+    },
+    { 
+        name: '商社・流通', 
+        industries: [
+            '総合商社',
+            '専門商社',
+            '小売・百貨店',
+            'EC・通販',
+            '卸売',
+            '物流・倉庫'
+        ] 
+    },
+    { 
+        name: 'メーカー', 
+        industries: [
+            '自動車・輸送機器',
+            '電機・電子',
+            '機械・重工業',
+            '化学・素材',
+            '食品・飲料',
+            '医薬品・医療機器',
+            '繊維・アパレル',
+            '建材・住宅'
+        ] 
+    },
+    { 
+        name: 'サービス', 
+        industries: [
+            'コンサルティング',
+            '人材サービス',
+            '教育・研修',
+            '医療・ヘルスケア',
+            '福祉・介護',
+            'ホテル・旅行',
+            'レストラン・飲食',
+            'スポーツ・フィットネス'
+        ] 
+    }
 ];
 
 const CustomCheckbox: React.FC<{ label: string; isChecked: boolean; onChange: () => void; }> = ({ label, isChecked, onChange }) => (
@@ -61,9 +131,9 @@ const IndustryModal: React.FC<IndustryModalProps> = ({ isOpen, onClose, selected
                         <div key={cat.name} className="mb-6">
                             <h3 className="font-semibold mb-4 text-gray-800">{cat.name}</h3>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                                {cat.industries.map((industry, index) => (
+                                {cat.industries.map((industry) => (
                                     <CustomCheckbox 
-                                        key={index} 
+                                        key={industry} 
                                         label={industry} 
                                         isChecked={selectedIndustries.includes(industry)} 
                                         onChange={() => handleCheckboxChange(industry)} 

@@ -73,15 +73,12 @@ type JobTypeModalProps = {
 const JobTypeModal: React.FC<JobTypeModalProps> = ({ isOpen, onClose, selectedJobTypes, setSelectedJobTypes }) => {
     const MAX_SELECTIONS = 3;
     const [selectedCategory, setSelectedCategory] = useState(jobCategories[0].name);
-    const [isConfirmMode, setIsConfirmMode] = useState(false);
 
     if (!isOpen) {
         return null;
     }
 
     const handleCheckboxChange = (job: string) => {
-        if (isConfirmMode) return;
-        
         const isSelected = selectedJobTypes.includes(job);
         if (isSelected) {
             setSelectedJobTypes(selectedJobTypes.filter((j) => j !== job));
@@ -91,15 +88,6 @@ const JobTypeModal: React.FC<JobTypeModalProps> = ({ isOpen, onClose, selectedJo
     };
 
     const handleConfirm = () => {
-        setIsConfirmMode(true);
-    };
-
-    const handleBack = () => {
-        setIsConfirmMode(false);
-    };
-
-    const handleFinalConfirm = () => {
-        setIsConfirmMode(false);
         onClose();
     };
 
@@ -111,7 +99,7 @@ const JobTypeModal: React.FC<JobTypeModalProps> = ({ isOpen, onClose, selectedJo
                 {/* ヘッダー */}
                 <div className="bg-white flex items-center justify-between px-10 py-6 border-b border-[#EFEFEF]">
                     <h2 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
-                        {isConfirmMode ? '選択内容の確認' : '職種を選択'}
+                        職種を選択
                     </h2>
                     <button onClick={onClose} className="text-[#999999] hover:text-[#323232]">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -124,70 +112,43 @@ const JobTypeModal: React.FC<JobTypeModalProps> = ({ isOpen, onClose, selectedJo
                 <div className="flex flex-1 overflow-hidden">
                     {/* メインコンテンツ */}
                     <div className="flex-1 bg-[#F9F9F9] p-10 overflow-y-auto">
-                        {isConfirmMode ? (
-                            /* 確認モード */
-                            <div className="space-y-6">
-                                <div className="border-b border-[#DCDCDC] pb-2">
-                                    <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[2px] text-[#323232]">
-                                        選択した職種
-                                    </h3>
-                                </div>
-                                
-                                <div className="flex flex-wrap gap-6">
-                                    {selectedJobTypes.map((job) => (
-                                        <div key={job} className="flex-shrink-0">
-                                            <CustomCheckbox 
-                                                label={job} 
-                                                isChecked={true} 
-                                                onChange={() => {}} 
-                                                disabled={true}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : (
-                            /* 選択モード */
-                            <>
-                                {/* カテゴリータブ */}
-                                <div className="flex flex-wrap gap-2 mb-10">
-                                    {jobCategories.map((category) => (
-                                        <button
-                                            key={category.name}
-                                            onClick={() => setSelectedCategory(category.name)}
-                                            className={`font-['Noto_Sans_JP'] font-bold text-[14px] leading-[1.6] tracking-[1.4px] px-2 py-1 whitespace-nowrap ${
-                                                selectedCategory === category.name 
-                                                    ? 'text-[#0F9058]' 
-                                                    : 'text-[#999999]'
-                                            }`}
-                                        >
-                                            {category.name}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* カテゴリータブ */}
+                        <div className="flex flex-wrap gap-2 mb-10">
+                            {jobCategories.map((category) => (
+                                <button
+                                    key={category.name}
+                                    onClick={() => setSelectedCategory(category.name)}
+                                    className={`font-['Noto_Sans_JP'] font-bold text-[14px] leading-[1.6] tracking-[1.4px] px-2 py-1 whitespace-nowrap ${
+                                        selectedCategory === category.name 
+                                            ? 'text-[#0F9058]' 
+                                            : 'text-[#999999]'
+                                    }`}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
 
-                                {/* 職種セクション */}
-                                <div className="space-y-6">
-                                    <div className="border-b border-[#DCDCDC] pb-2">
-                                        <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[2px] text-[#323232]">
-                                            {selectedCategoryData.name}
-                                        </h3>
+                        {/* 職種セクション */}
+                        <div className="space-y-6">
+                            <div className="border-b border-[#DCDCDC] pb-2">
+                                <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[2px] text-[#323232]">
+                                    {selectedCategoryData.name}
+                                </h3>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-6">
+                                {selectedCategoryData.jobs.map((job) => (
+                                    <div key={job} className="flex-shrink-0">
+                                        <CustomCheckbox 
+                                            label={job} 
+                                            isChecked={selectedJobTypes.includes(job)} 
+                                            onChange={() => handleCheckboxChange(job)} 
+                                        />
                                     </div>
-                                    
-                                    <div className="flex flex-wrap gap-6">
-                                        {selectedCategoryData.jobs.map((job) => (
-                                            <div key={job} className="flex-shrink-0">
-                                                <CustomCheckbox 
-                                                    label={job} 
-                                                    isChecked={selectedJobTypes.includes(job)} 
-                                                    onChange={() => handleCheckboxChange(job)} 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {/* スクロールバー */}
@@ -202,80 +163,30 @@ const JobTypeModal: React.FC<JobTypeModalProps> = ({ isOpen, onClose, selectedJo
                         {selectedJobTypes.length}/{MAX_SELECTIONS} 選択中
                     </div>
                     <div className="flex gap-4">
-                        {isConfirmMode ? (
-                            <>
-                                <Button 
-                                    onClick={handleBack}
-                                    style={{
-                                        borderRadius: '32px',
-                                        background: '#FFFFFF',
-                                        border: '1px solid #DCDCDC',
-                                        display: 'flex',
-                                        minWidth: '160px',
-                                        padding: '10px 40px',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        gap: '10px',
-                                        color: '#323232',
-                                        fontWeight: 'bold',
-                                        fontSize: '16px',
-                                        lineHeight: '2',
-                                        letterSpacing: '1.6px',
-                                        fontFamily: 'Noto Sans JP'
-                                    }}
-                                >
-                                    戻る
-                                </Button>
-                                <Button 
-                                    onClick={handleFinalConfirm}
-                                    style={{
-                                        borderRadius: '32px',
-                                        background: 'linear-gradient(83deg, #198D76 0%, #1CA74F 100%)',
-                                        boxShadow: '0px 5px 10px 0px rgba(0, 0, 0, 0.15)',
-                                        display: 'flex',
-                                        minWidth: '160px',
-                                        padding: '10px 40px',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        gap: '10px',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        border: 'none',
-                                        fontSize: '16px',
-                                        lineHeight: '2',
-                                        letterSpacing: '1.6px',
-                                        fontFamily: 'Noto Sans JP'
-                                    }}
-                                >
-                                    決定
-                                </Button>
-                            </>
-                        ) : (
-                            <Button 
-                                onClick={handleConfirm}
-                                disabled={selectedJobTypes.length === 0}
-                                style={{
-                                    borderRadius: '32px',
-                                    background: selectedJobTypes.length === 0 ? '#DCDCDC' : 'linear-gradient(83deg, #198D76 0%, #1CA74F 100%)',
-                                    boxShadow: selectedJobTypes.length === 0 ? 'none' : '0px 5px 10px 0px rgba(0, 0, 0, 0.15)',
-                                    display: 'flex',
-                                    minWidth: '160px',
-                                    padding: '10px 40px',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    color: selectedJobTypes.length === 0 ? '#999999' : 'white',
-                                    fontWeight: 'bold',
-                                    border: 'none',
-                                    fontSize: '16px',
-                                    lineHeight: '2',
-                                    letterSpacing: '1.6px',
-                                    fontFamily: 'Noto Sans JP'
-                                }}
-                            >
-                                確認する
-                            </Button>
-                        )}
+                        <Button 
+                            onClick={handleConfirm}
+                            disabled={selectedJobTypes.length === 0}
+                            style={{
+                                borderRadius: '32px',
+                                background: selectedJobTypes.length === 0 ? '#DCDCDC' : 'linear-gradient(83deg, #198D76 0%, #1CA74F 100%)',
+                                boxShadow: selectedJobTypes.length === 0 ? 'none' : '0px 5px 10px 0px rgba(0, 0, 0, 0.15)',
+                                display: 'flex',
+                                minWidth: '160px',
+                                padding: '10px 40px',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '10px',
+                                color: selectedJobTypes.length === 0 ? '#999999' : 'white',
+                                fontWeight: 'bold',
+                                border: 'none',
+                                fontSize: '16px',
+                                lineHeight: '2',
+                                letterSpacing: '1.6px',
+                                fontFamily: 'Noto Sans JP'
+                            }}
+                        >
+                            決定
+                        </Button>
                     </div>
                 </div>
             </div>

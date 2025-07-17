@@ -24,8 +24,10 @@ export default function CompanyJobLayout({
 
   const checkAuthStatus = async () => {
     try {
-      // localStorage からトークンを確認
-      const token = localStorage.getItem('auth-token') || localStorage.getItem('auth_token');
+      // localStorage からトークンを確認（複数のキーをチェック）
+      const token = localStorage.getItem('auth-token') || 
+                   localStorage.getItem('auth_token') || 
+                   localStorage.getItem('supabase-auth-token');
       
       if (!token) {
         setIsLoggedIn(false);
@@ -55,6 +57,7 @@ export default function CompanyJobLayout({
           // 無効なトークンは削除
           localStorage.removeItem('auth-token');
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('supabase-auth-token');
           // 企業ログインページにリダイレクト
           router.push('/company/auth/login');
         }
@@ -63,6 +66,7 @@ export default function CompanyJobLayout({
         // 無効なトークンは削除
         localStorage.removeItem('auth-token');
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('supabase-auth-token');
         // 企業ログインページにリダイレクト
         router.push('/company/auth/login');
       }

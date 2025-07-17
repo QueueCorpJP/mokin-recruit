@@ -27,7 +27,15 @@ function RightLine() {
   );
 }
 
-export default function NewJobHeader() {
+interface NewJobHeaderProps {
+  breadcrumbText?: string;
+  titleText?: string;
+}
+
+export default function NewJobHeader({ 
+  breadcrumbText = '求人一覧', 
+  titleText = '新規求人作成' 
+}: NewJobHeaderProps = {}) {
   return (
     <div
       className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10"
@@ -43,7 +51,7 @@ export default function NewJobHeader() {
                 <div
                   className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
                 >
-                    求人一覧
+                    {breadcrumbText}
                 </div>
               </div>
               <div
@@ -54,7 +62,7 @@ export default function NewJobHeader() {
               <div
                 className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
               >
-                  新規求人作成
+                  {titleText}
               </div>
             </div>
             <div
@@ -82,7 +90,7 @@ export default function NewJobHeader() {
               <div
                 className="font-['Noto_Sans_JP'] font-bold grow leading-[1.6] not-italic text-white text-[24px] text-left tracking-[2.4px]"
               >
-                新規求人作成
+                {titleText}
               </div>
           </div>
         </div>

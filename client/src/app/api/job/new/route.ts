@@ -29,33 +29,24 @@ export async function POST(request: NextRequest) {
 
     // 企業ユーザーのcompany_account_idを取得
     const supabase = getSupabaseAdminClient();
-    let { data: userData, error: userError } = await supabase
+    
+    // セッション認証のユーザーIDとcompany_usersのIDは異なるため、メールアドレスで検索
+    console.log('Searching user by email:', sessionResult.sessionInfo.user.email);
+    const { data: userByEmail, error: emailError } = await supabase
       .from('company_users')
-      .select('company_account_id')
-      .eq('id', createdBy)
+      .select('id, company_account_id, email, full_name')
+      .eq('email', sessionResult.sessionInfo.user.email)
       .single();
-
-    if (userError || !userData?.company_account_id) {
-      console.log('Failed to get company_account_id:', userError);
-      console.log('Searching by email instead...');
-      
-      // ユーザーIDで見つからない場合、メールアドレスで検索
-      const { data: userByEmail, error: emailError } = await supabase
-        .from('company_users')
-        .select('id, company_account_id')
-        .eq('email', sessionResult.sessionInfo.user.email)
-        .single();
-      
-      if (emailError || !userByEmail) {
-        console.log('Failed to get user by email:', emailError);
-        return NextResponse.json({ success: false, error: '企業アカウント情報の取得に失敗しました' }, { status: 400 });
-      }
-      
-      console.log('Found user by email:', userByEmail);
-      userData = { company_account_id: userByEmail.company_account_id };
+    
+    if (emailError || !userByEmail) {
+      console.log('Failed to get user by email:', emailError);
+      return NextResponse.json({ success: false, error: '企業アカウント情報の取得に失敗しました' }, { status: 400 });
     }
-
-    const userCompanyAccountId = userData.company_account_id;
+    
+    console.log('Found user by email:', userByEmail);
+    const actualUserId = userByEmail.id; // これが実際のcompany_usersのID
+    const userCompanyAccountId = userByEmail.company_account_id;
+    console.log('Actual user ID from company_users:', actualUserId);
     console.log('User company_account_id:', userCompanyAccountId);
 
     // company_group_idは求人作成時にフロントエンドから指定される
@@ -86,8 +77,10 @@ export async function POST(request: NextRequest) {
     // 雇用形態の日本語→英語マッピング
     const employmentTypeMapping: Record<string, string> = {
       '正社員': 'FULL_TIME',
-      'パートタイム': 'PART_TIME', 
       '契約社員': 'CONTRACT',
+      '派遣社員': 'CONTRACT', // 契約社員として扱う
+      'アルバイト・パート': 'PART_TIME',
+      '業務委託': 'CONTRACT', // 契約社員として扱う
       'インターン': 'INTERN'
     };
     
@@ -98,9 +91,36 @@ export async function POST(request: NextRequest) {
     //   return NextResponse.json({ success: false, error: '必須項目が不足しています' }, { status: 400 });
     // }
 
+    // デバッグ：利用可能なcompany_user_idを確認
+    console.log('=== DEBUG INFO ===');
+    console.log('createdBy (session user ID):', createdBy);
+    console.log('actualUserId (company_users ID):', actualUserId);
+    console.log('bodyCompanyGroupId from request:', bodyCompanyGroupId);
+    console.log('userCompanyAccountId:', userCompanyAccountId);
+    
+    // 現在のcompany_account_idに属するcompany_usersを確認
+    const { data: availableUsers, error: usersError } = await supabase
+      .from('company_users')
+      .select('id, email, full_name')
+      .eq('company_account_id', userCompanyAccountId);
+    
+    console.log('Available company_users for this account:', availableUsers);
+    console.log('Users query error:', usersError);
+    
+    // company_group_idとして使用するIDを決定
+    let finalCompanyGroupId = actualUserId; // デフォルトは実際のcompany_usersのID
+    
+    // bodyCompanyGroupIdが指定されており、利用可能なユーザーIDの中にある場合はそれを使用
+    if (bodyCompanyGroupId && availableUsers?.some(user => user.id === bodyCompanyGroupId)) {
+      finalCompanyGroupId = bodyCompanyGroupId;
+      console.log('Using bodyCompanyGroupId:', finalCompanyGroupId);
+    } else {
+      console.log('Using actualUserId as fallback:', finalCompanyGroupId);
+    }
+    
     const insertData = {
       company_account_id: userCompanyAccountId, // 重要: company_account_idを追加
-      company_group_id: bodyCompanyGroupId || null, // フロントエンドから指定されたgroup_id、なければnull
+      company_group_id: finalCompanyGroupId, // 検証済みのcompany_user_idを使用
       title: title || '未設定',
       job_description: job_description || '未設定',
       required_skills: Array.isArray(required_skills) ? required_skills : (required_skills ? [required_skills] : []),

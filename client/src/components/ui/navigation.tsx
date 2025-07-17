@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Menu, X, ChevronDown, Home, MessageSquare, Search, FileText, List, HelpCircle, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
@@ -25,10 +26,57 @@ export function Navigation({
 }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const router = useRouter();
 
   // ドロップダウンメニューの切り替え
   const toggleDropdown = (dropdown: string) => {
     setOpenDropdown(openDropdown === dropdown ? null : dropdown);
+  };
+
+  // ログアウト処理
+  const handleLogout = async () => {
+    try {
+      // ログアウトAPIを呼び出し
+      const token = localStorage.getItem('auth-token') || localStorage.getItem('supabase-auth-token');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // ローカルストレージからトークンを削除
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('supabase-auth-token');
+        localStorage.removeItem('auth_token');
+        
+        console.log('✅ ログアウトが完了しました');
+        
+        // ログインページにリダイレクト
+        router.push('/company/auth/login');
+      } else {
+        console.error('❌ ログアウトAPIエラー:', result);
+        // APIエラーの場合でもローカルのトークンは削除
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('supabase-auth-token');
+        localStorage.removeItem('auth_token');
+        router.push('/company/auth/login');
+      }
+    } catch (error) {
+      console.error('❌ ログアウト処理でエラーが発生しました:', error);
+      // エラーの場合でもローカルのトークンは削除
+      localStorage.removeItem('auth-token');
+      localStorage.removeItem('supabase-auth-token');
+      localStorage.removeItem('auth_token');
+      router.push('/company/auth/login');
+    }
+    
+    // ドロップダウンを閉じる
+    setOpenDropdown(null);
   };
 
   // variant に応じたCTAボタンの設定
@@ -224,6 +272,7 @@ export function Navigation({
                         {item.isActive && (
                           <div className='absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#0F9058]' />
                         )}
+                        {/* Dropdown */}
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50'>
                             {item.dropdownItems?.map((dropdownItem) => (
@@ -240,79 +289,77 @@ export function Navigation({
                         )}
                       </div>
                     ) : (
-                      <div className='relative'>
-                        <Link
-                          href={item.href}
-                          className={cn(
-                            'flex items-center space-x-[8px] transition-colors relative',
-                            item.isActive 
-                              ? 'text-[#0F9058]'
-                              : 'text-[#323232] hover:text-[#0F9058]'
-                          )}
-                          style={{
-                            fontFamily: '"Noto Sans JP", sans-serif',
-                            fontSize: '14px',
-                            fontStyle: 'normal',
-                            fontWeight: 700,
-                            lineHeight: '200%',
-                            letterSpacing: '1.4px'
-                          }}
-                        >
-                          <item.icon className='w-[20px] h-[20px]' />
-                          <span>{item.label}</span>
-                        </Link>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          'flex items-center space-x-[8px] transition-colors relative',
+                          item.isActive 
+                            ? 'text-[#0F9058]'
+                            : 'text-[#323232] hover:text-[#0F9058]'
+                        )}
+                        style={{
+                          fontFamily: '"Noto Sans JP", sans-serif',
+                          fontSize: '14px',
+                          fontStyle: 'normal',
+                          fontWeight: 700,
+                          lineHeight: '200%',
+                          letterSpacing: '1.4px'
+                        }}
+                      >
+                        <item.icon className='w-[20px] h-[20px]' />
+                        <span>{item.label}</span>
                         {/* Active underline */}
                         {item.isActive && (
                           <div className='absolute bottom-[-20px] left-0 right-0 h-[3px] bg-[#0F9058]' />
                         )}
-                      </div>
+                      </Link>
                     )}
                   </div>
                 ))}
               </div>
             </nav>
 
-            {/* User Info & Account Dropdown */}
+            {/* User Account Menu */}
             <div className='flex items-center ml-[40px]'>
               <div className='relative'>
-                                  <button
-                    onClick={() => toggleDropdown('account')}
-                    className='flex items-center space-x-[16px] transition-colors'
-                    style={{
-                      fontFamily: '"Noto Sans JP", sans-serif',
-                      fontSize: '12px',
-                      fontStyle: 'normal',
-                      fontWeight: 400,
-                      lineHeight: '150%',
-                      letterSpacing: '0.6px'
-                    }}
-                  >
-                    <div className='text-left flex flex-col'>
-                      <div 
-                        className='text-[#666666] leading-[18px]'
-                        style={{
-                          fontFamily: '"Noto Sans JP", sans-serif',
-                          fontSize: '12px',
-                          fontWeight: 400,
-                          letterSpacing: '0.6px'
-                        }}
-                      >
-                        企業アカウント名...
-                      </div>
-                      <div 
-                        className='text-[#666666] leading-[18px]'
-                        style={{
-                          fontFamily: '"Noto Sans JP", sans-serif',
-                          fontSize: '12px',
-                          fontWeight: 400,
-                          letterSpacing: '0.6px'
-                        }}
-                      >
-                        ユーザー名デキ...
-                      </div>
+                <button
+                  onClick={() => toggleDropdown('account')}
+                  className='flex items-center space-x-[16px] transition-colors'
+                  style={{
+                    fontFamily: '"Noto Sans JP", sans-serif',
+                    fontSize: '12px',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    lineHeight: '150%',
+                    letterSpacing: '0.6px'
+                  }}
+                >
+                  <div className='text-left flex flex-col'>
+                    <div 
+                      className='text-[#666666] leading-[18px]'
+                      style={{
+                        fontFamily: '"Noto Sans JP", sans-serif',
+                        fontSize: '12px',
+                        fontWeight: 400,
+                        letterSpacing: '0.6px'
+                      }}
+                    >
+                      {userInfo?.companyName || '企業アカウント名...'}
                     </div>
-                    <ChevronDown className='w-[12px] h-[12px] text-[#666666]' />
-                  </button>
+                    <div 
+                      className='text-[#666666] leading-[18px]'
+                      style={{
+                        fontFamily: '"Noto Sans JP", sans-serif',
+                        fontSize: '12px',
+                        fontWeight: 400,
+                        letterSpacing: '0.6px'
+                      }}
+                    >
+                      {userInfo?.userName || 'ユーザー名デキ...'}
+                    </div>
+                  </div>
+                  <ChevronDown className='w-[12px] h-[12px] text-[#666666]' />
+                </button>
                 {openDropdown === 'account' && (
                   <div className='absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50'>
                     <Link
@@ -332,10 +379,7 @@ export function Navigation({
                     <hr className='my-1' />
                     <button
                       className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0F9058]'
-                      onClick={() => {
-                        setOpenDropdown(null);
-                        // ログアウト処理
-                      }}
+                      onClick={handleLogout}
                     >
                       ログアウト
                     </button>
@@ -383,6 +427,12 @@ export function Navigation({
                   <div className='text-sm font-medium'>{userInfo?.companyName || '企業名'}</div>
                   <div className='text-xs text-gray-500 mt-1'>ユーザー名</div>
                   <div className='text-sm font-medium'>{userInfo?.userName || 'ユーザー名'}</div>
+                  <button
+                    className='mt-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#0F9058] rounded-md'
+                    onClick={handleLogout}
+                  >
+                    ログアウト
+                  </button>
                 </div>
               </div>
             </div>
