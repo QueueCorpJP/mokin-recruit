@@ -4,25 +4,23 @@ import React from 'react';
 function RightLine() {
   return (
     <div
-      className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center p-0 relative size-full"
+      className="flex-shrink-0 self-stretch"
+      style={{ width: '4.571px', aspectRatio: '4.57/8.00' }}
       data-name="right line"
     >
-      <div
-        className="aspect-[256.05/448.15] h-full relative shrink-0"
-        data-name="Vector"
+      <svg
+        className="block size-full"
+        xmlns="http://www.w3.org/2000/svg"
+        width="6"
+        height="8"
+        viewBox="0 0 6 8"
+        fill="none"
       >
-        <svg
-          className="block size-full"
-          fill="none"
-          preserveAspectRatio="none"
-          viewBox="0 0 69 120"
-        >
-          <path
-            d="M66.0515 53.9484C69.3986 57.2955 69.3986 62.7312 66.0515 66.0783L14.6402 117.49C11.2931 120.837 5.85741 120.837 2.51032 117.49C-0.836773 114.143 -0.836773 108.707 2.51032 105.36L47.8701 60L2.5371 14.6402C-0.809997 11.2931 -0.809997 5.85741 2.5371 2.51032C5.88419 -0.836773 11.3199 -0.836773 14.667 2.51032L66.0783 53.9217L66.0515 53.9484Z"
-            fill="var(--fill-0, #0F9058)"
-          />
-        </svg>
-      </div>
+        <path
+          d="M5.11804 3.59656C5.34118 3.8197 5.34118 4.18208 5.11804 4.40522L1.69061 7.83264C1.46747 8.05579 1.10509 8.05579 0.881954 7.83264C0.658815 7.60951 0.658815 7.24713 0.881954 7.02399L3.90594 4L0.883739 0.976012C0.6606 0.752873 0.6606 0.390494 0.883739 0.167355C1.10688 -0.0557849 1.46926 -0.0557849 1.6924 0.167355L5.11982 3.59478L5.11804 3.59656Z"
+          fill="white"
+        />
+      </svg>
     </div>
   );
 }
@@ -55,7 +53,8 @@ export default function NewJobHeader({
                 </div>
               </div>
               <div
-                className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center size-2"
+                className="flex items-center justify-center"
+                style={{ width: '6px', height: '8px' }}
               >
                 <RightLine />
               </div>
