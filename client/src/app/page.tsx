@@ -116,6 +116,7 @@ export default function RootPage() {
                   候補者向けサービス
                 </Link>
               </div>
+              
             </div>
           </div>
         </div>
