@@ -84,6 +84,11 @@ const buttonVariants = cva(
           'transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] ' +
           'leading-[var(--small-button-line-height,1.6)]',
 
+        'green-outline':
+          'border border-[var(--green-outline-border,#0f9058)] bg-transparent text-[var(--green-outline-text,#0f9058)] font-bold tracking-[0.1em] ' +
+          'hover:bg-[var(--green-outline-hover-bg,rgba(15,144,88,0.2))] focus-visible:ring-[var(--green-outline-border,#0f9058)]/30 ' +
+          'transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)]',
+
         'small-green-outline':
           'border border-[var(--small-outline-border,#198D76)] bg-transparent text-[var(--small-outline-text,#198D76)] font-bold ' +
           'tracking-[var(--small-button-letter-spacing,0.1em)] hover:bg-[var(--small-outline-hover-bg,rgba(25,141,118,0.1))] ' +
