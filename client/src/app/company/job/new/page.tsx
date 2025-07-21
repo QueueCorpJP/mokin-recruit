@@ -31,7 +31,7 @@ export default function JobNewPage() {
   const [salaryNote, setSalaryNote] = useState('');
   const [locations, setLocations] = useState<string[]>([]);
   const [locationNote, setLocationNote] = useState('');
-  const [employmentType, setEmploymentType] = useState('');
+  const [employmentType, setEmploymentType] = useState('正社員');
   const [employmentTypeNote, setEmploymentTypeNote] = useState('');
   const [workingHours, setWorkingHours] = useState('');
   const [overtime, setOvertime] = useState('');
@@ -162,7 +162,7 @@ export default function JobNewPage() {
     if (!title.trim()) newErrors.title = '求人タイトルを入力してください';
     if (images.length === 0) newErrors.images = '画像を選択してください';
     if (!jobDescription.trim()) newErrors.jobDescription = '仕事内容を入力してください';
-    if (!employmentType) newErrors.employmentType = '雇用形態を選択してください';
+    if (!employmentType || employmentType === '') newErrors.employmentType = '雇用形態を選択してください';
     if (locations.length === 0) newErrors.locations = '勤務地を選択してください';
     if (jobTypes.length === 0) newErrors.jobTypes = '職種を選択してください';
     if (industries.length === 0) newErrors.industries = '業種を選択してください';

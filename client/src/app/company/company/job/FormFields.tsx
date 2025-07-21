@@ -482,7 +482,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                   value={employmentType} 
                   onChange={e => setEmploymentType(e.target.value)}
                 >
-                  <option value="">正社員</option>
+                  <option value="正社員">正社員</option>
                   {employmentTypeOptions.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
