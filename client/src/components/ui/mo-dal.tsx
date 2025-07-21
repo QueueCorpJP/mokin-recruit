@@ -72,15 +72,20 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Footer */}
-        <footer className="w-full flex items-center justify-center px-6 py-6 bg-white border-t border-[#E5E7EB] flex-shrink-0">
-          <div className="flex items-center justify-start">
-            {selectedCount !== undefined && totalCount !== undefined && (
-              <span className="text-[#666666] text-[14px] font-medium absolute left-100">
+        <footer className="w-full flex items-center justify-between px-6 py-6 bg-white border-t border-[#E5E7EB] flex-shrink-0">
+          {/* Left: Selection count */}
+          <div className="flex items-center">
+            {selectedCount !== undefined && totalCount !== undefined ? (
+              <span className="text-[#666666] text-[14px] font-medium">
                 {selectedCount}/{totalCount} 選択中
               </span>
+            ) : (
+              <div></div>
             )}
           </div>
-          <div className="flex justify-center gap-4">
+          
+          {/* Center: Buttons */}
+          <div className="flex justify-center gap-4 absolute left-1/2 transform -translate-x-1/2">
             {secondaryButtonText && (
               <Button 
                 variant="green-outline"
@@ -91,7 +96,6 @@ export const Modal: React.FC<ModalProps> = ({
                 {secondaryButtonText}
               </Button>
             )}
-            
             <Button 
               variant="green-gradient"
               size="figma-default"
@@ -101,6 +105,9 @@ export const Modal: React.FC<ModalProps> = ({
               {primaryButtonText}
             </Button>
           </div>
+          
+          {/* Right: Empty space for balance */}
+          <div></div>
         </footer>
       </div>
     </div>
