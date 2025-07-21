@@ -159,7 +159,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   return (
     <>
       {/* グループ */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="group">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             グループ
@@ -193,7 +193,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
       
       {/* 求人タイトル */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="title">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             求人タイトル
@@ -231,14 +231,14 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 職種 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="jobTypes">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             職種
           </div>
         </div>
         <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
+          <div className="flex flex-col items-start justify-start w-full">
             <div className="flex flex-row gap-6 items-center justify-start w-full">
               <button
                 type="button"
@@ -275,14 +275,14 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 業種 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="industries">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             業種
           </div>
         </div>
         <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
+          <div className="flex flex-col  items-start justify-start w-full">
             <div className="flex flex-row gap-6 items-center justify-start w-full">
               <button
                 type="button"
@@ -319,7 +319,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* ポジション概要（業務内容＋魅力） */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="jobDescription">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             ポジション概要
@@ -421,7 +421,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             />
           </div>
           {/* 勤務地 */}
-          <div className="w-full">
+          <div className="w-full" data-field="locations">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">勤務地</label>
             <div className="flex flex-col gap-2 items-start justify-start w-full">
               <div className="flex flex-row gap-6 items-center justify-start w-full">
@@ -468,7 +468,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             />
           </div>
           {/* 雇用形態 */}
-          <div className="w-full">
+          <div className="w-full" data-field="employmentType">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">雇用形態</label>
             <div className="flex flex-col gap-2 items-start justify-center w-[400px]">
               <div className="relative w-full">
