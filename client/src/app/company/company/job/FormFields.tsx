@@ -397,7 +397,9 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 options={salaryOptions}
                 value={salaryMin}
                 placeholder="未選択"
-                onChange={(value) => setSalaryMin(value)}
+                onChange={(value) => {
+                  setSalaryMin(value);
+                }}
                 style={{ width: '180px', color: '#323232' }}
               />
               <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</span>
@@ -405,11 +407,13 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 options={salaryOptions}
                 value={salaryMax}
                 placeholder="未選択"
-                onChange={(value) => setSalaryMax(value)}
+                onChange={(value) => {
+                  setSalaryMax(value);
+                }}
                 style={{ width: '180px', color: '#323232' }}
               />
             </div>
-            {showErrors && errors.salary && <span className="text-red-500 text-sm">{errors.salary}</span>}
+            {errors.salary && <span className="text-red-500 text-sm">{errors.salary}</span>}
           </div>
           {/* 年収補足 */}
           <div className="w-full">
