@@ -28,13 +28,11 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
   return (
     <div className="space-y-6">
       {/* 業種カテゴリーテキスト */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-['Noto_Sans_JP'] text-[20px] font-bold leading-[160%] tracking-[2px] text-[#323232] border-b border-[#E5E7EB] pb-2">
+      <div className="flex items-center justify-between w-[100%]">
+        <h3 className="font-['Noto_Sans_JP'] w-[100%] text-[20px] font-bold leading-[160%] tracking-[2px] text-[#323232] border-b-2 border-[#E5E7EB] pb-2">
           業種カテゴリーテキスト
         </h3>
-        <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#666]">
-          {selectedIndustries.length}/{MAX_SELECTION}個選択
-        </span>
+       
       </div>
 
       {/* 制限メッセージ */}

@@ -405,7 +405,13 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 options={salaryOptions}
                 value={salaryMax}
                 placeholder="未選択"
-                onChange={(value) => setSalaryMax(value)}
+                onChange={(value) => function(){
+                  if(salaryMin > value){
+                    setSalaryMin(value)
+                  }else{
+                    setSalaryMax(value)
+                  }
+                }}
                 style={{ width: '180px', color: '#323232' }}
               />
             </div>

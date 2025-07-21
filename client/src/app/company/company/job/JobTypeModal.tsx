@@ -78,9 +78,7 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({ selectedJobTypes, se
           <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
             {selectedCategoryData.name}
           </h3>
-          <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#666]">
-            {selectedJobTypes.length}/{MAX_SELECTION}個選択
-          </span>
+          
         </div>
 
         {/* 制限メッセージ */}

@@ -237,8 +237,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
 
             {/* 会社情報・規約メニュー */}
             <div className='md:w-[240px] w-[100%]'>
-            <button   onClick={() => setSupportOpen(!supportOpen)} className='w-[100%]'>
-
+            <button   onClick={() => setCompanyOpen(!companyOpen)} className='w-[100%]'>
               <div className='flex flex-row items-center justify-between md:block'>
 
                 <h3
