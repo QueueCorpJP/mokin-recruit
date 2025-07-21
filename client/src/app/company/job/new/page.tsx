@@ -116,6 +116,17 @@ export default function JobNewPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // エラーをクリアする関数
+  const clearFieldError = (fieldName: string) => {
+    if (errors[fieldName]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
   // 確認モードに切り替え
   const handleConfirm = () => {
     if (validateForm()) {
@@ -279,18 +290,18 @@ export default function JobNewPage() {
           ) : (
             <FormFields
               group={group}
-              setGroup={setGroup}
+              setGroup={(value: string) => { setGroup(value); clearFieldError('group'); }}
               companyGroups={companyGroups}
               title={title}
-              setTitle={setTitle}
+              setTitle={(value: string) => { setTitle(value); clearFieldError('title'); }}
               images={images}
               setImages={setImages}
               jobTypes={jobTypes}
-              setJobTypes={setJobTypes}
+              setJobTypes={(types: string[]) => { setJobTypes(types); clearFieldError('jobTypes'); }}
               industries={industries}
-              setIndustries={setIndustries}
+              setIndustries={(industries: string[]) => { setIndustries(industries); clearFieldError('industries'); }}
               jobDescription={jobDescription}
-              setJobDescription={setJobDescription}
+              setJobDescription={(value: string) => { setJobDescription(value); clearFieldError('jobDescription'); }}
               positionSummary={positionSummary}
               setPositionSummary={setPositionSummary}
               skills={skills}
@@ -304,13 +315,13 @@ export default function JobNewPage() {
               salaryNote={salaryNote}
               setSalaryNote={setSalaryNote}
               locations={locations}
-              setLocations={setLocations}
+              setLocations={(locations: string[]) => { setLocations(locations); clearFieldError('locations'); }}
               locationNote={locationNote}
               setLocationNote={setLocationNote}
               selectionProcess={selectionProcess}
               setSelectionProcess={setSelectionProcess}
               employmentType={employmentType}
-              setEmploymentType={setEmploymentType}
+              setEmploymentType={(value: string) => { setEmploymentType(value); clearFieldError('employmentType'); }}
               employmentTypeNote={employmentTypeNote}
               setEmploymentTypeNote={setEmploymentTypeNote}
               workingHours={workingHours}
@@ -396,7 +407,10 @@ export default function JobNewPage() {
                 selectedCount={locations.length}
                 totalCount={47}
                 primaryButtonText="決定"
-                onPrimaryAction={() => setLocationModalOpen(false)}
+                onPrimaryAction={() => {
+                  setLocationModalOpen(false);
+                  clearFieldError('locations');
+                }}
               >
                 <LocationModal
                   selectedLocations={locations}
@@ -412,7 +426,10 @@ export default function JobNewPage() {
                 selectedCount={jobTypes.length}
                 totalCount={3}
                 primaryButtonText="決定"
-                onPrimaryAction={() => setJobTypeModalOpen(false)}
+                onPrimaryAction={() => {
+                  setJobTypeModalOpen(false);
+                  clearFieldError('jobTypes');
+                }}
               >
                 <JobTypeModal
                   selectedJobTypes={jobTypes}
@@ -428,7 +445,10 @@ export default function JobNewPage() {
                 selectedCount={industries.length}
                 totalCount={3}
                 primaryButtonText="決定"
-                onPrimaryAction={() => setIndustryModalOpen(false)}
+                onPrimaryAction={() => {
+                  setIndustryModalOpen(false);
+                  clearFieldError('industries');
+                }}
               >
                 <IndustryModal 
                   selectedIndustries={industries} 
