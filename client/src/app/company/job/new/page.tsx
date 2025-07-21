@@ -106,11 +106,21 @@ export default function JobNewPage() {
     
     if (!group) newErrors.group = 'グループを選択してください';
     if (!title.trim()) newErrors.title = '求人タイトルを入力してください';
+    if (images.length === 0) newErrors.images = '画像を選択してください';
     if (!jobDescription.trim()) newErrors.jobDescription = '仕事内容を入力してください';
     if (!employmentType) newErrors.employmentType = '雇用形態を選択してください';
     if (locations.length === 0) newErrors.locations = '勤務地を選択してください';
     if (jobTypes.length === 0) newErrors.jobTypes = '職種を選択してください';
     if (industries.length === 0) newErrors.industries = '業種を選択してください';
+    
+    // 年収バリデーション
+    if (salaryMin && salaryMax) {
+      const minValue = parseInt(salaryMin);
+      const maxValue = parseInt(salaryMax);
+      if (minValue > maxValue) {
+        newErrors.salary = '最大年収は最小年収よりも高く設定してください';
+      }
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -124,6 +134,21 @@ export default function JobNewPage() {
         delete newErrors[fieldName];
         return newErrors;
       });
+    }
+  };
+
+  // 年収バリデーション関数
+  const validateSalary = (minValue: string, maxValue: string) => {
+    if (minValue && maxValue) {
+      const min = parseInt(minValue);
+      const max = parseInt(maxValue);
+      if (min > max) {
+        setErrors(prev => ({ ...prev, salary: '最大年収は最小年収よりも高く設定してください' }));
+      } else {
+        clearFieldError('salary');
+      }
+    } else {
+      clearFieldError('salary');
     }
   };
 
@@ -200,11 +225,13 @@ export default function JobNewPage() {
       const labels: Record<string, string> = {
         group: 'グループ',
         title: '求人タイトル',
+        images: '画像',
         jobDescription: '業務内容',
         employmentType: '雇用形態',
         locations: '勤務地',
         jobTypes: '職種',
-        industries: '業種'
+        industries: '業種',
+        salary: '年収'
       };
       return labels[field] || field;
     };
@@ -295,7 +322,7 @@ export default function JobNewPage() {
               title={title}
               setTitle={(value: string) => { setTitle(value); clearFieldError('title'); }}
               images={images}
-              setImages={setImages}
+              setImages={(images: File[]) => { setImages(images); clearFieldError('images'); }}
               jobTypes={jobTypes}
               setJobTypes={(types: string[]) => { setJobTypes(types); clearFieldError('jobTypes'); }}
               industries={industries}
@@ -309,9 +336,9 @@ export default function JobNewPage() {
               otherRequirements={otherRequirements}
               setOtherRequirements={setOtherRequirements}
               salaryMin={salaryMin}
-              setSalaryMin={setSalaryMin}
+              setSalaryMin={(value: string) => { setSalaryMin(value); validateSalary(value, salaryMax); }}
               salaryMax={salaryMax}
-              setSalaryMax={setSalaryMax}
+              setSalaryMax={(value: string) => { setSalaryMax(value); validateSalary(salaryMin, value); }}
               salaryNote={salaryNote}
               setSalaryNote={setSalaryNote}
               locations={locations}
