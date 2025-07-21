@@ -213,7 +213,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 写真 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="images">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
           イメージ画像
@@ -390,7 +390,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
         </div>
         <div className="flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6">
           {/* 想定年収 */}
-          <div className="w-full">
+          <div className="w-full" data-field="salary">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">想定年収</label>
             <div className="flex gap-4 items-center">
               <SelectInput
@@ -405,16 +405,11 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 options={salaryOptions}
                 value={salaryMax}
                 placeholder="未選択"
-                onChange={(value) => function(){
-                  if(salaryMin > value){
-                    setSalaryMin(value)
-                  }else{
-                    setSalaryMax(value)
-                  }
-                }}
+                onChange={(value) => setSalaryMax(value)}
                 style={{ width: '180px', color: '#323232' }}
               />
             </div>
+            {showErrors && errors.salary && <span className="text-red-500 text-sm">{errors.salary}</span>}
           </div>
           {/* 年収補足 */}
           <div className="w-full">
