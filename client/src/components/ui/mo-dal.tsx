@@ -76,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
           {/* Left: Selection count */}
           <div className="flex items-center">
             {selectedCount !== undefined && totalCount !== undefined ? (
-              <span className="text-[#666666] text-[14px] font-medium">
+              <span className="text-[#323232] text-[14px] font-medium">
                 {selectedCount}/{totalCount} 選択中
               </span>
             ) : (
