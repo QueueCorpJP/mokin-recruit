@@ -124,6 +124,8 @@ export function Footer({ variant = 'default' }: FooterProps) {
           <div className='w-[100%] lg:w-[800px] flex flex-col md:flex-row gap-6 md:gap-10'>
             {/* サービスメニュー */}
             <div className='md:w-[240px] w-[100%]'>
+            <button   onClick={() => setServiceOpen(!serviceOpen)} className='w-[100%]'>
+
               <div className='flex flex-row items-center justify-between md:block'>
                 <h3
                   className='text-white font-bold mb-4'
@@ -147,6 +149,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
                   />
                 </div>
               </div>
+              </button>
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
               <div 
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -177,7 +180,10 @@ export function Footer({ variant = 'default' }: FooterProps) {
 
             {/* お問い合わせメニュー */}
             <div className='md:w-[240px] w-[100%]'>
-              <div className='flex flex-row items-center justify-between md:block'>
+            <button   onClick={() => setSupportOpen(!supportOpen)} className='w-[100%]'>
+
+              <div className='flex flex-row items-center justify-between md:block'                    onClick={() => setSupportOpen(!supportOpen)}
+              >
                 <h3
                   className='text-white font-bold mb-4'
                   style={{
@@ -196,10 +202,11 @@ export function Footer({ variant = 'default' }: FooterProps) {
                     height={12} 
                     fill='#FFF' 
                     rotate={supportOpen ? 180 : 0} 
-                    onClick={() => setSupportOpen(!supportOpen)}
                   />
                 </div>
               </div>
+           </button>
+
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
               <div 
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -230,7 +237,10 @@ export function Footer({ variant = 'default' }: FooterProps) {
 
             {/* 会社情報・規約メニュー */}
             <div className='md:w-[240px] w-[100%]'>
+            <button   onClick={() => setSupportOpen(!supportOpen)} className='w-[100%]'>
+
               <div className='flex flex-row items-center justify-between md:block'>
+
                 <h3
                   className='text-white font-bold mb-4'
                   style={{
@@ -253,6 +263,8 @@ export function Footer({ variant = 'default' }: FooterProps) {
                   />
                 </div>
               </div>
+              </button>
+
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
               <div 
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${

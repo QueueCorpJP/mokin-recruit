@@ -5,6 +5,7 @@ interface CheckboxProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export const Checkbox: React.FC<CheckboxProps> = ({
@@ -12,24 +13,33 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   checked = false,
   onChange,
   className = '',
+  disabled = false,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    onChange?.(e.target.checked);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!disabled) {
+      onChange?.(e.target.checked);
+    }
+  };
 
   return (
-    <label className={`inline-flex items-center cursor-pointer ${className}`}>
+    <label 
+      className={`inline-flex items-center ${
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+      } ${className}`}
+    >
       {/* 視覚に出さない実際のチェックボックス */}
       <input
         type="checkbox"
         className="sr-only"
         checked={checked}
         onChange={handleChange}
+        disabled={disabled}
       />
 
       {/* 可視化用のボックス  */}
       <div
         className={`w-5 h-5 flex items-center justify-center rounded-[4px] transition-colors duration-200 
-          ${checked ? 'bg-[#0F9058]' : 'bg-[#DCDCDC]'}`}
+          ${checked ? 'bg-[#0F9058]' : disabled ? 'bg-[#F3F4F6]' : 'bg-[#DCDCDC]'}`}
       >
         {/* ✓ マークは常に描画し、色は白固定 */}
         <svg
@@ -49,7 +59,15 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         </svg>
       </div>
 
-      {label && <span className="ml-2 select-none">{label}</span>}
+      {label && (
+        <span 
+          className={`ml-2 select-none ${
+            disabled ? 'text-gray-400' : ''
+          }`}
+        >
+          {label}
+        </span>
+      )}
     </label>
   );
 };

@@ -166,8 +166,8 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
             職種
           </div>
         </div>
-        <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
+        <div className="flex-1 flex flex-col items-start justify-start px-0 py-6">
+          <div className="flex flex-col items-start justify-start w-full">
             {jobTypes.length > 0 ? (
               <TagDisplay items={jobTypes} />
             ) : (
@@ -186,8 +186,8 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
             業種
           </div>
         </div>
-        <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
+        <div className="flex-1 flex flex-col items-start justify-start px-0 py-6">
+          <div className="flex flex-col items-start justify-start w-full">
             {industries.length > 0 ? (
               <TagDisplay items={industries} />
             ) : (

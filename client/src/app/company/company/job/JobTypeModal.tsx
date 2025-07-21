@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { jobCategories } from './types';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,13 +9,18 @@ interface JobTypeModalProps {
 
 export const JobTypeModal: React.FC<JobTypeModalProps> = ({ selectedJobTypes, setSelectedJobTypes }) => {
   const [selectedCategory, setSelectedCategory] = useState(jobCategories[0].name);
+  const MAX_SELECTION = 3;
 
   const handleCheckboxChange = (job: string) => {
-    setSelectedJobTypes(
-      selectedJobTypes.includes(job)
-        ? selectedJobTypes.filter((j) => j !== job)
-        : [...selectedJobTypes, job]
-    );
+    if (selectedJobTypes.includes(job)) {
+      // 既に選択されている場合は削除
+      setSelectedJobTypes(selectedJobTypes.filter((j) => j !== job));
+    } else {
+      // 新規選択の場合は制限をチェック
+      if (selectedJobTypes.length < MAX_SELECTION) {
+        setSelectedJobTypes([...selectedJobTypes, job]);
+      }
+    }
   };
 
   const selectedCategoryData = jobCategories.find((category) => category.name === selectedCategory)!;
@@ -70,25 +74,42 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({ selectedJobTypes, se
 
       {/* 選択中のカテゴリー名 */}
       <div>
-        <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
-          {selectedCategoryData.name}
-        </h3>
-        
-        {/* 職種チェックボックスリスト（2列グリッド） */}
-        <div className="grid grid-cols-2 gap-x-8 gap-y-4  mt-6">
-          {selectedCategoryData.jobs.map((job) => (
-            <div key={job} className="flex items-center">
-              <Checkbox 
-                label={job} 
-                checked={selectedJobTypes.includes(job)} 
-                onChange={() => handleCheckboxChange(job)} 
-              />
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
+            {selectedCategoryData.name}
+          </h3>
+          <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#666]">
+            {selectedJobTypes.length}/{MAX_SELECTION}個選択
+          </span>
         </div>
 
-        {/* 選択数表示（左下） */}
-        {/* 削除：この部分は共通モーダルコンポーネントに移動 */}
+        {/* 制限メッセージ */}
+        {selectedJobTypes.length >= MAX_SELECTION && (
+          <div className="p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4">
+            <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
+              最大{MAX_SELECTION}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
+            </p>
+          </div>
+        )}
+        
+        {/* 職種チェックボックスリスト（2列グリッド） */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-6">
+          {selectedCategoryData.jobs.map((job) => {
+            const isSelected = selectedJobTypes.includes(job);
+            const isDisabled = !isSelected && selectedJobTypes.length >= MAX_SELECTION;
+            
+            return (
+              <div key={job} className="flex items-center">
+                <Checkbox 
+                  label={job} 
+                  checked={isSelected} 
+                  onChange={() => handleCheckboxChange(job)}
+                  disabled={isDisabled}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

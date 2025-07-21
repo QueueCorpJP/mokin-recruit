@@ -180,6 +180,66 @@ export default function JobNewPage() {
     }
   };
 
+  // エラーサマリーコンポーネント
+  const ErrorSummary: React.FC<{ errors: Record<string, string> }> = ({ errors }) => {
+    const errorEntries = Object.entries(errors);
+    if (errorEntries.length === 0) return null;
+
+    const getFieldLabel = (field: string) => {
+      const labels: Record<string, string> = {
+        group: 'グループ',
+        title: '求人タイトル',
+        jobDescription: '業務内容',
+        employmentType: '雇用形態',
+        locations: '勤務地',
+        jobTypes: '職種',
+        industries: '業種'
+      };
+      return labels[field] || field;
+    };
+
+    const scrollToField = (field: string) => {
+      // フィールドまでスクロールする
+      const element = document.querySelector(`[data-field="${field}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    return (
+      <div className="mb-6 p-4 border-2 border-red-500 rounded-lg bg-red-50">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-red-700 mb-2">
+              入力に不備があります
+            </h3>
+            <p className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-600 mb-3">
+              以下の項目を確認してください：
+            </p>
+            <ul className="space-y-2">
+              {errorEntries.map(([field, message]) => (
+                <li key={field} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollToField(field)}
+                    className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-700 hover:text-red-900 underline hover:no-underline cursor-pointer text-left"
+                  >
+                    • {getFieldLabel(field)}: {message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <NewJobHeader />
@@ -278,45 +338,50 @@ export default function JobNewPage() {
           )}
         
           {/* ボタンエリア */}
-          <div className="flex justify-center items-center gap-4 mt-[40px] w-full">
-            {isConfirmMode ? (
-              <>
-                <Button
-                  type="button"
-                  variant="green-outline"
-                  size="lg"
-                  className="rounded-[32px] min-w-[260px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
-                  onClick={handleBack}
-                >
-                  修正する
-                </Button>
-                <button
-                  type="button"
-                  className="rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
-                  onClick={handleSubmit}
-                >
-                  この内容で掲載申請をする
-                </button>
-              </>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  variant="green-outline"
-                  size="lg"
-                  className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
-                >
-                  下書き保存
-                </Button>
-                <button
-                  type="button"
-                  className="rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
-                  onClick={handleConfirm}
-                >
-                  確認する
-                </button>
-              </>
-            )}
+          <div className="flex flex-col items-center gap-4 mt-[40px] w-full">
+            {/* エラーサマリー */}
+            {showErrors && <ErrorSummary errors={errors} />}
+            
+            <div className="flex justify-center items-center gap-4 w-full">
+              {isConfirmMode ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="green-outline"
+                    size="lg"
+                    className="rounded-[32px] min-w-[260px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                    onClick={handleBack}
+                  >
+                    修正する
+                  </Button>
+                  <button
+                    type="button"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
+                    onClick={handleSubmit}
+                  >
+                    この内容で掲載申請をする
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="green-outline"
+                    size="lg"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                  >
+                    下書き保存
+                  </Button>
+                  <button
+                    type="button"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
+                    onClick={handleConfirm}
+                  >
+                    確認する
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
         
