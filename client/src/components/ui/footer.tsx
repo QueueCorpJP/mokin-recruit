@@ -56,7 +56,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
             {/* ロゴとキャッチフレーズ */}
             <div className='flex flex-col gap-6'>
               <div className='w-[180px]'>
-                <Logo width={180} height={38} variant='white' />
+                <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' variant='white' />
               </div>
               <p
                 className='text-white font-bold'

@@ -182,14 +182,15 @@ export function Navigation({
         )}
         style={{ height: '80px' }}
       >
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='w-full mx-auto px-4 sm:px-6 lg:px-8'>
           <div
             className='flex justify-between items-center navigation-container'
             style={{ height: '80px' }}
           >
             {/* Logo */}
             <div className='flex-shrink-0 flex items-center h-full'>
-              <Logo width={180} height={38} />
+              <Logo 
+              className=' w-auto h-[32px] md:w-[180px] md:h-[32px]' />
             </div>
 
             {/* Desktop Buttons */}
@@ -327,7 +328,7 @@ export function Navigation({
           <div className='flex items-center h-[80px] w-full px-[40px] justify-between w-full'>
             {/* ロゴ：左端に配置 */}
             <div className='flex-shrink-0'>
-              <Logo width={180} height={38} />
+              <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
             </div>
 
             {/* メニュー項目とアカウント情報を同一グループとして扱う */}
@@ -473,7 +474,7 @@ export function Navigation({
         >
           {/* Logo */}
           <div className='flex-shrink-0 flex items-center h-full'>
-            <Logo width={180} height={38} />
+            <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
           </div>
 
           {/* Desktop Auth Buttons */}

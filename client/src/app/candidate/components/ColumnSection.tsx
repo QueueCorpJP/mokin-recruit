@@ -37,7 +37,7 @@ export function ColumnSection() {
   return (
     <section className='bg-[#f9f9f9] py-[120px] flex flex-col items-center relative'>
       {/* 背景装飾テキスト */}
-      <div className="absolute bottom-[255px] font-['League_Spartan'] font-bold text-[200px] text-[#ffffff] opacity-80 text-center tracking-[20px] left-1/2 transform -translate-x-1/2 translate-y-full leading-[1.8] whitespace-nowrap z-0 pointer-events-none select-none">
+      <div className="absolute bottom-[270px] font-['League_Spartan'] font-bold text-[200px] text-[#ffffff] opacity-80 text-center tracking-[20px] left-1/2 transform -translate-x-1/2 translate-y-full leading-[1.8] whitespace-nowrap z-0 pointer-events-none select-none">
         MEDIA ARTICLES
       </div>
 
