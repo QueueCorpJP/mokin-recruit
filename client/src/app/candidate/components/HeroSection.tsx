@@ -49,7 +49,7 @@ export function HeroSection() {
       </div>
       {/* Hero Section */}
       <div className="relative w-full h-auto">
-        <div className="w-[100%] h-auto flex block mx-auto">
+        <div className="w-[100%] h-auto flex block mx-auto justify-center">
           <picture>
             <source media="(max-width: 768px)" srcSet="/image.png" />
             <img 
