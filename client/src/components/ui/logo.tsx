@@ -19,7 +19,7 @@ export function Logo({
   href = '/',
   variant = 'default',
 }: LogoProps) {
-  const logoSrc = variant === 'white' ? '/images/logo-white.png' : '/logo.png';
+  const logoSrc = variant === 'white' ? '/images/logo-white.png' : '/images/logo.png';
   const logoContent = (
     <div
       className={cn('flex items-center justify-center gap-3 h-full', className)}
