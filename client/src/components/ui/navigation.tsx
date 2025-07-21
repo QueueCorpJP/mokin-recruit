@@ -7,7 +7,23 @@ import { X, ChevronDown, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+
 // Custom Icon Components
+
+function DownIcon({ className }: { className?: string }) {
+  return (
+    <div className={cn('relative w-[10px] h-[10px]', className)}>
+      <Image 
+        src="/images/down.svg" 
+        alt="down-icon" 
+        fill
+        className="object-contain" 
+      />
+    </div>
+  );
+}
+
 function HomeIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="18" viewBox="0 0 20 18" fill="none" className={className}>
@@ -349,7 +365,7 @@ export function Navigation({
                         >
                           <item.icon className='w-5 h-5' />
                           <span>{item.label}</span>
-                          <ChevronDown className='w-4 h-4 ml-0.5' />
+                          <DownIcon className='ml-1' />
                         </button>
                         {/* ドロップダウンメニュー */}
                         {openDropdown === item.label && (
@@ -400,7 +416,7 @@ export function Navigation({
                     <span className='max-w-[160px] truncate'>
                       {userInfo?.companyName || 'ユーザー名'}
                     </span>
-                    <ChevronDown className='w-4 h-4' />
+                    <DownIcon className='ml-1' />
                   </button>
                   {/* アカウントドロップダウン */}
                   {openDropdown === 'account' && (
