@@ -238,7 +238,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
           </div>
         </div>
         <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col items-start justify-start w-full">
+          <div className="flex flex-col gap-2 items-start justify-start w-full">
             <div className="flex flex-row gap-6 items-center justify-start w-full">
               <button
                 type="button"
@@ -282,7 +282,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
           </div>
         </div>
         <div className="flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6">
-          <div className="flex flex-col  items-start justify-start w-full">
+          <div className="flex flex-col gap-2 items-start justify-start w-full">
             <div className="flex flex-row gap-6 items-center justify-start w-full">
               <button
                 type="button"

@@ -140,9 +140,9 @@ export default function CompanyJobsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#4FC3A1] to-[#229A4E]">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        
+    <div className="w-full flex flex-col items-center justify-center">
+      <div className=" w-full">
+        <div className="bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] px-[80px] py-[40px] w-full">
         {/* ヘッダー部分 */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
@@ -265,8 +265,9 @@ export default function CompanyJobsPage() {
               </div>
             </div>
           </div>
+         </div>
         </div>
-
+        <div className="w-full px-[80px] py-[40px]">
         {/* 新規求人作成ボタン */}
         <div className="flex justify-between items-center mb-6">
           <button
@@ -287,8 +288,8 @@ export default function CompanyJobsPage() {
         </div>
 
         {/* テーブルヘッダー */}
-        <div className="bg-white rounded-t-lg">
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#E5E5E5] text-[#666666] text-sm font-medium font-['Noto_Sans_JP']">
+        <div className="bg-white rounded-t-lg flex flex-col items-center justify-center py-[40px]">
+          <div className="grid grid-cols-12 gap-4  border-b border-[#E5E5E5] text-[#666666] text-sm font-medium font-['Noto_Sans_JP']">
             <div className="col-span-1">グループ</div>
             <div className="col-span-3">職種 / 求人タイトル</div>
             <div className="col-span-1">ステータス</div>
@@ -322,9 +323,9 @@ export default function CompanyJobsPage() {
 
           {/* 求人データ一覧 */}
           {!loading && jobs.length > 0 && (
-            <div className="divide-y divide-[#E5E5E5]">
+            <div className="divide-y divide-[#E5E5E5] py-[20px] px-[40px]">
               {jobs.map((job) => (
-                <div key={job.id} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-[#F8F9FA] transition-colors">
+                <div key={job.id} className="grid grid-cols-12 gap-[24px] hover:bg-[#F8F9FA] transition-colors">
                   {/* グループ */}
                   <div className="col-span-1 flex items-center">
                     <div className="bg-[#4FC3A1] text-white px-3 py-1 rounded text-xs font-medium">
@@ -432,6 +433,7 @@ export default function CompanyJobsPage() {
             <span className="w-4 h-4 border border-[#0F9058] rounded-full flex items-center justify-center text-xs text-[#0F9058]">?</span>
             <span className="text-[#0F9058] text-xs">求人の削除について</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
