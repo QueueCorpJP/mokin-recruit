@@ -12,6 +12,7 @@ export interface ModalProps {
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
   width?: string;
+  industries?: string;
   height?: string;
   overlayBgColor?: string;
   selectedCount?: number;
@@ -22,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   isOpen = true,
   onClose,
+  industries,
   children,
   primaryButtonText = "決定",
   onPrimaryAction,
@@ -68,6 +70,15 @@ export const Modal: React.FC<ModalProps> = ({
             flex: '1 1 auto'
           }}
         >
+          {
+            industries && (
+              <div className="flex items-center justify-between w-[100%]">
+                <h3 className="font-['Noto_Sans_JP'] w-[100%] text-[20px] font-bold leading-[160%] tracking-[2px] text-[#323232] border-b-2 border-[#E5E7EB] pb-2">
+                  業種カテゴリーテキスト
+                </h3>
+              </div>
+            )
+          }
           {children}
         </div>
 

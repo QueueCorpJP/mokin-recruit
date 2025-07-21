@@ -445,6 +445,7 @@ export default function JobNewPage() {
                 selectedCount={industries.length}
                 totalCount={3}
                 primaryButtonText="決定"
+                industries="true"
                 onPrimaryAction={() => {
                   setIndustryModalOpen(false);
                   clearFieldError('industries');

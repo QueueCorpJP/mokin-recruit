@@ -26,14 +26,13 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
   const allIndustries = industryCategories.flatMap(category => category.industries);
 
   return (
+   
+      
+   <div>
+  
     <div className="space-y-6">
       {/* 業種カテゴリーテキスト */}
-      <div className="flex items-center justify-between w-[100%]">
-        <h3 className="font-['Noto_Sans_JP'] w-[100%] text-[20px] font-bold leading-[160%] tracking-[2px] text-[#323232] border-b-2 border-[#E5E7EB] pb-2">
-          業種カテゴリーテキスト
-        </h3>
-       
-      </div>
+      
 
       {/* 制限メッセージ */}
       {selectedIndustries.length >= MAX_SELECTION && (
@@ -62,6 +61,7 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
           );
         })}
       </div>
+    </div>
     </div>
   );
 }; 
