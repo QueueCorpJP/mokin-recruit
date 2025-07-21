@@ -52,7 +52,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
       <div className='md:px-20 px-[0px] md:py-20 py-[0px]'>
         <div className='flex flex-col lg:flex-row gap-10 lg:gap-20 xl:gap-[80px] px-[16px] md:px-0 py-[80px] md:py-0 pb-[40px] md:pb-0'>
           {/* 左側 - ロゴとキャッチフレーズ + 会員登録/ログイン */}
-          <div className='flex-1 flex flex-col justify-between gap-10'>
+          <div className='flex-1 flex flex-col gap-10'>
             {/* ロゴとキャッチフレーズ */}
             <div className='flex flex-col gap-6'>
               <div className='w-[180px]'>
@@ -73,8 +73,8 @@ export function Footer({ variant = 'default' }: FooterProps) {
               </p>
             </div>
 
-            {/* 会員登録/ログインリンク */}
-            <div className='flex items-center gap-2 hidden md:flex'>
+            {/* 会員登録/ログインリンク - デスクトップ用 */}
+            <div className='hidden md:flex items-center gap-2'>
               <div className='w-[104px] h-[32px] flex items-center justify-center'>
                 <Link
                   href='/auth/register'
@@ -137,7 +137,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
                 >
                   {menuData.service.title}
                 </h3>
-                <div className='md:hidden'>
+                <div className='md:hidden block'>
                   <Open 
                     width={12} 
                     height={12} 
@@ -190,7 +190,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
                 >
                   {menuData.support.title}
                 </h3>
-                <div className='md:hidden'>
+                <div className='md:hidden block'>
                   <Open 
                     width={12} 
                     height={12} 
@@ -243,7 +243,7 @@ export function Footer({ variant = 'default' }: FooterProps) {
                 >
                   {menuData.company.title}
                 </h3>
-                <div className='md:hidden'>
+                <div className='md:hidden block'>
                   <Open 
                     width={12} 
                     height={12} 
@@ -281,54 +281,54 @@ export function Footer({ variant = 'default' }: FooterProps) {
               </div>
             </div>
           </div>
-             {/* 会員登録/ログインリンク */}
-             <div className='flex items-center gap-2 block md:hidden'>
-              <div className='w-[104px] h-[32px] flex items-center justify-center'>
-                <Link
-                  href='/auth/register'
-                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  会員登録
-                </Link>
-              </div>
-              <span
-                className='text-white font-bold'
-                style={{
-                  fontFamily: 'Noto Sans JP, sans-serif',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  lineHeight: '200%',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                /
-              </span>
-              <div className='w-[104px] h-[32px] flex items-center justify-center'>
-                <Link
-                  href='/auth/login'
-                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  ログイン
-                </Link>
-              </div>
-            </div>
+        </div>
+
+        {/* 会員登録/ログインリンク - モバイル用 */}
+        <div className='md:hidden flex items-center gap-2 px-[16px] pb-[40px]'>
+          <div className='w-[104px] h-[32px] flex items-center justify-center'>
+            <Link
+              href='/auth/register'
+              className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                lineHeight: '200%',
+                letterSpacing: '0.1em',
+              }}
+            >
+              会員登録
+            </Link>
+          </div>
+          <span
+            className='text-white font-bold'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              fontSize: '16px',
+              lineHeight: '200%',
+              letterSpacing: '0.1em',
+            }}
+          >
+            /
+          </span>
+          <div className='w-[104px] h-[32px] flex items-center justify-center'>
+            <Link
+              href='/auth/login'
+              className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                lineHeight: '200%',
+                letterSpacing: '0.1em',
+              }}
+            >
+              ログイン
+            </Link>
           </div>
         </div>
-     
+      </div>
 
       {/* コピーライトセクション */}
       <div className='bg-[#262626] px-20 py-6 flex justify-center items-center'>

@@ -38,6 +38,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -60,12 +62,16 @@ export default function RootLayout({
           crossOrigin='anonymous'
         />
 
-        {/* Critical CSS */}
+        {/* Critical CSS - レスポンシブ対応のちらつき防止 */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-            html { font-family: var(--font-inter), system-ui, sans-serif; }
-            .font-noto-sans-jp { font-family: var(--font-noto-sans-jp), sans-serif; }
+            html { 
+              font-family: var(--font-inter), system-ui, sans-serif; 
+            }
+            .font-noto-sans-jp { 
+              font-family: var(--font-noto-sans-jp), sans-serif; 
+            }
           `,
           }}
         />

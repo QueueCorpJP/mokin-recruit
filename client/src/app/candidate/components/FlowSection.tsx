@@ -1,7 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-
 export function FlowSection() {
     const steps = [
       { icon: '/images/flow-1.svg', label: '会員情報を登録' },
@@ -9,10 +7,6 @@ export function FlowSection() {
       { icon: '/images/flow-3.svg', label: '面談・面接' },
       { icon: '/images/flow-4.svg', label: '内定・入社' },
     ];
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        setIsMobile(window.innerWidth < 768);
-    }, []);
     return (
       <section className='py-20 flex flex-col items-center'>
         <div className='w-full max-w-[1200px] flex flex-col items-center'>
@@ -51,15 +45,20 @@ export function FlowSection() {
                 </div>
                 {/* 矢印アイコン（最後以外） */}
                 {idx < steps.length - 1 && (
-                    
-
-                    
-                  <img
-                    src={isMobile ? '/images/flow-arrow2.svg' : '/images/flow-arrow.svg'}
-                    alt=''
-                    className='md:w-[32px] md:h-[32px] w-[24px] h-[24px] items-center justify-center '
-                  />
-                    
+                    <>
+                      {/* モバイル用矢印 */}
+                      <img
+                        src='/images/flow-arrow2.svg'
+                        alt=''
+                        className='block md:hidden w-[24px] h-[24px] items-center justify-center'
+                      />
+                      {/* デスクトップ用矢印 */}
+                      <img
+                        src='/images/flow-arrow.svg'
+                        alt=''
+                        className='hidden md:block w-[32px] h-[32px] items-center justify-center'
+                      />
+                    </>
                 )}
             </div>            
             ))}
