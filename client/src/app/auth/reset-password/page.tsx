@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
             <div className='flex-1 flex flex-col justify-between gap-10'>
               <div className='flex flex-col gap-6'>
                 <div className='w-45'>
-                  <img src='/logo-white.png' alt='CuePoint' className='h-9' />
+                  <img src='/images/logo-white.png' alt='CuePoint' className='h-9' />
                 </div>
                 <p className='text-white font-bold leading-8'>
                   戦略的なスカウトを支える

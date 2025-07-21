@@ -114,7 +114,7 @@ export function HeroSection() {
             src='/images/hero-background.jpg'
             alt='Background'
             fill
-            className='object-cover'
+            className='object-cover object-center'
             priority
             sizes='100vw'
             quality={75}
