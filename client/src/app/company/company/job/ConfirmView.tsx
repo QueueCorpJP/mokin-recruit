@@ -422,7 +422,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
             
             {/* 一般公開 */}
             <div className="flex flex-row gap-6 items-center justify-start w-full">
-              <div className="flex flex-row gap-2 items-center justify-start w-[120px]">
+              <div className="flex flex-row gap-2 items-center justify-start w-[140px]">
                 <div className="relative w-5 h-5">
                   <input
                     type="radio"
@@ -442,7 +442,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
                 </div>
                 <label 
                   htmlFor="public"
-                  className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] cursor-pointer"
+                  className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] cursor-pointer mx-[10px]"
                 >
                   一般公開
                 </label>
@@ -455,7 +455,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
 
             {/* 登録会員限定 */}
             <div className="flex flex-row gap-6 items-center justify-start w-full">
-              <div className="flex flex-row gap-2 items-center justify-start w-[120px]">
+              <div className="flex flex-row gap-2 items-center justify-start w-[140px]">
                 <div className="relative w-5 h-5">
                   <input
                     type="radio"
@@ -475,7 +475,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
                 </div>
                 <label 
                   htmlFor="members"
-                  className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] cursor-pointer"
+                  className="font-['Noto_Sans_JP']  font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]  cursor-pointer"
                 >
                   登録会員限定
                 </label>
@@ -488,7 +488,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
 
             {/* スカウト限定 */}
             <div className="flex flex-row gap-6 items-center justify-start w-full">
-              <div className="flex flex-row gap-2 items-center justify-start w-[120px]">
+              <div className="flex flex-row gap-2 items-center justify-start w-[140px]">
                 <div className="relative w-5 h-5">
                   <input
                     type="radio"
