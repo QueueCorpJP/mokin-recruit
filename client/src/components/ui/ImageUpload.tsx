@@ -37,7 +37,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxI
         />
       </svg>
     </div>
-      <span className="text-white text-base font-[700px]">画像を追加</span>
+      <span className="text-white text-base font-bold">画像を追加</span>
       <input
         ref={fileInputRef}
         type="file"
