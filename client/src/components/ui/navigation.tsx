@@ -229,23 +229,13 @@ export function Navigation({
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div 
-              className='lg:hidden border-t-2 border-[#E5E5E5] bg-white shadow-xl' 
-              style={{ 
-                display: 'block', 
-                position: 'relative', 
-                zIndex: 9999,
-                backgroundColor: '#ffffff',
-                minHeight: '200px',
-                border: '2px solid red' // デバッグ用
-              }}
-            >
-              <div className='px-6 py-8 space-y-4' style={{ backgroundColor: '#f0f0f0' }}>
+            <div className='lg:hidden bg-white shadow-lg border-t border-gray-100'>
+              <div className='px-6 py-6 space-y-3'>
                 {/* 会員登録ボタン（グラデーション） */}
                 <Button
                   variant='green-gradient'
                   size='lg'
-                  className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] text-white h-[56px] max-h-[56px] text-[16px] transition-all duration-200 ease-in-out hover:shadow-lg active:scale-[0.98]'
+                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] text-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out active:scale-[0.98]'
                   asChild
                 >
                   <Link href='/candidate/auth/register' onClick={() => setIsMenuOpen(false)}>
@@ -255,29 +245,15 @@ export function Navigation({
                 
                 {/* ログインボタン（アウトライン） */}
                 <Button
-                  variant='green-outline'
+                  variant='outline'
                   size='lg'
-                  className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] h-[56px] max-h-[56px] text-[16px] border-2 border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F3FBF7] transition-all duration-200 ease-in-out active:scale-[0.98]'
+                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] border-2 border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F8FDF9] transition-all duration-200 ease-in-out active:scale-[0.98]'
                   asChild
                 >
                   <Link href='/candidate/auth/login' onClick={() => setIsMenuOpen(false)}>
                     ログイン
                   </Link>
                 </Button>
-                
-                {/* 区切り線 */}
-                <div className='w-full h-px bg-[#E5E5E5] my-6'></div>
-                
-                {/* 追加のリンク（必要に応じて） */}
-                <div className='text-center'>
-                  <Link 
-                    href='/candidate' 
-                    className='text-[#666666] text-[14px] font-medium hover:text-[#0F9058] transition-colors duration-200'
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    候補者向けサービスについて
-                  </Link>
-                </div>
               </div>
             </div>
           )}
