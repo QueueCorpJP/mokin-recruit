@@ -56,6 +56,9 @@ export default function JobNewPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
 
+  // 下書き保存用のキー
+  const DRAFT_KEY = 'job_draft_data';
+
   // 企業グループ情報を取得
   useEffect(() => {
     const fetchCompanyGroups = async () => {
@@ -100,6 +103,57 @@ export default function JobNewPage() {
     fetchCompanyGroups();
   }, []);
 
+  // 下書きデータを復元
+  useEffect(() => {
+    const loadDraft = () => {
+      try {
+        const savedDraft = localStorage.getItem(DRAFT_KEY);
+        if (savedDraft) {
+          const draftData = JSON.parse(savedDraft);
+          
+          // 各状態を復元
+          if (draftData.group) setGroup(draftData.group);
+          if (draftData.title) setTitle(draftData.title);
+          if (draftData.jobTypes) setJobTypes(draftData.jobTypes);
+          if (draftData.industries) setIndustries(draftData.industries);
+          if (draftData.jobDescription) setJobDescription(draftData.jobDescription);
+          if (draftData.positionSummary) setPositionSummary(draftData.positionSummary);
+          if (draftData.skills) setSkills(draftData.skills);
+          if (draftData.otherRequirements) setOtherRequirements(draftData.otherRequirements);
+          if (draftData.salaryMin) setSalaryMin(draftData.salaryMin);
+          if (draftData.salaryMax) setSalaryMax(draftData.salaryMax);
+          if (draftData.salaryNote) setSalaryNote(draftData.salaryNote);
+          if (draftData.locations) setLocations(draftData.locations);
+          if (draftData.locationNote) setLocationNote(draftData.locationNote);
+          if (draftData.employmentType) setEmploymentType(draftData.employmentType);
+          if (draftData.employmentTypeNote) setEmploymentTypeNote(draftData.employmentTypeNote);
+          if (draftData.workingHours) setWorkingHours(draftData.workingHours);
+          if (draftData.overtime) setOvertime(draftData.overtime);
+          if (draftData.holidays) setHolidays(draftData.holidays);
+          if (draftData.selectionProcess) setSelectionProcess(draftData.selectionProcess);
+          if (draftData.appealPoints) setAppealPoints(draftData.appealPoints);
+          if (draftData.smoke) setSmoke(draftData.smoke);
+          if (draftData.smokeNote) setSmokeNote(draftData.smokeNote);
+          if (draftData.resumeRequired) setResumeRequired(draftData.resumeRequired);
+          if (draftData.memo) setMemo(draftData.memo);
+          if (draftData.publicationType) setPublicationType(draftData.publicationType);
+          
+          console.log('下書きデータを復元しました');
+        }
+      } catch (error) {
+        console.error('下書きデータの復元に失敗しました:', error);
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    };
+
+    loadDraft();
+  }, []);
+
+  // 年収のリアルタイムバリデーション
+  useEffect(() => {
+    validateSalary(salaryMin, salaryMax);
+  }, [salaryMin, salaryMax]);
+
   // バリデーション関数
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -139,16 +193,70 @@ export default function JobNewPage() {
 
   // 年収バリデーション関数
   const validateSalary = (minValue: string, maxValue: string) => {
-    if (minValue && maxValue) {
+    if (minValue && maxValue && minValue !== '' && maxValue !== '') {
       const min = parseInt(minValue);
       const max = parseInt(maxValue);
       if (min > max) {
         setErrors(prev => ({ ...prev, salary: '最大年収は最小年収よりも高く設定してください' }));
-      } else {
-        clearFieldError('salary');
+        return;
       }
-    } else {
-      clearFieldError('salary');
+    }
+    // エラーをクリア
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.salary;
+      return newErrors;
+    });
+  };
+
+  // 下書き保存関数
+  const saveDraft = () => {
+    try {
+      const draftData = {
+        group,
+        title,
+        jobTypes,
+        industries,
+        jobDescription,
+        positionSummary,
+        skills,
+        otherRequirements,
+        salaryMin,
+        salaryMax,
+        salaryNote,
+        locations,
+        locationNote,
+        employmentType,
+        employmentTypeNote,
+        workingHours,
+        overtime,
+        holidays,
+        selectionProcess,
+        appealPoints,
+        smoke,
+        smokeNote,
+        resumeRequired,
+        memo,
+        publicationType,
+        savedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      alert('下書きを保存しました');
+      console.log('下書きを保存しました');
+    } catch (error) {
+      console.error('下書きの保存に失敗しました:', error);
+      alert('下書きの保存に失敗しました');
+    }
+  };
+
+  // 下書きデータを削除
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+      console.log('下書きデータを削除しました');
+    } catch (error) {
+      console.error('下書きデータの削除に失敗しました:', error);
     }
   };
 
@@ -204,6 +312,8 @@ export default function JobNewPage() {
       const result = await res.json();
       
       if (result.success) {
+        // 下書きデータを削除
+        clearDraft();
         // 完了ページにリダイレクト
         router.push('/company/job/complete');
       } else {
@@ -336,9 +446,9 @@ export default function JobNewPage() {
               otherRequirements={otherRequirements}
               setOtherRequirements={setOtherRequirements}
               salaryMin={salaryMin}
-              setSalaryMin={(value: string) => { setSalaryMin(value); validateSalary(value, salaryMax); }}
+              setSalaryMin={setSalaryMin}
               salaryMax={salaryMax}
-              setSalaryMax={(value: string) => { setSalaryMax(value); validateSalary(salaryMin, value); }}
+              setSalaryMax={setSalaryMax}
               salaryNote={salaryNote}
               setSalaryNote={setSalaryNote}
               locations={locations}
@@ -407,6 +517,7 @@ export default function JobNewPage() {
                     variant="green-outline"
                     size="lg"
                     className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                    onClick={saveDraft}
                   >
                     下書き保存
                   </Button>
