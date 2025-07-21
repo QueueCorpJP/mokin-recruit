@@ -228,7 +228,7 @@ const nextConfig: NextConfig = {
   },
 
   // 出力設定
-  output: 'standalone',
+  // output: 'standalone',
 
   // パワードバイの非表示
   poweredByHeader: false,

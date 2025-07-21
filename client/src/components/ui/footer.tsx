@@ -1,4 +1,9 @@
+'use client'
+
 import Link from 'next/link';
+import { Logo } from './logo';
+import Open from '../svg/open';
+import { useState } from 'react';
 
 interface FooterProps {
   variant?: 'default' | 'login-before';
@@ -37,109 +42,307 @@ export function Footer({ variant = 'default' }: FooterProps) {
     },
   };
 
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
+
   return (
     <footer className='bg-[#323232] text-white'>
       {/* メインフッターセクション */}
-      <div className='px-4 lg:px-20 py-20'>
-        <div className='flex flex-col lg:flex-row gap-10 lg:gap-20'>
+      <div className='md:px-20 px-[0px] md:py-20 py-[0px]'>
+        <div className='flex flex-col lg:flex-row gap-10 lg:gap-20 xl:gap-[80px] px-[16px] md:px-0 py-[80px] md:py-0 pb-[40px] md:pb-0'>
           {/* 左側 - ロゴとキャッチフレーズ + 会員登録/ログイン */}
-          <div className='flex-1 flex flex-col justify-between gap-10'>
+          <div className='flex-1 flex flex-col gap-10'>
             {/* ロゴとキャッチフレーズ */}
             <div className='flex flex-col gap-6'>
               <div className='w-[180px]'>
-                <h2 className='text-white font-bold text-2xl tracking-wider'>
-                  CuePoint
-                </h2>
+                <Logo width={180} height={38} variant='white' />
               </div>
-              <p className='text-white font-bold text-base leading-8 tracking-[0.1em]'>
-                戦略的なスカウトを支える
-                <br />
-                ダイレクトリクルーティングサービス
+              <p
+                className='text-white font-bold'
+                style={{
+                  fontFamily: 'Noto Sans JP, sans-serif',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  lineHeight: '200%',
+                  letterSpacing: '0.1em',
+                }}
+              >
+                CuePointは、選考状況や志向を企業に共有することで、
+                あなたの本音に届くスカウトを実現する転職支援サービスです。
               </p>
             </div>
 
-            {/* 会員登録/ログインリンク */}
-            <div className='flex items-center gap-2'>
-              <Link
-                href='/auth/register'
-                className='text-white font-bold text-base leading-8 tracking-[0.1em] bg-transparent px-6 py-2 text-center w-[104px] hover:text-[#0F9058] transition-colors'
+            {/* 会員登録/ログインリンク - デスクトップ用 */}
+            <div className='hidden md:flex items-center gap-2'>
+              <div className='w-[104px] h-[32px] flex items-center justify-center'>
+                <Link
+                  href='/auth/register'
+                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+                  style={{
+                    fontFamily: 'Noto Sans JP, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  会員登録
+                </Link>
+              </div>
+              <span
+                className='text-white font-bold'
+                style={{
+                  fontFamily: 'Noto Sans JP, sans-serif',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  lineHeight: '200%',
+                  letterSpacing: '0.1em',
+                }}
               >
-                会員登録
-              </Link>
-              <span className='text-white font-medium text-base leading-8 tracking-[0.1em]'>
                 /
               </span>
-              <Link
-                href='/auth/login'
-                className='text-white font-bold text-base leading-8 tracking-[0.1em] bg-transparent px-6 py-2 text-center w-[104px] hover:text-[#0F9058] transition-colors'
-              >
-                ログイン
-              </Link>
+              <div className='w-[104px] h-[32px] flex items-center justify-center'>
+                <Link
+                  href='/auth/login'
+                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+                  style={{
+                    fontFamily: 'Noto Sans JP, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  ログイン
+                </Link>
+              </div>
             </div>
           </div>
 
           {/* 右側 - 3カラムメニュー */}
-          <div className='w-full lg:w-[800px] flex flex-col md:flex-row gap-6 md:gap-10'>
+          <div className='w-[100%] lg:w-[800px] flex flex-col md:flex-row gap-6 md:gap-10'>
             {/* サービスメニュー */}
-            <div className='flex-1'>
-              <h3 className='text-white font-bold text-lg leading-[1.6em] tracking-[0.1em] mb-4'>
-                {menuData.service.title}
-              </h3>
-              <div className='border-t border-white mb-4'></div>
-              <div className='space-y-0'>
-                {menuData.service.items.map((item, index) => (
-                  <div key={index} className='flex items-center gap-2 py-1'>
-                    <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                    <span className='text-white font-bold text-sm leading-8 tracking-[0.1em]'>
-                      {item}
-                    </span>
-                  </div>
-                ))}
+            <div className='md:w-[240px] w-[100%]'>
+              <div className='flex flex-row items-center justify-between md:block'>
+                <h3
+                  className='text-white font-bold mb-4'
+                  style={{
+                    fontFamily: 'Noto Sans JP, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    lineHeight: '160%',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {menuData.service.title}
+                </h3>
+                <div className='md:hidden block'>
+                  <Open 
+                    width={12} 
+                    height={12} 
+                    fill='#FFF' 
+                    rotate={serviceOpen ? 180 : 0} 
+                    onClick={() => setServiceOpen(!serviceOpen)}
+                  />
+                </div>
+              </div>
+              <div className='border-t border-white mb-2 w-full md:w-auto'></div>
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  serviceOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                } md:max-h-none md:opacity-100`}
+              >
+                <div className='space-y-0'>
+                  {menuData.service.items.map((item, index) => (
+                    <div key={index} className='flex items-center gap-2 py-1'>
+                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                      <span
+                        className='text-white font-bold'
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          lineHeight: '200%',
+                          letterSpacing: '0.1em',
+                        }}
+                      >
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* お問い合わせメニュー */}
-            <div className='flex-1'>
-              <h3 className='text-white font-bold text-lg leading-[1.6em] tracking-[0.1em] mb-4'>
-                {menuData.support.title}
-              </h3>
-              <div className='border-t border-white mb-4'></div>
-              <div className='space-y-0'>
-                {menuData.support.items.map((item, index) => (
-                  <div key={index} className='flex items-center gap-2 py-1'>
-                    <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                    <span className='text-white font-bold text-sm leading-8 tracking-[0.1em]'>
-                      {item}
-                    </span>
-                  </div>
-                ))}
+            <div className='md:w-[240px] w-[100%]'>
+              <div className='flex flex-row items-center justify-between md:block'>
+                <h3
+                  className='text-white font-bold mb-4'
+                  style={{
+                    fontFamily: 'Noto Sans JP, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    lineHeight: '160%',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {menuData.support.title}
+                </h3>
+                <div className='md:hidden block'>
+                  <Open 
+                    width={12} 
+                    height={12} 
+                    fill='#FFF' 
+                    rotate={supportOpen ? 180 : 0} 
+                    onClick={() => setSupportOpen(!supportOpen)}
+                  />
+                </div>
+              </div>
+              <div className='border-t border-white mb-2 w-full md:w-auto'></div>
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  supportOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                } md:max-h-none md:opacity-100`}
+              >
+                <div className='space-y-0'>
+                  {menuData.support.items.map((item, index) => (
+                    <div key={index} className='flex items-center gap-2 py-1'>
+                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                      <span
+                        className='text-white font-bold'
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          lineHeight: '200%',
+                          letterSpacing: '0.1em',
+                        }}
+                      >
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* 会社情報・規約メニュー */}
-            <div className='flex-1'>
-              <h3 className='text-white font-bold text-lg leading-[1.6em] tracking-[0.1em] mb-4'>
-                {menuData.company.title}
-              </h3>
-              <div className='border-t border-white mb-4'></div>
-              <div className='space-y-0'>
-                {menuData.company.items.map((item, index) => (
-                  <div key={index} className='flex items-center gap-2 py-1'>
-                    <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                    <span className='text-white font-bold text-sm leading-8 tracking-[0.1em]'>
-                      {item}
-                    </span>
-                  </div>
-                ))}
+            <div className='md:w-[240px] w-[100%]'>
+              <div className='flex flex-row items-center justify-between md:block'>
+                <h3
+                  className='text-white font-bold mb-4'
+                  style={{
+                    fontFamily: 'Noto Sans JP, sans-serif',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    lineHeight: '160%',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  {menuData.company.title}
+                </h3>
+                <div className='md:hidden block'>
+                  <Open 
+                    width={12} 
+                    height={12} 
+                    fill='#FFF' 
+                    rotate={companyOpen ? 180 : 0} 
+                    onClick={() => setCompanyOpen(!companyOpen)}
+                  />
+                </div>
+              </div>
+              <div className='border-t border-white mb-2 w-full md:w-auto'></div>
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  companyOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                } md:max-h-none md:opacity-100`}
+              >
+                <div className='space-y-0'>
+                  {menuData.company.items.map((item, index) => (
+                    <div key={index} className='flex items-center gap-2 py-1'>
+                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                      <span
+                        className='text-white font-bold'
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          lineHeight: '200%',
+                          letterSpacing: '0.1em',
+                        }}
+                      >
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* 会員登録/ログインリンク - モバイル用 */}
+        <div className='md:hidden flex items-center gap-2 px-[16px] pb-[40px]'>
+          <div className='w-[104px] h-[32px] flex items-center justify-center'>
+            <Link
+              href='/auth/register'
+              className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                lineHeight: '200%',
+                letterSpacing: '0.1em',
+              }}
+            >
+              会員登録
+            </Link>
+          </div>
+          <span
+            className='text-white font-bold'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              fontSize: '16px',
+              lineHeight: '200%',
+              letterSpacing: '0.1em',
+            }}
+          >
+            /
+          </span>
+          <div className='w-[104px] h-[32px] flex items-center justify-center'>
+            <Link
+              href='/auth/login'
+              className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                lineHeight: '200%',
+                letterSpacing: '0.1em',
+              }}
+            >
+              ログイン
+            </Link>
           </div>
         </div>
       </div>
 
       {/* コピーライトセクション */}
-      <div className='bg-[#262626] px-4 lg:px-20 py-6'>
-        <p className='text-white font-medium text-sm leading-[1.6em] tracking-[0.1em]'>
+      <div className='bg-[#262626] px-20 py-6 flex justify-center items-center'>
+        <p
+          className='text-white'
+          style={{
+            fontFamily: 'Noto Sans JP, sans-serif',
+            fontWeight: 500,
+            fontSize: '14px',
+            lineHeight: '160%',
+            letterSpacing: '0.1em',
+            textAlign: 'center',
+          }}
+        >
           © 2025 DRS. All rights reserved.
         </p>
       </div>

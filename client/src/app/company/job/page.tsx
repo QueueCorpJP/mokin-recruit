@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, MoreHorizontal } from 'lucide-react';
+import { SelectInput } from '@/components/ui/select-input';
+import { BaseInput } from '@/components/ui/base-input';
+import { Button } from '@/components/ui/button';
 
 // 求人ステータスの型定義
 type JobStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'CLOSED';
@@ -48,10 +51,20 @@ export default function CompanyJobsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('すべて');
   const [selectedGroup, setSelectedGroup] = useState('すべて');
+  const [selectedScope, setSelectedScope] = useState('すべて');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const statusTabs = ['すべて', '下書き', '掲載待ち（承認待ち）', '掲載済', '停止'];
+  const statusTabs = ['すべて', '下書き', '掲載待ち（承認待ち）', '掲載済'];
+
+  // グループ選択肢の定義
+  const groupOptions = [
+    { value: 'すべて', label: 'すべて' },
+    { value: 'グループA', label: 'グループA' },
+    { value: 'グループB', label: 'グループB' },
+    { value: 'グループC', label: 'グループC' },
+    { value: 'グループD', label: 'グループD' },
+  ];
 
   // 求人データを取得
   const fetchJobs = async () => {
@@ -71,6 +84,7 @@ export default function CompanyJobsPage() {
       const params = new URLSearchParams();
       if (selectedStatus !== 'すべて') params.append('status', selectedStatus);
       if (selectedGroup !== 'すべて') params.append('groupId', selectedGroup);
+      if (selectedScope !== 'すべて') params.append('scope', selectedScope);
       if (searchKeyword.trim()) params.append('search', searchKeyword.trim());
 
       const response = await fetch(`/api/company/jobs?${params.toString()}`, {
@@ -103,7 +117,7 @@ export default function CompanyJobsPage() {
   // フィルター変更時にリロード
   useEffect(() => {
     fetchJobs();
-  }, [selectedStatus, selectedGroup]);
+  }, [selectedStatus, selectedGroup, selectedScope]);
 
   // 検索実行
   const handleSearch = () => {
@@ -138,13 +152,13 @@ export default function CompanyJobsPage() {
                 <path d="M12.16 0C9.51267 0 7.258 1.66875 6.42833 4H4.05333C1.81767 4 0 5.79375 0 8V28C0 30.2062 1.81767 32 4.05333 32H20.2667C22.5023 32 24.32 30.2062 24.32 28V8C24.32 5.79375 22.5023 4 20.2667 4H17.8917C17.062 1.66875 14.8073 0 12.16 0ZM12.16 4C12.6975 4 13.213 4.21071 13.5931 4.58579C13.9731 4.96086 14.1867 5.46957 14.1867 6C14.1867 6.53043 13.9731 7.03914 13.5931 7.41421C13.213 7.78929 12.6975 8 12.16 8C11.6225 8 11.107 7.78929 10.7269 7.41421C10.3469 7.03914 10.1333 6.53043 10.1333 6C10.1333 5.46957 10.3469 4.96086 10.7269 4.58579C11.107 4.21071 11.6225 4 12.16 4ZM4.56 17C4.56 16.6022 4.72014 16.2206 5.0052 15.9393C5.29025 15.658 5.67687 15.5 6.08 15.5C6.48313 15.5 6.86975 15.658 7.1548 15.9393C7.43986 16.2206 7.6 16.6022 7.6 17C7.6 17.3978 7.43986 17.7794 7.1548 18.0607C6.86975 18.342 6.48313 18.5 6.08 18.5C5.67687 18.5 5.29025 18.342 5.0052 18.0607C4.72014 17.7794 4.56 17.3978 4.56 17ZM11.1467 16H19.2533C19.8107 16 20.2667 16.45 20.2667 17C20.2667 17.55 19.8107 18 19.2533 18H11.1467C10.5893 18 10.1333 17.55 10.1333 17C10.1333 16.45 10.5893 16 11.1467 16ZM4.56 23C4.56 22.6022 4.72014 22.2206 5.0052 21.9393C5.29025 21.658 5.67687 21.5 6.08 21.5C6.48313 21.5 6.86975 21.658 7.1548 21.9393C7.43986 22.2206 7.6 22.6022 7.6 23C7.6 23.3978 7.43986 23.7794 7.1548 24.0607C6.86975 24.342 6.48313 24.5 6.08 24.5C5.67687 24.5 5.29025 24.342 5.0052 24.0607C4.72014 23.7794 4.56 23.3978 4.56 23ZM10.1333 23C10.1333 22.45 10.5893 22 11.1467 22H19.2533C19.8107 22 20.2667 22.45 20.2667 23C20.2667 23.55 19.8107 24 19.2533 24H11.1467C10.5893 24 10.1333 23.55 10.1333 23Z"/>
               </svg>
             </div>
-            <h1 className="text-white text-2xl font-bold font-['Noto_Sans_JP']">
+            <h1 className="text-white text-2xl font-bold font-['Noto_Sans_JP'] text-left">
               求人一覧
             </h1>
           </div>
 
           {/* 求人の期間について */}
-          <div className="flex items-center gap-2 text-white text-sm">
+          <div className="flex items-center gap-2 text-white text-sm text-right">
             <span>1〜10件 / 1,000件</span>
             <button className="text-white flex items-center gap-1">
               <span className="w-4 h-4 border border-white rounded-full flex items-center justify-center text-xs">?</span>
@@ -154,74 +168,100 @@ export default function CompanyJobsPage() {
         </div>
 
         {/* フィルター・検索エリア */}
-        <div className="bg-white rounded-[15px] p-8 mb-6 shadow-sm">
-          {/* 上段：ステータスフィルター */}
-          <div className="flex items-center gap-6 mb-8">
-            <div className="text-[#323232] font-medium text-base font-['Noto_Sans_JP'] min-w-[80px]">
-              ステータス
+        <div className="bg-white rounded-[10px] px-4 py-4 mb-6 shadow-[0_2px_16px_0_rgba(44,151,109,0.10)] my-10" style={{marginLeft: '71px', marginRight: '71px'}}>
+          {/* 上段：ステータス・公開範囲フィルター */}
+          <div className="flex items-start gap-7 mb-6">
+            {/* ステータス */}
+            <div className="flex items-start gap-4">
+              <div className="text-[#323232] font-bold text-[14px] font-['Noto_Sans_JP'] min-w-[80px] tracking-[1.6px] leading-[32px] pt-1">
+                ステータス
+              </div>
+              <div className="flex border border-[#999999]">
+                {statusTabs.map((status, index) => (
+                  <button
+                    key={status}
+                    onClick={() => setSelectedStatus(status)}
+                    className={`px-4 py-1 text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                      index > 0 ? 'border-l border-[#999999]' : ''
+                    } ${selectedStatus === status
+                        ? 'bg-[#4FC3A1] text-white'
+                        : 'bg-transparent text-[#999999] hover:bg-gray-50'}
+                    `}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {statusTabs.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`px-6 py-3 text-sm font-medium font-['Noto_Sans_JP'] rounded-[25px] transition-colors ${
-                    selectedStatus === status
-                      ? 'bg-[#4FC3A1] text-white'
-                      : 'bg-[#F0F0F0] text-[#666666] hover:bg-[#E0E0E0]'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+
+            {/* 公開範囲 */}
+            <div className="flex items-start gap-4">
+              <div className="text-[#323232] font-bold text-[14px] font-['Noto_Sans_JP'] min-w-[80px] tracking-[1.6px] leading-[32px] pt-1">
+                公開範囲
+              </div>
+              <div className="flex border border-[#999999]">
+                {['すべて', '一般公開', '登録会員限定', 'スカウト限定', '公開停止'].map((scope, index) => (
+                  <button
+                    key={scope}
+                    onClick={() => setSelectedScope(scope)}
+                    className={`px-4 py-1 text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                      index > 0 ? 'border-l border-[#999999]' : ''
+                    } ${selectedScope === scope
+                        ? 'bg-[#4FC3A1] text-white'
+                        : 'bg-transparent text-[#999999] hover:bg-gray-50'}
+                    `}
+                  >
+                    {scope}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* 下段：検索とグループ */}
-          <div className="flex items-center gap-12">
+          {/* 下段：グループと検索 */}
+          <div className="flex items-center gap-12 mt-6">
             {/* グループフィルター */}
-            <div className="flex items-center gap-6">
-              <div className="text-[#323232] font-medium text-base font-['Noto_Sans_JP'] min-w-[70px]">
+            <div className="flex items-center gap-4">
+              <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[70px] tracking-[1.6px] leading-[32px]">
                 グループ
               </div>
-              <div className="relative">
-                <select 
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="w-56 bg-white border border-[#CCCCCC] rounded-[8px] px-4 py-3 pr-10 font-['Noto_Sans_JP'] text-sm text-[#323232] focus:border-[#4FC3A1] focus:outline-none appearance-none"
-                >
-                  <option value="すべて">すべて</option>
-                  <option value="グループA">グループA</option>
-                  <option value="グループB">グループB</option>
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg className="w-4 h-4 text-[#666666]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              <SelectInput
+                options={groupOptions}
+                value={selectedGroup}
+                placeholder="グループを選択"
+                onChange={(value) => setSelectedGroup(value)}
+                className="w-60"
+              />
             </div>
 
             {/* 検索 */}
-            <div className="flex items-center gap-6 flex-1">
-              <div className="text-[#323232] font-medium text-base font-['Noto_Sans_JP'] whitespace-nowrap">
+            <div className="flex items-center gap-4">
+              <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] whitespace-nowrap tracking-[1.6px] leading-[32px]">
                 求人タイトル、職種から検索
               </div>
-              <div className="flex items-center gap-3 flex-1 max-w-lg">
-                <input
+              <div className="flex items-center gap-3">
+                <BaseInput
                   type="text"
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   placeholder="キーワード検索"
-                  className="flex-1 bg-white border border-[#CCCCCC] rounded-[8px] px-4 py-3 font-['Noto_Sans_JP'] text-sm text-[#323232] placeholder:text-[#999999] focus:border-[#4FC3A1] focus:outline-none"
+                  className="w-60"
+                  style={{
+                    width: '240px',
+                    padding: '4px 11px',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <button
+                <Button
                   onClick={handleSearch}
-                  className="bg-[#4FC3A1] hover:bg-[#3BA188] text-white px-8 py-3 rounded-[8px] font-medium text-sm font-['Noto_Sans_JP'] transition-colors whitespace-nowrap"
+                  variant="green-gradient"
+                  size="lg"
+                  className="whitespace-nowrap px-6 py-2 rounded-[8px]"
                 >
                   検索
-                </button>
+                </Button>
               </div>
             </div>
           </div>

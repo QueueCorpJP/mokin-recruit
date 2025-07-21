@@ -21,6 +21,13 @@ export async function GET(request: NextRequest) {
         database: await checkSupabaseConnection(),
         redis: await checkRedisConnection(),
       },
+      // Supabase環境変数の存在チェック
+      supabaseEnv: {
+        NEXT_PUBLIC_SUPABASE_URL:
+          typeof process.env.NEXT_PUBLIC_SUPABASE_URL !== 'undefined',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
+          typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'undefined',
+      },
     };
 
     return NextResponse.json(healthData, {

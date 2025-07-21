@@ -5,19 +5,19 @@ export interface BaseInputProps
   type?: React.HTMLInputTypeAttribute;
   error?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const BaseInput = forwardRef<HTMLInputElement, BaseInputProps>(
-  ({ type = 'text', error = false, className = '', ...props }, ref) => {
+  ({ type = 'text', error = false, className = '', style, ...props }, ref) => {
     return (
       <input
         ref={ref}
         type={type}
         data-slot='base-input'
         className={`
-          flex w-full min-w-0 rounded-[5px]
+          flex min-w-0 rounded-[5px]
           bg-[color:var(--input-background-color)]
-          px-[11px] py-[11px]
           text-[color:var(--input-text-color)] placeholder:text-[color:var(--input-placeholder-color)]
           font-[family-name:var(--font-noto-sans-jp)] font-medium text-[16px] leading-[2em] tracking-[0.1em]
           border border-[color:var(--input-border-color)]
@@ -27,6 +27,13 @@ export const BaseInput = forwardRef<HTMLInputElement, BaseInputProps>(
           ${error ? 'border-[color:var(--error-color)] focus:ring-[color:var(--error-color)] focus:border-[color:var(--error-color)]' : ''}
           ${className}
         `}
+        style={{
+          width: style?.width || '100%',
+          padding: style?.padding || '11px',
+          alignItems: style?.alignItems || 'center',
+          gap: style?.gap,
+          ...style
+        }}
         {...props}
       />
     );

@@ -8,6 +8,7 @@ interface LogoProps {
   height?: number;
   showText?: boolean;
   href?: string;
+  variant?: 'default' | 'white';
 }
 
 export function Logo({
@@ -16,13 +17,15 @@ export function Logo({
   height = 38,
   showText = false,
   href = '/',
+  variant = 'default',
 }: LogoProps) {
+  const logoSrc = variant === 'white' ? '/images/logo-white.png' : '/logo.png';
   const logoContent = (
     <div
       className={cn('flex items-center justify-center gap-3 h-full', className)}
     >
       <Image
-        src='/logo.png'
+        src={logoSrc}
         alt='Mokin Recruit'
         width={width}
         height={height}
