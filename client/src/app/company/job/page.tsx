@@ -144,144 +144,133 @@ export default function CompanyJobsPage() {
     <div className='w-full flex flex-col items-center justify-center'>
       <div className=' w-full'>
         <div className='bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] px-[80px] py-[40px] w-full'>
-          {/* ヘッダー部分 */}
-          <div className='flex justify-between items-center mb-8'>
-            <div className='flex items-center gap-4'>
-              {/* アイコン */}
-              <div className='w-8 h-8 flex items-center justify-center'>
-                <svg
-                  className='w-6 h-8 text-white'
-                  fill='currentColor'
-                  viewBox='0 0 25 32'
-                >
-                  <path d='M12.16 0C9.51267 0 7.258 1.66875 6.42833 4H4.05333C1.81767 4 0 5.79375 0 8V28C0 30.2062 1.81767 32 4.05333 32H20.2667C22.5023 32 24.32 30.2062 24.32 28V8C24.32 5.79375 22.5023 4 20.2667 4H17.8917C17.062 1.66875 14.8073 0 12.16 0ZM12.16 4C12.6975 4 13.213 4.21071 13.5931 4.58579C13.9731 4.96086 14.1867 5.46957 14.1867 6C14.1867 6.53043 13.9731 7.03914 13.5931 7.41421C13.213 7.78929 12.6975 8 12.16 8C11.6225 8 11.107 7.78929 10.7269 7.41421C10.3469 7.03914 10.1333 6.53043 10.1333 6C10.1333 5.46957 10.3469 4.96086 10.7269 4.58579C11.107 4.21071 11.6225 4 12.16 4ZM4.56 17C4.56 16.6022 4.72014 16.2206 5.0052 15.9393C5.29025 15.658 5.67687 15.5 6.08 15.5C6.48313 15.5 6.86975 15.658 7.1548 15.9393C7.43986 16.2206 7.6 16.6022 7.6 17C7.6 17.3978 7.43986 17.7794 7.1548 18.0607C6.86975 18.342 6.48313 18.5 6.08 18.5C5.67687 18.5 5.29025 18.342 5.0052 18.0607C4.72014 17.7794 4.56 17.3978 4.56 17ZM11.1467 16H19.2533C19.8107 16 20.2667 16.45 20.2667 17C20.2667 17.55 19.8107 18 19.2533 18H11.1467C10.5893 18 10.1333 17.55 10.1333 17C10.1333 16.45 10.5893 16 11.1467 16ZM4.56 23C4.56 22.6022 4.72014 22.2206 5.0052 21.9393C5.29025 21.658 5.67687 21.5 6.08 21.5C6.48313 21.5 6.86975 21.658 7.1548 21.9393C7.43986 22.2206 7.6 22.6022 7.6 23C7.6 23.3978 7.43986 23.7794 7.1548 24.0607C6.86975 24.342 6.48313 24.5 6.08 24.5C5.67687 24.5 5.29025 24.342 5.0052 24.0607C4.72014 23.7794 4.56 23.3978 4.56 23ZM10.1333 23C10.1333 22.45 10.5893 22 11.1467 22H19.2533C19.8107 22 20.2667 22.45 20.2667 23C20.2667 23.55 19.8107 24 19.2533 24H11.1467C10.5893 24 10.1333 23.55 10.1333 23Z' />
-                </svg>
-              </div>
-              <h1 className="text-white text-2xl font-bold font-['Noto_Sans_JP'] text-left">
-                求人一覧
-              </h1>
-            </div>
-
-            {/* 求人の期間について */}
-            <div className='flex items-center gap-2 text-white text-sm text-right'>
-              <span>1〜10件 / 1,000件</span>
-              <button className='text-white flex items-center gap-1'>
-                <span className='w-4 h-4 border border-white rounded-full flex items-center justify-center text-xs'>
-                  ?
-                </span>
-                求人の期間について
-              </button>
-            </div>
-          </div>
-
-          {/* フィルター・検索エリア */}
-          <div
-            className='bg-white rounded-[10px] px-4 py-4 mb-6 shadow-[0_2px_16px_0_rgba(44,151,109,0.10)] my-10'
-            style={{ marginLeft: '71px', marginRight: '71px' }}
-          >
-            {/* 上段：ステータス・公開範囲フィルター */}
-            <div className='flex items-start gap-7 mb-6'>
-              {/* ステータス */}
-              <div className='flex items-start gap-4'>
-                <div className="text-[#323232] font-bold text-[14px] font-['Noto_Sans_JP'] min-w-[80px] tracking-[1.6px] leading-[32px] pt-1">
-                  ステータス
-                </div>
-                <div className='flex border border-[#999999]'>
-                  {statusTabs.map((status, index) => (
-                    <button
-                      key={status}
-                      onClick={() => setSelectedStatus(status)}
-                      className={`px-4 py-1 text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
-                        index > 0 ? 'border-l border-[#999999]' : ''
-                      } ${
-                        selectedStatus === status
-                          ? 'bg-[#4FC3A1] text-white'
-                          : 'bg-transparent text-[#999999] hover:bg-gray-50'
-                      }
-                    `}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 公開範囲 */}
-              <div className='flex items-start gap-4'>
-                <div className="text-[#323232] font-bold text-[14px] font-['Noto_Sans_JP'] min-w-[80px] tracking-[1.6px] leading-[32px] pt-1">
-                  公開範囲
-                </div>
-                <div className='flex border border-[#999999]'>
-                  {[
-                    'すべて',
-                    '一般公開',
-                    '登録会員限定',
-                    'スカウト限定',
-                    '公開停止',
-                  ].map((scope, index) => (
-                    <button
-                      key={scope}
-                      onClick={() => setSelectedScope(scope)}
-                      className={`px-4 py-1 text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
-                        index > 0 ? 'border-l border-[#999999]' : ''
-                      } ${
-                        selectedScope === scope
-                          ? 'bg-[#4FC3A1] text-white'
-                          : 'bg-transparent text-[#999999] hover:bg-gray-50'
-                      }
-                    `}
-                    >
-                      {scope}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 下段：グループと検索 */}
-            <div className='flex items-center gap-12 mt-6'>
-              {/* グループフィルター */}
+          <div className='max-w-[1280px] mx-auto w-full'>
+            {/* ヘッダー部分 */}
+            <div className='flex justify-between items-center mb-8'>
               <div className='flex items-center gap-4'>
-                <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[70px] tracking-[1.6px] leading-[32px]">
-                  グループ
-                </div>
-                <SelectInput
-                  options={groupOptions}
-                  value={selectedGroup}
-                  placeholder='グループを選択'
-                  onChange={value => setSelectedGroup(value)}
-                  className='w-60'
-                />
-              </div>
-
-              {/* 検索 */}
-              <div className='flex items-center gap-4'>
-                <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] whitespace-nowrap tracking-[1.6px] leading-[32px]">
-                  求人タイトル、職種から検索
-                </div>
-                <div className='flex items-center gap-3'>
-                  <BaseInput
-                    type='text'
-                    value={searchKeyword}
-                    onChange={e => setSearchKeyword(e.target.value)}
-                    placeholder='キーワード検索'
-                    className='w-60'
-                    style={{
-                      width: '240px',
-                      padding: '4px 11px',
-                      alignItems: 'center',
-                      gap: '10px',
-                    }}
-                    onKeyPress={e => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button
-                    onClick={handleSearch}
-                    variant='green-gradient'
-                    size='lg'
-                    className='whitespace-nowrap px-6 py-2 rounded-[8px]'
+                {/* アイコン */}
+                <div className='w-8 h-8 flex items-center justify-center'>
+                  <svg
+                    className='w-6 h-8 text-white'
+                    fill='currentColor'
+                    viewBox='0 0 25 32'
                   >
-                    検索
-                  </Button>
+                    <path d='M12.16 0C9.51267 0 7.258 1.66875 6.42833 4H4.05333C1.81767 4 0 5.79375 0 8V28C0 30.2062 1.81767 32 4.05333 32H20.2667C22.5023 32 24.32 30.2062 24.32 28V8C24.32 5.79375 22.5023 4 20.2667 4H17.8917C17.062 1.66875 14.8073 0 12.16 0ZM12.16 4C12.6975 4 13.213 4.21071 13.5931 4.58579C13.9731 4.96086 14.1867 5.46957 14.1867 6C14.1867 6.53043 13.9731 7.03914 13.5931 7.41421C13.213 7.78929 12.6975 8 12.16 8C11.6225 8 11.107 7.78929 10.7269 7.41421C10.3469 7.03914 10.1333 6.53043 10.1333 6C10.1333 5.46957 10.3469 4.96086 10.7269 4.58579C11.107 4.21071 11.6225 4 12.16 4ZM4.56 17C4.56 16.6022 4.72014 16.2206 5.0052 15.9393C5.29025 15.658 5.67687 15.5 6.08 15.5C6.48313 15.5 6.86975 15.658 7.1548 15.9393C7.43986 16.2206 7.6 16.6022 7.6 17C7.6 17.3978 7.43986 17.7794 7.1548 18.0607C6.86975 18.342 6.48313 18.5 6.08 18.5C5.67687 18.5 5.29025 18.342 5.0052 18.0607C4.72014 17.7794 4.56 17.3978 4.56 17ZM11.1467 16H19.2533C19.8107 16 20.2667 16.45 20.2667 17C20.2667 17.55 19.8107 18 19.2533 18H11.1467C10.5893 18 10.1333 17.55 10.1333 17C10.1333 16.45 10.5893 16 11.1467 16ZM4.56 23C4.56 22.6022 4.72014 22.2206 5.0052 21.9393C5.29025 21.658 5.67687 21.5 6.08 21.5C6.48313 21.5 6.86975 21.658 7.1548 21.9393C7.43986 22.2206 7.6 22.6022 7.6 23C7.6 23.3978 7.43986 23.7794 7.1548 24.0607C6.86975 24.342 6.48313 24.5 6.08 24.5C5.67687 24.5 5.29025 24.342 5.0052 24.0607C4.72014 23.7794 4.56 23.3978 4.56 23ZM10.1333 23C10.1333 22.45 10.5893 22 11.1467 22H19.2533C19.8107 22 20.2667 22.45 20.2667 23C20.2667 23.55 19.8107 24 19.2533 24H11.1467C10.5893 24 10.1333 23.55 10.1333 23Z' />
+                  </svg>
+                </div>
+                <h1 className="text-white text-2xl font-bold font-['Noto_Sans_JP'] text-left">
+                  求人一覧
+                </h1>
+              </div>
+            </div>
+
+            {/* フィルター・検索エリア */}
+            <div className='bg-white rounded-[10px] p-[40px] mb-6 shadow-[0_2px_16px_0_rgba(44,151,109,0.10)]'>
+              {/* 上段：ステータス・公開範囲フィルター */}
+              <div className='flex items-start gap-7 mb-6'>
+                {/* ステータス */}
+                <div className='flex items-center gap-[16px]'>
+                  {' '}
+                  <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[90px] tracking-[1.6px] leading-[32px]">
+                    ステータス
+                  </div>
+                  <div className='flex border border-[#EFEFEF]'>
+                    {statusTabs.map((status, index) => (
+                      <button
+                        key={status}
+                        onClick={() => setSelectedStatus(status)}
+                        className={`py-[4px] px-[16px] text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                          index > 0 ? 'border-l border-[#EFEFEF]' : ''
+                        } ${
+                          selectedStatus === status
+                            ? 'bg-[#D2F1DA] text-[#0F9058]'
+                            : 'bg-transparent text-[#999999] hover:bg-gray-50'
+                        }
+                      `}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 公開範囲 */}
+                <div className='flex items-center gap-[16px]'>
+                  <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[72px] tracking-[1.6px] leading-[32px]">
+                    公開範囲
+                  </div>
+                  <div className='flex border border-[#EFEFEF]'>
+                    {[
+                      'すべて',
+                      '一般公開',
+                      '登録会員限定',
+                      'スカウト限定',
+                      '公開停止',
+                    ].map((scope, index) => (
+                      <button
+                        key={scope}
+                        onClick={() => setSelectedScope(scope)}
+                        className={`py-[4px] px-[16px] text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                          index > 0 ? 'border-l border-[#EFEFEF]' : ''
+                        } ${
+                          selectedScope === scope
+                            ? 'bg-[#D2F1DA] text-[#0F9058]'
+                            : 'bg-transparent text-[#999999] hover:bg-gray-50'
+                        }
+                      `}
+                      >
+                        {scope}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 下段：グループと検索 */}
+              <div className='flex items-center gap-12 mt-6'>
+                {/* グループフィルター */}
+                <div className='flex items-center gap-4'>
+                  <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[70px] tracking-[1.6px] leading-[32px]">
+                    グループ
+                  </div>
+                  <SelectInput
+                    options={groupOptions}
+                    value={selectedGroup}
+                    placeholder='グループを選択'
+                    onChange={value => setSelectedGroup(value)}
+                    className='w-60'
+                  />
+                </div>
+
+                {/* 検索 */}
+                <div className='flex items-center gap-4'>
+                  <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] whitespace-nowrap tracking-[1.6px] leading-[32px]">
+                    求人タイトル、職種から検索
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <BaseInput
+                      type='text'
+                      value={searchKeyword}
+                      onChange={e => setSearchKeyword(e.target.value)}
+                      placeholder='キーワード検索'
+                      className='w-60'
+                      style={{
+                        width: '240px',
+                        padding: '4px 11px',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                      onKeyPress={e => e.key === 'Enter' && handleSearch()}
+                    />
+                    <Button
+                      onClick={handleSearch}
+                      variant='green-gradient'
+                      size='lg'
+                      className='whitespace-nowrap px-6 py-2 rounded-[8px]'
+                    >
+                      検索
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

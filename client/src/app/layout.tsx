@@ -67,7 +67,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
             html { 
-              font-family: var(--font-inter), system-ui, sans-serif; 
+              font-family: var(--font-noto-sans-jp), system-ui, sans-serif; 
             }
             .font-noto-sans-jp { 
               font-family: var(--font-noto-sans-jp), sans-serif; 
@@ -76,7 +76,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body className={`antialiased`}>{children}</body>
     </html>
   );
 }
