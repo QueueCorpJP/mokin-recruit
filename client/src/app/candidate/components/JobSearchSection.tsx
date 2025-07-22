@@ -39,7 +39,7 @@ export function JobSearchSection() {
           <span className='w-[8px] h-[8px] md:h-[12px] md:w-[12px] rounded-full bg-white'></span>
         </div>
         {/* 白背景角丸ボックス */}
-        <div className='bg-white rounded-[10px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] md:p-[40px] p-[24px] w-full md:px-0 flex flex-col items-center gap-10 mt-16'>
+        <div className='bg-white rounded-[10px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] md:p-[40px] md:px-[40px] p-[24px] w-full md:w-auto md:px-0 flex flex-col items-center gap-10 mt-16'>
           {/* Figma準拠：職種・勤務地セレクト2行分＋年収 */}
           <div className='w-full flex flex-col gap-[16px]'>
             {/* 1行目：職種 */}

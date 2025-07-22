@@ -92,7 +92,7 @@ export default function AuthBypassPage() {
           if (userType === 'candidate') {
             router.push('/candidate');
           } else {
-            router.push('/company/jobs');
+            router.push('/company/job'); // 修正: jobs → job
           }
         }, 1500);
       } else {

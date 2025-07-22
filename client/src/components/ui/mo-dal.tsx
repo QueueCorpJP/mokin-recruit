@@ -12,6 +12,7 @@ export interface ModalProps {
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
   width?: string;
+  industries?: string;
   height?: string;
   overlayBgColor?: string;
   selectedCount?: number;
@@ -22,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   isOpen = true,
   onClose,
+  industries,
   children,
   primaryButtonText = "決定",
   onPrimaryAction,
@@ -68,19 +70,33 @@ export const Modal: React.FC<ModalProps> = ({
             flex: '1 1 auto'
           }}
         >
+          {
+            industries && (
+              <div className="flex items-center justify-between w-[100%]">
+                <h3 className="font-['Noto_Sans_JP'] w-[100%] text-[20px] font-bold leading-[160%] tracking-[2px] text-[#323232] border-b-2 border-[#E5E7EB] pb-2">
+                  業種カテゴリーテキスト
+                </h3>
+              </div>
+            )
+          }
           {children}
         </div>
 
         {/* Footer */}
-        <footer className="w-full flex items-center justify-center px-6 py-6 bg-white border-t border-[#E5E7EB] flex-shrink-0">
-          <div className="flex items-center justify-start">
-            {selectedCount !== undefined && totalCount !== undefined && (
-              <span className="text-[#666666] text-[14px] font-medium absolute left-100">
+        <footer className="w-full flex items-center justify-between px-6 py-6 bg-white border-t border-[#E5E7EB] flex-shrink-0">
+          {/* Left: Selection count */}
+          <div className="flex items-center">
+            {selectedCount !== undefined && totalCount !== undefined ? (
+              <span className="text-[#323232] text-[14px] font-medium">
                 {selectedCount}/{totalCount} 選択中
               </span>
+            ) : (
+              <div></div>
             )}
           </div>
-          <div className="flex justify-center gap-4">
+          
+          {/* Center: Buttons */}
+          <div className="flex justify-center gap-4 absolute left-1/2 transform -translate-x-1/2">
             {secondaryButtonText && (
               <Button 
                 variant="green-outline"
@@ -91,7 +107,6 @@ export const Modal: React.FC<ModalProps> = ({
                 {secondaryButtonText}
               </Button>
             )}
-            
             <Button 
               variant="green-gradient"
               size="figma-default"
@@ -101,6 +116,9 @@ export const Modal: React.FC<ModalProps> = ({
               {primaryButtonText}
             </Button>
           </div>
+          
+          {/* Right: Empty space for balance */}
+          <div></div>
         </footer>
       </div>
     </div>

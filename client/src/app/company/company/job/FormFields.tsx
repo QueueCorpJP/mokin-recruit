@@ -159,7 +159,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   return (
     <>
       {/* グループ */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="group">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             グループ
@@ -193,7 +193,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
       
       {/* 求人タイトル */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="title">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             求人タイトル
@@ -213,7 +213,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 写真 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="images">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
           イメージ画像
@@ -231,7 +231,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 職種 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="jobTypes">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             職種
@@ -275,7 +275,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* 業種 */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="industries">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             業種
@@ -319,7 +319,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       </div>
 
       {/* ポジション概要（業務内容＋魅力） */}
-      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2">
+      <div className="flex flex-row gap-8 items-stretch justify-start w-full mb-2" data-field="jobDescription">
         <div className="bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]">
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
             ポジション概要
@@ -390,14 +390,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
         </div>
         <div className="flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6">
           {/* 想定年収 */}
-          <div className="w-full">
+          <div className="w-full" data-field="salary">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">想定年収</label>
             <div className="flex gap-4 items-center">
               <SelectInput
                 options={salaryOptions}
                 value={salaryMin}
                 placeholder="未選択"
-                onChange={(value) => setSalaryMin(value)}
+                onChange={(value) => {
+                  setSalaryMin(value);
+                }}
                 style={{ width: '180px', color: '#323232' }}
               />
               <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</span>
@@ -405,10 +407,13 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 options={salaryOptions}
                 value={salaryMax}
                 placeholder="未選択"
-                onChange={(value) => setSalaryMax(value)}
+                onChange={(value) => {
+                  setSalaryMax(value);
+                }}
                 style={{ width: '180px', color: '#323232' }}
               />
             </div>
+            {errors.salary && <span className="text-red-500 text-sm">{errors.salary}</span>}
           </div>
           {/* 年収補足 */}
           <div className="w-full">
@@ -421,7 +426,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             />
           </div>
           {/* 勤務地 */}
-          <div className="w-full">
+          <div className="w-full" data-field="locations">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">勤務地</label>
             <div className="flex flex-col gap-2 items-start justify-start w-full">
               <div className="flex flex-row gap-6 items-center justify-start w-full">
@@ -468,7 +473,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             />
           </div>
           {/* 雇用形態 */}
-          <div className="w-full">
+          <div className="w-full" data-field="employmentType">
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">雇用形態</label>
             <div className="flex flex-col gap-2 items-start justify-center w-[400px]">
               <div className="relative w-full">
@@ -477,7 +482,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                   value={employmentType} 
                   onChange={e => setEmploymentType(e.target.value)}
                 >
-                  <option value="">正社員</option>
+                  <option value="正社員">正社員</option>
                   {employmentTypeOptions.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}

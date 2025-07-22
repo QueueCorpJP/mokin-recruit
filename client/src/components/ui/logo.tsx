@@ -4,8 +4,6 @@ import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
-  width?: number;
-  height?: number;
   showText?: boolean;
   href?: string;
   variant?: 'default' | 'white';
@@ -13,35 +11,35 @@ interface LogoProps {
 
 export function Logo({
   className,
-  width = 180,
-  height = 38,
   showText = false,
   href = '/',
   variant = 'default',
 }: LogoProps) {
-  const logoSrc = variant === 'white' ? '/images/logo-white.png' : '/logo.png';
+  const logoSrc = variant === 'white' ? '/images/logo-white.png' : '/images/logo.png';
+
   const logoContent = (
-    <div
-      className={cn('flex items-center justify-center gap-3 h-full', className)}
-    >
-      <Image
-        src={logoSrc}
-        alt='Mokin Recruit'
-        width={width}
-        height={height}
-        priority
-        className='object-contain block'
-        style={{ verticalAlign: 'middle' }}
-      />
+    <div className={cn('flex items-center gap-3', className)}>
+      <div className="relative h-[32px] md:h-[38px] aspect-[180/38]">
+  <Image
+    src={logoSrc}
+    alt="Mokin Recruit"
+    fill
+    priority
+    className="object-contain block"
+    style={{ verticalAlign: 'middle' }}
+  />
+</div>
+
+    
       {showText && (
-        <span className='text-xl font-bold text-gray-900'>Mokin Recruit</span>
+        <span className="text-xl font-bold text-gray-900">Mokin Recruit</span>
       )}
     </div>
   );
 
   if (href) {
     return (
-      <Link href={href} className='inline-flex items-center h-full'>
+      <Link href={href} className="inline-flex items-center h-full">
         {logoContent}
       </Link>
     );

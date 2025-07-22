@@ -7,7 +7,23 @@ import { X, ChevronDown, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+
 // Custom Icon Components
+
+function DownIcon({ className }: { className?: string }) {
+  return (
+    <div className={cn('relative w-[10px] h-[10px]', className)}>
+      <Image 
+        src="/images/down.svg" 
+        alt="down-icon" 
+        fill
+        className="object-contain" 
+      />
+    </div>
+  );
+}
+
 function HomeIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="18" viewBox="0 0 20 18" fill="none" className={className}>
@@ -182,14 +198,15 @@ export function Navigation({
         )}
         style={{ height: '80px' }}
       >
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='w-full mx-auto px-4 sm:px-6 lg:px-8'>
           <div
             className='flex justify-between items-center navigation-container'
             style={{ height: '80px' }}
           >
             {/* Logo */}
             <div className='flex-shrink-0 flex items-center h-full'>
-              <Logo width={180} height={38} />
+              <Logo 
+              className=' w-auto h-[32px] md:w-[180px] md:h-[32px]' />
             </div>
 
             {/* Desktop Buttons */}
@@ -229,23 +246,13 @@ export function Navigation({
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div 
-              className='lg:hidden border-t-2 border-[#E5E5E5] bg-white shadow-xl' 
-              style={{ 
-                display: 'block', 
-                position: 'relative', 
-                zIndex: 9999,
-                backgroundColor: '#ffffff',
-                minHeight: '200px',
-                border: '2px solid red' // デバッグ用
-              }}
-            >
-              <div className='px-6 py-8 space-y-4' style={{ backgroundColor: '#f0f0f0' }}>
+            <div className='lg:hidden bg-white shadow-lg border-t border-gray-100'>
+              <div className='px-6 py-6 space-y-3'>
                 {/* 会員登録ボタン（グラデーション） */}
                 <Button
                   variant='green-gradient'
                   size='lg'
-                  className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] text-white h-[56px] max-h-[56px] text-[16px] transition-all duration-200 ease-in-out hover:shadow-lg active:scale-[0.98]'
+                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] text-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out active:scale-[0.98]'
                   asChild
                 >
                   <Link href='/candidate/auth/register' onClick={() => setIsMenuOpen(false)}>
@@ -255,29 +262,15 @@ export function Navigation({
                 
                 {/* ログインボタン（アウトライン） */}
                 <Button
-                  variant='green-outline'
+                  variant='outline'
                   size='lg'
-                  className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] h-[56px] max-h-[56px] text-[16px] border-2 border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F3FBF7] transition-all duration-200 ease-in-out active:scale-[0.98]'
+                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] border-2 border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F8FDF9] transition-all duration-200 ease-in-out active:scale-[0.98]'
                   asChild
                 >
                   <Link href='/candidate/auth/login' onClick={() => setIsMenuOpen(false)}>
                     ログイン
                   </Link>
                 </Button>
-                
-                {/* 区切り線 */}
-                <div className='w-full h-px bg-[#E5E5E5] my-6'></div>
-                
-                {/* 追加のリンク（必要に応じて） */}
-                <div className='text-center'>
-                  <Link 
-                    href='/candidate' 
-                    className='text-[#666666] text-[14px] font-medium hover:text-[#0F9058] transition-colors duration-200'
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    候補者向けサービスについて
-                  </Link>
-                </div>
               </div>
             </div>
           )}
@@ -351,7 +344,7 @@ export function Navigation({
           <div className='flex items-center h-[80px] w-full px-[40px] justify-between w-full'>
             {/* ロゴ：左端に配置 */}
             <div className='flex-shrink-0'>
-              <Logo width={180} height={38} />
+              <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
             </div>
 
             {/* メニュー項目とアカウント情報を同一グループとして扱う */}
@@ -372,7 +365,7 @@ export function Navigation({
                         >
                           <item.icon className='w-5 h-5' />
                           <span>{item.label}</span>
-                          <ChevronDown className='w-4 h-4 ml-0.5' />
+                          <DownIcon className='ml-1' />
                         </button>
                         {/* ドロップダウンメニュー */}
                         {openDropdown === item.label && (
@@ -423,7 +416,7 @@ export function Navigation({
                     <span className='max-w-[160px] truncate'>
                       {userInfo?.companyName || 'ユーザー名'}
                     </span>
-                    <ChevronDown className='w-4 h-4' />
+                    <DownIcon className='ml-1' />
                   </button>
                   {/* アカウントドロップダウン */}
                   {openDropdown === 'account' && (
@@ -497,7 +490,7 @@ export function Navigation({
         >
           {/* Logo */}
           <div className='flex-shrink-0 flex items-center h-full'>
-            <Logo width={180} height={38} />
+            <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
           </div>
 
           {/* Desktop Auth Buttons */}

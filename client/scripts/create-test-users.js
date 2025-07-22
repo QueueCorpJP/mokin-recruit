@@ -8,7 +8,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 // UUID生成関数
 function generateUUID() {
@@ -58,6 +58,17 @@ const testUsers = [
       fullName: '田中花子',
       companyAccountId: generateUUID(), // UUID生成
       positionTitle: '人事マネージャー',
+    },
+  },
+  // 追加: 須田悠人さんのテスト用company_userアカウント
+  {
+    email: 'yuto.suda1024@gmail.com',
+    password: 'TestPassword123!',
+    userType: 'company_user',
+    profile: {
+      fullName: '須田悠人',
+      companyAccountId: generateUUID(), // UUID生成
+      positionTitle: 'テスト担当者',
     },
   },
 ];

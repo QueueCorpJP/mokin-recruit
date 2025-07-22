@@ -1,7 +1,6 @@
 "use client"
 import { Navigation } from '@/components/ui/navigation';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 const ProfileIcon = () => (
   <svg
@@ -42,21 +41,6 @@ const ProfileIcon = () => (
 
 
 export function HeroSection() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-
-    return () => {
-      window.removeEventListener('resize', checkIfMobile);
-    };
-  }, []);
-
   return (
     <div className="relative w-full">
       {/* Header */}
@@ -65,12 +49,15 @@ export function HeroSection() {
       </div>
       {/* Hero Section */}
       <div className="relative w-full h-auto">
-        <div className="w-[100%] h-auto flex block mx-auto">
-          <img 
-            src={isMobile ? "/image.png" : "/top.png"} 
-            alt="hero" 
-            className="w-full h-auto object-cover"
-          />
+        <div className="w-[100%] h-auto flex block mx-auto justify-center">
+          <picture>
+            <source media="(max-width: 768px)" srcSet="/image.png" />
+            <img 
+              src="/top.png" 
+              alt="hero" 
+              className="w-full h-auto object-cover"
+            />
+          </picture>
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-[24px] text-center">
@@ -95,10 +82,10 @@ export function HeroSection() {
 >
   どんな企業を受け、どんな選択に迷っているのか。
   {/* <br /> */}
-  <span className="inline md:hidden"> </span>
-  <span className="hidden md:inline"><br /></span>
+  {/* <span className="block md:hidden"> </span> */}
+  <span className="hidden md:block"> </span>
   あなたの&quot;今&quot;に、
-  <span className="md:hidden inline"><br /></span>
+  <span className="md:hidden block"> </span>
   戦略的なスカウトを届けます。
 </p>
 </div>

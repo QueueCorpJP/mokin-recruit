@@ -151,6 +151,79 @@ async function fixTestUsers() {
   }
 }
 
+// 追加: yuto.suda1024@gmail.com の初期化
+(async () => {
+  const email = 'yuto.suda1024@gmail.com';
+  const newPassword = 'TestPassword2024!';
+  const fullName = '須田悠人';
+  const positionTitle = 'テスト担当者';
+  const companyAccountId = crypto.randomUUID();
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+  // Supabase Authユーザー取得
+  const { data: userData, error: userError } =
+    await supabaseAdmin.auth.admin.listUsers();
+  if (userError) {
+    console.error('❌ ユーザー一覧取得エラー:', userError.message);
+    return;
+  }
+  const user = userData.users.find(u => u.email === email);
+  if (!user) {
+    console.error('❌ 指定メールのユーザーが見つかりません:', email);
+    return;
+  }
+
+  // 企業アカウント再作成
+  const { error: companyError } = await supabaseAdmin
+    .from('company_accounts')
+    .upsert(
+      {
+        id: companyAccountId,
+        company_name: 'テスト企業株式会社',
+        headquarters_address: '東京都千代田区丸の内1-1-1',
+        representative_name: '代表取締役 テスト太郎',
+        industry: 'IT・通信',
+        company_overview: 'テスト用の企業アカウントです',
+        appeal_points: '優秀な人材を募集中',
+        status: 'ACTIVE',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' }
+    );
+  if (companyError) {
+    console.error('❌ 企業アカウント作成エラー:', companyError.message);
+    return;
+  }
+
+  // company_usersを初期化
+  const { error: companyUserError } = await supabaseAdmin
+    .from('company_users')
+    .upsert(
+      {
+        id: user.id,
+        company_account_id: companyAccountId,
+        email: email,
+        password_hash: hashedPassword,
+        full_name: fullName,
+        position_title: positionTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' }
+    );
+  if (companyUserError) {
+    console.error(
+      '❌ 企業ユーザーデータ初期化エラー:',
+      companyUserError.message
+    );
+    return;
+  }
+  console.log(
+    '✅ yuto.suda1024@gmail.com のアカウント初期化・パスワードリセット完了'
+  );
+})();
+
 // スクリプト実行
 fixTestUsers().catch(error => {
   console.error('❌ スクリプト実行エラー:', error);

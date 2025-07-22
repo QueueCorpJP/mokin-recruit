@@ -66,7 +66,7 @@ role-based separation and preventing URL conflicts.
 - `/company/dashboard` - Company dashboard (was `/mypage`)
 - `/company/profile` - Company profile management
 - `/company/search` - Candidate search interface
-- `/company/jobs` - Job posting management
+- `/company/job` - Job posting management
 - `/company/applications` - Application management
 - `/company/messages` - Message center
 - `/company/analytics` - Recruitment analytics
