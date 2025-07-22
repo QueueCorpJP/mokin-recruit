@@ -55,23 +55,41 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     console.log('Request body received:', body);
-    // job_postingsテーブルのカラムに完全準拠
+    // フォームからのすべての項目を受け取る
     const {
-      company_group_id: bodyCompanyGroupId, // リクエストボディからのcompany_group_id（もしあれば）
+      company_group_id: bodyCompanyGroupId,
       title,
       job_description,
+      position_summary,
       required_skills,
       preferred_skills,
       salary_min,
       salary_max,
+      salary_note,
       employment_type,
       work_location,
+      work_locations,
+      location_note,
+      employment_type_note,
+      working_hours,
+      overtime_info,
+      holidays,
       remote_work_available,
       job_type,
+      job_types,
       industry,
+      industries,
+      selection_process,
+      appeal_points,
+      smoking_policy,
+      smoking_policy_note,
+      required_documents,
+      internal_memo,
+      publication_type,
       status,
       application_deadline,
       published_at,
+      images, // Base64エンコードされた画像データの配列
     } = body;
 
     // 雇用形態の日本語→英語マッピング
@@ -118,24 +136,94 @@ export async function POST(request: NextRequest) {
       console.log('Using actualUserId as fallback:', finalCompanyGroupId);
     }
     
+    // 画像をSupabase Storageにアップロード
+    let imageUrls: string[] = [];
+    if (images && Array.isArray(images) && images.length > 0) {
+      console.log('Processing images:', images.length);
+      
+      try {
+        const uploadPromises = images.map(async (imageData: any, index: number) => {
+          // Base64データから実際のファイルデータを抽出
+          const { data: base64Data, contentType } = imageData;
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          // ファイル名を生成（一意性を保つため）
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 15);
+          const fileExtension = contentType.includes('jpeg') ? 'jpg' : contentType.split('/')[1];
+          const fileName = `job-${finalCompanyGroupId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
+          
+          console.log('Uploading image:', fileName);
+          
+          // Supabase Storageにアップロード
+          const { data, error } = await supabase.storage
+            .from('job-images')
+            .upload(fileName, buffer, {
+              contentType: contentType,
+              upsert: false
+            });
+          
+          if (error) {
+            console.error('Image upload error:', error);
+            throw new Error(`画像のアップロードに失敗しました: ${error.message}`);
+          }
+          
+          // パブリックURLを取得
+          const { data: urlData } = supabase.storage
+            .from('job-images')
+            .getPublicUrl(fileName);
+          
+          console.log('Image uploaded successfully:', urlData.publicUrl);
+          return urlData.publicUrl;
+        });
+        
+        imageUrls = await Promise.all(uploadPromises);
+        console.log('All images uploaded:', imageUrls);
+        
+      } catch (error) {
+        console.error('Image upload process failed:', error);
+        return NextResponse.json({ 
+          success: false, 
+          error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
+        }, { status: 500 });
+      }
+    }
+    
     const insertData = {
-      company_account_id: userCompanyAccountId, // 重要: company_account_idを追加
-      company_group_id: finalCompanyGroupId, // 検証済みのcompany_user_idを使用
+      company_account_id: userCompanyAccountId,
+      company_group_id: finalCompanyGroupId,
       title: title || '未設定',
       job_description: job_description || '未設定',
+      position_summary: position_summary || null,
       required_skills: Array.isArray(required_skills) ? required_skills : (required_skills ? [required_skills] : []),
       preferred_skills: Array.isArray(preferred_skills) ? preferred_skills : (preferred_skills ? [preferred_skills] : []),
       salary_min: salary_min !== undefined ? Number(salary_min) : null,
       salary_max: salary_max !== undefined ? Number(salary_max) : null,
+      salary_note: salary_note || null,
       employment_type: mappedEmploymentType,
       work_location: work_location || '未設定',
+      work_locations: Array.isArray(work_locations) ? work_locations : (work_locations ? [work_locations] : []),
+      location_note: location_note || null,
+      employment_type_note: employment_type_note || null,
+      working_hours: working_hours || null,
+      overtime_info: overtime_info || null,
+      holidays: holidays || null,
       remote_work_available: remote_work_available === true || remote_work_available === 'true',
       job_type: job_type || '未設定',
+      job_types: Array.isArray(job_types) ? job_types : (job_types ? [job_types] : []),
       industry: industry || '未設定',
+      industries: Array.isArray(industries) ? industries : (industries ? [industries] : []),
+      selection_process: selection_process || null,
+      appeal_points: Array.isArray(appeal_points) ? appeal_points : [],
+      smoking_policy: smoking_policy || null,
+      smoking_policy_note: smoking_policy_note || null,
+      required_documents: Array.isArray(required_documents) ? required_documents : [],
+      internal_memo: internal_memo || null,
+      publication_type: publication_type || 'public',
+      image_urls: imageUrls,
       status: status || 'DRAFT',
       application_deadline: application_deadline || null,
       published_at: published_at || null,
-      // created_at, updated_atはDB側で自動
     };
     
     console.log('Data to insert into Supabase:', insertData);

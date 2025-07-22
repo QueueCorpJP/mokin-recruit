@@ -34,11 +34,11 @@ export default function JobNewPage() {
   const [employmentType, setEmploymentType] = useState('正社員');
   const [employmentTypeNote, setEmploymentTypeNote] = useState('');
   const [workingHours, setWorkingHours] = useState('');
-  const [overtime, setOvertime] = useState('');
+  const [overtime, setOvertime] = useState('あり');
   const [holidays, setHolidays] = useState('');
   const [selectionProcess, setSelectionProcess] = useState('');
   const [appealPoints, setAppealPoints] = useState<string[]>([]);
-  const [smoke, setSmoke] = useState('');
+  const [smoke, setSmoke] = useState('屋内禁煙');
   const [smokeNote, setSmokeNote] = useState('');
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
   const [memo, setMemo] = useState('');
@@ -276,21 +276,80 @@ export default function JobNewPage() {
     setShowErrors(false);
   };
 
+  // 画像をBase64エンコードする関数
+  const encodeImagesToBase64 = async (files: File[]): Promise<any[]> => {
+    const encodedImages: any[] = [];
+    
+    for (const file of files) {
+      await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          // data:image/jpeg;base64, の部分を除去してBase64データのみ抽出
+          const base64Data = result.split(',')[1];
+          
+          encodedImages.push({
+            data: base64Data,
+            contentType: file.type,
+            fileName: file.name,
+            size: file.size
+          });
+          resolve(void 0);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    return encodedImages;
+  };
+
   // 送信処理
   const handleSubmit = async () => {
+    // 画像をBase64エンコード
+    console.log('Encoding images:', images.length);
+    let encodedImages: any[] = [];
+    if (images.length > 0) {
+      try {
+        encodedImages = await encodeImagesToBase64(images);
+        console.log('Images encoded successfully:', encodedImages.length);
+      } catch (error) {
+        console.error('Image encoding failed:', error);
+        alert('画像の処理に失敗しました');
+        return;
+      }
+    }
+
     const data = {
       company_group_id: group,
       title: title || '未設定',
-      job_type: jobTypes[0] || '未設定',
-      industry: industries[0] || '未設定', 
       job_description: jobDescription || '未設定',
+      position_summary: positionSummary || null,
       required_skills: skills || '',
       preferred_skills: otherRequirements || '',
       salary_min: salaryMin ? parseInt(salaryMin) : null,
       salary_max: salaryMax ? parseInt(salaryMax) : null,
+      salary_note: salaryNote || null,
       employment_type: employmentType || '未設定',
+      employment_type_note: employmentTypeNote || null,
       work_location: locations[0] || '未設定',
+      work_locations: locations || [],
+      location_note: locationNote || null,
+      working_hours: workingHours || null,
+      overtime_info: overtime || null,
+      holidays: holidays || null,
       remote_work_available: false,
+      job_type: jobTypes[0] || '未設定',
+      job_types: jobTypes || [],
+      industry: industries[0] || '未設定', 
+      industries: industries || [],
+      selection_process: selectionProcess || null,
+      appeal_points: appealPoints || [],
+      smoking_policy: smoke || null,
+      smoking_policy_note: smokeNote || null,
+      required_documents: resumeRequired || [],
+      internal_memo: memo || null,
+      publication_type: publicationType || 'public',
+      images: encodedImages,
       status: 'DRAFT',
       application_deadline: null,
       published_at: null
