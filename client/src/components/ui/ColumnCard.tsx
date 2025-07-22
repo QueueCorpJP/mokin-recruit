@@ -13,9 +13,14 @@ export const ColumnCard: React.FC<ColumnCardProps> = ({
   categories,
 }) => {
   return (
-    <div className='bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col md:w-[373px]  md:h-[471px]  w-auto h-auto'>
-      <div className='relative w-full aspect-[373/249]'>
-        <Image src={imageUrl} alt={title} fill className='object-cover' />
+    <div className='bg-white hover:bg-[#F9F9F9] rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col md:w-[373px]  md:h-[471px]  w-auto h-auto transition-colors duration-200 group'>
+      <div className='relative w-full aspect-[373/249] overflow-hidden'>
+        <Image
+          src={imageUrl}
+          alt={title}
+          fill
+          className='object-cover transition-transform duration-300 group-hover:scale-110'
+        />
       </div>
       <div className='p-6 flex flex-col gap-4 flex-1'>
         <h3

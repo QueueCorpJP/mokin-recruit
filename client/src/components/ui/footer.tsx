@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import Link from 'next/link';
 import { Logo } from './logo';
@@ -16,20 +16,15 @@ export function Footer({ variant = 'default' }: FooterProps) {
       title: 'サービス',
       items: [
         'メッセージ',
-        '候補者を探す',
-        '保存した検索条件',
-        '進捗管理',
+        'メディア',
+        '求人を探す',
+        'お気に入り求人',
         'お知らせ一覧',
       ],
     },
     support: {
       title: 'お問い合わせ',
-      items: [
-        '問い合わせ',
-        'ご利用ガイド',
-        'よくある質問',
-        '不具合・要望フォーム',
-      ],
+      items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
     },
     company: {
       title: '会社情報・規約',
@@ -56,7 +51,10 @@ export function Footer({ variant = 'default' }: FooterProps) {
             {/* ロゴとキャッチフレーズ */}
             <div className='flex flex-col gap-6'>
               <div className='w-[180px]'>
-                <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' variant='white' />
+                <Logo
+                  className='w-[32px] h-auto md:w-[180px] md:h-[32px]'
+                  variant='white'
+                />
               </div>
               <p
                 className='text-white font-bold'
@@ -124,36 +122,40 @@ export function Footer({ variant = 'default' }: FooterProps) {
           <div className='w-[100%] lg:w-[800px] flex flex-col md:flex-row gap-6 md:gap-10'>
             {/* サービスメニュー */}
             <div className='md:w-[240px] w-[100%]'>
-            <button   onClick={() => setServiceOpen(!serviceOpen)} className='w-[100%]'>
-
-              <div className='flex flex-row items-center justify-between md:block'>
-                <h3
-                  className='text-white font-bold mb-4'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '18px',
-                    lineHeight: '160%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  {menuData.service.title}
-                </h3>
-                <div className='md:hidden block'>
-                  <Open 
-                    width={12} 
-                    height={12} 
-                    fill='#FFF' 
-                    rotate={serviceOpen ? 180 : 0} 
-                    onClick={() => setServiceOpen(!serviceOpen)}
-                  />
+              <button
+                onClick={() => setServiceOpen(!serviceOpen)}
+                className='w-[100%]'
+              >
+                <div className='flex flex-row items-center justify-between md:block'>
+                  <h3
+                    className='text-white font-bold mb-4 text-left'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '18px',
+                      lineHeight: '160%',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {menuData.service.title}
+                  </h3>
+                  <div className='md:hidden block'>
+                    <Open
+                      width={12}
+                      height={12}
+                      fill='#FFF'
+                      rotate={serviceOpen ? 180 : 0}
+                      onClick={() => setServiceOpen(!serviceOpen)}
+                    />
+                  </div>
                 </div>
-              </div>
               </button>
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
-              <div 
+              <div
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  serviceOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                  serviceOpen
+                    ? 'max-h-[500px] opacity-100'
+                    : 'max-h-0 opacity-0'
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>
@@ -180,37 +182,43 @@ export function Footer({ variant = 'default' }: FooterProps) {
 
             {/* お問い合わせメニュー */}
             <div className='md:w-[240px] w-[100%]'>
-            <button   onClick={() => setSupportOpen(!supportOpen)} className='w-[100%]'>
-
-              <div className='flex flex-row items-center justify-between md:block'                    onClick={() => setSupportOpen(!supportOpen)}
+              <button
+                onClick={() => setSupportOpen(!supportOpen)}
+                className='w-[100%]'
               >
-                <h3
-                  className='text-white font-bold mb-4'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '18px',
-                    lineHeight: '160%',
-                    letterSpacing: '0.1em',
-                  }}
+                <div
+                  className='flex flex-row items-center justify-between md:block'
+                  onClick={() => setSupportOpen(!supportOpen)}
                 >
-                  {menuData.support.title}
-                </h3>
-                <div className='md:hidden block'>
-                  <Open 
-                    width={12} 
-                    height={12} 
-                    fill='#FFF' 
-                    rotate={supportOpen ? 180 : 0} 
-                  />
+                  <h3
+                    className='text-white font-bold mb-4 text-left'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '18px',
+                      lineHeight: '160%',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {menuData.support.title}
+                  </h3>
+                  <div className='md:hidden block'>
+                    <Open
+                      width={12}
+                      height={12}
+                      fill='#FFF'
+                      rotate={supportOpen ? 180 : 0}
+                    />
+                  </div>
                 </div>
-              </div>
-           </button>
+              </button>
 
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
-              <div 
+              <div
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  supportOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                  supportOpen
+                    ? 'max-h-[500px] opacity-100'
+                    : 'max-h-0 opacity-0'
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>
@@ -237,37 +245,41 @@ export function Footer({ variant = 'default' }: FooterProps) {
 
             {/* 会社情報・規約メニュー */}
             <div className='md:w-[240px] w-[100%]'>
-            <button   onClick={() => setCompanyOpen(!companyOpen)} className='w-[100%]'>
-              <div className='flex flex-row items-center justify-between md:block'>
-
-                <h3
-                  className='text-white font-bold mb-4'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '18px',
-                    lineHeight: '160%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  {menuData.company.title}
-                </h3>
-                <div className='md:hidden block'>
-                  <Open 
-                    width={12} 
-                    height={12} 
-                    fill='#FFF' 
-                    rotate={companyOpen ? 180 : 0} 
-                    onClick={() => setCompanyOpen(!companyOpen)}
-                  />
+              <button
+                onClick={() => setCompanyOpen(!companyOpen)}
+                className='w-[100%]'
+              >
+                <div className='flex flex-row items-center justify-between md:block'>
+                  <h3
+                    className='text-white font-bold mb-4 text-left'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '18px',
+                      lineHeight: '160%',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {menuData.company.title}
+                  </h3>
+                  <div className='md:hidden block'>
+                    <Open
+                      width={12}
+                      height={12}
+                      fill='#FFF'
+                      rotate={companyOpen ? 180 : 0}
+                      onClick={() => setCompanyOpen(!companyOpen)}
+                    />
+                  </div>
                 </div>
-              </div>
               </button>
 
               <div className='border-t border-white mb-2 w-full md:w-auto'></div>
-              <div 
+              <div
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  companyOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                  companyOpen
+                    ? 'max-h-[500px] opacity-100'
+                    : 'max-h-0 opacity-0'
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>

@@ -69,7 +69,7 @@ export function ColumnSection() {
 
         {/* 他のコラムも見るボタン */}
         <div className='mt-14'>
-          <button className='border border-[#0f9058] rounded-[32px] px-10 py-3.5 min-w-40'>
+          <button className='border border-[#0f9058] rounded-[32px] px-10 py-3.5 min-w-40 transition-colors duration-200 hover:bg-[#0F9058]/20'>
             <span className='text-[#0f9058] font-bold text-[16px] leading-[2] tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)]'>
               他のコラムも見る
             </span>
