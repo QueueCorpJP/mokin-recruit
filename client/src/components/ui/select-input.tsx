@@ -24,18 +24,23 @@ interface SelectInputProps {
 }
 
 // カスタムドロップダウンアイコンコンポーネント
-const DropdownIcon = ({ className, isOpen, error, disabled }: { 
-  className?: string; 
-  isOpen: boolean; 
-  error: boolean; 
-  disabled: boolean; 
+const DropdownIcon = ({
+  className,
+  isOpen,
+  error,
+  disabled,
+}: {
+  className?: string;
+  isOpen: boolean;
+  error: boolean;
+  disabled: boolean;
 }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="14" 
-    height="10" 
-    viewBox="0 0 14 10" 
-    fill="none"
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='14'
+    height='10'
+    viewBox='0 0 14 10'
+    fill='none'
     className={cn(
       'transition-transform duration-200',
       isOpen && 'rotate-180',
@@ -44,11 +49,11 @@ const DropdownIcon = ({ className, isOpen, error, disabled }: {
     style={{
       width: '14px',
       height: '9.333px',
-      aspectRatio: '14.00/9.33'
+      aspectRatio: '14.00/9.33',
     }}
   >
-    <path 
-      d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z" 
+    <path
+      d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
       fill={error ? '#F56C6C' : disabled ? '#999999' : '#0F9058'}
     />
   </svg>
@@ -79,7 +84,10 @@ export function SelectInput({
   // 外部クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         onBlur?.();
       }
@@ -97,7 +105,7 @@ export function SelectInput({
   // 選択処理
   const handleSelect = (optionValue: string) => {
     if (disabled) return;
-    
+
     const selectedOption = options.find(opt => opt.value === optionValue);
     if (selectedOption?.disabled) return;
 
@@ -133,7 +141,9 @@ export function SelectInput({
           setIsOpen(true);
         } else {
           // フォーカスを次の選択肢に移動
-          const currentIndex = options.findIndex(opt => opt.value === selectedValue);
+          const currentIndex = options.findIndex(
+            opt => opt.value === selectedValue
+          );
           const nextIndex = Math.min(currentIndex + 1, options.length - 1);
           if (nextIndex !== currentIndex) {
             handleSelect(options[nextIndex].value);
@@ -143,7 +153,9 @@ export function SelectInput({
       case 'ArrowUp':
         event.preventDefault();
         if (isOpen) {
-          const currentIndex = options.findIndex(opt => opt.value === selectedValue);
+          const currentIndex = options.findIndex(
+            opt => opt.value === selectedValue
+          );
           const prevIndex = Math.max(currentIndex - 1, 0);
           if (prevIndex !== currentIndex) {
             handleSelect(options[prevIndex].value);
@@ -154,10 +166,14 @@ export function SelectInput({
   };
 
   return (
-    <div className={cn('relative', className)} ref={selectRef} data-testid={testId}>
+    <div
+      className={cn('relative', className)}
+      ref={selectRef}
+      data-testid={testId}
+    >
       {/* セレクトボタン */}
       <button
-        type="button"
+        type='button'
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         disabled={disabled}
@@ -167,26 +183,28 @@ export function SelectInput({
           'bg-white border border-[#999999] rounded-[8px] text-left',
           'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
-          
+
           // 状態別スタイル
-          !disabled && !error && [
-            'hover:border-[#4FC3A1] hover:shadow-[0_0_0_2px_rgba(79,195,161,0.1)]',
-            'focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] focus:outline-none',
-            isOpen && 'border-[#4FC3A1] shadow-[0_0_0_2px_rgba(79,195,161,0.2)]'
-          ],
-          
+          !disabled &&
+            !error && [
+              'hover:border-[#4FC3A1] hover:shadow-[0_0_0_2px_rgba(79,195,161,0.1)]',
+              'focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] focus:outline-none',
+              isOpen &&
+                'border-[#4FC3A1] shadow-[0_0_0_2px_rgba(79,195,161,0.2)]',
+            ],
+
           // エラー状態
           error && [
             'border-[#F56C6C] text-[#F56C6C]',
             'hover:border-[#F56C6C] focus:border-[#F56C6C]',
-            'focus:shadow-[0_0_0_2px_rgba(245,108,108,0.2)]'
+            'focus:shadow-[0_0_0_2px_rgba(245,108,108,0.2)]',
           ],
-          
+
           // 無効状態
           disabled && [
-            'bg-[#F5F5F5] border-[#E0E0E0] text-[#999999] cursor-not-allowed'
+            'bg-[#F5F5F5] border-[#E0E0E0] text-[#999999] cursor-not-allowed',
           ],
-          
+
           // テキスト色
           selectedValue ? 'text-[#323232]' : 'text-[#999999]'
         )}
@@ -195,19 +213,21 @@ export function SelectInput({
           padding: '4px 16px 4px 11px',
           alignItems: 'center',
           gap: '16px',
-          ...style
+          ...style,
         }}
         aria-expanded={isOpen}
-        aria-haspopup="listbox"
+        aria-haspopup='listbox'
         aria-label={placeholder}
       >
-        <span className="truncate">
+        <span
+          className={cn('truncate', displayText === 'すべて' && 'text-[14px]')}
+        >
           {displayText}
         </span>
-        
+
         {/* カスタムドロップダウンアイコン */}
-        <DropdownIcon 
-          className="ml-2"
+        <DropdownIcon
+          className='ml-2'
           isOpen={isOpen}
           error={error}
           disabled={disabled}
@@ -226,10 +246,10 @@ export function SelectInput({
             'max-h-60 overflow-y-auto',
             'py-1'
           )}
-          role="listbox"
-          aria-label="選択肢"
+          role='listbox'
+          aria-label='選択肢'
         >
-          {options.map((option) => (
+          {options.map(option => (
             <li
               key={option.value}
               onClick={() => handleSelect(option.value)}
@@ -238,27 +258,24 @@ export function SelectInput({
                 'px-4 py-3 cursor-pointer',
                 'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
                 'transition-colors duration-150',
-                
+
                 // 状態別スタイル
-                option.disabled ? [
-                  'text-[#CCCCCC] cursor-not-allowed bg-[#F9F9F9]'
-                ] : [
-                  'text-[#323232] hover:bg-[#F0F9F2] hover:text-[#0F9058]'
-                ],
-                
+                option.disabled
+                  ? ['text-[#CCCCCC] cursor-not-allowed bg-[#F9F9F9]']
+                  : ['text-[#323232] hover:bg-[#F0F9F2] hover:text-[#0F9058]'],
+
                 // 選択済み
-                option.value === selectedValue && !option.disabled && [
-                  'bg-[#E8F5E8] text-[#0F9058] font-bold'
-                ]
+                option.value === selectedValue &&
+                  !option.disabled && ['bg-[#E8F5E8] text-[#0F9058] font-bold']
               )}
-              role="option"
+              role='option'
               aria-selected={option.value === selectedValue}
               aria-disabled={option.disabled}
             >
               {option.label}
             </li>
           ))}
-          
+
           {/* 選択肢が空の場合 */}
           {options.length === 0 && (
             <li className="px-4 py-3 text-[#999999] font-['Noto_Sans_JP'] text-[16px] font-bold leading-[32px] tracking-[1.6px]">
@@ -276,4 +293,4 @@ export function SelectInput({
       )}
     </div>
   );
-} 
+}
