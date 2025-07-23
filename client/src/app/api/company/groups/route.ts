@@ -75,11 +75,12 @@ export async function GET(request: NextRequest) {
       console.log('📧 Email lookup successful');
     }
 
-    // 現在の制約に合わせて、同じ会社アカウントに属するユーザーを"グループ"として返す
+    // データベース制約に合わせて、company_usersを"グループ"として取得
     const { data: users, error: usersError } = await supabase
       .from('company_users')
       .select('id, full_name, position_title')
-      .eq('company_account_id', userData.company_account_id);
+      .eq('company_account_id', userData.company_account_id)
+      .order('full_name');
     
     if (usersError) {
       console.error('Failed to fetch company users:', usersError);

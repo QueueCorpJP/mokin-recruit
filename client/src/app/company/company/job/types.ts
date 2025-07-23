@@ -23,12 +23,6 @@ export const regions: Region[] = [
 
 // 年収の選択肢
 export const salaryOptions = [
-  { value: '200', label: '200万円' },
-  { value: '250', label: '250万円' },
-  { value: '300', label: '300万円' },
-  { value: '350', label: '350万円' },
-  { value: '400', label: '400万円' },
-  { value: '450', label: '450万円' },
   { value: '500', label: '500万円' },
   { value: '550', label: '550万円' },
   { value: '600', label: '600万円' },
@@ -40,16 +34,6 @@ export const salaryOptions = [
   { value: '900', label: '900万円' },
   { value: '950', label: '950万円' },
   { value: '1000', label: '1000万円' },
-  { value: '1100', label: '1100万円' },
-  { value: '1200', label: '1200万円' },
-  { value: '1300', label: '1300万円' },
-  { value: '1400', label: '1400万円' },
-  { value: '1500', label: '1500万円' },
-  { value: '1600', label: '1600万円' },
-  { value: '1700', label: '1700万円' },
-  { value: '1800', label: '1800万円' },
-  { value: '1900', label: '1900万円' },
-  { value: '2000', label: '2000万円' },
 ];
 
 // 職種カテゴリーの定義

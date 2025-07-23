@@ -27,6 +27,8 @@ interface JobPosting {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  publicationType: string;
+  internalMemo: string;
 }
 
 // ステータス表示用のマッピング
@@ -55,6 +57,7 @@ export default function CompanyJobsPage() {
   const [selectedScope, setSelectedScope] = useState('すべて');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [groups, setGroups] = useState<{id: string; group_name: string; description: string}[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(jobs.length / itemsPerPage);
@@ -65,14 +68,40 @@ export default function CompanyJobsPage() {
 
   const statusTabs = ['すべて', '下書き', '掲載待ち（承認待ち）', '掲載済'];
 
-  // グループ選択肢の定義
+  // グループ選択肢を動的に生成
   const groupOptions = [
     { value: 'すべて', label: 'すべて' },
-    { value: 'グループA', label: 'グループA' },
-    { value: 'グループB', label: 'グループB' },
-    { value: 'グループC', label: 'グループC' },
-    { value: 'グループD', label: 'グループD' },
+    ...groups.map(group => ({
+      value: group.id,
+      label: group.group_name
+    }))
   ];
+
+  // グループデータを取得
+  const fetchGroups = async () => {
+    try {
+      const authHeaders = getAuthHeaders();
+
+      if (!authHeaders.Authorization) {
+        console.error('認証トークンが見つかりません');
+        return;
+      }
+
+      const response = await fetch('/api/company/groups', {
+        headers: authHeaders,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setGroups(result.data || []);
+      } else {
+        console.error('グループ情報の取得に失敗しました:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
 
   // 求人データを取得
   const fetchJobs = async () => {
@@ -114,6 +143,7 @@ export default function CompanyJobsPage() {
 
   // 初回ロード
   useEffect(() => {
+    fetchGroups();
     fetchJobs();
   }, []);
 
@@ -226,13 +256,13 @@ export default function CompanyJobsPage() {
                     公開範囲
                   </div>
                   <div className='flex border border-[#EFEFEF]'>
-                    {[
-                      'すべて',
-                      '一般公開',
-                      '登録会員限定',
-                      'スカウト限定',
-                      '公開停止',
-                    ].map((scope, index) => (
+                                    {[
+                  'すべて',
+                  '一般公開',
+                  '登録会員限定',
+                  'スカウト限定',
+                  '公開停止',
+                ].map((scope, index) => (
                       <button
                         key={scope}
                         onClick={() => setSelectedScope(scope)}
@@ -292,7 +322,7 @@ export default function CompanyJobsPage() {
                       onClick={handleSearch}
                       variant='green-gradient'
                       size='lg'
-                      className='whitespace-nowrap px-6 py-2 rounded-[8px]'
+                      className='whitespace-nowrap px-6 py-3 rounded-full'
                     >
                       検索
                     </Button>
@@ -415,7 +445,7 @@ export default function CompanyJobsPage() {
                                 'linear-gradient(90deg, #65BDAC 0%, #86C36A 100%)',
                             }}
                           >
-                            {job.groupName || 'グループ名テスト'}
+                            {job.groupName || 'ユーザー'}
                           </div>
                         </div>
 
@@ -517,7 +547,10 @@ export default function CompanyJobsPage() {
                                 maxWidth: '100%',
                               }}
                             >
-                              公開範囲
+                              {job.status === 'CLOSED' ? '公開停止' :
+                               job.publicationType === 'public' ? '一般公開' :
+                               job.publicationType === 'members' ? '登録会員限定' :
+                               job.publicationType === 'scout' ? 'スカウト限定' : '一般公開'}
                             </span>
                           </div>
                         </div>
@@ -534,7 +567,7 @@ export default function CompanyJobsPage() {
                             WebkitBoxOrient: 'vertical',
                           }}
                         >
-                          テストが入ります。テストが入ります。...
+                          {job.internalMemo || ''}
                         </div>
 
                         {/* 公開日 */}
