@@ -58,6 +58,7 @@ export default function CompanyJobLayout({
           localStorage.removeItem('auth-token');
           localStorage.removeItem('auth_token');
           localStorage.removeItem('supabase-auth-token');
+          localStorage.removeItem('user_info');
           // 企業ログインページにリダイレクト
           router.push('/company/auth/login');
         }
@@ -67,6 +68,7 @@ export default function CompanyJobLayout({
         localStorage.removeItem('auth-token');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('supabase-auth-token');
+        localStorage.removeItem('user_info');
         // 企業ログインページにリダイレクト
         router.push('/company/auth/login');
       }

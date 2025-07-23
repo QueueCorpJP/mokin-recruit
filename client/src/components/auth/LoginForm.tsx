@@ -180,6 +180,23 @@ export function LoginForm({ userType }: LoginFormProps) {
             }
           }
 
+          // ユーザー情報をlocalStorageに保存
+          if (data?.user) {
+            try {
+              localStorage.setItem('user_info', JSON.stringify(data.user));
+              console.log('💾 User info saved to localStorage:', {
+                id: data.user.id,
+                email: data.user.email,
+                type: data.user.type
+              });
+            } catch (storageError) {
+              console.warn(
+                '⚠️ Failed to save user info to localStorage:',
+                storageError
+              );
+            }
+          }
+
           // 成功時は適切なダッシュボードにリダイレクト
           setTimeout(() => {
             router.push(getRedirectPath());

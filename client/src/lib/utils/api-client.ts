@@ -123,6 +123,115 @@ class ApiClient {
   }
 }
 
+/**
+ * ローカルストレージから認証情報を取得
+ */
+export const getAuthInfo = () => {
+  if (typeof window === 'undefined') return null;
+  
+  const token = localStorage.getItem('auth_token') || 
+                localStorage.getItem('auth-token') || 
+                localStorage.getItem('supabase-auth-token');
+  
+  const userInfoStr = localStorage.getItem('user_info');
+  let userInfo = null;
+  
+  if (userInfoStr) {
+    try {
+      userInfo = JSON.parse(userInfoStr);
+    } catch (error) {
+      console.warn('Failed to parse user info from localStorage:', error);
+    }
+  }
+  
+  return { token, userInfo };
+};
+
+/**
+ * 現在のユーザーIDを取得
+ */
+export const getCurrentUserId = (): string | null => {
+  const { userInfo } = getAuthInfo();
+  return userInfo?.id || null;
+};
+
+/**
+ * 現在のユーザータイプを取得
+ */
+export const getCurrentUserType = (): string | null => {
+  const { userInfo } = getAuthInfo();
+  return userInfo?.type || null;
+};
+
+/**
+ * 企業ユーザーの場合、company_account_idを取得
+ */
+export const getCompanyAccountId = (): string | null => {
+  const { userInfo } = getAuthInfo();
+  return userInfo?.profile?.companyAccountId || null;
+};
+
+/**
+ * 認証ヘッダーを取得
+ */
+export const getAuthHeaders = () => {
+  const { token, userInfo } = getAuthInfo() || {};
+  const headers: HeadersInit = {};
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  // company_users.idがある場合はヘッダーに追加
+  if (userInfo?.id) {
+    headers['X-User-Id'] = userInfo.id;
+  }
+  
+  return headers;
+};
+
+// APIクライアント関数を拡張
+const createApiClient = (baseURL: string = '/api') => {
+  return {
+    // ... existing methods ...
+    
+    /**
+     * 認証付きのGETリクエスト
+     */
+    getAuth: async (path: string, options: RequestInit = {}) => {
+      const authHeaders = getAuthHeaders();
+      
+      return fetch(`${baseURL}${path}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+          ...options.headers,
+        },
+        ...options,
+      });
+    },
+    
+    /**
+     * 認証付きのPOSTリクエスト
+     */
+    postAuth: async (path: string, data?: any, options: RequestInit = {}) => {
+      const authHeaders = getAuthHeaders();
+      
+      return fetch(`${baseURL}${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+          ...options.headers,
+        },
+        body: JSON.stringify(data),
+        ...options,
+      });
+    },
+  };
+};
+
 // デフォルトインスタンス
 export const apiClient = new ApiClient();
 

@@ -19,43 +19,22 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { job_posting_id, company_account_id } = body;
+    const { id } = body;
 
-    if (!job_posting_id || !company_account_id) {
+    if (!id) {
       return NextResponse.json({ 
         success: false, 
-        error: 'job_posting_idとcompany_account_idが必要です' 
+        error: 'idが必要です' 
       }, { status: 400 });
     }
 
     const supabase = getSupabaseAdminClient();
 
-    // 権限確認: job_postings.company_account_id == 送信されたcompany_account_id
-    const { data: jobData, error: jobError } = await supabase
-      .from('job_postings')
-      .select('company_account_id')
-      .eq('id', job_posting_id)
-      .single();
-
-    if (jobError || !jobData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '求人情報が見つかりません' 
-      }, { status: 404 });
-    }
-
-    if (jobData.company_account_id !== company_account_id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '削除権限がありません' 
-      }, { status: 403 });
-    }
-
     // 求人情報の削除
     const { error } = await supabase
       .from('job_postings')
       .delete()
-      .eq('id', job_posting_id);
+      .eq('id', id);
 
     if (error) {
       return NextResponse.json({ 

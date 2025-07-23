@@ -19,37 +19,16 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { job_posting_id, company_account_id, ...updateData } = body;
+    const { job_posting_id, ...updateData } = body;
 
-    if (!job_posting_id || !company_account_id) {
+    if (!job_posting_id) {
       return NextResponse.json({ 
         success: false, 
-        error: 'job_posting_idとcompany_account_idが必要です' 
+        error: 'job_posting_idが必要です' 
       }, { status: 400 });
     }
 
     const supabase = getSupabaseAdminClient();
-
-    // 権限確認: job_postings.company_account_id == 送信されたcompany_account_id
-    const { data: jobData, error: jobError } = await supabase
-      .from('job_postings')
-      .select('company_account_id')
-      .eq('id', job_posting_id)
-      .single();
-
-    if (jobError || !jobData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '求人情報が見つかりません' 
-      }, { status: 404 });
-    }
-
-    if (jobData.company_account_id !== company_account_id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: '編集権限がありません' 
-      }, { status: 403 });
-    }
 
     // 求人情報の更新
     const { data, error } = await supabase
@@ -66,6 +45,13 @@ export async function PUT(request: NextRequest) {
         success: false, 
         error: error.message 
       }, { status: 500 });
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: '求人情報が見つかりません' 
+      }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data });
