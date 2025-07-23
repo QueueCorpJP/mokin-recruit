@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, MoreHorizontal } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
@@ -55,6 +55,13 @@ export default function CompanyJobsPage() {
   const [selectedScope, setSelectedScope] = useState('すべて');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(jobs.length / itemsPerPage);
+  const displayedJobs = jobs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const statusTabs = ['すべて', '下書き', '掲載待ち（承認待ち）', '掲載済'];
 
@@ -135,6 +142,30 @@ export default function CompanyJobsPage() {
     router.push(`/company/job/view/${jobId}`);
   };
 
+  // ポップアップの表示状態と対象jobId
+  const [popupJobId, setPopupJobId] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  // ポップアップ外クリックで閉じる
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
+        setPopupJobId(null);
+      }
+    }
+    if (popupJobId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [popupJobId]);
+
   return (
     <div className='w-full flex flex-col items-center justify-center'>
       <div className=' w-full'>
@@ -174,7 +205,7 @@ export default function CompanyJobsPage() {
                       <button
                         key={status}
                         onClick={() => setSelectedStatus(status)}
-                        className={`py-[4px] px-[16px] text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                        className={`py-[4px] px-[16px] text-[14px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
                           index > 0 ? 'border-l border-[#EFEFEF]' : ''
                         } ${
                           selectedStatus === status
@@ -205,7 +236,7 @@ export default function CompanyJobsPage() {
                       <button
                         key={scope}
                         onClick={() => setSelectedScope(scope)}
-                        className={`py-[4px] px-[16px] text-[12px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
+                        className={`py-[4px] px-[16px] text-[14px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${
                           index > 0 ? 'border-l border-[#EFEFEF]' : ''
                         } ${
                           selectedScope === scope
@@ -271,188 +302,332 @@ export default function CompanyJobsPage() {
             </div>
           </div>
         </div>
-        <div className='w-full px-[80px] py-[40px]'>
-          {/* 新規求人作成ボタン */}
-          <div className='flex justify-between items-center mb-6'>
-            <button
-              onClick={handleNewJob}
-              className="bg-[#5BA8D4] hover:bg-[#4A96C2] text-white px-8 py-3 rounded-[25px] font-medium text-base font-['Noto_Sans_JP'] transition-colors"
-            >
-              新規求人作成
-            </button>
+        <div className='w-full px-[80px] py-[40px] bg-[#F9F9F9]'>
+          <div className='max-w-[1280px] mx-auto w-full pb-[80px]'>
+            {/* 新規求人作成ボタン */}
+            <div className='flex w-full items-center justify-between mb-10'>
+              {/* 左：新規求人作成 */}
+              <Button
+                onClick={handleNewJob}
+                variant='blue-gradient'
+                size='lg'
+                className="rounded-[25px] h-[54px] px-[40px] text-[16px] font-bold font-['Noto_Sans_JP'] transition-colors flex items-center"
+              >
+                新規求人作成
+              </Button>
 
-            {/* 求人の期間について（右側） */}
-            <div className='flex items-center gap-2 text-[#666666] text-sm'>
-              <span>1〜10件 / 1,000件</span>
-              <button className='text-[#4FC3A1] flex items-center gap-1'>
-                <span className='w-4 h-4 border border-[#4FC3A1] rounded-full flex items-center justify-center text-xs'>
-                  ?
-                </span>
-                求人の期間について
-              </button>
-            </div>
-          </div>
-
-          {/* テーブルヘッダー */}
-          <div className='bg-white rounded-t-lg flex flex-col items-center justify-center py-[40px]'>
-            <div className="grid grid-cols-12 gap-4  border-b border-[#E5E5E5] text-[#666666] text-sm font-medium font-['Noto_Sans_JP']">
-              <div className='col-span-1'>グループ</div>
-              <div className='col-span-3'>職種 / 求人タイトル</div>
-              <div className='col-span-1'>ステータス</div>
-              <div className='col-span-1'>公開期間</div>
-              <div className='col-span-2'>社内メモ</div>
-              <div className='col-span-1'>公開日</div>
-              <div className='col-span-1'>最終更新日</div>
-              <div className='col-span-2'></div>
-            </div>
-
-            {/* エラー表示 */}
-            {error && (
-              <div className='px-6 py-4 bg-red-50 border-b border-[#E5E5E5]'>
-                <div className='text-red-700 text-sm'>{error}</div>
-              </div>
-            )}
-
-            {/* ローディング */}
-            {loading && (
-              <div className='px-6 py-8 text-center'>
-                <div className="text-[#666666] font-['Noto_Sans_JP']">
-                  読み込み中...
+              {/* 右側まとめ（中央＋右） */}
+              <div className='flex gap-3 items-center w-auto flex-shrink-0'>
+                {/* 中央：求人の削除について */}
+                <div className='bg-[#F3FBF7] rounded-[8px] p-4 w-[608px]'>
+                  <div className='font-bold text-xs mb-1'>
+                    求人の削除について
+                  </div>
+                  <div className='text-xs'>
+                    すでに候補者にスカウトを送信済、もしくは候補者からの応募があった求人は削除することができません。
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* データなし */}
-            {!loading && jobs.length === 0 && !error && (
-              <div className='px-6 py-8 text-center'>
-                <div className="text-[#666666] font-['Noto_Sans_JP']">
-                  求人が見つかりませんでした
-                </div>
-              </div>
-            )}
-
-            {/* 求人データ一覧 */}
-            {!loading && jobs.length > 0 && (
-              <div className='divide-y divide-[#E5E5E5] py-[20px] px-[40px]'>
-                {jobs.map(job => (
-                  <div
-                    key={job.id}
-                    className='grid grid-cols-12 gap-[24px] hover:bg-[#F8F9FA] transition-colors'
-                  >
-                    {/* グループ */}
-                    <div className='col-span-1 flex items-center'>
-                      <div className='bg-[#4FC3A1] text-white px-3 py-1 rounded text-xs font-medium'>
-                        {job.groupName || 'グループ名テスト'}
-                      </div>
-                    </div>
-
-                    {/* 職種/求人タイトル */}
-                    <div className='col-span-3'>
-                      <div className='flex flex-wrap gap-1 mb-2'>
-                        <span className='bg-[#E8F5E8] text-[#4FC3A1] px-2 py-1 rounded text-xs'>
-                          {job.jobType || '職種テキスト'}
-                        </span>
-                        <span className='bg-[#E8F5E8] text-[#4FC3A1] px-2 py-1 rounded text-xs'>
-                          {job.industry || '職種テキスト'}
-                        </span>
-                        <span className='bg-[#E8F5E8] text-[#4FC3A1] px-2 py-1 rounded text-xs'>
-                          {job.workLocation || '職種テキスト'}
-                        </span>
-                      </div>
-                      <div className='text-[#323232] text-sm font-medium line-clamp-2'>
-                        {job.title}
-                      </div>
-                    </div>
-
-                    {/* ステータス */}
-                    <div className='col-span-1 flex items-center'>
-                      {job.status === 'PUBLISHED' ? (
-                        <span className='bg-[#E8F5E8] text-[#4FC3A1] px-3 py-1 rounded text-xs font-medium'>
-                          掲載済
-                        </span>
-                      ) : job.status === 'DRAFT' ? (
-                        <span className='bg-[#F5F5F5] text-[#666666] px-3 py-1 rounded text-xs font-medium'>
-                          下書き
-                        </span>
-                      ) : job.status === 'PENDING_APPROVAL' ? (
-                        <span className='bg-[#FFF8E7] text-[#E6A23C] px-3 py-1 rounded text-xs font-medium'>
-                          掲載待ち（承認待ち）
-                        </span>
-                      ) : (
-                        <span className='bg-[#FEF0F0] text-[#F56C6C] px-3 py-1 rounded text-xs font-medium'>
-                          停止
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 公開期間 */}
-                    <div className='col-span-1 text-[#323232] text-xs'>
+                {/* 右：件数表示＋リンク */}
+                <div className='flex flex-col justify-between items-end min-w-[180px] h-[67.98px]'>
+                  <div className='flex items-center gap-2'>
+                    <button
+                      className='text-[#4FC3A1] text-xs px-1 font-bold'
+                      aria-label='前のページ'
+                    >
+                      {'<'}
+                    </button>
+                    <span className='text-[#666666] text-xs font-bold'>
                       1〜10件 / 1,000件
-                    </div>
+                    </span>
+                    <button
+                      className='text-[#4FC3A1] text-xs px-1 font-bold'
+                      aria-label='次のページ'
+                    >
+                      {'>'}
+                    </button>
+                  </div>
+                  <button className='flex items-center gap-1 text-[#999999] text-xs font-bold underline focus:outline-none'>
+                    <span className='w-5 h-5 border border-[#999999] rounded-full flex items-center justify-center text-xs font-bold'>
+                      ？
+                    </span>
+                    <span>求人の期間について</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-                    {/* 社内メモ */}
-                    <div className='col-span-2 text-[#323232] text-xs'>
-                      テストが入ります。テストが入ります。...
-                    </div>
+            {/* テーブルヘッダー */}
+            <div className='rounded-t-lg flex flex-col items-center justify-center'>
+              <div className="max-w-[1280px] w-full mx-auto flex gap-[24px] border-b border-[#E5E5E5] text-[#222] text-[14px] font-bold font-['Noto_Sans_JP'] px-[40px] pr-[82px] pb-2">
+                <div className='w-[160px]'>グループ</div>
+                <div className='w-[424px]'>職種 / 求人タイトル</div>
+                <div className='w-[76px]'>ステータス</div>
+                <div className='w-[107px]'>公開範囲</div>
+                <div className='w-[112px]'>社内メモ</div>
+                <div className='w-[70px]'>公開日</div>
+                <div className='w-[76px]'>最終更新日</div>
+              </div>
 
-                    {/* 公開日 */}
-                    <div className='col-span-1 text-[#323232] text-xs'>
-                      {job.publishedAt
-                        ? new Date(job.publishedAt)
+              {/* エラー表示 */}
+              {error && (
+                <div className='px-6 py-4 bg-red-50 border-b border-[#E5E5E5]'>
+                  <div className='text-red-700 text-sm'>{error}</div>
+                </div>
+              )}
+
+              {/* ローディング */}
+              {loading && (
+                <div className='px-6 py-8 text-center'>
+                  <div className="text-[#666666] font-['Noto_Sans_JP']">
+                    読み込み中...
+                  </div>
+                </div>
+              )}
+
+              {/* データなし */}
+              {!loading && jobs.length === 0 && !error && (
+                <div className='px-6 py-8 text-center'>
+                  <div className="text-[#666666] font-['Noto_Sans_JP']">
+                    求人が見つかりませんでした
+                  </div>
+                </div>
+              )}
+
+              {/* 求人データ一覧 */}
+              {!loading && jobs.length > 0 && (
+                <>
+                  <div className='divide-y divide-[#E5E5E5] flex flex-col gap-y-2'>
+                    {displayedJobs.map(job => (
+                      <div
+                        key={job.id}
+                        className='bg-[#FFFFFF] flex gap-[24px] py-[20px] px-[24px]'
+                      >
+                        {/* グループ */}
+                        <div className='w-[160px] flex items-center'>
+                          <div
+                            className='text-white text-[14px] font-bold rounded flex items-center justify-center'
+                            style={{
+                              width: '160px',
+                              height: '32px',
+                              paddingLeft: '20px',
+                              paddingRight: '20px',
+                              background:
+                                'linear-gradient(90deg, #65BDAC 0%, #86C36A 100%)',
+                            }}
+                          >
+                            {job.groupName || 'グループ名テスト'}
+                          </div>
+                        </div>
+
+                        {/* 職種/求人タイトル */}
+                        <div className='w-[424px]'>
+                          <div className='flex flex-wrap gap-1 mb-2'>
+                            <span
+                              className={`rounded flex items-center justify-center font-bold ${(job.jobType || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              style={{
+                                width: '136px',
+                                height: '32px',
+                                paddingLeft: '16px',
+                                paddingRight: '16px',
+                                background: '#D2F1DA',
+                                color: '#0F9058',
+                              }}
+                            >
+                              {job.jobType || '職種テキスト'}
+                            </span>
+                            <span
+                              className={`rounded flex items-center justify-center font-bold ${(job.industry || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              style={{
+                                width: '136px',
+                                height: '32px',
+                                paddingLeft: '16px',
+                                paddingRight: '16px',
+                                background: '#D2F1DA',
+                                color: '#0F9058',
+                              }}
+                            >
+                              {job.industry || '職種テキスト'}
+                            </span>
+                            <span
+                              className={`rounded flex items-center justify-center font-bold ${(job.workLocation || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              style={{
+                                width: '136px',
+                                height: '32px',
+                                paddingLeft: '16px',
+                                paddingRight: '16px',
+                                background: '#D2F1DA',
+                                color: '#0F9058',
+                              }}
+                            >
+                              {job.workLocation || '職種テキスト'}
+                            </span>
+                          </div>
+                          <div
+                            className='text-[#323232] font-bold truncate'
+                            style={{ fontSize: '16px', lineHeight: '200%' }}
+                          >
+                            {job.title}
+                          </div>
+                        </div>
+
+                        {/* ステータス */}
+                        <div className='w-[76px] flex items-center justify-center'>
+                          {job.status === 'PUBLISHED' ? (
+                            <span
+                              className='font-bold'
+                              style={{ fontSize: '14px', color: '#0F9058' }}
+                            >
+                              掲載済
+                            </span>
+                          ) : job.status === 'DRAFT' ? (
+                            <span
+                              className='font-bold'
+                              style={{ fontSize: '14px', color: '#999999' }}
+                            >
+                              下書き
+                            </span>
+                          ) : job.status === 'PENDING_APPROVAL' ? (
+                            <span
+                              className='font-bold whitespace-pre-line text-center'
+                              style={{ fontSize: '14px', color: '#FF5B5B' }}
+                            >
+                              {'掲載待ち\n（承認待ち）'}
+                            </span>
+                          ) : (
+                            <span className='bg-[#FEF0F0] text-[#F56C6C] px-3 py-1 rounded text-xs font-medium'>
+                              停止
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 公開範囲 */}
+                        <div className='w-[107px] flex items-center justify-center'>
+                          <div className='flex items-center justify-center w-full h-full'>
+                            <span
+                              className='font-bold flex items-center justify-center'
+                              style={{
+                                paddingLeft: '8px',
+                                paddingRight: '8px',
+                                fontSize: '14px',
+                                color: '#fff',
+                                background: '#0F9058',
+                                borderRadius: '4px',
+                                height: '22px',
+                                minWidth: '60px',
+                                maxWidth: '100%',
+                              }}
+                            >
+                              公開範囲
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 社内メモ */}
+                        <div
+                          className='w-[112px] text-[#323232]'
+                          style={{
+                            fontSize: '14px',
+                            maxHeight: '65px',
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
+                          テストが入ります。テストが入ります。...
+                        </div>
+
+                        {/* 公開日 */}
+                        <div className='w-[70px] text-[#323232] text-xs flex items-center justify-center text-center'>
+                          {job.publishedAt
+                            ? new Date(job.publishedAt)
+                                .toLocaleDateString('ja-JP', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                })
+                                .replace(/\//g, '/')
+                            : 'yyyy/mm/dd'}
+                        </div>
+
+                        {/* 最終更新日 */}
+                        <div className='w-[76px] text-[#323232] text-xs flex items-center justify-center text-center'>
+                          {new Date(job.updatedAt)
                             .toLocaleDateString('ja-JP', {
                               year: 'numeric',
                               month: '2-digit',
                               day: '2-digit',
                             })
-                            .replace(/\//g, '/')
-                        : 'yyyy/mm/dd'}
-                    </div>
+                            .replace(/\//g, '/')}
+                        </div>
 
-                    {/* 最終更新日 */}
-                    <div className='col-span-1 text-[#323232] text-xs'>
-                      {new Date(job.updatedAt)
-                        .toLocaleDateString('ja-JP', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                        })
-                        .replace(/\//g, '/')}
-                    </div>
-
-                    {/* アクション */}
-                    <div className='col-span-2 flex items-center gap-2'>
-                      <button
-                        onClick={() => handleViewJob(job.id)}
-                        className='text-[#0F9058] text-xs hover:underline'
-                      >
-                        複製
-                      </button>
-                      <button
-                        onClick={() => handleEditJob(job.id)}
-                        className='text-[#0F9058] text-xs hover:underline'
-                      >
-                        削除
-                      </button>
-                      <button className='text-[#666666] hover:text-[#323232]'>
-                        <MoreHorizontal className='w-4 h-4' />
-                      </button>
-                    </div>
+                        {/* アクション */}
+                        <div className='col-span-2 flex items-center gap-2 relative'>
+                          <button
+                            className='text-[#DCDCDC] hover:text-[#323232] rounded-full p-2'
+                            onClick={() => setPopupJobId(job.id)}
+                          >
+                            <MoreHorizontal className='w-6 h-6' />
+                          </button>
+                          {popupJobId === job.id && (
+                            <div
+                              ref={popupRef}
+                              className='absolute left-0 translate-x-0 top-full mt-[-20px] z-10 bg-white border border-[#E5E5E5] rounded shadow-lg w-[72px] flex flex-col'
+                            >
+                              <button
+                                className='px-2 py-2 text-left hover:bg-[#F3FBF7] text-[#222] font-bold border-b border-[#E5E5E5] last:border-b-0'
+                                style={{ color: '#222' }}
+                                onClick={() => {
+                                  /* 複製処理 */ setPopupJobId(null);
+                                }}
+                              >
+                                複製
+                              </button>
+                              <button
+                                className='px-2 py-2 text-left hover:bg-[#FEF0F0] text-[#F56C6C] font-bold'
+                                style={{ color: '#F56C6C' }}
+                                onClick={() => {
+                                  /* 削除処理 */ setPopupJobId(null);
+                                }}
+                              >
+                                削除
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* テーブル下部の追加情報 */}
-          <div className='bg-white rounded-b-lg px-6 py-4 border-t border-[#E5E5E5]'>
-            <div className='text-[#666666] text-xs'>
-              すでに条件を入力済みしてスカウト送信済。もしくは検索能力からの応募があった求人は削除することができません。
-            </div>
-            <div className='mt-2 flex items-center gap-1'>
-              <span className='w-4 h-4 border border-[#0F9058] rounded-full flex items-center justify-center text-xs text-[#0F9058]'>
-                ?
-              </span>
-              <span className='text-[#0F9058] text-xs'>求人の削除について</span>
+                  {/* ページネーションUI */}
+                  <div className='flex justify-center items-center gap-2 mt-10'>
+                    <button
+                      className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === 1 ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent' : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'}`}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      {'<'}
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === i + 1 ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === totalPages ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent' : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'}`}
+                      onClick={() =>
+                        setCurrentPage(p => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                    >
+                      {'>'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
