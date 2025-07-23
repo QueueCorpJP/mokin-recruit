@@ -481,7 +481,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
               />
             </div>
             <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#999999] w-full mt-1">
-              ※ 応募後に別途提出を依頼することも可能です。
+            応募後に別途提出を依頼することも可能です。
             </div>
           </div>
         </div>
@@ -495,9 +495,9 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
           </div>
         </div>
         <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-          <div className='flex flex-col gap-2 items-start justify-start w-full'>
-            <DisplayValue value={memo} className='whitespace-pre-wrap' />
-          </div>
+        <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#999999] w-full mt-1">
+              社内メモは候補者に共有されません。
+            </div>
         </div>
       </div>
 
