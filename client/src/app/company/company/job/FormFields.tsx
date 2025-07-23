@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -142,6 +142,31 @@ export const FormFields: React.FC<FormFieldsProps> = ({
     setIndustries(industries.filter(v => v !== val));
   const removeLocation = (val: string) =>
     setLocations(locations.filter(v => v !== val));
+
+  // Dynamic width calculation for employment type select
+  const [selectWidth, setSelectWidth] = useState<number>(103);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    const calculateTextWidth = (text: string): number => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) return 103;
+      
+      // Use the same font properties as the select element
+      context.font = 'bold 16px "Noto Sans JP", sans-serif';
+      context.letterSpacing = '1.6px';
+      
+      const textWidth = context.measureText(text).width;
+      // Add padding (11px left + 35px right for SVG) + extra space for letter spacing
+      return Math.max(103, textWidth + 46 + (text.length * 1.6));
+    };
+
+    if (employmentType) {
+      const newWidth = calculateTextWidth(employmentType);
+      setSelectWidth(newWidth);
+    }
+  }, [employmentType]);
 
   const toggleAppealPoint = (val: string) => {
     if (appealPoints.includes(val)) {
@@ -546,13 +571,14 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
               雇用形態
             </label>
-            <div className='flex flex-col gap-2 items-start justify-center w-[400px]'>
-              <div className='relative w-[103px]' style={{ width: '103px' }}>
+            <div className='flex flex-col gap-2 items-start justify-center min-w-[400px] w-auto'>
+              <div className='relative' style={{ width: `${selectWidth}px` }}>
                 <select
-                  className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none ${showErrors && errors.employmentType ? 'border-red-500 bg-red-50' : ''} w-[103px]`}
+                  ref={selectRef}
+                  className={`bg-white border border-[#999999] rounded-[5px] pl-[11px] pr-[35px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none ${showErrors && errors.employmentType ? 'border-red-500 bg-red-50' : ''}`}
                   value={employmentType}
                   onChange={e => setEmploymentType(e.target.value)}
-                  style={{ width: '103px' }}
+                  style={{ width: `${selectWidth}px` }}
                 >
                   <option value='正社員'>正社員</option>
                   {employmentTypeOptions.map(option => (
@@ -561,7 +587,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                     </option>
                   ))}
                 </select>
-                <div className='absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none'>
+                <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                   <svg
                     className='w-3.5 h-[9.333px]'
                     fill='none'
