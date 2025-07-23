@@ -651,7 +651,7 @@ export default function JobNewPage() {
                   </Button>
                   <button
                     type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white'
+                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
                     onClick={handleSubmit}
                   >
                     この内容で掲載申請をする
@@ -670,7 +670,7 @@ export default function JobNewPage() {
                   </Button>
                   <button
                     type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white'
+                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
                     onClick={handleConfirm}
                   >
                     確認する
