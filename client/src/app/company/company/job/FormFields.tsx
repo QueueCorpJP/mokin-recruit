@@ -593,6 +593,10 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               onChange={e => setEmploymentTypeNote(e.target.value)}
             />
           </div>
+          <div
+            className='w-full my-2'
+            style={{ height: '1px', background: '#EFEFEF' }}
+          />
           {/* 就業時間 */}
           <div className='w-full'>
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
