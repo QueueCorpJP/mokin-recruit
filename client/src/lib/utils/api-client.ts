@@ -151,40 +151,43 @@ export const getAuthInfo = () => {
  * 現在のユーザーIDを取得
  */
 export const getCurrentUserId = (): string | null => {
-  const { userInfo } = getAuthInfo();
-  return userInfo?.id || null;
+  const authInfo = getAuthInfo();
+  if (!authInfo) return null;
+  return authInfo.userInfo?.id || null;
 };
 
 /**
  * 現在のユーザータイプを取得
  */
 export const getCurrentUserType = (): string | null => {
-  const { userInfo } = getAuthInfo();
-  return userInfo?.type || null;
+  const authInfo = getAuthInfo();
+  if (!authInfo) return null;
+  return authInfo.userInfo?.type || null;
 };
 
 /**
  * 企業ユーザーの場合、company_account_idを取得
  */
 export const getCompanyAccountId = (): string | null => {
-  const { userInfo } = getAuthInfo();
-  return userInfo?.profile?.companyAccountId || null;
+  const authInfo = getAuthInfo();
+  if (!authInfo) return null;
+  return authInfo.userInfo?.profile?.companyAccountId || null;
 };
 
 /**
  * 認証ヘッダーを取得
  */
 export const getAuthHeaders = () => {
-  const { token, userInfo } = getAuthInfo() || {};
+  const authInfo = getAuthInfo();
   const headers: HeadersInit = {};
   
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (authInfo?.token) {
+    headers['Authorization'] = `Bearer ${authInfo.token}`;
   }
   
   // company_users.idがある場合はヘッダーに追加
-  if (userInfo?.id) {
-    headers['X-User-Id'] = userInfo.id;
+  if (authInfo?.userInfo?.id) {
+    headers['X-User-Id'] = authInfo.userInfo.id;
   }
   
   return headers;

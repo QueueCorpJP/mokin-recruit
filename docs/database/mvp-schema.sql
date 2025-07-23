@@ -252,7 +252,7 @@ CREATE TABLE "job_postings" (
     "industry" TEXT NOT NULL,
     
     -- 公開設定
-    "status" TEXT DEFAULT 'DRAFT' CHECK ("status" IN ('DRAFT', 'PUBLISHED', 'CLOSED')),
+    "status" TEXT DEFAULT 'DRAFT' CHECK ("status" IN ('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'CLOSED')),
     "application_deadline" TIMESTAMP WITH TIME ZONE,
     
     -- タイムスタンプ

@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const groupId = searchParams.get('groupId');
+    const scope = searchParams.get('scope');
     const searchKeyword = searchParams.get('search');
 
     // 基本クエリ：同じ会社アカウントの求人のみ
@@ -105,7 +106,8 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq('company_account_id', userCompanyAccountId)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     // ステータスフィルター
     if (status && status !== 'すべて') {
@@ -125,6 +127,23 @@ export async function GET(request: NextRequest) {
       query = query.eq('company_group_id', groupId);
     }
 
+    // 公開範囲フィルター
+    if (scope && scope !== 'すべて') {
+      if (scope === '公開停止') {
+        // 公開停止はstatus = 'CLOSED'で判定
+        query = query.eq('status', 'CLOSED');
+      } else {
+        const scopeMap: Record<string, string> = {
+          '一般公開': 'public',
+          '登録会員限定': 'members',
+          'スカウト限定': 'scout'
+        };
+        if (scopeMap[scope]) {
+          query = query.eq('publication_type', scopeMap[scope]);
+        }
+      }
+    }
+
     // キーワード検索
     if (searchKeyword) {
       query = query.or(
@@ -142,22 +161,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // グループ名を取得するために、関連するcompany_usersの情報も取得
+    // グループ名を取得するために、関連するcompany_usersの情報を取得
     const groupIds = [
       ...new Set(jobs?.map(job => job.company_group_id).filter(Boolean)),
     ];
     let groupNames: Record<string, string> = {};
 
     if (groupIds.length > 0) {
-      const { data: groups, error: groupsError } = await supabase
+      const { data: users, error: usersError } = await supabase
         .from('company_users')
         .select('id, full_name')
         .in('id', groupIds);
 
-      if (!groupsError && groups) {
-        groupNames = groups.reduce(
-          (acc, group) => {
-            acc[group.id] = group.full_name || 'ユーザー';
+      if (!usersError && users) {
+        groupNames = users.reduce(
+          (acc, user) => {
+            acc[user.id] = user.full_name || 'ユーザー';
             return acc;
           },
           {} as Record<string, string>
