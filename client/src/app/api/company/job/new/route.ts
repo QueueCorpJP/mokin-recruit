@@ -13,6 +13,9 @@ export async function POST(request: NextRequest) {
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     console.log('Auth token found:', !!token);
     
+    // X-User-Idヘッダーからcompany_users.idを取得
+    const companyUserId = request.headers.get('x-user-id');
+    
     if (!token) {
       console.log('No auth token provided');
       return NextResponse.json({ success: false, error: '認証トークンがありません' }, { status: 401 });
@@ -24,37 +27,65 @@ export async function POST(request: NextRequest) {
       console.log('Session validation failed:', sessionResult.error);
       return NextResponse.json({ success: false, error: '認証エラー' }, { status: 401 });
     }
-    const createdBy = sessionResult.sessionInfo.user.id;
-    console.log('User authenticated:', createdBy);
+    
+    console.log('User authenticated:', sessionResult.sessionInfo.user.email);
 
     // 企業ユーザーのcompany_account_idを取得
     const supabase = getSupabaseAdminClient();
     
-    // セッション認証のユーザーIDとcompany_usersのIDは異なるため、メールアドレスで検索
-    console.log('Searching user by email:', sessionResult.sessionInfo.user.email);
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('company_users')
-      .select('id, company_account_id, email, full_name')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
+    let actualUserId: string | null = null;
+    let userCompanyAccountId: string | null = null;
     
-    if (emailError || !userByEmail) {
-      console.log('Failed to get user by email:', emailError);
-      return NextResponse.json({ success: false, error: '企業アカウント情報の取得に失敗しました' }, { status: 400 });
+    // X-User-Idヘッダーがある場合は直接検索（最適化）
+    if (companyUserId) {
+      console.log('Using X-User-Id header for optimized lookup:', companyUserId);
+      
+      const { data: userByIdData, error: userByIdError } = await supabase
+        .from('company_users')
+        .select('id, company_account_id, email, full_name')
+        .eq('id', companyUserId)
+        .single();
+      
+      if (!userByIdError && userByIdData) {
+        // セキュリティチェック：セッションのメールアドレスと一致するか確認
+        if (userByIdData.email === sessionResult.sessionInfo.user.email) {
+          actualUserId = userByIdData.id;
+          userCompanyAccountId = userByIdData.company_account_id;
+          console.log('✅ Optimized lookup successful');
+        } else {
+          console.warn('⚠️ Security check failed: email mismatch');
+        }
+      }
     }
     
-    console.log('Found user by email:', userByEmail);
-    const actualUserId = userByEmail.id; // これが実際のcompany_usersのID
-    const userCompanyAccountId = userByEmail.company_account_id;
-    console.log('Actual user ID from company_users:', actualUserId);
-    console.log('User company_account_id:', userCompanyAccountId);
+    // フォールバック：メールアドレスで検索
+    if (!actualUserId || !userCompanyAccountId) {
+      console.log('Falling back to email lookup...');
+      
+      const { data: userByEmail, error: emailError } = await supabase
+        .from('company_users')
+        .select('id, company_account_id, email, full_name')
+        .eq('email', sessionResult.sessionInfo.user.email)
+        .single();
+      
+      if (emailError || !userByEmail) {
+        console.log('Failed to get user by email:', emailError);
+        return NextResponse.json({ success: false, error: '企業アカウント情報の取得に失敗しました' }, { status: 400 });
+      }
+      
+      actualUserId = userByEmail.id;
+      userCompanyAccountId = userByEmail.company_account_id;
+      console.log('📧 Email lookup successful');
+    }
+    
+    console.log('User data:', { actualUserId, userCompanyAccountId });
 
     // company_group_idは求人作成時にフロントエンドから指定される
-    // 指定されない場合はnullにする（後で管理画面で設定可能）
     console.log('Company group handling: Will use company_account_id for filtering');
 
     const body = await request.json();
-    console.log('Request body received:', body);
+    console.log('Request body received');
+    
     // フォームからのすべての項目を受け取る
     const {
       company_group_id: bodyCompanyGroupId,
@@ -96,34 +127,21 @@ export async function POST(request: NextRequest) {
     const employmentTypeMapping: Record<string, string> = {
       '正社員': 'FULL_TIME',
       '契約社員': 'CONTRACT',
-      '派遣社員': 'CONTRACT', // 契約社員として扱う
+      '派遣社員': 'CONTRACT',
       'アルバイト・パート': 'PART_TIME',
-      '業務委託': 'CONTRACT', // 契約社員として扱う
+      '業務委託': 'CONTRACT',
       'インターン': 'INTERN'
     };
     
     const mappedEmploymentType = employmentTypeMapping[employment_type] || 'FULL_TIME';
 
-    // 下書き保存のため必須チェックを一時的に無効化
-    // if (!company_group_id || !title || !job_description || !employment_type || !work_location || !job_type || !industry) {
-    //   return NextResponse.json({ success: false, error: '必須項目が不足しています' }, { status: 400 });
-    // }
-
-    // デバッグ：利用可能なcompany_user_idを確認
-    console.log('=== DEBUG INFO ===');
-    console.log('createdBy (session user ID):', createdBy);
-    console.log('actualUserId (company_users ID):', actualUserId);
-    console.log('bodyCompanyGroupId from request:', bodyCompanyGroupId);
-    console.log('userCompanyAccountId:', userCompanyAccountId);
-    
     // 現在のcompany_account_idに属するcompany_usersを確認
     const { data: availableUsers, error: usersError } = await supabase
       .from('company_users')
       .select('id, email, full_name')
       .eq('company_account_id', userCompanyAccountId);
     
-    console.log('Available company_users for this account:', availableUsers);
-    console.log('Users query error:', usersError);
+    console.log('Available company_users for this account:', availableUsers?.length);
     
     // company_group_idとして使用するIDを決定
     let finalCompanyGroupId = actualUserId; // デフォルトは実際のcompany_usersのID
@@ -226,7 +244,7 @@ export async function POST(request: NextRequest) {
       published_at: published_at || null,
     };
     
-    console.log('Data to insert into Supabase:', insertData);
+    console.log('Creating job posting...');
     
     const { data, error } = await supabase.from('job_postings').insert([insertData]);
     
@@ -235,7 +253,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
     
-    console.log('Job created successfully:', data);
+    console.log('Job created successfully');
     return NextResponse.json({ success: true, data });
   } catch (e: any) {
     console.error('Job creation API error:', e);

@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
     const cookieToken = request.cookies.get('supabase-auth-token')?.value;
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     
+    // X-User-Idヘッダーからcompany_users.idを取得
+    const companyUserId = request.headers.get('x-user-id');
+    
     if (!token) {
       console.log('No auth token provided');
       return NextResponse.json({ success: false, error: '認証トークンがありません' }, { status: 401 });
@@ -21,45 +24,39 @@ export async function GET(request: NextRequest) {
     const sessionResult = await sessionService.validateSession(token);
     if (!sessionResult.success || !sessionResult.sessionInfo) {
       console.log('Session validation failed:', sessionResult.error);
-      console.log('Full session result:', JSON.stringify(sessionResult, null, 2));
       return NextResponse.json({ success: false, error: `認証エラー: ${sessionResult.error}` }, { status: 401 });
     }
     
-    const userId = sessionResult.sessionInfo.user.id;
-    console.log('User authenticated:', userId);
-    console.log('Session user details:', {
-      id: sessionResult.sessionInfo.user.id,
-      email: sessionResult.sessionInfo.user.email,
-      user_metadata: sessionResult.sessionInfo.user.user_metadata,
-      app_metadata: sessionResult.sessionInfo.user.app_metadata,
-    });
-
+    console.log('User authenticated:', sessionResult.sessionInfo.user.email);
     const supabase = getSupabaseAdminClient();
     
-    // デバッグ：company_usersテーブルの全レコードを確認
-    console.log('Checking all company_users records...');
-    const { data: allUsers, error: allUsersError } = await supabase
-      .from('company_users')
-      .select('id, email, company_account_id');
+    let userData: { company_account_id: string } | null = null;
     
-    if (!allUsersError && allUsers) {
-      console.log('All company_users records:', allUsers);
+    // X-User-Idヘッダーがある場合は直接検索（最適化）
+    if (companyUserId) {
+      console.log('Using X-User-Id header for optimized lookup:', companyUserId);
+      
+      const { data: userByIdData, error: userByIdError } = await supabase
+        .from('company_users')
+        .select('company_account_id, email')
+        .eq('id', companyUserId)
+        .single();
+      
+      if (!userByIdError && userByIdData) {
+        // セキュリティチェック：セッションのメールアドレスと一致するか確認
+        if (userByIdData.email === sessionResult.sessionInfo.user.email) {
+          userData = { company_account_id: userByIdData.company_account_id };
+          console.log('✅ Optimized lookup successful');
+        } else {
+          console.warn('⚠️ Security check failed: email mismatch');
+        }
+      }
     }
     
-    // ユーザーの会社アカウントIDを取得
-    let { data: userData, error: userError } = await supabase
-      .from('company_users')
-      .select('company_account_id')
-      .eq('id', userId)
-      .single();
-    
-    if (userError || !userData?.company_account_id) {
-      console.log('Failed to get user company_account_id:', userError);
-      console.log('User search by ID failed. User ID:', userId);
-      console.log('Searching by email instead...');
-      console.log('User email from session:', sessionResult.sessionInfo.user.email);
+    // フォールバック：メールアドレスで検索
+    if (!userData) {
+      console.log('Falling back to email lookup...');
       
-      // ユーザーIDで見つからない場合、メールアドレスで検索
       const { data: userByEmail, error: emailError } = await supabase
         .from('company_users')
         .select('id, company_account_id')
@@ -68,13 +65,14 @@ export async function GET(request: NextRequest) {
       
       if (emailError || !userByEmail) {
         console.log('Failed to get user by email:', emailError);
-        console.log('Email search result:', userByEmail);
-        return NextResponse.json({ success: false, error: `企業情報の取得に失敗しました: ${emailError?.message || 'ユーザーが見つかりません'}` }, { status: 400 });
+        return NextResponse.json({ 
+          success: false, 
+          error: `企業情報の取得に失敗しました: ${emailError?.message || 'ユーザーが見つかりません'}` 
+        }, { status: 400 });
       }
       
-      console.log('Found user by email:', userByEmail);
-      // メールで見つかった場合は新しいオブジェクトを作成
       userData = { company_account_id: userByEmail.company_account_id };
+      console.log('📧 Email lookup successful');
     }
 
     // 現在の制約に合わせて、同じ会社アカウントに属するユーザーを"グループ"として返す
@@ -95,7 +93,7 @@ export async function GET(request: NextRequest) {
       description: user.position_title || '担当者'
     }));
     
-    console.log('Company groups fetched successfully:', groupsData);
+    console.log('Company groups fetched successfully:', groupsData.length, 'groups');
     return NextResponse.json({ success: true, data: groupsData });
   } catch (e: any) {
     console.error('Company groups API error:', e);

@@ -6,6 +6,7 @@ import { Plus, MoreHorizontal } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
 import { BaseInput } from '@/components/ui/base-input';
 import { Button } from '@/components/ui/button';
+import { getAuthHeaders } from '@/lib/utils/api-client';
 
 // 求人ステータスの型定義
 type JobStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'CLOSED';
@@ -72,12 +73,9 @@ export default function CompanyJobsPage() {
       setLoading(true);
       setError(null);
 
-      const token =
-        localStorage.getItem('auth-token') ||
-        localStorage.getItem('auth_token') ||
-        localStorage.getItem('supabase-auth-token');
+      const authHeaders = getAuthHeaders();
 
-      if (!token) {
+      if (!authHeaders.Authorization) {
         setError('認証トークンが見つかりません');
         return;
       }
@@ -89,10 +87,7 @@ export default function CompanyJobsPage() {
       if (searchKeyword.trim()) params.append('search', searchKeyword.trim());
 
       const response = await fetch(`/api/company/job?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
       });
 
       const result = await response.json();

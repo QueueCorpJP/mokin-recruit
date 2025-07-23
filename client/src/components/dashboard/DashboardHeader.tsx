@@ -13,19 +13,10 @@ export function DashboardHeader() {
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleLogout = () => {
-    try {
-      // トークンを削除
-      localStorage.removeItem('auth_token');
-      console.log('🔓 ログアウトしました');
-
-      // ログインページにリダイレクト
-      router.push('/auth/login');
-    } catch (error) {
-      console.error('❌ ログアウト処理でエラーが発生しました:', error);
-      // フォールバック: window.location を使用
-      window.location.href = '/auth/login';
-    }
+  const logout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    window.location.href = '/';
   };
 
   return (
@@ -43,7 +34,7 @@ export function DashboardHeader() {
             </span>
             <button
               className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50'
-              onClick={handleLogout}
+              onClick={logout}
               disabled={!isLoggedIn}
             >
               ログアウト

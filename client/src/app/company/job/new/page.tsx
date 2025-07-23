@@ -11,6 +11,7 @@ import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { FormFields } from '@/app/company/company/job/FormFields';
 import { ConfirmView } from '@/app/company/company/job/ConfirmView';
+import { getCurrentUserId, getAuthInfo, getAuthHeaders } from '@/lib/utils/api-client';
 
 export default function JobNewPage() {
   const router = useRouter();
@@ -56,28 +57,25 @@ export default function JobNewPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
 
-  // 下書き保存用のキー
-  const DRAFT_KEY = 'job_draft_data';
+  // 下書き保存用のキー（ユーザー固有）
+  const currentUserId = getCurrentUserId();
+  const DRAFT_KEY = `job_draft_data_${currentUserId || 'anonymous'}`;
 
   // 企業グループ情報を取得
   useEffect(() => {
     const fetchCompanyGroups = async () => {
       try {
-        const token = localStorage.getItem('auth-token') || 
-                     localStorage.getItem('auth_token') || 
-                     localStorage.getItem('supabase-auth-token');
+        const authHeaders = getAuthHeaders();
+        const currentUserId = getCurrentUserId();
         
-        console.log('Token found for groups API:', !!token);
-        if (!token) {
+        console.log('Auth headers prepared:', !!authHeaders.Authorization);
+        if (!authHeaders.Authorization) {
           console.error('No authentication token found');
           return;
         }
         
         const response = await fetch('/api/company/groups', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: authHeaders
         });
         
         console.log('Groups API response status:', response.status);
@@ -86,8 +84,18 @@ export default function JobNewPage() {
         
         if (result.success) {
           setCompanyGroups(result.data);
-          // ユーザーのグループが1つの場合は自動選択
-          if (result.data.length === 1) {
+          
+          // 現在のユーザーIDが取得できる場合、そのユーザーをデフォルト選択
+          if (currentUserId) {
+            const currentUserGroup = result.data.find((group: any) => group.id === currentUserId);
+            if (currentUserGroup) {
+              setGroup(currentUserGroup.id);
+              console.log('✅ Default group set to current user:', currentUserGroup.group_name);
+            }
+          }
+          
+          // フォールバック：グループが1つの場合は自動選択
+          if (result.data.length === 1 && !group) {
             setGroup(result.data[0].id);
           }
         } else {
@@ -355,16 +363,15 @@ export default function JobNewPage() {
       published_at: null
     };
     
-    const token = localStorage.getItem('auth-token') || 
-                 localStorage.getItem('auth_token') || 
-                 localStorage.getItem('supabase-auth-token');
+    const authHeaders = getAuthHeaders();
+    const currentUserId = getCurrentUserId();
     
     try {
-      const res = await fetch('/api/job/new', {
+      const res = await fetch('/api/company/job/new', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          ...authHeaders
         },
         body: JSON.stringify(data),
       });

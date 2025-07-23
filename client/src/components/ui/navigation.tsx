@@ -208,6 +208,7 @@ export function Navigation({
         localStorage.removeItem('auth-token');
         localStorage.removeItem('supabase-auth-token');
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_info');
 
         console.log('✅ ログアウトが完了しました');
 
@@ -219,6 +220,7 @@ export function Navigation({
         localStorage.removeItem('auth-token');
         localStorage.removeItem('supabase-auth-token');
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_info');
         router.push('/company/auth/login');
       }
     } catch (error) {
@@ -227,6 +229,7 @@ export function Navigation({
       localStorage.removeItem('auth-token');
       localStorage.removeItem('supabase-auth-token');
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_info');
       router.push('/company/auth/login');
     }
 
