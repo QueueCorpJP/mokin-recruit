@@ -24,7 +24,7 @@ export default function RootPage() {
         </h1>
         <p className='text-lg text-gray-600 mb-8'>開発中です</p>
         <Link
-          href='/'
+          href='/candidate'
           className='flex items-center text-gray-700 hover:text-blue-600 text-base'
         >
           <svg
@@ -40,7 +40,7 @@ export default function RootPage() {
               d='M15 19l-7-7 7-7'
             />
           </svg>
-          ホームに戻る
+          候補者LPへ遷移する
         </Link>
       </div>
     </div>
