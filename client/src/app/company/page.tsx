@@ -1,176 +1,116 @@
-import { Navigation } from '@/components/ui/navigation';
-import { CompanyHeroSection } from '@/components/ui/company-hero-section';
-import { Footer } from '@/components/ui/footer';
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: '企業向けダイレクトリクルーティング | CuePoint',
-  description:
-    '優秀な人材を効率的に発見・採用。CuePointの企業向けダイレクトリクルーティングサービス',
-  keywords: [
-    '採用',
-    '人材発見',
-    'ダイレクトリクルーティング',
-    '企業向け',
-    'スカウト',
-  ],
-};
+import Link from 'next/link';
 
-export default function CompanyLandingPage() {
-  // TODO: 実際のログイン状態を取得するロジックを実装
-  const isLoggedIn = true; // 仮の値（後で実装）
-  const userInfo = {
-    companyName: '株式会社サンプル',
-    userName: '田中太郎',
-  };
-
+export default function RootPage() {
   return (
-    <div className='min-h-screen'>
-      {/* Header */}
-      <Navigation 
-        variant='company' 
-        isLoggedIn={isLoggedIn}
-        userInfo={userInfo}
-      />
+    <div className='min-h-screen flex flex-col items-center justify-center bg-white relative overflow-hidden'>
+      {/* 背景アニメーション */}
+      <div className='absolute inset-0'>
+        <div className='absolute top-1/4 left-1/4 w-96 h-96 bg-gray-200/30 rounded-full blur-3xl animate-slow-pulse'></div>
+        <div className='absolute top-1/3 right-1/4 w-80 h-80 bg-gray-300/30 rounded-full blur-3xl animate-slow-pulse animation-delay-1000'></div>
+        <div className='absolute bottom-1/4 left-1/3 w-72 h-72 bg-gray-100/40 rounded-full blur-3xl animate-slow-pulse animation-delay-2000'></div>
+      </div>
+      
+      {/* 動く線のアニメーション */}
+      <div className='absolute inset-0'>
+        <div className='absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-300/40 to-transparent animate-slow-scan'></div>
+        <div className='absolute bottom-0 right-0 w-full h-px bg-gradient-to-l from-transparent via-gray-300/40 to-transparent animate-slow-scan-reverse'></div>
+      </div>
 
-      {/* Hero Section */}
-      <CompanyHeroSection />
+      <div className='flex flex-col items-center z-10'>
+        <h1 className='text-7xl font-light text-gray-800 mb-6 tracking-wider animate-subtle-glow mb-22'>
+          トップ画面は開発中です
+        </h1>
+        <div className='flex items-center space-x-2 mb-12'>
+          <div className='w-2 h-2 bg-gray-800 rounded-full animate-loading-scale'></div>
+          <div className='w-2 h-2 bg-gray-800 rounded-full animate-loading-scale animation-delay-200'></div>
+          <div className='w-2 h-2 bg-gray-800 rounded-full animate-loading-scale animation-delay-400'></div>
+        </div>
+        <Link
+          href='/company/job'
+          className='group relative px-8 py-4 bg-transparent rounded-full border border-gray-300 text-gray-700 font-light tracking-wide hover:border-gray-500 hover:text-gray-900 transition-all duration-500 overflow-hidden flex items-center space-x-2'
+        >
+          <svg
+            className='w-6 h-6 animate-spin-slow'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={1.5}
+              d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'
+            />
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={1.5}
+              d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+            />
+          </svg>
+          <span className='relative z-10 ml-4'>求人一覧画面へ遷移する</span>
+          <div className='absolute inset-0 bg-gray-100/20 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-500'></div>
+        </Link>
+      </div>
 
-      {/* Additional Content Sections */}
-      <main className='bg-white'>
-        {/* Services Features Section */}
-        <section className='py-16 bg-gray-50'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center mb-12'>
-              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
-                企業の採用課題を解決
-              </h2>
-              <p className='mt-4 text-lg text-gray-600'>
-                効率的なダイレクトリクルーティングで理想の人材を発見
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3'>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  ダイレクトスカウト
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  データベースから最適な候補者を検索し、直接スカウトメッセージを送信できます。
-                </p>
-              </div>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  詳細な候補者情報
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  スキル、経験、希望条件など詳細な情報で、理想の人材を見つけられます。
-                </p>
-              </div>
-              <div className='bg-white rounded-lg shadow-md p-6'>
-                <h3 className='text-lg font-semibold text-gray-900'>
-                  採用効率化
-                </h3>
-                <p className='mt-2 text-gray-600'>
-                  応募管理から面接調整まで、採用プロセスを全面的に効率化します。
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Company Benefits Section */}
-        <section className='py-16 bg-white'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center mb-12'>
-              <h2 className='text-3xl font-bold text-gray-900 sm:text-4xl'>
-                なぜCuePointが選ばれるのか
-              </h2>
-              <p className='mt-4 text-lg text-gray-600'>
-                企業の採用成功を支える3つの強み
-              </p>
-            </div>
-
-            <div className='grid grid-cols-1 gap-12 lg:grid-cols-3'>
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-green-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M13 10V3L4 14h7v7l9-11h-7z'
-                    />
-                  </svg>
-                </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  高速マッチング
-                </h3>
-                <p className='text-gray-600'>
-                  AIを活用した高精度なマッチングで、最短での人材発見を実現
-                </p>
-              </div>
-
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-blue-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                    />
-                  </svg>
-                </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  品質保証
-                </h3>
-                <p className='text-gray-600'>
-                  厳選された候補者データベースで、質の高い採用を保証
-                </p>
-              </div>
-
-              <div className='text-center'>
-                <div className='w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg
-                    className='w-8 h-8 text-purple-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.196l-2.196 2.196M12 21.804l-2.196-2.196'
-                    />
-                  </svg>
-                </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>
-                  専任サポート
-                </h3>
-                <p className='text-gray-600'>
-                  採用のプロが専任でサポート。成功まで伴走します
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <Footer />
+      <style jsx>{`
+        @keyframes subtle-glow {
+          0%, 100% { text-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+          50% { text-shadow: 0 0 20px rgba(0, 0, 0, 0.15); }
+        }
+        @keyframes slow-scan {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes slow-scan-reverse {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        @keyframes slow-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        @keyframes loading-scale {
+          0%, 80%, 100% { transform: scale(1); }
+          40% { transform: scale(1.5); }
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-subtle-glow {
+          animation: subtle-glow 4s ease-in-out infinite;
+        }
+        .animate-slow-scan {
+          animation: slow-scan 8s linear infinite;
+        }
+        .animate-slow-scan-reverse {
+          animation: slow-scan-reverse 10s linear infinite;
+        }
+        .animate-slow-pulse {
+          animation: slow-pulse 6s ease-in-out infinite;
+        }
+        .animate-loading-scale {
+          animation: loading-scale 1.4s ease-in-out infinite;
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
+        .animation-delay-400 {
+          animation-delay: 0.4s;
+        }
+        .animation-delay-1000 {
+          animation-delay: 1s;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+      `}</style>
     </div>
   );
 }
