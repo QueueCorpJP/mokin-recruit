@@ -88,6 +88,28 @@ export async function PUT(request: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
+    // ステータスが'PUBLISHED'に変更される場合、published_atを自動設定
+    if (updateData.status === 'PUBLISHED') {
+      // 現在のステータスを確認
+      const { data: currentJob, error: fetchError } = await supabase
+        .from('job_postings')
+        .select('status, published_at')
+        .eq('id', job_posting_id)
+        .single();
+
+      if (fetchError) {
+        return NextResponse.json({ 
+          success: false, 
+          error: fetchError.message 
+        }, { status: 500 });
+      }
+
+      // 現在のステータスが'PUBLISHED'でない場合（初回公開の場合）、published_atを設定
+      if (currentJob.status !== 'PUBLISHED') {
+        updateData.published_at = new Date().toISOString();
+      }
+    }
+
     // 求人情報の更新
     const { data, error } = await supabase
       .from('job_postings')

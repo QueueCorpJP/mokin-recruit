@@ -33,10 +33,8 @@ export function NewPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<Record<string, string>>({});
   const [parameterError, setParameterError] = useState<string | null>(null);
   const [isParametersReady, setIsParametersReady] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState<string>('');
   const [allParams, setAllParams] = useState<Record<string, string>>({});
 
   // URLパラメータの安全な取得と検証（クエリパラメータ + フラグメントパラメータ）
@@ -55,20 +53,16 @@ export function NewPasswordContent() {
       if (typeof window !== 'undefined') {
         const fragment = window.location.hash;
         Object.assign(fragmentParams, parseFragmentParams(fragment));
-        setCurrentUrl(window.location.href);
       }
 
       // 全パラメータをマージ（フラグメントパラメータを優先）
       const combinedParams = { ...queryParams, ...fragmentParams };
       setAllParams(combinedParams);
-      setDebugInfo(combinedParams);
 
       // 必須パラメータの存在確認
       const tokenHash = combinedParams.token_hash || combinedParams.token;
       const code = combinedParams.code;
       const accessToken = combinedParams.access_token;
-      const refreshToken = combinedParams.refresh_token;
-      const type = combinedParams.type;
       const error = combinedParams.error;
 
       // エラーパラメータがある場合の処理
@@ -77,20 +71,26 @@ export function NewPasswordContent() {
 
         switch (error) {
           case 'access_denied':
-            errorMessage =
-              'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
+            if (combinedParams.error_code === 'otp_expired') {
+              errorMessage =
+                'パスワードリセットリンクの有効期限が切れています（1時間）。新しいリンクを要求してください。';
+            } else {
+              errorMessage =
+                'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
+            }
             break;
           case 'invalid_request':
             errorMessage =
               '無効なリクエストです。正しいリンクを使用してください。';
             break;
           case 'expired_token':
+          case 'otp_expired':
             errorMessage =
-              'リンクの有効期限が切れています。新しいパスワードリセットを要求してください。';
+              'パスワードリセットリンクの有効期限が切れています（1時間）。新しいリンクを要求してください。';
             break;
           default:
             if (combinedParams.error_description) {
-              errorMessage = `エラー: ${combinedParams.error_description}`;
+              errorMessage = `エラー: ${decodeURIComponent(combinedParams.error_description)}`;
             }
         }
         setParameterError(errorMessage);
@@ -105,31 +105,12 @@ export function NewPasswordContent() {
 
       if (!hasValidParams) {
         setParameterError(
-          '無効なリンクです。パスワードリセットを再度お試しください。\n' +
-            '（認証パラメータが見つかりません）'
+          '無効なリンクです。パスワードリセットを再度お試しください。'
         );
       }
 
       setIsParametersReady(true);
-
-      // 開発環境でのデバッグログ（クライアントサイドでのみ実行）
-      if (
-        process.env.NODE_ENV === 'development' &&
-        typeof window !== 'undefined'
-      ) {
-        console.log('🔍 Password Reset URL Parameters Analysis:', {
-          queryParams,
-          fragmentParams,
-          combinedParams,
-          hasValidParams,
-          fullUrl: window.location.href,
-          fragment: window.location.hash,
-        });
-      }
     } catch (error) {
-      if (typeof window !== 'undefined') {
-        console.error('❌ Parameter processing error:', error);
-      }
       setParameterError('URLパラメータの処理中にエラーが発生しました。');
       setIsParametersReady(true);
     }
@@ -153,49 +134,24 @@ export function NewPasswordContent() {
         const code = allParams.code;
         const state = allParams.state;
 
-        // クライアントサイドでのみデバッグログ出力
-        if (typeof window !== 'undefined') {
-          console.log('🔍 Password reset parameters (詳細):', {
-            tokenHash: tokenHash ? `${tokenHash.substring(0, 10)}...` : null,
-            type,
-            accessToken: accessToken
-              ? `${accessToken.substring(0, 10)}...`
-              : null,
-            refreshToken: refreshToken
-              ? `${refreshToken.substring(0, 10)}...`
-              : null,
-            code: code ? `${code.substring(0, 10)}...` : null,
-            state,
-            allParams: Object.keys(allParams),
-          });
-        }
-
         // 必須パラメータの最終確認
         if (!tokenHash && !code && !accessToken) {
           throw new Error(
-            '無効なリンクです。パスワードリセットを再度お試しください。\n' +
-              '（認証トークンが見つかりません）'
+            '無効なリンクです。パスワードリセットを再度お試しください。'
           );
         }
 
         // APIリクエストのペイロード構築
         const requestBody = {
-          // 従来のパラメータ
           tokenHash,
           type,
           accessToken,
           refreshToken,
-          // 新しい形式のパラメータ
           code,
           state,
-          // パスワード情報
           password,
           confirmPassword,
         };
-
-        if (typeof window !== 'undefined') {
-          console.log('🚀 Sending password reset request...');
-        }
 
         const response = await fetch('/api/auth/reset-password', {
           method: 'POST',
@@ -208,22 +164,12 @@ export function NewPasswordContent() {
         const data = await response.json();
 
         if (!response.ok) {
-          if (typeof window !== 'undefined') {
-            console.error('❌ Password reset API error:', data);
-          }
           throw new Error(data.error || 'パスワードの設定に失敗しました');
-        }
-
-        if (typeof window !== 'undefined') {
-          console.log('✅ Password reset successful');
         }
 
         // 成功時は完了ページにリダイレクト
         router.push('/auth/reset-password/complete');
       } catch (error) {
-        if (typeof window !== 'undefined') {
-          console.error('❌ Password reset error:', error);
-        }
         throw error;
       } finally {
         setIsLoading(false);
@@ -249,56 +195,32 @@ export function NewPasswordContent() {
         <div className='text-center space-y-4'>
           <Alert variant='destructive'>
             <AlertCircle className='h-4 w-4' />
-            <AlertDescription className='whitespace-pre-line'>
+            <AlertDescription>
               {parameterError}
             </AlertDescription>
           </Alert>
-
-          {/* 開発環境でのデバッグ情報表示 */}
-          {process.env.NODE_ENV === 'development' && (
-            <Alert>
-              <AlertDescription>
-                <div className='text-left text-xs'>
-                  <strong>デバッグ情報:</strong>
-                  <pre className='mt-2 overflow-auto'>
-                    {JSON.stringify(
-                      {
-                        currentUrl: currentUrl,
-                        allParams: allParams,
-                        fragmentPresent:
-                          typeof window !== 'undefined'
-                            ? !!window.location.hash
-                            : false,
-                      },
-                      null,
-                      2
-                    )}
-                  </pre>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
 
           <div className='space-y-4'>
             <p className='text-[#323232] font-medium text-base leading-8'>
               以下の方法をお試しください：
             </p>
             <ul className='text-left text-[#323232] text-sm space-y-2'>
-              <li>• メールから再度リンクをクリックしてください</li>
-              <li>• 新しいパスワードリセットを要求してください</li>
-              <li>• リンクの有効期限（1時間）を確認してください</li>
+              <li>• パスワードリセットリンクは<strong>1時間で期限切れ</strong>になります</li>
+              <li>• リンクは<strong>1回限り</strong>の使用です</li>
+              <li>• 下記ボタンから新しいリセットを要求してください</li>
+              <li>• 新しいメールが届いたら即座にリンクをクリックしてください</li>
             </ul>
 
-            <div className='flex justify-center gap-4 mt-6'>
+            <div className='flex flex-col gap-3 mt-6'>
               <button
                 onClick={() => router.push('/auth/reset-password')}
-                className='bg-[#0F9058] text-white px-6 py-2 rounded-md hover:bg-[#0D7A4A] transition-colors'
+                className='bg-[#0F9058] text-white px-6 py-3 rounded-[25px] hover:bg-[#0D7A4A] transition-colors font-bold tracking-[0.1em]'
               >
                 新しいリセットを要求
               </button>
               <button
                 onClick={() => router.push('/auth/login')}
-                className='border border-[#0F9058] text-[#0F9058] px-6 py-2 rounded-md hover:bg-[#0F9058] hover:text-white transition-colors'
+                className='border border-[#0F9058] text-[#0F9058] px-6 py-3 rounded-[25px] hover:bg-[#0F9058] hover:text-white transition-colors font-bold tracking-[0.1em]'
               >
                 ログインページに戻る
               </button>
@@ -311,7 +233,7 @@ export function NewPasswordContent() {
 
   // 正常時はパスワードリセットフォームを表示（Figmaデザインに合わせたシンプルな構成）
   return (
-    <div className='w-full max-w-md'>
+    <div className='w-full'>
       <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   );

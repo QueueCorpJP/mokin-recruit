@@ -6,6 +6,8 @@ import { Plus, MoreHorizontal } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
 import { BaseInput } from '@/components/ui/base-input';
 import { Button } from '@/components/ui/button';
+import { PaginationArrow } from '@/components/svg/PaginationArrow';
+import { QuestionIcon } from '@/components/svg/QuestionIcon';
 import { getAuthHeaders } from '@/lib/utils/api-client';
 
 // 求人ステータスの型定義
@@ -418,7 +420,7 @@ export default function CompanyJobsPage() {
                 onClick={handleNewJob}
                 variant='blue-gradient'
                 size='lg'
-                className="rounded-[25px] h-[54px] px-[40px] text-[16px] font-bold font-['Noto_Sans_JP'] transition-colors flex items-center"
+                className="rounded-[25px] h-[54px] px-[40px] text-[16px] font-normal font-['Noto_Sans_JP'] transition-colors flex items-center"
               >
                 新規求人作成
               </Button>
@@ -426,7 +428,7 @@ export default function CompanyJobsPage() {
               {/* 右側まとめ（中央＋右） */}
               <div className='flex gap-3 items-center w-auto flex-shrink-0'>
                 {/* 中央：求人の削除について */}
-                <div className='bg-[#F3FBF7] rounded-[8px] p-4 w-[608px]'>
+                <div className='bg-[#F0F9F3] rounded-[8px] p-4 w-[608px]'>
                   <div className='font-bold text-xs mb-1'>
                     求人の削除について
                   </div>
@@ -435,28 +437,26 @@ export default function CompanyJobsPage() {
                   </div>
                 </div>
                 {/* 右：件数表示＋リンク */}
-                <div className='flex flex-col justify-between items-end min-w-[180px] h-[67.98px]'>
+                <div className='flex flex-col justify-center gap-3 items-end min-w-[180px] h-[67.98px]'>
                   <div className='flex items-center gap-2'>
                     <button
-                      className='text-[#4FC3A1] text-xs px-1 font-bold'
+                      className='text-[#4FC3A1] text-xs px-1 font-bold flex items-center justify-center'
                       aria-label='前のページ'
                     >
-                      {'<'}
+                      <PaginationArrow direction='left' />
                     </button>
-                    <span className='text-[#666666] text-xs font-bold'>
+                    <span className='text-[#323232] text-xs font-bold'>
                       1〜10件 / 1,000件
                     </span>
                     <button
-                      className='text-[#4FC3A1] text-xs px-1 font-bold'
+                      className='text-[#4FC3A1] text-xs px-1 font-bold flex items-center justify-center'
                       aria-label='次のページ'
                     >
-                      {'>'}
+                      <PaginationArrow direction='right' />
                     </button>
                   </div>
                   <button className='flex items-center gap-1 text-[#999999] text-xs font-bold focus:outline-none'>
-                    <span className='w-5 h-5 border border-[#999999] rounded-full flex items-center justify-center text-xs font-bold'>
-                      ？
-                    </span>
+                    <QuestionIcon />
                     <span className='underline'>求人の削除について</span>
                   </button>
                 </div>
@@ -465,13 +465,13 @@ export default function CompanyJobsPage() {
 
             {/* テーブルヘッダー */}
             <div className='rounded-t-lg flex flex-col items-center justify-center'>
-              <div className="max-w-[1280px] w-full mx-auto flex gap-[24px] border-b border-[#E5E5E5] text-[#222] text-[14px] font-bold font-['Noto_Sans_JP'] px-[40px] pr-[82px] pb-2">
+              <div className="max-w-[1280px] w-full mx-auto flex gap-[24px] border-b border-[#DCDCDC] text-[#222] text-[14px] font-bold font-['Noto_Sans_JP'] px-[40px] pr-[82px] pb-2">
                 <div className='w-[160px]'>グループ</div>
                 <div className='w-[424px]'>職種 / 求人タイトル</div>
                 <div className='w-[90px]'>ステータス</div>
                 <div className='w-[107px]'>公開範囲</div>
                 <div className='w-[112px]'>社内メモ</div>
-                <div className='w-[70px]'>公開日</div>
+                <div className='w-[70px]'>登録日</div>
                 <div className='w-[76px]'>最終更新日</div>
               </div>
               <div className='mt-2'></div>
@@ -504,7 +504,7 @@ export default function CompanyJobsPage() {
               {/* 求人データ一覧 */}
               {!loading && jobs.length > 0 && (
                 <>
-                  <div className='divide-y divide-[#E5E5E5] flex flex-col gap-y-2'>
+                  <div className='flex flex-col gap-y-2'>
                     {displayedJobs.map(job => (
                       <div
                         key={job.id}
@@ -514,7 +514,7 @@ export default function CompanyJobsPage() {
                         {/* グループ */}
                         <div className='w-[160px] flex items-center'>
                           <div
-                            className='text-white text-[14px] font-bold rounded flex items-center justify-center'
+                            className='text-white text-[14px] font-bold rounded-[8px] flex items-center justify-center'
                             style={{
                               width: '160px',
                               height: '32px',
@@ -530,9 +530,9 @@ export default function CompanyJobsPage() {
 
                         {/* 職種/求人タイトル */}
                         <div className='w-[424px]'>
-                          <div className='flex flex-wrap gap-1 mb-2'>
+                          <div className='flex flex-wrap gap-2 mb-2'>
                             <span
-                              className={`rounded flex items-center justify-center font-bold ${(job.jobType || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.jobType || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
                               style={{
                                 width: '136px',
                                 height: '32px',
@@ -545,7 +545,7 @@ export default function CompanyJobsPage() {
                               {job.jobType || '職種テキスト'}
                             </span>
                             <span
-                              className={`rounded flex items-center justify-center font-bold ${(job.industry || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.industry || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
                               style={{
                                 width: '136px',
                                 height: '32px',
@@ -558,7 +558,7 @@ export default function CompanyJobsPage() {
                               {job.industry || '職種テキスト'}
                             </span>
                             <span
-                              className={`rounded flex items-center justify-center font-bold ${(job.workLocation || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.workLocation || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
                               style={{
                                 width: '136px',
                                 height: '32px',
@@ -621,7 +621,7 @@ export default function CompanyJobsPage() {
                                 fontSize: '14px',
                                 color: '#fff',
                                 background: '#0F9058',
-                                borderRadius: '4px',
+                                borderRadius: '5px',
                                 height: '22px',
                                 minWidth: '60px',
                                 maxWidth: '100%',
@@ -660,7 +660,7 @@ export default function CompanyJobsPage() {
                                   day: '2-digit',
                                 })
                                 .replace(/\//g, '/')
-                            : 'yyyy/mm/dd'}
+                            : 'ー'}
                         </div>
 
                         {/* 最終更新日 */}
@@ -691,7 +691,7 @@ export default function CompanyJobsPage() {
                                 className='text-left hover:bg-[#F3FBF7] text-[#222] text-[14px]'
                                 style={{
                                   color: '#222',
-                                  fontWeight: 'normal',
+                                  fontWeight: '500',
                                   width: '48px',
                                   height: '22px',
                                   padding: 0,
@@ -707,7 +707,7 @@ export default function CompanyJobsPage() {
                                 className='text-left hover:bg-[#FEF0F0] text-[#F56C6C] text-[14px]'
                                 style={{
                                   color: '#F56C6C',
-                                  fontWeight: 'normal',
+                                  fontWeight: '500',
                                   width: '48px',
                                   height: '22px',
                                   padding: 0,
@@ -733,17 +733,69 @@ export default function CompanyJobsPage() {
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
-                      {'<'}
+                      <PaginationArrow direction="left" className="w-3 h-4" />
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <button
-                        key={i + 1}
-                        className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === i + 1 ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                    {(() => {
+                      const getPages = () => {
+                        if (totalPages <= 5) {
+                          // 総ページ数が5以下の場合は全て表示
+                          return Array.from({ length: totalPages }, (_, i) => i + 1);
+                        }
+
+                        // 5個固定で表示
+                        const pages = new Set<number>();
+                        
+                        // 先頭ページ
+                        pages.add(1);
+                        
+                        // 前ページ
+                        if (currentPage > 1) {
+                          pages.add(currentPage - 1);
+                        }
+                        
+                        // 現在のページ
+                        pages.add(currentPage);
+                        
+                        // 次ページ
+                        if (currentPage < totalPages) {
+                          pages.add(currentPage + 1);
+                        }
+                        
+                        // 最終ページ
+                        pages.add(totalPages);
+                        
+                        // 5個になるまで追加
+                        const sortedPages = [...pages].sort((a, b) => a - b);
+                        while (sortedPages.length < 5) {
+                          // 現在のページ周辺で不足分を埋める
+                          for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                            if (!pages.has(i)) {
+                              pages.add(i);
+                              break;
+                            }
+                          }
+                          // それでも足りない場合は全体から補完
+                          for (let i = 1; i <= totalPages && sortedPages.length < 5; i++) {
+                            if (!pages.has(i)) {
+                              pages.add(i);
+                            }
+                          }
+                          break;
+                        }
+                        
+                        return [...pages].sort((a, b) => a - b).slice(0, 5);
+                      };
+
+                      return getPages().map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === pageNum ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      ));
+                    })()}
                     <button
                       className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === totalPages ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent' : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'}`}
                       onClick={() =>
@@ -751,7 +803,7 @@ export default function CompanyJobsPage() {
                       }
                       disabled={currentPage === totalPages}
                     >
-                      {'>'}
+                      <PaginationArrow direction="right" className="w-3 h-4" />
                     </button>
                   </div>
                 </>
