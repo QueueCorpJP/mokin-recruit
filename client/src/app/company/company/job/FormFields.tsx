@@ -269,7 +269,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
         </div>
         <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
           <div className='flex flex-col gap-2 items-start justify-start w-full'>
-            <ImageUpload images={images} onChange={setImages} maxImages={5} />
+            <ImageUpload images={images} onChange={setImages} maxImages={3} />
           </div>
         </div>
       </div>
@@ -406,11 +406,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               当ポジションの魅力
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.positionSummary ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='当ポジションの魅力を入力してください。'
               value={positionSummary}
               onChange={e => setPositionSummary(e.target.value)}
             />
+            {showErrors && errors.positionSummary && (
+              <span className='text-red-500 text-sm'>
+                {errors.positionSummary}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -429,11 +434,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               スキル・経験
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.skills ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='必要または歓迎するスキル・経験について入力してください。'
               value={skills}
               onChange={e => setSkills(e.target.value)}
             />
+            {showErrors && errors.skills && (
+              <span className='text-red-500 text-sm'>
+                {errors.skills}
+              </span>
+            )}
           </div>
           {/* その他・求める人物像など */}
           <div className='w-full'>
@@ -441,11 +451,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               その他・求める人物像など
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.otherRequirements ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='スキル以外に求める人物像や価値観などを入力してください。'
               value={otherRequirements}
               onChange={e => setOtherRequirements(e.target.value)}
             />
+            {showErrors && errors.otherRequirements && (
+              <span className='text-red-500 text-sm'>
+                {errors.otherRequirements}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -576,7 +591,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               <div className='relative' style={{ width: `${selectWidth}px` }}>
                 <select
                   ref={selectRef}
-                  className={`bg-white border border-[#999999] rounded-[5px] pl-[11px] pr-[35px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none ${showErrors && errors.employmentType ? 'border-red-500 bg-red-50' : ''}`}
+                  className="bg-white border border-[#999999] rounded-[5px] pl-[11px] pr-[35px] py-[11px] font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] appearance-none"
                   value={employmentType}
                   onChange={e => setEmploymentType(e.target.value)}
                   style={{ width: `${selectWidth}px` }}
@@ -601,11 +616,6 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                   </svg>
                 </div>
               </div>
-              {showErrors && errors.employmentType && (
-                <span className='text-red-500 text-sm'>
-                  {errors.employmentType}
-                </span>
-              )}
             </div>
           </div>
           {/* 雇用形態補足 */}
@@ -630,11 +640,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               就業時間
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.workingHours ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='9:00～18:00（所定労働時間8時間）&#13;&#10;休憩：60分&#13;&#10;フレックス制：有'
               value={workingHours}
               onChange={e => setWorkingHours(e.target.value)}
             />
+            {showErrors && errors.workingHours && (
+              <span className='text-red-500 text-sm'>
+                {errors.workingHours}
+              </span>
+            )}
           </div>
           {/* 所定外労働の有無 */}
           <div className='w-full'>
@@ -686,11 +701,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               休日・休暇
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.holidays ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='完全週休2日制（土・日）、祝日&#13;&#10;年間休日：120日&#13;&#10;有給休暇：初年度10日&#13;&#10;その他休暇：年末年始休暇'
               value={holidays}
               onChange={e => setHolidays(e.target.value)}
             />
+            {showErrors && errors.holidays && (
+              <span className='text-red-500 text-sm'>
+                {errors.holidays}
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -265,10 +265,8 @@ export const resumeRequiredOptions = [
 // 雇用形態の選択肢
 export const employmentTypeOptions = [
   { value: '契約社員', label: '契約社員' },
-  { value: '派遣社員', label: '派遣社員' },
-  { value: 'アルバイト・パート', label: 'アルバイト・パート' },
   { value: '業務委託', label: '業務委託' },
-  { value: 'インターン', label: 'インターン' },
+  { value: 'その他', label: 'その他' },
 ];
 
 // 受動喫煙防止措置の選択肢

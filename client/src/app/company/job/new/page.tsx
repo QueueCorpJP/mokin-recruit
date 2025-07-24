@@ -236,11 +236,10 @@ export default function JobNewPage() {
     if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
       newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
-    if (!employmentType || employmentType === '')
-      newErrors.employmentType = '雇用形態を選択してください';
+    // 雇用形態は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に入力済み）
     if (locations.length === 0)
       newErrors.locations = '勤務地を1つ以上選択してください。';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
+    if (jobTypes.length === 0) newErrors.jobTypes = '求人タイトルを入力してください。';
     if (industries.length === 0)
       newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
@@ -257,15 +256,13 @@ export default function JobNewPage() {
     // if (!salaryNote.trim()) newErrors.salaryNote = '年収補足を入力してください';
     if (!workingHours.trim())
       newErrors.workingHours = '就業時間を入力してください。';
-    if (!overtime || overtime === '')
-      newErrors.overtime = '所定外労働の有無を選択してください';
+    // 所定外労働の有無は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に選択済み）
     if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
       newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
       newErrors.appealPoints = 'アピールポイントを1つ以上選択してください。';
-    if (!smoke || smoke === '')
-      newErrors.smoke = '受動喫煙防止措置を選択してください';
+    // 受動喫煙防止措置は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に選択済み）
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -684,14 +681,11 @@ export default function JobNewPage() {
               }}
               locationNote={locationNote}
               setLocationNote={setLocationNote}
-              selectionProcess={selectionProcess}
-              setSelectionProcess={setSelectionProcess}
-              employmentType={employmentType}
-              setEmploymentType={(value: string) => {
-                setEmploymentType(value);
-                clearFieldError('employmentType');
-              }}
-              employmentTypeNote={employmentTypeNote}
+                              selectionProcess={selectionProcess}
+                setSelectionProcess={setSelectionProcess}
+                employmentType={employmentType}
+                setEmploymentType={setEmploymentType}
+                employmentTypeNote={employmentTypeNote}
               setEmploymentTypeNote={setEmploymentTypeNote}
               workingHours={workingHours}
               setWorkingHours={setWorkingHours}
