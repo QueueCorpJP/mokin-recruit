@@ -23,10 +23,10 @@ export async function GET(request: NextRequest) {
       },
       // Supabase環境変数の存在チェック
       supabaseEnv: {
-        NEXT_PUBLIC_SUPABASE_URL:
-          typeof process.env.NEXT_PUBLIC_SUPABASE_URL !== 'undefined',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY:
-          typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'undefined',
+        SUPABASE_URL:
+          typeof process.env.SUPABASE_URL !== 'undefined',
+        SUPABASE_ANON_KEY:
+          typeof process.env.SUPABASE_ANON_KEY !== 'undefined',
       },
     };
 

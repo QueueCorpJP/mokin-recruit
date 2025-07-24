@@ -122,10 +122,49 @@ export default function JobNewPage() {
     fetchCompanyGroups();
   }, []);
 
-  // 下書きデータを復元
+  // 複製データまたは下書きデータを復元
   useEffect(() => {
-    const loadDraft = () => {
+    const loadData = () => {
       try {
+        // 複製データがあるかチェック（優先）
+        const duplicateData = sessionStorage.getItem('duplicateJobData');
+        if (duplicateData) {
+          const parsedData = JSON.parse(duplicateData);
+          
+          // 複製データを各状態にセット
+          if (parsedData.company_group_id) setGroup(parsedData.company_group_id);
+          if (parsedData.title) setTitle(parsedData.title);
+          if (parsedData.job_types) setJobTypes(parsedData.job_types);
+          if (parsedData.industries) setIndustries(parsedData.industries);
+          if (parsedData.job_description) setJobDescription(parsedData.job_description);
+          if (parsedData.position_summary) setPositionSummary(parsedData.position_summary);
+          if (parsedData.required_skills) setSkills(parsedData.required_skills);
+          if (parsedData.preferred_skills) setOtherRequirements(parsedData.preferred_skills);
+          if (parsedData.salary_min) setSalaryMin(parsedData.salary_min.toString());
+          if (parsedData.salary_max) setSalaryMax(parsedData.salary_max.toString());
+          if (parsedData.salary_note) setSalaryNote(parsedData.salary_note);
+          if (parsedData.work_locations) setLocations(parsedData.work_locations);
+          if (parsedData.location_note) setLocationNote(parsedData.location_note);
+          if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
+          if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
+          if (parsedData.working_hours) setWorkingHours(parsedData.working_hours);
+          if (parsedData.overtime_info) setOvertime(parsedData.overtime_info);
+          if (parsedData.holidays) setHolidays(parsedData.holidays);
+          if (parsedData.selection_process) setSelectionProcess(parsedData.selection_process);
+          if (parsedData.appeal_points) setAppealPoints(parsedData.appeal_points);
+          if (parsedData.smoking_policy) setSmoke(parsedData.smoking_policy);
+          if (parsedData.smoking_policy_note) setSmokeNote(parsedData.smoking_policy_note);
+          if (parsedData.required_documents) setResumeRequired(parsedData.required_documents);
+          if (parsedData.internal_memo) setMemo(parsedData.internal_memo);
+          if (parsedData.publication_type) setPublicationType(parsedData.publication_type);
+
+          // 複製データ使用後は削除
+          sessionStorage.removeItem('duplicateJobData');
+          console.log('複製データを復元しました');
+          return;
+        }
+
+        // 複製データがなければ下書きデータをチェック
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
           const draftData = JSON.parse(savedDraft);
@@ -168,12 +207,13 @@ export default function JobNewPage() {
           console.log('下書きデータを復元しました');
         }
       } catch (error) {
-        console.error('下書きデータの復元に失敗しました:', error);
+        console.error('データの復元に失敗しました:', error);
         localStorage.removeItem(DRAFT_KEY);
+        sessionStorage.removeItem('duplicateJobData');
       }
     };
 
-    loadDraft();
+    loadData();
   }, []);
 
   // 年収のリアルタイムバリデーション
@@ -181,31 +221,80 @@ export default function JobNewPage() {
     validateSalary(salaryMin, salaryMax);
   }, [salaryMin, salaryMax]);
 
+  // 必須項目が全て入力されているかチェックする関数
+  const isFormValid = () => {
+    // グループ選択
+    if (!group) return false;
+    
+    // 求人タイトル
+    if (!title.trim()) return false;
+    
+    // 職種（1つ以上）
+    if (jobTypes.length === 0) return false;
+    
+    // 業種（1つ以上）
+    if (industries.length === 0) return false;
+    
+    // 業務内容
+    if (!jobDescription.trim()) return false;
+    
+    // 当ポジションの魅力
+    if (!positionSummary.trim()) return false;
+    
+    // スキル・経験
+    if (!skills.trim()) return false;
+    
+    // その他・求める人物像
+    if (!otherRequirements.trim()) return false;
+    
+    // 想定年収
+    if (!salaryMin || !salaryMax) return false;
+    const minValue = parseInt(salaryMin);
+    const maxValue = parseInt(salaryMax);
+    if (minValue > maxValue) return false;
+    
+    // 勤務地（1つ以上）
+    if (locations.length === 0) return false;
+    
+    // 就業時間
+    if (!workingHours.trim()) return false;
+    
+    // 休日・休暇
+    if (!holidays.trim()) return false;
+    
+    // 選考情報
+    if (!selectionProcess.trim()) return false;
+    
+    // アピールポイント（1つ以上）
+    if (!appealPoints || appealPoints.length === 0) return false;
+    
+    return true;
+  };
+
   // バリデーション関数
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!group) newErrors.group = 'グループを選択してください';
-    if (!title.trim()) newErrors.title = '求人タイトルを入力してください';
+    if (!group) newErrors.group = 'グループを選択してください。';
+    if (!title.trim()) newErrors.title = '求人タイトルを入力してください。';
     // imagesは任意項目に変更
     // if (images.length === 0) newErrors.images = '画像を選択してください';
     if (!jobDescription.trim())
-      newErrors.jobDescription = '業務内容を入力してください';
+      newErrors.jobDescription = '業務内容を入力してください。';
     if (!positionSummary.trim())
-      newErrors.positionSummary = '当ポジションの魅力を入力してください';
-    if (!skills.trim()) newErrors.skills = 'スキル・経験を入力してください';
+      newErrors.positionSummary = '当ポジションの魅力を入力してください。';
+    if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
-      newErrors.otherRequirements = 'その他・求める人物像を入力してください';
-    if (!employmentType || employmentType === '')
-      newErrors.employmentType = '雇用形態を選択してください';
+      newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
+    // 雇用形態は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に入力済み）
     if (locations.length === 0)
-      newErrors.locations = '勤務地を選択してください';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を選択してください';
+      newErrors.locations = '勤務地を1つ以上選択してください。';
+    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
-      newErrors.industries = '業種を選択してください';
+      newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
     if (!salaryMin || !salaryMax) {
-      newErrors.salary = '想定年収（下限・上限）を選択してください';
+      newErrors.salary = '想定年収を選択してください。';
     } else {
       const minValue = parseInt(salaryMin);
       const maxValue = parseInt(salaryMax);
@@ -213,18 +302,17 @@ export default function JobNewPage() {
         newErrors.salary = '最大年収は最小年収よりも高く設定してください';
       }
     }
-    if (!salaryNote.trim()) newErrors.salaryNote = '年収補足を入力してください';
+    // salaryNoteは任意項目に変更
+    // if (!salaryNote.trim()) newErrors.salaryNote = '年収補足を入力してください';
     if (!workingHours.trim())
-      newErrors.workingHours = '就業時間を入力してください';
-    if (!overtime || overtime === '')
-      newErrors.overtime = '所定外労働の有無を選択してください';
-    if (!holidays.trim()) newErrors.holidays = '休日・休暇を入力してください';
+      newErrors.workingHours = '就業時間を入力してください。';
+    // 所定外労働の有無は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に選択済み）
+    if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
-      newErrors.selectionProcess = '選考情報を入力してください';
+      newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
-      newErrors.appealPoints = 'アピールポイントを1つ以上選択してください';
-    if (!smoke || smoke === '')
-      newErrors.smoke = '受動喫煙防止措置を選択してください';
+      newErrors.appealPoints = 'アピールポイントを1つ以上選択してください。';
+    // 受動喫煙防止措置は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に選択済み）
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -262,44 +350,88 @@ export default function JobNewPage() {
     });
   };
 
-  // 下書き保存関数
-  const saveDraft = () => {
+  // 下書き保存関数（Supabaseに保存・バリデーションなし）
+  const saveDraft = async () => {
     try {
-      const draftData = {
-        group,
-        title,
-        jobTypes,
-        industries,
-        jobDescription,
-        positionSummary,
-        skills,
-        otherRequirements,
-        salaryMin,
-        salaryMax,
-        salaryNote,
-        locations,
-        locationNote,
-        employmentType,
-        employmentTypeNote,
-        workingHours,
-        overtime,
-        holidays,
-        selectionProcess,
-        appealPoints,
-        smoke,
-        smokeNote,
-        resumeRequired,
-        memo,
-        publicationType,
-        savedAt: new Date().toISOString(),
+      // 画像をBase64エンコード（通常の投稿処理と同じ）
+      console.log('Encoding images for draft:', images.length);
+      let encodedImages: any[] = [];
+      if (images.length > 0) {
+        try {
+          encodedImages = await encodeImagesToBase64(images);
+          console.log('Images encoded successfully for draft:', encodedImages.length);
+        } catch (error) {
+          console.error('Image encoding failed for draft:', error);
+          alert('画像の処理に失敗しました');
+          return;
+        }
+      }
+
+      // 通常の投稿処理と全く同じデータ構造
+      const data = {
+        company_group_id: group,
+        title: title || '未設定',
+        job_description: jobDescription || '未設定',
+        position_summary: positionSummary || null,
+        required_skills: skills || '',
+        preferred_skills: otherRequirements || '',
+        salary_min: salaryMin ? parseInt(salaryMin) : null,
+        salary_max: salaryMax ? parseInt(salaryMax) : null,
+        salary_note: salaryNote || null,
+        employment_type: employmentType || '未設定',
+        employment_type_note: employmentTypeNote || null,
+        work_location: locations[0] || '未設定',
+        work_locations: locations || [],
+        location_note: locationNote || null,
+        working_hours: workingHours || null,
+        overtime_info: overtime || null,
+        holidays: holidays || null,
+        remote_work_available: false,
+        job_type: jobTypes[0] || '未設定',
+        job_types: jobTypes || [],
+        industry: industries[0] || '未設定',
+        industries: industries || [],
+        selection_process: selectionProcess || null,
+        appeal_points: appealPoints || [],
+        smoking_policy: smoke || null,
+        smoking_policy_note: smokeNote || null,
+        required_documents: resumeRequired || [],
+        internal_memo: memo || null,
+        publication_type: publicationType || 'public',
+        images: encodedImages,
+        status: 'DRAFT', // 下書き保存時は必ずDRAFTステータス
+        application_deadline: null,
+        published_at: null,
       };
 
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-      alert('下書きを保存しました');
-      console.log('下書きを保存しました');
+      const authHeaders = getAuthHeaders();
+
+      console.log('Saving draft to Supabase with data:', { ...data, images: '(encoded)' });
+
+      const res = await fetch('/api/company/job/new', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        // ローカルストレージの下書きデータを削除
+        clearDraft();
+        alert('下書きを保存しました');
+        console.log('下書き保存成功:', result);
+        // 求人一覧ページにリダイレクト
+        router.push('/company/job');
+      } else {
+        console.error('Draft save API Error:', result);
+        alert(`下書き保存エラー: ${result.error}`);
+      }
     } catch (error) {
-      console.error('下書きの保存に失敗しました:', error);
-      alert('下書きの保存に失敗しました');
+      console.error('Draft save Request Error:', error);
+      alert('下書き保存で通信エラーが発生しました');
     }
   };
 
@@ -403,7 +535,7 @@ export default function JobNewPage() {
       internal_memo: memo || null,
       publication_type: publicationType || 'public',
       images: encodedImages,
-      status: 'DRAFT',
+      status: 'PENDING_APPROVAL',
       application_deadline: null,
       published_at: null,
     };
@@ -437,79 +569,7 @@ export default function JobNewPage() {
     }
   };
 
-  // エラーサマリーコンポーネント
-  const ErrorSummary: React.FC<{ errors: Record<string, string> }> = ({
-    errors,
-  }) => {
-    const errorEntries = Object.entries(errors);
-    if (errorEntries.length === 0) return null;
 
-    const getFieldLabel = (field: string) => {
-      const labels: Record<string, string> = {
-        group: 'グループ',
-        title: '求人タイトル',
-        images: '画像',
-        jobDescription: '業務内容',
-        employmentType: '雇用形態',
-        locations: '勤務地',
-        jobTypes: '職種',
-        industries: '業種',
-        salary: '年収',
-      };
-      return labels[field] || field;
-    };
-
-    const scrollToField = (field: string) => {
-      // フィールドまでスクロールする
-      const element = document.querySelector(`[data-field="${field}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    };
-
-    return (
-      <div className='mb-6 p-4 border-2 border-red-500 rounded-lg bg-red-50'>
-        <div className='flex items-start gap-3'>
-          <div className='flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
-            <svg
-              className='w-4 h-4 text-white'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
-              />
-            </svg>
-          </div>
-          <div className='flex-1'>
-            <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-red-700 mb-2">
-              入力に不備があります
-            </h3>
-            <p className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-600 mb-3">
-              以下の項目を確認してください：
-            </p>
-            <ul className='space-y-2'>
-              {errorEntries.map(([field, message]) => (
-                <li key={field} className='flex items-center gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => scrollToField(field)}
-                    className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-700 hover:text-red-900 underline hover:no-underline cursor-pointer text-left"
-                  >
-                    • {getFieldLabel(field)}: {message}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -581,11 +641,20 @@ export default function JobNewPage() {
                 clearFieldError('jobDescription');
               }}
               positionSummary={positionSummary}
-              setPositionSummary={setPositionSummary}
+              setPositionSummary={(value: string) => {
+                setPositionSummary(value);
+                clearFieldError('positionSummary');
+              }}
               skills={skills}
-              setSkills={setSkills}
+              setSkills={(value: string) => {
+                setSkills(value);
+                clearFieldError('skills');
+              }}
               otherRequirements={otherRequirements}
-              setOtherRequirements={setOtherRequirements}
+              setOtherRequirements={(value: string) => {
+                setOtherRequirements(value);
+                clearFieldError('otherRequirements');
+              }}
               salaryMin={salaryMin}
               setSalaryMin={setSalaryMin}
               salaryMax={salaryMax}
@@ -600,13 +669,13 @@ export default function JobNewPage() {
               locationNote={locationNote}
               setLocationNote={setLocationNote}
               selectionProcess={selectionProcess}
-              setSelectionProcess={setSelectionProcess}
-              employmentType={employmentType}
-              setEmploymentType={(value: string) => {
-                setEmploymentType(value);
-                clearFieldError('employmentType');
+              setSelectionProcess={(value: string) => {
+                setSelectionProcess(value);
+                clearFieldError('selectionProcess');
               }}
-              employmentTypeNote={employmentTypeNote}
+                employmentType={employmentType}
+                setEmploymentType={setEmploymentType}
+                employmentTypeNote={employmentTypeNote}
               setEmploymentTypeNote={setEmploymentTypeNote}
               workingHours={workingHours}
               setWorkingHours={setWorkingHours}
@@ -615,7 +684,10 @@ export default function JobNewPage() {
               holidays={holidays}
               setHolidays={setHolidays}
               appealPoints={appealPoints}
-              setAppealPoints={setAppealPoints}
+              setAppealPoints={(points: string[]) => {
+                setAppealPoints(points);
+                clearFieldError('appealPoints');
+              }}
               smoke={smoke}
               setSmoke={setSmoke}
               smokeNote={smokeNote}
@@ -634,9 +706,6 @@ export default function JobNewPage() {
 
           {/* ボタンエリア */}
           <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
-            {/* エラーサマリー */}
-            {showErrors && <ErrorSummary errors={errors} />}
-
             <div className='flex justify-center items-center gap-4 w-full'>
               {isConfirmMode ? (
                 <>
@@ -670,7 +739,12 @@ export default function JobNewPage() {
                   </Button>
                   <button
                     type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
+                    disabled={showErrors && !isFormValid()}
+                    className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
+                      !showErrors || isFormValid()
+                        ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                     onClick={handleConfirm}
                   >
                     確認する
