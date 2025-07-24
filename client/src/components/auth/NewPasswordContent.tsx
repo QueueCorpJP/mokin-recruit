@@ -247,10 +247,6 @@ export function NewPasswordContent() {
     return (
       <div className='w-full max-w-md space-y-6'>
         <div className='text-center space-y-4'>
-          <h2 className='text-[#0F9058] font-bold text-xl'>
-            パスワードリセットエラー
-          </h2>
-
           <Alert variant='destructive'>
             <AlertCircle className='h-4 w-4' />
             <AlertDescription className='whitespace-pre-line'>
@@ -313,18 +309,9 @@ export function NewPasswordContent() {
     );
   }
 
-  // 正常時はパスワードリセットフォームを表示
+  // 正常時はパスワードリセットフォームを表示（Figmaデザインに合わせたシンプルな構成）
   return (
-    <div className='w-full max-w-md space-y-6'>
-      <div className='text-center space-y-4'>
-        <h2 className='text-[#0F9058] font-bold text-xl'>
-          新しいパスワードを設定
-        </h2>
-        <p className='text-[#323232] font-medium text-base leading-8'>
-          新しいパスワードを入力してください
-        </p>
-      </div>
-
+    <div className='w-full max-w-md'>
       <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} />
     </div>
   );

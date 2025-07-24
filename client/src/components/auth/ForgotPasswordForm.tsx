@@ -2,18 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { InputField } from '@/components/ui/input-field';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Mail, Loader2, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface ForgotPasswordFormData {
   email: string;
@@ -62,6 +51,9 @@ export default function ForgotPasswordForm({
     if (emailError) {
       setEmailError('');
     }
+    if (submitStatus !== 'idle') {
+      setSubmitStatus('idle');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,7 +84,7 @@ export default function ForgotPasswordForm({
         setSubmitStatus('success');
         setMessage(
           result.message ||
-            'パスワードリセットリンクをメールで送信しました。メールをご確認ください。'
+            'パスワード再設定のご案内のメールをお送りいたします。'
         );
       } else {
         setSubmitStatus('error');
@@ -111,109 +103,137 @@ export default function ForgotPasswordForm({
     }
   };
 
-  const getBackUrl = () => {
-    switch (userType) {
-      case 'candidate':
-        return '/candidate/auth/login';
-      case 'company':
-        return '/company/auth/login';
-      case 'admin':
-        return '/admin/auth/login';
-      default:
-        return '/auth/login';
-    }
-  };
-
-  const getUserTypeLabel = () => {
-    switch (userType) {
-      case 'candidate':
-        return '候補者';
-      case 'company':
-        return '企業';
-      case 'admin':
-        return '管理者';
-      default:
-        return '';
-    }
-  };
+  if (submitStatus === 'success') {
+    return (
+      <div className='flex flex-col gap-10 items-center'>
+        {/* 成功ヘッダー */}
+        <div className='flex flex-col gap-6 items-center w-full text-center'>
+          <div className='mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4'>
+            <CheckCircle className='w-6 h-6 text-green-600' />
+          </div>
+          <div className='text-[#0f9058] text-[32px] font-bold w-full' style={{
+            fontFamily: 'Noto Sans JP, sans-serif',
+            fontWeight: 700,
+            fontSize: '32px',
+            lineHeight: '1.6',
+            letterSpacing: '3.2px',
+          }}>
+            <p className='block leading-[1.6]'>送信完了</p>
+          </div>
+          <div className='text-[#323232] text-[16px] w-full' style={{
+            fontFamily: 'Noto Sans JP, sans-serif',
+            fontWeight: 500,
+            fontSize: '16px',
+            lineHeight: '2',
+            letterSpacing: '1.6px',
+          }}>
+            <p className='block mb-0'>{message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Card className='w-full max-w-md mx-auto'>
-      <CardHeader className='space-y-1'>
-        <div className='flex items-center gap-2'>
-          <Link
-            href={getBackUrl()}
-            className='text-gray-500 hover:text-gray-700 transition-colors'
-          >
-            <ArrowLeft className='h-4 w-4' />
-          </Link>
-          <CardTitle className='text-2xl'>パスワードリセット</CardTitle>
+    <div className='flex flex-col gap-10 items-center w-full'>
+      {/* ヘッダー - 見出し+説明 */}
+      <div className='flex flex-col gap-6 items-center w-full text-center'>
+        <div className='text-[#0f9058] text-[32px] font-bold w-full' style={{
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 700,
+          fontSize: '32px',
+          lineHeight: '1.6',
+          letterSpacing: '3.2px',
+        }}>
+          <p className='block leading-[1.6]'>パスワードの再設定</p>
         </div>
-        <CardDescription>
-          {getUserTypeLabel()}アカウントのパスワードをリセットします
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className='space-y-4'>
-          <div className='space-y-2'>
-            <InputField
-              label='メールアドレス'
-              inputType='email'
-              layout='vertical'
-              required={true}
-              errorMessage={emailError}
-              inputProps={{
-                value: formData.email,
-                onChange: handleEmailChange,
-                placeholder: 'example@email.com',
-                error: !!emailError,
-                disabled: isLoading,
-              }}
-            />
+        <div className='text-[#323232] text-[16px] w-full' style={{
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 500,
+          fontSize: '16px',
+          lineHeight: '2',
+          letterSpacing: '1.6px',
+        }}>
+          <p className='block mb-0'>
+            サービスに登録されているメールアドレスを入力してください。
+          </p>
+          <p className='block'>
+            パスワード再設定のご案内のメールをお送りいたします。
+          </p>
+        </div>
+      </div>
+
+      {/* フォーム */}
+      <form onSubmit={handleSubmit} className='flex flex-col gap-10 items-center w-full'>
+        {/* エラーメッセージ */}
+        {submitStatus === 'error' && (
+          <div className='flex items-center gap-2 text-red-600 text-sm'>
+            <AlertCircle className='w-4 h-4' />
+            <span>{message}</span>
           </div>
+        )}
 
-          {submitStatus === 'success' && (
-            <Alert className='border-green-200 bg-green-50'>
-              <CheckCircle className='h-4 w-4 text-green-600' />
-              <AlertDescription className='text-green-800'>
-                {message}
-              </AlertDescription>
-            </Alert>
-          )}
+        {/* 入力フィールド - 通常 */}
+        <div className='flex justify-center w-full'>
+          <div className='flex flex-col gap-2 w-[400px]'>
+            <div className='bg-white border border-[#999999] border-solid rounded-[5px] cursor-pointer relative w-full'>
+              <div className='flex items-center w-full h-full'>
+                <div className='flex items-center justify-start p-[11px] w-full gap-2.5'>
+                  <input
+                    type='email'
+                    placeholder='メールアドレスを入力'
+                    value={formData.email}
+                    onChange={handleEmailChange}
+                    className='grow min-w-0 bg-transparent text-[#999999] font-medium text-[16px] outline-none placeholder-[#999999]'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '16px',
+                      lineHeight: '2',
+                      letterSpacing: '1.6px',
+                    }}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
+            {emailError && (
+              <div className='mt-1 text-xs text-red-500 flex items-center'>
+                <AlertCircle className='w-3 h-3 mr-1' />
+                {emailError}
+              </div>
+            )}
+          </div>
+        </div>
 
-          {submitStatus === 'error' && (
-            <Alert className='border-red-200 bg-red-50'>
-              <Mail className='h-4 w-4 text-red-600' />
-              <AlertDescription className='text-red-800'>
-                {message}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <Button
+        {/* 送信ボタン - 通常サイズ_グリーン */}
+        <div className='flex justify-center w-full'>
+          <button
             type='submit'
-            className='w-full'
-            disabled={isLoading || submitStatus === 'success'}
+            disabled={isLoading || !formData.email}
+            className='flex items-center justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              fontSize: '16px',
+              lineHeight: '1.6',
+              letterSpacing: '1.6px',
+            }}
           >
             {isLoading ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 送信中...
               </>
-            ) : submitStatus === 'success' ? (
-              '送信完了'
             ) : (
-              'リセットリンクを送信'
+              <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
+                送信する
+              </p>
             )}
-          </Button>
-
-          <div className='text-center text-sm'>
-            <Link href={getBackUrl()} className='text-primary hover:underline'>
-              ログインに戻る
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
