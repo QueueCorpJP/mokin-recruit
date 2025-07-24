@@ -129,7 +129,9 @@ export default function CompanyJobsPage() {
       const result = await response.json();
 
       if (result.success) {
-        setJobs(result.data || []);
+        // 停止状態の求人を除外（「すべて」選択時でも停止状態は非表示）
+        const filteredJobs = (result.data || []).filter((job: JobPosting) => job.status !== 'CLOSED');
+        setJobs(filteredJobs);
       } else {
         setError(result.error || '求人情報の取得に失敗しました');
       }
@@ -170,6 +172,81 @@ export default function CompanyJobsPage() {
   // 求人詳細表示
   const handleViewJob = (jobId: string) => {
     router.push(`/company/job/view/${jobId}`);
+  };
+
+  // 求人複製
+  const handleDuplicateJob = async (jobId: string) => {
+    try {
+      const authHeaders = getAuthHeaders();
+
+      // 複製元の求人データを取得
+      const response = await fetch(`/api/company/job/edit?id=${jobId}`, {
+        headers: authHeaders,
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const originalJob = result.data;
+        
+        // 複製データを作成（求人タイトルに「のコピー」を追加）
+        const duplicateData = {
+          ...originalJob,
+          title: `${originalJob.title}のコピー`,
+          // IDや日付など、複製時に引き継がない項目は除外
+          id: undefined,
+          createdAt: undefined,
+          updatedAt: undefined,
+          publishedAt: undefined,
+          status: 'DRAFT'
+        };
+        
+        // sessionStorageに複製データを保存
+        sessionStorage.setItem('duplicateJobData', JSON.stringify(duplicateData));
+        
+        // 新規作成画面に遷移
+        router.push('/company/job/new');
+      } else {
+        console.error('求人データの取得に失敗しました:', result.error);
+        alert('求人データの取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('複製処理でエラーが発生しました:', error);
+      alert('複製処理でエラーが発生しました');
+    }
+  };
+
+  // 求人の停止（削除）
+  const handleDeleteJob = async (jobId: string) => {
+    try {
+      const authHeaders = getAuthHeaders();
+
+      // 求人のステータスをCLOSEDに変更
+      const response = await fetch('/api/company/job/edit', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify({
+          job_posting_id: jobId,
+          status: 'CLOSED'
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // 成功時に一覧を再取得
+        await fetchJobs();
+      } else {
+        console.error('求人の停止に失敗しました:', result.error);
+        alert('求人の停止に失敗しました');
+      }
+    } catch (error) {
+      console.error('求人停止処理でエラーが発生しました:', error);
+      alert('求人停止処理でエラーが発生しました');
+    }
   };
 
   // ポップアップの表示状態と対象jobId
@@ -519,12 +596,13 @@ export default function CompanyJobsPage() {
                               下書き
                             </span>
                           ) : job.status === 'PENDING_APPROVAL' ? (
-                            <span
-                              className='font-bold whitespace-pre-line text-center'
+                            <div
+                              className='font-bold text-center leading-tight'
                               style={{ fontSize: '14px', color: '#FF5B5B' }}
                             >
-                              {'掲載待ち\n（承認待ち）'}
-                            </span>
+                              <div className='text-center'>掲載待ち</div>
+                              <div className='text-center'> (承認待ち)</div>
+                            </div>
                           ) : (
                             <span className='bg-[#FEF0F0] text-[#F56C6C] px-3 py-1 rounded text-xs font-medium'>
                               停止
@@ -619,7 +697,8 @@ export default function CompanyJobsPage() {
                                   padding: 0,
                                 }}
                                 onClick={() => {
-                                  /* 複製処理 */ setPopupJobId(null);
+                                  handleDuplicateJob(job.id);
+                                  setPopupJobId(null);
                                 }}
                               >
                                 複製
@@ -635,7 +714,8 @@ export default function CompanyJobsPage() {
                                   marginTop: '4px',
                                 }}
                                 onClick={() => {
-                                  /* 削除処理 */ setPopupJobId(null);
+                                  handleDeleteJob(job.id);
+                                  setPopupJobId(null);
                                 }}
                               >
                                 削除

@@ -122,10 +122,49 @@ export default function JobNewPage() {
     fetchCompanyGroups();
   }, []);
 
-  // 下書きデータを復元
+  // 複製データまたは下書きデータを復元
   useEffect(() => {
-    const loadDraft = () => {
+    const loadData = () => {
       try {
+        // 複製データがあるかチェック（優先）
+        const duplicateData = sessionStorage.getItem('duplicateJobData');
+        if (duplicateData) {
+          const parsedData = JSON.parse(duplicateData);
+          
+          // 複製データを各状態にセット
+          if (parsedData.company_group_id) setGroup(parsedData.company_group_id);
+          if (parsedData.title) setTitle(parsedData.title);
+          if (parsedData.job_types) setJobTypes(parsedData.job_types);
+          if (parsedData.industries) setIndustries(parsedData.industries);
+          if (parsedData.job_description) setJobDescription(parsedData.job_description);
+          if (parsedData.position_summary) setPositionSummary(parsedData.position_summary);
+          if (parsedData.required_skills) setSkills(parsedData.required_skills);
+          if (parsedData.preferred_skills) setOtherRequirements(parsedData.preferred_skills);
+          if (parsedData.salary_min) setSalaryMin(parsedData.salary_min.toString());
+          if (parsedData.salary_max) setSalaryMax(parsedData.salary_max.toString());
+          if (parsedData.salary_note) setSalaryNote(parsedData.salary_note);
+          if (parsedData.work_locations) setLocations(parsedData.work_locations);
+          if (parsedData.location_note) setLocationNote(parsedData.location_note);
+          if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
+          if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
+          if (parsedData.working_hours) setWorkingHours(parsedData.working_hours);
+          if (parsedData.overtime_info) setOvertime(parsedData.overtime_info);
+          if (parsedData.holidays) setHolidays(parsedData.holidays);
+          if (parsedData.selection_process) setSelectionProcess(parsedData.selection_process);
+          if (parsedData.appeal_points) setAppealPoints(parsedData.appeal_points);
+          if (parsedData.smoking_policy) setSmoke(parsedData.smoking_policy);
+          if (parsedData.smoking_policy_note) setSmokeNote(parsedData.smoking_policy_note);
+          if (parsedData.required_documents) setResumeRequired(parsedData.required_documents);
+          if (parsedData.internal_memo) setMemo(parsedData.internal_memo);
+          if (parsedData.publication_type) setPublicationType(parsedData.publication_type);
+
+          // 複製データ使用後は削除
+          sessionStorage.removeItem('duplicateJobData');
+          console.log('複製データを復元しました');
+          return;
+        }
+
+        // 複製データがなければ下書きデータをチェック
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
           const draftData = JSON.parse(savedDraft);
@@ -168,12 +207,13 @@ export default function JobNewPage() {
           console.log('下書きデータを復元しました');
         }
       } catch (error) {
-        console.error('下書きデータの復元に失敗しました:', error);
+        console.error('データの復元に失敗しました:', error);
         localStorage.removeItem(DRAFT_KEY);
+        sessionStorage.removeItem('duplicateJobData');
       }
     };
 
-    loadDraft();
+    loadData();
   }, []);
 
   // 年収のリアルタイムバリデーション
@@ -262,44 +302,88 @@ export default function JobNewPage() {
     });
   };
 
-  // 下書き保存関数
-  const saveDraft = () => {
+  // 下書き保存関数（Supabaseに保存・バリデーションなし）
+  const saveDraft = async () => {
     try {
-      const draftData = {
-        group,
-        title,
-        jobTypes,
-        industries,
-        jobDescription,
-        positionSummary,
-        skills,
-        otherRequirements,
-        salaryMin,
-        salaryMax,
-        salaryNote,
-        locations,
-        locationNote,
-        employmentType,
-        employmentTypeNote,
-        workingHours,
-        overtime,
-        holidays,
-        selectionProcess,
-        appealPoints,
-        smoke,
-        smokeNote,
-        resumeRequired,
-        memo,
-        publicationType,
-        savedAt: new Date().toISOString(),
+      // 画像をBase64エンコード（通常の投稿処理と同じ）
+      console.log('Encoding images for draft:', images.length);
+      let encodedImages: any[] = [];
+      if (images.length > 0) {
+        try {
+          encodedImages = await encodeImagesToBase64(images);
+          console.log('Images encoded successfully for draft:', encodedImages.length);
+        } catch (error) {
+          console.error('Image encoding failed for draft:', error);
+          alert('画像の処理に失敗しました');
+          return;
+        }
+      }
+
+      // 通常の投稿処理と全く同じデータ構造
+      const data = {
+        company_group_id: group,
+        title: title || '未設定',
+        job_description: jobDescription || '未設定',
+        position_summary: positionSummary || null,
+        required_skills: skills || '',
+        preferred_skills: otherRequirements || '',
+        salary_min: salaryMin ? parseInt(salaryMin) : null,
+        salary_max: salaryMax ? parseInt(salaryMax) : null,
+        salary_note: salaryNote || null,
+        employment_type: employmentType || '未設定',
+        employment_type_note: employmentTypeNote || null,
+        work_location: locations[0] || '未設定',
+        work_locations: locations || [],
+        location_note: locationNote || null,
+        working_hours: workingHours || null,
+        overtime_info: overtime || null,
+        holidays: holidays || null,
+        remote_work_available: false,
+        job_type: jobTypes[0] || '未設定',
+        job_types: jobTypes || [],
+        industry: industries[0] || '未設定',
+        industries: industries || [],
+        selection_process: selectionProcess || null,
+        appeal_points: appealPoints || [],
+        smoking_policy: smoke || null,
+        smoking_policy_note: smokeNote || null,
+        required_documents: resumeRequired || [],
+        internal_memo: memo || null,
+        publication_type: publicationType || 'public',
+        images: encodedImages,
+        status: 'DRAFT', // 下書き保存時は必ずDRAFTステータス
+        application_deadline: null,
+        published_at: null,
       };
 
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
-      alert('下書きを保存しました');
-      console.log('下書きを保存しました');
+      const authHeaders = getAuthHeaders();
+
+      console.log('Saving draft to Supabase with data:', { ...data, images: '(encoded)' });
+
+      const res = await fetch('/api/company/job/new', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        // ローカルストレージの下書きデータを削除
+        clearDraft();
+        alert('下書きを保存しました');
+        console.log('下書き保存成功:', result);
+        // 求人一覧ページにリダイレクト
+        router.push('/company/job');
+      } else {
+        console.error('Draft save API Error:', result);
+        alert(`下書き保存エラー: ${result.error}`);
+      }
     } catch (error) {
-      console.error('下書きの保存に失敗しました:', error);
-      alert('下書きの保存に失敗しました');
+      console.error('Draft save Request Error:', error);
+      alert('下書き保存で通信エラーが発生しました');
     }
   };
 
@@ -403,7 +487,7 @@ export default function JobNewPage() {
       internal_memo: memo || null,
       publication_type: publicationType || 'public',
       images: encodedImages,
-      status: 'DRAFT',
+      status: 'PENDING_APPROVAL',
       application_deadline: null,
       published_at: null,
     };

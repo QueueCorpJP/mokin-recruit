@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
       internal_memo: internal_memo || null,
       publication_type: publication_type || 'public',
       image_urls: imageUrls,
-      status: status || 'DRAFT',
+      status: status || 'PENDING_APPROVAL',
       application_deadline: application_deadline || null,
       published_at: published_at || null,
     };
