@@ -55,7 +55,7 @@ CREATE TABLE "job_postings" (
     -- 管理・公開設定
     "internal_memo" TEXT,
     "publication_type" TEXT DEFAULT 'public' CHECK ("publication_type" IN ('public', 'members', 'scout')),
-    "status" TEXT DEFAULT 'DRAFT' CHECK ("status" IN ('DRAFT', 'PUBLISHED', 'CLOSED')),
+    "status" TEXT DEFAULT 'DRAFT' CHECK ("status" IN ('DRAFT', 'PENDING_APPROVAL', 'PUBLISHED', 'CLOSED')),
     "able_watch" TEXT DEFAULT '',
 
     -- タイムスタンプ

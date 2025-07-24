@@ -37,16 +37,16 @@ export default function JobNewPage() {
   const [locations, setLocations] = useState<string[]>([]);
   const [locationNote, setLocationNote] = useState('');
   const [employmentType, setEmploymentType] = useState('正社員');
-  const [employmentTypeNote, setEmploymentTypeNote] = useState('');
-  const [workingHours, setWorkingHours] = useState('');
+  const [employmentTypeNote, setEmploymentTypeNote] = useState('契約期間：期間の定めなし\n試用期間：あり（３か月）');
+  const [workingHours, setWorkingHours] = useState('9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有');
   const [overtime, setOvertime] = useState('あり');
-  const [holidays, setHolidays] = useState('');
+  const [holidays, setHolidays] = useState('完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇');
   const [selectionProcess, setSelectionProcess] = useState('');
   const [appealPoints, setAppealPoints] = useState<string[]>([]);
   const [smoke, setSmoke] = useState('屋内禁煙');
   const [smokeNote, setSmokeNote] = useState('');
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
-  const [memo, setMemo] = useState('');
+  const [memo, setMemo] = useState('月平均20時間程度／固定残業代45時間分を含む');
   const [publicationType, setPublicationType] = useState('public');
 
   // モーダルの状態
@@ -437,6 +437,80 @@ export default function JobNewPage() {
     }
   };
 
+  // エラーサマリーコンポーネント
+  const ErrorSummary: React.FC<{ errors: Record<string, string> }> = ({
+    errors,
+  }) => {
+    const errorEntries = Object.entries(errors);
+    if (errorEntries.length === 0) return null;
+
+    const getFieldLabel = (field: string) => {
+      const labels: Record<string, string> = {
+        group: 'グループ',
+        title: '求人タイトル',
+        images: '画像',
+        jobDescription: '業務内容',
+        employmentType: '雇用形態',
+        locations: '勤務地',
+        jobTypes: '職種',
+        industries: '業種',
+        salary: '年収',
+      };
+      return labels[field] || field;
+    };
+
+    const scrollToField = (field: string) => {
+      // フィールドまでスクロールする
+      const element = document.querySelector(`[data-field="${field}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    return (
+      <div className='mb-6 p-4 border-2 border-red-500 rounded-lg bg-red-50'>
+        <div className='flex items-start gap-3'>
+          <div className='flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
+            <svg
+              className='w-4 h-4 text-white'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
+              />
+            </svg>
+          </div>
+          <div className='flex-1'>
+            <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-red-700 mb-2">
+              入力に不備があります
+            </h3>
+            <p className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-600 mb-3">
+              以下の項目を確認してください：
+            </p>
+            <ul className='space-y-2'>
+              {errorEntries.map(([field, message]) => (
+                <li key={field} className='flex items-center gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => scrollToField(field)}
+                    className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-700 hover:text-red-900 underline hover:no-underline cursor-pointer text-left"
+                  >
+                    • {getFieldLabel(field)}: {message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <NewJobHeader />
@@ -561,59 +635,7 @@ export default function JobNewPage() {
           {/* ボタンエリア */}
           <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
             {/* エラーサマリー */}
-            {showErrors && (
-              <div className='mb-6 p-4 border-2 border-red-500 rounded-lg bg-red-50'>
-                <div className='flex items-start gap-3'>
-                  <div className='flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
-                    <svg
-                      className='w-4 h-4 text-white'
-                      fill='none'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
-                      />
-                    </svg>
-                  </div>
-                  <div className='flex-1'>
-                    <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-red-700 mb-2">
-                      入力に不備があります
-                    </h3>
-                    <p className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-600 mb-3">
-                      以下の項目を確認してください：
-                    </p>
-                    <ul className='space-y-2'>
-                      {Object.entries(errors).map(([field, message]) => (
-                        <li key={field} className='flex items-center gap-2'>
-                          <button
-                            type='button'
-                            onClick={() => {
-                              // フィールドまでスクロールする
-                              const element = document.querySelector(
-                                `[data-field="${field}"]`
-                              );
-                              if (element) {
-                                element.scrollIntoView({
-                                  behavior: 'smooth',
-                                  block: 'center',
-                                });
-                              }
-                            }}
-                            className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-700 hover:text-red-900 underline hover:no-underline cursor-pointer text-left"
-                          >
-                            • {field}: {message}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
+            {showErrors && <ErrorSummary errors={errors} />}
 
             <div className='flex justify-center items-center gap-4 w-full'>
               {isConfirmMode ? (

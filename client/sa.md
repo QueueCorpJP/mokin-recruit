@@ -99,7 +99,7 @@ CREATE TABLE public.job_postings (
   remote_work_available boolean DEFAULT false,
   job_type text NOT NULL,
   industry text NOT NULL,
-  status text DEFAULT 'DRAFT'::text CHECK (status = ANY (ARRAY['DRAFT'::text, 'PUBLISHED'::text, 'CLOSED'::text])),
+  status text DEFAULT 'DRAFT'::text CHECK (status = ANY (ARRAY['DRAFT'::text, 'PENDING_APPROVAL'::text, 'PUBLISHED'::text, 'CLOSED'::text])),
   application_deadline timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
