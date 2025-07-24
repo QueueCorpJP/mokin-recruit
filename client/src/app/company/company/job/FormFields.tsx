@@ -389,7 +389,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               業務内容
             </label>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px]"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[147px] ${showErrors && errors.jobDescription ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='具体的な業務内容・期待する役割/成果・募集背景などを入力してください。'
               value={jobDescription}
               onChange={e => setJobDescription(e.target.value)}
@@ -488,6 +488,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 }}
                 style={{ width: '180px', color: '#323232', height: '50px' }}
                 className='h-[50px]'
+                error={showErrors && !!errors.salary}
               />
               <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                 〜
@@ -501,6 +502,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 }}
                 style={{ width: '180px', color: '#323232', height: '50px' }}
                 className='h-[50px]'
+                error={showErrors && !!errors.salary}
               />
             </div>
             {errors.salary && (
@@ -725,11 +727,16 @@ export const FormFields: React.FC<FormFieldsProps> = ({
         <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
           <div className='flex flex-col gap-2 items-start justify-start w-full'>
             <textarea
-              className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[148px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none"
+              className={`w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] h-[148px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none ${showErrors && errors.selectionProcess ? 'border-red-500 bg-red-50' : ''}`}
               placeholder='選考フローや面接回数などの情報を入力してください。'
               value={selectionProcess}
               onChange={e => setSelectionProcess(e.target.value)}
             />
+            {showErrors && errors.selectionProcess && (
+              <span className='text-red-500 text-sm'>
+                {errors.selectionProcess}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -765,6 +772,11 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             ))}
 
             {/* 選択されたアピールポイントの表示 */}
+            {showErrors && errors.appealPoints && (
+              <span className='text-red-500 text-sm'>
+                {errors.appealPoints}
+              </span>
+            )}
           </div>
         </div>
       </div>

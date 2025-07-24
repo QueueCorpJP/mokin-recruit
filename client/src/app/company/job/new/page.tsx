@@ -221,6 +221,56 @@ export default function JobNewPage() {
     validateSalary(salaryMin, salaryMax);
   }, [salaryMin, salaryMax]);
 
+  // 必須項目が全て入力されているかチェックする関数
+  const isFormValid = () => {
+    // グループ選択
+    if (!group) return false;
+    
+    // 求人タイトル
+    if (!title.trim()) return false;
+    
+    // 職種（1つ以上）
+    if (jobTypes.length === 0) return false;
+    
+    // 業種（1つ以上）
+    if (industries.length === 0) return false;
+    
+    // 業務内容
+    if (!jobDescription.trim()) return false;
+    
+    // 当ポジションの魅力
+    if (!positionSummary.trim()) return false;
+    
+    // スキル・経験
+    if (!skills.trim()) return false;
+    
+    // その他・求める人物像
+    if (!otherRequirements.trim()) return false;
+    
+    // 想定年収
+    if (!salaryMin || !salaryMax) return false;
+    const minValue = parseInt(salaryMin);
+    const maxValue = parseInt(salaryMax);
+    if (minValue > maxValue) return false;
+    
+    // 勤務地（1つ以上）
+    if (locations.length === 0) return false;
+    
+    // 就業時間
+    if (!workingHours.trim()) return false;
+    
+    // 休日・休暇
+    if (!holidays.trim()) return false;
+    
+    // 選考情報
+    if (!selectionProcess.trim()) return false;
+    
+    // アピールポイント（1つ以上）
+    if (!appealPoints || appealPoints.length === 0) return false;
+    
+    return true;
+  };
+
   // バリデーション関数
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -239,7 +289,7 @@ export default function JobNewPage() {
     // 雇用形態は必須だがバリデーションエラーメッセージは表示しない（デフォルト値があるため常に入力済み）
     if (locations.length === 0)
       newErrors.locations = '勤務地を1つ以上選択してください。';
-    if (jobTypes.length === 0) newErrors.jobTypes = '求人タイトルを入力してください。';
+    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
       newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
@@ -519,79 +569,7 @@ export default function JobNewPage() {
     }
   };
 
-  // エラーサマリーコンポーネント
-  const ErrorSummary: React.FC<{ errors: Record<string, string> }> = ({
-    errors,
-  }) => {
-    const errorEntries = Object.entries(errors);
-    if (errorEntries.length === 0) return null;
 
-    const getFieldLabel = (field: string) => {
-      const labels: Record<string, string> = {
-        group: 'グループ',
-        title: '求人タイトル',
-        images: '画像',
-        jobDescription: '業務内容',
-        employmentType: '雇用形態',
-        locations: '勤務地',
-        jobTypes: '職種',
-        industries: '業種',
-        salary: '年収',
-      };
-      return labels[field] || field;
-    };
-
-    const scrollToField = (field: string) => {
-      // フィールドまでスクロールする
-      const element = document.querySelector(`[data-field="${field}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    };
-
-    return (
-      <div className='mb-6 p-4 border-2 border-red-500 rounded-lg bg-red-50'>
-        <div className='flex items-start gap-3'>
-          <div className='flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
-            <svg
-              className='w-4 h-4 text-white'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
-              />
-            </svg>
-          </div>
-          <div className='flex-1'>
-            <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-red-700 mb-2">
-              入力に不備があります
-            </h3>
-            <p className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-600 mb-3">
-              以下の項目を確認してください：
-            </p>
-            <ul className='space-y-2'>
-              {errorEntries.map(([field, message]) => (
-                <li key={field} className='flex items-center gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => scrollToField(field)}
-                    className="font-['Noto_Sans_JP'] font-medium text-[14px] text-red-700 hover:text-red-900 underline hover:no-underline cursor-pointer text-left"
-                  >
-                    • {getFieldLabel(field)}: {message}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -663,11 +641,20 @@ export default function JobNewPage() {
                 clearFieldError('jobDescription');
               }}
               positionSummary={positionSummary}
-              setPositionSummary={setPositionSummary}
+              setPositionSummary={(value: string) => {
+                setPositionSummary(value);
+                clearFieldError('positionSummary');
+              }}
               skills={skills}
-              setSkills={setSkills}
+              setSkills={(value: string) => {
+                setSkills(value);
+                clearFieldError('skills');
+              }}
               otherRequirements={otherRequirements}
-              setOtherRequirements={setOtherRequirements}
+              setOtherRequirements={(value: string) => {
+                setOtherRequirements(value);
+                clearFieldError('otherRequirements');
+              }}
               salaryMin={salaryMin}
               setSalaryMin={setSalaryMin}
               salaryMax={salaryMax}
@@ -681,8 +668,11 @@ export default function JobNewPage() {
               }}
               locationNote={locationNote}
               setLocationNote={setLocationNote}
-                              selectionProcess={selectionProcess}
-                setSelectionProcess={setSelectionProcess}
+              selectionProcess={selectionProcess}
+              setSelectionProcess={(value: string) => {
+                setSelectionProcess(value);
+                clearFieldError('selectionProcess');
+              }}
                 employmentType={employmentType}
                 setEmploymentType={setEmploymentType}
                 employmentTypeNote={employmentTypeNote}
@@ -694,7 +684,10 @@ export default function JobNewPage() {
               holidays={holidays}
               setHolidays={setHolidays}
               appealPoints={appealPoints}
-              setAppealPoints={setAppealPoints}
+              setAppealPoints={(points: string[]) => {
+                setAppealPoints(points);
+                clearFieldError('appealPoints');
+              }}
               smoke={smoke}
               setSmoke={setSmoke}
               smokeNote={smokeNote}
@@ -713,9 +706,6 @@ export default function JobNewPage() {
 
           {/* ボタンエリア */}
           <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
-            {/* エラーサマリー */}
-            {showErrors && <ErrorSummary errors={errors} />}
-
             <div className='flex justify-center items-center gap-4 w-full'>
               {isConfirmMode ? (
                 <>
@@ -749,7 +739,12 @@ export default function JobNewPage() {
                   </Button>
                   <button
                     type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
+                    disabled={showErrors && !isFormValid()}
+                    className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
+                      !showErrors || isFormValid()
+                        ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                     onClick={handleConfirm}
                   >
                     確認する
