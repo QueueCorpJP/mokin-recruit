@@ -225,27 +225,27 @@ export default function JobNewPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!group) newErrors.group = 'グループを選択してください';
-    if (!title.trim()) newErrors.title = '求人タイトルを入力してください';
+    if (!group) newErrors.group = 'グループを選択してください。';
+    if (!title.trim()) newErrors.title = '求人タイトルを入力してください。';
     // imagesは任意項目に変更
     // if (images.length === 0) newErrors.images = '画像を選択してください';
     if (!jobDescription.trim())
-      newErrors.jobDescription = '業務内容を入力してください';
+      newErrors.jobDescription = '業務内容を入力してください。';
     if (!positionSummary.trim())
-      newErrors.positionSummary = '当ポジションの魅力を入力してください';
-    if (!skills.trim()) newErrors.skills = 'スキル・経験を入力してください';
+      newErrors.positionSummary = '当ポジションの魅力を入力してください。';
+    if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
-      newErrors.otherRequirements = 'その他・求める人物像を入力してください';
+      newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
     if (!employmentType || employmentType === '')
       newErrors.employmentType = '雇用形態を選択してください';
     if (locations.length === 0)
-      newErrors.locations = '勤務地を選択してください';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を選択してください';
+      newErrors.locations = '勤務地を1つ以上選択してください。';
+    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
-      newErrors.industries = '業種を選択してください';
+      newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
     if (!salaryMin || !salaryMax) {
-      newErrors.salary = '想定年収（下限・上限）を選択してください';
+      newErrors.salary = '想定年収を選択してください。';
     } else {
       const minValue = parseInt(salaryMin);
       const maxValue = parseInt(salaryMax);
@@ -253,16 +253,17 @@ export default function JobNewPage() {
         newErrors.salary = '最大年収は最小年収よりも高く設定してください';
       }
     }
-    if (!salaryNote.trim()) newErrors.salaryNote = '年収補足を入力してください';
+    // salaryNoteは任意項目に変更
+    // if (!salaryNote.trim()) newErrors.salaryNote = '年収補足を入力してください';
     if (!workingHours.trim())
-      newErrors.workingHours = '就業時間を入力してください';
+      newErrors.workingHours = '就業時間を入力してください。';
     if (!overtime || overtime === '')
       newErrors.overtime = '所定外労働の有無を選択してください';
-    if (!holidays.trim()) newErrors.holidays = '休日・休暇を入力してください';
+    if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
-      newErrors.selectionProcess = '選考情報を入力してください';
+      newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
-      newErrors.appealPoints = 'アピールポイントを1つ以上選択してください';
+      newErrors.appealPoints = 'アピールポイントを1つ以上選択してください。';
     if (!smoke || smoke === '')
       newErrors.smoke = '受動喫煙防止措置を選択してください';
 

@@ -21,20 +21,68 @@ export const regions: Region[] = [
   { name: '九州・沖縄', prefectures: ['福岡', '熊本', '鹿児島', '長崎', '大分', '宮崎', '佐賀', '沖縄'] },
 ];
 
-// 年収の選択肢
-export const salaryOptions = [
-  { value: '500', label: '500万円' },
-  { value: '550', label: '550万円' },
+// 年収の選択肢（下限用）
+export const salaryMinOptions = [
   { value: '600', label: '600万円' },
-  { value: '650', label: '650万円' },
   { value: '700', label: '700万円' },
-  { value: '750', label: '750万円' },
   { value: '800', label: '800万円' },
-  { value: '850', label: '850万円' },
   { value: '900', label: '900万円' },
-  { value: '950', label: '950万円' },
   { value: '1000', label: '1000万円' },
+  { value: '1100', label: '1100万円' },
+  { value: '1200', label: '1200万円' },
+  { value: '1300', label: '1300万円' },
+  { value: '1400', label: '1400万円' },
+  { value: '1500', label: '1500万円' },
+  { value: '1600', label: '1600万円' },
+  { value: '1700', label: '1700万円' },
+  { value: '1800', label: '1800万円' },
+  { value: '1900', label: '1900万円' },
+  { value: '2000', label: '2000万円' },
+  { value: '2100', label: '2100万円' },
+  { value: '2200', label: '2200万円' },
+  { value: '2300', label: '2300万円' },
+  { value: '2400', label: '2400万円' },
+  { value: '2500', label: '2500万円' },
+  { value: '2600', label: '2600万円' },
+  { value: '2700', label: '2700万円' },
+  { value: '2800', label: '2800万円' },
+  { value: '2900', label: '2900万円' },
+  { value: '3000', label: '3000万円' },
+  { value: '4000', label: '4000万円' },
 ];
+
+// 年収の選択肢（上限用）
+export const salaryMaxOptions = [
+  { value: '700', label: '700万円' },
+  { value: '800', label: '800万円' },
+  { value: '900', label: '900万円' },
+  { value: '1000', label: '1000万円' },
+  { value: '1100', label: '1100万円' },
+  { value: '1200', label: '1200万円' },
+  { value: '1300', label: '1300万円' },
+  { value: '1400', label: '1400万円' },
+  { value: '1500', label: '1500万円' },
+  { value: '1600', label: '1600万円' },
+  { value: '1700', label: '1700万円' },
+  { value: '1800', label: '1800万円' },
+  { value: '1900', label: '1900万円' },
+  { value: '2000', label: '2000万円' },
+  { value: '2100', label: '2100万円' },
+  { value: '2200', label: '2200万円' },
+  { value: '2300', label: '2300万円' },
+  { value: '2400', label: '2400万円' },
+  { value: '2500', label: '2500万円' },
+  { value: '2600', label: '2600万円' },
+  { value: '2700', label: '2700万円' },
+  { value: '2800', label: '2800万円' },
+  { value: '2900', label: '2900万円' },
+  { value: '3000', label: '3000万円' },
+  { value: '4000', label: '4000万円' },
+  { value: '5000', label: '5000万円' },
+];
+
+// 後方互換性のため、従来のsalaryOptionsも保持（下限用と同じ）
+export const salaryOptions = salaryMinOptions;
 
 // 職種カテゴリーの定義
 export type JobCategory = {

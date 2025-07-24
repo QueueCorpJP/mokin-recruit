@@ -4,7 +4,8 @@ import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   CompanyGroup,
-  salaryOptions,
+  salaryMinOptions,
+  salaryMaxOptions,
   employmentTypeOptions,
   smokeOptions,
   appealPointOptions,
@@ -464,7 +465,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             </label>
             <div className='flex gap-4 items-center'>
               <SelectInput
-                options={salaryOptions}
+                options={salaryMinOptions}
                 value={salaryMin}
                 placeholder='未選択'
                 onChange={value => {
@@ -477,7 +478,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                 〜
               </span>
               <SelectInput
-                options={salaryOptions}
+                options={salaryMaxOptions}
                 value={salaryMax}
                 placeholder='未選択'
                 onChange={value => {
