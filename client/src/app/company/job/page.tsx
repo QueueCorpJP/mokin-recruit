@@ -346,11 +346,11 @@ export default function CompanyJobsPage() {
                       {'>'}
                     </button>
                   </div>
-                  <button className='flex items-center gap-1 text-[#999999] text-xs font-bold underline focus:outline-none'>
+                  <button className='flex items-center gap-1 text-[#999999] text-xs font-bold focus:outline-none'>
                     <span className='w-5 h-5 border border-[#999999] rounded-full flex items-center justify-center text-xs font-bold'>
                       ？
                     </span>
-                    <span>求人の期間について</span>
+                    <span className='underline'>求人の削除について</span>
                   </button>
                 </div>
               </div>
@@ -367,6 +367,7 @@ export default function CompanyJobsPage() {
                 <div className='w-[70px]'>公開日</div>
                 <div className='w-[76px]'>最終更新日</div>
               </div>
+              <div className='mt-2'></div>
 
               {/* エラー表示 */}
               {error && (
@@ -400,7 +401,8 @@ export default function CompanyJobsPage() {
                     {displayedJobs.map(job => (
                       <div
                         key={job.id}
-                        className='bg-[#FFFFFF] flex gap-[24px] py-[20px] px-[24px]'
+                        className='bg-[#FFFFFF] flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
+                        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
                       >
                         {/* グループ */}
                         <div className='w-[160px] flex items-center'>
@@ -567,16 +569,22 @@ export default function CompanyJobsPage() {
                             className='text-[#DCDCDC] hover:text-[#323232] rounded-full p-2'
                             onClick={() => setPopupJobId(job.id)}
                           >
-                            <MoreHorizontal className='w-6 h-6' />
+                            <MoreHorizontal className='w-10 h-10' />
                           </button>
                           {popupJobId === job.id && (
                             <div
                               ref={popupRef}
-                              className='absolute left-0 translate-x-0 top-full mt-[-20px] z-10 bg-white border border-[#E5E5E5] rounded shadow-lg w-[72px] flex flex-col'
+                              className='absolute left-0 translate-x-0 top-full mt-[-20px] z-10 bg-white border border-[#E5E5E5] rounded shadow-lg w-[64px] h-[64px] flex flex-col justify-center items-center'
                             >
                               <button
-                                className='px-2 py-2 text-left hover:bg-[#F3FBF7] text-[#222] font-bold border-b border-[#E5E5E5] last:border-b-0'
-                                style={{ color: '#222' }}
+                                className='text-left hover:bg-[#F3FBF7] text-[#222] text-[14px]'
+                                style={{
+                                  color: '#222',
+                                  fontWeight: 'normal',
+                                  width: '48px',
+                                  height: '22px',
+                                  padding: 0,
+                                }}
                                 onClick={() => {
                                   /* 複製処理 */ setPopupJobId(null);
                                 }}
@@ -584,8 +592,15 @@ export default function CompanyJobsPage() {
                                 複製
                               </button>
                               <button
-                                className='px-2 py-2 text-left hover:bg-[#FEF0F0] text-[#F56C6C] font-bold'
-                                style={{ color: '#F56C6C' }}
+                                className='text-left hover:bg-[#FEF0F0] text-[#F56C6C] text-[14px]'
+                                style={{
+                                  color: '#F56C6C',
+                                  fontWeight: 'normal',
+                                  width: '48px',
+                                  height: '22px',
+                                  padding: 0,
+                                  marginTop: '4px',
+                                }}
                                 onClick={() => {
                                   /* 削除処理 */ setPopupJobId(null);
                                 }}
