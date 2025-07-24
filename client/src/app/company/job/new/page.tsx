@@ -605,6 +605,7 @@ export default function JobNewPage() {
               smoke={smoke}
               smokeNote={smokeNote}
               resumeRequired={resumeRequired}
+              overtimeMemo={overtimeMemo}
               memo={memo}
               publicationType={publicationType}
               setPublicationType={setPublicationType}

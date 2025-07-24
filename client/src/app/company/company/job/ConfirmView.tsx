@@ -31,6 +31,7 @@ interface ConfirmViewProps {
   smoke: string;
   smokeNote: string;
   resumeRequired: string[];
+  overtimeMemo: string;
   memo: string;
   publicationType: string;
   setPublicationType: (value: string) => void;
@@ -62,6 +63,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
   smoke,
   smokeNote,
   resumeRequired,
+  overtimeMemo,
   memo,
   publicationType,
   setPublicationType,
@@ -380,7 +382,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
             <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
               備考
             </label>
-            <DisplayValue value={memo} className='whitespace-pre-wrap' />
+            <DisplayValue value={overtimeMemo} className='whitespace-pre-wrap' />
           </div>
           {/* 休日・休暇 */}
           <div className='w-full'>
@@ -495,7 +497,10 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
           </div>
         </div>
         <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-        <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#999999] w-full mt-1">
+          <div className='flex flex-col gap-2 items-start justify-start w-full'>
+            <DisplayValue value={memo} className='whitespace-pre-wrap' />
+          </div>
+          <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#999999] w-full mt-1">
               社内メモは候補者に共有されません。
             </div>
         </div>
