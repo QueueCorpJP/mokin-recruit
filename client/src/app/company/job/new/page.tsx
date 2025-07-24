@@ -46,7 +46,8 @@ export default function JobNewPage() {
   const [smoke, setSmoke] = useState('屋内禁煙');
   const [smokeNote, setSmokeNote] = useState('');
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
-  const [memo, setMemo] = useState('月平均20時間程度／固定残業代45時間分を含む');
+  const [overtimeMemo, setOvertimeMemo] = useState('月平均20時間程度／固定残業代45時間分を含む');
+  const [memo, setMemo] = useState('');
   const [publicationType, setPublicationType] = useState('public');
 
   // モーダルの状態
@@ -148,7 +149,7 @@ export default function JobNewPage() {
           if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
           if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
           if (parsedData.working_hours) setWorkingHours(parsedData.working_hours);
-          if (parsedData.overtime_info) setOvertime(parsedData.overtime_info);
+          if (parsedData.overtime_info) setOvertimeMemo(parsedData.overtime_info);
           if (parsedData.holidays) setHolidays(parsedData.holidays);
           if (parsedData.selection_process) setSelectionProcess(parsedData.selection_process);
           if (parsedData.appeal_points) setAppealPoints(parsedData.appeal_points);
@@ -200,6 +201,7 @@ export default function JobNewPage() {
           if (draftData.smokeNote) setSmokeNote(draftData.smokeNote);
           if (draftData.resumeRequired)
             setResumeRequired(draftData.resumeRequired);
+          if (draftData.overtimeMemo) setOvertimeMemo(draftData.overtimeMemo);
           if (draftData.memo) setMemo(draftData.memo);
           if (draftData.publicationType)
             setPublicationType(draftData.publicationType);
@@ -384,7 +386,7 @@ export default function JobNewPage() {
         work_locations: locations || [],
         location_note: locationNote || null,
         working_hours: workingHours || null,
-        overtime_info: overtime || null,
+        overtime_info: overtimeMemo || null,
         holidays: holidays || null,
         remote_work_available: false,
         job_type: jobTypes[0] || '未設定',
@@ -520,7 +522,7 @@ export default function JobNewPage() {
       work_locations: locations || [],
       location_note: locationNote || null,
       working_hours: workingHours || null,
-      overtime_info: overtime || null,
+      overtime_info: overtimeMemo || null,
       holidays: holidays || null,
       remote_work_available: false,
       job_type: jobTypes[0] || '未設定',
@@ -694,6 +696,8 @@ export default function JobNewPage() {
               setSmokeNote={setSmokeNote}
               resumeRequired={resumeRequired}
               setResumeRequired={setResumeRequired}
+              overtimeMemo={overtimeMemo}
+              setOvertimeMemo={setOvertimeMemo}
               memo={memo}
               setMemo={setMemo}
               setLocationModalOpen={setLocationModalOpen}

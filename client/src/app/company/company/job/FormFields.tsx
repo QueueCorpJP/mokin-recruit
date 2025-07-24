@@ -55,6 +55,8 @@ interface FormFieldsProps {
   setWorkingHours: (value: string) => void;
   overtime: string;
   setOvertime: (value: string) => void;
+  overtimeMemo: string;
+  setOvertimeMemo: (value: string) => void;
   holidays: string;
   setHolidays: (value: string) => void;
   appealPoints: string[];
@@ -118,6 +120,8 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   setWorkingHours,
   overtime,
   setOvertime,
+  overtimeMemo,
+  setOvertimeMemo,
   holidays,
   setHolidays,
   appealPoints,
@@ -693,8 +697,8 @@ export const FormFields: React.FC<FormFieldsProps> = ({
             <textarea
               className="w-full bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] placeholder:text-[#999999] resize-none h-[78px]"
               placeholder='月平均20時間程度／固定残業代45時間分を含む'
-              value={memo}
-              onChange={e => setMemo(e.target.value)}
+              value={overtimeMemo}
+              onChange={e => setOvertimeMemo(e.target.value)}
             />
           </div>
           {/* 休日・休暇 */}
