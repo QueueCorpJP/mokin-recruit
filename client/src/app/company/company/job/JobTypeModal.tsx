@@ -19,11 +19,13 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({
   const handleCheckboxChange = (job: string) => {
     if (selectedJobTypes.includes(job)) {
       // 既に選択されている場合は削除
-      setSelectedJobTypes(selectedJobTypes.filter(j => j !== job));
+      const newJobTypes = selectedJobTypes.filter(j => j !== job);
+      setSelectedJobTypes(newJobTypes);
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedJobTypes.length < MAX_SELECTION) {
-        setSelectedJobTypes([...selectedJobTypes, job]);
+        const newJobTypes = [...selectedJobTypes, job];
+        setSelectedJobTypes(newJobTypes);
       }
     }
   };

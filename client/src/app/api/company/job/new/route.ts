@@ -98,7 +98,6 @@ export async function POST(request: NextRequest) {
       salary_max,
       salary_note,
       employment_type,
-      work_location,
       work_locations,
       location_note,
       employment_type_note,
@@ -106,9 +105,7 @@ export async function POST(request: NextRequest) {
       overtime_info,
       holidays,
       remote_work_available,
-      job_type,
       job_types,
-      industry,
       industries,
       selection_process,
       appeal_points,
@@ -122,6 +119,16 @@ export async function POST(request: NextRequest) {
       published_at,
       images, // Base64エンコードされた画像データの配列
     } = body;
+
+    // デバッグ：受信データをログ出力
+    console.log('=== RECEIVED DATA DEBUG ===');
+    console.log('required_skills:', required_skills, 'type:', typeof required_skills);
+    console.log('preferred_skills:', preferred_skills, 'type:', typeof preferred_skills);
+    console.log('job_types:', job_types, 'isArray:', Array.isArray(job_types));
+    console.log('industries:', industries, 'isArray:', Array.isArray(industries));
+    console.log('work_locations:', work_locations, 'isArray:', Array.isArray(work_locations));
+    console.log('appeal_points:', appeal_points, 'isArray:', Array.isArray(appeal_points));
+    console.log('=== END DEBUG ===');
 
     // 雇用形態の日本語→英語マッピング
     const employmentTypeMapping: Record<string, string> = {
@@ -207,35 +214,63 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // 配列フィールドの処理を強化
+    const ensureArray = (value: any): string[] => {
+      console.log('ensureArray input:', value, 'type:', typeof value);
+      if (Array.isArray(value)) {
+        console.log('ensureArray result (already array):', value);
+        return value.filter(v => v && typeof v === 'string');
+      }
+      if (value && typeof value === 'string') {
+        console.log('ensureArray result (string to array):', [value]);
+        return [value];
+      }
+      console.log('ensureArray result (empty):', []);
+      return [];
+    };
+
+    // テキストフィールドの処理（配列から文字列に変換）
+    const ensureText = (value: any): string | null => {
+      console.log('ensureText input:', value, 'type:', typeof value);
+      if (typeof value === 'string') {
+        console.log('ensureText result (already string):', value);
+        return value || null;
+      }
+      if (Array.isArray(value)) {
+        const textResult = value.filter(v => v && typeof v === 'string').join(', ');
+        console.log('ensureText result (array to string):', textResult);
+        return textResult || null;
+      }
+      console.log('ensureText result (null):', null);
+      return null;
+    };
+
     const insertData = {
       company_account_id: userCompanyAccountId,
       company_group_id: finalCompanyGroupId,
       title: title || '未設定',
       job_description: job_description || '未設定',
       position_summary: position_summary || null,
-      required_skills: Array.isArray(required_skills) ? required_skills : (required_skills ? [required_skills] : []),
-      preferred_skills: Array.isArray(preferred_skills) ? preferred_skills : (preferred_skills ? [preferred_skills] : []),
+      required_skills: ensureText(required_skills),
+      preferred_skills: ensureText(preferred_skills),
       salary_min: salary_min !== undefined ? Number(salary_min) : null,
       salary_max: salary_max !== undefined ? Number(salary_max) : null,
       salary_note: salary_note || null,
       employment_type: mappedEmploymentType,
-      work_location: work_location || '未設定',
-      work_locations: Array.isArray(work_locations) ? work_locations : (work_locations ? [work_locations] : []),
+      work_location: ensureArray(work_locations),
       location_note: location_note || null,
       employment_type_note: employment_type_note || null,
       working_hours: working_hours || null,
       overtime_info: overtime_info || null,
       holidays: holidays || null,
       remote_work_available: remote_work_available === true || remote_work_available === 'true',
-      job_type: job_type || '未設定',
-      job_types: Array.isArray(job_types) ? job_types : (job_types ? [job_types] : []),
-      industry: industry || '未設定',
-      industries: Array.isArray(industries) ? industries : (industries ? [industries] : []),
+      job_type: ensureArray(job_types),
+      industry: ensureArray(industries),
       selection_process: selection_process || null,
-      appeal_points: Array.isArray(appeal_points) ? appeal_points : [],
+      appeal_points: ensureArray(appeal_points),
       smoking_policy: smoking_policy || null,
       smoking_policy_note: smoking_policy_note || null,
-      required_documents: Array.isArray(required_documents) ? required_documents : [],
+      required_documents: ensureArray(required_documents),
       internal_memo: internal_memo || null,
       publication_type: publication_type || 'public',
       image_urls: imageUrls,
@@ -243,6 +278,14 @@ export async function POST(request: NextRequest) {
       application_deadline: application_deadline || null,
       published_at: published_at || null,
     };
+    
+    // デバッグ：insertDataの配列フィールドをログ出力
+    console.log('=== INSERT DATA DEBUG ===');
+    console.log('insertData.job_type:', insertData.job_type);
+    console.log('insertData.industry:', insertData.industry);
+    console.log('insertData.work_location:', insertData.work_location);
+    console.log('insertData.appeal_points:', insertData.appeal_points);
+    console.log('=== END INSERT DATA DEBUG ===');
     
     console.log('Creating job posting...');
     
@@ -254,6 +297,7 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Job created successfully');
+    console.log('Insert result data:', data);
     return NextResponse.json({ success: true, data });
   } catch (e: any) {
     console.error('Job creation API error:', e);

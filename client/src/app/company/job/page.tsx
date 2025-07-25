@@ -17,10 +17,10 @@ type JobStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'CLOSED';
 interface JobPosting {
   id: string;
   title: string;
-  jobType: string;
-  industry: string;
+  jobType: string[];
+  industry: string[];
   employmentType: string;
-  workLocation: string;
+  workLocation: string[];
   salaryMin: number | null;
   salaryMax: number | null;
   status: JobStatus;
@@ -420,7 +420,7 @@ export default function CompanyJobsPage() {
                 onClick={handleNewJob}
                 variant='blue-gradient'
                 size='lg'
-                className="rounded-[25px] h-[54px] px-[40px] text-[16px] font-normal font-['Noto_Sans_JP'] transition-colors flex items-center"
+                className="rounded-[25px] h-[54px] px-[40px] text-[16px] font-bold font-['Noto_Sans_JP'] transition-colors flex items-center"
               >
                 新規求人作成
               </Button>
@@ -531,45 +531,39 @@ export default function CompanyJobsPage() {
                         {/* 職種/求人タイトル */}
                         <div className='w-[424px]'>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            <span
-                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.jobType || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
-                              style={{
-                                width: '136px',
-                                height: '32px',
-                                paddingLeft: '16px',
-                                paddingRight: '16px',
-                                background: '#D2F1DA',
-                                color: '#0F9058',
-                              }}
-                            >
-                              {job.jobType || '職種テキスト'}
-                            </span>
-                            <span
-                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.industry || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
-                              style={{
-                                width: '136px',
-                                height: '32px',
-                                paddingLeft: '16px',
-                                paddingRight: '16px',
-                                background: '#D2F1DA',
-                                color: '#0F9058',
-                              }}
-                            >
-                              {job.industry || '職種テキスト'}
-                            </span>
-                            <span
-                              className={`rounded-[8px] flex items-center justify-center font-bold ${(job.workLocation || '').length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
-                              style={{
-                                width: '136px',
-                                height: '32px',
-                                paddingLeft: '16px',
-                                paddingRight: '16px',
-                                background: '#D2F1DA',
-                                color: '#0F9058',
-                              }}
-                            >
-                              {job.workLocation || '職種テキスト'}
-                            </span>
+                            {/* 職種を配列から動的に表示 */}
+                            {job.jobType && job.jobType.length > 0 ? (
+                              job.jobType.map((jobType, index) => (
+                                <span
+                                  key={index}
+                                  className={`rounded-[8px] flex items-center justify-center font-bold ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                                  style={{
+                                    width: '136px',
+                                    height: '32px',
+                                    paddingLeft: '16px',
+                                    paddingRight: '16px',
+                                    background: '#D2F1DA',
+                                    color: '#0F9058',
+                                  }}
+                                >
+                                  {jobType}
+                                </span>
+                              ))
+                            ) : (
+                              <span
+                                className={`rounded-[8px] flex items-center justify-center font-bold text-[14px]`}
+                                style={{
+                                  width: '136px',
+                                  height: '32px',
+                                  paddingLeft: '16px',
+                                  paddingRight: '16px',
+                                  background: '#D2F1DA',
+                                  color: '#0F9058',
+                                }}
+                              >
+                                職種未設定
+                              </span>
+                            )}
                           </div>
                           <div
                             className='text-[#323232] font-bold truncate'
