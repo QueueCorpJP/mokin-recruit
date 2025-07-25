@@ -508,7 +508,7 @@ export default function CompanyJobsPage() {
                     {displayedJobs.map(job => (
                       <div
                         key={job.id}
-                        className='bg-[#FFFFFF] flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
+                        className='bg-[#FFFFFF] hover:bg-[#E9E9E9] transition-colors flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
                         style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
                       >
                         {/* グループ */}
@@ -536,7 +536,7 @@ export default function CompanyJobsPage() {
                               job.jobType.map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className={`rounded-[8px] flex items-center justify-center font-bold ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                                  className={`rounded-[8px] flex items-center justify-center font-medium ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
                                   style={{
                                     width: '136px',
                                     height: '32px',
@@ -551,7 +551,7 @@ export default function CompanyJobsPage() {
                               ))
                             ) : (
                               <span
-                                className={`rounded-[8px] flex items-center justify-center font-bold text-[14px]`}
+                                className={`rounded-[8px] flex items-center justify-center font-medium text-[14px]`}
                                 style={{
                                   width: '136px',
                                   height: '32px',
