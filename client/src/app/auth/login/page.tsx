@@ -16,12 +16,12 @@ export const viewport: Viewport = {
 
 export default function LoginPage() {
   return (
-    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
+    <div className='h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
       {/* ナビゲーション */}
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 flex items-center justify-center relative px-4 py-20'>
+      <main className='flex-1 min-h-[730px] flex items-center justify-center relative px-4'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>

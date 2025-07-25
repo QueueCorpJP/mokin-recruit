@@ -547,14 +547,18 @@ export default function CompanyJobsPage() {
                               job.jobType.map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className={`rounded-[8px] flex items-center justify-center font-medium ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                                  className='rounded-[8px] flex items-center justify-center font-medium text-[14px] leading-tight'
                                   style={{
                                     width: '136px',
-                                    height: '32px',
+                                    minHeight: '32px',
                                     paddingLeft: '16px',
                                     paddingRight: '16px',
+                                    paddingTop: '6px',
+                                    paddingBottom: '6px',
                                     background: '#D2F1DA',
                                     color: '#0F9058',
+                                    wordBreak: 'break-all',
+                                    hyphens: 'auto',
                                   }}
                                 >
                                   {jobType}
@@ -562,12 +566,14 @@ export default function CompanyJobsPage() {
                               ))
                             ) : (
                               <span
-                                className={`rounded-[8px] flex items-center justify-center font-medium text-[14px]`}
+                                className='rounded-[8px] flex items-center justify-center font-medium text-[14px]'
                                 style={{
                                   width: '136px',
-                                  height: '32px',
+                                  minHeight: '32px',
                                   paddingLeft: '16px',
                                   paddingRight: '16px',
+                                  paddingTop: '6px',
+                                  paddingBottom: '6px',
                                   background: '#D2F1DA',
                                   color: '#0F9058',
                                 }}

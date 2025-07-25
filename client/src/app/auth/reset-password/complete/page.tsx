@@ -1,5 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Navigation } from '@/components/ui/navigation';
+import { Footer } from '@/components/ui/footer';
 import { ResetPasswordCompleteContent } from '@/components/auth/ResetPasswordCompleteContent';
 
 export const metadata: Metadata = {
@@ -15,51 +16,56 @@ export const viewport: Viewport = {
 // Server Component (メタデータ、SEO、静的コンテンツ)
 export default function ResetPasswordCompletePage() {
   return (
-    <div className='min-h-screen flex flex-col'>
-      {/* ヘッダー */}
+    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
+      {/* ナビゲーション */}
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 bg-gradient-to-b from-[#17856F] to-[#229A4E] flex items-center justify-center px-4 py-12'>
-        {/* 背景装飾 */}
+      <main className='min-h-[730px] flex flex-col relative px-4 pt-20'>
+        {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -left-56 top-[395px] w-[1889.89px] h-[335px] bg-gradient-to-b from-[#198D76] to-[#1CA74F] rounded-full opacity-30'></div>
+          <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
+            <svg
+              className='w-full h-full'
+              fill='none'
+              preserveAspectRatio='none'
+              viewBox='0 0 1890 335'
+            >
+              <path
+                d='M944.943 0C1303.11 0 1631.96 125.532 1889.89 335H0C257.931 125.532 586.776 0 944.943 0Z'
+                fill='url(#paint0_linear_4387_76076)'
+              />
+              <defs>
+                <linearGradient
+                  gradientUnits='userSpaceOnUse'
+                  id='paint0_linear_4387_76076'
+                  x1='944.943'
+                  x2='944.943'
+                  y1='335'
+                  y2='0'
+                >
+                  <stop stopColor='#198D76' />
+                  <stop offset='1' stopColor='#1CA74F' />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
         </div>
 
         {/* カードコンテナ */}
-        <div className='relative bg-white rounded-[10px] shadow-lg p-8 md:p-12 lg:p-20 w-full max-w-[800px]'>
-          <div className='text-center space-y-8'>
-            {/* 成功アイコン */}
-            <div className='flex justify-center'>
-              <div className='w-16 h-16 bg-[#0F9058] rounded-full flex items-center justify-center'>
-                <svg
-                  className='w-8 h-8 text-white'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M5 13l4 4L19 7'
-                  />
-                </svg>
+        <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20 mx-auto'>
+          <div className='flex flex-col gap-10 items-center justify-start w-full'>
+            {/* 見出し+説明 */}
+            <div className='flex flex-col gap-6 items-center justify-start text-center w-full'>
+              <div className='text-[#0f9058] text-[32px] tracking-[3.2px] w-full'>
+                <p className='block leading-[1.6] font-bold font-[family-name:var(--font-noto-sans-jp)]'>パスワードの再設定</p>
+              </div>
+              <div className='text-[#323232] text-[16px] tracking-[1.6px] w-full font-bold font-[family-name:var(--font-noto-sans-jp)]'>
+                <p className='block mb-0 leading-[2]'>パスワードの再設定が完了しました。</p>
+                <p className='block leading-[2]'>セキュリティのため、定期的な変更をおすすめします。</p>
               </div>
             </div>
-
-            {/* 見出し */}
-            <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] tracking-[0.1em]'>
-              パスワード再設定完了
-            </h1>
-
-            {/* 説明 */}
-            <p className='text-[#323232] font-medium text-base leading-8'>
-              パスワードの再設定が完了しました。
-              <br />
-              新しいパスワードでログインしてください。
-            </p>
-
+            
             {/* Client Component でインタラクティブ機能を処理 */}
             <ResetPasswordCompleteContent />
           </div>
@@ -67,48 +73,7 @@ export default function ResetPasswordCompletePage() {
       </main>
 
       {/* フッター */}
-      <footer className='bg-[#323232] text-white py-12'>
-        <div className='max-w-6xl mx-auto px-4'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
-            {/* 会社情報 */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>株式会社Mokin</h3>
-              <div className='space-y-2 text-sm'>
-                <p>〒100-0000</p>
-                <p>東京都千代田区丸の内1-1-1</p>
-                <p>TEL: 03-0000-0000</p>
-                <p>FAX: 03-0000-0001</p>
-              </div>
-            </div>
-
-            {/* サービス */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>サービス</h3>
-              <div className='space-y-2 text-sm'>
-                <p>転職支援サービス</p>
-                <p>キャリア相談</p>
-                <p>企業紹介</p>
-                <p>面接対策</p>
-              </div>
-            </div>
-
-            {/* サポート */}
-            <div className='space-y-4'>
-              <h3 className='font-bold text-lg'>サポート</h3>
-              <div className='space-y-2 text-sm'>
-                <p>よくある質問</p>
-                <p>お問い合わせ</p>
-                <p>利用規約</p>
-                <p>プライバシーポリシー</p>
-              </div>
-            </div>
-          </div>
-
-          <div className='border-t border-gray-600 mt-8 pt-8 text-center text-sm'>
-            <p>&copy; 2024 Mokin Recruit. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer variant='login-before' />
     </div>
   );
 }

@@ -1,165 +1,55 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
-import { EmailInput, type EmailInputProps } from './email-input';
+'use client';
 
-interface EmailFormFieldProps extends EmailInputProps {
-  label?: string;
-  description?: string;
-  errorMessage?: string;
-  layout?: 'horizontal' | 'vertical';
-  required?: boolean;
+import React from 'react';
+
+interface EmailFormFieldProps {
+  id?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  showValidation?: boolean;
+  isValid?: boolean;
+  className?: string;
 }
 
-/**
- * Email Form Field Component (Molecule)
- * ラベル付きメールアドレス入力フィールド
- * Figma仕様: 横並びレイアウト対応 (Tailwind CSS v4.0対応)
- */
-function EmailFormField({
-  label = 'メールアドレス',
-  description,
-  errorMessage,
-  layout = 'horizontal',
-  required = false,
-  className,
-  error,
-  id,
-  ...inputProps
+export function EmailFormField({
+  id = 'email',
+  value,
+  onChange,
+  placeholder = 'name@example.com',
+  showValidation = true,
+  isValid = true,
+  className = '',
 }: EmailFormFieldProps) {
-  const fieldId = id || React.useId();
-  const hasError = !!(error || errorMessage);
+  const isEmailValid = value.includes('@') && value.length > 0;
 
-  if (layout === 'horizontal') {
-    return (
-      <div
-        className={cn(
-          // Figma仕様: 横並びレイアウト、gap: 16px
-          'flex items-start gap-4',
-          className
-        )}
-        data-slot='email-form-field'
-      >
-        {/* Label - Figma仕様準拠 */}
-        <div className='flex items-center pt-[11px] min-w-[140px]'>
-          <label
-            htmlFor={fieldId}
-            className={cn(
-              // Figma仕様: Noto Sans JP, 700, 16px, line-height: 2em, letter-spacing: 10%
-              'text-[color:var(--input-label-color)] font-bold',
-              'text-base leading-8 tracking-[0.1em]',
-              'font-[family-name:var(--font-noto-sans-jp)]',
-              'whitespace-nowrap select-none text-right w-[140px]',
-              hasError && 'text-[color:var(--input-error-border-color)]'
-            )}
-          >
-            {label}
-            {required && (
-              <span className='text-[color:var(--input-error-border-color)] ml-1'>
-                *
-              </span>
-            )}
-          </label>
-        </div>
-
-        {/* Input Field Container - Figma仕様: 400px幅 */}
-        <div className='flex flex-col gap-2 w-[400px]'>
-          <EmailInput
-            id={fieldId}
-            error={hasError}
-            aria-invalid={hasError}
-            aria-describedby={
-              description || errorMessage
-                ? `${fieldId}-description ${fieldId}-error`.trim()
-                : undefined
-            }
-            {...inputProps}
-          />
-
-          {/* Description */}
-          {description && (
-            <p
-              id={`${fieldId}-description`}
-              className='text-sm text-[color:var(--input-description-color)] leading-[1.4] tracking-[0.025em]'
-            >
-              {description}
-            </p>
-          )}
-
-          {/* Error Message */}
-          {errorMessage && (
-            <p
-              id={`${fieldId}-error`}
-              className='text-sm text-[color:var(--input-error-border-color)] leading-[1.4]'
-              role='alert'
-            >
-              {errorMessage}
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Vertical Layout
   return (
-    <div
-      className={cn('flex flex-col gap-2 w-[400px]', className)}
-      data-slot='email-form-field'
-    >
-      {/* Label */}
-      <label
-        htmlFor={fieldId}
-        className={cn(
-          'text-[color:var(--input-label-color)] font-bold',
-          'text-base leading-8 tracking-[0.1em]',
-          'font-[family-name:var(--font-noto-sans-jp)]',
-          'select-none',
-          hasError && 'text-[color:var(--input-error-border-color)]'
-        )}
-      >
-        {label}
-        {required && (
-          <span className='text-[color:var(--input-error-border-color)] ml-1'>
-            *
-          </span>
-        )}
-      </label>
-
-      {/* Input Field */}
-      <EmailInput
-        id={fieldId}
-        error={hasError}
-        aria-invalid={hasError}
-        aria-describedby={
-          description || errorMessage
-            ? `${fieldId}-description ${fieldId}-error`.trim()
-            : undefined
-        }
-        {...inputProps}
-      />
-
-      {/* Description */}
-      {description && (
-        <p
-          id={`${fieldId}-description`}
-          className='text-sm text-[color:var(--input-description-color)] leading-[1.4] tracking-[0.025em]'
+    <div className={`flex flex-row gap-4 items-start ${className}`}>
+      <div className='flex flex-row items-center justify-end pt-[11px] pb-0 w-[140px]'>
+        <label 
+          htmlFor={id}
+          className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
         >
-          {description}
-        </p>
-      )}
-
-      {/* Error Message */}
-      {errorMessage && (
-        <p
-          id={`${fieldId}-error`}
-          className='text-sm text-[color:var(--input-error-border-color)] leading-[1.4]'
-          role='alert'
-        >
-          {errorMessage}
-        </p>
-      )}
+          メールアドレス
+        </label>
+      </div>
+      <div className='w-[400px] flex flex-col gap-2'>
+        <div className='relative'>
+          <input
+            id={id}
+            type='email'
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className='w-full h-auto bg-white border border-[#999999] border-solid rounded-[5px] px-[11px] py-[11px] text-[#323232] text-[16px] leading-[2] tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] focus:outline-none focus:border-[#0F9058] focus:ring-2 focus:ring-[#0F9058]/20 transition-colors'
+          />
+        </div>
+        {showValidation && value && !isEmailValid && (
+          <p className='text-sm text-red-600'>
+            有効なメールアドレスを入力してください
+          </p>
+        )}
+      </div>
     </div>
   );
 }
-
-export { EmailFormField, type EmailFormFieldProps };

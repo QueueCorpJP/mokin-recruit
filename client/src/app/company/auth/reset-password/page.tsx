@@ -49,7 +49,7 @@ export default function CompanyResetPasswordPage() {
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 flex items-center justify-center relative px-4 py-20'>
+      <main className='flex-1 flex items-center justify-center relative px-4'>
         {/* カードコンテナ */}
         <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20'>
           <Suspense fallback={<div className='text-center'>読み込み中...</div>}>
