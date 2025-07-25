@@ -254,6 +254,9 @@ export default function CompanyJobsPage() {
   // ポップアップの表示状態と対象jobId
   const [popupJobId, setPopupJobId] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
+  
+  // 求人削除説明の表示状態
+  const [showDeleteInfo, setShowDeleteInfo] = useState(false);
 
   // ポップアップ外クリックで閉じる
   useEffect(() => {
@@ -428,7 +431,11 @@ export default function CompanyJobsPage() {
               {/* 右側まとめ（中央＋右） */}
               <div className='flex gap-3 items-center w-auto flex-shrink-0'>
                 {/* 中央：求人の削除について */}
-                <div className='bg-[#F0F9F3] rounded-[8px] p-4 w-[608px]'>
+                <div className={`bg-[#F0F9F3] rounded-[8px] p-4 w-[608px] transition-all duration-[600ms] ease-in-out ${
+                  showDeleteInfo 
+                    ? 'opacity-100 translate-y-0 scale-100' 
+                    : 'opacity-0 translate-y-[-10px] scale-95 pointer-events-none'
+                }`}>
                   <div className='font-bold text-xs mb-1'>
                     求人の削除について
                   </div>
@@ -455,7 +462,11 @@ export default function CompanyJobsPage() {
                       <PaginationArrow direction='right' />
                     </button>
                   </div>
-                  <button className='flex items-center gap-1 text-[#999999] text-xs font-bold focus:outline-none'>
+                  <button 
+                    className='flex items-center gap-1 text-[#999999] text-xs font-bold focus:outline-none'
+                    onMouseEnter={() => setShowDeleteInfo(true)}
+                    onMouseLeave={() => setShowDeleteInfo(false)}
+                  >
                     <QuestionIcon />
                     <span className='underline'>求人の削除について</span>
                   </button>
@@ -508,7 +519,7 @@ export default function CompanyJobsPage() {
                     {displayedJobs.map(job => (
                       <div
                         key={job.id}
-                        className='bg-[#FFFFFF] flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
+                        className='bg-[#FFFFFF] hover:bg-[#E9E9E9] transition-colors flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
                         style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
                       >
                         {/* グループ */}
@@ -536,7 +547,7 @@ export default function CompanyJobsPage() {
                               job.jobType.map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className={`rounded-[8px] flex items-center justify-center font-bold ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
+                                  className={`rounded-[8px] flex items-center justify-center font-medium ${jobType.length >= 8 ? 'text-[10px]' : 'text-[14px]'}`}
                                   style={{
                                     width: '136px',
                                     height: '32px',
@@ -551,7 +562,7 @@ export default function CompanyJobsPage() {
                               ))
                             ) : (
                               <span
-                                className={`rounded-[8px] flex items-center justify-center font-bold text-[14px]`}
+                                className={`rounded-[8px] flex items-center justify-center font-medium text-[14px]`}
                                 style={{
                                   width: '136px',
                                   height: '32px',
