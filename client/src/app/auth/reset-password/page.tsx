@@ -16,7 +16,7 @@ export const viewport: Viewport = {
 
 export default function ResetPasswordPage() {
   return (
-    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col relative'>
+    <div className='h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col relative'>
       {/* 背景装飾SVG */}
       <div className='absolute h-[335px] left-[-224.943px] top-[395px] w-[1889.89px] pointer-events-none'>
         <svg
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 flex items-center justify-center relative px-4 py-20'>
+      <main className='flex-1 min-h-[730px] flex items-center justify-center relative px-4'>
         {/* カードコンテナ */}
         <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20'>
           <Suspense fallback={<div className='text-center'>読み込み中...</div>}>

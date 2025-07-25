@@ -22,7 +22,7 @@ export default function CompanyLoginPage() {
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 flex items-center justify-center relative px-4 py-20'>
+      <main className='flex-1 flex items-center justify-center relative px-4'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
