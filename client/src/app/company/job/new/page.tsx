@@ -73,7 +73,6 @@ export default function JobNewPage() {
         const authHeaders = getAuthHeaders();
         const currentUserId = getCurrentUserId();
 
-        console.log('Auth headers prepared:', !!authHeaders.Authorization);
         if (!authHeaders.Authorization) {
           console.error('No authentication token found');
           return;
@@ -83,9 +82,7 @@ export default function JobNewPage() {
           headers: authHeaders,
         });
 
-        console.log('Groups API response status:', response.status);
         const result = await response.json();
-        console.log('Groups API result:', result);
 
         if (result.success) {
           setCompanyGroups(result.data);
@@ -97,10 +94,6 @@ export default function JobNewPage() {
             );
             if (currentUserGroup) {
               setGroup(currentUserGroup.id);
-              console.log(
-                '✅ Default group set to current user:',
-                currentUserGroup.group_name
-              );
             }
           }
 
@@ -135,16 +128,51 @@ export default function JobNewPage() {
           // 複製データを各状態にセット
           if (parsedData.company_group_id) setGroup(parsedData.company_group_id);
           if (parsedData.title) setTitle(parsedData.title);
-          if (parsedData.job_types) setJobTypes(parsedData.job_types);
-          if (parsedData.industries) setIndustries(parsedData.industries);
+          
+          // 職種の復元（新しい配列形式と古い単一値形式の両方に対応）
+          if (parsedData.job_types && Array.isArray(parsedData.job_types)) {
+            setJobTypes(parsedData.job_types);
+          } else if (parsedData.job_type) {
+            setJobTypes([parsedData.job_type]);
+          }
+          
+          // 業種の復元（新しい配列形式と古い単一値形式の両方に対応）
+          if (parsedData.industries && Array.isArray(parsedData.industries)) {
+            setIndustries(parsedData.industries);
+          } else if (parsedData.industry) {
+            setIndustries([parsedData.industry]);
+          }
+          
           if (parsedData.job_description) setJobDescription(parsedData.job_description);
           if (parsedData.position_summary) setPositionSummary(parsedData.position_summary);
-          if (parsedData.required_skills) setSkills(parsedData.required_skills);
-          if (parsedData.preferred_skills) setOtherRequirements(parsedData.preferred_skills);
+          
+          // スキルの復元（配列からテキストに変換対応）
+          if (parsedData.required_skills) {
+            if (Array.isArray(parsedData.required_skills)) {
+              setSkills(parsedData.required_skills.join(', '));
+            } else {
+              setSkills(parsedData.required_skills);
+            }
+          }
+          if (parsedData.preferred_skills) {
+            if (Array.isArray(parsedData.preferred_skills)) {
+              setOtherRequirements(parsedData.preferred_skills.join(', '));
+            } else {
+              setOtherRequirements(parsedData.preferred_skills);
+            }
+          }
+          
           if (parsedData.salary_min) setSalaryMin(parsedData.salary_min.toString());
           if (parsedData.salary_max) setSalaryMax(parsedData.salary_max.toString());
           if (parsedData.salary_note) setSalaryNote(parsedData.salary_note);
-          if (parsedData.work_locations) setLocations(parsedData.work_locations);
+          
+          // 勤務地の復元（新しい配列形式と古い単一値形式の両方に対応）
+          if (parsedData.work_locations && Array.isArray(parsedData.work_locations)) {
+            setLocations(parsedData.work_locations);
+          } else if (parsedData.work_location) {
+            setLocations([parsedData.work_location]);
+          }
+          
           if (parsedData.location_note) setLocationNote(parsedData.location_note);
           if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
           if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
@@ -356,12 +384,10 @@ export default function JobNewPage() {
   const saveDraft = async () => {
     try {
       // 画像をBase64エンコード（通常の投稿処理と同じ）
-      console.log('Encoding images for draft:', images.length);
       let encodedImages: any[] = [];
       if (images.length > 0) {
         try {
           encodedImages = await encodeImagesToBase64(images);
-          console.log('Images encoded successfully for draft:', encodedImages.length);
         } catch (error) {
           console.error('Image encoding failed for draft:', error);
           alert('画像の処理に失敗しました');
@@ -382,16 +408,13 @@ export default function JobNewPage() {
         salary_note: salaryNote || null,
         employment_type: employmentType || '未設定',
         employment_type_note: employmentTypeNote || null,
-        work_location: locations[0] || '未設定',
         work_locations: locations || [],
         location_note: locationNote || null,
         working_hours: workingHours || null,
         overtime_info: overtimeMemo || null,
         holidays: holidays || null,
         remote_work_available: false,
-        job_type: jobTypes[0] || '未設定',
         job_types: jobTypes || [],
-        industry: industries[0] || '未設定',
         industries: industries || [],
         selection_process: selectionProcess || null,
         appeal_points: appealPoints || [],
@@ -408,8 +431,6 @@ export default function JobNewPage() {
 
       const authHeaders = getAuthHeaders();
 
-      console.log('Saving draft to Supabase with data:', { ...data, images: '(encoded)' });
-
       const res = await fetch('/api/company/job/new', {
         method: 'POST',
         headers: {
@@ -424,7 +445,6 @@ export default function JobNewPage() {
         // ローカルストレージの下書きデータを削除
         clearDraft();
         alert('下書きを保存しました');
-        console.log('下書き保存成功:', result);
         // 求人一覧ページにリダイレクト
         router.push('/company/job');
       } else {
@@ -441,7 +461,6 @@ export default function JobNewPage() {
   const clearDraft = () => {
     try {
       localStorage.removeItem(DRAFT_KEY);
-      console.log('下書きデータを削除しました');
     } catch (error) {
       console.error('下書きデータの削除に失敗しました:', error);
     }
@@ -493,12 +512,10 @@ export default function JobNewPage() {
   // 送信処理
   const handleSubmit = async () => {
     // 画像をBase64エンコード
-    console.log('Encoding images:', images.length);
     let encodedImages: any[] = [];
     if (images.length > 0) {
       try {
         encodedImages = await encodeImagesToBase64(images);
-        console.log('Images encoded successfully:', encodedImages.length);
       } catch (error) {
         console.error('Image encoding failed:', error);
         alert('画像の処理に失敗しました');
@@ -518,16 +535,13 @@ export default function JobNewPage() {
       salary_note: salaryNote || null,
       employment_type: employmentType || '未設定',
       employment_type_note: employmentTypeNote || null,
-      work_location: locations[0] || '未設定',
       work_locations: locations || [],
       location_note: locationNote || null,
       working_hours: workingHours || null,
       overtime_info: overtimeMemo || null,
       holidays: holidays || null,
       remote_work_available: false,
-      job_type: jobTypes[0] || '未設定',
       job_types: jobTypes || [],
-      industry: industries[0] || '未設定',
       industries: industries || [],
       selection_process: selectionProcess || null,
       appeal_points: appealPoints || [],
