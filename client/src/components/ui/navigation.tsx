@@ -239,7 +239,7 @@ export function Navigation({
 
   // variant に応じたCTAボタンの設定
   // --- ここから拡張 ---
-  if (variant === 'candidate') {
+  if ((variant as string) === 'candidate') {
     // Figma準拠: 会員登録（filled/gradient）・ログイン（outline/ghost）
     const candidateButtons = [
       {
@@ -531,7 +531,7 @@ export function Navigation({
   }
 
   // 候補者ログイン後ナビゲーションを企業用と同等構成で新規追加し、違いとして指摘された点を厳密に反映する。
-  if (variant === 'candidate' && isLoggedIn) {
+  if ((variant as string) === 'candidate' && isLoggedIn) {
     const navigationItems = [
       {
         label: 'マイページ',

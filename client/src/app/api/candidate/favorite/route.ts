@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/server/database/supabase';
+import { getSupabaseClient } from '@/lib/server/database/supabase';
 import { validateJWT } from '@/lib/server/auth/supabaseAuth';
 
 // お気に入り一覧取得 (GET)
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // お気に入り求人を取得（求人詳細を含む）
+    const supabase = getSupabaseClient();
     const { data: favorites, error: favoritesError, count } = await supabase
       .from('favorites')
       .select(`
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 求人が存在し、公開されているかチェック
+    const supabase = getSupabaseClient();
     const { data: jobPosting, error: jobError } = await supabase
       .from('job_postings')
       .select('id, status')
@@ -214,6 +216,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // お気に入りが存在するかチェック
+    const supabase = getSupabaseClient();
     const { data: existingFavorite, error: checkError } = await supabase
       .from('favorites')
       .select('id')

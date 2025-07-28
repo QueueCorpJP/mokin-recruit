@@ -1,347 +1,361 @@
 'use client';
 
+import { Navigation } from '@/components/ui/navigation';
+import { SearchIcon } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { BaseInput } from '@/components/ui/base-input';
 import { useState } from 'react';
+import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
+import { LocationModal } from '@/app/company/company/job/LocationModal';
+import { Modal } from '@/components/ui/mo-dal';
+import { X } from 'lucide-react';
+import { SelectInput } from '@/components/ui/select-input';
+import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { PaginationArrow } from '@/components/svg/PaginationArrow';
+import { JobPostCard } from '@/components/ui/JobPostCard';
 
-// アイコンコンポーネント
-const MagnifyingGlassIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-  </svg>
-);
-
-const StarIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5Z" />
-  </svg>
-);
-
-const ChevronDownIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-  </svg>
-);
-
-const ChevronUpIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-  </svg>
-);
-
-const ChevronLeftIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5 8.25 12l7.5-7.5" />
-  </svg>
-);
-
-const ChevronRightIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-  </svg>
-);
-
-const LocationIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />
-  </svg>
-);
-
-const YenIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7.5 15 7.5M9 12l6 0m-7.5-4.5L12 2l4.5 5.5M3 16.5h18M3 20.5h18" />
-  </svg>
-);
-
-const HeartIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-  </svg>
-);
-
-export default function SearchSettingPage() {
-  const [keyword, setKeyword] = useState('');
-  const [jobType, setJobType] = useState('');
-  const [location, setLocation] = useState('');
-  const [salary, setSalary] = useState('');
-  const [industry, setIndustry] = useState('');
-  const [appealPoint, setAppealPoint] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const handleSearch = () => {
-    // 検索処理を実装
-    console.log({
-      keyword,
-      jobType,
-      location,
-      salary,
-      industry,
-      appealPoint,
-    });
-  };
+export default function CandidateSearchPage() {
+  const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [industryModalOpen, setIndustryModalOpen] = useState(false);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#198D76] to-[#1CA74F]">
-      {/* ヘッダー */}
-      <div className="flex justify-between items-center px-6 py-4">
-        <div className="flex items-center gap-3 text-white">
-          <MagnifyingGlassIcon className="w-6 h-6" />
-          <h1 className="text-xl font-bold">求人を探す</h1>
-        </div>
-        <Button
-          variant="outline"
-          className="text-white border-white hover:bg-white hover:text-[#198D76] flex items-center gap-2"
-        >
-          <StarIcon className="w-5 h-5" />
-          お気に入り求人
-        </Button>
-      </div>
-
-      {/* 検索フォーム */}
-      <div className="flex justify-center px-6">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl">
-          <div className="space-y-6">
-            {/* キーワード検索 */}
-            <div>
-              <Input
-                placeholder="キーワード検索"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="h-12 text-base"
-              />
-            </div>
-
-            {/* 第一行: 職種、勤務地、年収 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                variant="outline"
-                className="h-12 justify-between text-left bg-gray-50 hover:bg-gray-100"
-                onClick={() => {/* 職種選択モーダルを開く */}}
-              >
-                <span className={jobType ? 'text-black' : 'text-gray-500'}>
-                  {jobType || '職種を選択'}
+    <>
+      <Navigation variant='candidate' />
+      <main>
+        <section className='w-full px-[80px] py-[40px] bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] flex items-center justify-center'>
+          <div className='max-w-[1280px] w-full h-full flex flex-col relative'>
+            <div className='flex justify-between items-start'>
+              <div className='flex items-center'>
+                <SearchIcon size={32} className='text-white' />
+                <span className='ml-4 text-white text-2xl font-bold'>
+                  求人を探す
                 </span>
-                <ChevronDownIcon className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-12 justify-between text-left bg-gray-50 hover:bg-gray-100"
-                onClick={() => {/* 勤務地選択モーダルを開く */}}
-              >
-                <span className={location ? 'text-black' : 'text-gray-500'}>
-                  {location || '勤務地を選択'}
-                </span>
-                <ChevronDownIcon className="w-4 h-4" />
-              </Button>
-
-              <div className="relative">
-                <select
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  className="w-full h-12 px-3 border border-gray-200 rounded-md bg-gray-50 text-gray-700 appearance-none cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">年収</option>
-                  <option value="300-400">300-400万円</option>
-                  <option value="400-500">400-500万円</option>
-                  <option value="500-600">500-600万円</option>
-                  <option value="600-700">600-700万円</option>
-                  <option value="700-800">700-800万円</option>
-                  <option value="800-900">800-900万円</option>
-                  <option value="900-1000">900-1000万円</option>
-                  <option value="1000+">1000万円以上</option>
-                </select>
-                <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
-            </div>
-
-            {/* 検索条件追加 */}
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                className="text-[#198D76] hover:text-[#12614E] flex items-center gap-2"
-                onClick={() => setShowAdvanced(!showAdvanced)}
+              <button
+                className='w-[150px] h-[94px] border-2 border-white rounded-[10px] bg-transparent p-[14px] hover:bg-white/30 transition-colors duration-150 absolute right-0 top-0'
+                style={{ minWidth: 150, minHeight: 94 }}
               >
-                検索条件追加
-                {showAdvanced ? (
-                  <ChevronUpIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronDownIcon className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-
-            {/* 追加条件（アコーディオン） */}
-            {showAdvanced && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  className="h-12 justify-between text-left bg-gray-50 hover:bg-gray-100"
-                  onClick={() => {/* 業種選択モーダルを開く */}}
-                >
-                  <span className={industry ? 'text-black' : 'text-gray-500'}>
-                    {industry || '業種を選択'}
+                <div className='flex flex-col items-center justify-center h-full gap-[10px]'>
+                  <Star size={24} fill='white' stroke='white' />
+                  <span className='text-white text-[16px] font-bold'>
+                    お気に入り求人
                   </span>
-                  <ChevronDownIcon className="w-4 h-4" />
-                </Button>
-
-                <div className="relative">
-                  <select
-                    value={appealPoint}
-                    onChange={(e) => setAppealPoint(e.target.value)}
-                    className="w-full h-12 px-3 border border-gray-200 rounded-md bg-gray-50 text-gray-700 appearance-none cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">アピールポイント</option>
-                    <option value="remote">リモートワーク可</option>
-                    <option value="flexible">フレックスタイム制</option>
-                    <option value="education">教育制度充実</option>
-                    <option value="welfare">福利厚生充実</option>
-                    <option value="startup">スタートアップ</option>
-                    <option value="stable">安定企業</option>
-                    <option value="global">グローバル企業</option>
-                  </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
-              </div>
-            )}
-
-            {/* 検索ボタン */}
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={handleSearch}
-                className="bg-[#4A90E2] hover:bg-[#357ABD] text-white px-12 py-3 rounded-full text-base font-medium min-w-[120px]"
-              >
-                検索
-              </Button>
+              </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 求人一覧セクション */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-xl shadow-lg">
-          <div className="space-y-0">
-            {/* 求人アイテム */}
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div key={index} className="relative p-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
-                <div className="flex space-x-6">
-                  {/* 企業画像 */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src="/company.jpg"
-                      alt="企業画像"
-                      className="w-80 h-44 object-cover rounded-lg"
+            <div className='flex-1 flex items-center justify-center mt-10'>
+              <div className='w-[742px] bg-white rounded-lg shadow p-[40px]'>
+                <div className='max-w-[662px] w-full mx-auto'>
+                  <BaseInput placeholder='キーワード検索' className='mb-4' />
+                  <div className='flex flex-row gap-[24px] items-start justify-start w-full mt-6'>
+                    {/* 職種ボタン＋ラベル */}
+                    <div className='flex flex-col items-start'>
+                      <button
+                        type='button'
+                        onClick={() => setJobTypeModalOpen(true)}
+                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-[205px]'
+                      >
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          職種を選択
+                        </span>
+                      </button>
+                      {selectedJobTypes.length > 0 && (
+                        <div className='flex flex-col items-start mt-2'>
+                          <div className='flex flex-col gap-2 w-full'>
+                            {selectedJobTypes.map(item => (
+                              <div
+                                key={item}
+                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                              >
+                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  {item}
+                                </span>
+                                <button
+                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  onClick={() =>
+                                    setSelectedJobTypes(
+                                      selectedJobTypes.filter(j => j !== item)
+                                    )
+                                  }
+                                  aria-label='削除'
+                                >
+                                  <X size={18} className='text-[#0f9058]' />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* 勤務地ボタン＋ラベル */}
+                    <div className='flex flex-col items-start'>
+                      <button
+                        type='button'
+                        onClick={() => setLocationModalOpen(true)}
+                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-[205px]'
+                      >
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          勤務地を選択
+                        </span>
+                      </button>
+                      {selectedLocations.length > 0 && (
+                        <div className='flex flex-col items-start mt-2'>
+                          <div className='flex flex-row flex-wrap gap-2 max-w-[205px] w-full'>
+                            {selectedLocations.map(item => (
+                              <div
+                                key={item}
+                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                              >
+                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  {item}
+                                </span>
+                                <button
+                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  onClick={() =>
+                                    setSelectedLocations(
+                                      selectedLocations.filter(l => l !== item)
+                                    )
+                                  }
+                                  aria-label='削除'
+                                >
+                                  <X size={18} className='text-[#0f9058]' />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* セレクトコンポーネント（年収ラベル、右端、幅205px） */}
+                    <div style={{ width: 205 }}>
+                      <SelectInput
+                        options={[]}
+                        placeholder='年収'
+                        style={{
+                          width: '100%',
+                          padding: '8px 16px 8px 11px',
+                          color: '#323232',
+                        }}
+                      />
+                    </div>
+                    {/* モーダル */}
+                    {jobTypeModalOpen && (
+                      <Modal
+                        title='職種を選択'
+                        isOpen={jobTypeModalOpen}
+                        onClose={() => setJobTypeModalOpen(false)}
+                        primaryButtonText='決定'
+                        onPrimaryAction={() => setJobTypeModalOpen(false)}
+                        width='800px'
+                        height='680px'
+                      >
+                        <JobTypeModal
+                          selectedJobTypes={selectedJobTypes}
+                          setSelectedJobTypes={setSelectedJobTypes}
+                        />
+                      </Modal>
+                    )}
+                    {locationModalOpen && (
+                      <Modal
+                        title='勤務地を選択'
+                        isOpen={locationModalOpen}
+                        onClose={() => setLocationModalOpen(false)}
+                        primaryButtonText='決定'
+                        onPrimaryAction={() => setLocationModalOpen(false)}
+                        width='800px'
+                        height='680px'
+                      >
+                        <LocationModal
+                          selectedLocations={selectedLocations}
+                          setSelectedLocations={setSelectedLocations}
+                        />
+                      </Modal>
+                    )}
+                  </div>
+                  {/* 幅100%、高さ32pxのdiv（中央に線を追加） */}
+                  <div
+                    className='mt-6'
+                    style={{
+                      width: '100%',
+                      height: '32px',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* 線の上に白いdiv */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '0',
+                        left: 0,
+                        width: '100%',
+                        height: '16px',
+                        background: '#FFF',
+                        zIndex: 2,
+                      }}
                     />
-                  </div>
-
-                  {/* 求人情報 */}
-                  <div className="flex-1 space-y-4">
-                    {/* 職種タグ */}
-                    <div className="flex flex-wrap gap-2">
-                      <span className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
-                        職種テキスト
-                      </span>
-                      <span className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
-                        職種テキスト
-                      </span>
-                      <span className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
-                        職種テキスト
-                      </span>
-                    </div>
-
-                    {/* 求人タイトル */}
-                    <h3 className="text-xl font-bold text-gray-900 leading-relaxed">
-                      求人タイトルテキストが入ります。求人タイトルテキストが入ります。求人タイトルテキストが入ります。求人タイトルテキストが入ります。求人タイ...
-                    </h3>
-
-                    {/* 勤務地 */}
-                    <div className="flex items-center text-gray-600">
-                      <LocationIcon className="w-4 h-4 mr-2 text-[#198D76]" />
-                      <span className="text-sm">勤務地テキスト、勤務地テキスト</span>
-                    </div>
-
-                    {/* 年収 */}
-                    <div className="flex items-center text-gray-900">
-                      <YenIcon className="w-4 h-4 mr-2 text-[#198D76]" />
-                      <span className="text-sm font-medium">1,000万〜1,200万</span>
-                    </div>
-
-                    {/* 企業名 */}
-                    <div className="flex items-center mt-4">
-                      <div className="w-8 h-8 bg-[#4A90E2] rounded-full flex items-center justify-center mr-3">
-                        <span className="text-white text-xs font-bold">企</span>
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">企業名テキスト</span>
-                    </div>
-                  </div>
-
-                  {/* お気に入りボタン */}
-                  <div className="absolute top-6 right-6">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-red-500 p-2"
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: 0,
+                        width: '100%',
+                        height: '2px',
+                        background: '#EFEFEF',
+                        transform: 'translateY(-50%)',
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* 線を覆う中央の184x32pxのdiv */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: '184px',
+                        height: '32px',
+                        background: '#fff',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 3,
+                      }}
+                      className='flex items-center justify-center gap-4'
                     >
-                      <HeartIcon className="w-6 h-6" />
+                      <span className='text-[#0F9058] font-bold text-[16px] leading-[2] tracking-[1.6px] font-[Noto_Sans_JP]'>
+                        検索条件追加
+                      </span>
+                      <svg
+                        width='14'
+                        height='10'
+                        viewBox='0 0 14 10'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                        style={{ transform: 'rotate(180deg)' }}
+                      >
+                        <path
+                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                          fill='#0F9058'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* 新しいコンテンツ用のdiv */}
+                  <div className='mt-6 rounded flex flex-row gap-8 justify-center'>
+                    {/* 業種を選択ボタン＋ラベル */}
+                    <div
+                      style={{ width: 319 }}
+                      className='flex flex-col items-start'
+                    >
+                      <button
+                        type='button'
+                        onClick={() => setIndustryModalOpen(true)}
+                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center px-10 py-0 rounded-[32px] border border-[#999999] w-full bg-white shadow-sm'
+                      >
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          業種を選択
+                        </span>
+                      </button>
+                      {selectedIndustries.length > 0 && (
+                        <div className='flex flex-col items-start mt-2'>
+                          <div className='flex flex-col gap-2 w-full'>
+                            {selectedIndustries.map(item => (
+                              <div
+                                key={item}
+                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                              >
+                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  {item}
+                                </span>
+                                <button
+                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  onClick={() =>
+                                    setSelectedIndustries(
+                                      selectedIndustries.filter(j => j !== item)
+                                    )
+                                  }
+                                  aria-label='削除'
+                                >
+                                  <X size={18} className='text-[#0f9058]' />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* アピールポイントセレクト（デザインのみ） */}
+                    <div style={{ width: 319 }}>
+                      <SelectInput
+                        options={[]}
+                        placeholder='アピールポイント'
+                        style={{
+                          width: '100%',
+                          padding: '8px 16px 8px 11px',
+                          color: '#323232',
+                          background: '#fff',
+                          border: '1px solid #999999',
+                          borderRadius: '5px', // 年収セレクトと同じ
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* 業種モーダル */}
+                  {industryModalOpen && (
+                    <Modal
+                      title='業種を選択'
+                      isOpen={industryModalOpen}
+                      onClose={() => setIndustryModalOpen(false)}
+                      primaryButtonText='決定'
+                      onPrimaryAction={() => setIndustryModalOpen(false)}
+                      width='800px'
+                      height='680px'
+                    >
+                      <IndustryModal
+                        selectedIndustries={selectedIndustries}
+                        setSelectedIndustries={setSelectedIndustries}
+                      />
+                    </Modal>
+                  )}
+                  {/* 新しいフィルター用div（仮） */}
+                  <div className='mt-6 flex flex-row gap-8 justify-center'>
+                    <Button
+                      variant='blue-gradient'
+                      size='figma-default'
+                      className='w-[160px] h-[50px] text-[18px]'
+                      type='button'
+                    >
+                      検索
                     </Button>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* ページネーション */}
-          <div className="flex justify-center items-center py-6 border-t border-gray-100">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-gray-600 hover:text-[#198D76]"
-                disabled
-              >
-                <ChevronLeftIcon className="w-4 h-4" />
-                前へ
-              </Button>
-
-              {/* ページ番号 */}
-              <div className="flex items-center space-x-1">
-                {[1, 2, 3, 4, 5].map((page) => (
-                  <Button
-                    key={page}
-                    variant={page === 1 ? "default" : "outline"}
-                    size="sm"
-                    className={page === 1 
-                      ? "bg-[#198D76] text-white hover:bg-[#12614E]" 
-                      : "text-gray-600 hover:text-[#198D76] hover:bg-gray-50"
-                    }
-                  >
-                    {page}
-                  </Button>
-                ))}
-                <span className="text-gray-400 px-2">...</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-gray-600 hover:text-[#198D76] hover:bg-gray-50"
-                >
-                  20
-                </Button>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-gray-600 hover:text-[#198D76]"
-              >
-                次へ
-                <ChevronRightIcon className="w-4 h-4" />
-              </Button>
             </div>
+            {/* ここにコンテンツを追加できます */}
           </div>
-        </div>
-      </div>
-    </div>
+        </section>
+        <section className='w-full bg-[#F9F9F9] py-12'>
+          <div className='max-w-[1280px] mx-auto'>
+            {/* ページネーションデザイン（矢印アイコン8px） */}
+            <div className='flex flex-row items-center justify-end gap-2 w-full'>
+              <PaginationArrow direction='left' className='w-[8px] h-[8px]' />
+              <span className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232]'>
+                1〜10件 / 1,000件
+              </span>
+              <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
+            </div>
+            <JobPostCard
+              imageUrl='/company.jpg'
+              imageAlt='company'
+              className='mt-10'
+            >
+              {/* TODO: ここに新しい731x318pxのコンテンツを追加 */}
+            </JobPostCard>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

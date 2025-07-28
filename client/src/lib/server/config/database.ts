@@ -34,6 +34,7 @@ export class SupabaseConfig implements ISupabaseConfig {
   private getValidatedEnv() {
     try {
       // 新しいバリデーションシステムを使用
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { getValidatedEnv } = require('@/lib/server/config/env-validation');
       return getValidatedEnv();
     } catch (error) {

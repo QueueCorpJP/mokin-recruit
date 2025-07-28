@@ -70,6 +70,7 @@ export function SimpleLoginForm() {
         </CardTitle>
         <CardDescription className='text-center'>
           アカウントにログインしてください
+        </CardDescription>
         </div>
         
         <form onSubmit={handleSubmit} className='space-y-4 w-full'>
