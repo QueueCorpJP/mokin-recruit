@@ -51,37 +51,47 @@ export function NewPasswordContent() {
         queryParams[key] = value;
       }
 
-      // ユーザータイプの取得（URLパラメータを最優先）
-      const detectedUserType = queryParams.userType as 'candidate' | 'company';
-      if (detectedUserType === 'candidate' || detectedUserType === 'company') {
-        setUserType(detectedUserType);
-        // 正常に取得できた場合はローカルストレージをクリア
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('password_reset_user_type');
-        }
-      } else {
-        // URLパラメータが無い場合、ローカルストレージから復元を試行
-        if (typeof window !== 'undefined') {
-          const savedUserType = localStorage.getItem('password_reset_user_type') as 'candidate' | 'company';
-          if (savedUserType === 'candidate' || savedUserType === 'company') {
-            setUserType(savedUserType);
-            // 復元後はローカルストレージをクリア
-            localStorage.removeItem('password_reset_user_type');
-            console.log('🔄 UserType restored from localStorage:', savedUserType);
-          } else {
-            // どちらからも取得できない場合はデフォルトで企業ユーザーとして扱う
-            setUserType('company');
-          }
-        } else {
-          // ユーザータイプが指定されていない場合はデフォルトで企業ユーザーとして扱う
-          setUserType('company');
-        }
-      }
-
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
       if (typeof window !== 'undefined') {
         const fragment = window.location.hash;
         Object.assign(fragmentParams, parseFragmentParams(fragment));
+      }
+
+      // ユーザータイプの取得（複数ソースから優先順位付きで取得）
+      let detectedUserType: 'candidate' | 'company' | null = null;
+      
+      // 1. URLクエリパラメータから取得（最優先）
+      if (queryParams.userType === 'candidate' || queryParams.userType === 'company') {
+        detectedUserType = queryParams.userType;
+        console.log('🔗 UserType from URL query:', detectedUserType);
+      }
+      
+      // 2. URLフラグメントパラメータから取得
+      if (!detectedUserType && (fragmentParams.userType === 'candidate' || fragmentParams.userType === 'company')) {
+        detectedUserType = fragmentParams.userType;
+        console.log('🔗 UserType from URL fragment:', detectedUserType);
+      }
+      
+      // 3. ローカルストレージから取得
+      if (!detectedUserType && typeof window !== 'undefined') {
+        const savedUserType = localStorage.getItem('password_reset_user_type') as 'candidate' | 'company';
+        if (savedUserType === 'candidate' || savedUserType === 'company') {
+          detectedUserType = savedUserType;
+          console.log('🔄 UserType restored from localStorage:', detectedUserType);
+        }
+      }
+      
+      // 4. デフォルト値（企業ユーザー）
+      if (!detectedUserType) {
+        detectedUserType = 'company';
+        console.log('⚙️ UserType defaulted to company');
+      }
+      
+      setUserType(detectedUserType);
+      
+      // 使用後はローカルストレージをクリア
+      if (typeof window !== 'undefined' && (queryParams.userType || fragmentParams.userType)) {
+        localStorage.removeItem('password_reset_user_type');
       }
 
       // デバッグ情報を出力
@@ -89,10 +99,14 @@ export function NewPasswordContent() {
         currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
         queryParams,
         fragmentParams,
+        detectedUserType,
         hasQueryUserType: !!queryParams.userType,
         hasFragmentUserType: !!fragmentParams.userType,
         savedUserType: typeof window !== 'undefined' ? localStorage.getItem('password_reset_user_type') : null,
-        hasError: !!queryParams.error || !!fragmentParams.error
+        hasError: !!queryParams.error || !!fragmentParams.error,
+        hasTokenHash: !!(queryParams.token_hash || fragmentParams.token_hash),
+        hasCode: !!(queryParams.code || fragmentParams.code),
+        hasAccessToken: !!(queryParams.access_token || fragmentParams.access_token)
       });
 
       // 全パラメータをマージ（フラグメントパラメータを優先）
