@@ -135,6 +135,9 @@ class PasswordResetManager {
 
   // 期限切れセッションのクリーンアップ
   cleanupExpiredSessions() {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     const now = Date.now();
     const expirationTime = 60 * 60 * 1000; // 1時間
 
