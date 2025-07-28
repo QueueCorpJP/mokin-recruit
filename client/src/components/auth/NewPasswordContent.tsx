@@ -3,9 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState, useEffect } from 'react';
 import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
+// Alert component is no longer used
 
 /**
  * URLフラグメント（#以降）からパラメータを解析する関数
@@ -126,34 +124,30 @@ export function NewPasswordContent() {
 
       // エラーパラメータがある場合の処理
       if (error) {
-        let errorMessage = 'パスワードリセットリンクでエラーが発生しました。';
+        let errorMessage = 'リンクでエラーが発生しました。';
 
         switch (error) {
           case 'access_denied':
             if (combinedParams.error_code === 'otp_expired') {
-              errorMessage =
-                'パスワードリセットリンクの有効期限が切れているか、既に使用されています。リンクは1回限りの使用で、1時間で期限切れになります。新しいリンクを要求してください。';
+              errorMessage = 'リンクの有効期限が切れています。新しいリンクを要求してください。';
             } else {
-              errorMessage =
-                'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
+              errorMessage = 'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
             }
             break;
           case 'invalid_request':
-            errorMessage =
-              '無効なリクエストです。メールから正しいリンクを使用してください。';
+            errorMessage = '無効なリクエストです。メールから正しいリンクを使用してください。';
             break;
           case 'expired_token':
           case 'otp_expired':
-            errorMessage =
-              'パスワードリセットリンクの有効期限が切れているか、既に使用されています。リンクは1回限りの使用で、1時間で期限切れになります。新しいリンクを要求してください。';
+            errorMessage = 'リンクの有効期限が切れています。新しいリンクを要求してください。';
             break;
           default:
             if (combinedParams.error_description) {
               const decodedDescription = decodeURIComponent(combinedParams.error_description);
               if (decodedDescription.toLowerCase().includes('expired')) {
-                errorMessage = 'パスワードリセットリンクの有効期限が切れているか、既に使用されています。新しいリンクを要求してください。';
+                errorMessage = 'リンクの有効期限が切れています。新しいリンクを要求してください。';
               } else if (decodedDescription.toLowerCase().includes('invalid')) {
-                errorMessage = 'パスワードリセットリンクが無効です。メールから正しいリンクを使用してください。';
+                errorMessage = 'リンクが無効です。メールから正しいリンクを使用してください。';
               } else {
                 errorMessage = `エラー: ${decodedDescription}`;
               }
@@ -170,9 +164,7 @@ export function NewPasswordContent() {
       }
 
       if (!hasValidParams) {
-        setParameterError(
-          '無効なリンクです。パスワードリセットを再度お試しください。'
-        );
+        setParameterError('無効なリンクです。パスワードリセットを再度お試しください。');
       }
 
       setIsParametersReady(true);
@@ -202,9 +194,7 @@ export function NewPasswordContent() {
 
         // 必須パラメータの最終確認
         if (!tokenHash && !code && !accessToken) {
-          throw new Error(
-            '無効なリンクです。パスワードリセットを再度お試しください。'
-          );
+          throw new Error('無効なリンクです。パスワードリセットを再度お試しください。');
         }
 
         // APIリクエストのペイロード構築
@@ -250,7 +240,7 @@ export function NewPasswordContent() {
   // パラメータの準備ができていない場合はローディング表示
   if (!isParametersReady) {
     return (
-      <div className='w-full max-w-md text-center space-y-4'>
+              <div className='w-full max-w-md text-center space-y-4'>
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058] mx-auto'></div>
         <p className='text-[#323232] font-medium'>パラメータを確認中...</p>
       </div>
@@ -260,31 +250,31 @@ export function NewPasswordContent() {
   // パラメータエラーがある場合はエラー表示
   if (parameterError) {
     return (
-      <div className={`w-full max-w-md space-y-6 ${
+      <div className={`relative size-full ${
         userType === 'candidate' 
-          ? 'bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 md:px-[80px] py-10 md:py-[80px]' 
-          : ''
+          ? '' 
+          : 'bg-[#ffffff] rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
       }`}>
-        <div className='text-center space-y-4'>
-          <Alert variant='destructive'>
-            <AlertCircle className='h-4 w-4' />
-            <AlertDescription>
-              {parameterError}
-            </AlertDescription>
-          </Alert>
+        <div className="flex flex-col items-center relative size-full">
+          <div className={`box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative size-full ${
+            userType === 'candidate' ? 'p-0' : 'p-20'
+          }`}>
+            
+            {/* エラーメッセージ - 一番上に配置 */}
+            <div className="box-border content-stretch flex flex-col gap-4 md:gap-6 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-center w-full">
+              <div className="relative shrink-0 text-[#DC2626] text-[24px] md:text-[32px] tracking-[2.4px] md:tracking-[3.2px] w-full">
+                <p className="block leading-[1.6] font-bold font-[family-name:var(--font-noto-sans-jp)]">リンクが無効です</p>
+              </div>
+              <div className="relative shrink-0 text-[#323232] text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px] w-full">
+                <p className="block leading-[2] font-bold font-[family-name:var(--font-noto-sans-jp)]">
+                  パスワードリセットリンクの有効期限が切れています。<br />
+                  新しいリンクを要求してください。
+                </p>
+              </div>
+            </div>
 
-          <div className='space-y-4'>
-            <p className='text-[#323232] font-medium text-[14px] md:text-base leading-8'>
-              以下の方法をお試しください：
-            </p>
-            <ul className='text-left text-[#323232] text-[12px] md:text-sm space-y-2'>
-              <li>• パスワードリセットリンクは<strong>1時間で期限切れ</strong>になります</li>
-              <li>• リンクは<strong>1回限り</strong>の使用です</li>
-              <li>• 下記ボタンから新しいリセットを要求してください</li>
-              <li>• 新しいメールが届いたら即座にリンクをクリックしてください</li>
-            </ul>
-
-            <div className='flex flex-col gap-3 mt-6'>
+            {/* ボタン */}
+            <div className="box-border content-stretch flex flex-col gap-4 items-center justify-start p-0 relative shrink-0 w-full">
               <button
                 onClick={() => {
                   const resetPath = userType === 'candidate' 
@@ -292,10 +282,15 @@ export function NewPasswordContent() {
                     : '/company/auth/reset-password';
                   router.push(resetPath);
                 }}
-                className='bg-[#0F9058] text-white px-6 py-3 rounded-[25px] hover:bg-[#0D7A4A] transition-colors font-bold tracking-[0.1em] text-[14px] md:text-[16px]'
+                className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:min-w-40 px-6 sm:px-10 py-3 md:py-3.5 relative rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] shrink-0 bg-[#0F9058] hover:bg-[#0D7A4A] transition-colors"
               >
-                新しいリセットを要求
+                <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#ffffff] text-[0px] text-center text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
+                  <p className="adjustLetterSpacing block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre">
+                    新しいリセットを要求
+                  </p>
+                </div>
               </button>
+              
               <button
                 onClick={() => {
                   const loginPath = userType === 'candidate' 
@@ -303,9 +298,13 @@ export function NewPasswordContent() {
                     : '/company/auth/login';
                   router.push(loginPath);
                 }}
-                className='border border-[#0F9058] text-[#0F9058] px-6 py-3 rounded-[25px] hover:bg-[#0F9058] hover:text-white transition-colors font-bold tracking-[0.1em] text-[14px] md:text-[16px]'
+                className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:min-w-40 px-6 sm:px-10 py-3 md:py-3.5 relative rounded-[32px] border-2 border-[#0F9058] shrink-0 bg-white text-[#0F9058] hover:bg-[#0F9058] hover:text-white transition-colors"
               >
-                ログインページに戻る
+                <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[0px] text-center text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
+                  <p className="adjustLetterSpacing block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre">
+                    ログインページに戻る
+                  </p>
+                </div>
               </button>
             </div>
           </div>
@@ -318,7 +317,7 @@ export function NewPasswordContent() {
   return (
     <div className='w-full'>
       {userType === 'candidate' ? (
-        // 候補者の場合は親でCandidateAuthBackgroundを使用するため、フォームのみ表示
+        // 候補者の場合のフォーム表示
         <div className='relative w-full max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 md:px-[80px] py-10 md:py-[80px]'>
           <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} userType="candidate" />
         </div>
