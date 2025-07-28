@@ -227,6 +227,16 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // ビルドキャッシュの制御（Vercel問題対応）
+  generateBuildId: async () => {
+    // 環境変数でキャッシュ無効化を制御
+    if (process.env.DISABLE_BUILD_CACHE === 'true') {
+      return `build-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    }
+    // 通常は git commit hash を使用
+    return process.env.VERCEL_GIT_COMMIT_SHA || `build-${Date.now()}`;
+  },
+
   // 出力設定
   // output: 'standalone',
 

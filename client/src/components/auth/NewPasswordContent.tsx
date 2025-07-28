@@ -13,18 +13,28 @@ import { CandidateAuthBackground } from '@/components/ui/candidate-auth-backgrou
 function parseFragmentParams(fragment: string): Record<string, string> {
   const params: Record<string, string> = {};
 
-  if (!fragment) return params;
+  try {
+    if (!fragment || typeof fragment !== 'string') return params;
 
-  // #を削除
-  const cleanFragment = fragment.startsWith('#') ? fragment.slice(1) : fragment;
+    // #を削除
+    const cleanFragment = fragment.startsWith('#') ? fragment.slice(1) : fragment;
 
-  // &で分割してパラメータを解析
-  cleanFragment.split('&').forEach(param => {
-    const [key, value] = param.split('=');
-    if (key && value) {
-      params[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
-  });
+    if (!cleanFragment.trim()) return params;
+
+    // &で分割してパラメータを解析
+    cleanFragment.split('&').forEach(param => {
+      try {
+        const [key, value] = param.split('=');
+        if (key && value !== undefined) {
+          params[decodeURIComponent(key)] = decodeURIComponent(value);
+        }
+      } catch (decodeError) {
+        console.warn('Failed to decode fragment parameter:', param, decodeError);
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to parse fragment params:', error);
+  }
 
   return params;
 }
@@ -41,6 +51,12 @@ export function NewPasswordContent() {
 
   // URLパラメータの安全な取得と検証（クエリパラメータ + フラグメントパラメータ）
   useEffect(() => {
+    // SSR安全性チェック
+    if (typeof window === 'undefined') {
+      setIsParametersReady(true);
+      return;
+    }
+
     try {
       const queryParams: Record<string, string> = {};
       const fragmentParams: Record<string, string> = {};
@@ -52,9 +68,13 @@ export function NewPasswordContent() {
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
-      if (typeof window !== 'undefined') {
-        const fragment = window.location.hash;
-        Object.assign(fragmentParams, parseFragmentParams(fragment));
+      if (typeof window !== 'undefined' && window.location) {
+        try {
+          const fragment = window.location.hash;
+          Object.assign(fragmentParams, parseFragmentParams(fragment));
+        } catch (error) {
+          console.warn('Failed to parse window.location.hash:', error);
+        }
       }
 
       // ユーザータイプの取得（複数ソースから優先順位付きで取得）
@@ -149,13 +169,18 @@ export function NewPasswordContent() {
             break;
           default:
             if (combinedParams.error_description) {
-              const decodedDescription = decodeURIComponent(combinedParams.error_description);
-              if (decodedDescription.toLowerCase().includes('expired')) {
-                errorMessage = 'パスワードリセットリンクの有効期限が切れているか、既に使用されています。新しいリンクを要求してください。';
-              } else if (decodedDescription.toLowerCase().includes('invalid')) {
-                errorMessage = 'パスワードリセットリンクが無効です。メールから正しいリンクを使用してください。';
-              } else {
-                errorMessage = `エラー: ${decodedDescription}`;
+              try {
+                const decodedDescription = decodeURIComponent(combinedParams.error_description);
+                if (decodedDescription.toLowerCase().includes('expired')) {
+                  errorMessage = 'パスワードリセットリンクの有効期限が切れているか、既に使用されています。新しいリンクを要求してください。';
+                } else if (decodedDescription.toLowerCase().includes('invalid')) {
+                  errorMessage = 'パスワードリセットリンクが無効です。メールから正しいリンクを使用してください。';
+                } else {
+                  errorMessage = `エラー: ${decodedDescription}`;
+                }
+              } catch (decodeError) {
+                console.warn('Failed to decode error_description:', combinedParams.error_description, decodeError);
+                errorMessage = 'パスワードリセットリンクでエラーが発生しました。新しいリンクを要求してください。';
               }
             }
         }

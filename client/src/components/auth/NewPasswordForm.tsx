@@ -53,10 +53,10 @@ export function NewPasswordForm({
           {/* 見出し+説明 */}
           <div className="box-border content-stretch flex flex-col gap-4 md:gap-6 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-center w-full">
             <div className="relative shrink-0 text-[#0f9058] text-[24px] md:text-[32px] tracking-[2.4px] md:tracking-[3.2px] w-full">
-              <p className="block leading-[1.6] font-bold font-[family-name:var(--font-noto-sans-jp)]">パスワードの再設定</p>
+              <p className="block leading-[1.6] font-bold font-[var(--font-noto-sans-jp)]">パスワードの再設定</p>
             </div>
             <div className="relative shrink-0 text-[#323232] text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px] w-full">
-              <p className="block leading-[2] font-bold font-[family-name:var(--font-noto-sans-jp)]">
+                              <p className="block leading-[2] font-bold font-[var(--font-noto-sans-jp)]">
                 半角英数字・記号のみ、8文字以上でパスワードを設定してください。
               </p>
             </div>

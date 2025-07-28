@@ -16,7 +16,10 @@
     "db:schema": "node scripts/create-database-schema.js",
     "db:schema:manual": "echo 'Please execute database_schema.sql in Supabase Dashboard > SQL Editor'",
     "db:reset": "echo 'Use Supabase Dashboard > Database > Reset to reset database'",
-    "db:migrate": "echo 'Use Supabase Dashboard > SQL Editor to execute migration scripts'"
+    "db:migrate": "echo 'Use Supabase Dashboard > SQL Editor to execute migration scripts'",
+    "build:fresh": "npm run clean && npm run build",
+    "deploy:vercel": "vercel --prod --force",
+    "deploy:fresh": "npm run clean && vercel --prod --force"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

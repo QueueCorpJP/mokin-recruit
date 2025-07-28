@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import PasswordResetManager from '@/lib/auth/passwordResetManager';
 
 interface ForgotPasswordFormData {
   email: string;
@@ -25,6 +26,42 @@ export default function CandidateForgotPasswordForm() {
   >('idle');
   const [message, setMessage] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [resetManager] = useState(() => PasswordResetManager.getInstance());
+
+  // PasswordResetManagerリスナーの設定
+  useEffect(() => {
+    const unsubscribe = resetManager.addListener((event, data) => {
+      console.log('🎯 Auth event received (Candidate):', event, data);
+
+      switch (event) {
+        case 'PASSWORD_RECOVERY':
+          console.log('✅ Password recovery confirmed by Supabase (Candidate)');
+          setSubmitStatus('success');
+          setMessage('パスワード再設定のご案内のメールをお送りいたします。');
+          break;
+        case 'PASSWORD_RESET_INVALIDATED':
+          console.log('⚠️ Previous password reset session invalidated (Candidate)');
+          if (data.email === formData.email) {
+            setMessage('新しいパスワードリセットリンクが発行されました。古いリンクは無効になりました。');
+          }
+          break;
+      }
+    });
+
+    resetManager.cleanupExpiredSessions();
+    return unsubscribe;
+  }, [resetManager, formData.email]);
+
+  // クールダウンタイマー
+  useEffect(() => {
+    if (cooldownRemaining > 0) {
+      const timer = setTimeout(() => {
+        setCooldownRemaining(cooldownRemaining - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownRemaining]);
 
   const validateEmail = (email: string): boolean => {
     if (!email) {
@@ -66,30 +103,20 @@ export default function CandidateForgotPasswordForm() {
         localStorage.setItem('password_reset_user_type', 'candidate');
       }
 
-      const response = await fetch('/api/auth/reset-password/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          userType: 'candidate',
-        }),
-      });
+      // PasswordResetManagerを使用してリセット要求
+      const result = await resetManager.requestPasswordReset(formData.email, 'candidate');
 
-      const result: ForgotPasswordResponse = await response.json();
-
-      if (response.ok) {
-        setSubmitStatus('success');
-        setMessage(
-          result.message ||
-            'パスワード再設定のご案内のメールをお送りいたします。'
-        );
+      if (result.success) {
+        // 成功時の処理はPasswordResetManagerのリスナーで行われる
+        console.log('✅ Password reset request successful (Candidate)');
       } else {
         setSubmitStatus('error');
-        setMessage(
-          result.error || 'パスワードリセット要求の送信に失敗しました。'
-        );
+        setMessage(result.message);
+        
+        // 重複要求の場合はクールダウンを設定しない
+        if (!result.isDuplicate) {
+          setCooldownRemaining(60);
+        }
       }
     } catch (error) {
       console.error('Password reset request error:', error);

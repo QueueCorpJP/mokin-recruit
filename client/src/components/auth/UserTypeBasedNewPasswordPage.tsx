@@ -67,7 +67,7 @@ function CompanyLoadingScreen({ message = '読み込み中...' }: { message?: st
         <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-[80px]'>
           <div className='text-center space-y-6'>
             <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] tracking-[0.1em]'>
-              パスワードの再設
+              パスワードの再設定
             </h1>
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058] mx-auto'></div>
             <p className='text-[#323232] font-medium'>{message}</p>

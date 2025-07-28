@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import PasswordResetManager from '@/lib/auth/passwordResetManager';
 
 interface ForgotPasswordFormData {
   email: string;
@@ -31,6 +32,45 @@ export default function ForgotPasswordForm({
   >('idle');
   const [message, setMessage] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [resetManager] = useState(() => PasswordResetManager.getInstance());
+
+  // PasswordResetManagerリスナーの設定
+  useEffect(() => {
+    const unsubscribe = resetManager.addListener((event, data) => {
+      console.log('🎯 Auth event received:', event, data);
+
+      switch (event) {
+        case 'PASSWORD_RECOVERY':
+          console.log('✅ Password recovery confirmed by Supabase');
+          setSubmitStatus('success');
+          setMessage('パスワード再設定のご案内のメールをお送りいたします。');
+          break;
+        case 'PASSWORD_RESET_INVALIDATED':
+          console.log('⚠️ Previous password reset session invalidated');
+          // 古いセッションが無効化された場合の処理
+          if (data.email === formData.email) {
+            setMessage('新しいパスワードリセットリンクが発行されました。古いリンクは無効になりました。');
+          }
+          break;
+      }
+    });
+
+    // セッションクリーンアップ
+    resetManager.cleanupExpiredSessions();
+
+    return unsubscribe;
+  }, [resetManager, formData.email]);
+
+  // クールダウンタイマー
+  useEffect(() => {
+    if (cooldownRemaining > 0) {
+      const timer = setTimeout(() => {
+        setCooldownRemaining(cooldownRemaining - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownRemaining]);
 
   const validateEmail = (email: string): boolean => {
     if (!email) {
@@ -72,30 +112,20 @@ export default function ForgotPasswordForm({
         localStorage.setItem('password_reset_user_type', userType);
       }
 
-      const response = await fetch('/api/auth/reset-password/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          userType,
-        }),
-      });
+      // PasswordResetManagerを使用してリセット要求
+      const result = await resetManager.requestPasswordReset(formData.email, userType);
 
-      const result: ForgotPasswordResponse = await response.json();
-
-      if (response.ok) {
-        setSubmitStatus('success');
-        setMessage(
-          result.message ||
-            'パスワード再設定のご案内のメールをお送りいたします。'
-        );
+      if (result.success) {
+        // 成功時の処理はPasswordResetManagerのリスナーで行われる
+        console.log('✅ Password reset request successful');
       } else {
         setSubmitStatus('error');
-        setMessage(
-          result.error || 'パスワードリセット要求の送信に失敗しました。'
-        );
+        setMessage(result.message);
+        
+        // 重複要求の場合はクールダウンを設定しない
+        if (!result.isDuplicate) {
+          setCooldownRemaining(60);
+        }
       }
     } catch (error) {
       console.error('Password reset request error:', error);
@@ -134,6 +164,11 @@ export default function ForgotPasswordForm({
               letterSpacing: '1.6px',
             }}>
               <p className='block mb-0'>{message}</p>
+              {cooldownRemaining > 0 && (
+                <p className='block mt-2 text-sm text-gray-600'>
+                  重複送信を防ぐため、{cooldownRemaining}秒後に再送信可能になります。
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -219,7 +254,7 @@ export default function ForgotPasswordForm({
           <div className='flex justify-center w-full'>
             <button
               type='submit'
-              disabled={isLoading || !formData.email}
+              disabled={isLoading || !formData.email || cooldownRemaining > 0}
               className='flex items-center justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',
@@ -234,6 +269,10 @@ export default function ForgotPasswordForm({
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   送信中...
                 </>
+              ) : cooldownRemaining > 0 ? (
+                <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
+                  再送信まで {cooldownRemaining}秒
+                </p>
               ) : (
                 <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
                   送信する

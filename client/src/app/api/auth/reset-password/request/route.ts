@@ -7,6 +7,10 @@ const ForgotPasswordSchema = z.object({
   userType: z.enum(['candidate', 'company']).optional(),
 });
 
+// リクエスト重複防止のためのメモリキャッシュ
+const resetRequestCache = new Map<string, number>();
+const CACHE_DURATION = 60000; // 1分間
+
 export async function POST(request: NextRequest) {
   // 最初のログ出力（最も基本的な機能のテスト）
   console.log(
@@ -76,7 +80,37 @@ export async function POST(request: NextRequest) {
       hasUserType: !!validationResult.data.userType
     });
 
-    // ステップ4: Supabaseクライアントの動的インポートと初期化
+    // ステップ4a: 重複リクエストのチェック
+    console.log('🔒 Step 4a: Checking for duplicate requests...');
+    const now = Date.now();
+    const cacheKey = email.toLowerCase().trim();
+    const lastRequestTime = resetRequestCache.get(cacheKey);
+
+    if (lastRequestTime && (now - lastRequestTime) < CACHE_DURATION) {
+      const remainingTime = Math.ceil((CACHE_DURATION - (now - lastRequestTime)) / 1000);
+      console.log(`⏳ Duplicate request blocked for email: ${email.substring(0, 3)}***, ${remainingTime}s remaining`);
+      
+      return NextResponse.json({
+        success: true,
+        message: `パスワードリセット用のメールを既に送信しています。${remainingTime}秒後に再度お試しください。`,
+      });
+    }
+
+    // リクエストをキャッシュに記録
+    resetRequestCache.set(cacheKey, now);
+    
+    // 古いキャッシュエントリを定期的にクリーンアップ
+    if (resetRequestCache.size > 1000) {
+      for (const [key, time] of resetRequestCache.entries()) {
+        if (now - time > CACHE_DURATION) {
+          resetRequestCache.delete(key);
+        }
+      }
+    }
+    
+    console.log('✅ No duplicate request found, proceeding...');
+
+    // ステップ5: Supabaseクライアントの動的インポートと初期化
     console.log('🔧 Step 5: Dynamic import of Supabase...');
     let createClient;
     try {
@@ -94,7 +128,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ステップ5: Supabaseクライアントの作成
+    // ステップ6: Supabaseクライアントの作成
     console.log('🔧 Step 6: Creating Supabase client...');
     let supabase;
     try {
@@ -124,7 +158,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ステップ6: URL設定の動的取得
+    // ステップ7: URL設定の動的取得
     console.log('🔧 Step 7: Getting redirect URL...');
     let redirectUrl;
     try {
@@ -158,7 +192,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ステップ7: パスワードリセットメールの送信
+    // ステップ8: パスワードリセットメールの送信
     console.log('📤 Step 8: Sending password reset email...');
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
