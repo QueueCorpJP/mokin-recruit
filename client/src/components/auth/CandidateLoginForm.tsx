@@ -154,7 +154,7 @@ export function CandidateLoginForm() {
               type='submit'
               disabled={!isFormValid || isPending}
               variant='green-gradient'
-              className='px-6 sm:px-10 md:px-15 py-6 md:py-8 text-[16px] leading-[1.6] tracking-[1.6px] rounded-[32px] w-full max-w-[280px] sm:max-w-[313px] md:min-w-auto'
+              className='px-10 py-6 md:py-8 text-[16px] leading-[1.6] tracking-[1.6px] rounded-[32px] w-full max-w-[280px] sm:max-w-[313px] md:max-w-[160px]'
             >
               {isPending ? 'ログイン中...' : 'ログイン'}
             </Button>
