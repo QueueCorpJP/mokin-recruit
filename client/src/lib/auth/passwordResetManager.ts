@@ -64,7 +64,9 @@ class PasswordResetManager {
       console.log('⚠️ Invalidating previous reset session:', oldSessionId);
       
       // 前のセッションを無効化する通知
-      this.notifySessionInvalidated(email, oldSessionId);
+      if (oldSessionId) {
+        this.notifySessionInvalidated(email, oldSessionId);
+      }
     }
 
     // 新しいセッションを記録

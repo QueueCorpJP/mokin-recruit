@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { SelectInput } from '@/components/ui/select-input';

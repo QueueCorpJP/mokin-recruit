@@ -70,6 +70,7 @@ export default function ForgotPasswordForm({
       }, 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [cooldownRemaining]);
 
   const validateEmail = (email: string): boolean => {

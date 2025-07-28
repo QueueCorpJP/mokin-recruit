@@ -46,7 +46,6 @@ export const TYPES = {
 
   // === External Services ===
   SupabaseClient: Symbol.for('SupabaseClient'),
-  EmailService: Symbol.for('EmailService'),
   FileStorage: Symbol.for('FileStorage'),
   RedisClient: Symbol.for('RedisClient'),
 
