@@ -5,6 +5,8 @@ import {
 import { logger } from '@/lib/server/utils/logger';
 import { User } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import { SessionService } from '@/lib/server/core/services/SessionService';
+import { NextRequest } from 'next/server';
 
 // 認証結果の型定義
 export interface AuthResult {
@@ -12,6 +14,14 @@ export interface AuthResult {
   user?: User;
   error?: string;
   token?: string;
+}
+
+// JWT検証結果の型定義
+export interface JWTValidationResult {
+  isValid: boolean;
+  candidateId?: string;
+  user?: User;
+  error?: string;
 }
 
 // ユーザー登録データの型
@@ -275,5 +285,66 @@ export function verifyCustomJWT(token: string): {
   } catch (error) {
     logger.error('Custom JWT verification failed:', error);
     return { valid: false };
+  }
+}
+
+/**
+ * Next.js Request から JWT を検証し、候補者情報を取得
+ */
+export async function validateJWT(request: NextRequest): Promise<JWTValidationResult> {
+  try {
+    const sessionService = new SessionService();
+    
+    // Authorizationヘッダーまたはクッキーからトークンを取得
+    const authHeader = request.headers.get('authorization');
+    const cookieToken = request.cookies.get('supabase-auth-token')?.value;
+    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+
+    if (!token) {
+      return {
+        isValid: false,
+        error: 'No authentication token provided'
+      };
+    }
+
+    // セッションを検証
+    const sessionResult = await sessionService.validateSession(token);
+
+    if (!sessionResult.success || !sessionResult.sessionInfo) {
+      return {
+        isValid: false,
+        error: sessionResult.error || 'Session validation failed'
+      };
+    }
+
+    const user = sessionResult.sessionInfo.user;
+
+    // 候補者情報を取得
+    const supabase = getSupabaseAdminClient();
+    const { data: candidate, error: candidateError } = await supabase
+      .from('candidates')
+      .select('id')
+      .eq('email', user.email)
+      .single();
+
+    if (candidateError || !candidate) {
+      logger.error('Candidate lookup failed:', candidateError);
+      return {
+        isValid: false,
+        error: 'Candidate information not found'
+      };
+    }
+
+    return {
+      isValid: true,
+      candidateId: candidate.id,
+      user: user
+    };
+  } catch (error) {
+    logger.error('JWT validation error:', error);
+    return {
+      isValid: false,
+      error: 'JWT validation failed'
+    };
   }
 }

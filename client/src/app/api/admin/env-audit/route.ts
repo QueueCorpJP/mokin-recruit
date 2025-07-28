@@ -329,8 +329,7 @@ export async function POST(request: NextRequest) {
  */
 async function testSupabaseConnection() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { createClient } = require('@supabase/supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_ANON_KEY!
@@ -363,14 +362,13 @@ async function testSupabaseConnection() {
  */
 async function testJwtConfiguration() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const jwt = require('jsonwebtoken');
+    const jwt = await import('jsonwebtoken');
     const secret = process.env.JWT_SECRET!;
 
     // テスト用トークンの生成と検証
     const testPayload = { test: true, timestamp: Date.now() };
-    const token = jwt.sign(testPayload, secret, { expiresIn: '1m' });
-    const decoded = jwt.verify(token, secret);
+    const token = jwt.default.sign(testPayload, secret, { expiresIn: '1m' });
+    const decoded = jwt.default.verify(token, secret);
 
     return {
       status: 'success',
@@ -393,8 +391,7 @@ async function testJwtConfiguration() {
  */
 async function testUrlConfiguration() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getBaseUrl, getCorsOrigin } = require('@/lib/server/utils/url');
+    const { getBaseUrl, getCorsOrigin } = await import('@/lib/server/utils/url');
 
     const baseUrl = getBaseUrl();
     const corsOrigin = getCorsOrigin();

@@ -72,6 +72,24 @@ export function getAuthRedirectUrl(path: string): string {
 }
 
 /**
+ * CORS用のオリジンを取得
+ */
+export function getCorsOrigin(): string {
+  // 明示的に設定されたCORS origin
+  if (process.env.CORS_ORIGIN) {
+    return process.env.CORS_ORIGIN;
+  }
+
+  // 開発環境では全てのオリジンを許可
+  if (process.env.NODE_ENV === 'development') {
+    return '*';
+  }
+
+  // 本番環境ではベースURLを使用
+  return getBaseUrl();
+}
+
+/**
  * 環境情報を取得（デバッグ用・簡素化版）
  */
 export function getEnvironmentInfo() {

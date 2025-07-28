@@ -431,11 +431,14 @@ export default function CompanyJobsPage() {
               {/* 右側まとめ（中央＋右） */}
               <div className='flex gap-3 items-center w-auto flex-shrink-0'>
                 {/* 中央：求人の削除について */}
-                <div className={`bg-[#F0F9F3] rounded-[8px] p-4 w-[608px] transition-all duration-[600ms] ease-in-out ${
-                  showDeleteInfo 
-                    ? 'opacity-100 translate-y-0 scale-100' 
-                    : 'opacity-0 translate-y-[-10px] scale-95 pointer-events-none'
-                }`}>
+                <div 
+                  className={`bg-[#F0F9F3] rounded-[8px] p-4 w-[608px] transition-all duration-[600ms] ease-in-out ${
+                    showDeleteInfo 
+                      ? 'opacity-100 translate-y-0 scale-100' 
+                      : 'opacity-0 translate-y-[-10px] scale-95 pointer-events-none'
+                  }`}
+                  style={{ boxShadow: '0px 0px 20px 0px rgba(0, 0, 0, 0.1)' }}
+                >
                   <div className='font-bold text-xs mb-1'>
                     求人の削除について
                   </div>
@@ -547,7 +550,7 @@ export default function CompanyJobsPage() {
                               job.jobType.map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className='rounded-[8px] flex items-center justify-center font-medium text-[14px] leading-tight'
+                                  className='rounded-[8px] font-medium text-[14px] leading-tight line-clamp-2'
                                   style={{
                                     width: '136px',
                                     minHeight: '32px',
@@ -559,6 +562,9 @@ export default function CompanyJobsPage() {
                                     color: '#0F9058',
                                     wordBreak: 'break-all',
                                     hyphens: 'auto',
+                                    display: '-webkit-box',
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
                                   }}
                                 >
                                   {jobType}

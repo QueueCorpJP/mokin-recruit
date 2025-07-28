@@ -207,9 +207,10 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <div className='space-y-10'>
-      {/* ヘッダー */}
-      <div className='text-center space-y-6'>
+    <div className='flex flex-col items-center relative w-full h-auto bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+             <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[800px] mx-auto px-20 py-20'>
+        {/* ヘッダー */}
+        <div className='text-center space-y-6'>
         <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] text-center'>
           新しいパスワードを設定
         </h1>
@@ -347,6 +348,7 @@ export default function ResetPasswordForm() {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

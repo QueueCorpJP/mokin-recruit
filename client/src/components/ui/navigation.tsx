@@ -239,7 +239,7 @@ export function Navigation({
 
   // variant に応じたCTAボタンの設定
   // --- ここから拡張 ---
-  if (variant === 'candidate') {
+  if ((variant as string) === 'candidate') {
     // Figma準拠: 会員登録（filled/gradient）・ログイン（outline/ghost）
     const candidateButtons = [
       {
@@ -506,6 +506,167 @@ export function Navigation({
                         className={cn(
                           'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
                           pathname === '/company/settings'
+                            ? 'text-[#0F9058] bg-[#F3FBF7]'
+                            : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                        )}
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        アカウント設定
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className='w-full text-left px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                      >
+                        ログアウト
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // 候補者ログイン後ナビゲーションを企業用と同等構成で新規追加し、違いとして指摘された点を厳密に反映する。
+  if ((variant as string) === 'candidate' && isLoggedIn) {
+    const navigationItems = [
+      {
+        label: 'マイページ',
+        href: '/candidate',
+        icon: HomeIcon,
+        hasDropdown: false,
+        isActive: pathname === '/candidate',
+      },
+      {
+        label: 'メッセージ',
+        href: '/candidate/messages',
+        icon: MessageIcon,
+        hasDropdown: true,
+        isActive: pathname.startsWith('/candidate/messages'),
+        dropdownItems: [
+          { label: '受信メッセージ', href: '/candidate/messages/inbox' },
+          { label: '送信メッセージ', href: '/candidate/messages/sent' },
+        ],
+      },
+      {
+        label: '求人を探す',
+        href: '/candidate/search',
+        icon: SearchIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/search'),
+      },
+      {
+        label: 'やることリスト',
+        href: '/candidate/todo',
+        icon: ResponseListIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/todo'),
+      },
+      {
+        label: 'プロフィール確認・編集',
+        href: '/candidate/profile',
+        icon: User,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/profile'),
+      },
+    ];
+
+    return (
+      <header
+        className={cn('w-full border-b border-[#E5E5E5] bg-white', className)}
+      >
+        <div className='w-full flex justify-center'>
+          <div className='flex items-center h-[80px] w-full px-[40px] justify-between w-full'>
+            {/* ロゴ：左端に配置 */}
+            <div className='flex-shrink-0'>
+              <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
+            </div>
+
+            {/* メニュー項目とアカウント情報を同一グループとして扱う */}
+            <nav className='flex items-center ml-[40px]'>
+              <div className='flex items-center gap-10'>
+                {navigationItems.map(item => (
+                  <div key={item.label} className='relative'>
+                    {item.hasDropdown ? (
+                      <div>
+                        <button
+                          onClick={() => toggleDropdown(item.label)}
+                          className={cn(
+                            'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
+                            openDropdown === item.label || item.isActive
+                              ? 'text-[#0F9058]'
+                              : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]',
+                            item.isActive &&
+                              'after:content-["" ] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
+                          )}
+                        >
+                          <item.icon className='w-5 h-5' />
+                          <span>{item.label}</span>
+                          <DownIcon className='ml-1' />
+                        </button>
+                        {openDropdown === item.label && (
+                          <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
+                            {item.dropdownItems?.map(dropdownItem => (
+                              <Link
+                                key={dropdownItem.label}
+                                href={dropdownItem.href}
+                                className={cn(
+                                  'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                                  pathname === dropdownItem.href
+                                    ? 'text-[#0F9058] bg-[#F3FBF7]'
+                                    : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                                )}
+                                onClick={() => setOpenDropdown(null)}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
+                          item.isActive
+                            ? 'text-[#0F9058] after:content-["" ] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
+                            : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]'
+                        )}
+                      >
+                        <item.icon className='w-5 h-5' />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+                {/* アカウント情報 */}
+                <div className='relative'>
+                  <button
+                    onClick={() => toggleDropdown('account')}
+                    className={cn(
+                      'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px]',
+                      openDropdown === 'account'
+                        ? 'text-[#0F9058]'
+                        : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]'
+                    )}
+                  >
+                    <User className='w-5 h-5' />
+                    <span className='max-w-[160px] truncate'>
+                      {userInfo?.userName || 'ユーザー名'}
+                    </span>
+                    <DownIcon className='ml-1' />
+                  </button>
+                  {openDropdown === 'account' && (
+                    <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
+                      <Link
+                        href='/candidate/settings'
+                        className={cn(
+                          'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                          pathname === '/candidate/settings'
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}

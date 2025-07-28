@@ -27,28 +27,28 @@ export function PasswordFormField({
   const isPasswordValid = value.length >= minLength;
 
   return (
-    <div className={`flex flex-row gap-4 items-start ${className}`}>
-      <div className='flex flex-row items-center justify-end pt-[11px] pb-0 w-[140px]'>
+    <div className={`flex flex-col md:flex-row gap-2 md:gap-4 items-start w-full ${className}`}>
+      <div className='flex flex-row items-center justify-start md:justify-end pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
         <label 
           htmlFor={id}
-          className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
+          className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
         >
           {label}
         </label>
       </div>
-      <div className='w-[400px] flex flex-col gap-2'>
+      <div className='w-full md:w-[400px] flex flex-col gap-2'>
         <div className='relative'>
-          <div className='bg-white h-[50px] relative rounded-[5px] w-full'>
+          <div className='bg-white h-[44px] md:h-[50px] relative rounded-[5px] w-full'>
             <div className='absolute border border-[#999999] border-solid inset-0 pointer-events-none rounded-[5px]' />
             <div className='flex flex-row items-center relative h-full'>
-              <div className='flex flex-row h-[50px] items-center justify-between p-[11px] relative w-full'>
+              <div className='flex flex-row h-[44px] md:h-[50px] items-center justify-between p-[11px] relative w-full'>
                 <input
                   id={id}
                   type={showPassword ? 'text' : 'password'}
                   value={value}
                   onChange={onChange}
                   placeholder={placeholder}
-                  className='flex-1 bg-transparent text-[#323232] text-[16px] leading-[2] tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] placeholder:tracking-[1.6px] placeholder:whitespace-pre border-none outline-none [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden'
+                  className='flex-1 bg-transparent text-[#323232] text-[14px] md:text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] placeholder:tracking-[1.2px] md:placeholder:tracking-[1.6px] placeholder:whitespace-pre placeholder:text-[11px] md:placeholder:text-[14px] border-none outline-none [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden'
                 />
                 <button
                   type='button'
@@ -62,7 +62,7 @@ export function PasswordFormField({
                   <svg
                     viewBox="0 0 28 23"
                     fill="none"
-                    className="w-[28px] h-[23px]"
+                    className="w-[24px] h-[20px] md:w-[28px] md:h-[23px]"
                   >
                     {/* 常に閉じた目のアイコン */}
                     <path
@@ -76,7 +76,7 @@ export function PasswordFormField({
           </div>
         </div>
         {showValidation && value && !isPasswordValid && (
-          <p className='text-sm text-red-600'>
+          <p className='text-xs md:text-sm text-red-600'>
             パスワードは{minLength}文字以上で入力してください
           </p>
         )}

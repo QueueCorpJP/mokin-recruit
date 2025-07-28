@@ -16,12 +16,12 @@ export const viewport: Viewport = {
 
 export default function LoginPage() {
   return (
-    <div className='h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
+    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
       {/* ナビゲーション */}
       <Navigation />
 
       {/* メインコンテンツ */}
-      <main className='flex-1 min-h-[730px] flex items-center justify-center relative px-4'>
+      <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
@@ -52,8 +52,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* カードコンテナ */}
-        <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20'>
+        {/* フォームコンテナ */}
+        <div className='relative w-full max-w-[800px]'>
           <Suspense fallback={<div className='text-center'>読み込み中...</div>}>
             <LoginForm />
           </Suspense>

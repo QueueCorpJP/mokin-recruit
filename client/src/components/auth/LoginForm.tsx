@@ -240,16 +240,16 @@ export function LoginForm({ userType }: LoginFormProps) {
   };
 
   return (
-    <div className='flex flex-col items-center relative w-full'>
-      <div className='flex flex-col gap-10 items-center justify-start p-0 relative w-full'>
+    <div className='flex flex-col items-center relative w-full h-auto bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+      <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[800px] mx-auto px-20 py-20'>
         {/* 見出し */}
-        <div className='flex flex-col gap-6 items-center justify-start p-0 relative w-[592px]'>
+        <div className='flex flex-col gap-6 items-center justify-start p-0 relative w-full'>
           <h1 className='text-[#0F9058] font-bold text-[32px] leading-[1.6] tracking-[3.2px] font-[family-name:var(--font-noto-sans-jp)] text-center w-full'>
             ログイン
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className='w-full max-w-[592px]'>
+        <form onSubmit={handleSubmit} className='w-full h-auto'>
           {/* エラー表示 */}
           {error && (
             <Alert variant='destructive' className='mb-6'>

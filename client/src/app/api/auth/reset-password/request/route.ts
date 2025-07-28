@@ -4,6 +4,7 @@ import { z } from 'zod';
 // リクエストボディのバリデーションスキーマ
 const ForgotPasswordSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
+  userType: z.enum(['candidate', 'company']).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -55,20 +56,25 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Step 3: Validating email format...');
     const validationResult = ForgotPasswordSchema.safeParse(body);
     if (!validationResult.success) {
-      console.log('❌ Email validation failed:', validationResult.error.errors);
+      const firstError = validationResult.error.errors[0];
+      console.log('❌ Password reset validation failed:', firstError);
+
       return NextResponse.json(
         {
           success: false,
-          message: validationResult.error.errors[0]?.message || 'Invalid input',
+          error: firstError?.message || 'Invalid input',
+          field: firstError?.path?.[0] || 'general',
         },
         { status: 400 }
       );
     }
 
     const { email } = validationResult.data;
-    console.log(
-      `📧 Step 4: Processing password reset for email: ${email.substring(0, 3)}***`
-    );
+    console.log('🔍 Step 4: Request details:', {
+      email: email.substring(0, 3) + '***',
+      userType: validationResult.data.userType,
+      hasUserType: !!validationResult.data.userType
+    });
 
     // ステップ4: Supabaseクライアントの動的インポートと初期化
     console.log('🔧 Step 5: Dynamic import of Supabase...');
@@ -122,14 +128,23 @@ export async function POST(request: NextRequest) {
     console.log('🔧 Step 7: Getting redirect URL...');
     let redirectUrl;
     try {
+      // userTypeパラメータを含めたリダイレクトURL生成
+      const { userType } = validationResult.data;
+      const userTypeParam = userType ? `?userType=${userType}` : '';
+      
+      console.log('🔗 URL generation details:', {
+        userType,
+        userTypeParam,
+        hasUserType: !!userType
+      });
+      
       // 本番環境とVercelでの動的URL取得
       if (process.env.VERCEL_URL) {
-        redirectUrl = `https://${process.env.VERCEL_URL}/auth/reset-password/new`;
+        redirectUrl = `https://${process.env.VERCEL_URL}/auth/reset-password/new${userTypeParam}`;
       } else if (process.env.NODE_ENV === 'production') {
-        redirectUrl =
-          'https://mokin-recruit.vercel.app/auth/reset-password/new';
+        redirectUrl = `https://mokin-recruit.vercel.app/auth/reset-password/new${userTypeParam}`;
       } else {
-        redirectUrl = 'http://localhost:3000/auth/reset-password/new';
+        redirectUrl = `http://localhost:3000/auth/reset-password/new${userTypeParam}`;
       }
       console.log('✅ Redirect URL configured:', redirectUrl);
     } catch (urlError) {
