@@ -81,7 +81,16 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Footer */}
-        <footer className='w-full flex items-center justify-between px-6 py-6 bg-white border-t border-[#E5E7EB] flex-shrink-0'>
+        <footer
+          className='w-full flex items-center justify-between px-6 bg-white border-t border-[#E5E7EB] flex-shrink-0'
+          style={{
+            height: '108px',
+            minHeight: '108px',
+            maxHeight: '108px',
+            paddingTop: 0,
+            paddingBottom: 0,
+          }}
+        >
           {/* Left: Selection count */}
           <div className='flex items-center'>
             {selectedCount !== undefined && totalCount !== undefined ? (

@@ -62,17 +62,17 @@ export function SimpleLoginForm() {
   const isFormValid = email.length > 0 && password.length > 0;
 
   return (
-    <Card className='w-full max-w-md mx-auto'>
-      <CardHeader className='space-y-1'>
+    <div className='flex flex-col items-center relative w-full h-auto bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+      <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[592px] mx-auto px-20 py-20'>
+        <div className='space-y-1'>
         <CardTitle className='text-2xl font-bold text-center'>
           ログイン
         </CardTitle>
         <CardDescription className='text-center'>
           アカウントにログインしてください
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        </div>
+        
+        <form onSubmit={handleSubmit} className='space-y-4 w-full'>
           {error && (
             <Alert variant='destructive'>
               <AlertDescription>{error}</AlertDescription>
@@ -139,7 +139,7 @@ export function SimpleLoginForm() {
             </a>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

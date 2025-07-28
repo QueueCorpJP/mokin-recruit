@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_acffe46818d78a5691b3c64a805cd8b4b1ec2b44"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@executeautomation/playwright-mcp-server"
+      ],
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "./node_modules/.bin/playwright"
+      }
+    },
+    "Figma": {
+      "type": "sse",
+      "url": "http://127.0.0.1:3845/sse"
+    }
+  }
+}

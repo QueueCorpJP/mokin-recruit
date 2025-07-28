@@ -161,8 +161,9 @@ export default function CompanyRegistrationForm({
   };
 
   return (
-    <div className='w-full max-w-2xl mx-auto'>
-      <form onSubmit={handleSubmit} className='space-y-8'>
+    <div className='flex flex-col items-center relative w-full h-auto bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+      <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[592px] mx-auto px-20 py-20'>
+        <form onSubmit={handleSubmit} className='space-y-8 w-full'>
         {/* 企業情報セクション */}
         <div className='space-y-6'>
           <h2 className='text-xl font-semibold text-gray-900 border-b pb-2'>
@@ -357,7 +358,8 @@ export default function CompanyRegistrationForm({
             ログイン
           </Link>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
