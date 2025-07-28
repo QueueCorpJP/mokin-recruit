@@ -94,21 +94,6 @@ export function NewPasswordContent() {
         localStorage.removeItem('password_reset_user_type');
       }
 
-      // デバッグ情報を出力
-      console.log('🔍 NewPasswordContent - Parameter analysis:', {
-        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
-        queryParams,
-        fragmentParams,
-        detectedUserType,
-        hasQueryUserType: !!queryParams.userType,
-        hasFragmentUserType: !!fragmentParams.userType,
-        savedUserType: typeof window !== 'undefined' ? localStorage.getItem('password_reset_user_type') : null,
-        hasError: !!queryParams.error || !!fragmentParams.error,
-        hasTokenHash: !!(queryParams.token_hash || fragmentParams.token_hash),
-        hasCode: !!(queryParams.code || fragmentParams.code),
-        hasAccessToken: !!(queryParams.access_token || fragmentParams.access_token)
-      });
-
       // 全パラメータをマージ（フラグメントパラメータを優先）
       const combinedParams = { ...queryParams, ...fragmentParams };
       setAllParams(combinedParams);
@@ -118,6 +103,26 @@ export function NewPasswordContent() {
       const code = combinedParams.code;
       const accessToken = combinedParams.access_token;
       const error = combinedParams.error;
+
+      // デバッグ情報を出力
+      console.log('🔍 NewPasswordContent - Parameter analysis:', {
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+        queryParams,
+        fragmentParams,
+        combinedParams,
+        detectedUserType,
+        hasQueryUserType: !!queryParams.userType,
+        hasFragmentUserType: !!fragmentParams.userType,
+        savedUserType: typeof window !== 'undefined' ? localStorage.getItem('password_reset_user_type') : null,
+        hasError: !!error,
+        hasTokenHash: !!tokenHash,
+        hasCode: !!code,
+        hasAccessToken: !!accessToken,
+        tokenSources: {
+          fromQuery: !!(queryParams.token_hash || queryParams.access_token),
+          fromFragment: !!(fragmentParams.token_hash || fragmentParams.access_token)
+        }
+      });
 
       // エラーパラメータがある場合の処理
       if (error) {
@@ -227,6 +232,8 @@ export function NewPasswordContent() {
         if (!response.ok) {
           throw new Error(data.error || 'パスワードの設定に失敗しました');
         }
+
+        // パスワードリセット成功
 
         // 成功時は完了ページにリダイレクト（userTypeパラメータを引き継ぐ）
         const redirectUrl = `/auth/reset-password/complete?userType=${userType}`;
