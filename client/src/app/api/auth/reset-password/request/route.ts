@@ -171,13 +171,31 @@ export async function POST(request: NextRequest) {
           error.message
         );
 
-        // 本番環境でも詳細なエラー情報をログに記録
-        if (process.env.NODE_ENV === 'production') {
-          console.error('Production password reset error details:', {
-            email: email.substring(0, 3) + '***',
-            error: error.message,
-            timestamp: new Date().toISOString(),
-          });
+        // 詳細なエラー情報をログに記録
+        console.error('Detailed password reset error:', {
+          email: email.substring(0, 3) + '***',
+          error: error.message,
+          errorCode: error.code || 'unknown',
+          timestamp: new Date().toISOString(),
+          redirectUrl,
+        });
+
+        // Supabaseのメール制限エラーの特定
+        if (error.message?.includes('rate') || error.message?.includes('limit') || error.message?.includes('too many')) {
+          console.error('🚨 Supabase email rate limit detected!');
+          
+          // 管理者向けの詳細情報
+          if (process.env.NODE_ENV === 'development') {
+            return NextResponse.json({
+              success: false,
+              message: '⚠️ Supabaseのデフォルトメール制限に達しました。カスタムSMTPの設定が必要です。',
+              debug: {
+                error: error.message,
+                solution: 'カスタムSMTP設定またはSupabaseのSMTP設定を有効にしてください',
+                docs: 'https://supabase.com/docs/guides/auth/auth-smtp'
+              }
+            }, { status: 429 });
+          }
         }
 
         // エラーの詳細は返さず、一般的なメッセージを返す（セキュリティ考慮）

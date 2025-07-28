@@ -551,9 +551,6 @@ export class AuthController {
         return;
       }
 
-      // パスワードリセットメールの送信（実装必要）
-      // await this.emailService.sendPasswordResetEmail(email, resetToken);
-
       logger.info(`Password reset requested for email: ${email}`);
 
       res.status(200).json({
