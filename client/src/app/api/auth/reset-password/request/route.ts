@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       if (process.env.VERCEL_URL) {
         redirectUrl = `https://${process.env.VERCEL_URL}/auth/reset-password/new${userTypeParam}`;
       } else if (process.env.NODE_ENV === 'production') {
-        redirectUrl = `https://mokin-recruit.vercel.app/auth/reset-password/new${userTypeParam}`;
+        redirectUrl = `https://mokin-recruit-client.vercel.app/auth/reset-password/new${userTypeParam}`;
       } else {
         redirectUrl = `http://localhost:3000/auth/reset-password/new${userTypeParam}`;
       }

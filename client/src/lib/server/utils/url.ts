@@ -30,7 +30,7 @@ export function getBaseUrl(): string {
   }
 
   // 5. フォールバック（本番環境でのデフォルト）
-  return 'https://mokin-recruit.vercel.app';
+  return 'https://mokin-recruit-client.vercel.app';
 }
 
 /**
