@@ -55,9 +55,27 @@ export function NewPasswordContent() {
       const detectedUserType = queryParams.userType as 'candidate' | 'company';
       if (detectedUserType === 'candidate' || detectedUserType === 'company') {
         setUserType(detectedUserType);
+        // 正常に取得できた場合はローカルストレージをクリア
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('password_reset_user_type');
+        }
       } else {
-        // ユーザータイプが指定されていない場合はデフォルトで企業ユーザーとして扱う
-        setUserType('company');
+        // URLパラメータが無い場合、ローカルストレージから復元を試行
+        if (typeof window !== 'undefined') {
+          const savedUserType = localStorage.getItem('password_reset_user_type') as 'candidate' | 'company';
+          if (savedUserType === 'candidate' || savedUserType === 'company') {
+            setUserType(savedUserType);
+            // 復元後はローカルストレージをクリア
+            localStorage.removeItem('password_reset_user_type');
+            console.log('🔄 UserType restored from localStorage:', savedUserType);
+          } else {
+            // どちらからも取得できない場合はデフォルトで企業ユーザーとして扱う
+            setUserType('company');
+          }
+        } else {
+          // ユーザータイプが指定されていない場合はデフォルトで企業ユーザーとして扱う
+          setUserType('company');
+        }
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
@@ -65,6 +83,17 @@ export function NewPasswordContent() {
         const fragment = window.location.hash;
         Object.assign(fragmentParams, parseFragmentParams(fragment));
       }
+
+      // デバッグ情報を出力
+      console.log('🔍 NewPasswordContent - Parameter analysis:', {
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
+        queryParams,
+        fragmentParams,
+        hasQueryUserType: !!queryParams.userType,
+        hasFragmentUserType: !!fragmentParams.userType,
+        savedUserType: typeof window !== 'undefined' ? localStorage.getItem('password_reset_user_type') : null,
+        hasError: !!queryParams.error || !!fragmentParams.error
+      });
 
       // 全パラメータをマージ（フラグメントパラメータを優先）
       const combinedParams = { ...queryParams, ...fragmentParams };
@@ -84,7 +113,7 @@ export function NewPasswordContent() {
           case 'access_denied':
             if (combinedParams.error_code === 'otp_expired') {
               errorMessage =
-                'パスワードリセットリンクの有効期限が切れています（1時間）。新しいリンクを要求してください。';
+                'パスワードリセットリンクの有効期限が切れているか、既に使用されています。リンクは1回限りの使用で、1時間で期限切れになります。新しいリンクを要求してください。';
             } else {
               errorMessage =
                 'アクセスが拒否されました。新しいパスワードリセットを要求してください。';
@@ -92,16 +121,23 @@ export function NewPasswordContent() {
             break;
           case 'invalid_request':
             errorMessage =
-              '無効なリクエストです。正しいリンクを使用してください。';
+              '無効なリクエストです。メールから正しいリンクを使用してください。';
             break;
           case 'expired_token':
           case 'otp_expired':
             errorMessage =
-              'パスワードリセットリンクの有効期限が切れています（1時間）。新しいリンクを要求してください。';
+              'パスワードリセットリンクの有効期限が切れているか、既に使用されています。リンクは1回限りの使用で、1時間で期限切れになります。新しいリンクを要求してください。';
             break;
           default:
             if (combinedParams.error_description) {
-              errorMessage = `エラー: ${decodeURIComponent(combinedParams.error_description)}`;
+              const decodedDescription = decodeURIComponent(combinedParams.error_description);
+              if (decodedDescription.toLowerCase().includes('expired')) {
+                errorMessage = 'パスワードリセットリンクの有効期限が切れているか、既に使用されています。新しいリンクを要求してください。';
+              } else if (decodedDescription.toLowerCase().includes('invalid')) {
+                errorMessage = 'パスワードリセットリンクが無効です。メールから正しいリンクを使用してください。';
+              } else {
+                errorMessage = `エラー: ${decodedDescription}`;
+              }
             }
         }
         setParameterError(errorMessage);

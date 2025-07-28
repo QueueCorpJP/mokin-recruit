@@ -61,6 +61,11 @@ export default function CandidateForgotPasswordForm() {
     setSubmitStatus('idle');
 
     try {
+      // userTypeをローカルストレージに保存（リダイレクト後の復元用）
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('password_reset_user_type', 'candidate');
+      }
+
       const response = await fetch('/api/auth/reset-password/request', {
         method: 'POST',
         headers: {
