@@ -50,7 +50,7 @@ export const TYPES = {
   FileStorage: Symbol.for('FileStorage'),
   RedisClient: Symbol.for('RedisClient'),
 
-  // === Middleware & Utilities ===
+  // === Middleware & Utilities ==
   AuthMiddleware: Symbol.for('AuthMiddleware'),
   ValidationMiddleware: Symbol.for('ValidationMiddleware'),
   ErrorHandler: Symbol.for('ErrorHandler'),
