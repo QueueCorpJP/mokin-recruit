@@ -51,10 +51,13 @@ export function NewPasswordContent() {
         queryParams[key] = value;
       }
 
-      // ユーザータイプの取得
+      // ユーザータイプの取得（URLパラメータを最優先）
       const detectedUserType = queryParams.userType as 'candidate' | 'company';
       if (detectedUserType === 'candidate' || detectedUserType === 'company') {
         setUserType(detectedUserType);
+      } else {
+        // ユーザータイプが指定されていない場合はデフォルトで企業ユーザーとして扱う
+        setUserType('company');
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
@@ -175,10 +178,8 @@ export function NewPasswordContent() {
           throw new Error(data.error || 'パスワードの設定に失敗しました');
         }
 
-        // 成功時は完了ページにリダイレクト
-        const redirectUrl = userType 
-          ? `/auth/reset-password/complete?userType=${userType}`
-          : '/auth/reset-password/complete';
+        // 成功時は完了ページにリダイレクト（userTypeパラメータを引き継ぐ）
+        const redirectUrl = `/auth/reset-password/complete?userType=${userType}`;
         router.push(redirectUrl);
       } catch (error) {
         throw error;
@@ -228,7 +229,12 @@ export function NewPasswordContent() {
 
             <div className='flex flex-col gap-3 mt-6'>
               <button
-                onClick={() => router.push('/auth/reset-password')}
+                onClick={() => {
+                  const resetPath = userType === 'candidate' 
+                    ? '/candidate/auth/reset-password' 
+                    : '/company/auth/reset-password';
+                  router.push(resetPath);
+                }}
                 className='bg-[#0F9058] text-white px-6 py-3 rounded-[25px] hover:bg-[#0D7A4A] transition-colors font-bold tracking-[0.1em] text-[14px] md:text-[16px]'
               >
                 新しいリセットを要求
@@ -237,9 +243,7 @@ export function NewPasswordContent() {
                 onClick={() => {
                   const loginPath = userType === 'candidate' 
                     ? '/candidate/auth/login' 
-                    : userType === 'company' 
-                      ? '/company/auth/login' 
-                      : '/auth/login';
+                    : '/company/auth/login';
                   router.push(loginPath);
                 }}
                 className='border border-[#0F9058] text-[#0F9058] px-6 py-3 rounded-[25px] hover:bg-[#0F9058] hover:text-white transition-colors font-bold tracking-[0.1em] text-[14px] md:text-[16px]'
@@ -263,7 +267,7 @@ export function NewPasswordContent() {
         </div>
       ) : (
         // 企業ユーザーの場合は従来通り
-        <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} userType="company" />
       )}
     </div>
   );

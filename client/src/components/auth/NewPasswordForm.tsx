@@ -45,7 +45,7 @@ export function NewPasswordForm({
         ? '' 
         : 'bg-[#ffffff] rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
     }`}>
-      <div className="flex flex-col items-center relative size-full">
+      <div className="flex flex-col items-center relative size-full mb-50">
         <form onSubmit={handleSubmit} className={`box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative size-full ${
           userType === 'candidate' ? 'p-0' : 'p-20'
         }`}>
@@ -110,10 +110,10 @@ export function NewPasswordForm({
                 {isLoading || isPending ? (
                   <span className="flex items-center gap-2 justify-center">
                     <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    変更中...
+                    {userType === 'company' ? '設定中' : '変更中'}
                   </span>
                 ) : (
-                  'パスワードを変更する'
+                  userType === 'company' ? '設定する' : 'パスワードを変更する'
                 )}
               </p>
             </div>
