@@ -1,8 +1,50 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // URLフラグメントをチェックしてパスワードリセットトークンを処理
+    const handlePasswordResetToken = () => {
+      const hash = window.location.hash;
+      if (hash.includes('access_token=')) {
+        try {
+          // URLフラグメントからパラメータを解析
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const tokenType = hashParams.get('token_type');
+          
+          if (accessToken) {
+            // トークンをセッションストレージに保存
+            sessionStorage.setItem('reset_access_token', accessToken);
+            if (refreshToken) {
+              sessionStorage.setItem('reset_refresh_token', refreshToken);
+            }
+            if (tokenType) {
+              sessionStorage.setItem('reset_token_type', tokenType);
+            }
+            
+            // URLを整理してパスワード変更画面にリダイレクト
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // ユーザータイプを決定（デフォルトは candidate）
+            // TODO: 将来的にはメールから送信されたリンクにユーザータイプ情報を含める可能性がある
+            router.push('/auth/reset-password/new?userType=candidate');
+          }
+        } catch (error) {
+          console.error('パスワードリセットトークンの処理中にエラーが発生しました:', error);
+        }
+      }
+    };
+
+    handlePasswordResetToken();
+  }, [router]);
+
   return (
     <div className='min-h-screen flex flex-col items-center justify-center bg-white relative overflow-hidden'>
       {/* 背景アニメーション */}
