@@ -96,14 +96,16 @@ enabled = true
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:3000"
+site_url = "https://mokin-recruit-client.vercel.app"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
   "http://localhost:3000/auth/reset-password/new",
   "https://localhost:3000/auth/reset-password/new",
   "http://127.0.0.1:3000/auth/reset-password/new",
   "https://127.0.0.1:3000/auth/reset-password/new",
-  "https://mokin-recruit.vercel.app/auth/reset-password/new"
+  "https://mokin-recruit-client.vercel.app/auth/reset-password/new",
+  "https://mokin-recruit-client.vercel.app/**",
+  "https://*-*.vercel.app/**"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -141,16 +143,20 @@ otp_length = 6
 # Number of seconds before the email OTP expires (recommended: 10 minutes for security).
 otp_expiry = 600
 
-# Use Supabase default email service (no external SMTP required)
-# [auth.email.smtp]
-# host = ""
-# port = 587
-# user = ""
-# pass = ""
-# admin_email = "admin@mokin-recruit.jp"
-# sender_name = "Mokin Recruit"
+# Use custom SMTP (SendGrid)
+[auth.email.smtp]
+host = "smtp.sendgrid.net"
+port = 587
+user = "apikey"
+pass = "env(SENDGRID_API_KEY)"
+admin_email = "admin@mokin-recruit.jp"
+sender_name = "Mokin Recruit"
 
-# Uncomment to customize email template
+# Customize email templates
+[auth.email.template.recovery]
+subject = "Reset Your Password"
+content_path = "./supabase/templates/recovery.html"
+
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"

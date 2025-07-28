@@ -7,29 +7,51 @@
 ### 📋 **問題の詳細**
 - パスワードリセットリクエスト自体は正常に処理されている
 - Supabaseデフォルトメール機能でメール送信時にエラーが発生
-- レート制限（30通/時間）には達していない
+- **チームメンバーに入っていても本番環境で失敗する**
+- `"error_code": "unexpected_failure"` - Supabaseデフォルトメール機能の本番環境制限
 
-### ⚡ **即座の解決方法**
+### ⚡ **即座の解決方法（5分で完了）**
 
-#### 1. **テスト対象の確認**
-Supabaseデフォルトメール機能は**プロジェクトチームメンバーのメールアドレスにのみ**送信されます：
+#### **🎯 Resend SMTP設定（推奨）**
 
-1. **Supabaseダッシュボード**の[Team設定](https://supabase.com/dashboard/org/_/team)を確認
-2. **テスト用メールアドレス**がチームメンバーに追加されているか確認
-3. **追加されていない場合**：チームメンバーとして追加するか、カスタムSMTP設定を実装
+**ステップ1: Resendアカウント作成**
+1. [https://resend.com](https://resend.com) にアクセス
+2. 「Sign up」をクリック
+3. メールアドレスとパスワードを入力してアカウント作成
 
-#### 2. **カスタムSMTP設定（推奨）**
-```bash
-# Supabaseダッシュボード → Settings → Auth → SMTP Settings
-# または config.toml の設定を有効化：
+**ステップ2: API Key取得**
+1. Resendダッシュボードで「API Keys」をクリック
+2. 「Create API Key」をクリック
+3. 名前を入力（例：`mokin-recruit-smtp`）
+4. 「Add」をクリック
+5. **API Keyをコピー**（`re_xxxxxxxxxx`で始まる文字列）
 
-[auth.email.smtp]
-host = "smtp.resend.com"  # 例：Resend
-port = 587
-user = "resend"
-pass = "YOUR_API_KEY"
-admin_email = "noreply@yourdomain.com"
-sender_name = "Your App Name"
+**ステップ3: Supabase設定**
+1. [Supabaseダッシュボード](https://supabase.com/dashboard/project/mjhqeagxibsklugikyma/settings/auth) → Settings → Auth
+2. **SMTP Settings**セクションを見つける
+3. 以下を入力：
+   ```
+   SMTP Host: smtp.resend.com
+   SMTP Port: 587
+   SMTP User: resend
+   SMTP Password: [先程コピーしたAPI Key]
+   Sender email: noreply@yourdomain.com (※お持ちのドメイン)
+   Sender name: Mokin Recruit
+   ```
+4. **Save**をクリック
+
+**⚡ これで即座に解決します！**
+
+---
+
+#### **🔄 代替案: SendGrid設定**
+
+**設定値**:
+```
+SMTP Host: smtp.sendgrid.net
+SMTP Port: 587
+SMTP User: apikey
+SMTP Password: [SendGrid API Key]
 ```
 
 ---
@@ -55,6 +77,7 @@ sender_name = "Your App Name"
    - 未認証のメールアドレスには**送信されない**
 2. **開発目的のみ**: 本番環境での使用は**非推奨**
 3. **配信保証なし**: メール配信のSLA保証なし
+4. **本番環境での不安定性**: ベストエフォートベースでの提供
 
 ### 🔍 現在のエラーの特定方法
 
@@ -62,12 +85,13 @@ sender_name = "Your App Name"
 
 ```
 /recover | 500: Error sending recovery email
+"error_code": "unexpected_failure"
 ```
 
 ### ⏰ エラーの即座の解決
 
-1. **チームメンバー確認**: テスト用メールアドレスがSupabaseプロジェクトのチームメンバーになっているか確認
-2. **カスタムSMTP設定**: すぐにでもカスタムSMTP設定を実装することを強く推奨
+1. **カスタムSMTP設定**: すぐにでもカスタムSMTP設定を実装することを強く推奨
+2. **Resend推奨**: 月3,000通無料、設定簡単、高い配信率
 
 ---
 
@@ -75,9 +99,13 @@ sender_name = "Your App Name"
 
 ### 1. **即座の対応**（推奨）
 
-#### A. チームメンバーとして追加
-- Supabaseダッシュボードでテスト用メールアドレスをチームメンバーに追加
-- 一時的な回避策として有効
+#### A. **Resend SMTP設定**（5分で完了）
+```bash
+# 1. https://resend.com でアカウント作成
+# 2. API キー取得（re_xxxxxxxxxx）
+# 3. Supabaseダッシュボード → Settings → Auth → SMTP Settings
+# 4. 上記の設定値を入力
+```
 
 #### B. カスタムSMTP設定（推奨）
 ```bash
@@ -117,5 +145,10 @@ sender_name = "Mokin Recruit"
 - DKIM、SPF、DMARC設定
 - カスタムドメイン設定
 - 定期的なセキュリティ監査
+
+## ✅ **まとめ**
+
+**原因**: Supabaseデフォルトメール機能の本番環境での制限・不安定性
+**解決**: カスタムSMTP設定（Resend推奨、5分で完了）
 
 これで`/recover`エラーは解決し、安定したパスワードリセット機能が実現できます！ 
