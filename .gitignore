@@ -58,3 +58,6 @@ Thumbs.db
 *.tmp
 *.temp 
 .vercel
+
+# MCP Server
+postman/postman-mcp-server

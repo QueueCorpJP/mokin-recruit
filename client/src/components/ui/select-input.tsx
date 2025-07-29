@@ -79,7 +79,23 @@ export function SelectInput({
 
   // 選択された項目のラベルを取得
   const selectedOption = options.find(option => option.value === selectedValue);
-  const displayText = selectedOption ? selectedOption.label : placeholder;
+  let displayText = selectedOption ? selectedOption.label : placeholder;
+  // 年収・アピールポイントセレクト用途の場合はprefixを付与
+  if (
+    placeholder &&
+    (placeholder.startsWith('年収') ||
+      placeholder.startsWith('アピールポイント'))
+  ) {
+    if (selectedOption) {
+      const prefix = placeholder.startsWith('年収')
+        ? '年収：'
+        : 'アピールポイント：';
+      const base = `${prefix}${selectedOption.label}`;
+      displayText = base.length > 10 ? base.slice(0, 10) + '...' : base;
+    } else {
+      displayText = placeholder;
+    }
+  }
 
   // 外部クリックで閉じる
   useEffect(() => {
@@ -183,6 +199,7 @@ export function SelectInput({
           'bg-white border border-[#999999] rounded-[8px] text-left',
           'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
+          className?.includes('w-full') && 'w-full',
 
           // 状態別スタイル
           !disabled &&
@@ -209,7 +226,6 @@ export function SelectInput({
           selectedValue ? 'text-[#323232]' : 'text-[#999999]'
         )}
         style={{
-          width: '240px',
           padding: '4px 16px 4px 11px',
           alignItems: 'center',
           gap: '16px',
@@ -220,7 +236,10 @@ export function SelectInput({
         aria-label={placeholder}
       >
         <span
-          className={cn('truncate', displayText === 'すべて' && 'text-[14px]')}
+          className={cn(
+            'truncate w-full block text-ellipsis overflow-hidden whitespace-nowrap',
+            displayText === 'すべて' && 'text-[14px]'
+          )}
         >
           {displayText}
         </span>

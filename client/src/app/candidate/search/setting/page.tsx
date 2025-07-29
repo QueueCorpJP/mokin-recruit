@@ -14,31 +14,125 @@ import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
+import { TagDisplay } from '@/components/ui/TagDisplay';
+import { Tag } from '@/components/ui/Tag';
+import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
+import { Footer } from '@/components/ui/footer';
+import { useRouter } from 'next/navigation';
 
 export default function CandidateSearchPage() {
+  const router = useRouter();
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [starred, setStarred] = useState(false);
+
+  // 12個分のダミーデータ
+  const [jobCards, setJobCards] = useState(
+    Array.from({ length: 12 }).map((_, i) => ({
+      id: i,
+      imageUrl: '/company.jpg',
+      imageAlt: 'company',
+      title: `求人タイトル${i + 1}`,
+      tags: ['タグA', 'タグB', 'タグC'],
+      companyName: '企業名テキスト',
+      location: '勤務地テキスト',
+      salary: '1,000万〜1,200万',
+      starred: false,
+    }))
+  );
+
+  // スター切り替え
+  const handleStarClick = (idx: number) => {
+    setJobCards(cards =>
+      cards.map((card, i) =>
+        i === idx ? { ...card, starred: !card.starred } : card
+      )
+    );
+  };
+
+  // 年収セレクト用
+  const salaryOptions = [
+    '問わない',
+    '600万円以上',
+    '700万円以上',
+    '800万円以上',
+    '900万円以上',
+    '1000万円以上',
+    '1100万円以上',
+    '1200万円以上',
+    '1300万円以上',
+    '1400万円以上',
+    '1500万円以上',
+    '1600万円以上',
+    '1700万円以上',
+    '1800万円以上',
+    '1900万円以上',
+    '2000万円以上',
+    '2100万円以上',
+    '2200万円以上',
+    '2300万円以上',
+    '2400万円以上',
+    '2500万円以上',
+    '2600万円以上',
+    '2700万円以上',
+    '2800万円以上',
+    '2900万円以上',
+    '3000万円以上',
+    '4000万円以上',
+    '5000万円以上',
+  ].map(v => ({ value: v, label: v }));
+  const [selectedSalary, setSelectedSalary] = useState('');
+
+  // アピールポイントセレクト用
+  const appealPointOptions = [
+    'CxO候補',
+    '新規事業立ち上げ',
+    '経営戦略に関与',
+    '裁量が大きい',
+    'スピード感がある',
+    'グローバル事業に関与',
+    '成長フェーズ',
+    '上場準備中',
+    '社会課題に貢献',
+    '少数精鋭',
+    '代表と距離が近い',
+    '20〜30代中心',
+    'フラットな組織',
+    '多様な人材が活躍',
+    'フレックス制度',
+    'リモートあり',
+    '副業OK',
+    '残業少なめ',
+    '育児／介護と両立しやすい',
+  ].map(v => ({ value: v, label: v }));
+  const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
+
+  // ページネーションのページ数（仮実装: 1〜5固定）
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 100; // 仮: 総ページ数
 
   return (
     <>
       <Navigation variant='candidate' />
       <main>
-        <section className='w-full px-[80px] py-[40px] bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] flex items-center justify-center'>
+        <section className='w-full px-4 py-6 md:px-[80px] md:py-[40px] bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] flex items-center justify-center'>
           <div className='max-w-[1280px] w-full h-full flex flex-col relative'>
-            <div className='flex justify-between items-start'>
+            <div className='flex flex-row items-center justify-between md:justify-start md:items-start md:flex-col md:flex md:relative'>
               <div className='flex items-center'>
                 <SearchIcon size={32} className='text-white' />
-                <span className='ml-4 text-white text-2xl font-bold'>
+                <span className='ml-4 text-white text-[20px] md:text-2xl font-bold'>
                   求人を探す
                 </span>
               </div>
+              {/* モバイルではstatic配置、md以上でabsolute配置 */}
               <button
-                className='w-[150px] h-[94px] border-2 border-white rounded-[10px] bg-transparent p-[14px] hover:bg-white/30 transition-colors duration-150 absolute right-0 top-0'
+                className='w-[150px] h-[94px] border-2 border-white rounded-[10px] bg-transparent p-[14px] hover:bg-white/30 transition-colors duration-150 md:mt-0 md:absolute md:right-0 md:top-0'
                 style={{ minWidth: 150, minHeight: 94 }}
+                onClick={() => router.push('/candidate/job/favorite')}
               >
                 <div className='flex flex-col items-center justify-center h-full gap-[10px]'>
                   <Star size={24} fill='white' stroke='white' />
@@ -49,18 +143,18 @@ export default function CandidateSearchPage() {
               </button>
             </div>
             <div className='flex-1 flex items-center justify-center mt-10'>
-              <div className='w-[742px] bg-white rounded-lg shadow p-[40px]'>
-                <div className='max-w-[662px] w-full mx-auto'>
-                  <BaseInput placeholder='キーワード検索' className='mb-4' />
-                  <div className='flex flex-row gap-[24px] items-start justify-start w-full mt-6'>
+              <div className='w-full md:w-[742px] bg-white rounded-lg shadow p-6 md:p-[40px]'>
+                <div className='max-w-[662px] w-full mx-auto flex flex-col gap-6'>
+                  <BaseInput placeholder='キーワード検索' />
+                  <div className='flex flex-col md:flex-row gap-6 items-start justify-start w-full'>
                     {/* 職種ボタン＋ラベル */}
-                    <div className='flex flex-col items-start'>
+                    <div className='flex flex-col items-start w-full md:w-auto'>
                       <button
                         type='button'
                         onClick={() => setJobTypeModalOpen(true)}
-                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-[205px]'
+                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-full md:w-[205px]'
                       >
-                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full text-center">
                           職種を選択
                         </span>
                       </button>
@@ -93,13 +187,13 @@ export default function CandidateSearchPage() {
                       )}
                     </div>
                     {/* 勤務地ボタン＋ラベル */}
-                    <div className='flex flex-col items-start'>
+                    <div className='flex flex-col items-start w-full md:w-auto'>
                       <button
                         type='button'
                         onClick={() => setLocationModalOpen(true)}
-                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-[205px]'
+                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center min-w-40 px-10 py-0 rounded-[32px] border border-[#999999] w-full md:w-[205px]'
                       >
-                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full text-center">
                           勤務地を選択
                         </span>
                       </button>
@@ -131,55 +225,28 @@ export default function CandidateSearchPage() {
                         </div>
                       )}
                     </div>
-                    {/* セレクトコンポーネント（年収ラベル、右端、幅205px） */}
-                    <div style={{ width: 205 }}>
+                    {/* セレクトコンポーネント（年収） */}
+                    <div className='w-full md:w-[205px]'>
                       <SelectInput
-                        options={[]}
-                        placeholder='年収'
+                        options={salaryOptions}
+                        value={selectedSalary}
+                        onChange={v => setSelectedSalary(v)}
+                        placeholder={
+                          selectedSalary
+                            ? `年収：${selectedSalary.length > 7 ? selectedSalary.slice(0, 7) + '...' : selectedSalary}`
+                            : '年収'
+                        }
+                        className='w-full'
                         style={{
-                          width: '100%',
                           padding: '8px 16px 8px 11px',
                           color: '#323232',
                         }}
                       />
                     </div>
-                    {/* モーダル */}
-                    {jobTypeModalOpen && (
-                      <Modal
-                        title='職種を選択'
-                        isOpen={jobTypeModalOpen}
-                        onClose={() => setJobTypeModalOpen(false)}
-                        primaryButtonText='決定'
-                        onPrimaryAction={() => setJobTypeModalOpen(false)}
-                        width='800px'
-                        height='680px'
-                      >
-                        <JobTypeModal
-                          selectedJobTypes={selectedJobTypes}
-                          setSelectedJobTypes={setSelectedJobTypes}
-                        />
-                      </Modal>
-                    )}
-                    {locationModalOpen && (
-                      <Modal
-                        title='勤務地を選択'
-                        isOpen={locationModalOpen}
-                        onClose={() => setLocationModalOpen(false)}
-                        primaryButtonText='決定'
-                        onPrimaryAction={() => setLocationModalOpen(false)}
-                        width='800px'
-                        height='680px'
-                      >
-                        <LocationModal
-                          selectedLocations={selectedLocations}
-                          setSelectedLocations={setSelectedLocations}
-                        />
-                      </Modal>
-                    )}
                   </div>
                   {/* 幅100%、高さ32pxのdiv（中央に線を追加） */}
                   <div
-                    className='mt-6'
+                    className=''
                     style={{
                       width: '100%',
                       height: '32px',
@@ -242,19 +309,16 @@ export default function CandidateSearchPage() {
                       </svg>
                     </div>
                   </div>
-                  {/* 新しいコンテンツ用のdiv */}
-                  <div className='mt-6 rounded flex flex-row gap-8 justify-center'>
+                  {/* 新しいコンテンツ用のdiv（業種・アピールポイント） */}
+                  <div className='rounded flex flex-col md:flex-row gap-6 justify-center'>
                     {/* 業種を選択ボタン＋ラベル */}
-                    <div
-                      style={{ width: 319 }}
-                      className='flex flex-col items-start'
-                    >
+                    <div className='flex flex-col items-start w-full md:w-[319px]'>
                       <button
                         type='button'
                         onClick={() => setIndustryModalOpen(true)}
                         className='flex flex-row gap-2.5 h-[50px] items-center justify-center px-10 py-0 rounded-[32px] border border-[#999999] w-full bg-white shadow-sm'
                       >
-                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full text-center">
                           業種を選択
                         </span>
                       </button>
@@ -286,18 +350,24 @@ export default function CandidateSearchPage() {
                         </div>
                       )}
                     </div>
-                    {/* アピールポイントセレクト（デザインのみ） */}
-                    <div style={{ width: 319 }}>
+                    {/* アピールポイントセレクト */}
+                    <div className='w-full md:w-[319px]'>
                       <SelectInput
-                        options={[]}
-                        placeholder='アピールポイント'
+                        options={appealPointOptions}
+                        value={selectedAppealPoint}
+                        onChange={v => setSelectedAppealPoint(v)}
+                        placeholder={
+                          selectedAppealPoint
+                            ? `アピールポイント：${selectedAppealPoint.length > 9 ? selectedAppealPoint.slice(0, 9) + '...' : selectedAppealPoint}`
+                            : 'アピールポイント'
+                        }
+                        className='w-full'
                         style={{
-                          width: '100%',
                           padding: '8px 16px 8px 11px',
                           color: '#323232',
                           background: '#fff',
                           border: '1px solid #999999',
-                          borderRadius: '5px', // 年収セレクトと同じ
+                          borderRadius: '5px',
                         }}
                       />
                     </div>
@@ -319,12 +389,46 @@ export default function CandidateSearchPage() {
                       />
                     </Modal>
                   )}
+                  {/* 職種モーダル */}
+                  {jobTypeModalOpen && (
+                    <Modal
+                      title='職種を選択'
+                      isOpen={jobTypeModalOpen}
+                      onClose={() => setJobTypeModalOpen(false)}
+                      primaryButtonText='決定'
+                      onPrimaryAction={() => setJobTypeModalOpen(false)}
+                      width='800px'
+                      height='680px'
+                    >
+                      <JobTypeModal
+                        selectedJobTypes={selectedJobTypes}
+                        setSelectedJobTypes={setSelectedJobTypes}
+                      />
+                    </Modal>
+                  )}
+                  {/* 勤務地モーダル */}
+                  {locationModalOpen && (
+                    <Modal
+                      title='勤務地を選択'
+                      isOpen={locationModalOpen}
+                      onClose={() => setLocationModalOpen(false)}
+                      primaryButtonText='決定'
+                      onPrimaryAction={() => setLocationModalOpen(false)}
+                      width='800px'
+                      height='680px'
+                    >
+                      <LocationModal
+                        selectedLocations={selectedLocations}
+                        setSelectedLocations={setSelectedLocations}
+                      />
+                    </Modal>
+                  )}
                   {/* 新しいフィルター用div（仮） */}
-                  <div className='mt-6 flex flex-row gap-8 justify-center'>
+                  <div className='flex flex-row gap-6 justify-center'>
                     <Button
                       variant='blue-gradient'
                       size='figma-default'
-                      className='w-[160px] h-[50px] text-[18px]'
+                      className='w-full md:w-[160px] h-[50px] text-[18px]'
                       type='button'
                     >
                       検索
@@ -336,7 +440,7 @@ export default function CandidateSearchPage() {
             {/* ここにコンテンツを追加できます */}
           </div>
         </section>
-        <section className='w-full bg-[#F9F9F9] py-12'>
+        <section className='w-full bg-[#F9F9F9] py-4 md:pt-10 px-6 pb-20'>
           <div className='max-w-[1280px] mx-auto'>
             {/* ページネーションデザイン（矢印アイコン8px） */}
             <div className='flex flex-row items-center justify-end gap-2 w-full'>
@@ -346,15 +450,48 @@ export default function CandidateSearchPage() {
               </span>
               <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
             </div>
-            <JobPostCard
-              imageUrl='/company.jpg'
-              imageAlt='company'
-              className='mt-10'
-            >
-              {/* TODO: ここに新しい731x318pxのコンテンツを追加 */}
-            </JobPostCard>
+            {/* JobPostCardを12個mapで表示 */}
+            <div className='grid grid-cols-1 gap-8 mt-10'>
+              {jobCards.map((card, idx) => (
+                <JobPostCard
+                  key={card.id}
+                  imageUrl={card.imageUrl}
+                  imageAlt={card.imageAlt}
+                  title={card.title}
+                  tags={card.tags}
+                  companyName={card.companyName}
+                  location={card.location}
+                  salary={card.salary}
+                  starred={card.starred}
+                  onStarClick={() => handleStarClick(idx)}
+                />
+              ))}
+            </div>
+            {/* ページネーションデザイン（会社/求人ページ準拠、デザインのみ） */}
+            <div className='flex justify-center items-center gap-2 mt-10'>
+              <button
+                className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent'
+                disabled
+              >
+                <PaginationArrow direction='left' className='w-3 h-4' />
+              </button>
+              {/* ページ番号ボタン: モバイルは3つ、md以上は5つ */}
+              {[...Array(5)].map((_, i) => (
+                <button
+                  key={i}
+                  className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${i === 0 ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
+                  style={{ display: i > 2 ? 'none' : undefined }} // モバイル: 3つまで
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'>
+                <PaginationArrow direction='right' className='w-3 h-4' />
+              </button>
+            </div>
           </div>
         </section>
+        <Footer />
       </main>
     </>
   );
