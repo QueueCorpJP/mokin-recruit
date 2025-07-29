@@ -28,43 +28,13 @@ function CandidateLoadingScreen({ message = '読み込み中...' }: { message?: 
   );
 }
 
-// ローディング画面コンポーネント（企業用）
+// ローディング画面コンポーネント（企業用） - CandidateAuthBackgroundを使用
 function CompanyLoadingScreen({ message = '読み込み中...' }: { message?: string }) {
   return (
-    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
+    <CandidateAuthBackground>
       <Navigation />
-      <main className='min-h-[730px] px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center relative'>
-        {/* 背景装飾（Figmaの曲線） */}
-        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
-            <svg
-              className='w-full h-full'
-              fill='none'
-              preserveAspectRatio='none'
-              viewBox='0 0 1890 335'
-            >
-              <path
-                d='M944.943 0C1303.11 0 1631.96 125.532 1889.89 335H0C257.931 125.532 586.776 0 944.943 0Z'
-                fill='url(#paint0_linear_4387_76076)'
-              />
-              <defs>
-                <linearGradient
-                  gradientUnits='userSpaceOnUse'
-                  id='paint0_linear_4387_76076'
-                  x1='944.943'
-                  x2='944.943'
-                  y1='335'
-                  y2='0'
-                >
-                  <stop stopColor='#198D76' />
-                  <stop offset='1' stopColor='#1CA74F' />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
-        <div className='relative w-full max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 md:p-[80px]'>
+      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[460px] flex justify-center items-start relative w-full'>
+        <div className='relative w-full max-w-[480px] md:max-w-[800px] mx-auto bg-white rounded-[20px] md:rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 md:p-[80px]'>
           <div className='text-center space-y-6'>
             <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] md:leading-[51.2px] tracking-[2.4px] md:tracking-[0.1em]'>
               パスワードの再設定
@@ -74,7 +44,8 @@ function CompanyLoadingScreen({ message = '読み込み中...' }: { message?: st
           </div>
         </div>
       </main>
-    </div>
+      <Footer variant='login-before' />
+    </CandidateAuthBackground>
   );
 }
 
@@ -102,41 +73,11 @@ export function UserTypeBasedNewPasswordPage() {
   }
 
   console.log('🏢 Rendering company view');
-  // デフォルト（company）または不明なユーザータイプの場合は企業デザインを使用
+  // デフォルト（company）または不明なユーザータイプの場合も CandidateAuthBackground を使用
   return (
-    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
+    <CandidateAuthBackground>
       <Navigation />
-      <main className='min-h-[730px] px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center relative'>
-        {/* 背景装飾（Figmaの曲線） */}
-        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
-            <svg
-              className='w-full h-full'
-              fill='none'
-              preserveAspectRatio='none'
-              viewBox='0 0 1890 335'
-            >
-              <path
-                d='M944.943 0C1303.11 0 1631.96 125.532 1889.89 335H0C257.931 125.532 586.776 0 944.943 0Z'
-                fill='url(#paint0_linear_4387_76076)'
-              />
-              <defs>
-                <linearGradient
-                  gradientUnits='userSpaceOnUse'
-                  id='paint0_linear_4387_76076'
-                  x1='944.943'
-                  x2='944.943'
-                  y1='335'
-                  y2='0'
-                >
-                  <stop stopColor='#198D76' />
-                  <stop offset='1' stopColor='#1CA74F' />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
+      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[460px] flex justify-center items-start relative w-full'>
         <div className='flex justify-center w-full max-w-[480px] md:max-w-[800px]'>
           <Suspense fallback={<CompanyLoadingScreen />}>
             <NewPasswordContent />
@@ -144,6 +85,6 @@ export function UserTypeBasedNewPasswordPage() {
         </div>
       </main>
       <Footer variant='login-before' />
-    </div>
+    </CandidateAuthBackground>
   );
 } 
