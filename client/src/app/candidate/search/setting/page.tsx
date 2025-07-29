@@ -4,7 +4,9 @@ import { Navigation } from '@/components/ui/navigation';
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { searchJobs, addToFavorites, removeFromFavorites, checkFavoriteStatus } from '@/lib/utils/api-client';
+
 import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/company/job/LocationModal';
 import { Modal } from '@/components/ui/mo-dal';
@@ -29,29 +31,160 @@ export default function CandidateSearchPage() {
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [starred, setStarred] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  
+  // 求人データとローディング状態
+  const [jobCards, setJobCards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0
+  });
 
-  // 12個分のダミーデータ
-  const [jobCards, setJobCards] = useState(
-    Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      imageUrl: '/company.jpg',
-      imageAlt: 'company',
-      title: `求人タイトル${i + 1}`,
-      tags: ['タグA', 'タグB', 'タグC'],
-      companyName: '企業名テキスト',
-      location: '勤務地テキスト',
-      salary: '1,000万〜1,200万',
-      starred: false,
-    }))
-  );
+  // APIから求人データを取得
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const response = await searchJobs({
+        keyword: searchKeyword,
+        location: selectedLocations.join(','),
+        salaryMin: selectedSalary ? selectedSalary.replace(/[^\d]/g, '') : undefined,
+        industries: selectedIndustries,
+        jobTypes: selectedJobTypes,
+        page: pagination.page,
+        limit: pagination.limit
+      });
 
-  // スター切り替え
-  const handleStarClick = (idx: number) => {
-    setJobCards(cards =>
-      cards.map((card, i) =>
-        i === idx ? { ...card, starred: !card.starred } : card
-      )
-    );
+      if (response.success && response.data) {
+        const transformedJobs = response.data.jobs.map((job: any) => {
+          return {
+            id: job.id,
+            imageUrl: job.image_urls?.[0] || '/company.jpg',
+            imageAlt: job.company_name || 'company',
+            title: job.title,
+            tags: Array.isArray(job.job_type) ? job.job_type.slice(0, 3) : [job.job_type].filter(Boolean),
+            companyName: job.company_name || '企業名',
+            location: Array.isArray(job.work_location) ? job.work_location : [job.work_location || '勤務地未設定'],
+            salary: job.salary_min && job.salary_max && job.salary_min > 0 && job.salary_max > 0
+              ? `${job.salary_min}万〜${job.salary_max}万`
+              : job.salary_note || '給与応相談',
+            starred: false,
+            apell: Array.isArray(job.appeal_points) ? job.appeal_points : ['アピールポイントなし']
+          };
+        });
+        
+        setJobCards(transformedJobs);
+        setPagination(prev => ({
+          ...prev,
+          ...response.data!.pagination
+        }));
+
+        // お気に入り状態を確認
+        const jobIds = transformedJobs.map((job: any) => job.id);
+        const favoriteStatus = await checkFavoriteStatus(jobIds);
+        
+        setJobCards(prevJobs => 
+          prevJobs.map(job => ({
+            ...job,
+            starred: favoriteStatus[job.id] || false
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初期データ読み込み
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // 検索実行
+  const handleSearch = () => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+    fetchJobs();
+  };
+
+  // スター切り替え（お気に入りAPI呼び出し）
+  const handleStarClick = async (idx: number) => {
+    const job = jobCards[idx];
+    const jobId = job.id;
+    const isCurrentlyStarred = job.starred;
+
+    console.log('お気に入り操作開始:', { jobId, isCurrentlyStarred });
+
+    // ローディング状態を設定
+    setFavoriteLoading(prev => ({ ...prev, [jobId]: true }));
+
+    try {
+      let response;
+      if (isCurrentlyStarred) {
+        // お気に入りから削除
+        console.log('お気に入りから削除中...');
+        response = await removeFromFavorites(jobId);
+      } else {
+        // お気に入りに追加
+        console.log('お気に入りに追加中...');
+        response = await addToFavorites(jobId);
+      }
+
+      console.log('API応答:', response);
+
+      if (response.success) {
+        // UI更新
+        setJobCards(cards =>
+          cards.map((card, i) =>
+            i === idx ? { ...card, starred: !isCurrentlyStarred } : card
+          )
+        );
+        console.log('お気に入り操作成功');
+      } else {
+        console.error('お気に入り操作エラー:', response.error);
+        
+        // より詳細なエラー情報を表示
+        let errorMessage = response.error || 'お気に入り操作に失敗しました';
+        
+        // デバッグ情報がある場合は表示
+        if (response.debug) {
+          console.error('デバッグ情報:', response.debug);
+          
+          // 認証エラーの場合の詳細メッセージ
+          if (!response.debug.hasAuthHeader && !response.debug.hasCookieToken) {
+            errorMessage = 'ログインが必要です。再度ログインしてください。';
+          } else if (response.debug.validationError) {
+            errorMessage = `認証エラー: ${response.debug.validationError}`;
+          } else if (response.debug.jobPostingId && !response.debug.jobExists) {
+            // 求人が存在しない場合
+            errorMessage = 'この求人は削除されたか、現在利用できません。ページを更新してください。';
+            
+            // 求人リストから該当の求人を削除
+            setJobCards(cards => cards.filter(card => card.id !== jobId));
+          } else if (response.debug.jobExists && response.debug.jobStatus !== 'PUBLISHED') {
+            // 求人は存在するが公開されていない場合
+            errorMessage = `この求人は現在公開されていません（ステータス: ${response.debug.jobStatus}）`;
+            
+            // 求人リストから該当の求人を削除
+            setJobCards(cards => cards.filter(card => card.id !== jobId));
+          }
+        }
+        
+        // ユーザーに分かりやすいエラーメッセージを表示
+        alert(errorMessage);
+      }
+    } catch (error) {
+      console.error('お気に入り操作エラー:', error);
+      alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
+    } finally {
+      // ローディング状態を解除
+      setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
+    }
+
   };
 
   // 年収セレクト用
@@ -145,7 +278,12 @@ export default function CandidateSearchPage() {
             <div className='flex-1 flex items-center justify-center mt-10'>
               <div className='w-full md:w-[742px] bg-white rounded-lg shadow p-6 md:p-[40px]'>
                 <div className='max-w-[662px] w-full mx-auto flex flex-col gap-6'>
-                  <BaseInput placeholder='キーワード検索' />
+                  <BaseInput 
+                    placeholder='キーワード検索' 
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                  />
+
                   <div className='flex flex-col md:flex-row gap-6 items-start justify-start w-full'>
                     {/* 職種ボタン＋ラベル */}
                     <div className='flex flex-col items-start w-full md:w-auto'>
@@ -430,8 +568,11 @@ export default function CandidateSearchPage() {
                       size='figma-default'
                       className='w-full md:w-[160px] h-[50px] text-[18px]'
                       type='button'
+                      onClick={handleSearch}
+                      disabled={loading}
                     >
-                      検索
+                      {loading ? '検索中...' : '検索'}
+
                     </Button>
                   </div>
                 </div>
@@ -446,26 +587,39 @@ export default function CandidateSearchPage() {
             <div className='flex flex-row items-center justify-end gap-2 w-full'>
               <PaginationArrow direction='left' className='w-[8px] h-[8px]' />
               <span className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232]'>
-                1〜10件 / 1,000件
+                {loading ? 'Loading...' : `${((pagination.page - 1) * pagination.limit) + 1}〜${Math.min(pagination.page * pagination.limit, pagination.total)}件 / ${pagination.total}件`}
               </span>
               <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
             </div>
-            {/* JobPostCardを12個mapで表示 */}
+            {/* 求人カード表示 */}
             <div className='grid grid-cols-1 gap-8 mt-10'>
-              {jobCards.map((card, idx) => (
-                <JobPostCard
-                  key={card.id}
-                  imageUrl={card.imageUrl}
-                  imageAlt={card.imageAlt}
-                  title={card.title}
-                  tags={card.tags}
-                  companyName={card.companyName}
-                  location={card.location}
-                  salary={card.salary}
-                  starred={card.starred}
-                  onStarClick={() => handleStarClick(idx)}
-                />
-              ))}
+              {loading ? (
+                <div className='text-center py-10'>
+                  <span className='text-gray-500'>求人を読み込み中...</span>
+                </div>
+              ) : jobCards.length === 0 ? (
+                <div className='text-center py-10'>
+                  <span className='text-gray-500'>該当する求人が見つかりませんでした</span>
+                </div>
+              ) : (
+                jobCards.map((card, idx) => (
+                  <JobPostCard
+                    key={card.id}
+                    imageUrl={card.imageUrl}
+                    imageAlt={card.imageAlt}
+                    title={card.title}
+                    tags={card.tags}
+                    companyName={card.companyName}
+                    location={card.location}
+                    salary={card.salary}
+                    apell={card.apell}
+                    starred={card.starred}
+                    onStarClick={() => handleStarClick(idx)}
+                    isFavoriteLoading={favoriteLoading[card.id]}
+                  />
+                ))
+              )}
+
             </div>
             {/* ページネーションデザイン（会社/求人ページ準拠、デザインのみ） */}
             <div className='flex justify-center items-center gap-2 mt-10'>

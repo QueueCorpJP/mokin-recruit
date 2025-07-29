@@ -20,3 +20,4 @@ export const MapPinFilled: React.FC<{
     <circle cx='12' cy='11' r='2.8' fill='white' />
   </svg>
 );
+

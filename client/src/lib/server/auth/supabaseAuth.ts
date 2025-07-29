@@ -293,6 +293,7 @@ export function verifyCustomJWT(token: string): {
  */
 export async function validateJWT(request: NextRequest): Promise<JWTValidationResult> {
   try {
+    logger.info('JWT validation started');
     const sessionService = new SessionService();
     
     // Authorizationヘッダーまたはクッキーからトークンを取得
@@ -300,7 +301,14 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     const cookieToken = request.cookies.get('supabase-auth-token')?.value;
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
+    logger.info('Token sources:', {
+      hasAuthHeader: !!authHeader,
+      hasCookieToken: !!cookieToken,
+      hasToken: !!token
+    });
+
     if (!token) {
+      logger.warn('No authentication token provided');
       return {
         isValid: false,
         error: 'No authentication token provided'
@@ -308,9 +316,11 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     }
 
     // セッションを検証
+    logger.info('Validating session...');
     const sessionResult = await sessionService.validateSession(token);
 
     if (!sessionResult.success || !sessionResult.sessionInfo) {
+      logger.warn('Session validation failed:', sessionResult.error);
       return {
         isValid: false,
         error: sessionResult.error || 'Session validation failed'
@@ -318,33 +328,68 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     }
 
     const user = sessionResult.sessionInfo.user;
+    logger.info('Session validated for user:', { userId: user.id, email: user.email });
 
     // 候補者情報を取得
+    logger.info('Looking up candidate information...');
     const supabase = getSupabaseAdminClient();
-    const { data: candidate, error: candidateError } = await supabase
+    
+    // まず候補者テーブルの存在確認
+    const { data: candidateCheck, error: candidateCheckError } = await supabase
       .from('candidates')
-      .select('id')
+      .select('id, email')
       .eq('email', user.email)
-      .single();
+      .maybeSingle();
 
-    if (candidateError || !candidate) {
-      logger.error('Candidate lookup failed:', candidateError);
+    logger.info('Candidate lookup result:', {
+      email: user.email,
+      found: !!candidateCheck,
+      error: candidateCheckError?.message
+    });
+
+    if (candidateCheckError) {
+      logger.error('Candidate lookup database error:', candidateCheckError);
       return {
         isValid: false,
-        error: 'Candidate information not found'
+        error: `Database error: ${candidateCheckError.message}`
       };
     }
 
+    if (!candidateCheck) {
+      logger.warn('Candidate not found for email:', user.email);
+      
+      // 企業ユーザーかどうかチェック
+      const { data: companyUser, error: companyError } = await supabase
+        .from('company_users')
+        .select('id, email')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (companyUser) {
+        logger.info('User is a company user, not a candidate');
+        return {
+          isValid: false,
+          error: 'This endpoint is for candidates only. Please use the company interface.'
+        };
+      }
+
+      return {
+        isValid: false,
+        error: 'Candidate information not found. Please complete your candidate registration.'
+      };
+    }
+
+    logger.info('Candidate validation successful:', { candidateId: candidateCheck.id });
     return {
       isValid: true,
-      candidateId: candidate.id,
+      candidateId: candidateCheck.id,
       user: user
     };
   } catch (error) {
     logger.error('JWT validation error:', error);
     return {
       isValid: false,
-      error: 'JWT validation failed'
+      error: `JWT validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
 }

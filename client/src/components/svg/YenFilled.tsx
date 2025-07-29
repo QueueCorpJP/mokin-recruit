@@ -19,3 +19,4 @@ export const YenFilled: React.FC<{
     />
   </svg>
 );
+

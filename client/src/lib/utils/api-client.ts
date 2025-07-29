@@ -124,13 +124,13 @@ class ApiClient {
 }
 
 /**
- * ローカルストレージから認証情報を取得
+ * ローカルストレージから認証情報を取得（クッキーベース認証では使用しない）
  */
 export const getAuthInfo = () => {
   if (typeof window === 'undefined') return null;
   
-  const token = localStorage.getItem('auth_token') || 
-                localStorage.getItem('auth-token') || 
+  const token = localStorage.getItem('auth_token') ||
+                localStorage.getItem('auth-token') ||
                 localStorage.getItem('supabase-auth-token');
   
   const userInfoStr = localStorage.getItem('user_info');
@@ -145,6 +145,22 @@ export const getAuthInfo = () => {
   }
   
   return { token, userInfo };
+};
+
+/**
+ * クッキーから認証トークンを取得
+ */
+export const getCookieToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'supabase-auth-token') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
 };
 
 /**
@@ -175,17 +191,28 @@ export const getCompanyAccountId = (): string | null => {
 };
 
 /**
- * 認証ヘッダーを取得
+ * 認証ヘッダーを取得（クッキーベース認証対応）
  */
 export const getAuthHeaders = () => {
-  const authInfo = getAuthInfo();
-  const headers: HeadersInit = {};
+  // まずクッキーからトークンを取得
+  let token = getCookieToken();
   
-  if (authInfo?.token) {
-    headers['Authorization'] = `Bearer ${authInfo.token}`;
+  // クッキーにない場合はlocalStorageから取得（後方互換性のため）
+  if (!token) {
+    const authInfo = getAuthInfo();
+    token = authInfo?.token || null;
   }
   
-  // company_users.idがある場合はヘッダーに追加
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
+  const authInfo = getAuthInfo();
   if (authInfo?.userInfo?.id) {
     headers['X-User-Id'] = authInfo.userInfo.id;
   }
@@ -234,6 +261,210 @@ const createApiClient = (baseURL: string = '/api') => {
     },
   };
 };
+
+interface JobSearchParams {
+  keyword?: string;
+  location?: string;
+  salaryMin?: string;
+  industries?: string[];
+  jobTypes?: string[];
+  page?: number;
+  limit?: number;
+}
+
+interface JobSearchResponse {
+  success: boolean;
+  data?: {
+    jobs: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+  error?: string;
+}
+
+export async function searchJobs(params: JobSearchParams): Promise<JobSearchResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+    const searchParams = new URLSearchParams();
+    
+    if (params.keyword) searchParams.append('keyword', params.keyword);
+    if (params.location) searchParams.append('location', params.location);
+    if (params.salaryMin) searchParams.append('salaryMin', params.salaryMin);
+    if (params.industries?.length) searchParams.append('industries', params.industries.join(','));
+    if (params.jobTypes?.length) searchParams.append('jobTypes', params.jobTypes.join(','));
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+
+    const response = await fetch(`/api/candidate/job/search?${searchParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to search jobs:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+// お気に入り機能API関数
+interface FavoriteResponse {
+  success: boolean;
+  data?: {
+    favorites: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+  favorite?: any;
+  message?: string;
+  error?: string;
+  debug?: {
+    hasAuthHeader?: boolean;
+    hasCookieToken?: boolean;
+    validationError?: string;
+    authResult?: any;
+    jobPostingId?: string;
+    jobExists?: boolean;
+    jobStatus?: string;
+    errorCode?: string;
+  };
+}
+
+/**
+ * お気に入り一覧を取得
+ */
+export async function getFavorites(page: number = 1, limit: number = 20): Promise<FavoriteResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+    const searchParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+
+    const response = await fetch(`/api/candidate/favorite?${searchParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to get favorites:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+/**
+ * お気に入りに追加
+ */
+export async function addToFavorites(jobPostingId: string): Promise<FavoriteResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+    
+    console.log('お気に入り追加API呼び出し:', {
+      jobPostingId,
+      hasAuthHeaders: Object.keys(authHeaders).length > 0,
+      authHeaders: Object.keys(authHeaders)
+    });
+
+    const response = await fetch('/api/candidate/favorite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify({
+        job_posting_id: jobPostingId
+      }),
+    });
+
+    console.log('API応答ステータス:', response.status);
+    
+    const result = await response.json();
+    console.log('API応答内容:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('Failed to add to favorites:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+/**
+ * お気に入りから削除
+ */
+export async function removeFromFavorites(jobPostingId: string): Promise<FavoriteResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch(`/api/candidate/favorite?job_posting_id=${jobPostingId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to remove from favorites:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+/**
+ * お気に入り状態を確認（複数の求人ID）
+ */
+export async function checkFavoriteStatus(jobPostingIds: string[]): Promise<Record<string, boolean>> {
+  try {
+    const authHeaders = getAuthHeaders();
+    
+    // お気に入り一覧を取得してIDリストを作成
+    const favorites = await getFavorites(1, 100); // 最大100件取得
+    
+    if (!favorites.success || !favorites.data) {
+      return {};
+    }
+
+    const favoriteJobIds = new Set(
+      favorites.data.favorites.map(fav => fav.job_posting_id)
+    );
+
+    const result: Record<string, boolean> = {};
+    jobPostingIds.forEach(id => {
+      result[id] = favoriteJobIds.has(id);
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Failed to check favorite status:', error);
+    return {};
+  }
+}
 
 // デフォルトインスタンス
 export const apiClient = new ApiClient();
