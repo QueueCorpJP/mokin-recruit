@@ -40,15 +40,9 @@ export function NewPasswordForm({
   };
 
   return (
-    <div className={`relative size-full ${
-      userType === 'candidate' 
-        ? '' 
-        : 'bg-[#ffffff] rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
-    }`}>
-      <div className="flex flex-col items-center relative size-full mb-50">
-        <form onSubmit={handleSubmit} className={`box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative size-full ${
-          userType === 'candidate' ? 'p-0' : 'p-20'
-        }`}>
+    <div className="relative w-full">
+      <div className="flex flex-col items-center relative w-full">
+        <form onSubmit={handleSubmit} className="box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative w-full">
           
           {/* 見出し+説明 */}
           <div className="box-border content-stretch flex flex-col gap-4 md:gap-6 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-center w-full">

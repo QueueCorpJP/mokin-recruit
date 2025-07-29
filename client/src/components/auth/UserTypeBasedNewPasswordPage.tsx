@@ -12,7 +12,7 @@ function CandidateLoadingScreen({ message = '読み込み中...' }: { message?: 
   return (
     <CandidateAuthBackground>
       <Navigation />
-      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 flex justify-center items-start relative w-full'>
+      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center items-start relative w-full'>
         <div className='relative w-full max-w-[480px] md:max-w-[800px] mx-auto bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 md:px-[80px] py-10 md:py-[80px]'>
           <div className='text-center space-y-6'>
             <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] tracking-[2.4px] md:tracking-[3.2px]'>
@@ -33,7 +33,7 @@ function CompanyLoadingScreen({ message = '読み込み中...' }: { message?: st
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
       <Navigation />
-      <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
+      <main className='min-h-[730px] px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
@@ -64,13 +64,13 @@ function CompanyLoadingScreen({ message = '読み込み中...' }: { message?: st
           </div>
         </div>
 
-        <div className='relative w-full max-w-[800px] bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-[80px]'>
+        <div className='relative w-full max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 md:p-[80px]'>
           <div className='text-center space-y-6'>
-            <h1 className='text-[#0F9058] font-bold text-[32px] leading-[51.2px] tracking-[0.1em]'>
-              パスワードの再設
+            <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] md:leading-[51.2px] tracking-[2.4px] md:tracking-[0.1em]'>
+              パスワードの再設定
             </h1>
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058] mx-auto'></div>
-            <p className='text-[#323232] font-medium'>{message}</p>
+            <p className='text-[#323232] font-medium text-[14px] md:text-[16px]'>{message}</p>
           </div>
         </div>
       </main>
@@ -89,7 +89,7 @@ export function UserTypeBasedNewPasswordPage() {
     return (
       <CandidateAuthBackground>
         <Navigation />
-        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 flex justify-center items-start relative w-full'>
+        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center items-start relative w-full'>
           <div className='flex justify-center w-full max-w-[480px] md:max-w-[800px] mx-auto'>
             <Suspense fallback={<CandidateLoadingScreen />}>
               <NewPasswordContent />
@@ -106,7 +106,7 @@ export function UserTypeBasedNewPasswordPage() {
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
       <Navigation />
-      <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
+      <main className='min-h-[730px] px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
@@ -137,7 +137,7 @@ export function UserTypeBasedNewPasswordPage() {
           </div>
         </div>
 
-        <div className='flex justify-center w-full max-w-[800px]'>
+        <div className='flex justify-center w-full max-w-[480px] md:max-w-[800px]'>
           <Suspense fallback={<CompanyLoadingScreen />}>
             <NewPasswordContent />
           </Suspense>

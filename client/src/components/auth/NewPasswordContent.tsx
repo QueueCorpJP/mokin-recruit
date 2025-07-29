@@ -250,15 +250,13 @@ export function NewPasswordContent() {
   // パラメータエラーがある場合はエラー表示
   if (parameterError) {
     return (
-      <div className={`relative size-full ${
+      <div className={`relative w-full ${
         userType === 'candidate' 
-          ? '' 
-          : 'bg-[#ffffff] rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
+          ? 'max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 md:px-[80px] py-10 md:py-[80px]' 
+          : 'max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 md:p-[80px]'
       }`}>
-        <div className="flex flex-col items-center relative size-full">
-          <div className={`box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative size-full ${
-            userType === 'candidate' ? 'p-0' : 'p-20'
-          }`}>
+        <div className="flex flex-col items-center relative w-full">
+          <div className="box-border content-stretch flex flex-col gap-6 md:gap-10 items-center justify-start relative w-full">
             
             {/* エラーメッセージ - 一番上に配置 */}
             <div className="box-border content-stretch flex flex-col gap-4 md:gap-6 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-center w-full">
@@ -322,8 +320,10 @@ export function NewPasswordContent() {
           <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} userType="candidate" />
         </div>
       ) : (
-        // 企業ユーザーの場合は従来通り
-        <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} userType="company" />
+        // 企業ユーザーの場合
+        <div className='relative w-full max-w-[480px] md:max-w-[800px] bg-white rounded-[20px] md:rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 md:p-[80px]'>
+          <NewPasswordForm onSubmit={handleSubmit} isLoading={isLoading} userType="company" />
+        </div>
       )}
     </div>
   );
