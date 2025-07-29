@@ -12,7 +12,7 @@ function CandidateLoadingScreen({ message = '読み込み中...' }: { message?: 
   return (
     <CandidateAuthBackground>
       <Navigation />
-      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center items-start relative w-full'>
+      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[460px] flex justify-center items-start relative w-full'>
         <div className='relative w-full max-w-[480px] md:max-w-[800px] mx-auto bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 md:px-[80px] py-10 md:py-[80px]'>
           <div className='text-center space-y-6'>
             <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] tracking-[2.4px] md:tracking-[3.2px]'>
@@ -89,7 +89,7 @@ export function UserTypeBasedNewPasswordPage() {
     return (
       <CandidateAuthBackground>
         <Navigation />
-        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-6 md:pb-[80px] flex justify-center items-start relative w-full'>
+        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[460px] flex justify-center items-start relative w-full'>
           <div className='flex justify-center w-full max-w-[480px] md:max-w-[800px] mx-auto'>
             <Suspense fallback={<CandidateLoadingScreen />}>
               <NewPasswordContent />
