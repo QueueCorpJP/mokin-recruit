@@ -8,6 +8,7 @@ import { BaseInput } from '@/components/ui/base-input';
 import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { QuestionIcon } from '@/components/svg/QuestionIcon';
+import { Pagination } from '@/components/ui/Pagination';
 import { getAuthHeaders } from '@/lib/utils/api-client';
 
 // 求人ステータスの型定義
@@ -743,86 +744,13 @@ export default function CompanyJobsPage() {
                       </div>
                     ))}
                   </div>
-                  {/* ページネーションUI */}
-                  <div className='flex justify-center items-center gap-2 mt-10'>
-                    <button
-                      className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === 1 ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent' : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'}`}
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <PaginationArrow direction="left" className="w-3 h-4" />
-                    </button>
-                    {(() => {
-                      const getPages = () => {
-                        if (totalPages <= 5) {
-                          // 総ページ数が5以下の場合は全て表示
-                          return Array.from({ length: totalPages }, (_, i) => i + 1);
-                        }
-
-                        // 5個固定で表示
-                        const pages = new Set<number>();
-                        
-                        // 先頭ページ
-                        pages.add(1);
-                        
-                        // 前ページ
-                        if (currentPage > 1) {
-                          pages.add(currentPage - 1);
-                        }
-                        
-                        // 現在のページ
-                        pages.add(currentPage);
-                        
-                        // 次ページ
-                        if (currentPage < totalPages) {
-                          pages.add(currentPage + 1);
-                        }
-                        
-                        // 最終ページ
-                        pages.add(totalPages);
-                        
-                        // 5個になるまで追加
-                        const sortedPages = [...pages].sort((a, b) => a - b);
-                        while (sortedPages.length < 5) {
-                          // 現在のページ周辺で不足分を埋める
-                          for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-                            if (!pages.has(i)) {
-                              pages.add(i);
-                              break;
-                            }
-                          }
-                          // それでも足りない場合は全体から補完
-                          for (let i = 1; i <= totalPages && sortedPages.length < 5; i++) {
-                            if (!pages.has(i)) {
-                              pages.add(i);
-                            }
-                          }
-                          break;
-                        }
-                        
-                        return [...pages].sort((a, b) => a - b).slice(0, 5);
-                      };
-
-                      return getPages().map((pageNum) => (
-                        <button
-                          key={pageNum}
-                          className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === pageNum ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
-                          onClick={() => setCurrentPage(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      ));
-                    })()}
-                    <button
-                      className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${currentPage === totalPages ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent' : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'}`}
-                      onClick={() =>
-                        setCurrentPage(p => Math.min(totalPages, p + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                    >
-                      <PaginationArrow direction="right" className="w-3 h-4" />
-                    </button>
-                  </div>
+                  {/* ページネーション */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    className="mt-10"
+                  />
                 </>
               )}
             </div>

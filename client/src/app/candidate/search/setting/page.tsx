@@ -16,6 +16,7 @@ import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
+import { Pagination } from '@/components/ui/Pagination';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { Tag } from '@/components/ui/Tag';
 import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
@@ -103,7 +104,7 @@ export default function CandidateSearchPage() {
   // 初期データ読み込み
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [pagination.page]);
 
   // 検索実行
   const handleSearch = () => {
@@ -244,9 +245,10 @@ export default function CandidateSearchPage() {
   ].map(v => ({ value: v, label: v }));
   const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
 
-  // ページネーションのページ数（仮実装: 1〜5固定）
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 100; // 仮: 総ページ数
+  // ページネーション処理
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, page }));
+  };
 
   return (
     <>
@@ -308,7 +310,7 @@ export default function CandidateSearchPage() {
                                   {item}
                                 </span>
                                 <button
-                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
                                   onClick={() =>
                                     setSelectedJobTypes(
                                       selectedJobTypes.filter(j => j !== item)
@@ -347,7 +349,7 @@ export default function CandidateSearchPage() {
                                   {item}
                                 </span>
                                 <button
-                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
                                   onClick={() =>
                                     setSelectedLocations(
                                       selectedLocations.filter(l => l !== item)
@@ -472,7 +474,7 @@ export default function CandidateSearchPage() {
                                   {item}
                                 </span>
                                 <button
-                                  className='ml-2 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                  className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
                                   onClick={() =>
                                     setSelectedIndustries(
                                       selectedIndustries.filter(j => j !== item)
@@ -621,28 +623,13 @@ export default function CandidateSearchPage() {
               )}
 
             </div>
-            {/* ページネーションデザイン（会社/求人ページ準拠、デザインのみ） */}
-            <div className='flex justify-center items-center gap-2 mt-10'>
-              <button
-                className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-transparent'
-                disabled
-              >
-                <PaginationArrow direction='left' className='w-3 h-4' />
-              </button>
-              {/* ページ番号ボタン: モバイルは3つ、md以上は5つ */}
-              {[...Array(5)].map((_, i) => (
-                <button
-                  key={i}
-                  className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${i === 0 ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
-                  style={{ display: i > 2 ? 'none' : undefined }} // モバイル: 3つまで
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'>
-                <PaginationArrow direction='right' className='w-3 h-4' />
-              </button>
-            </div>
+            {/* ページネーション */}
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+              className="mt-10"
+            />
           </div>
         </section>
         <Footer />
