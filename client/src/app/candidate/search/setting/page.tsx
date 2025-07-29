@@ -355,7 +355,7 @@ export default function CandidateSearchPage() {
               imageAlt='company'
               className='mt-10'
             >
-              <div className='flex flex-col items-start relative'>
+              <div className='flex flex-col items-start relative md:h-[318px]'>
                 {/* 右上のスターアイコン */}
                 <button
                   type='button'
@@ -376,14 +376,20 @@ export default function CandidateSearchPage() {
                     />
                   </svg>
                 </button>
-                <div className='flex flex-row gap-2 items-start flex-wrap w-[277px]'>
-                  <Tag className='py-0.5 px-2 md:py-0 md:px-0'>タグA</Tag>
-                  <Tag className='py-0.5 px-2 md:py-0 md:px-0'>タグB</Tag>
-                  <Tag className='py-0.5 px-2 md:py-0 md:px-0'>タグC</Tag>
+                <div className='flex flex-row gap-2 items-start flex-wrap md:flex-nowrap w-[277px]'>
+                  <Tag className='py-0.5 px-2 md:py-0 md:px-4 md:text-[16px] md:leading-[2]'>
+                    タグA
+                  </Tag>
+                  <Tag className='py-0.5 px-2 md:py-0 md:px-4 md:text-[16px] md:leading-[2]'>
+                    タグB
+                  </Tag>
+                  <Tag className='py-0.5 px-2 md:py-0 md:px-4 md:text-[16px] md:leading-[2]'>
+                    タグC
+                  </Tag>
                 </div>
                 <div
                   className='mt-4 md:mt-2 text-[18px] font-bold'
-                  style={{ color: '#0f9058', lineHeight: '1.6' }}
+                  style={{ color: '#0f9058', lineHeight: '2.0' }}
                 >
                   求人テキスト
                 </div>
@@ -427,10 +433,7 @@ export default function CandidateSearchPage() {
                     1,000万〜1,200万
                   </span>
                 </div>
-                <div
-                  className='pt-4 border-t-2 w-full bg-white static md:absolute md:left-0 md:bottom-0'
-                  style={{ borderColor: 'transparent' }}
-                >
+                <div className='pt-4 border-t-0 md:border-t-2 md:border-t-[#EFEFEF] w-full bg-white static md:absolute md:left-0 md:bottom-0'>
                   <div className='flex flex-row items-center'>
                     <div
                       style={{
