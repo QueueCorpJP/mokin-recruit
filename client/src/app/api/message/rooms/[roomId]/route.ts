@@ -165,21 +165,21 @@ export async function GET(
       type: p.participant_type,
       joinedAt: p.joined_at,
       user: p.participant_type === 'CANDIDATE' && p.candidates ? {
-        id: p.candidates.id,
-        email: p.candidates.email,
-        name: `${p.candidates?.last_name || ''} ${p.candidates?.first_name || ''}`.trim(),
-        residence: p.candidates.current_residence,
-        experienceYears: p.candidates.experience_years,
-        skills: p.candidates.skills,
-        desiredIndustries: p.candidates.desired_industries,
-        desiredJobTypes: p.candidates.desired_job_types
+        id: (p.candidates as any).id,
+        email: (p.candidates as any).email,
+        name: `${(p.candidates as any)?.last_name || ''} ${(p.candidates as any)?.first_name || ''}`.trim(),
+        residence: (p.candidates as any).current_residence,
+        experienceYears: (p.candidates as any).experience_years,
+        skills: (p.candidates as any).skills,
+        desiredIndustries: (p.candidates as any).desired_industries,
+        desiredJobTypes: (p.candidates as any).desired_job_types
       } : p.participant_type === 'COMPANY_USER' && p.company_users ? {
-        id: p.company_users.id,
-        email: p.company_users.email,
-        name: p.company_users.full_name,
-        position: p.company_users.position_title,
-        companyName: p.company_users.company_accounts?.company_name,
-        industry: p.company_users.company_accounts?.industry
+        id: (p.company_users as any).id,
+        email: (p.company_users as any).email,
+        name: (p.company_users as any).full_name,
+        position: (p.company_users as any).position_title,
+        companyName: (p.company_users as any).company_accounts?.company_name,
+        industry: (p.company_users as any).company_accounts?.industry
       } : null
     })).filter(p => p.user !== null);
 
@@ -190,25 +190,25 @@ export async function GET(
       companyGroupId: room.company_group_id,
       createdAt: room.created_at,
       updatedAt: room.updated_at,
-      jobPosting: room.job_postings ? {
-        id: room.job_postings.id,
-        title: room.job_postings.title,
-        positionSummary: room.job_postings.position_summary,
-        jobDescription: room.job_postings.job_description,
-        employmentType: room.job_postings.employment_type,
-        workLocation: room.job_postings.work_location,
-        salaryMin: room.job_postings.salary_min,
-        salaryMax: room.job_postings.salary_max,
-        company: room.job_postings.company_accounts ? {
-          id: room.job_postings.company_accounts.id,
-          name: room.job_postings.company_accounts.company_name,
-          industry: room.job_postings.company_accounts.industry
+      jobPosting: (room as any).job_postings ? {
+        id: (room as any).job_postings.id,
+        title: (room as any).job_postings.title,
+        positionSummary: (room as any).job_postings.position_summary,
+        jobDescription: (room as any).job_postings.job_description,
+        employmentType: (room as any).job_postings.employment_type,
+        workLocation: (room as any).job_postings.work_location,
+        salaryMin: (room as any).job_postings.salary_min,
+        salaryMax: (room as any).job_postings.salary_max,
+        company: (room as any).job_postings.company_accounts ? {
+          id: (room as any).job_postings.company_accounts.id,
+          name: (room as any).job_postings.company_accounts.company_name,
+          industry: (room as any).job_postings.company_accounts.industry
         } : null
       } : null,
-      companyGroup: room.company_groups ? {
-        id: room.company_groups.id,
-        name: room.company_groups.group_name,
-        description: room.company_groups.description
+      companyGroup: (room as any).company_groups ? {
+        id: (room as any).company_groups.id,
+        name: (room as any).company_groups.group_name,
+        description: (room as any).company_groups.description
       } : null,
       participants: formattedParticipants,
       stats: {
@@ -219,8 +219,8 @@ export async function GET(
         id: latestMessage.id,
         senderType: latestMessage.sender_type,
         senderName: latestMessage.sender_type === 'CANDIDATE'
-          ? `${latestMessage.candidates?.last_name || ''} ${latestMessage.candidates?.first_name || ''}`.trim()
-          : latestMessage.company_users?.full_name,
+          ? `${(latestMessage.candidates as any)?.last_name || ''} ${(latestMessage.candidates as any)?.first_name || ''}`.trim()
+          : (latestMessage.company_users as any)?.full_name,
         content: latestMessage.content,
         messageType: latestMessage.message_type,
         status: latestMessage.status,
