@@ -111,6 +111,10 @@ export default function CandidateSearchPage() {
   ].map(v => ({ value: v, label: v }));
   const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
 
+  // ページネーションのページ数（仮実装: 1〜5固定）
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 100; // 仮: 総ページ数
+
   return (
     <>
       <Navigation variant='candidate' />
@@ -471,21 +475,16 @@ export default function CandidateSearchPage() {
               >
                 <PaginationArrow direction='left' className='w-3 h-4' />
               </button>
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 bg-[#0F9058] text-white border-[#0F9058]'>
-                1
-              </button>
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'>
-                2
-              </button>
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'>
-                3
-              </button>
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'>
-                4
-              </button>
-              <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'>
-                5
-              </button>
+              {/* ページ番号ボタン: モバイルは3つ、md以上は5つ */}
+              {[...Array(5)].map((_, i) => (
+                <button
+                  key={i}
+                  className={`w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 ${i === 0 ? 'bg-[#0F9058] text-white border-[#0F9058]' : 'border-[#0F9058] text-[#0F9058] bg-transparent hover:bg-[#F3FBF7]'}`}
+                  style={{ display: i > 2 ? 'none' : undefined }} // モバイル: 3つまで
+                >
+                  {i + 1}
+                </button>
+              ))}
               <button className='w-14 h-14 flex items-center justify-center rounded-full border text-[16px] font-bold mx-2 border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-transparent'>
                 <PaginationArrow direction='right' className='w-3 h-4' />
               </button>
