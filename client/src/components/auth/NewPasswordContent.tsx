@@ -44,15 +44,32 @@ export function NewPasswordContent() {
       const fragmentParams: Record<string, string> = {};
       let hasValidParams = false;
 
+      // 現在のURLを詳細にログ出力
+      if (typeof window !== 'undefined') {
+        console.log('🌐 Current URL details:', {
+          fullUrl: window.location.href,
+          pathname: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+          searchParams: Array.from(searchParams.entries()),
+        });
+      }
+
       // クエリパラメータ（?以降）を収集
       for (const [key, value] of searchParams.entries()) {
         queryParams[key] = value;
+        console.log(`🔍 Query param found: ${key} = ${value}`);
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
       if (typeof window !== 'undefined') {
         const fragment = window.location.hash;
+        console.log('🔗 Fragment detected:', fragment);
         Object.assign(fragmentParams, parseFragmentParams(fragment));
+        
+        if (Object.keys(fragmentParams).length > 0) {
+          console.log('🔗 Fragment params parsed:', fragmentParams);
+        }
       }
 
       // ユーザータイプの取得（複数ソースから優先順位付きで取得）
@@ -76,6 +93,8 @@ export function NewPasswordContent() {
         if (savedUserType === 'candidate' || savedUserType === 'company') {
           detectedUserType = savedUserType;
           console.log('🔄 UserType restored from localStorage:', detectedUserType);
+        } else {
+          console.log('🔄 No valid userType in localStorage:', savedUserType);
         }
       }
       
@@ -85,11 +104,19 @@ export function NewPasswordContent() {
         console.log('⚙️ UserType defaulted to company');
       }
       
+      console.log('🎯 Final userType decision:', detectedUserType);
       setUserType(detectedUserType);
       
-      // 使用後はローカルストレージをクリア
-      if (typeof window !== 'undefined' && (queryParams.userType || fragmentParams.userType)) {
-        localStorage.removeItem('password_reset_user_type');
+      // ローカルストレージのクリア条件を改善（userTypeが正しく検出できた場合のみ）
+      if (typeof window !== 'undefined' && detectedUserType && detectedUserType !== 'company') {
+        // candidateの場合、またはURLパラメータから正しく取得できた場合のみクリア
+        if (queryParams.userType || fragmentParams.userType) {
+          console.log('🧹 Clearing localStorage password_reset_user_type (URL params detected)');
+          localStorage.removeItem('password_reset_user_type');
+        } else if (detectedUserType === 'candidate') {
+          console.log('🧹 Clearing localStorage password_reset_user_type (candidate type confirmed)');
+          localStorage.removeItem('password_reset_user_type');
+        }
       }
 
       // 全パラメータをマージ（フラグメントパラメータを優先）
