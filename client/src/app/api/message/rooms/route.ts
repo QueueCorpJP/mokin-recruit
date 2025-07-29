@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     // 各ルームの最新メッセージと参加者情報を取得
     const roomsWithDetails = await Promise.all(
       (participantRooms || []).map(async (participant) => {
-        const room = participant.rooms;
+        const room = (participant.rooms as any);
         
         // 最新メッセージを取得
         const { data: latestMessage } = await supabase
@@ -126,9 +126,9 @@ export async function GET(request: NextRequest) {
           participants: (participants || []).map(p => ({
             type: p.participant_type,
             id: p.participant_type === 'CANDIDATE' ? p.candidate_id : p.company_user_id,
-            name: p.participant_type === 'CANDIDATE' 
-              ? `${p.candidates?.last_name || ''} ${p.candidates?.first_name || ''}`.trim()
-              : p.company_users?.full_name
+            name: p.participant_type === 'CANDIDATE'
+              ? `${(p.candidates as any)?.last_name || ''} ${(p.candidates as any)?.first_name || ''}`.trim()
+              : (p.company_users as any)?.full_name
           })),
           unreadCount: unreadCount || 0
         };
