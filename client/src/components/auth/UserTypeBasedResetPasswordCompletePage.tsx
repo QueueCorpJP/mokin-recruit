@@ -17,7 +17,7 @@ export function UserTypeBasedResetPasswordCompletePage() {
         bottomRightBallPosition={{ top: '18%', right: '-4rem' }}
       >
         <Navigation />
-        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[300px] flex justify-center items-start relative w-full'>
+        <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[500px] flex justify-center items-start relative w-full'>
           <div className='relative w-full max-w-[480px] md:max-w-[800px] mx-auto'>
             <ResetPasswordCompleteContent />
           </div>
