@@ -183,6 +183,7 @@ export function SelectInput({
           'bg-white border border-[#999999] rounded-[8px] text-left',
           'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
+          className?.includes('w-full') && 'w-full',
 
           // 状態別スタイル
           !disabled &&
@@ -209,7 +210,6 @@ export function SelectInput({
           selectedValue ? 'text-[#323232]' : 'text-[#999999]'
         )}
         style={{
-          width: '240px',
           padding: '4px 16px 4px 11px',
           alignItems: 'center',
           gap: '16px',
