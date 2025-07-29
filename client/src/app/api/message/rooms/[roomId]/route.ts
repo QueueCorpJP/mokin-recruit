@@ -167,7 +167,7 @@ export async function GET(
       user: p.participant_type === 'CANDIDATE' && p.candidates ? {
         id: p.candidates.id,
         email: p.candidates.email,
-        name: `${p.candidates.last_name} ${p.candidates.first_name}`,
+        name: `${p.candidates?.last_name || ''} ${p.candidates?.first_name || ''}`.trim(),
         residence: p.candidates.current_residence,
         experienceYears: p.candidates.experience_years,
         skills: p.candidates.skills,
@@ -219,7 +219,7 @@ export async function GET(
         id: latestMessage.id,
         senderType: latestMessage.sender_type,
         senderName: latestMessage.sender_type === 'CANDIDATE'
-          ? `${latestMessage.candidates?.last_name} ${latestMessage.candidates?.first_name}`
+          ? `${latestMessage.candidates?.last_name || ''} ${latestMessage.candidates?.first_name || ''}`.trim()
           : latestMessage.company_users?.full_name,
         content: latestMessage.content,
         messageType: latestMessage.message_type,

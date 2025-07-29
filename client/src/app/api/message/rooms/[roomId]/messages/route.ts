@@ -112,7 +112,7 @@ export async function GET(
         ? message.sender_candidate_id 
         : message.sender_company_user_id,
       senderName: message.sender_type === 'CANDIDATE'
-        ? `${message.candidates?.last_name} ${message.candidates?.first_name}`
+        ? `${message.candidates?.last_name || ''} ${message.candidates?.first_name || ''}`.trim()
         : message.company_users?.full_name,
       messageType: message.message_type,
       subject: message.subject,
@@ -269,7 +269,7 @@ export async function POST(
         ? newMessage.sender_candidate_id 
         : newMessage.sender_company_user_id,
       senderName: newMessage.sender_type === 'CANDIDATE'
-        ? `${newMessage.candidates?.last_name} ${newMessage.candidates?.first_name}`
+        ? `${newMessage.candidates?.last_name || ''} ${newMessage.candidates?.first_name || ''}`.trim()
         : newMessage.company_users?.full_name,
       messageType: newMessage.message_type,
       subject: newMessage.subject,

@@ -152,8 +152,8 @@ export async function GET(request: NextRequest) {
         companyName: msg.rooms?.job_postings?.company_accounts?.company_name,
         senderType: msg.sender_type,
         senderName: msg.sender_type === 'CANDIDATE'
-          ? `${msg.candidates?.last_name} ${msg.candidates?.first_name}`
-          : msg.company_users?.full_name,
+          ? `${msg.candidates?.last_name || ''} ${msg.candidates?.first_name || ''}`.trim()
+          : msg.company_users?.full_name || '',
         messageType: msg.message_type,
         content: msg.content.length > 100 ? msg.content.substring(0, 100) + '...' : msg.content,
         status: msg.status,

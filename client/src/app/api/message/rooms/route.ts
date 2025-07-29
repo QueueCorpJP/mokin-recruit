@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
             type: p.participant_type,
             id: p.participant_type === 'CANDIDATE' ? p.candidate_id : p.company_user_id,
             name: p.participant_type === 'CANDIDATE' 
-              ? `${p.candidates?.last_name} ${p.candidates?.first_name}`
+              ? `${p.candidates?.last_name || ''} ${p.candidates?.first_name || ''}`.trim()
               : p.company_users?.full_name
           })),
           unreadCount: unreadCount || 0
