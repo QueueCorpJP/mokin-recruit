@@ -364,7 +364,7 @@ export default function CandidateSearchPage() {
             {/* ここにコンテンツを追加できます */}
           </div>
         </section>
-        <section className='w-full bg-[#F9F9F9] py-4 md:py-12 px-6'>
+        <section className='w-full bg-[#F9F9F9] py-4 md:pt-10 px-6 pb-20'>
           <div className='max-w-[1280px] mx-auto'>
             {/* ページネーションデザイン（矢印アイコン8px） */}
             <div className='flex flex-row items-center justify-end gap-2 w-full'>
