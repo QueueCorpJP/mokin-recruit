@@ -5,6 +5,7 @@ import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
 import { useState, useEffect } from 'react';
+
 import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/company/job/LocationModal';
 import { Modal } from '@/components/ui/mo-dal';
@@ -116,6 +117,7 @@ export default function CandidateFavoritePage() {
     }
   };
 
+
   return (
     <>
       <Navigation variant='candidate' />
@@ -127,6 +129,7 @@ export default function CandidateFavoritePage() {
                 <Star size={32} className='text-white' fill='white' />
                 <span className='ml-4 text-white text-[20px] md:text-2xl font-bold'>
                   お気に入り求人
+
                 </span>
               </div>
               <Link href='/candidate/search/setting'>
@@ -233,6 +236,7 @@ export default function CandidateFavoritePage() {
                 </button>
               </div>
             )}
+
           </div>
         </section>
         <Footer />

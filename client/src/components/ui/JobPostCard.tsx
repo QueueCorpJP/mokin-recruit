@@ -13,6 +13,7 @@ interface JobPostCardProps {
   onStarClick?: () => void;
   apell: string[];
   isFavoriteLoading?: boolean;
+
 }
 
 export function JobPostCard({
@@ -28,6 +29,7 @@ export function JobPostCard({
   apell,
   onStarClick,
   isFavoriteLoading = false,
+
 }: JobPostCardProps) {
   return (
     <div
@@ -82,6 +84,7 @@ export function JobPostCard({
               <span
                 key={tag + idx}
                 className='py-0.5 px-2 md:py-0 md:px-4 md:text-[16px] md:leading-[2] bg-[#d2f1da] rounded-[5px] text-[#0f9058] font-medium whitespace-nowrap'
+
               >
                 {tag}
               </span>
@@ -103,6 +106,7 @@ export function JobPostCard({
             {title}
           </div>
           <div className='flex flex-row items-center mt-4 hidden md:flex' style={{ maxWidth: 'calc(100% - 2em)' }}>
+
             <svg
               width='20'
               height='20'
@@ -110,6 +114,7 @@ export function JobPostCard({
               fill='none'
               xmlns='http://www.w3.org/2000/svg'
               className='flex-shrink-0'
+
             >
               <path
                 d='M8.74534 15.6405C10.3582 13.629 14.0366 8.7539 14.0366 6.01557C14.0366 2.69447 11.3328 0 8.00023 0C4.66765 0 1.96387 2.69447 1.96387 6.01557C1.96387 8.7539 5.64228 13.629 7.25512 15.6405C7.64182 16.1198 8.35864 16.1198 8.74534 15.6405ZM8.00023 4.01038C8.53388 4.01038 9.04567 4.22164 9.42302 4.59768C9.80036 4.97373 10.0124 5.48376 10.0124 6.01557C10.0124 6.54738 9.80036 7.0574 9.42302 7.43345C9.04567 7.8095 8.53388 8.02076 8.00023 8.02076C7.46658 8.02076 6.95479 7.8095 6.57745 7.43345C6.2001 7.0574 5.98811 6.54738 5.98811 6.01557C5.98811 5.48376 6.2001 4.97373 6.57745 4.59768C6.95479 4.22164 7.46658 4.01038 8.00023 4.01038Z'
@@ -123,6 +128,7 @@ export function JobPostCard({
               }}
             >
               {Array.isArray(location) ? location.join('、') : location}
+
             </span>
           </div>
           <div className='flex flex-row items-center mt-2 hidden md:flex'>
@@ -140,6 +146,7 @@ export function JobPostCard({
             </svg>
             <span
               className='ml-1 text-[16px] font-medium'
+
               style={{ color: '#323232', lineHeight: '2' }}
             >
               {salary}
@@ -152,6 +159,7 @@ export function JobPostCard({
                {item}
               </span>
             ))}
+
           </div>
           <div className='pt-4 border-t-0 md:border-t-2 md:border-t-[#EFEFEF] w-full bg-white static md:absolute md:left-0 md:bottom-0'>
             <div className='flex flex-row items-center'>
@@ -166,6 +174,7 @@ export function JobPostCard({
               <span
                 className='ml-2 text-[14px] md:text-[16px] font-bold'
                 style={{ color: '#323232', lineHeight: '2',letterSpacing: '1.6px' }}
+
               >
                 {companyName}
               </span>
@@ -176,3 +185,4 @@ export function JobPostCard({
     </div>
   );
 }
+

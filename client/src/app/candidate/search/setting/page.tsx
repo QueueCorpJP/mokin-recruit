@@ -6,6 +6,7 @@ import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
 import { useState, useEffect } from 'react';
 import { searchJobs, addToFavorites, removeFromFavorites, checkFavoriteStatus } from '@/lib/utils/api-client';
+
 import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/company/job/LocationModal';
 import { Modal } from '@/components/ui/mo-dal';
@@ -183,6 +184,7 @@ export default function CandidateSearchPage() {
       // ローディング状態を解除
       setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
     }
+
   };
 
   // 年収セレクト用
@@ -281,6 +283,7 @@ export default function CandidateSearchPage() {
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                   />
+
                   <div className='flex flex-col md:flex-row gap-6 items-start justify-start w-full'>
                     {/* 職種ボタン＋ラベル */}
                     <div className='flex flex-col items-start w-full md:w-auto'>
@@ -569,6 +572,7 @@ export default function CandidateSearchPage() {
                       disabled={loading}
                     >
                       {loading ? '検索中...' : '検索'}
+
                     </Button>
                   </div>
                 </div>
@@ -615,6 +619,7 @@ export default function CandidateSearchPage() {
                   />
                 ))
               )}
+
             </div>
             {/* ページネーションデザイン（会社/求人ページ準拠、デザインのみ） */}
             <div className='flex justify-center items-center gap-2 mt-10'>
