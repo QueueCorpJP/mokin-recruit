@@ -18,8 +18,10 @@ import { TagDisplay } from '@/components/ui/TagDisplay';
 import { Tag } from '@/components/ui/Tag';
 import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
 import { Footer } from '@/components/ui/footer';
+import { useRouter } from 'next/navigation';
 
 export default function CandidateSearchPage() {
+  const router = useRouter();
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -52,6 +54,63 @@ export default function CandidateSearchPage() {
     );
   };
 
+  // 年収セレクト用
+  const salaryOptions = [
+    '問わない',
+    '600万円以上',
+    '700万円以上',
+    '800万円以上',
+    '900万円以上',
+    '1000万円以上',
+    '1100万円以上',
+    '1200万円以上',
+    '1300万円以上',
+    '1400万円以上',
+    '1500万円以上',
+    '1600万円以上',
+    '1700万円以上',
+    '1800万円以上',
+    '1900万円以上',
+    '2000万円以上',
+    '2100万円以上',
+    '2200万円以上',
+    '2300万円以上',
+    '2400万円以上',
+    '2500万円以上',
+    '2600万円以上',
+    '2700万円以上',
+    '2800万円以上',
+    '2900万円以上',
+    '3000万円以上',
+    '4000万円以上',
+    '5000万円以上',
+  ].map(v => ({ value: v, label: v }));
+  const [selectedSalary, setSelectedSalary] = useState('');
+
+  // アピールポイントセレクト用
+  const appealPointOptions = [
+    'CxO候補',
+    '新規事業立ち上げ',
+    '経営戦略に関与',
+    '裁量が大きい',
+    'スピード感がある',
+    'グローバル事業に関与',
+    '成長フェーズ',
+    '上場準備中',
+    '社会課題に貢献',
+    '少数精鋭',
+    '代表と距離が近い',
+    '20〜30代中心',
+    'フラットな組織',
+    '多様な人材が活躍',
+    'フレックス制度',
+    'リモートあり',
+    '副業OK',
+    '残業少なめ',
+    '育児／介護と両立しやすい',
+  ].map(v => ({ value: v, label: v }));
+  const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
+
   return (
     <>
       <Navigation variant='candidate' />
@@ -69,6 +128,7 @@ export default function CandidateSearchPage() {
               <button
                 className='w-[150px] h-[94px] border-2 border-white rounded-[10px] bg-transparent p-[14px] hover:bg-white/30 transition-colors duration-150 md:mt-0 md:absolute md:right-0 md:top-0'
                 style={{ minWidth: 150, minHeight: 94 }}
+                onClick={() => router.push('/candidate/job/favorite')}
               >
                 <div className='flex flex-col items-center justify-center h-full gap-[10px]'>
                   <Star size={24} fill='white' stroke='white' />
@@ -164,8 +224,14 @@ export default function CandidateSearchPage() {
                     {/* セレクトコンポーネント（年収） */}
                     <div className='w-full md:w-[205px]'>
                       <SelectInput
-                        options={[]}
-                        placeholder='年収'
+                        options={salaryOptions}
+                        value={selectedSalary}
+                        onChange={v => setSelectedSalary(v)}
+                        placeholder={
+                          selectedSalary
+                            ? `年収：${selectedSalary.length > 7 ? selectedSalary.slice(0, 7) + '...' : selectedSalary}`
+                            : '年収'
+                        }
                         className='w-full'
                         style={{
                           padding: '8px 16px 8px 11px',
@@ -283,8 +349,14 @@ export default function CandidateSearchPage() {
                     {/* アピールポイントセレクト */}
                     <div className='w-full md:w-[319px]'>
                       <SelectInput
-                        options={[]}
-                        placeholder='アピールポイント'
+                        options={appealPointOptions}
+                        value={selectedAppealPoint}
+                        onChange={v => setSelectedAppealPoint(v)}
+                        placeholder={
+                          selectedAppealPoint
+                            ? `アピールポイント：${selectedAppealPoint.length > 9 ? selectedAppealPoint.slice(0, 9) + '...' : selectedAppealPoint}`
+                            : 'アピールポイント'
+                        }
                         className='w-full'
                         style={{
                           padding: '8px 16px 8px 11px',
