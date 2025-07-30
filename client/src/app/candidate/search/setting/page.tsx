@@ -34,7 +34,8 @@ export default function CandidateSearchPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   
   // 求人データとローディング状態
-  const [jobCards, setJobCards] = useState<any[]>([]);
+  const [allJobCards, setAllJobCards] = useState<any[]>([]); // 全件データ
+  const [displayJobCards, setDisplayJobCards] = useState<any[]>([]); // 表示用データ
   const [loading, setLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
   const [pagination, setPagination] = useState({
@@ -44,18 +45,27 @@ export default function CandidateSearchPage() {
     totalPages: 0
   });
 
-  // APIから求人データを取得
-  const fetchJobs = async () => {
+  // 表示用データを更新（クライアントサイドページング）
+  const updateDisplayJobs = (allJobs: any[], page: number, limit: number) => {
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedJobs = allJobs.slice(startIndex, endIndex);
+    setDisplayJobCards(paginatedJobs);
+  };
+
+  // APIから全件データを取得（初回・検索条件変更時のみ）
+  const fetchAllJobs = async () => {
     setLoading(true);
     try {
+      // 最大1000件まで取得（メモリ使用量を考慮）
       const response = await searchJobs({
         keyword: searchKeyword,
         location: selectedLocations.join(','),
         salaryMin: selectedSalary ? selectedSalary.replace(/[^\d]/g, '') : undefined,
         industries: selectedIndustries,
         jobTypes: selectedJobTypes,
-        page: pagination.page,
-        limit: pagination.limit
+        page: 1,
+        limit: 1000 // 大きな値で全件取得
       });
 
       if (response.success && response.data) {
@@ -76,22 +86,30 @@ export default function CandidateSearchPage() {
           };
         });
         
-        setJobCards(transformedJobs);
+        // 全件データを保存
+        setAllJobCards(transformedJobs);
+        
+        // ページネーション情報を更新
+        const totalJobs = transformedJobs.length;
+        const totalPages = Math.ceil(totalJobs / pagination.limit);
         setPagination(prev => ({
           ...prev,
-          ...response.data!.pagination
+          total: totalJobs,
+          totalPages: totalPages,
+          page: 1
         }));
 
         // お気に入り状態を確認
         const jobIds = transformedJobs.map((job: any) => job.id);
         const favoriteStatus = await checkFavoriteStatus(jobIds);
         
-        setJobCards(prevJobs => 
-          prevJobs.map(job => ({
-            ...job,
-            starred: favoriteStatus[job.id] || false
-          }))
-        );
+        const jobsWithFavorites = transformedJobs.map(job => ({
+          ...job,
+          starred: favoriteStatus[job.id] || false
+        }));
+        
+        setAllJobCards(jobsWithFavorites);
+        updateDisplayJobs(jobsWithFavorites, 1, pagination.limit);
       }
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
@@ -102,18 +120,18 @@ export default function CandidateSearchPage() {
 
   // 初期データ読み込み
   useEffect(() => {
-    fetchJobs();
-  }, [pagination.page]);
+    fetchAllJobs();
+  }, []); // 初回のみ実行
 
-  // 検索実行
+  // 検索実行（条件変更時）
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchJobs();
+    fetchAllJobs(); // 検索条件変更時のみAPI呼び出し
   };
 
   // スター切り替え（お気に入りAPI呼び出し）
   const handleStarClick = async (idx: number) => {
-    const job = jobCards[idx];
+    const job = displayJobCards[idx];
     const jobId = job.id;
     const isCurrentlyStarred = job.starred;
 
@@ -137,8 +155,14 @@ export default function CandidateSearchPage() {
       console.log('API応答:', response);
 
       if (response.success) {
-        // UI更新
-        setJobCards(cards =>
+        // 全件データと表示データの両方を更新
+        const updatedAllJobs = allJobCards.map(job => 
+          job.id === jobId ? { ...job, starred: !isCurrentlyStarred } : job
+        );
+        setAllJobCards(updatedAllJobs);
+        
+        // 表示データも更新
+        setDisplayJobCards(cards =>
           cards.map((card, i) =>
             i === idx ? { ...card, starred: !isCurrentlyStarred } : card
           )
@@ -164,13 +188,17 @@ export default function CandidateSearchPage() {
             errorMessage = 'この求人は削除されたか、現在利用できません。ページを更新してください。';
             
             // 求人リストから該当の求人を削除
-            setJobCards(cards => cards.filter(card => card.id !== jobId));
+            const filteredAllJobs = allJobCards.filter(card => card.id !== jobId);
+            setAllJobCards(filteredAllJobs);
+            setDisplayJobCards(cards => cards.filter(card => card.id !== jobId));
           } else if (response.debug.jobExists && response.debug.jobStatus !== 'PUBLISHED') {
             // 求人は存在するが公開されていない場合
             errorMessage = `この求人は現在公開されていません（ステータス: ${response.debug.jobStatus}）`;
             
             // 求人リストから該当の求人を削除
-            setJobCards(cards => cards.filter(card => card.id !== jobId));
+            const filteredAllJobs = allJobCards.filter(card => card.id !== jobId);
+            setAllJobCards(filteredAllJobs);
+            setDisplayJobCards(cards => cards.filter(card => card.id !== jobId));
           }
         }
         
@@ -243,10 +271,12 @@ export default function CandidateSearchPage() {
     '育児／介護と両立しやすい',
   ].map(v => ({ value: v, label: v }));
   const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
+  const [isSearchConditionActive, setIsSearchConditionActive] = useState(false);
 
-  // ページネーション処理
+  // ページネーション処理（クライアントサイド）
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }));
+    updateDisplayJobs(allJobCards, page, pagination.limit);
   };
 
   return (
@@ -416,7 +446,8 @@ export default function CandidateSearchPage() {
                       }}
                     />
                     {/* 線を覆う中央の184x32pxのdiv */}
-                    <div
+                    <button
+                      onClick={() => setIsSearchConditionActive(!isSearchConditionActive)}
                       style={{
                         position: 'absolute',
                         top: '50%',
@@ -426,6 +457,8 @@ export default function CandidateSearchPage() {
                         background: '#fff',
                         transform: 'translate(-50%, -50%)',
                         zIndex: 3,
+                        border: 'none',
+                        cursor: 'pointer',
                       }}
                       className='flex items-center justify-center gap-4'
                     >
@@ -438,78 +471,83 @@ export default function CandidateSearchPage() {
                         viewBox='0 0 14 10'
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'
-                        style={{ transform: 'rotate(180deg)' }}
+                        style={{ 
+                          transform: isSearchConditionActive ? 'rotate(0deg)' : 'rotate(180deg)',
+                          transition: 'transform 0.4s ease'
+                        }}
                       >
                         <path
                           d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
                           fill='#0F9058'
                         />
                       </svg>
-                    </div>
+                    </button>
                   </div>
                   {/* 新しいコンテンツ用のdiv（業種・アピールポイント） */}
-                  <div className='rounded flex flex-col md:flex-row gap-6 justify-center'>
-                    {/* 業種を選択ボタン＋ラベル */}
-                    <div className='flex flex-col items-start w-full md:w-[319px]'>
-                      <button
-                        type='button'
-                        onClick={() => setIndustryModalOpen(true)}
-                        className='flex flex-row gap-2.5 h-[50px] items-center justify-center px-10 py-0 rounded-[32px] border border-[#999999] w-full bg-white shadow-sm'
-                      >
-                        <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full text-center">
-                          業種を選択
-                        </span>
-                      </button>
-                      {selectedIndustries.length > 0 && (
-                        <div className='flex flex-col items-start mt-2'>
-                          <div className='flex flex-col gap-2 w-full'>
-                            {selectedIndustries.map(item => (
-                              <div
-                                key={item}
-                                className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
-                              >
-                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                  {item}
-                                </span>
-                                <button
-                                  className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
-                                  onClick={() =>
-                                    setSelectedIndustries(
-                                      selectedIndustries.filter(j => j !== item)
-                                    )
-                                  }
-                                  aria-label='削除'
+                  {isSearchConditionActive && (
+                    <div className='rounded flex flex-col md:flex-row gap-6 justify-center'>
+                      {/* 業種を選択ボタン＋ラベル */}
+                      <div className='flex flex-col items-start w-full md:w-[319px]'>
+                        <button
+                          type='button'
+                          onClick={() => setIndustryModalOpen(true)}
+                          className='flex flex-row gap-2.5 h-[50px] items-center justify-center px-10 py-0 rounded-[32px] border border-[#999999] w-full bg-white shadow-sm'
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full text-center">
+                            業種を選択
+                          </span>
+                        </button>
+                        {selectedIndustries.length > 0 && (
+                          <div className='flex flex-col items-start mt-2'>
+                            <div className='flex flex-col gap-2 w-full'>
+                              {selectedIndustries.map(item => (
+                                <div
+                                  key={item}
+                                  className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
                                 >
-                                  <X size={18} className='text-[#0f9058]' />
-                                </button>
-                              </div>
-                            ))}
+                                  <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                    {item}
+                                  </span>
+                                  <button
+                                    className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
+                                    onClick={() =>
+                                      setSelectedIndustries(
+                                        selectedIndustries.filter(j => j !== item)
+                                      )
+                                    }
+                                    aria-label='削除'
+                                  >
+                                    <X size={18} className='text-[#0f9058]' />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                      {/* アピールポイントセレクト */}
+                      <div className='w-full md:w-[319px]'>
+                        <SelectInput
+                          options={appealPointOptions}
+                          value={selectedAppealPoint}
+                          onChange={v => setSelectedAppealPoint(v)}
+                          placeholder={
+                            selectedAppealPoint
+                              ? `アピールポイント：${selectedAppealPoint.length > 9 ? selectedAppealPoint.slice(0, 9) + '...' : selectedAppealPoint}`
+                              : 'アピールポイント'
+                          }
+                          className='w-full'
+                          style={{
+                            padding: '8px 16px 8px 11px',
+                            color: '#323232',
+                            background: '#fff',
+                            border: '1px solid #999999',
+                            borderRadius: '5px',
+                          }}
+                        />
+                      </div>
                     </div>
-                    {/* アピールポイントセレクト */}
-                    <div className='w-full md:w-[319px]'>
-                      <SelectInput
-                        options={appealPointOptions}
-                        value={selectedAppealPoint}
-                        onChange={v => setSelectedAppealPoint(v)}
-                        placeholder={
-                          selectedAppealPoint
-                            ? `アピールポイント：${selectedAppealPoint.length > 9 ? selectedAppealPoint.slice(0, 9) + '...' : selectedAppealPoint}`
-                            : 'アピールポイント'
-                        }
-                        className='w-full'
-                        style={{
-                          padding: '8px 16px 8px 11px',
-                          color: '#323232',
-                          background: '#fff',
-                          border: '1px solid #999999',
-                          borderRadius: '5px',
-                        }}
-                      />
-                    </div>
-                  </div>
+                  )}
                   {/* 業種モーダル */}
                   {industryModalOpen && (
                     <Modal
@@ -611,12 +649,12 @@ export default function CandidateSearchPage() {
                 <div className='text-center py-10'>
                   <span className='text-gray-500'>求人を読み込み中...</span>
                 </div>
-              ) : jobCards.length === 0 ? (
+              ) : displayJobCards.length === 0 ? (
                 <div className='text-center py-10'>
                   <span className='text-gray-500'>該当する求人が見つかりませんでした</span>
                 </div>
               ) : (
-                jobCards.map((card, idx) => (
+                displayJobCards.map((card, idx) => (
                   <JobPostCard
                     key={card.id}
                     imageUrl={card.imageUrl}
