@@ -1,6 +1,5 @@
 'use client';
 
-import { Navigation } from '@/components/ui/navigation';
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
@@ -252,7 +251,6 @@ export default function CandidateSearchPage() {
 
   return (
     <>
-      <Navigation variant='candidate' />
       <main>
         <section className='w-full px-4 py-6 md:px-[80px] md:py-[40px] bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)] flex items-center justify-center'>
           <div className='max-w-[1280px] w-full h-full flex flex-col relative'>
@@ -304,7 +302,7 @@ export default function CandidateSearchPage() {
                             {selectedJobTypes.map(item => (
                               <div
                                 key={item}
-                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                                className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
                               >
                                 <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
                                   {item}
@@ -343,7 +341,7 @@ export default function CandidateSearchPage() {
                             {selectedLocations.map(item => (
                               <div
                                 key={item}
-                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                                className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
                               >
                                 <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
                                   {item}
@@ -468,7 +466,7 @@ export default function CandidateSearchPage() {
                             {selectedIndustries.map(item => (
                               <div
                                 key={item}
-                                className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-start px-[11px] py-[4px] rounded-[10px] w-fit'
+                                className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
                               >
                                 <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
                                   {item}
@@ -565,17 +563,31 @@ export default function CandidateSearchPage() {
                   )}
                   {/* 新しいフィルター用div（仮） */}
                   <div className='flex flex-row gap-6 justify-center'>
-                    <Button
-                      variant='blue-gradient'
-                      size='figma-default'
-                      className='w-full md:w-[160px] h-[50px] text-[18px]'
+                    <button
                       type='button'
                       onClick={handleSearch}
                       disabled={loading}
+                      style={{
+                        display: 'flex',
+                        minWidth: '160px',
+                        padding: '15px 40px',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '10px',
+                        borderRadius: '32px',
+                        background: 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
+                        boxShadow: '0 5px 10px 0 rgba(0, 0, 0, 0.15)',
+                        border: 'none',
+                        color: 'white',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.7 : 1,
+                      }}
+                      className='w-full md:w-[160px] transition-opacity duration-150'
                     >
                       {loading ? '検索中...' : '検索'}
-
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>

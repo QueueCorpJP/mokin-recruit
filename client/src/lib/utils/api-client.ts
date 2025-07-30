@@ -167,6 +167,23 @@ export const getCookieToken = (): string | null => {
  * 現在のユーザーIDを取得
  */
 export const getCurrentUserId = (): string | null => {
+  // クライアントサイドでのみ実行
+  if (typeof window === 'undefined') return null;
+  
+  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  try {
+    const authStorageData = sessionStorage.getItem('auth-storage');
+    if (authStorageData) {
+      const parsedData = JSON.parse(authStorageData);
+      if (parsedData?.state?.user?.id) {
+        return parsedData.state.user.id;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get userId from sessionStorage:', error);
+  }
+  
+  // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();
   if (!authInfo) return null;
   return authInfo.userInfo?.id || null;
@@ -176,15 +193,50 @@ export const getCurrentUserId = (): string | null => {
  * 現在のユーザータイプを取得
  */
 export const getCurrentUserType = (): string | null => {
+  // クライアントサイドでのみ実行
+  if (typeof window === 'undefined') return null;
+  
+  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  try {
+    const authStorageData = sessionStorage.getItem('auth-storage');
+    if (authStorageData) {
+      const parsedData = JSON.parse(authStorageData);
+      if (parsedData?.state?.userType) {
+        return parsedData.state.userType;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get userType from sessionStorage:', error);
+  }
+  
+  // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.type || null;
+  return authInfo.userInfo?.userType || authInfo.userInfo?.type || null;
 };
 
 /**
  * 企業ユーザーの場合、company_account_idを取得
  */
 export const getCompanyAccountId = (): string | null => {
+  // クライアントサイドでのみ実行
+  if (typeof window === 'undefined') return null;
+  
+  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  try {
+    const authStorageData = sessionStorage.getItem('auth-storage');
+    if (authStorageData) {
+      const parsedData = JSON.parse(authStorageData);
+      const user = parsedData?.state?.user;
+      if (user?.profile?.companyAccountId) {
+        return user.profile.companyAccountId;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get companyAccountId from sessionStorage:', error);
+  }
+  
+  // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();
   if (!authInfo) return null;
   return authInfo.userInfo?.profile?.companyAccountId || null;
@@ -378,14 +430,34 @@ export async function getFavorites(page: number = 1, limit: number = 20): Promis
 export async function addToFavorites(jobPostingId: string): Promise<FavoriteResponse> {
   try {
     const authHeaders = getAuthHeaders();
+    const userType = getCurrentUserType();
     
     console.log('お気に入り追加API呼び出し:', {
       jobPostingId,
+      userType,
       hasAuthHeaders: Object.keys(authHeaders).length > 0,
       authHeaders: Object.keys(authHeaders)
     });
 
-    const response = await fetch('/api/candidate/favorite', {
+    // ユーザータイプに応じてAPIエンドポイントを決定
+    let endpoint: string;
+    if (userType === 'candidate') {
+      endpoint = '/api/candidate/favorite';
+    } else if (userType === 'company_user') {
+      // 企業ユーザーの場合はお気に入り機能を無効化
+      console.warn('企業ユーザー用のお気に入り機能は未実装です。');
+      return {
+        success: false,
+        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
+      };
+    } else {
+      return {
+        success: false,
+        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
+      };
+    }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -417,8 +489,33 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
 export async function removeFromFavorites(jobPostingId: string): Promise<FavoriteResponse> {
   try {
     const authHeaders = getAuthHeaders();
+    const userType = getCurrentUserType();
 
-    const response = await fetch(`/api/candidate/favorite?job_posting_id=${jobPostingId}`, {
+    console.log('お気に入り削除API呼び出し:', {
+      jobPostingId,
+      userType,
+      hasAuthHeaders: Object.keys(authHeaders).length > 0
+    });
+
+    // ユーザータイプに応じてAPIエンドポイントを決定
+    let endpoint: string;
+    if (userType === 'candidate') {
+      endpoint = `/api/candidate/favorite?job_posting_id=${jobPostingId}`;
+    } else if (userType === 'company_user') {
+      // 企業ユーザーの場合はお気に入り機能を無効化
+      console.warn('企業ユーザー用のお気に入り機能は未実装です。');
+      return {
+        success: false,
+        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
+      };
+    } else {
+      return {
+        success: false,
+        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
+      };
+    }
+
+    const response = await fetch(endpoint, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -426,7 +523,10 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
       },
     });
 
-    return await response.json();
+    const result = await response.json();
+    console.log('削除API応答:', result);
+    
+    return result;
   } catch (error) {
     console.error('Failed to remove from favorites:', error);
     return {
@@ -466,8 +566,14 @@ export async function checkFavoriteStatus(jobPostingIds: string[]): Promise<Reco
   }
 }
 
+// 新しいAPIクライアントをインポート
+import { apiClient as newApiClient } from '../api/client';
+
 // デフォルトインスタンス
 export const apiClient = new ApiClient();
+
+// 新しいAPIクライアントも利用可能にする（段階的移行用）
+export { newApiClient as modernApiClient };
 
 // 型定義のエクスポート
 export type { ApiResponse, ApiClientOptions };

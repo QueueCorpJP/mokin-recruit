@@ -1,5 +1,4 @@
 'use client';
-import { Navigation } from '@/components/ui/navigation';
 import Link from 'next/link';
 
 const ProfileIcon = () => (
@@ -39,10 +38,6 @@ const ProfileIcon = () => (
 export function HeroSection() {
   return (
     <div className='relative w-full'>
-      {/* Header */}
-      <div className=' top-0 left-0 right-0 z-10'>
-        <Navigation variant='candidate' />
-      </div>
       {/* Hero Section */}
       <div className='relative w-full h-auto'>
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>

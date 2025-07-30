@@ -241,12 +241,106 @@ export class AuthController {
         `Login attempt for user: ${email} (userType: ${userType || 'default'})`
       );
 
-      // Supabase認証
-      const authResult = await signInWithSupabase(email, password);
+      // ユーザータイプごとの認証方式を選択
+      let authResult: any = { success: false, user: null, session: null };
+      let useSupabaseAuth = true;
+
+      // 候補者の場合は、まず独自認証を試行
+      if (userType === 'candidate') {
+        try {
+          const candidate = await this.candidateRepository.findByEmail(email);
+          if (candidate) {
+            // パスワード検証を実行
+            logger.debug(`Attempting password verification for candidate: ${email}`);
+            logger.debug(`Input password: "${password}"`);
+            logger.debug(`Stored hash: "${candidate.password_hash}"`);
+            const isValidPassword = await this.passwordService.verifyPassword(password, candidate.password_hash);
+            
+            if (isValidPassword) {
+              logger.info(`Found candidate user: ${email}, using custom auth`);
+              useSupabaseAuth = false;
+              
+              // 適切なSupabaseユーザーオブジェクトを作成
+              const supabaseUser = {
+                id: candidate.id,
+                email: candidate.email,
+                user_metadata: {
+                  userType: 'candidate',
+                  name: `${candidate.last_name} ${candidate.first_name}`
+                },
+                app_metadata: {},
+                aud: 'authenticated',
+                created_at: candidate.created_at || new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                email_confirmed_at: new Date().toISOString(),
+                phone_confirmed_at: '',
+                confirmed_at: new Date().toISOString(),
+                last_sign_in_at: new Date().toISOString(),
+                role: 'authenticated',
+              };
+
+              // モックのSupabaseセッションを作成
+              const mockSupabaseSession = {
+                access_token: '',
+                refresh_token: '',
+                expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7日後
+                expires_in: 7 * 24 * 60 * 60,
+                token_type: 'bearer',
+                user: supabaseUser,
+              };
+
+              // SessionServiceを使用してJWTトークンを生成
+              logger.debug('Creating session with SessionService...');
+              try {
+                const sessionResult = await this.sessionService.createSession(supabaseUser, mockSupabaseSession);
+                logger.debug(`SessionService result: ${sessionResult.success}`);
+                
+                if (sessionResult.success && sessionResult.sessionInfo) {
+                  authResult = {
+                    success: true,
+                    user: supabaseUser,
+                    session: mockSupabaseSession,
+                    token: sessionResult.sessionInfo.customToken
+                  };
+                  
+                  logger.info(`JWT token generated successfully for candidate: ${candidate.id}`);
+                  
+                  // データベースのlast_login_at更新
+                  try {
+                    await this.candidateRepository.updateLastLogin(candidate.id);
+                    logger.debug(`Updated last_login_at for candidate: ${candidate.id}`);
+                  } catch (updateError) {
+                    logger.warn(`Failed to update last_login_at for candidate ${candidate.id}:`, updateError);
+                  }
+                } else {
+                  logger.error('Failed to create session for candidate:', sessionResult.error);
+                  // Supabase認証にフォールバック
+                  useSupabaseAuth = true;
+                }
+              } catch (sessionError) {
+                logger.error('SessionService error for candidate:', sessionError);
+                // Supabase認証にフォールバック
+                useSupabaseAuth = true;
+              }
+            } else {
+              logger.warn(`Invalid password for candidate: ${email}`);
+            }
+          }
+        } catch (error) {
+          logger.warn(`Candidate auth check failed: ${error}`);
+        }
+      }
+
+      // Supabase認証（企業ユーザーまたは候補者で独自認証が失敗した場合）
+      if (useSupabaseAuth) {
+        authResult = await signInWithSupabase(email, password);
+      }
+
       if (!authResult.success) {
         logger.warn(`Authentication failed for user: ${email}`, {
           userType: userType || 'default',
           error: authResult.error,
+          usedSupabaseAuth: useSupabaseAuth,
         });
 
         // 認証エラーの詳細分類
@@ -278,6 +372,7 @@ export class AuthController {
           code: errorCode,
           details: {
             originalError: authResult.error,
+            authMethod: useSupabaseAuth ? 'supabase' : 'custom',
           },
         });
         return;
@@ -296,7 +391,7 @@ export class AuthController {
                 userInfo = {
                   id: candidate.id,
                   email: candidate.email,
-                  type: 'candidate',
+                  userType: 'candidate',
                   name: `${candidate.last_name} ${candidate.first_name}`,
                   profile: {
                     lastName: candidate.last_name,
@@ -328,7 +423,7 @@ export class AuthController {
                 userInfo = {
                   id: companyUser.id,
                   email: companyUser.email,
-                  type: 'company_user',
+                  userType: 'company_user',
                   name: companyUser.full_name || companyUser.email,
                   profile: {
                     fullName: companyUser.full_name,
@@ -381,7 +476,7 @@ export class AuthController {
             userInfo = {
               id: candidate.id,
               email: candidate.email,
-              type: 'candidate',
+              userType: 'candidate',
               name: `${candidate.last_name} ${candidate.first_name}`,
               profile: {
                 lastName: candidate.last_name,
@@ -397,7 +492,7 @@ export class AuthController {
               userInfo = {
                 id: companyUser.id,
                 email: companyUser.email,
-                type: 'company_user',
+                userType: 'company_user',
                 name: companyUser.full_name || companyUser.email,
                 profile: {
                   fullName: companyUser.full_name,
@@ -437,8 +532,54 @@ export class AuthController {
         return;
       }
 
+      // Supabaseのuser_metadataを更新してuserTypeを保存
+      // データベース直接作成ユーザーの場合、Supabase Authに存在しない可能性があるため、
+      // 更新失敗は警告として扱い、ログイン処理は継続する
+      try {
+        const { getSupabaseAdminClient } = await import('@/lib/server/database/supabase');
+        const supabaseAdmin = getSupabaseAdminClient();
+        
+        const { error: metadataError } = await supabaseAdmin.auth.admin.updateUserById(
+          userInfo.id,
+          {
+            user_metadata: {
+              userType: userInfo.userType,
+              name: userInfo.name,
+              last_login_at: new Date().toISOString(),
+            },
+          }
+        );
+
+        if (metadataError) {
+          // データベース直接作成ユーザーの場合、Supabase Authに存在しないため更新できない
+          // これは正常な動作として扱う
+          logger.info(`User metadata update skipped for database-only user: ${userInfo.id} (${userInfo.userType})`);
+          logger.debug(`Metadata update error (expected for DB-only users): ${metadataError.message}`);
+        } else {
+          logger.info(`User metadata updated for ${userInfo.id} (userType: ${userInfo.userType})`);
+        }
+      } catch (metadataUpdateError) {
+        // メタデータ更新のエラーもデータベース直接ユーザーの場合は想定内
+        logger.info(`User metadata update skipped for database-only user: ${userInfo.id}`);
+        logger.debug('Metadata update error (expected for DB-only users):', metadataUpdateError);
+      }
+
+      // データベースのlast_login_at更新（カスタム認証を使わなかった場合）
+      if (userInfo && useSupabaseAuth) {
+        try {
+          if (userInfo.userType === 'candidate') {
+            await this.candidateRepository.updateLastLogin(userInfo.id);
+          } else if (userInfo.userType === 'company_user') {
+            await this.companyUserRepository.updateLastLogin(userInfo.id);
+          }
+          // admin の場合は今後実装予定
+        } catch (updateError) {
+          logger.warn(`Failed to update last_login_at for ${userInfo.userType} ${userInfo.id}:`, updateError);
+        }
+      }
+
       logger.info(
-        `Login successful for user: ${userInfo.id} (type: ${userInfo.type})`
+        `Login successful for user: ${userInfo.id} (userType: ${userInfo.userType})`
       );
 
       res.status(200).json({

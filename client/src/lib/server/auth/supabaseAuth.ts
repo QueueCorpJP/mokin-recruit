@@ -334,7 +334,7 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     logger.info('Looking up candidate information...');
     const supabase = getSupabaseAdminClient();
     
-    // まず候補者テーブルの存在確認
+    // まず候補者テーブルの存在確認（emailで検索）
     const { data: candidateCheck, error: candidateCheckError } = await supabase
       .from('candidates')
       .select('id, email')
@@ -344,6 +344,8 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     logger.info('Candidate lookup result:', {
       email: user.email,
       found: !!candidateCheck,
+      candidateId: candidateCheck?.id,
+      sessionUserId: user.id,
       error: candidateCheckError?.message
     });
 
@@ -379,7 +381,11 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
       };
     }
 
-    logger.info('Candidate validation successful:', { candidateId: candidateCheck.id });
+    logger.info('Candidate validation successful:', { 
+      candidateId: candidateCheck.id,
+      email: candidateCheck.email,
+      sessionUserId: user.id
+    });
     return {
       isValid: true,
       candidateId: candidateCheck.id,
