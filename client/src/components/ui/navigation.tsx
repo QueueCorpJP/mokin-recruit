@@ -620,10 +620,10 @@ export function Navigation({
       },
       {
         label: '求人を探す',
-        href: '/candidate/search',
+        href: '/candidate/search/setting',
         icon: SearchIcon,
         hasDropdown: false,
-        isActive: pathname.startsWith('/candidate/search'),
+        isActive: pathname.startsWith('/candidate/search/setting'),
       },
       {
         label: 'やることリスト',
