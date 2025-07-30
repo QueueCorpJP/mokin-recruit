@@ -40,7 +40,7 @@ export default function CandidateSearchPage() {
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 12,
+    limit: 10, // 10件ずつ表示
     total: 0,
     totalPages: 0
   });
@@ -82,7 +82,8 @@ export default function CandidateSearchPage() {
               ? `${job.salary_min}万〜${job.salary_max}万`
               : job.salary_note || '給与応相談',
             starred: false,
-            apell: Array.isArray(job.appeal_points) ? job.appeal_points : ['アピールポイントなし']
+            apell: Array.isArray(job.appeal_points) ? job.appeal_points : ['アピールポイントなし'],
+            created_at: job.created_at // ソート用に日付情報を保持
           };
         });
         
@@ -108,8 +109,17 @@ export default function CandidateSearchPage() {
           starred: favoriteStatus[job.id] || false
         }));
         
-        setAllJobCards(jobsWithFavorites);
-        updateDisplayJobs(jobsWithFavorites, 1, pagination.limit);
+        // 最新順にソート（created_atで降順、新しいものが先）
+        const sortedJobs = jobsWithFavorites.sort((a, b) => {
+          // created_atフィールドがある場合はそれを使用、なければIDで比較
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return b.id.localeCompare(a.id);
+        });
+        
+        setAllJobCards(sortedJobs);
+        updateDisplayJobs(sortedJobs, 1, pagination.limit);
       }
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
@@ -622,7 +632,19 @@ export default function CandidateSearchPage() {
                         cursor: loading ? 'not-allowed' : 'pointer',
                         opacity: loading ? 0.7 : 1,
                       }}
-                      className='w-full md:w-[160px] transition-opacity duration-150'
+                      className='w-full md:w-[160px] transition-all duration-150 hover:shadow-[0_5px_10px_0_rgba(0,0,0,0.15)] hover:bg-[linear-gradient(263deg,#249881_0%,#27668D_100%)]'
+                      onMouseEnter={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.background = 'linear-gradient(263deg, #249881 0%, #27668D 100%)';
+                          e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.background = 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)';
+                          e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+                        }
+                      }}
                     >
                       {loading ? '検索中...' : '検索'}
                     </button>
