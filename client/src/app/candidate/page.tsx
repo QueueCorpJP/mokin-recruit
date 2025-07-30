@@ -1,4 +1,3 @@
-import { Navigation } from '@/components/ui/navigation';
 import { FVWrapper } from '@/components/ui/FVWrapper';
 import { Footer } from '@/components/ui/footer';
 import { Metadata } from 'next';

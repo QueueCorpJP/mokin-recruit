@@ -37,10 +37,10 @@ export class SessionService {
   private readonly REFRESH_THRESHOLD = 5 * 60 * 1000; // 5分前にリフレッシュ
 
   constructor() {
-    this.JWT_SECRET = process.env.JWT_SECRET!;
+    this.JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
 
-    if (!this.JWT_SECRET) {
-      throw new Error('JWT_SECRET is required for SessionService');
+    if (!process.env.JWT_SECRET) {
+      console.warn('JWT_SECRET not found in environment variables, using default secret for development');
     }
   }
 

@@ -45,13 +45,72 @@ export async function GET(request: NextRequest) {
 
     // セッション情報を返す（機密情報は除外）
     const { sessionInfo } = sessionResult;
+    
+    // データベース直接作成ユーザーの場合、user_metadataが空の可能性があるため
+    // データベースから追加情報を取得
+    let userType = sessionInfo!.user.user_metadata?.userType;
+    let userName = sessionInfo!.user.user_metadata?.name;
+    
+    // user_metadataにuserTypeがない場合（データベース直接ユーザー）は
+    // データベースから推測する
+    if (!userType) {
+      try {
+        const { getSupabaseClient } = await import('@/lib/server/database/supabase');
+        const supabase = getSupabaseClient();
+        
+        // 候補者テーブルで検索（まずemailで検索し、見つからない場合はIDで検索）
+        const { data: candidate } = await supabase
+          .from('candidates')
+          .select('id, last_name, first_name, email')
+          .eq('email', sessionInfo!.user.email)
+          .single();
+          
+        if (candidate) {
+          userType = 'candidate';
+          userName = `${candidate.last_name} ${candidate.first_name}`;
+          logger.info(`Found candidate by email: ${candidate.email}, DB ID: ${candidate.id}, Session ID: ${sessionInfo!.user.id}`);
+        } else {
+          // 企業ユーザーテーブルで検索（emailで検索）
+          const { data: companyUser } = await supabase
+            .from('company_users')
+            .select('id, full_name, email')
+            .eq('email', sessionInfo!.user.email)
+            .single();
+            
+          if (companyUser) {
+            userType = 'company_user';
+            userName = companyUser.full_name;
+            logger.info(`Found company user by email: ${companyUser.email}, DB ID: ${companyUser.id}, Session ID: ${sessionInfo!.user.id}`);
+          }
+        }
+        
+        logger.info(`User type resolved from database for ${sessionInfo!.user.id}: ${userType}`);
+        
+        // userTypeが未定義の場合は古いセッションの可能性が高いため無効化
+        if (!userType) {
+          logger.warn(`Invalid session detected for user ${sessionInfo!.user.id} - no matching user found in database`);
+          return NextResponse.json(
+            { success: false, error: 'Invalid session - user not found' },
+            { status: 401 }
+          );
+        }
+      } catch (dbError) {
+        logger.warn(`Failed to resolve user type from database for ${sessionInfo!.user.id}:`, dbError);
+        // データベースエラーの場合は古いセッションとして扱う
+        return NextResponse.json(
+          { success: false, error: 'Session validation failed' },
+          { status: 401 }
+        );
+      }
+    }
+    
     const responseData = {
       success: true,
       user: {
         id: sessionInfo!.user.id,
         email: sessionInfo!.user.email,
-        userType: sessionInfo!.user.user_metadata?.userType,
-        name: sessionInfo!.user.user_metadata?.name,
+        userType: userType,
+        name: userName,
         emailConfirmed: !!sessionInfo!.user.email_confirmed_at,
         lastSignIn: sessionInfo!.user.last_sign_in_at,
       },

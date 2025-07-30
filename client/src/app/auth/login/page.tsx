@@ -1,6 +1,5 @@
 import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Navigation } from '@/components/ui/navigation';
 import { Footer } from '@/components/ui/footer';
 import { LoginForm } from '@/components/auth/LoginForm';
 
@@ -17,9 +16,6 @@ export const viewport: Viewport = {
 export default function LoginPage() {
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
-      {/* ナビゲーション */}
-      <Navigation />
-
       {/* メインコンテンツ */}
       <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}

@@ -19,7 +19,6 @@ export default function CompanyLoginPage() {
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
       {/* ナビゲーション */}
-      <Navigation />
 
       {/* メインコンテンツ */}
       <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>

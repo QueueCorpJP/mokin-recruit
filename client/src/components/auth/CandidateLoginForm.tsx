@@ -7,10 +7,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export function CandidateLoginForm() {
   const router = useRouter();
+  const { refreshAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,13 +72,8 @@ export function CandidateLoginForm() {
         if (data?.success === true || (data?.token && data?.user)) {
           setSuccess('ログインに成功しました！');
 
-          if (data?.token) {
-            localStorage.setItem('auth_token', data.token);
-          }
-
-          if (data?.user) {
-            localStorage.setItem('user_info', JSON.stringify(data.user));
-          }
+          // 認証状態をリフレッシュ（クッキーに保存されたトークンを使用）
+          await refreshAuth();
 
           setTimeout(() => {
             router.push('/candidate/dashboard');

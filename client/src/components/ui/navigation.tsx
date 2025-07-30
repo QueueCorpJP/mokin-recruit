@@ -8,6 +8,7 @@ import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useAuthActions } from '@/contexts/AuthContext';
 
 // Custom Icon Components
 
@@ -170,16 +171,18 @@ export function Navigation({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuthActions();
 
   // デバッグ用ログ
   useEffect(() => {
-    console.log(
-      'Navigation - isMenuOpen changed:',
+    console.log('🔍 Navigation - State:', {
       isMenuOpen,
-      'variant:',
-      variant
-    );
-  }, [isMenuOpen, variant]);
+      variant,
+      isLoggedIn,
+      userInfo,
+      pathname
+    });
+  }, [isMenuOpen, variant, isLoggedIn, userInfo, pathname]);
 
   // ドロップダウンメニューの切り替え
   const toggleDropdown = (dropdown: string) => {
@@ -189,57 +192,18 @@ export function Navigation({
   // ログアウト処理
   const handleLogout = async () => {
     try {
-      // ログアウトAPIを呼び出し
-      const token =
-        localStorage.getItem('auth-token') ||
-        localStorage.getItem('supabase-auth-token');
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        // ローカルストレージからトークンを削除
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('supabase-auth-token');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_info');
-
-        console.log('✅ ログアウトが完了しました');
-
-        // ログインページにリダイレクト
-        router.push('/company/auth/login');
-      } else {
-        console.error('❌ ログアウトAPIエラー:', result);
-        // APIエラーの場合でもローカルのトークンは削除
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('supabase-auth-token');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_info');
-        router.push('/company/auth/login');
-      }
+      await logout();
+      // ドロップダウンを閉じる
+      setOpenDropdown(null);
     } catch (error) {
       console.error('❌ ログアウト処理でエラーが発生しました:', error);
-      // エラーの場合でもローカルのトークンは削除
-      localStorage.removeItem('auth-token');
-      localStorage.removeItem('supabase-auth-token');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_info');
-      router.push('/company/auth/login');
+      setOpenDropdown(null);
     }
-
-    // ドロップダウンを閉じる
-    setOpenDropdown(null);
   };
 
   // variant に応じたCTAボタンの設定
   // --- ここから拡張 ---
-  if ((variant as string) === 'candidate') {
+  if ((variant as string) === 'candidate' && !isLoggedIn) {
     // Figma準拠: 会員登録（filled/gradient）・ログイン（outline/ghost）
     const candidateButtons = [
       {

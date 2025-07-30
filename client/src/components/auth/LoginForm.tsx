@@ -8,6 +8,7 @@ import { InputField } from '@/components/ui/input-field';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 interface LoginFormProps {
@@ -16,6 +17,7 @@ interface LoginFormProps {
 
 export function LoginForm({ userType }: LoginFormProps) {
   const router = useRouter();
+  const { refreshAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -169,35 +171,8 @@ export function LoginForm({ userType }: LoginFormProps) {
 
           setSuccess('ログインに成功しました！');
 
-          // トークンをlocalStorageに保存（必要に応じて）
-          if (data?.token) {
-            try {
-              localStorage.setItem('auth_token', data.token);
-              console.log('💾 Token saved to localStorage');
-            } catch (storageError) {
-              console.warn(
-                '⚠️ Failed to save token to localStorage:',
-                storageError
-              );
-            }
-          }
-
-          // ユーザー情報をlocalStorageに保存
-          if (data?.user) {
-            try {
-              localStorage.setItem('user_info', JSON.stringify(data.user));
-              console.log('💾 User info saved to localStorage:', {
-                id: data.user.id,
-                email: data.user.email,
-                type: data.user.type
-              });
-            } catch (storageError) {
-              console.warn(
-                '⚠️ Failed to save user info to localStorage:',
-                storageError
-              );
-            }
-          }
+          // 認証状態をリフレッシュ（クッキーに保存されたトークンを使用）
+          await refreshAuth();
 
           // 成功時は適切なダッシュボードにリダイレクト
           setTimeout(() => {

@@ -20,7 +20,6 @@ export default function CandidateLoginPage() {
   return (
     <CandidateAuthBackground>
       {/* ナビゲーション */}
-      <Navigation variant="candidate" />
 
       {/* メインコンテンツ */}
       <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] mb-20 lg:mb-0 lg:pb-[300px] flex justify-center items-start relative w-full'>

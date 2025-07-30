@@ -35,8 +35,46 @@ export async function POST(request: NextRequest) {
     // AuthControllerの処理実行
     await authController.logout(mockReq, mockRes);
 
-    // Next.js Response形式で返却
-    return NextResponse.json(responseData, { status: statusCode });
+    // クッキーを削除してレスポンスを返却
+    const response = NextResponse.json(responseData, { status: statusCode });
+    
+    // 認証関連のクッキーをすべて削除
+    const cookiesToDelete = [
+      'supabase-auth-token',
+      'supabase-refresh-token',
+      'sb-access-token',
+      'sb-refresh-token',
+      // その他のSupabase関連クッキー
+      'supabase.auth.token'
+    ];
+    
+    for (const cookieName of cookiesToDelete) {
+      // 複数の方法でクッキーを削除して確実性を高める
+      response.cookies.delete(cookieName);
+      
+      // 明示的な削除設定
+      response.cookies.set(cookieName, '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+        expires: new Date(0)
+      });
+    }
+    
+    // Supabase セッションの完全無効化
+    try {
+      const { getSupabaseClient } = await import('@/lib/server/database/supabase');
+      const supabase = getSupabaseClient();
+      await supabase.auth.signOut();
+      logger.info('Supabase session invalidated');
+    } catch (error) {
+      logger.warn('Failed to invalidate Supabase session:', error);
+    }
+
+    logger.info('Logout completed - cookies cleared and session invalidated');
+    return response;
   } catch (error) {
     logger.error('API Route error - logout:', error);
     return NextResponse.json(

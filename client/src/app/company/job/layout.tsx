@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navigation } from '@/components/ui/navigation';
+
 import { Footer } from '@/components/ui/footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CompanyJobLayout({
   children,
@@ -11,79 +12,26 @@ export default function CompanyJobLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState<{
-    companyName?: string;
-    userName?: string;
-  }>({});
-  const [loading, setLoading] = useState(true);
+  const { userType, isAuthenticated, isLoading, initialized } = useAuth();
 
+  // 認証チェックと企業ユーザー制限
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      // localStorage からトークンを確認（複数のキーをチェック）
-      const token = localStorage.getItem('auth-token') || 
-                   localStorage.getItem('auth_token') || 
-                   localStorage.getItem('supabase-auth-token');
-      
-      if (!token) {
-        setIsLoggedIn(false);
-        setLoading(false);
-        // 未ログインの場合は企業ログインページにリダイレクト
+    // 初期化完了後に認証チェック
+    if (initialized && !isLoading) {
+      if (!isAuthenticated) {
         router.push('/company/auth/login');
         return;
       }
-
-      // セッション API でトークンを検証
-      const response = await fetch('/api/auth/session', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.user) {
-          setIsLoggedIn(true);
-          setUserInfo({
-            companyName: data.user.name || '企業名',
-            userName: data.user.email || 'ユーザー名',
-          });
-        } else {
-          setIsLoggedIn(false);
-          // 無効なトークンは削除
-          localStorage.removeItem('auth-token');
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('supabase-auth-token');
-          localStorage.removeItem('user_info');
-          // 企業ログインページにリダイレクト
-          router.push('/company/auth/login');
-        }
-      } else {
-        setIsLoggedIn(false);
-        // 無効なトークンは削除
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('supabase-auth-token');
-        localStorage.removeItem('user_info');
-        // 企業ログインページにリダイレクト
+      
+      if (userType !== 'company_user') {
         router.push('/company/auth/login');
+        return;
       }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      setIsLoggedIn(false);
-      // エラーの場合も企業ログインページにリダイレクト
-      router.push('/company/auth/login');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [initialized, isLoading, isAuthenticated, userType, router]);
 
-  // ローディング中は何も表示しない（またはローディング画面）
-  if (loading) {
+  // 初期化中またはローディング中
+  if (!initialized || isLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-gray-600'>読み込み中...</div>
@@ -91,8 +39,8 @@ export default function CompanyJobLayout({
     );
   }
 
-  // 未ログインの場合はリダイレクト処理中なので何も表示しない
-  if (!isLoggedIn) {
+  // 未認証またはユーザータイプが不適切な場合（リダイレクト処理中）
+  if (!isAuthenticated || userType !== 'company_user') {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-gray-600'>ログインページに移動しています...</div>
@@ -102,11 +50,6 @@ export default function CompanyJobLayout({
 
   return (
     <div className='min-h-screen flex flex-col'>
-      <Navigation 
-        variant='company' 
-        isLoggedIn={isLoggedIn}
-        userInfo={userInfo}
-      />
       <main className='flex-1'>{children}</main>
       <Footer />
     </div>

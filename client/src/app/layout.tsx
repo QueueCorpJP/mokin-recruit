@@ -5,6 +5,11 @@ import './globals.css';
 // サーバーサイド初期化の実行
 import '@/lib/server/container/bindings';
 
+// Providers
+import { QueryProvider } from '@/providers/QueryProvider';
+import { AuthInitializer } from '../components/AuthInitializer';
+import { AuthAwareNavigation } from '../components/layout/AuthAwareNavigation';
+
 // フォント最適化
 const inter = Inter({
   subsets: ['latin'],
@@ -76,7 +81,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`antialiased`}>{children}</body>
+      <body className={`antialiased`}>
+        <QueryProvider>
+          <AuthInitializer />
+          <AuthAwareNavigation />
+          {children}
+        </QueryProvider>
+      </body>
     </html>
   );
 }
