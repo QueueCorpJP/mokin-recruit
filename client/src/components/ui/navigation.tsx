@@ -384,8 +384,8 @@ export function Navigation({
               <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
             </div>
 
-            {/* メニュー項目とアカウント情報を同一グループとして扱う */}
-            <nav className='flex items-center ml-[40px]'>
+            {/* デスクトップ用メニュー項目とアカウント情報 */}
+            <nav className='hidden lg:flex items-center ml-[40px]'>
               {/* すべてのナビゲーション項目を配置 */}
               <div className='flex items-center gap-10'>
                 {navigationItems.map(item => (
@@ -488,7 +488,110 @@ export function Navigation({
                 </div>
               </div>
             </nav>
+
+            {/* モバイル用ハンバーガーメニューボタン */}
+            <div className='lg:hidden'>
+              <Button
+                variant='ghost'
+                className='p-2'
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label='メニューを開く'
+              >
+                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+              </Button>
+            </div>
           </div>
+
+          {/* モバイル用ナビゲーション */}
+          {isMenuOpen && (
+            <div className='lg:hidden border-t border-gray-200 bg-white'>
+              <div className='px-4 py-2 space-y-1'>
+                {navigationItems.map(item => (
+                  <div key={item.label}>
+                    {item.hasDropdown ? (
+                      <div>
+                        <button
+                          onClick={() => toggleDropdown(item.label)}
+                          className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        >
+                          <div className='flex items-center gap-2'>
+                            <item.icon className='w-5 h-5' />
+                            <span>{item.label}</span>
+                          </div>
+                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
+                        </button>
+                        {openDropdown === item.label && (
+                          <div className='ml-6 mt-1 space-y-1'>
+                            {item.dropdownItems?.map(dropdownItem => (
+                              <Link
+                                key={dropdownItem.label}
+                                href={dropdownItem.href}
+                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <item.icon className='w-5 h-5' />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+                
+                {/* モバイル用アカウント情報 */}
+                <div className='border-t border-gray-200 pt-2 mt-2'>
+                  <button
+                    onClick={() => toggleDropdown('account')}
+                    className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                  >
+                    <div className='flex items-center gap-2'>
+                      <User className='w-5 h-5' />
+                      <span className='max-w-[160px] truncate'>
+                        {userInfo?.companyName || 'ユーザー名'}
+                      </span>
+                    </div>
+                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
+                  </button>
+                  {openDropdown === 'account' && (
+                    <div className='ml-6 mt-1 space-y-1'>
+                      <Link
+                        href='/company/settings'
+                        className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        アカウント設定
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className='w-full text-left px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                      >
+                        ログアウト
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
     );
@@ -549,8 +652,8 @@ export function Navigation({
               <Logo className='w-[32px] h-auto md:w-[180px] md:h-[32px]' />
             </div>
 
-            {/* メニュー項目とアカウント情報を同一グループとして扱う */}
-            <nav className='flex items-center ml-[40px]'>
+            {/* デスクトップ用メニュー項目とアカウント情報 */}
+            <nav className='hidden lg:flex items-center ml-[40px]'>
               <div className='flex items-center gap-10'>
                 {navigationItems.map(item => (
                   <div key={item.label} className='relative'>
@@ -649,7 +752,110 @@ export function Navigation({
                 </div>
               </div>
             </nav>
+
+            {/* モバイル用ハンバーガーメニューボタン */}
+            <div className='lg:hidden'>
+              <Button
+                variant='ghost'
+                className='p-2'
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label='メニューを開く'
+              >
+                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+              </Button>
+            </div>
           </div>
+
+          {/* モバイル用ナビゲーション */}
+          {isMenuOpen && (
+            <div className='lg:hidden border-t border-gray-200 bg-white'>
+              <div className='px-4 py-2 space-y-1'>
+                {navigationItems.map(item => (
+                  <div key={item.label}>
+                    {item.hasDropdown ? (
+                      <div>
+                        <button
+                          onClick={() => toggleDropdown(item.label)}
+                          className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        >
+                          <div className='flex items-center gap-2'>
+                            <item.icon className='w-5 h-5' />
+                            <span>{item.label}</span>
+                          </div>
+                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
+                        </button>
+                        {openDropdown === item.label && (
+                          <div className='ml-6 mt-1 space-y-1'>
+                            {item.dropdownItems?.map(dropdownItem => (
+                              <Link
+                                key={dropdownItem.label}
+                                href={dropdownItem.href}
+                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <item.icon className='w-5 h-5' />
+                        <span>{item.label}</span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+                
+                {/* モバイル用アカウント情報 */}
+                <div className='border-t border-gray-200 pt-2 mt-2'>
+                  <button
+                    onClick={() => toggleDropdown('account')}
+                    className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                  >
+                    <div className='flex items-center gap-2'>
+                      <User className='w-5 h-5' />
+                      <span className='max-w-[160px] truncate'>
+                        {userInfo?.userName || 'ユーザー名'}
+                      </span>
+                    </div>
+                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
+                  </button>
+                  {openDropdown === 'account' && (
+                    <div className='ml-6 mt-1 space-y-1'>
+                      <Link
+                        href='/candidate/settings'
+                        className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        アカウント設定
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className='w-full text-left px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                      >
+                        ログアウト
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
     );
