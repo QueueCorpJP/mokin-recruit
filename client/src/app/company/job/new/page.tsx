@@ -11,14 +11,11 @@ import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { FormFields } from '@/app/company/company/job/FormFields';
 import { ConfirmView } from '@/app/company/company/job/ConfirmView';
-import {
-  getCurrentUserId,
-  getAuthInfo,
-  getAuthHeaders,
-} from '@/lib/utils/api-client';
+import { useAuthUser } from '@/contexts/AuthContext';
 
 export default function JobNewPage() {
   const router = useRouter();
+  const user = useAuthUser();
 
   // 各項目の状態
   const [group, setGroup] = useState('');
@@ -63,23 +60,19 @@ export default function JobNewPage() {
   const [showErrors, setShowErrors] = useState(false);
 
   // 下書き保存用のキー（ユーザー固有）
-  const currentUserId = getCurrentUserId();
+  const currentUserId = user?.id;
   const DRAFT_KEY = `job_draft_data_${currentUserId || 'anonymous'}`;
 
   // 企業グループ情報を取得
   useEffect(() => {
     const fetchCompanyGroups = async () => {
       try {
-        const authHeaders = getAuthHeaders();
-        const currentUserId = getCurrentUserId();
-
-        if (!authHeaders.Authorization) {
-          console.error('No authentication token found');
-          return;
-        }
-
         const response = await fetch('/api/company/groups', {
-          headers: authHeaders,
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
         });
 
         const result = await response.json();
@@ -88,9 +81,9 @@ export default function JobNewPage() {
           setCompanyGroups(result.data);
 
           // 現在のユーザーIDが取得できる場合、そのユーザーをデフォルト選択
-          if (currentUserId) {
+          if (user?.id) {
             const currentUserGroup = result.data.find(
-              (group: any) => group.id === currentUserId
+              (group: any) => group.id === user.id
             );
             if (currentUserGroup) {
               setGroup(currentUserGroup.id);
@@ -114,7 +107,7 @@ export default function JobNewPage() {
     };
 
     fetchCompanyGroups();
-  }, []);
+  }, [user?.id]);
 
   // 複製データまたは下書きデータを復元
   useEffect(() => {
@@ -194,6 +187,8 @@ export default function JobNewPage() {
         }
 
         // 複製データがなければ下書きデータをチェック
+        // 注意：ローカル下書き機能は下書き保存APIに移行済みのため、
+        // 既存の下書きデータがあれば復元後削除
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
           const draftData = JSON.parse(savedDraft);
@@ -234,11 +229,18 @@ export default function JobNewPage() {
           if (draftData.publicationType)
             setPublicationType(draftData.publicationType);
 
-          console.log('下書きデータを復元しました');
+          console.log('下書きデータを復元しました（旧形式）');
+          // 旧形式の下書きデータを削除
+          localStorage.removeItem(DRAFT_KEY);
         }
       } catch (error) {
         console.error('データの復元に失敗しました:', error);
-        localStorage.removeItem(DRAFT_KEY);
+        // エラー時はlocalStorageとsessionStorageの両方をクリア
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch (e) {
+          console.error('localStorage清理失敗:', e);
+        }
         sessionStorage.removeItem('duplicateJobData');
       }
     };
@@ -429,21 +431,17 @@ export default function JobNewPage() {
         published_at: null,
       };
 
-      const authHeaders = getAuthHeaders();
-
       const res = await fetch('/api/company/job/new', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authHeaders,
         },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       const result = await res.json();
 
       if (result.success) {
-        // ローカルストレージの下書きデータを削除
-        clearDraft();
         alert('下書きを保存しました');
         // 求人一覧ページにリダイレクト
         router.push('/company/job');
@@ -454,15 +452,6 @@ export default function JobNewPage() {
     } catch (error) {
       console.error('Draft save Request Error:', error);
       alert('下書き保存で通信エラーが発生しました');
-    }
-  };
-
-  // 下書きデータを削除
-  const clearDraft = () => {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch (error) {
-      console.error('下書きデータの削除に失敗しました:', error);
     }
   };
 
@@ -556,23 +545,18 @@ export default function JobNewPage() {
       published_at: null,
     };
 
-    const authHeaders = getAuthHeaders();
-    const currentUserId = getCurrentUserId();
-
     try {
       const res = await fetch('/api/company/job/new', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authHeaders,
         },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       const result = await res.json();
 
       if (result.success) {
-        // 下書きデータを削除
-        clearDraft();
         // 完了ページにリダイレクト
         router.push('/company/job/complete');
       } else {

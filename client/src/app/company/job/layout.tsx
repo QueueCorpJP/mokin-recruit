@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Footer } from '@/components/ui/footer';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthInitialized, useAuthIsLoading, useAuthIsAuthenticated, useAuthUserType } from '@/stores/authStore';
 
 export default function CompanyJobLayout({
   children,
@@ -12,26 +12,36 @@ export default function CompanyJobLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { userType, isAuthenticated, isLoading, initialized } = useAuth();
+  
+  // 🔥 根本修正: 個別フック使用でオブジェクト返却を完全回避
+  const initialized = useAuthInitialized();
+  const isLoading = useAuthIsLoading();
+  const isAuthenticated = useAuthIsAuthenticated();
+  const userType = useAuthUserType();
+
+  // 認証状態を計算（メモ化で再計算を抑制）
+  const authState = useMemo(() => {
+    const isAuthReady = initialized && !isLoading;
+    const isValidAuth = isAuthenticated && userType === 'company_user';
+    
+    return {
+      isAuthReady,
+      isValidAuth,
+      shouldShowLoading: !isAuthReady,
+      shouldRedirect: isAuthReady && !isValidAuth
+    };
+  }, [initialized, isLoading, isAuthenticated, userType]);
 
   // 認証チェックと企業ユーザー制限
   useEffect(() => {
-    // 初期化完了後に認証チェック
-    if (initialized && !isLoading) {
-      if (!isAuthenticated) {
-        router.push('/company/auth/login');
-        return;
-      }
-      
-      if (userType !== 'company_user') {
-        router.push('/company/auth/login');
-        return;
-      }
+    if (authState.shouldRedirect) {
+      console.log('🔍 CompanyJobLayout - Redirecting to login');
+      router.push('/company/auth/login');
     }
-  }, [initialized, isLoading, isAuthenticated, userType, router]);
+  }, [authState.shouldRedirect, router]);
 
-  // 初期化中またはローディング中
-  if (!initialized || isLoading) {
+  // ローディング表示
+  if (authState.shouldShowLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-gray-600'>読み込み中...</div>
@@ -39,8 +49,8 @@ export default function CompanyJobLayout({
     );
   }
 
-  // 未認証またはユーザータイプが不適切な場合（リダイレクト処理中）
-  if (!isAuthenticated || userType !== 'company_user') {
+  // リダイレクト中表示
+  if (authState.shouldRedirect) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-gray-600'>ログインページに移動しています...</div>

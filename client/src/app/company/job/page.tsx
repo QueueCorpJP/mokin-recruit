@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, MoreHorizontal } from 'lucide-react';
-import { SelectInput } from '@/components/ui/select-input';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/Pagination';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { QuestionIcon } from '@/components/svg/QuestionIcon';
-import { Pagination } from '@/components/ui/Pagination';
-import { getAuthHeaders } from '@/lib/utils/api-client';
+import { SelectInput } from '@/components/ui/select-input';
+import { useAuthIsAuthenticated, useAuthIsLoading, useAuthInitialized } from '@/stores/authStore';
 
 // 求人ステータスの型定義
 type JobStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED' | 'CLOSED';
@@ -51,10 +51,14 @@ const statusColors: Record<JobStatus, string> = {
 
 export default function CompanyJobsPage() {
   const router = useRouter();
+  // 🔥 根本修正: 個別フック使用でオブジェクト返却を完全回避
+  const isAuthenticated = useAuthIsAuthenticated();
+  const authLoading = useAuthIsLoading();
+  const initialized = useAuthInitialized();
 
   // 状態管理
   const [jobs, setJobs] = useState<JobPosting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // 初期値をfalseに変更
   const [selectedStatus, setSelectedStatus] = useState('すべて');
   const [selectedGroup, setSelectedGroup] = useState('すべて');
   const [selectedScope, setSelectedScope] = useState('すべて');
@@ -81,18 +85,19 @@ export default function CompanyJobsPage() {
   ];
 
   // グループデータを取得
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
-      const authHeaders = getAuthHeaders();
-
-      if (!authHeaders.Authorization) {
-        console.error('認証トークンが見つかりません');
-        return;
-      }
-
       const response = await fetch('/api/company/groups', {
-        headers: authHeaders,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
@@ -100,24 +105,19 @@ export default function CompanyJobsPage() {
         setGroups(result.data || []);
       } else {
         console.error('グループ情報の取得に失敗しました:', result.error);
+        setGroups([]);
       }
     } catch (error) {
       console.error('Error fetching groups:', error);
+      setGroups([]);
     }
-  };
+  }, []);
 
   // 求人データを取得
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const authHeaders = getAuthHeaders();
-
-      if (!authHeaders.Authorization) {
-        setError('認証トークンが見つかりません');
-        return;
-      }
 
       const params = new URLSearchParams();
       if (selectedStatus !== 'すべて') params.append('status', selectedStatus);
@@ -126,8 +126,16 @@ export default function CompanyJobsPage() {
       if (searchKeyword.trim()) params.append('search', searchKeyword.trim());
 
       const response = await fetch(`/api/company/job?${params.toString()}`, {
-        headers: authHeaders,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
 
@@ -144,18 +152,22 @@ export default function CompanyJobsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedStatus, selectedGroup, selectedScope, searchKeyword]);
 
-  // 初回ロード
+  // 認証完了後の初回データ取得
   useEffect(() => {
-    fetchGroups();
-    fetchJobs();
-  }, []);
+    if (initialized && !authLoading && isAuthenticated) {
+      fetchGroups();
+      fetchJobs();
+    }
+  }, [initialized, authLoading, isAuthenticated, fetchGroups, fetchJobs]);
 
-  // フィルター変更時にリロード
+  // フィルター変更時のデータ再取得
   useEffect(() => {
-    fetchJobs();
-  }, [selectedStatus, selectedGroup, selectedScope]);
+    if (initialized && !authLoading && isAuthenticated) {
+      fetchJobs();
+    }
+  }, [selectedStatus, selectedGroup, selectedScope, initialized, authLoading, isAuthenticated, fetchJobs]);
 
   // 検索実行
   const handleSearch = () => {
@@ -180,11 +192,13 @@ export default function CompanyJobsPage() {
   // 求人複製
   const handleDuplicateJob = async (jobId: string) => {
     try {
-      const authHeaders = getAuthHeaders();
-
       // 複製元の求人データを取得
       const response = await fetch(`/api/company/job/edit?id=${jobId}`, {
-        headers: authHeaders,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
       
       const result = await response.json();
@@ -204,7 +218,7 @@ export default function CompanyJobsPage() {
           status: 'DRAFT'
         };
         
-        // sessionStorageに複製データを保存
+        // sessionStorageに複製データを保存（一時的な用途のため継続使用）
         sessionStorage.setItem('duplicateJobData', JSON.stringify(duplicateData));
         
         // 新規作成画面に遷移
@@ -222,15 +236,13 @@ export default function CompanyJobsPage() {
   // 求人の停止（削除）
   const handleDeleteJob = async (jobId: string) => {
     try {
-      const authHeaders = getAuthHeaders();
-
       // 求人のステータスをCLOSEDに変更
       const response = await fetch('/api/company/job/edit', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...authHeaders,
         },
+        credentials: 'include',
         body: JSON.stringify({
           job_posting_id: jobId,
           status: 'CLOSED'
@@ -278,6 +290,9 @@ export default function CompanyJobsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [popupJobId]);
+
+  // レイアウトで認証チェック済みのため、ここでは不要
+  // 早期リターンを削除してパフォーマンスを向上
 
   return (
     <div className='w-full flex flex-col items-center justify-center'>
@@ -499,7 +514,7 @@ export default function CompanyJobsPage() {
               )}
 
               {/* ローディング */}
-              {loading && (
+              {(authLoading || loading) && (
                 <div className='px-6 py-8 text-center'>
                   <div className="text-[#666666] font-['Noto_Sans_JP']">
                     読み込み中...
@@ -508,7 +523,7 @@ export default function CompanyJobsPage() {
               )}
 
               {/* データなし */}
-              {!loading && jobs.length === 0 && !error && (
+              {!authLoading && !loading && jobs.length === 0 && !error && (
                 <div className='px-6 py-8 text-center'>
                   <div className="text-[#666666] font-['Noto_Sans_JP']">
                     求人が見つかりませんでした

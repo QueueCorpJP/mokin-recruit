@@ -244,29 +244,26 @@ export const getCompanyAccountId = (): string | null => {
 
 /**
  * 認証ヘッダーを取得（クッキーベース認証対応）
+ * 注意：現在はクッキーベース認証を使用しているため、基本的には 'credentials: include' のみで十分です
+ * この関数は後方互換性のためのフォールバック用です
  */
 export const getAuthHeaders = () => {
-  // まずクッキーからトークンを取得
-  let token = getCookieToken();
-  
-  // クッキーにない場合はlocalStorageから取得（後方互換性のため）
-  if (!token) {
-    const authInfo = getAuthInfo();
-    token = authInfo?.token || null;
-  }
-  
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
   
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  // 現在はクッキーベース認証を使用しているため、Authorizationヘッダーは通常不要
+  // credentials: 'include' をfetchオプションに設定することで認証される
   
-  // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
+  // 後方互換性のためのフォールバック：localStorageから取得
   const authInfo = getAuthInfo();
-  if (authInfo?.userInfo?.id) {
-    headers['X-User-Id'] = authInfo.userInfo.id;
+  if (authInfo?.token) {
+    headers['Authorization'] = `Bearer ${authInfo.token}`;
+    
+    // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
+    if (authInfo.userInfo?.id) {
+      headers['X-User-Id'] = authInfo.userInfo.id;
+    }
   }
   
   return headers;

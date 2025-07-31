@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import type { UserType } from '@/stores/authStore';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthIsLoading, useAuthInitialized, useAuthIsAuthenticated } from '@/contexts/AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -29,7 +29,9 @@ export function AuthGuard({
   redirectTo: _redirectTo, // 未使用パラメータ（後方互換性のため）
   showLoadingSpinner = true,
 }: AuthGuardProps) {
-  const { isLoading, initialized, isAuthenticated } = useAuth();
+  const isLoading = useAuthIsLoading();
+  const initialized = useAuthInitialized();
+  const isAuthenticated = useAuthIsAuthenticated();
   const [mounted, setMounted] = useState(false);
 
   // クライアントサイドでのマウント確認

@@ -8,7 +8,7 @@ import { InputField } from '@/components/ui/input-field';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthRefresh } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 interface LoginFormProps {
@@ -17,7 +17,7 @@ interface LoginFormProps {
 
 export function LoginForm({ userType }: LoginFormProps) {
   const router = useRouter();
-  const { refreshAuth } = useAuth();
+  const refreshAuth = useAuthRefresh();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

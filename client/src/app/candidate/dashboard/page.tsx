@@ -2,11 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthUser, useAuthIsAuthenticated, useAuthIsLoading } from '@/contexts/AuthContext';
 
 export default function CandidateDashboard() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const user = useAuthUser();
+  const isAuthenticated = useAuthIsAuthenticated();
+  const isLoading = useAuthIsLoading();
 
   useEffect(() => {
     if (!isLoading) {

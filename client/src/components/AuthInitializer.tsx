@@ -1,42 +1,30 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { authStore } from '@/stores/authStore';
 
-import { selectInitialized, useAuthStore } from '@/stores/authStore';
-
+// 🔥 根本修正: AuthInitializerの完全簡素化
 export const AuthInitializer = () => {
-  const initialized = useAuthStore(selectInitialized);
   const hasInitialized = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    // 未初期化かつ初回実行の場合のみ実行
-    if (!initialized && !hasInitialized.current) {
-      hasInitialized.current = true;
+    // CSRでのみ実行
+    if (typeof window !== 'undefined') {
+      // hydration実行
+      authStore.persist.rehydrate();
+      setHydrated(true);
       
-      // eslint-disable-next-line no-console
-      console.log('🚀 AuthInitializer: Starting auth initialization...');
-      
-      // ストアから直接関数を呼び出して依存関係の問題を回避
-      useAuthStore.getState().fetchUserSession();
-    } else if (initialized) {
-      // eslint-disable-next-line no-console
-      console.log('✅ AuthInitializer: Already initialized');
-    }
-  }, [initialized]);
-
-  // フォールバック：5秒経っても初期化されない場合は強制的に初期化済みとする
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentState = useAuthStore.getState();
-      if (!currentState.initialized) {
-        // eslint-disable-next-line no-console
-        console.log('⚠️ AuthInitializer: Forcing initialization after timeout');
-        currentState.setInitialized(true);
+      // 初期化は一度だけ（状態に依存しない）
+      if (!hasInitialized.current) {
+        hasInitialized.current = true;
+        const { fetchUserSession, initialized } = authStore.getState();
+        if (!initialized) {
+          fetchUserSession();
+        }
       }
-    }, 5000);
+    }
+  }, []); // 依存関係なし - 一度だけ実行
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  return null;
+  return null; // SSRでは何も描画しない
 };
