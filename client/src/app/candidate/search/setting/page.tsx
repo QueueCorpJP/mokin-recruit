@@ -287,6 +287,12 @@ export default function CandidateSearchPage() {
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }));
     updateDisplayJobs(allJobCards, page, pagination.limit);
+    
+    // ページ遷移後にページトップにスクロール
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   return (
@@ -543,7 +549,7 @@ export default function CandidateSearchPage() {
                           onChange={v => setSelectedAppealPoint(v)}
                           placeholder={
                             selectedAppealPoint
-                              ? `アピールポイント：${selectedAppealPoint.length > 9 ? selectedAppealPoint.slice(0, 9) + '...' : selectedAppealPoint}`
+                              ? `アピールポイント：${selectedAppealPoint.length > 19 ? selectedAppealPoint.slice(0, 19) + '...' : selectedAppealPoint}`
                               : 'アピールポイント'
                           }
                           className='w-full'
@@ -659,11 +665,37 @@ export default function CandidateSearchPage() {
           <div className='max-w-[1280px] mx-auto'>
             {/* ページネーションデザイン（矢印アイコン8px） */}
             <div className='flex flex-row items-center justify-end gap-2 w-full'>
-              <PaginationArrow direction='left' className='w-[8px] h-[8px]' />
-              <span className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232]'>
+              <button
+                className={`p-1 ${pagination.page === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
+                onClick={() => pagination.page > 1 && handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                aria-label="前のページ"
+              >
+                <PaginationArrow direction='left' className='w-[8px] h-[8px]' />
+              </button>
+              <span className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232] cursor-pointer hover:text-[#0F9058] transition-colors'
+                    onClick={() => {
+                      const targetPage = prompt(`ページ番号を入力してください (1-${pagination.totalPages}):`, pagination.page.toString());
+                      if (targetPage) {
+                        const pageNum = parseInt(targetPage, 10);
+                        if (pageNum >= 1 && pageNum <= pagination.totalPages) {
+                          handlePageChange(pageNum);
+                        } else {
+                          alert(`有効なページ番号を入力してください (1-${pagination.totalPages})`);
+                        }
+                      }
+                    }}
+                    title="クリックしてページ移動">
                 {loading ? 'Loading...' : `${((pagination.page - 1) * pagination.limit) + 1}〜${Math.min(pagination.page * pagination.limit, pagination.total)}件 / ${pagination.total}件`}
               </span>
-              <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
+              <button
+                className={`p-1 ${pagination.page === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
+                onClick={() => pagination.page < pagination.totalPages && handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.totalPages}
+                aria-label="次のページ"
+              >
+                <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
+              </button>
             </div>
             {/* 求人カード表示 */}
             <div className='grid grid-cols-1 gap-8 mt-10'>
@@ -690,6 +722,8 @@ export default function CandidateSearchPage() {
                     starred={card.starred}
                     onStarClick={() => handleStarClick(idx)}
                     isFavoriteLoading={favoriteLoading[card.id]}
+                    jobId={card.id}
+                    onClick={() => router.push(`/candidate/search/setting/${card.id}`)}
                   />
                 ))
               )}

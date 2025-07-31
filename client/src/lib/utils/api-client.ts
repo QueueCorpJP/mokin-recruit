@@ -18,7 +18,7 @@ class ApiClient {
 
   constructor(options: ApiClientOptions = {}) {
     this.baseURL = options.baseURL || '/api';
-    this.timeout = options.timeout || 10000; // 10秒
+    this.timeout = options.timeout || 5000; // 5秒に短縮（お気に入り操作高速化）
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -365,6 +365,35 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResp
   }
 }
 
+// 求人詳細取得API関数
+interface JobDetailResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+export async function getJobDetail(jobId: string): Promise<JobDetailResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch(`/api/candidate/job/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch job detail:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
 // お気に入り機能API関数
 interface FavoriteResponse {
   success: boolean;
@@ -460,6 +489,7 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
         'Content-Type': 'application/json',
         ...authHeaders,
       },
+      credentials: 'include', // クッキーベース認証の高速化
       body: JSON.stringify({
         job_posting_id: jobPostingId
       }),
@@ -518,6 +548,7 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
         'Content-Type': 'application/json',
         ...authHeaders,
       },
+      credentials: 'include', // クッキーベース認証の高速化
     });
 
     const result = await response.json();

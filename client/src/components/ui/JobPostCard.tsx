@@ -13,7 +13,8 @@ interface JobPostCardProps {
   onStarClick?: () => void;
   apell: string[];
   isFavoriteLoading?: boolean;
-
+  jobId?: string;
+  onClick?: () => void;
 }
 
 export function JobPostCard({
@@ -29,7 +30,7 @@ export function JobPostCard({
   apell,
   onStarClick,
   isFavoriteLoading = false,
-
+  onClick,
 }: JobPostCardProps) {
   return (
     <div
@@ -37,7 +38,8 @@ export function JobPostCard({
         width: '100%',
         boxShadow: '0px 0px 20px rgba(0,0,0,0.05)',
       }}
-      className={`bg-white h-auto md:h-[366px] ${className} rounded-[10px] overflow-hidden`}
+      className={`bg-white h-auto md:h-[366px] ${className} rounded-[10px] overflow-hidden transition-all duration-200 hover:bg-[#E9E9E9] hover:shadow-[0_0_20px_0_rgba(0,0,0,0.05)] cursor-pointer`}
+      onClick={onClick}
     >
       <div className='flex flex-col md:flex-row justify-center items-center w-full h-full gap-8 p-6'>
         <img
@@ -55,7 +57,10 @@ export function JobPostCard({
           <button
             type='button'
             className={`absolute top-0 right-0 z-10 p-2 ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''}`}
-            onClick={onStarClick}
+            onClick={(e) => {
+              e.stopPropagation(); // カードクリックとの競合を防ぐ
+              onStarClick?.();
+            }}
             aria-label='お気に入り'
             disabled={isFavoriteLoading}
           >
@@ -156,12 +161,12 @@ export function JobPostCard({
           <div className='flex flex-wrap gap-x-2 mr-2 gap-y-2 mt-4'>
             {apell.map((item, idx) => (
               <span key={idx} className='text-[16px] font-medium mr-2' style={{ color: '#999', lineHeight: '2' }}>
-               {item}
+               #{item}
               </span>
             ))}
 
           </div>
-          <div className='pt-4 border-t-0 md:border-t-2 md:border-t-[#EFEFEF] w-full bg-white static md:absolute md:left-0 md:bottom-0'>
+          <div className='pt-4 border-t-0 md:border-t-2 md:border-t-[#EFEFEF] w-full static md:absolute md:left-0 md:bottom-0'>
             <div className='flex flex-row items-center'>
               <div
                 style={{
