@@ -1,5 +1,5 @@
 import { FVWrapper } from '@/components/ui/FVWrapper';
-import { Footer } from '@/components/ui/footer';
+
 import { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { ColumnCard } from '@/components/ui/ColumnCard';
@@ -63,7 +63,7 @@ export default function CandidateLandingPage() {
         <CTASection />
         <ColumnSection />
         {/* Footer */}
-        <Footer />
+  
       </div>
 </div>
   );

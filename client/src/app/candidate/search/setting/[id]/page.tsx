@@ -1,14 +1,11 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { getJobDetail } from '@/lib/utils/api-client';
-
-const Footer = dynamic(() => import('@/components/ui/footer').then(mod => ({ default: mod.Footer })), {
-  ssr: false
-});
+import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
+import { Footer } from '@/components/ui/footer';
 
 // ダミーデータ型定義
 interface JobDetailData {
@@ -169,7 +166,9 @@ export default function CandidateSearchSettingPage() {
   }
 
   return (
-    <div className="bg-[#f9f9f9] min-h-screen pb-20 pt-10 px-20">
+    <>
+      <AuthAwareNavigation />
+      <div className="bg-[#f9f9f9] min-h-screen pb-20 pt-10 px-20">
       <div className="max-w-[1280px] mx-auto">
         {/* ヘッダー部分 */}
         <div className="flex flex-col gap-6 items-start justify-start w-full mb-10">
@@ -810,7 +809,7 @@ export default function CandidateSearchSettingPage() {
           </div>
         </div>
       </div>
-      <Footer />
+
     </div>
   );        
 }

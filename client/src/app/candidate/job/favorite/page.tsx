@@ -4,7 +4,7 @@ import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
-import { Footer } from '@/components/ui/footer';
+
 import Link from 'next/link';
 import { useFavoritesQuery, useRemoveFavoriteMutation } from '@/hooks/useFavoriteApi';
 import { getUserFriendlyMessage } from '@/lib/errors/errorHandler';
@@ -217,7 +217,7 @@ export default function CandidateFavoritePage() {
 
           </div>
         </section>
-        <Footer />
+
       </main>
     </>
   );

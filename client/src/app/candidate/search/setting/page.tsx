@@ -19,7 +19,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { Tag } from '@/components/ui/Tag';
 import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
-import { Footer } from '@/components/ui/footer';
+
 import { useRouter } from 'next/navigation';
 
 export default function CandidateSearchPage() {
@@ -738,7 +738,7 @@ export default function CandidateSearchPage() {
             />
           </div>
         </section>
-        <Footer />
+
       </main>
     </>
   );

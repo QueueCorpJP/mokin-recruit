@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Footer } from '@/components/ui/footer';
+
 import { useAuthInitialized, useAuthIsLoading, useAuthIsAuthenticated, useAuthUserType } from '@/stores/authStore';
 
 export default function CompanyJobLayout({
@@ -61,7 +61,6 @@ export default function CompanyJobLayout({
   return (
     <div className='min-h-screen flex flex-col'>
       <main className='flex-1'>{children}</main>
-      <Footer />
     </div>
   );
 }
