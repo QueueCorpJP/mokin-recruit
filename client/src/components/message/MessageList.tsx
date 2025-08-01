@@ -85,29 +85,32 @@ export function MessageList({
   });
 
   return (
-    <div className={cn('flex flex-col w-full', className)}>
+    <div className={cn('flex flex-col w-full h-full', className)}>
       {/* 右ボーダー */}
-      <div className="relative">
+      <div className="relative flex flex-col h-full">
         <div className="absolute right-[-0.5px] top-0 bottom-0 border-r border-[#efefef] pointer-events-none" />
         
         {/* 検索フィルター */}
-        <MessageSearchFilter
-          statusValue={statusFilter}
-          groupValue={groupFilter}
-          keywordValue={keyword}
-          onStatusChange={setStatusFilter}
-          onGroupChange={setGroupFilter}
-          onKeywordChange={setKeyword}
-          onSearch={handleSearch}
-        />
+        <div className="flex-shrink-0">
+          <MessageSearchFilter
+            statusValue={statusFilter}
+            groupValue={groupFilter}
+            keywordValue={keyword}
+            onStatusChange={setStatusFilter}
+            onGroupChange={setGroupFilter}
+            onKeywordChange={setKeyword}
+            onSearch={handleSearch}
+          />
+        </div>
 
         {/* メッセージリスト */}
-        <div className="flex flex-col">
-          {filteredMessages.map((message) => (
+        <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
+          {filteredMessages.map((message, index) => (
             <MessageItem
               key={message.id}
               {...message}
               onClick={onMessageClick}
+              className={index === filteredMessages.length - 1 ? 'mb-6' : ''}
             />
           ))}
         </div>

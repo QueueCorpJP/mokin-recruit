@@ -6,7 +6,7 @@ import Open from '../svg/open';
 import { useState } from 'react';
 
 interface FooterProps {
-  variant?: 'default' | 'candidate' | 'company';
+  variant?: 'default' | 'candidate' | 'company' | 'login-before';
   isLoggedIn?: boolean;
   userInfo?: {
     companyName?: string;
@@ -50,6 +50,27 @@ export function Footer({
           items: isLoggedIn 
             ? ['求人管理', 'メッセージ', '候補者検索', '企業設定']
             : ['サービス紹介', '企業向け機能'],
+        },
+        support: {
+          title: 'お問い合わせ',
+          items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
+        },
+        company: {
+          title: '会社情報・規約',
+          items: [
+            '運営会社',
+            '利用規約',
+            'プライバシーポリシー',
+            '法令に基づく表記',
+          ],
+        },
+      };
+    } else if (variant === 'login-before') {
+      // login-before variant (for auth pages)
+      return {
+        service: {
+          title: 'サービス',
+          items: ['求人を探す', 'サービス紹介'],
         },
         support: {
           title: 'お問い合わせ',

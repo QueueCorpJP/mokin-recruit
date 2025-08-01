@@ -10,7 +10,7 @@ export function MessageGroupTag({ children, className }: MessageGroupTagProps) {
   return (
     <div
       className={cn(
-        'bg-gradient-to-r from-[#65bdac] to-[#86c36a]',
+        'bg-gradient-to-r from-[#86c36a] to-[#65bdac]',
         'text-white font-["Noto_Sans_JP"] font-bold text-[14px] tracking-[1.4px]',
         'px-5 py-0 h-8 rounded-lg',
         'flex items-center justify-center',
