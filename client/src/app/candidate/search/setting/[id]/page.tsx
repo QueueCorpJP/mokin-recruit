@@ -1056,7 +1056,7 @@ export default function CandidateSearchSettingPage() {
                   disabled={favoriteToggleMutation.isPending}
                   className={`${
                     isFavorite 
-                      ? 'bg-[#FF6B6B] hover:bg-[#FF5252]' 
+                      ? 'bg-[#FFDA5F] hover:bg-[#FFDA5F] text-[#323232]' 
                       : 'bg-[#dcdcdc] hover:bg-[#c0c0c0]'
                   } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-colors min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden ${
                     favoriteToggleMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
@@ -1064,14 +1064,14 @@ export default function CandidateSearchSettingPage() {
                 >
                   <Star
                     size={12}
-                    className={`${isFavorite ? 'fill-white text-white' : 'text-white'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
+                    className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-white'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
                   />
-                  <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] text-white whitespace-nowrap">
+                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-white'} whitespace-nowrap`}>
                     {favoriteToggleMutation.isPending 
                       ? '処理中...' 
                       : isFavorite 
                         ? 'お気に入り解除' 
-                        : 'お気に入りに追加'
+                        : 'お気に入りに登録'
                     }
                   </span>
                 </button>
