@@ -1083,6 +1083,7 @@ export default function CandidateSearchSettingPage() {
                   <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] text-white whitespace-nowrap">
                     応募する
                   </span>
+                
                 </button>
               </div>
             </div>
