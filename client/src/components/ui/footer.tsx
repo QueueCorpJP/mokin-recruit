@@ -6,36 +6,117 @@ import Open from '../svg/open';
 import { useState } from 'react';
 
 interface FooterProps {
-  variant?: 'default' | 'login-before';
+  variant?: 'default' | 'candidate' | 'company' | 'login-before';
+  isLoggedIn?: boolean;
+  userInfo?: {
+    companyName?: string;
+    userName?: string;
+  };
 }
 
-export function Footer({ variant = 'default' }: FooterProps) {
-  // メニューデータ
-  const menuData = {
-    service: {
-      title: 'サービス',
-      items: [
-        'メッセージ',
-        'メディア',
-        '求人を探す',
-        'お気に入り求人',
-        'お知らせ一覧',
-      ],
-    },
-    support: {
-      title: 'お問い合わせ',
-      items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
-    },
-    company: {
-      title: '会社情報・規約',
-      items: [
-        '運営会社',
-        '利用規約',
-        'プライバシーポリシー',
-        '法令に基づく表記',
-      ],
-    },
+export function Footer({ 
+  variant = 'default',
+  isLoggedIn = false,
+  userInfo
+}: FooterProps) {
+  // variantと認証状態に応じたメニューデータ
+  const getMenuData = () => {
+    if (variant === 'candidate') {
+      return {
+        service: {
+          title: 'サービス',
+          items: isLoggedIn 
+            ? ['メッセージ', 'メディア', '求人を探す', 'お気に入り求人', 'お知らせ一覧']
+            : ['求人を探す', 'サービス紹介'],
+        },
+        support: {
+          title: 'お問い合わせ',
+          items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
+        },
+        company: {
+          title: '会社情報・規約',
+          items: [
+            '運営会社',
+            '利用規約',
+            'プライバシーポリシー',
+            '法令に基づく表記',
+          ],
+        },
+      };
+    } else if (variant === 'company') {
+      return {
+        service: {
+          title: 'サービス',
+          items: isLoggedIn 
+            ? ['求人管理', 'メッセージ', '候補者検索', '企業設定']
+            : ['サービス紹介', '企業向け機能'],
+        },
+        support: {
+          title: 'お問い合わせ',
+          items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
+        },
+        company: {
+          title: '会社情報・規約',
+          items: [
+            '運営会社',
+            '利用規約',
+            'プライバシーポリシー',
+            '法令に基づく表記',
+          ],
+        },
+      };
+    } else if (variant === 'login-before') {
+      // login-before variant (for auth pages)
+      return {
+        service: {
+          title: 'サービス',
+          items: ['求人を探す', 'サービス紹介'],
+        },
+        support: {
+          title: 'お問い合わせ',
+          items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
+        },
+        company: {
+          title: '会社情報・規約',
+          items: [
+            '運営会社',
+            '利用規約',
+            'プライバシーポリシー',
+            '法令に基づく表記',
+          ],
+        },
+      };
+    } else {
+      // default variant
+      return {
+        service: {
+          title: 'サービス',
+          items: [
+            'メッセージ',
+            'メディア',
+            '求人を探す',
+            'お気に入り求人',
+            'お知らせ一覧',
+          ],
+        },
+        support: {
+          title: 'お問い合わせ',
+          items: ['問い合わせ', 'よくある質問', '不具合・要望フォーム'],
+        },
+        company: {
+          title: '会社情報・規約',
+          items: [
+            '運営会社',
+            '利用規約',
+            'プライバシーポリシー',
+            '法令に基づく表記',
+          ],
+        },
+      };
+    }
   };
+
+  const menuData = getMenuData();
 
   const [serviceOpen, setServiceOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
@@ -71,50 +152,73 @@ export function Footer({ variant = 'default' }: FooterProps) {
               </p>
             </div>
 
-            {/* 会員登録/ログインリンク - デスクトップ用 */}
+            {/* 会員登録/ログインリンク または ログイン済み情報 - デスクトップ用 */}
             <div className='hidden md:flex items-center gap-2'>
-              <div className='w-[104px] h-[32px] flex items-center justify-center'>
-                <Link
-                  href='/auth/register'
-                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  会員登録
-                </Link>
-              </div>
-              <span
-                className='text-white font-bold'
-                style={{
-                  fontFamily: 'Noto Sans JP, sans-serif',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  lineHeight: '200%',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                /
-              </span>
-              <div className='w-[104px] h-[32px] flex items-center justify-center'>
-                <Link
-                  href='/auth/login'
-                  className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  ログイン
-                </Link>
-              </div>
+              {!isLoggedIn ? (
+                // 未認証時: 会員登録/ログインリンク
+                <>
+                  <div className='w-[104px] h-[32px] flex items-center justify-center'>
+                    <Link
+                      href={variant === 'company' ? '/company/auth/register' : '/candidate/auth/register'}
+                      className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+                      style={{
+                        fontFamily: 'Noto Sans JP, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        lineHeight: '200%',
+                        letterSpacing: '0.1em',
+                      }}
+                    >
+                      会員登録
+                    </Link>
+                  </div>
+                  <span
+                    className='text-white font-bold'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      lineHeight: '200%',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    /
+                  </span>
+                  <div className='w-[104px] h-[32px] flex items-center justify-center'>
+                    <Link
+                      href={variant === 'company' ? '/company/auth/login' : '/candidate/auth/login'}
+                      className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
+                      style={{
+                        fontFamily: 'Noto Sans JP, sans-serif',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        lineHeight: '200%',
+                        letterSpacing: '0.1em',
+                      }}
+                    >
+                      ログイン
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                // 認証済み時: ユーザー情報表示
+                <div className='flex items-center gap-2'>
+                  <span
+                    className='text-white font-bold'
+                    style={{
+                      fontFamily: 'Noto Sans JP, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      lineHeight: '200%',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {userInfo?.userName && `${userInfo.userName}さん`}
+                    {userInfo?.companyName && `${userInfo.companyName}様`}
+                    {!userInfo?.userName && !userInfo?.companyName && 'ログイン中'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

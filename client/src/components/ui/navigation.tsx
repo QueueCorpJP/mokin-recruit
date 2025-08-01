@@ -8,7 +8,7 @@ import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useAuthActions } from '@/contexts/AuthContext';
+import { useAuthLogout } from '@/contexts/AuthContext';
 
 // Custom Icon Components
 
@@ -171,7 +171,7 @@ export function Navigation({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuthActions();
+  const logout = useAuthLogout();
 
   // デバッグ用ログ
   useEffect(() => {

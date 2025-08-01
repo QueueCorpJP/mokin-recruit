@@ -18,7 +18,7 @@ class ApiClient {
 
   constructor(options: ApiClientOptions = {}) {
     this.baseURL = options.baseURL || '/api';
-    this.timeout = options.timeout || 10000; // 10秒
+    this.timeout = options.timeout || 5000; // 5秒に短縮（お気に入り操作高速化）
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -244,29 +244,26 @@ export const getCompanyAccountId = (): string | null => {
 
 /**
  * 認証ヘッダーを取得（クッキーベース認証対応）
+ * 注意：現在はクッキーベース認証を使用しているため、基本的には 'credentials: include' のみで十分です
+ * この関数は後方互換性のためのフォールバック用です
  */
 export const getAuthHeaders = () => {
-  // まずクッキーからトークンを取得
-  let token = getCookieToken();
-  
-  // クッキーにない場合はlocalStorageから取得（後方互換性のため）
-  if (!token) {
-    const authInfo = getAuthInfo();
-    token = authInfo?.token || null;
-  }
-  
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
   
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  // 現在はクッキーベース認証を使用しているため、Authorizationヘッダーは通常不要
+  // credentials: 'include' をfetchオプションに設定することで認証される
   
-  // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
+  // 後方互換性のためのフォールバック：localStorageから取得
   const authInfo = getAuthInfo();
-  if (authInfo?.userInfo?.id) {
-    headers['X-User-Id'] = authInfo.userInfo.id;
+  if (authInfo?.token) {
+    headers['Authorization'] = `Bearer ${authInfo.token}`;
+    
+    // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
+    if (authInfo.userInfo?.id) {
+      headers['X-User-Id'] = authInfo.userInfo.id;
+    }
   }
   
   return headers;
@@ -361,6 +358,35 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResp
     return await response.json();
   } catch (error) {
     console.error('Failed to search jobs:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+// 求人詳細取得API関数
+interface JobDetailResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+export async function getJobDetail(jobId: string): Promise<JobDetailResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch(`/api/candidate/job/${jobId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch job detail:', error);
     return {
       success: false,
       error: 'ネットワークエラーが発生しました'
@@ -463,6 +489,7 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
         'Content-Type': 'application/json',
         ...authHeaders,
       },
+      credentials: 'include', // クッキーベース認証の高速化
       body: JSON.stringify({
         job_posting_id: jobPostingId
       }),
@@ -521,6 +548,7 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
         'Content-Type': 'application/json',
         ...authHeaders,
       },
+      credentials: 'include', // クッキーベース認証の高速化
     });
 
     const result = await response.json();
@@ -577,3 +605,70 @@ export { newApiClient as modernApiClient };
 
 // 型定義のエクスポート
 export type { ApiResponse, ApiClientOptions };
+
+// 応募関連のAPI関数
+interface ApplicationRequest {
+  job_posting_id: string;
+  resume_url?: string;
+  career_history_url?: string;
+  application_message?: string;
+}
+
+interface ApplicationResponse {
+  success: boolean;
+  data?: {
+    application_id: string;
+    job_title: string;
+    status: string;
+    applied_at: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+export async function submitApplication(applicationData: ApplicationRequest): Promise<ApplicationResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch('/api/candidate/application', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      credentials: 'include',
+      body: JSON.stringify(applicationData)
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to submit application:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+export async function getApplicationHistory(): Promise<ApplicationResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch('/api/candidate/application', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      credentials: 'include'
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch application history:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}

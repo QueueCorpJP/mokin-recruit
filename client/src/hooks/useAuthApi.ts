@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../stores/authStore';
+import { authStore } from '../stores/authStore';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
 import type { UserType } from '../stores/authStore';
@@ -71,7 +71,7 @@ export const useSessionQuery = (enabled = true) => {
 // ログイン
 export const useLoginMutation = () => {
   const queryClient = useQueryClient();
-  const refreshAuth = useAuthStore((state) => state.refreshAuth);
+  const refreshAuth = authStore.getState().refreshAuth;
 
   return useMutation({
     mutationFn: async (data: LoginData) => {
@@ -92,7 +92,7 @@ export const useLoginMutation = () => {
 // ログアウト
 export const useLogoutMutation = () => {
   const queryClient = useQueryClient();
-  const reset = useAuthStore((state) => state.reset);
+  const reset = authStore.getState().reset;
 
   return useMutation({
     mutationFn: async () => {
@@ -172,7 +172,7 @@ export const useNewPasswordMutation = () => {
 // 認証状態の更新（手動でセッションを再取得）
 export const useRefreshAuth = () => {
   const queryClient = useQueryClient();
-  const setLoading = useAuthStore((state) => state.setLoading);
+  const setLoading = authStore.getState().setLoading;
 
   return async () => {
     setLoading(true);

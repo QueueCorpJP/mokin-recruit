@@ -91,7 +91,7 @@ export function SelectInput({
         ? '年収：'
         : 'アピールポイント：';
       const base = `${prefix}${selectedOption.label}`;
-      displayText = base.length > 10 ? base.slice(0, 10) + '...' : base;
+      displayText = base.length > 19 ? base.slice(0, 19) + '...' : base;
     } else {
       displayText = placeholder;
     }
@@ -237,7 +237,7 @@ export function SelectInput({
       >
         <span
           className={cn(
-            'truncate w-full block text-ellipsis overflow-hidden whitespace-nowrap',
+            'w-full block text-ellipsis overflow-hidden whitespace-nowrap',
             displayText === 'すべて' && 'text-[14px]'
           )}
         >
@@ -246,7 +246,7 @@ export function SelectInput({
 
         {/* カスタムドロップダウンアイコン */}
         <DropdownIcon
-          className='ml-2'
+          className='ml-1'
           isOpen={isOpen}
           error={error}
           disabled={disabled}

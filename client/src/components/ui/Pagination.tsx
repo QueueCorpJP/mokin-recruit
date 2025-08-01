@@ -80,7 +80,16 @@ export function Pagination({
             ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-white'
             : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-white'
           }`}
-        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        onClick={() => {
+          onPageChange(Math.max(1, currentPage - 1));
+          // ページ遷移後にページトップにスクロール
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+          }, 100);
+        }}
         disabled={currentPage === 1}
         aria-label="前のページ"
       >
@@ -101,7 +110,16 @@ export function Pagination({
                 : 'border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F3FBF7]'
               }
               ${isHiddenOnMobile ? 'hidden md:flex' : 'flex'}`}
-            onClick={() => onPageChange(pageNum)}
+            onClick={() => {
+              onPageChange(pageNum);
+              // ページ遷移後にページトップにスクロール
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              }, 100);
+            }}
           >
             {pageNum}
           </button>
@@ -115,7 +133,16 @@ export function Pagination({
             ? 'border-[#DCDCDC] text-[#DCDCDC] cursor-not-allowed bg-white'
             : 'border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] bg-white'
           }`}
-        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        onClick={() => {
+          onPageChange(Math.min(totalPages, currentPage + 1));
+          // ページ遷移後にページトップにスクロール
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+          }, 100);
+        }}
         disabled={currentPage === totalPages}
         aria-label="次のページ"
       >

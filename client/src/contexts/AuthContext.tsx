@@ -1,12 +1,13 @@
-// 後方互換性のため、authStoreから直接エクスポート
+// 🔥 根本修正: useAuth削除、個別フックのみエクスポート
 export { 
-  useAuth, 
   useAuthUser, 
   useAuthUserType, 
   useAuthIsAuthenticated, 
   useAuthIsLoading, 
   useAuthSession, 
   useAuthInitialized,
-  useAuthActions,
+  useAuthRefresh,
+  useAuthLogout,
+  useAuthFetchSession,
   type UserType 
 } from '../stores/authStore'; 

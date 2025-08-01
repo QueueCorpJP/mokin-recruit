@@ -1,4 +1,4 @@
-import { useAuthStore } from '../../stores/authStore';
+// import { authStore } from '../../stores/authStore'; // 現在未使用
 import { 
   createErrorFromResponse, 
   createErrorFromException

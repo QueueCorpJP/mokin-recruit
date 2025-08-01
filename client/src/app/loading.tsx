@@ -12,7 +12,7 @@ export default function Loading() {
           <div className='w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin' />
         </div>
 
-        {/* テキスト */}
+        {/* テキト */}
         <div className='text-center'>
           <p className='text-white text-xl font-bold mb-2'>読み込み中...</p>
           <p className='text-white/80 text-sm'>しばらくお待ちください</p>

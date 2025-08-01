@@ -9,6 +9,7 @@ import '@/lib/server/container/bindings';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthInitializer } from '../components/AuthInitializer';
 import { AuthAwareNavigation } from '../components/layout/AuthAwareNavigation';
+import { AuthAwareFooter } from '../components/layout/AuthAwareFooter';
 
 // フォント最適化
 const inter = Inter({
@@ -86,6 +87,7 @@ export default function RootLayout({
           <AuthInitializer />
           <AuthAwareNavigation />
           {children}
+          <AuthAwareFooter />
         </QueryProvider>
       </body>
     </html>

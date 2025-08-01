@@ -5,10 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { Navigation } from '@/components/ui/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthUser, useAuthUserType, useAuthIsAuthenticated } from '@/contexts/AuthContext';
 
 export function AuthAwareNavigation() {
-  const { user, userType, isAuthenticated } = useAuth();
+  // 🔥 根本修正: 個別フック使用でオブジェクト返却を完全回避
+  const user = useAuthUser();
+  const userType = useAuthUserType();
+  const isAuthenticated = useAuthIsAuthenticated();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -28,30 +31,12 @@ export function AuthAwareNavigation() {
     return 'default';
   }, [pathname]);
 
-  // デバッグ情報を追加
-  useEffect(() => {
-    if (mounted) {
-      // eslint-disable-next-line no-console
-      console.log('🔍 AuthAwareNavigation - Auth State:', {
-        isAuthenticated,
-        userType,
-        userId: user?.id,
-        userName: user?.name,
-        pathname,
-        variant,
-        timestamp: new Date().toISOString()
-      });
-      
-      // ヘッダーの表示内容を明確に記録
-      if (isAuthenticated) {
-        // eslint-disable-next-line no-console
-        console.log('✅ Header will show: AUTHENTICATED navigation');
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('❌ Header will show: UNAUTHENTICATED navigation');
-      }
-    }
-  }, [mounted, isAuthenticated, userType, user, pathname, variant]);
+  // 🔥 FIX: デバッグログを削除 - useEffectでの副作用が無限ループの原因
+  // useEffect(() => {
+  //   if (mounted) {
+  //     console.log('🔍 AuthAwareNavigation - Auth State:', {...});
+  //   }
+  // }, [mounted, isAuthenticated, userType, user?.id, pathname, variant]);
 
   // ユーザー情報を整形（メモ化）
   const userInfo = useMemo(() => {
@@ -59,7 +44,7 @@ export function AuthAwareNavigation() {
       companyName: userType === 'company_user' ? user.name : undefined,
       userName: userType === 'candidate' ? user.name : undefined,
     } : undefined;
-  }, [user, userType]);
+  }, [user?.id, user?.name, userType]);
 
   // サーバーサイドレンダリング中はプレースホルダーを表示
   if (!mounted) {

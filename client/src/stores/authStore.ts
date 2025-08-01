@@ -1,9 +1,7 @@
-import {
-  createJSONStorage,
-  persist,
-  subscribeWithSelector,
-} from 'zustand/middleware';
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { subscribeWithSelector, persist, createJSONStorage } from 'zustand/middleware';
+import { useStore } from 'zustand';
+import { useMemo } from 'react';
 
 export type UserType = 'candidate' | 'company_user' | 'admin';
 
@@ -64,7 +62,8 @@ const initialState = {
   initialized: false,
 };
 
-export const useAuthStore = create<AuthState>()(
+// 🔥 Vanilla Store: SSR/CSR両対応の共有インスタンス
+export const authStore = createStore<AuthState>()(
   subscribeWithSelector(
     persist(
       (set, get) => ({
@@ -72,51 +71,37 @@ export const useAuthStore = create<AuthState>()(
       
       // Actions
       setUser: (_user) => {
-        // eslint-disable-next-line no-console
-        console.log('🔄 setUser called:', { 
-          user: _user ? { id: _user.id, email: _user.email, userType: _user.userType } : null,
-          isAuthenticated: !!_user 
-        });
-        
         set({ 
           user: _user, 
           userType: _user?.userType || null,
           isAuthenticated: !!_user 
         });
-        
-        // キャッシュを無効化
-        cachedAuthData = null;
-        cachedAuthActions = null;
-        cachedFullAuth = null;
       },
       
-      setLoading: (isLoading) => set({ isLoading }),
+      setLoading: (isLoading) => {
+        set({ isLoading });
+      },
       
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       
       setSession: (session) => set({ session }),
       
-      setInitialized: (initialized) => set({ initialized }),
+      setInitialized: (initialized) => {
+        set({ initialized });
+      },
       
       // API Actions
       fetchUserSession: async () => {
         const currentTime = Date.now();
         const { lastFetchTime, initialized, isAuthenticated, isLoading } = get();
         
-        // eslint-disable-next-line no-console
-        console.log('🔍 fetchUserSession called:', { initialized, isAuthenticated, isLoading, lastFetchTime, currentTime });
-        
         // 既にローディング中の場合はスキップ（重複実行防止）
         if (isLoading) {
-          // eslint-disable-next-line no-console
-          console.log('🔍 fetchUserSession: Skipped (already loading)');
           return;
         }
         
         // 初期化済みで認証済み、かつ直近でAPI呼び出し済みの場合のみスキップ
         if (initialized && isAuthenticated && currentTime - lastFetchTime < 3000) {
-          // eslint-disable-next-line no-console
-          console.log('🔍 fetchUserSession: Skipped (already initialized, authenticated, and recently fetched)');
           return;
         }
 
@@ -134,9 +119,6 @@ export const useAuthStore = create<AuthState>()(
           if (response.ok) {
             const data: SessionResponse = await response.json();
             
-            // eslint-disable-next-line no-console
-            console.log('🔍 fetchUserSession response:', { success: data.success, hasUser: !!data.user });
-            
             if (data.success && data.user) {
               get().setUser(data.user);
               get().setSession(data.session || null);
@@ -144,13 +126,10 @@ export const useAuthStore = create<AuthState>()(
               get().reset();
             }
           } else {
-            // eslint-disable-next-line no-console
-            console.log('🔍 fetchUserSession: API response not ok', response.status);
             get().reset();
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('🔍 Failed to fetch user session:', error);
+          console.error('Failed to fetch user session:', error);
           get().reset();
         } finally {
           set({ isLoading: false, initialized: true });
@@ -188,10 +167,6 @@ export const useAuthStore = create<AuthState>()(
                 isAuthenticated: true 
               });
               
-              // キャッシュを無効化
-              cachedAuthData = null;
-              cachedAuthActions = null;
-              cachedFullAuth = null;
             } else {
               get().reset();
               // eslint-disable-next-line no-console
@@ -254,13 +229,10 @@ export const useAuthStore = create<AuthState>()(
           initialized: true, // リセット後も初期化済みとする
         });
         
-        // キャッシュを無効化
-        cachedAuthData = null;
-        cachedAuthActions = null;
-        cachedFullAuth = null;
       }
       }),
       {
+        // SSR対応の設定
         name: 'auth-storage',
         storage: createJSONStorage(() => 
           typeof window !== 'undefined' ? sessionStorage : {
@@ -276,12 +248,14 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: state.isAuthenticated,
           session: state.session,
         }),
+        // 🔥 SSR対応: サーバーサイドでは常に初期状態を返す
+        skipHydration: true,
       }
     )
   )
 );
 
-// Selectors（パフォーマンス最適化用）
+// 🔥 Selectors（Vanilla Store用）
 export const selectUser = (state: AuthState) => state.user;
 export const selectUserType = (state: AuthState) => state.userType;
 export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
@@ -290,78 +264,19 @@ export const selectSession = (state: AuthState) => state.session;
 export const selectInitialized = (state: AuthState) => state.initialized;
 export const selectFetchUserSession = (state: AuthState) => state.fetchUserSession;
 
-// キャッシュされたセレクター関数（安定した参照を保つ）
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cachedAuthData: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cachedAuthActions: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cachedFullAuth: any = null;
+// 🔥 根本修正: useAuthフックを完全削除
+// オブジェクト返却による useSyncExternalStore 無限ループを根本解決
+// 以下の個別フックのみ使用すること
 
-const selectAuthData = (state: AuthState) => {
-  const newData = {
-    user: state.user,
-    userType: state.userType,
-    isLoading: state.isLoading,
-    isAuthenticated: state.isAuthenticated,
-    session: state.session,
-    initialized: state.initialized,
-  };
-  
-  // 浅い比較でキャッシュの有効性をチェック
-  if (!cachedAuthData || 
-      cachedAuthData.user !== newData.user ||
-      cachedAuthData.userType !== newData.userType ||
-      cachedAuthData.isLoading !== newData.isLoading ||
-      cachedAuthData.isAuthenticated !== newData.isAuthenticated ||
-      cachedAuthData.session !== newData.session ||
-      cachedAuthData.initialized !== newData.initialized) {
-    cachedAuthData = newData;
-    cachedFullAuth = null; // フルオブジェクトのキャッシュを無効化
-  }
-  
-  return cachedAuthData;
-};
+// アクション用フック（関数を取得）
+export const useAuthRefresh = () => useStore(authStore, (state) => state.refreshAuth);
+export const useAuthLogout = () => useStore(authStore, (state) => state.logout);
+export const useAuthFetchSession = () => useStore(authStore, (state) => state.fetchUserSession);
 
-const selectAuthActions = (state: AuthState) => {
-  const newActions = {
-    refreshAuth: state.refreshAuth,
-    logout: state.logout,
-    fetchUserSession: state.fetchUserSession,
-  };
-  
-  // アクションの参照が変わった場合のみ新しいオブジェクトを作成
-  if (!cachedAuthActions ||
-      cachedAuthActions.refreshAuth !== newActions.refreshAuth ||
-      cachedAuthActions.logout !== newActions.logout ||
-      cachedAuthActions.fetchUserSession !== newActions.fetchUserSession) {
-    cachedAuthActions = newActions;
-    cachedFullAuth = null; // フルオブジェクトのキャッシュを無効化
-  }
-  
-  return cachedAuthActions;
-};
-
-const selectFullAuth = (state: AuthState) => {
-  if (!cachedFullAuth) {
-    const authData = selectAuthData(state);
-    const authActions = selectAuthActions(state);
-    cachedFullAuth = {
-      ...authData,
-      ...authActions,
-    };
-  }
-  return cachedFullAuth;
-};
-
-// 最適化されたHooks
-export const useAuth = () => useAuthStore(selectFullAuth);
-
-// 個別のHooks（さらなるパフォーマンス最適化用）
-export const useAuthUser = () => useAuthStore(selectUser);
-export const useAuthUserType = () => useAuthStore(selectUserType);
-export const useAuthIsAuthenticated = () => useAuthStore(selectIsAuthenticated);
-export const useAuthIsLoading = () => useAuthStore(selectIsLoading);
-export const useAuthSession = () => useAuthStore(selectSession);
-export const useAuthInitialized = () => useAuthStore(selectInitialized);
-export const useAuthActions = () => useAuthStore(selectAuthActions);
+// 🔥 個別のHooks（Vanilla Store用）
+export const useAuthUser = () => useStore(authStore, selectUser);
+export const useAuthUserType = () => useStore(authStore, selectUserType);
+export const useAuthIsAuthenticated = () => useStore(authStore, selectIsAuthenticated);
+export const useAuthIsLoading = () => useStore(authStore, selectIsLoading);
+export const useAuthSession = () => useStore(authStore, selectSession);
+export const useAuthInitialized = () => useStore(authStore, selectInitialized);

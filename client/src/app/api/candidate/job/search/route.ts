@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { validateJWT } from '@/lib/server/auth/supabaseAuth';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('=== Candidate Job Search API Started ===');
+
+    // JWT認証（認証されていないユーザーは一般公開のみ閲覧可能）
+    const validationResult = await validateJWT(request);
+    const isAuthenticated = validationResult.isValid && validationResult.candidateId;
+    
+    console.log('Authentication status:', {
+      isAuthenticated,
+      candidateId: validationResult.candidateId
+    });
 
     const supabase = getSupabaseAdminClient();
     const { searchParams } = new URL(request.url);
@@ -18,7 +28,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
     const offset = (page - 1) * limit;
 
-    // 基本クエリ：公開されている求人のみ
+    // 基本クエリ：掲載済みの求人のみ + 公開範囲による制限
     let query = supabase
       .from('job_postings')
       .select(`
@@ -50,10 +60,24 @@ export async function GET(request: NextRequest) {
         updated_at,
         published_at,
         image_urls,
-        company_account_id
+        company_account_id,
+        publication_type
       `)
-      .neq('status', 'DRAFT')
+      .eq('status', 'PUBLISHED')
       .order('created_at', { ascending: false });
+
+    // 公開範囲による制限
+    if (isAuthenticated) {
+      // 認証済みユーザーは 一般公開 + 登録会員限定 を閲覧可能
+      query = query.in('publication_type', ['public', 'members']);
+    } else {
+      // 未認証ユーザーは 一般公開のみ
+      query = query.eq('publication_type', 'public');
+    }
+
+    // 応募期限チェック（期限が設定されていない場合は無制限とする）
+    const now = new Date().toISOString();
+    query = query.or(`application_deadline.is.null,application_deadline.gte.${now}`);
 
     // キーワード検索
     if (keyword) {
@@ -125,7 +149,17 @@ export async function GET(request: NextRequest) {
     let countQuery = supabase
       .from('job_postings')
       .select('*', { count: 'exact', head: true })
-      .neq('status', 'DRAFT');
+      .eq('status', 'PUBLISHED');
+
+    // 公開範囲による制限（カウントクエリにも適用）
+    if (isAuthenticated) {
+      countQuery = countQuery.in('publication_type', ['public', 'members']);
+    } else {
+      countQuery = countQuery.eq('publication_type', 'public');
+    }
+
+    // 応募期限チェック（カウントクエリにも適用）
+    countQuery = countQuery.or(`application_deadline.is.null,application_deadline.gte.${now}`);
 
     // 同じフィルター条件を適用
     if (keyword) {

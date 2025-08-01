@@ -21,9 +21,9 @@ export function MessageLayout({ className }: MessageLayoutProps) {
 
 
   return (
-    <div className={cn('flex h-full bg-white overflow-x-hidden', className)}>
-      {/* 左ペイン: メッセージ一覧（可変幅） */}
-      <div className="w-auto flex-shrink-0 border-r border-[#efefef] min-w-[400px] max-w-[600px]">
+    <div className={cn('flex h-full bg-white overflow-hidden', className)}>
+      {/* 左ペイン: メッセージ一覧（固定幅） */}
+      <div className="w-[445px] flex-shrink-0 border-r border-[#efefef]">
         <MessageList onMessageClick={handleMessageClick} />
       </div>
 
