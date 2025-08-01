@@ -3,6 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { uploadApplicationDocument, validateFile } from '@/lib/utils/fileUpload';
+import { useAuthUser, useAuthIsAuthenticated } from '@/stores/authStore';
 
 /**
  * 履歴書・職務経歴書アップロード画面の見出し部分＋コンテンツラッパー
@@ -26,9 +29,143 @@ function useMediaQuery(query: string): boolean {
 }
 
 export default function CandidateSearchSettingConfirmPage() {
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const user = useAuthUser();
+  const isAuthenticated = useAuthIsAuthenticated();
+  
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [careerFile, setCareerFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>('');
+  
+  // 求人情報をURLパラメータから取得
+  const jobId = params.id as string;
+  const jobTitle = searchParams.get('title') || '';
+  const companyName = searchParams.get('companyName') || '';
+  
   // --- 追加: モバイル判定 ---
   const isMobile = useMediaQuery('(max-width: 767px)');
+
+  // ファイルアップロード処理
+  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        setUploadError(validation.error || 'ファイルが無効です');
+        return;
+      }
+      setResumeFile(file);
+      setUploadError('');
+    }
+  };
+
+  const handleCareerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        setUploadError(validation.error || 'ファイルが無効です');
+        return;
+      }
+      setCareerFile(file);
+      setUploadError('');
+    }
+  };
+
+  // ファイル削除機能
+  const handleRemoveResume = () => {
+    setResumeFile(null);
+    setUploadError('');
+  };
+
+  const handleRemoveCareer = () => {
+    setCareerFile(null);
+    setUploadError('');
+  };
+
+  // 応募処理
+  const handleApplication = async () => {
+    if (!isAuthenticated || !user) {
+      router.push('/candidate/auth/login');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      let resumeUrl = '';
+      let careerUrl = '';
+
+      // 履歴書をアップロード
+      if (resumeFile) {
+        const resumeUploadResult = await uploadApplicationDocument(
+          resumeFile,
+          'resume',
+          user.id
+        );
+        if (!resumeUploadResult.success) {
+          throw new Error(resumeUploadResult.error || '履歴書のアップロードに失敗しました');
+        }
+        resumeUrl = resumeUploadResult.url || '';
+      }
+
+      // 職務経歴書をアップロード
+      if (careerFile) {
+        const careerUploadResult = await uploadApplicationDocument(
+          careerFile,
+          'career',
+          user.id
+        );
+        if (!careerUploadResult.success) {
+          throw new Error(careerUploadResult.error || '職務経歴書のアップロードに失敗しました');
+        }
+        careerUrl = careerUploadResult.url || '';
+      }
+
+      // 応募APIを呼び出し
+      const response = await fetch('/api/candidate/application', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          job_posting_id: jobId,
+          resume_url: resumeUrl,
+          career_history_url: careerUrl,
+          application_message: '求人に応募いたします。'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || '応募の送信に失敗しました');
+      }
+
+      // 応募完了状態に変更
+      setIsSubmitted(true);
+
+    } catch (error) {
+      console.error('Application error:', error);
+      setUploadError(error instanceof Error ? error.message : '応募の送信に失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // ファイル名を300px相当で切り詰める関数（日本語文字を考慮）
+  const truncateFileName = (fileName: string, maxChars: number = 20) => {
+    if (fileName.length <= maxChars) {
+      return fileName;
+    }
+    return fileName.substring(0, maxChars) + '...';
+  };
   return (
     <div>
       {/* 見出しラッパー：最大高さ156px、padding上下40px・左右80px、グラデーション背景 */}
@@ -340,23 +477,41 @@ export default function CandidateSearchSettingConfirmPage() {
                   width: '100%',
                 }}
               >
-                <p
-                  style={{
-                    fontFamily: 'Noto Sans JP',
-                    fontWeight: 700,
-                    fontSize: 16,
-                    lineHeight: 2,
-                    letterSpacing: '0.1em',
-                    color: '#323232',
-                    margin: 0,
-                    textAlign: 'left',
-                    width: '100%',
-                  }}
-                >
-                  本求人に応募する場合は、「応募する」ボタンをクリックしてください。
-                  <br />
-                  書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
-                </p>
+                <div>
+                  <p
+                    style={{
+                      fontFamily: 'Noto Sans JP',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      lineHeight: 2,
+                      letterSpacing: '0.1em',
+                      color: '#323232',
+                      margin: 0,
+                      textAlign: 'left',
+                      width: '100%',
+                    }}
+                  >
+                    本求人に応募する場合は、「応募する」ボタンをクリックしてください。
+                    <br />
+                    書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
+                  </p>
+                 
+                  {uploadError && (
+                    <div
+                      style={{
+                        background: '#fee',
+                        border: '1px solid #fcc',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        marginTop: '8px',
+                        color: '#c33',
+                        fontSize: '14px',
+                      }}
+                    >
+                      {uploadError}
+                    </div>
+                  )}
+                </div>
               </div>
               {/* --- アップロード行2列（履歴書・職務経歴書）→1列に修正 --- */}
               <div
@@ -418,18 +573,71 @@ export default function CandidateSearchSettingConfirmPage() {
                     <div
                       style={{ display: 'flex', flexDirection: 'row', gap: 16 }}
                     >
-                      <Button
-                        variant='green-outline'
-                        size='figma-default'
-                        className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none'
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleResumeUpload}
+                        style={{ display: 'none' }}
+                        id="resume-upload"
+                      />
+                      <label 
+                        htmlFor="resume-upload"
+                        className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none cursor-pointer bg-transparent flex items-center justify-center'
                         style={{
                           width: isMobile ? '100%' : undefined,
                           padding: '0 40px',
+                          fontFamily: 'Noto Sans JP',
+                          borderRadius: '999px',
+                          border: '1px solid #999',
+                          color: '#323232',
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          lineHeight: '2',
+                          letterSpacing: '0.1em',
+                          height: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 'transparent',
+                          textAlign: 'center',
                         }}
                       >
                         履歴書をアップロード
-                      </Button>
+                      </label>
                     </div>
+                    {resumeFile && (
+                      <div
+                        className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
+                        style={{ 
+                          maxWidth: isMobile ? '140px' : '300px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {truncateFileName(resumeFile.name, isMobile ? 10 : 20)}
+                        </div>
+                        <button
+                          onClick={handleRemoveResume}
+                          className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            width: '14px',
+                            height: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="ファイルを削除"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
                     <span
                       style={{
                         fontFamily: 'Noto Sans JP',
@@ -494,18 +702,71 @@ export default function CandidateSearchSettingConfirmPage() {
                     <div
                       style={{ display: 'flex', flexDirection: 'row', gap: 16 }}
                     >
-                      <Button
-                        variant='green-outline'
-                        size='figma-default'
-                        className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none'
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleCareerUpload}
+                        style={{ display: 'none' }}
+                        id="career-upload"
+                      />
+                      <label 
+                        htmlFor="career-upload"
+                        className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none cursor-pointer bg-transparent flex items-center justify-center'
                         style={{
                           width: isMobile ? '100%' : undefined,
                           padding: '0 40px',
+                          fontFamily: 'Noto Sans JP',
+                          borderRadius: '999px',
+                          border: '1px solid #999',
+                          color: '#323232',
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          lineHeight: '2',
+                          letterSpacing: '0.1em',
+                          height: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 'transparent',
+                          textAlign: 'center',
                         }}
                       >
                         職務経歴書をアップロード
-                      </Button>
+                      </label>
                     </div>
+                    {careerFile && (
+                      <div
+                        className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
+                        style={{ 
+                          maxWidth: isMobile ? '140px' : '300px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {truncateFileName(careerFile.name, isMobile ? 10 : 20)}
+                        </div>
+                        <button
+                          onClick={handleRemoveCareer}
+                          className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            width: '14px',
+                            height: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="ファイルを削除"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
                     <span
                       style={{
                         fontFamily: 'Noto Sans JP',
@@ -537,7 +798,7 @@ export default function CandidateSearchSettingConfirmPage() {
           >
             <Button
               style={{
-                width: isMobile ? '100%' : undefined,
+                width: isMobile ? '100%' : '160px',
                 height: 60,
                 borderRadius: 32,
                 border: '1px solid #0F9058',
@@ -554,13 +815,13 @@ export default function CandidateSearchSettingConfirmPage() {
                 justifyContent: 'center',
                 padding: '0 40px',
               }}
-              {...(isSubmitted ? {} : { onClick: undefined })}
+              onClick={isSubmitted ? () => router.push('/candidate/message') : () => router.back()}
             >
               {isSubmitted ? 'メッセージ一覧' : '戻る'}
             </Button>
             <Button
               style={{
-                width: isMobile ? '100%' : undefined,
+                width: isMobile ? '100%' : '160px',
                 height: 60,
                 borderRadius: 32,
                 background: 'linear-gradient(180deg, #198D76 0%, #1CA74F 100%)',
@@ -577,9 +838,10 @@ export default function CandidateSearchSettingConfirmPage() {
                 justifyContent: 'center',
                 padding: '0 40px',
               }}
-              onClick={isSubmitted ? undefined : () => setIsSubmitted(true)}
+              onClick={isSubmitted ? () => router.push('/candidate/search/setting') : handleApplication}
+              disabled={isUploading}
             >
-              {isSubmitted ? '求人検索' : '応募する'}
+              {isSubmitted ? '求人検索' : isUploading ? '応募中...' : '応募する'}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { validateJWT } from '@/lib/server/auth/supabaseAuth';
 
 export async function GET(
   request: NextRequest,
@@ -10,10 +11,19 @@ export async function GET(
     const resolvedParams = await params;
     console.log('Job ID:', resolvedParams.id);
 
+    // JWT認証（認証されていないユーザーは一般公開のみ閲覧可能）
+    const validationResult = await validateJWT(request);
+    const isAuthenticated = validationResult.isValid && validationResult.candidateId;
+    
+    console.log('Authentication status:', {
+      isAuthenticated,
+      candidateId: validationResult.candidateId
+    });
+
     const supabase = getSupabaseAdminClient();
     
     // 求人詳細を取得
-    const { data: job, error: jobError } = await supabase
+    let jobQuery = supabase
       .from('job_postings')
       .select(`
         id,
@@ -48,11 +58,26 @@ export async function GET(
         published_at,
         image_urls,
         company_account_id,
-        status
+        status,
+        publication_type
       `)
       .eq('id', resolvedParams.id)
-      .neq('status', 'DRAFT')
-      .single();
+      .eq('status', 'PUBLISHED');
+
+    // 公開範囲による制限
+    if (isAuthenticated) {
+      // 認証済みユーザーは 一般公開 + 登録会員限定 を閲覧可能
+      jobQuery = jobQuery.in('publication_type', ['public', 'members']);
+    } else {
+      // 未認証ユーザーは 一般公開のみ
+      jobQuery = jobQuery.eq('publication_type', 'public');
+    }
+
+    // 応募期限チェック（期限が設定されていない場合は無制限とする）
+    const now = new Date().toISOString();
+    jobQuery = jobQuery.or(`application_deadline.is.null,application_deadline.gte.${now}`);
+
+    const { data: job, error: jobError } = await jobQuery.single();
 
     if (jobError || !job) {
       console.error('Failed to fetch job:', jobError);

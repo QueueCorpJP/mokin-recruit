@@ -605,3 +605,70 @@ export { newApiClient as modernApiClient };
 
 // 型定義のエクスポート
 export type { ApiResponse, ApiClientOptions };
+
+// 応募関連のAPI関数
+interface ApplicationRequest {
+  job_posting_id: string;
+  resume_url?: string;
+  career_history_url?: string;
+  application_message?: string;
+}
+
+interface ApplicationResponse {
+  success: boolean;
+  data?: {
+    application_id: string;
+    job_title: string;
+    status: string;
+    applied_at: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+export async function submitApplication(applicationData: ApplicationRequest): Promise<ApplicationResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch('/api/candidate/application', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      credentials: 'include',
+      body: JSON.stringify(applicationData)
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to submit application:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
+
+export async function getApplicationHistory(): Promise<ApplicationResponse> {
+  try {
+    const authHeaders = getAuthHeaders();
+
+    const response = await fetch('/api/candidate/application', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      credentials: 'include'
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch application history:', error);
+    return {
+      success: false,
+      error: 'ネットワークエラーが発生しました'
+    };
+  }
+}
