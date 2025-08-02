@@ -86,6 +86,9 @@ export default function CandidateSearchSettingConfirmPage() {
       if (validFiles.length > 0) {
         setResumeFiles(prev => [...prev, ...validFiles]);
       }
+      
+      // input要素をリセット（同じファイルの再選択を可能にする）
+      event.target.value = '';
     }
   };
 
@@ -113,6 +116,9 @@ export default function CandidateSearchSettingConfirmPage() {
       if (validFiles.length > 0) {
         setCareerFiles(prev => [...prev, ...validFiles]);
       }
+      
+      // input要素をリセット（同じファイルの再選択を可能にする）
+      event.target.value = '';
     }
   };
 
@@ -120,11 +126,21 @@ export default function CandidateSearchSettingConfirmPage() {
   const handleRemoveResume = (index: number) => {
     setResumeFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
+    // 削除後にinput要素をリセット
+    const resumeInput = document.getElementById('resume-upload') as HTMLInputElement;
+    if (resumeInput) {
+      resumeInput.value = '';
+    }
   };
 
   const handleRemoveCareer = (index: number) => {
     setCareerFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
+    // 削除後にinput要素をリセット
+    const careerInput = document.getElementById('career-upload') as HTMLInputElement;
+    if (careerInput) {
+      careerInput.value = '';
+    }
   };
 
   // 応募処理
