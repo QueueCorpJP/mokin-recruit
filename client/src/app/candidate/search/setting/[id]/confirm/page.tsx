@@ -888,7 +888,8 @@ export default function CandidateSearchSettingConfirmPage() {
           >
             <Button
               style={{
-                width: isMobile ? '100%' : '160px',
+                width: isMobile ? '100%' : 'auto',
+                minWidth: isMobile ? 'auto' : '160px',
                 height: 60,
                 borderRadius: 32,
                 border: '1px solid #0F9058',
@@ -911,7 +912,8 @@ export default function CandidateSearchSettingConfirmPage() {
             </Button>
             <Button
               style={{
-                width: isMobile ? '100%' : '160px',
+                width: isMobile ? '100%' : 'auto',
+                minWidth: isMobile ? 'auto' : '160px',
                 height: 60,
                 borderRadius: 32,
                 background: 'linear-gradient(180deg, #198D76 0%, #1CA74F 100%)',

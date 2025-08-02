@@ -132,7 +132,7 @@ export default function CandidateSearchSettingPage() {
             employmentTypeNote:
               apiJob.employment_type_note || 'テキストが入ります。',
             workingHours: apiJob.working_hours || 'テキストが入ります。',
-            overtime: apiJob.overtime_info || 'あり',
+            overtime: apiJob.overtime_info ? 'あり' : 'なし',
             overtimeMemo: apiJob.overtime_memo || 'テキストが入ります。',
             holidays: apiJob.holidays || 'テキストが入ります。',
             selectionProcess:
