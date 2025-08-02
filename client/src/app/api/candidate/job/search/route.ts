@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
     const salaryMin = searchParams.get('salaryMin');
     const industries = searchParams.get('industries')?.split(',').filter(Boolean) || [];
     const jobTypes = searchParams.get('jobTypes')?.split(',').filter(Boolean) || [];
+    const appealPoints = searchParams.get('appealPoints')?.split(',').filter(Boolean) || [];
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 1000);
     const offset = (page - 1) * limit;
 
     // 基本クエリ：掲載済みの求人のみ + 公開範囲による制限
@@ -86,9 +87,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 勤務地検索
+    // 勤務地検索（配列フィールド用）
     if (location) {
-      query = query.ilike('work_location', `%${location}%`);
+      // 配列に完全一致する要素が含まれているかチェック
+      query = query.contains('work_location', [location]);
     }
 
     // 最低年収フィルター
@@ -97,14 +99,22 @@ export async function GET(request: NextRequest) {
       query = query.gte('salary_min', minSalary);
     }
 
-    // 業界フィルター
+    // 業界フィルター（配列フィールド用）
     if (industries.length > 0) {
-      query = query.in('industry', industries);
+      // 配列の重複検索：overlap演算子を使用
+      query = query.overlaps('industry', industries);
     }
 
-    // 職種フィルター
+    // 職種フィルター（配列フィールド用）
     if (jobTypes.length > 0) {
-      query = query.in('job_type', jobTypes);
+      // 配列の重複検索：overlap演算子を使用
+      query = query.overlaps('job_type', jobTypes);
+    }
+
+    // アピールポイントフィルター（配列フィールド用）
+    if (appealPoints.length > 0) {
+      // 配列の重複検索：overlap演算子を使用
+      query = query.overlaps('appeal_points', appealPoints);
     }
 
     // ページネーション
@@ -168,17 +178,20 @@ export async function GET(request: NextRequest) {
       );
     }
     if (location) {
-      countQuery = countQuery.ilike('work_location', `%${location}%`);
+      countQuery = countQuery.contains('work_location', [location]);
     }
     if (salaryMin) {
       const minSalary = parseInt(salaryMin);
       countQuery = countQuery.gte('salary_min', minSalary);
     }
     if (industries.length > 0) {
-      countQuery = countQuery.in('industry', industries);
+      countQuery = countQuery.overlaps('industry', industries);
     }
     if (jobTypes.length > 0) {
-      countQuery = countQuery.in('job_type', jobTypes);
+      countQuery = countQuery.overlaps('job_type', jobTypes);
+    }
+    if (appealPoints.length > 0) {
+      countQuery = countQuery.overlaps('appeal_points', appealPoints);
     }
 
     const { count: totalCount } = await countQuery;

@@ -34,8 +34,7 @@ export default function CandidateSearchPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   
   // 求人データとローディング状態
-  const [allJobCards, setAllJobCards] = useState<any[]>([]); // 全件データ
-  const [displayJobCards, setDisplayJobCards] = useState<any[]>([]); // 表示用データ
+  const [jobCards, setJobCards] = useState<any[]>([]); // 表示用データ
   const [loading, setLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
   const [pagination, setPagination] = useState({
@@ -45,28 +44,25 @@ export default function CandidateSearchPage() {
     totalPages: 0
   });
 
-  // 表示用データを更新（クライアントサイドページング）
-  const updateDisplayJobs = (allJobs: any[], page: number, limit: number) => {
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedJobs = allJobs.slice(startIndex, endIndex);
-    setDisplayJobCards(paginatedJobs);
-  };
-
-  // APIから全件データを取得（初回・検索条件変更時のみ）
-  const fetchAllJobs = async () => {
+  // APIから求人データを取得（サーバーサイドフィルタリング）
+  const fetchJobs = async (page: number = 1) => {
     setLoading(true);
     try {
-      // 最大1000件まで取得（メモリ使用量を考慮）
-      const response = await searchJobs({
+      const searchParams: any = {
         keyword: searchKeyword,
         location: selectedLocations.join(','),
         salaryMin: selectedSalary ? selectedSalary.replace(/[^\d]/g, '') : undefined,
         industries: selectedIndustries,
         jobTypes: selectedJobTypes,
-        page: 1,
-        limit: 1000 // 大きな値で全件取得
-      });
+        page: page,
+        limit: pagination.limit
+      };
+      
+      if (selectedAppealPoint) {
+        searchParams.appealPoints = [selectedAppealPoint];
+      }
+      
+      const response = await searchJobs(searchParams);
 
       if (response.success && response.data) {
         const transformedJobs = response.data.jobs.map((job: any) => {
@@ -83,21 +79,16 @@ export default function CandidateSearchPage() {
               : job.salary_note || '給与応相談',
             starred: false,
             apell: Array.isArray(job.appeal_points) ? job.appeal_points : ['アピールポイントなし'],
-            created_at: job.created_at // ソート用に日付情報を保持
+            created_at: job.created_at
           };
         });
         
-        // 全件データを保存
-        setAllJobCards(transformedJobs);
-        
         // ページネーション情報を更新
-        const totalJobs = transformedJobs.length;
-        const totalPages = Math.ceil(totalJobs / pagination.limit);
         setPagination(prev => ({
           ...prev,
-          total: totalJobs,
-          totalPages: totalPages,
-          page: 1
+          page: page,
+          total: response.data?.pagination.total || 0,
+          totalPages: response.data?.pagination.totalPages || 0
         }));
 
         // お気に入り状態を確認
@@ -109,17 +100,7 @@ export default function CandidateSearchPage() {
           starred: favoriteStatus[job.id] || false
         }));
         
-        // 最新順にソート（created_atで降順、新しいものが先）
-        const sortedJobs = jobsWithFavorites.sort((a, b) => {
-          // created_atフィールドがある場合はそれを使用、なければIDで比較
-          if (a.created_at && b.created_at) {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-          }
-          return b.id.localeCompare(a.id);
-        });
-        
-        setAllJobCards(sortedJobs);
-        updateDisplayJobs(sortedJobs, 1, pagination.limit);
+        setJobCards(jobsWithFavorites);
       }
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
@@ -130,18 +111,17 @@ export default function CandidateSearchPage() {
 
   // 初期データ読み込み
   useEffect(() => {
-    fetchAllJobs();
+    fetchJobs();
   }, []); // 初回のみ実行
 
   // 検索実行（条件変更時）
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchAllJobs(); // 検索条件変更時のみAPI呼び出し
+    fetchJobs(1); // 1ページ目から検索結果を表示
   };
 
   // スター切り替え（お気に入りAPI呼び出し）
   const handleStarClick = async (idx: number) => {
-    const job = displayJobCards[idx];
+    const job = jobCards[idx];
     const jobId = job.id;
     const isCurrentlyStarred = job.starred;
 
@@ -165,14 +145,8 @@ export default function CandidateSearchPage() {
       console.log('API応答:', response);
 
       if (response.success) {
-        // 全件データと表示データの両方を更新
-        const updatedAllJobs = allJobCards.map(job => 
-          job.id === jobId ? { ...job, starred: !isCurrentlyStarred } : job
-        );
-        setAllJobCards(updatedAllJobs);
-        
-        // 表示データも更新
-        setDisplayJobCards(cards =>
+        // 表示データを更新
+        setJobCards(cards =>
           cards.map((card, i) =>
             i === idx ? { ...card, starred: !isCurrentlyStarred } : card
           )
@@ -198,17 +172,13 @@ export default function CandidateSearchPage() {
             errorMessage = 'この求人は削除されたか、現在利用できません。ページを更新してください。';
             
             // 求人リストから該当の求人を削除
-            const filteredAllJobs = allJobCards.filter(card => card.id !== jobId);
-            setAllJobCards(filteredAllJobs);
-            setDisplayJobCards(cards => cards.filter(card => card.id !== jobId));
+            setJobCards(cards => cards.filter(card => card.id !== jobId));
           } else if (response.debug.jobExists && response.debug.jobStatus !== 'PUBLISHED') {
             // 求人は存在するが公開されていない場合
             errorMessage = `この求人は現在公開されていません（ステータス: ${response.debug.jobStatus}）`;
             
             // 求人リストから該当の求人を削除
-            const filteredAllJobs = allJobCards.filter(card => card.id !== jobId);
-            setAllJobCards(filteredAllJobs);
-            setDisplayJobCards(cards => cards.filter(card => card.id !== jobId));
+            setJobCards(cards => cards.filter(card => card.id !== jobId));
           }
         }
         
@@ -283,10 +253,9 @@ export default function CandidateSearchPage() {
   const [selectedAppealPoint, setSelectedAppealPoint] = useState('');
   const [isSearchConditionActive, setIsSearchConditionActive] = useState(false);
 
-  // ページネーション処理（クライアントサイド）
+  // ページネーション処理（サーバーサイド）
   const handlePageChange = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
-    updateDisplayJobs(allJobCards, page, pagination.limit);
+    fetchJobs(page);
     
     // ページ遷移後にページトップにスクロール
     window.scrollTo({
@@ -703,12 +672,12 @@ export default function CandidateSearchPage() {
                 <div className='text-center py-10'>
                   <span className='text-gray-500'>求人を読み込み中...</span>
                 </div>
-              ) : displayJobCards.length === 0 ? (
+              ) : jobCards.length === 0 ? (
                 <div className='text-center py-10'>
                   <span className='text-gray-500'>該当する求人が見つかりませんでした</span>
                 </div>
               ) : (
-                displayJobCards.map((card, idx) => (
+                jobCards.map((card, idx) => (
                   <JobPostCard
                     key={card.id}
                     imageUrl={card.imageUrl}

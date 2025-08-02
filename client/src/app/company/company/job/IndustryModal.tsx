@@ -22,8 +22,14 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
     }
   };
 
-  // すべての業種を1つの配列にフラット化
-  const allIndustries = industryCategories.flatMap(category => category.industries);
+  // すべての業種を1つの配列にフラット化（カテゴリ情報付きで一意のキーを生成）
+  const allIndustries = industryCategories.flatMap(category => 
+    category.industries.map(industry => ({
+      key: `${category.name}-${industry}`, // 一意のキー
+      value: industry, // 実際の値
+      category: category.name
+    }))
+  );
 
   return (
    
@@ -45,16 +51,16 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
 
       {/* 業種チェックボックスリスト（2列グリッド） */}
       <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-        {allIndustries.map((industry) => {
-          const isSelected = selectedIndustries.includes(industry);
+        {allIndustries.map((industryItem) => {
+          const isSelected = selectedIndustries.includes(industryItem.value);
           const isDisabled = !isSelected && selectedIndustries.length >= MAX_SELECTION;
           
           return (
-            <div key={industry} className="flex items-center">
+            <div key={industryItem.key} className="flex items-center">
               <Checkbox 
-                label={industry} 
+                label={industryItem.value} 
                 checked={isSelected} 
-                onChange={() => handleCheckboxChange(industry)}
+                onChange={() => handleCheckboxChange(industryItem.value)}
                 disabled={isDisabled}
               />
             </div>

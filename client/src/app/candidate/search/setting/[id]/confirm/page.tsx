@@ -45,9 +45,21 @@ export default function CandidateSearchSettingConfirmPage() {
   const jobId = params.id as string;
   const jobTitle = searchParams.get('title') || '';
   const companyName = searchParams.get('companyName') || '';
+  const requiredDocuments = JSON.parse(decodeURIComponent(searchParams.get('requiredDocuments') || '[]')) as string[];
   
   // --- 追加: モバイル判定 ---
   const isMobile = useMediaQuery('(max-width: 767px)');
+
+  // 必須書類チェック機能
+  const isResumeRequired = requiredDocuments.includes('履歴書の提出が必須');
+  const isCareerRequired = requiredDocuments.includes('職務経歴書の提出が必須');
+  
+  // 必須書類が揃っているかチェック
+  const canSubmit = () => {
+    if (isResumeRequired && !resumeFile) return false;
+    if (isCareerRequired && !careerFile) return false;
+    return true;
+  };
 
   // ファイルアップロード処理
   const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,6 +103,15 @@ export default function CandidateSearchSettingConfirmPage() {
   const handleApplication = async () => {
     if (!isAuthenticated || !user) {
       router.push('/candidate/auth/login');
+      return;
+    }
+
+    // 必須書類チェック
+    if (!canSubmit()) {
+      const missingDocs = [];
+      if (isResumeRequired && !resumeFile) missingDocs.push('履歴書');
+      if (isCareerRequired && !careerFile) missingDocs.push('職務経歴書');
+      setUploadError(`必須書類が不足しています: ${missingDocs.join('、')}`);
       return;
     }
 
@@ -478,23 +499,54 @@ export default function CandidateSearchSettingConfirmPage() {
                 }}
               >
                 <div>
-                  <p
-                    style={{
-                      fontFamily: 'Noto Sans JP',
-                      fontWeight: 700,
-                      fontSize: 16,
-                      lineHeight: 2,
-                      letterSpacing: '0.1em',
-                      color: '#323232',
-                      margin: 0,
-                      textAlign: 'left',
-                      width: '100%',
-                    }}
-                  >
-                    本求人に応募する場合は、「応募する」ボタンをクリックしてください。
-                    <br />
-                    書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
-                  </p>
+                  <div>
+                    <p
+                      style={{
+                        fontFamily: 'Noto Sans JP',
+                        fontWeight: 700,
+                        fontSize: 16,
+                        lineHeight: 2,
+                        letterSpacing: '0.1em',
+                        color: '#323232',
+                        margin: 0,
+                        textAlign: 'left',
+                        width: '100%',
+                      }}
+                    >
+                      本求人に応募する場合は、「応募する」ボタンをクリックしてください。
+                      <br />
+                      書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
+                    </p>
+                    {(isResumeRequired || isCareerRequired) && (
+                      <div
+                        style={{
+                          background: '#fff3cd',
+                          border: '1px solid #ffeaa7',
+                          borderRadius: '8px',
+                          padding: '12px 16px',
+                          marginTop: '16px',
+                          color: '#856404',
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontFamily: 'Noto Sans JP',
+                            fontWeight: 600,
+                            fontSize: 14,
+                            lineHeight: 1.6,
+                            letterSpacing: '0.1em',
+                            margin: 0,
+                          }}
+                        >
+                          <strong>この求人では以下の書類が必須です：</strong>
+                          <br />
+                          {isResumeRequired && '• 履歴書の提出が必須'}
+                          {isResumeRequired && isCareerRequired && <br />}
+                          {isCareerRequired && '• 職務経歴書の提出が必須'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                  
                   {uploadError && (
                     <div
@@ -546,18 +598,37 @@ export default function CandidateSearchSettingConfirmPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: 'Noto Sans JP',
-                        fontWeight: 700,
-                        fontSize: 16,
-                        lineHeight: 2,
-                        letterSpacing: '0.1em',
-                        color: '#323232',
-                      }}
-                    >
-                      履歴書
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 700,
+                          fontSize: 16,
+                          lineHeight: 2,
+                          letterSpacing: '0.1em',
+                          color: '#323232',
+                        }}
+                      >
+                        履歴書
+                      </span>
+                      {isResumeRequired && (
+                        <span
+                          style={{
+                            fontFamily: 'Noto Sans JP',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            letterSpacing: '0.1em',
+                            color: '#ff4444',
+                            background: '#ffe6e6',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          必須
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {/* アップロードUI部（Buttonに置き換え） */}
                   <div
@@ -675,18 +746,37 @@ export default function CandidateSearchSettingConfirmPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: 'Noto Sans JP',
-                        fontWeight: 700,
-                        fontSize: 16,
-                        lineHeight: 2,
-                        letterSpacing: '0.1em',
-                        color: '#323232',
-                      }}
-                    >
-                      職務経歴書
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 700,
+                          fontSize: 16,
+                          lineHeight: 2,
+                          letterSpacing: '0.1em',
+                          color: '#323232',
+                        }}
+                      >
+                        職務経歴書
+                      </span>
+                      {isCareerRequired && (
+                        <span
+                          style={{
+                            fontFamily: 'Noto Sans JP',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            letterSpacing: '0.1em',
+                            color: '#ff4444',
+                            background: '#ffe6e6',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          必須
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {/* アップロードUI部（Buttonに置き換え） */}
                   <div
@@ -839,7 +929,7 @@ export default function CandidateSearchSettingConfirmPage() {
                 padding: '0 40px',
               }}
               onClick={isSubmitted ? () => router.push('/candidate/search/setting') : handleApplication}
-              disabled={isUploading}
+              disabled={isUploading || (!isSubmitted && !canSubmit())}
             >
               {isSubmitted ? '求人検索' : isUploading ? '応募中...' : '応募する'}
             </Button>

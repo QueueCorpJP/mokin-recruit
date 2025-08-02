@@ -39,6 +39,7 @@ interface JobDetailData {
   };
   smoke: string;
   resumeRequired: string[];
+  requiredDocuments: string[];
   // 企業情報
   representative: string;
   establishedYear: string;
@@ -124,6 +125,9 @@ export default function CandidateSearchSettingPage() {
             resumeRequired: Array.isArray(apiJob.resume_required)
               ? apiJob.resume_required
               : ['履歴書の提出が必須', '職務経歴書の提出が必須'],
+            requiredDocuments: Array.isArray(apiJob.required_documents)
+              ? apiJob.required_documents
+              : [],
             // 企業情報
             representative: apiJob.representative || 'テキストが入ります。',
             establishedYear: apiJob.established_year?.toString() || '2020',
@@ -178,6 +182,7 @@ export default function CandidateSearchSettingPage() {
       locations: encodeURIComponent(jobData?.locations?.join(', ') || ''),
       salaryMin: encodeURIComponent(jobData?.salaryMin || ''),
       salaryMax: encodeURIComponent(jobData?.salaryMax || ''),
+      requiredDocuments: encodeURIComponent(JSON.stringify(jobData?.requiredDocuments || [])),
     });
     
     router.push(`/candidate/search/setting/${params.id}/confirm?${queryParams.toString()}`);
@@ -327,7 +332,7 @@ export default function CandidateSearchSettingPage() {
                 </div>
 
                 {/* 職種・業種・条件待遇セクション */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
+                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full max-w-[520px]'>
                   {/* 職種 */}
                   <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
                     <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
@@ -492,10 +497,10 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           勤務地
                         </div>
-                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full max-w-[400px]'>
                           <div className='flex flex-wrap lg:flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
-                            {/* スマホ画面では最初の2つのタグのみ表示し、残りは...で省略 */}
-                            <div className='flex flex-row lg:flex-wrap gap-2 items-center justify-start w-full overflow-hidden'>
+                            {/* タグを改行して表示 */}
+                            <div className='flex flex-wrap gap-2 items-center justify-start w-full'>
                               {jobData.locations.slice(0, 2).map((location, index) => (
                                 <div
                                   key={index}
