@@ -317,6 +317,7 @@ interface JobSearchParams {
   salaryMin?: string;
   industries?: string[];
   jobTypes?: string[];
+  appealPoints?: string[];
   page?: number;
   limit?: number;
 }
@@ -345,6 +346,7 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResp
     if (params.salaryMin) searchParams.append('salaryMin', params.salaryMin);
     if (params.industries?.length) searchParams.append('industries', params.industries.join(','));
     if (params.jobTypes?.length) searchParams.append('jobTypes', params.jobTypes.join(','));
+    if (params.appealPoints?.length) searchParams.append('appealPoints', params.appealPoints.join(','));
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
 

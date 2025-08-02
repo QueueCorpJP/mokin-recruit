@@ -39,6 +39,7 @@ interface JobDetailData {
   };
   smoke: string;
   resumeRequired: string[];
+  requiredDocuments: string[];
   // 企業情報
   representative: string;
   establishedYear: string;
@@ -51,11 +52,28 @@ interface JobDetailData {
   website: string;
 }
 
+// 雇用形態の英語→日本語マッピング
+const getEmploymentTypeInJapanese = (employmentType: string): string => {
+  const mapping: Record<string, string> = {
+    'FULL_TIME': '正社員',
+    'CONTRACT': '契約社員',
+    '正社員': '正社員',
+    '契約社員': '契約社員',
+    '業務委託': '業務委託',
+    'その他': 'その他'
+  };
+  
+  return mapping[employmentType] || employmentType;
+};
+
 export default function CandidateSearchSettingPage() {
   const router = useRouter();
   const params = useParams();
   const [jobData, setJobData] = useState<JobDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 画像カルーセル用のstate
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // お気に入り機能のhook
   const jobId = params.id as string;
@@ -64,6 +82,19 @@ export default function CandidateSearchSettingPage() {
   
   // お気に入り状態を取得
   const isFavorite = favoriteStatus?.[jobId] || false;
+
+  // 画像の自動切り替え
+  useEffect(() => {
+    if (!jobData || !jobData.images || jobData.images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % jobData.images.length
+      );
+    }, 2500); // 2.5秒間隔
+
+    return () => clearInterval(interval);
+  }, [jobData]);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -101,7 +132,7 @@ export default function CandidateSearchSettingPage() {
             employmentTypeNote:
               apiJob.employment_type_note || 'テキストが入ります。',
             workingHours: apiJob.working_hours || 'テキストが入ります。',
-            overtime: apiJob.overtime_info || 'あり',
+            overtime: apiJob.overtime_info ? 'あり' : 'なし',
             overtimeMemo: apiJob.overtime_memo || 'テキストが入ります。',
             holidays: apiJob.holidays || 'テキストが入ります。',
             selectionProcess:
@@ -124,6 +155,9 @@ export default function CandidateSearchSettingPage() {
             resumeRequired: Array.isArray(apiJob.resume_required)
               ? apiJob.resume_required
               : ['履歴書の提出が必須', '職務経歴書の提出が必須'],
+            requiredDocuments: Array.isArray(apiJob.required_documents)
+              ? apiJob.required_documents
+              : [],
             // 企業情報
             representative: apiJob.representative || 'テキストが入ります。',
             establishedYear: apiJob.established_year?.toString() || '2020',
@@ -178,6 +212,7 @@ export default function CandidateSearchSettingPage() {
       locations: encodeURIComponent(jobData?.locations?.join(', ') || ''),
       salaryMin: encodeURIComponent(jobData?.salaryMin || ''),
       salaryMax: encodeURIComponent(jobData?.salaryMax || ''),
+      requiredDocuments: encodeURIComponent(JSON.stringify(jobData?.requiredDocuments || [])),
     });
     
     router.push(`/candidate/search/setting/${params.id}/confirm?${queryParams.toString()}`);
@@ -252,20 +287,29 @@ export default function CandidateSearchSettingPage() {
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   {/* 画像 */}
                   <div
-                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-3xl w-full'
+                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-3xl w-full transition-all ease-in-out'
                     style={{
-                      backgroundImage: jobData.images[0]
-                        ? `url(${jobData.images[0]})`
+                      transitionDuration: '0.6s',
+                      backgroundImage: jobData.images[currentImageIndex]
+                        ? `url(${jobData.images[currentImageIndex]})`
                         : 'url(data:image/svg+xml;base64,PHN2ZwogICAgICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgICAgIHZpZXdCb3g9IjAgMCAxIDEiCiAgICAgIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiCiAgICAgIHdpZHRoPSIxMDAlIgogICAgICBoZWlnaHQ9IjEwMCUiCiAgICA+CiAgICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNFRUUiIC8+CiAgICA8L3N2Zz4=)',
                     }}
                   />
 
                   {/* プログレスバー */}
-                  <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
-                    <div className='flex-1 bg-[#0f9058] h-full rounded-[5px]'></div>
-                    <div className='flex-1 bg-[#dcdcdc] h-full rounded-[5px]'></div>
-                    <div className='flex-1 bg-[#dcdcdc] h-full rounded-[5px]'></div>
-                  </div>
+                  {jobData.images && jobData.images.length > 1 && (
+                    <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
+                      {jobData.images.map((_, index) => (
+                        <div 
+                          key={index}
+                          className={`flex-1 h-full rounded-[5px] transition-colors ease-in-out ${
+                            index === currentImageIndex ? 'bg-[#0f9058]' : 'bg-[#dcdcdc]'
+                          }`}
+                          style={{ transitionDuration: '0.6s' }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* ポジション概要セクション */}
@@ -327,7 +371,7 @@ export default function CandidateSearchSettingPage() {
                 </div>
 
                 {/* 職種・業種・条件待遇セクション */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
+                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full max-w-[520px]'>
                   {/* 職種 */}
                   <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
                     <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
@@ -492,10 +536,10 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           勤務地
                         </div>
-                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full max-w-[400px]'>
                           <div className='flex flex-wrap lg:flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
-                            {/* スマホ画面では最初の2つのタグのみ表示し、残りは...で省略 */}
-                            <div className='flex flex-row lg:flex-wrap gap-2 items-center justify-start w-full overflow-hidden'>
+                            {/* タグを改行して表示 */}
+                            <div className='flex flex-wrap gap-2 items-center justify-start w-full'>
                               {jobData.locations.slice(0, 2).map((location, index) => (
                                 <div
                                   key={index}
@@ -564,7 +608,7 @@ export default function CandidateSearchSettingPage() {
                         </div>
                         <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
-                            {jobData.employmentType}
+                            {getEmploymentTypeInJapanese(jobData.employmentType)}
                           </div>
                         </div>
                       </div>
@@ -638,7 +682,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+               
 
                 {/* 選考情報 */}
                 <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
@@ -813,7 +857,7 @@ export default function CandidateSearchSettingPage() {
                   </div>
                 </div>
               </div>
-
+              </div>
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
               <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6'>
                 <div className='flex flex-col gap-6 items-start justify-start'>
