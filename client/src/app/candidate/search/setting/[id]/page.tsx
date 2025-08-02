@@ -292,7 +292,7 @@ export default function CandidateSearchSettingPage() {
                       transitionDuration: '0.6s',
                       backgroundImage: jobData.images[currentImageIndex]
                         ? `url(${jobData.images[currentImageIndex]})`
-                        : 'url(data:image/svg+xml;base64,PHN2ZwogICAgICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgICAgIHZpZXdCb3g9IjAgMCAxIDEiCiAgICAgIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiCiAgICAgIHdpZHRoPSIxMDAlIgogICAgICBoZWlnaHQ9IjEwMCUiCiAgICA+CiAgICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNFRUUiIC8+CiAgICA8L3N2Zz4=)',
+                        : 'url(/company.jpg)',
                     }}
                   />
 
