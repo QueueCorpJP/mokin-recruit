@@ -41,6 +41,7 @@ export async function GET(
         work_location,
         location_note,
         working_hours,
+        overtime,
         overtime_info,
 
         holidays,

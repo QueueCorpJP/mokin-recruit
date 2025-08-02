@@ -132,8 +132,8 @@ export default function CandidateSearchSettingPage() {
             employmentTypeNote:
               apiJob.employment_type_note || 'テキストが入ります。',
             workingHours: apiJob.working_hours || 'テキストが入ります。',
-            overtime: apiJob.overtime_info ? 'あり' : 'なし',
-            overtimeMemo: apiJob.overtime_memo || 'テキストが入ります。',
+            overtime: apiJob.overtime,
+            overtimeMemo: apiJob.overtime_info,
             holidays: apiJob.holidays || 'テキストが入ります。',
             selectionProcess:
               apiJob.selection_process || 'テキストが入ります。',
@@ -532,26 +532,26 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 勤務地 */}
-                      <div className='box-border content-stretch flex flex-col md:flex-col gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
+                      <div className='box-border content-stretch flex flex-row md:flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] shrink-0">
                           勤務地
                         </div>
-                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full max-w-[400px]'>
-                          <div className='flex flex-wrap lg:flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
+                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                          <div className='flex flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
                             {/* タグを改行して表示 */}
                             <div className='flex flex-wrap gap-2 items-center justify-start w-full'>
                               {jobData.locations.slice(0, 2).map((location, index) => (
                                 <div
                                   key={index}
-                                  className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
+                                  className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 max-w-full'
                                 >
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] whitespace-nowrap overflow-hidden text-ellipsis">
                                     {location}
                                   </div>
                                 </div>
                               ))}
                               {jobData.locations.length > 2 && (
-                                <div className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 lg:hidden'>
+                                <div className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 lg:hidden max-w-full'>
                                   <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
                                     ...
                                   </div>
@@ -562,9 +562,9 @@ export default function CandidateSearchSettingPage() {
                                 {jobData.locations.slice(2).map((location, index) => (
                                   <div
                                     key={index + 2}
-                                    className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
+                                    className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 max-w-full'
                                   >
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                    <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] whitespace-nowrap overflow-hidden text-ellipsis">
                                       {location}
                                     </div>
                                   </div>

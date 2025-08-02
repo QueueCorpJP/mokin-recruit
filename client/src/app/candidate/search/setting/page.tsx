@@ -655,7 +655,7 @@ export default function CandidateSearchPage() {
                       }
                     }}
                     title="クリックしてページ移動">
-                {loading ? 'Loading...' : `${((pagination.page - 1) * pagination.limit) + 1}〜${Math.min(pagination.page * pagination.limit, pagination.total)}件 / ${pagination.total}件`}
+                {loading ? 'Loading...' : pagination.total === 0 ? '0件' : `${((pagination.page - 1) * pagination.limit) + 1}〜${Math.min(pagination.page * pagination.limit, pagination.total)}件 / ${pagination.total}件`}
               </span>
               <button
                 className={`p-1 ${pagination.page === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
