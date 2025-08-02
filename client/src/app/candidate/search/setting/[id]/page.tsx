@@ -267,7 +267,7 @@ export default function CandidateSearchSettingPage() {
                 style={{
                   backgroundImage: jobData.companyLogo
                     ? `url(${jobData.companyLogo})`
-                    : 'url(data:image/svg+xml;base64,PHN2ZwogICAgICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgICAgIHZpZXdCb3g9IjAgMCAxIDEiCiAgICAgIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiCiAgICAgIHdpZHRoPSIxMDAlIgogICAgICBoZWlnaHQ9IjEwMCUiCiAgICA+CiAgICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNFRUUiIC8+CiAgICA8L3N2Zz4=)',
+                    : 'url(/company.jpg)',
                 }}
               />
               <div className='flex-1'>
@@ -532,7 +532,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 勤務地 */}
-                      <div className='box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
+                      <div className='box-border content-stretch flex flex-col md:flex-col gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           勤務地
                         </div>
@@ -640,7 +640,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 就業時間 */}
-                      <div className='flex flex-col md:flex-row gap-2 md:gap-2.5 items-start justify-start w-full'>
+                      <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           就業時間
                         </div>
@@ -672,7 +672,7 @@ export default function CandidateSearchSettingPage() {
                       )}
 
                       {/* 休日・休暇 */}
-                      <div className='flex flex-col md:flex-row gap-2 md:gap-2.5 items-start justify-start w-full'>
+                      <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           休日・休暇
                         </div>
