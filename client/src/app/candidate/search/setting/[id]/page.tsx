@@ -638,7 +638,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+               
 
                 {/* 選考情報 */}
                 <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
@@ -813,7 +813,7 @@ export default function CandidateSearchSettingPage() {
                   </div>
                 </div>
               </div>
-
+              </div>
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
               <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6'>
                 <div className='flex flex-col gap-6 items-start justify-start'>
