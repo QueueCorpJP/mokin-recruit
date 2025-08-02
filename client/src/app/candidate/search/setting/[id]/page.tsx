@@ -52,11 +52,28 @@ interface JobDetailData {
   website: string;
 }
 
+// 雇用形態の英語→日本語マッピング
+const getEmploymentTypeInJapanese = (employmentType: string): string => {
+  const mapping: Record<string, string> = {
+    'FULL_TIME': '正社員',
+    'CONTRACT': '契約社員',
+    '正社員': '正社員',
+    '契約社員': '契約社員',
+    '業務委託': '業務委託',
+    'その他': 'その他'
+  };
+  
+  return mapping[employmentType] || employmentType;
+};
+
 export default function CandidateSearchSettingPage() {
   const router = useRouter();
   const params = useParams();
   const [jobData, setJobData] = useState<JobDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 画像カルーセル用のstate
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // お気に入り機能のhook
   const jobId = params.id as string;
@@ -65,6 +82,19 @@ export default function CandidateSearchSettingPage() {
   
   // お気に入り状態を取得
   const isFavorite = favoriteStatus?.[jobId] || false;
+
+  // 画像の自動切り替え
+  useEffect(() => {
+    if (!jobData || !jobData.images || jobData.images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % jobData.images.length
+      );
+    }, 2500); // 2.5秒間隔
+
+    return () => clearInterval(interval);
+  }, [jobData]);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -257,20 +287,29 @@ export default function CandidateSearchSettingPage() {
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   {/* 画像 */}
                   <div
-                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-3xl w-full'
+                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-3xl w-full transition-all ease-in-out'
                     style={{
-                      backgroundImage: jobData.images[0]
-                        ? `url(${jobData.images[0]})`
+                      transitionDuration: '0.6s',
+                      backgroundImage: jobData.images[currentImageIndex]
+                        ? `url(${jobData.images[currentImageIndex]})`
                         : 'url(data:image/svg+xml;base64,PHN2ZwogICAgICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgICAgIHZpZXdCb3g9IjAgMCAxIDEiCiAgICAgIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiCiAgICAgIHdpZHRoPSIxMDAlIgogICAgICBoZWlnaHQ9IjEwMCUiCiAgICA+CiAgICAgIDxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNFRUUiIC8+CiAgICA8L3N2Zz4=)',
                     }}
                   />
 
                   {/* プログレスバー */}
-                  <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
-                    <div className='flex-1 bg-[#0f9058] h-full rounded-[5px]'></div>
-                    <div className='flex-1 bg-[#dcdcdc] h-full rounded-[5px]'></div>
-                    <div className='flex-1 bg-[#dcdcdc] h-full rounded-[5px]'></div>
-                  </div>
+                  {jobData.images && jobData.images.length > 1 && (
+                    <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
+                      {jobData.images.map((_, index) => (
+                        <div 
+                          key={index}
+                          className={`flex-1 h-full rounded-[5px] transition-colors ease-in-out ${
+                            index === currentImageIndex ? 'bg-[#0f9058]' : 'bg-[#dcdcdc]'
+                          }`}
+                          style={{ transitionDuration: '0.6s' }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* ポジション概要セクション */}
@@ -569,7 +608,7 @@ export default function CandidateSearchSettingPage() {
                         </div>
                         <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
-                            {jobData.employmentType}
+                            {getEmploymentTypeInJapanese(jobData.employmentType)}
                           </div>
                         </div>
                       </div>
