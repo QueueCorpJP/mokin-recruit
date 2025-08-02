@@ -252,11 +252,11 @@ export default function CandidateSearchSettingPage() {
   return (
     <>
       <div className='bg-[#f9f9f9] min-h-screen pb-20 pt-6 px-4 lg:pt-10 lg:px-20'>
-        <div className='max-w-[1280px] mx-auto'>
+        <div className='max-w-[1280px] mx-auto overflow-hidden'>
           {/* ヘッダー部分 */}
           <div className='flex flex-col gap-6 items-start justify-start w-full mb-10'>
             {/* 求人タイトル */}
-            <h1 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
+            <h1 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
               {jobData.title}
             </h1>
 
@@ -271,7 +271,7 @@ export default function CandidateSearchSettingPage() {
                 }}
               />
               <div className='flex-1'>
-                <span className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#0f9058]">
+                <span className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#0f9058] break-words overflow-wrap-break-word line-break-auto max-w-full">
                   {jobData.companyName}
                 </span>
               </div>
@@ -279,10 +279,10 @@ export default function CandidateSearchSettingPage() {
           </div>
 
           {/* メインコンテンツ */}
-          <div className='flex flex-col gap-8 w-full'>
-            <div className='flex flex-col lg:flex-row gap-8 lg:gap-16 items-start justify-start w-full'>
+          <div className='flex flex-col gap-8 min-w-0 max-w-full overflow-hidden'>
+            <div className='flex flex-col lg:flex-row gap-8 lg:gap-16 items-start justify-start w-full max-w-full'>
               {/* 求人詳細 - スマホ時は最初に表示 */}
-              <div className='order-1 flex flex-col gap-10 items-start justify-start w-full lg:flex-1'>
+              <div className='order-1 flex flex-col gap-10 items-start justify-start lg:flex-1 min-w-0 max-w-full overflow-hidden'>
                 {/* 画像・プログレス・タグセクション */}
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   {/* 画像 */}
@@ -325,7 +325,7 @@ export default function CandidateSearchSettingPage() {
                     <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] mb-2">
                       ■業務内容
                     </h3>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.jobDescription}
                     </div>
                   </div>
@@ -335,7 +335,7 @@ export default function CandidateSearchSettingPage() {
                     <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] mb-2">
                       ■当ポジションの魅力
                     </h3>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.positionSummary}
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export default function CandidateSearchSettingPage() {
                     <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] mb-2">
                       ■スキル・経験
                     </h3>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.skills}
                     </div>
                   </div>
@@ -364,136 +364,71 @@ export default function CandidateSearchSettingPage() {
                     <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] mb-2">
                       ■その他・求める人物像など
                     </h3>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.otherRequirements}
                     </div>
                   </div>
                 </div>
 
-                {/* 職種・業種・条件待遇セクション */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full max-w-[520px]'>
-                  {/* 職種 */}
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                {/* 職種から下のセクション群 */}
+            <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full overflow-hidden'>
+                {/* 職種 */}
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] flex items-center px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         職種
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-2.5 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
-                      <div className='box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className='box-border content-stretch flex flex-col gap-2 flex-grow items-start justify-start min-w-0 p-0 relative shrink-0'>
-                          <div className='flex flex-wrap lg:flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
-                            {/* スマホ画面では最初の2つのタグのみ表示し、残りは...で省略 */}
-                            <div className='flex flex-row lg:flex-wrap gap-2 items-center justify-start w-full overflow-hidden'>
-                              {jobData.jobTypes.slice(0, 2).map((type, index) => (
-                                <div
-                                  key={index}
-                                  className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
-                                >
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                    {type}
-                                  </div>
-                                </div>
-                              ))}
-                              {jobData.jobTypes.length > 2 && (
-                                <div className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 lg:hidden'>
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                    ...
-                                  </div>
-                                </div>
-                              )}
-                              {/* PC画面では3つ目以降も表示 */}
-                              <div className='hidden lg:flex lg:flex-wrap gap-2'>
-                                {jobData.jobTypes.slice(2).map((type, index) => (
-                                  <div
-                                    key={index + 2}
-                                    className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
-                                  >
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                      {type}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <div className='bg-white p-6 flex-1 min-w-0 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                        {jobData.jobTypes.slice(0, 3).join('、')}
+                        {jobData.jobTypes.length > 3 && '...'}
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* 業種 */}
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                {/* 業種 */}
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] flex items-center px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         業種
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-2.5 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
-                      <div className='box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className='box-border content-stretch flex flex-col gap-2 flex-grow items-start justify-start min-w-0 p-0 relative shrink-0'>
-                          <div className='flex flex-wrap lg:flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
-                            {/* スマホ画面では最初の2つのタグのみ表示し、残りは...で省略 */}
-                            <div className='flex flex-row lg:flex-wrap gap-2 items-center justify-start w-full overflow-hidden'>
-                              {jobData.industries.slice(0, 2).map((industry, index) => (
-                                <div
-                                  key={index}
-                                  className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
-                                >
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                    {industry}
-                                  </div>
-                                </div>
-                              ))}
-                              {jobData.industries.length > 2 && (
-                                <div className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 lg:hidden'>
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                    ...
-                                  </div>
-                                </div>
-                              )}
-                              {/* PC画面では3つ目以降も表示 */}
-                              <div className='hidden lg:flex lg:flex-wrap gap-2'>
-                                {jobData.industries.slice(2).map((industry, index) => (
-                                  <div
-                                    key={index + 2}
-                                    className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0'
-                                  >
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                      {industry}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <div className='bg-white p-6 flex-1 min-w-0 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                        {jobData.industries.slice(0, 3).join('、')}
+                        {jobData.industries.length > 3 && '...'}
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* 条件・待遇 */}
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                {/* 条件・待遇 */}
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] flex items-center px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         条件・待遇
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-6 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
+                    <div className='bg-white flex flex-col gap-6 flex-1 min-w-0 items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
                       {/* 想定年収 */}
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           想定年収
                         </div>
                         <div className='box-border content-stretch flex flex-row gap-6 items-center justify-start p-0 relative shrink-0'>
                           <div className='box-border content-stretch flex flex-row gap-2 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]'>
-                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                               {jobData.salaryMin || '選択済項目が入ります'}
                             </div>
                             <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                               〜
                             </div>
-                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                               {jobData.salaryMax || '選択済項目が入ります'}
                             </div>
                           </div>
@@ -506,12 +441,12 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 年収補足 */}
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                        <div className="font-['Noto_Sans_JP'] flex items-center font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           年収補足
                         </div>
                         <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
                             {jobData.salaryNote}
                           </div>
                         </div>
@@ -532,58 +467,23 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 勤務地 */}
-                      <div className='box-border content-stretch flex flex-row md:flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] shrink-0">
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           勤務地
                         </div>
-                        <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className='flex flex-wrap box-border content-center gap-2 items-center justify-start p-0 relative shrink-0 w-full'>
-                            {/* タグを改行して表示 */}
-                            <div className='flex flex-wrap gap-2 items-center justify-start w-full'>
-                              {jobData.locations.slice(0, 2).map((location, index) => (
-                                <div
-                                  key={index}
-                                  className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 max-w-full'
-                                >
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {location}
-                                  </div>
-                                </div>
-                              ))}
-                              {jobData.locations.length > 2 && (
-                                <div className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 lg:hidden max-w-full'>
-                                  <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                    ...
-                                  </div>
-                                </div>
-                              )}
-                              {/* PC画面では3つ目以降も表示 */}
-                              <div className='hidden lg:flex lg:flex-wrap gap-2'>
-                                {jobData.locations.slice(2).map((location, index) => (
-                                  <div
-                                    key={index + 2}
-                                    className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2.5 items-center justify-center px-3 py-1 relative rounded-[5px] shrink-0 max-w-full'
-                                  >
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] whitespace-nowrap overflow-hidden text-ellipsis">
-                                      {location}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.locations.slice(0, 3).join('、')}
+                          {jobData.locations.length > 3 && '...'}
                         </div>
                       </div>
 
                       {/* 勤務地補足 */}
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           勤務地補足
                         </div>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
-                            {jobData.locationNote}
-                          </div>
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.locationNote}
                         </div>
                       </div>
 
@@ -602,24 +502,24 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 雇用形態 */}
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           雇用形態
                         </div>
                         <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
                             {getEmploymentTypeInJapanese(jobData.employmentType)}
                           </div>
                         </div>
                       </div>
 
                       {/* 雇用形態補足 */}
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           雇用形態補足
                         </div>
                         <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
                             {jobData.employmentTypeNote}
                           </div>
                         </div>
@@ -644,7 +544,7 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           就業時間
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap">
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                           {jobData.workingHours}
                         </div>
                       </div>
@@ -654,7 +554,7 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           所定外労働の有無
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
                           {jobData.overtime}
                         </div>
                       </div>
@@ -665,7 +565,7 @@ export default function CandidateSearchSettingPage() {
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                             備考
                           </div>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full">
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
                             {jobData.overtimeMemo}
                           </div>
                         </div>
@@ -676,24 +576,24 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
                           休日・休暇
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap">
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                           {jobData.holidays}
                         </div>
                       </div>
                     </div>
                   </div>
-               
+                </div>
 
                 {/* 選考情報 */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] flex items-center px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         選考情報
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-1 flex-grow items-start justify-center min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className='bg-white p-6 flex-1 min-w-0 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
                         {jobData.selectionProcess}
                       </div>
                     </div>
@@ -701,100 +601,51 @@ export default function CandidateSearchSettingPage() {
                 </div>
 
                 {/* アピールポイント */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] flex items-center px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         アピールポイント
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-3 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
+                    <div className='bg-white flex flex-col gap-3 flex-1 min-w-0 items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
                       {/* 業務・ポジション */}
-                      <div className='flex flex-col gap-1 items-start justify-start w-full'>
+                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           業務・ポジション
                         </div>
-                        <div className='flex flex-wrap gap-1 items-start justify-start w-full'>
-                          {jobData.appealPoints.business.map((point, index) => (
-                            <React.Fragment key={index}>
-                              <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                {point}
-                              </span>
-                              {index <
-                                jobData.appealPoints.business.length - 1 && (
-                                <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                  、
-                                </span>
-                              )}
-                            </React.Fragment>
-                          ))}
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.appealPoints.business.join('、')}
                         </div>
                       </div>
 
                       {/* 企業・組織 */}
-                      <div className='flex flex-col gap-1 items-start justify-start w-full'>
+                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           企業・組織
                         </div>
-                        <div className='flex flex-wrap gap-1 items-start justify-start w-full'>
-                          {jobData.appealPoints.company.map((point, index) => (
-                            <React.Fragment key={index}>
-                              <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#000000]">
-                                {point}
-                              </span>
-                              {index <
-                                jobData.appealPoints.company.length - 1 && (
-                                <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                  、
-                                </span>
-                              )}
-                            </React.Fragment>
-                          ))}
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.appealPoints.company.join('、')}
                         </div>
                       </div>
 
                       {/* チーム・文化 */}
-                      <div className='flex flex-col gap-1 items-start justify-start w-full'>
+                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           チーム・文化
                         </div>
-                        <div className='flex flex-wrap gap-1 items-start justify-start w-full'>
-                          {jobData.appealPoints.team.map((point, index) => (
-                            <React.Fragment key={index}>
-                              <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                {point}
-                              </span>
-                              {index < jobData.appealPoints.team.length - 1 && (
-                                <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                  、
-                                </span>
-                              )}
-                            </React.Fragment>
-                          ))}
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.appealPoints.team.join('、')}
                         </div>
                       </div>
 
                       {/* 働き方・制度 */}
-                      <div className='flex flex-col gap-1 items-start justify-start w-full'>
+                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           働き方・制度
                         </div>
-                        <div className='flex flex-wrap gap-1 items-start justify-start w-full'>
-                          {jobData.appealPoints.workstyle.map(
-                            (point, index) => (
-                              <React.Fragment key={index}>
-                                <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                  {point}
-                                </span>
-                                {index <
-                                  jobData.appealPoints.workstyle.length - 1 && (
-                                  <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                    、
-                                  </span>
-                                )}
-                              </React.Fragment>
-                            )
-                          )}
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                          {jobData.appealPoints.workstyle.join('、')}
                         </div>
                       </div>
                     </div>
@@ -802,66 +653,42 @@ export default function CandidateSearchSettingPage() {
                 </div>
 
                 {/* 受動喫煙防止措置 */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                <div className='flex flex-col gap-0 flex items-center justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         受動喫煙防止措置
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-2.5 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] min-h-[28px] w-full">
-                            {jobData.smoke}
-                          </div>
-                        </div>
+                    <div className='bg-white p-6 flex-1 min-w-0 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                        {jobData.smoke}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 応募時のレジュメ提出 */}
-                <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative rounded-[10px] w-full'>
-                  <div className='box-border content-stretch flex flex-col lg:flex-row gap-0 items-stretch justify-start overflow-visible p-0 relative shrink-0 w-full rounded-[10px]'>
-                    <div className='bg-[#efefef] box-border content-stretch flex flex-col gap-1 items-start justify-center min-h-[50px] px-6 py-3 relative shrink-0 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                <div className='flex flex-col gap-0 items-start justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                  <div className='flex flex-col flex items-center lg:flex-row gap-0 items-stretch justify-start min-w-0 max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='bg-[#efefef] px-6 py-3 w-full lg:w-[200px] rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                       <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         応募時のレジュメ提出
                       </div>
                     </div>
-                    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-2.5 flex-grow items-start justify-start min-h-fit p-[24px] relative shrink-0 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none'>
-                      <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className='flex flex-wrap box-border content-start gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                            {jobData.resumeRequired.map(
-                              (requirement, index) => (
-                                <React.Fragment key={index}>
-                                  <div className='box-border content-stretch flex flex-row gap-2 items-start justify-start p-0 relative shrink-0'>
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                      {requirement}
-                                    </div>
-                                  </div>
-                                  {index <
-                                    jobData.resumeRequired.length - 1 && (
-                                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                      、
-                                    </div>
-                                  )}
-                                </React.Fragment>
-                              )
-                            )}
-                          </div>
-                        </div>
+                    <div className='bg-white p-6 flex-1 min-w-0 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                        {jobData.resumeRequired.join('、')}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
               </div>
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
-              <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6'>
-                <div className='flex flex-col gap-6 items-start justify-start'>
-                  <h2 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232]">
+              <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6 max-w-full overflow-hidden'>
+                <div className='flex flex-col gap-6 items-start justify-start max-w-full overflow-hidden'>
+                  <h2 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                     {jobData.companyName}
                   </h2>
 
@@ -879,7 +706,7 @@ export default function CandidateSearchSettingPage() {
                         代表者
                       </div>
                     </div>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                       {jobData.representative}
                     </div>
                   </div>
@@ -899,7 +726,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
-                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                         {jobData.establishedYear}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -923,7 +750,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
-                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                         {jobData.capital}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -947,7 +774,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
-                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                         {jobData.employeeCount}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -957,7 +784,7 @@ export default function CandidateSearchSettingPage() {
                   </div>
 
                   {/* 業種 */}
-                  <div className='flex flex-col gap-2 items-start justify-start w-full'>
+                  <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full overflow-hidden'>
                     <div className='flex flex-row gap-2 h-7 items-center justify-start pb-1 pt-0 px-0 w-full border-b border-[#dcdcdc]'>
                       <svg
                         className='w-4 h-4 text-[#0f9058]'
@@ -970,40 +797,10 @@ export default function CandidateSearchSettingPage() {
                         業種
                       </div>
                     </div>
-                    <div className='flex flex-wrap lg:flex-wrap gap-2 items-center justify-start w-full'>
-                      {/* スマホ画面では最初の2つのタグのみ表示し、残りは...で省略 */}
-                      <div className='flex flex-row lg:flex-wrap gap-2 items-center justify-start w-full overflow-hidden'>
-                        {jobData.industry.split('、').slice(0, 2).map((ind, index) => (
-                          <div
-                            key={index}
-                            className='bg-[#d2f1da] flex flex-row gap-2.5 items-center justify-center px-3 py-1 rounded-[5px] shrink-0'
-                          >
-                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                              {ind}
-                            </span>
-                          </div>
-                        ))}
-                        {jobData.industry.split('、').length > 2 && (
-                          <div className='bg-[#d2f1da] flex flex-row gap-2.5 items-center justify-center px-3 py-1 rounded-[5px] shrink-0 lg:hidden'>
-                            <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                              ...
-                            </span>
-                          </div>
-                        )}
-                        {/* スマホ画面では3つ目以降も表示 */}
-                        {/* PC画面では3つ目以降も表示 */}
-                        <div className='hidden lg:flex lg:flex-wrap gap-2'>
-                          {jobData.industry.split('、').slice(2).map((ind, index) => (
-                            <div
-                              key={index + 2}
-                              className='bg-[#d2f1da] flex flex-row gap-2.5 items-center justify-center px-3 py-1 rounded-[5px] shrink-0'
-                            >
-                              <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                                {ind}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                    <div className='min-w-0 max-w-full overflow-hidden'>
+                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto">
+                        {jobData.industry.split('、').slice(0, 2).join('、')}
+                        {jobData.industry.split('、').length > 2 && '...'}
                       </div>
                     </div>
                   </div>
@@ -1022,7 +819,7 @@ export default function CandidateSearchSettingPage() {
                         事業内容
                       </div>
                     </div>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.businessContent}
                     </div>
                   </div>
@@ -1041,7 +838,7 @@ export default function CandidateSearchSettingPage() {
                         所在地
                       </div>
                     </div>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
                       {jobData.address}
                     </div>
                   </div>
@@ -1060,7 +857,7 @@ export default function CandidateSearchSettingPage() {
                         企業フェーズ
                       </div>
                     </div>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                       {jobData.companyPhase}
                     </div>
                   </div>
@@ -1079,7 +876,7 @@ export default function CandidateSearchSettingPage() {
                         URL
                       </div>
                     </div>
-                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                       {jobData.website}
                     </div>
                   </div>
