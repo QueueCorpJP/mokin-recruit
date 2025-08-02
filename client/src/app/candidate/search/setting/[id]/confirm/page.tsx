@@ -36,8 +36,8 @@ export default function CandidateSearchSettingConfirmPage() {
   const isAuthenticated = useAuthIsAuthenticated();
   
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [careerFile, setCareerFile] = useState<File | null>(null);
+  const [resumeFiles, setResumeFiles] = useState<File[]>([]);
+  const [careerFiles, setCareerFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>('');
   
@@ -56,46 +56,74 @@ export default function CandidateSearchSettingConfirmPage() {
   
   // 必須書類が揃っているかチェック
   const canSubmit = () => {
-    if (isResumeRequired && !resumeFile) return false;
-    if (isCareerRequired && !careerFile) return false;
+    if (isResumeRequired && resumeFiles.length === 0) return false;
+    if (isCareerRequired && careerFiles.length === 0) return false;
     return true;
   };
 
   // ファイルアップロード処理
   const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const validation = validateFile(file);
-      if (!validation.valid) {
-        setUploadError(validation.error || 'ファイルが無効です');
-        return;
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
+      
+      files.forEach(file => {
+        const validation = validateFile(file);
+        if (validation.valid) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(`${file.name}: ${validation.error}`);
+        }
+      });
+      
+      if (invalidFiles.length > 0) {
+        setUploadError(`以下のファイルが無効です: ${invalidFiles.join(', ')}`);
+      } else {
+        setUploadError('');
       }
-      setResumeFile(file);
-      setUploadError('');
+      
+      if (validFiles.length > 0) {
+        setResumeFiles(prev => [...prev, ...validFiles]);
+      }
     }
   };
 
   const handleCareerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const validation = validateFile(file);
-      if (!validation.valid) {
-        setUploadError(validation.error || 'ファイルが無効です');
-        return;
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
+      
+      files.forEach(file => {
+        const validation = validateFile(file);
+        if (validation.valid) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(`${file.name}: ${validation.error}`);
+        }
+      });
+      
+      if (invalidFiles.length > 0) {
+        setUploadError(`以下のファイルが無効です: ${invalidFiles.join(', ')}`);
+      } else {
+        setUploadError('');
       }
-      setCareerFile(file);
-      setUploadError('');
+      
+      if (validFiles.length > 0) {
+        setCareerFiles(prev => [...prev, ...validFiles]);
+      }
     }
   };
 
   // ファイル削除機能
-  const handleRemoveResume = () => {
-    setResumeFile(null);
+  const handleRemoveResume = (index: number) => {
+    setResumeFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
   };
 
-  const handleRemoveCareer = () => {
-    setCareerFile(null);
+  const handleRemoveCareer = (index: number) => {
+    setCareerFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
   };
 
@@ -109,8 +137,8 @@ export default function CandidateSearchSettingConfirmPage() {
     // 必須書類チェック
     if (!canSubmit()) {
       const missingDocs = [];
-      if (isResumeRequired && !resumeFile) missingDocs.push('履歴書');
-      if (isCareerRequired && !careerFile) missingDocs.push('職務経歴書');
+      if (isResumeRequired && resumeFiles.length === 0) missingDocs.push('履歴書');
+      if (isCareerRequired && careerFiles.length === 0) missingDocs.push('職務経歴書');
       setUploadError(`必須書類が不足しています: ${missingDocs.join('、')}`);
       return;
     }
@@ -119,11 +147,11 @@ export default function CandidateSearchSettingConfirmPage() {
     setUploadError('');
 
     try {
-      let resumeUrl = '';
-      let careerUrl = '';
+      const resumeUrls: string[] = [];
+      const careerUrls: string[] = [];
 
       // 履歴書をアップロード
-      if (resumeFile) {
+      for (const resumeFile of resumeFiles) {
         const resumeUploadResult = await uploadApplicationDocument(
           resumeFile,
           'resume',
@@ -132,11 +160,13 @@ export default function CandidateSearchSettingConfirmPage() {
         if (!resumeUploadResult.success) {
           throw new Error(resumeUploadResult.error || '履歴書のアップロードに失敗しました');
         }
-        resumeUrl = resumeUploadResult.url || '';
+        if (resumeUploadResult.url) {
+          resumeUrls.push(resumeUploadResult.url);
+        }
       }
 
       // 職務経歴書をアップロード
-      if (careerFile) {
+      for (const careerFile of careerFiles) {
         const careerUploadResult = await uploadApplicationDocument(
           careerFile,
           'career',
@@ -145,7 +175,9 @@ export default function CandidateSearchSettingConfirmPage() {
         if (!careerUploadResult.success) {
           throw new Error(careerUploadResult.error || '職務経歴書のアップロードに失敗しました');
         }
-        careerUrl = careerUploadResult.url || '';
+        if (careerUploadResult.url) {
+          careerUrls.push(careerUploadResult.url);
+        }
       }
 
       // 応募APIを呼び出し
@@ -157,8 +189,8 @@ export default function CandidateSearchSettingConfirmPage() {
         credentials: 'include',
         body: JSON.stringify({
           job_posting_id: jobId,
-          resume_url: resumeUrl,
-          career_history_url: careerUrl,
+          resume_urls: resumeUrls,
+          career_history_urls: careerUrls,
           application_message: '求人に応募いたします。'
         })
       });
@@ -647,6 +679,7 @@ export default function CandidateSearchSettingConfirmPage() {
                       <input
                         type="file"
                         accept=".pdf"
+                        multiple
                         onChange={handleResumeUpload}
                         style={{ display: 'none' }}
                         id="resume-upload"
@@ -676,8 +709,9 @@ export default function CandidateSearchSettingConfirmPage() {
                         履歴書をアップロード
                       </label>
                     </div>
-                    {resumeFile && (
+                    {resumeFiles.map((file, index) => (
                       <div
+                        key={`${file.name}-${index}`}
                         className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
                         style={{ 
                           maxWidth: isMobile ? '140px' : '300px',
@@ -685,10 +719,10 @@ export default function CandidateSearchSettingConfirmPage() {
                         }}
                       >
                         <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                          {truncateFileName(resumeFile.name, isMobile ? 10 : 20)}
+                          {truncateFileName(file.name, isMobile ? 10 : 20)}
                         </div>
                         <button
-                          onClick={handleRemoveResume}
+                          onClick={() => handleRemoveResume(index)}
                           className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
                           style={{
                             background: 'none',
@@ -708,7 +742,7 @@ export default function CandidateSearchSettingConfirmPage() {
                           ×
                         </button>
                       </div>
-                    )}
+                    ))}
                     <span
                       style={{
                         fontFamily: 'Noto Sans JP',
@@ -795,6 +829,7 @@ export default function CandidateSearchSettingConfirmPage() {
                       <input
                         type="file"
                         accept=".pdf"
+                        multiple
                         onChange={handleCareerUpload}
                         style={{ display: 'none' }}
                         id="career-upload"
@@ -824,8 +859,9 @@ export default function CandidateSearchSettingConfirmPage() {
                         職務経歴書をアップロード
                       </label>
                     </div>
-                    {careerFile && (
+                    {careerFiles.map((file, index) => (
                       <div
+                        key={`${file.name}-${index}`}
                         className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
                         style={{ 
                           maxWidth: isMobile ? '140px' : '300px',
@@ -833,10 +869,10 @@ export default function CandidateSearchSettingConfirmPage() {
                         }}
                       >
                         <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                          {truncateFileName(careerFile.name, isMobile ? 10 : 20)}
+                          {truncateFileName(file.name, isMobile ? 10 : 20)}
                         </div>
                         <button
-                          onClick={handleRemoveCareer}
+                          onClick={() => handleRemoveCareer(index)}
                           className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
                           style={{
                             background: 'none',
@@ -856,7 +892,7 @@ export default function CandidateSearchSettingConfirmPage() {
                           ×
                         </button>
                       </div>
-                    )}
+                    ))}
                     <span
                       style={{
                         fontFamily: 'Noto Sans JP',
