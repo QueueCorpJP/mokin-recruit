@@ -372,7 +372,7 @@ export default function CandidateSearchSettingPage() {
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   {/* 画像 */}
                   <div
-                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-3xl w-full transition-all ease-in-out'
+                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-[10px] md:rounded-3xl w-full transition-all ease-in-out'
                     style={{
                       transitionDuration: '0.6s',
                       backgroundImage: jobData.images[currentImageIndex]
