@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 
+// Stagewise Toolbar (development only)
+// import StagewiseToolbarClient from './stagewise-toolbar-client';
+
 // サーバーサイド初期化の実行
 import '@/lib/server/container/bindings';
 
@@ -88,6 +91,7 @@ export default function RootLayout({
           <AuthAwareNavigation />
           {children}
           <AuthAwareFooter />
+          {/* <StagewiseToolbarClient /> */}
         </QueryProvider>
       </body>
     </html>

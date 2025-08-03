@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
-    // 求人情報を取得して会社情報も取得
+    // 求人情報を取得
     const { data: jobPosting, error: jobError } = await supabase
       .from('job_postings')
       .select(`
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         status
       `)
       .eq('id', job_posting_id)
-      .single();
+      .maybeSingle();
 
     if (jobError || !jobPosting) {
       logger.error('Failed to fetch job posting:', jobError);
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
             description: '自動作成された採用チーム'
           })
           .select('id')
-          .single();
+          .maybeSingle();
           
         if (createGroupError) {
           logger.error('Failed to create company group:', createGroupError);
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       .select('id')
       .eq('company_account_id', jobPosting.company_account_id)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (companyUserError || !companyUser) {
       logger.error('Failed to fetch company user:', companyUserError);
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (applicationError) {
       logger.error('Failed to create application:', applicationError);
