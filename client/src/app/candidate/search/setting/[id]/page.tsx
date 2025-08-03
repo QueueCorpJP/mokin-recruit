@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { getJobDetail } from '@/lib/utils/api-client';
@@ -65,6 +65,90 @@ const getEmploymentTypeInJapanese = (employmentType: string): string => {
   };
   
   return mapping[employmentType] || employmentType;
+};
+
+// 勤務地タグの一行表示用コンポーネント
+const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(locations.length);
+
+  useEffect(() => {
+    const calculateVisibleTags = () => {
+      if (!containerRef.current) return;
+
+      const container = containerRef.current;
+      const containerWidth = container.offsetWidth;
+      const ellipsisWidth = 30; // "..." の幅
+      let currentWidth = 0;
+      let count = 0;
+
+      // 各タグの幅を計算
+      for (let i = 0; i < locations.length; i++) {
+        // タグの幅を概算（パディング48px + フォントサイズ14px * 文字数 * 0.9）
+        const estimatedTagWidth = 48 + (locations[i].length * 14 * 0.9);
+        const gapWidth = i > 0 ? 8 : 0; // gap分
+        const totalWidthWithTag = currentWidth + gapWidth + estimatedTagWidth;
+        
+        // 次のタグを追加した場合の幅をチェック
+        const remainingTags = locations.length - i - 1;
+        const needsEllipsis = remainingTags > 0;
+        
+        // 省略記号が必要な場合はその分も考慮
+        const finalWidth = totalWidthWithTag + (needsEllipsis ? 8 + ellipsisWidth : 0);
+        
+        if (finalWidth > containerWidth) {
+          // このタグを追加すると溢れる場合
+          break;
+        }
+        
+        currentWidth = totalWidthWithTag;
+        count++;
+      }
+
+      setVisibleCount(Math.max(1, count)); // 最低1つは表示
+    };
+
+    const timeoutId = setTimeout(calculateVisibleTags, 0);
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateVisibleTags, 0);
+    });
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
+  }, [locations]);
+
+  return (
+    <div ref={containerRef} className='flex flex-nowrap gap-2 items-center justify-start w-full overflow-hidden'>
+      {locations.slice(0, visibleCount).map(item => (
+        <div
+          key={item}
+          className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 shrink-0'
+          style={{ borderRadius: '5px' }}
+        >
+          <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] whitespace-nowrap">
+            {item}
+          </span>
+        </div>
+      ))}
+      {visibleCount < locations.length && (
+        <div
+          className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0 shrink-0'
+          style={{ borderRadius: '5px' }}
+        >
+          <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+            ...
+          </span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function CandidateSearchSettingPage() {
@@ -462,17 +546,19 @@ export default function CandidateSearchSettingPage() {
                       </div>
 
                       {/* 勤務地 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      <div className='flex flex-row gap-2 items-start justify-start min-w-0 max-w-full'>
+                        <div className="font-['Noto_Sans_JP'] shrink-0 font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
                           勤務地
                         </div>
-                        <TagDisplay items={jobData.locations} borderRadius="5px" />
+                        <div className="min-w-0 flex-1">
+                          <SingleRowLocationTags locations={jobData.locations} />
+                        </div>
                       </div>
 
                       {/* 勤務地補足 */}
                       <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          勤務地補足
+                          備考
                         </div>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
                           {jobData.locationNote}
