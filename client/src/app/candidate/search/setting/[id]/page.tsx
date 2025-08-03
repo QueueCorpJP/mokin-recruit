@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { getJobDetail } from '@/lib/utils/api-client';
 import { useFavoriteStatusQuery, useFavoriteToggleMutation } from '@/hooks/useFavoriteApi';
+import { TagDisplay } from '@/components/ui/TagDisplay';
 
 // ダミーデータ型定義
 interface JobDetailData {
@@ -371,7 +372,7 @@ export default function CandidateSearchSettingPage() {
                 </div>
 
                 {/* 職種から下のセクション群 */}
-            <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full overflow-hidden'>
+            <div className='flex flex-col gap-2 items-start justify-start w-full overflow-hidden'>
                 {/* 職種 */}
                 <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
                   <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
@@ -381,10 +382,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                     <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                        {jobData.jobTypes.slice(0, 3).join('、')}
-                        {jobData.jobTypes.length > 3 && '...'}
-                      </div>
+                      <TagDisplay items={jobData.jobTypes} borderRadius="5px" />
                     </div>
                   </div>
                 </div>
@@ -398,10 +396,7 @@ export default function CandidateSearchSettingPage() {
                       </div>
                     </div>
                     <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                        {jobData.industries.slice(0, 3).join('、')}
-                        {jobData.industries.length > 3 && '...'}
-                      </div>
+                      <TagDisplay items={jobData.industries} borderRadius="5px" />
                     </div>
                   </div>
                 </div>
@@ -471,10 +466,7 @@ export default function CandidateSearchSettingPage() {
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                           勤務地
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.locations.slice(0, 3).join('、')}
-                          {jobData.locations.length > 3 && '...'}
-                        </div>
+                        <TagDisplay items={jobData.locations} borderRadius="5px" />
                       </div>
 
                       {/* 勤務地補足 */}
@@ -555,7 +547,7 @@ export default function CandidateSearchSettingPage() {
                           所定外労働の有無
                         </div>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                          {jobData.overtime}
+                          {jobData.overtime ? (jobData.overtime.trim() === '' ? 'なし' : jobData.overtime) : 'なし'}
                         </div>
                       </div>
 
@@ -790,7 +782,7 @@ export default function CandidateSearchSettingPage() {
                   </div>
 
                   {/* 業種 */}
-                  <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full overflow-hidden'>
+                  <div className='flex flex-col gap-2 items-start justify-start w-full overflow-hidden'>
                     <div className='flex flex-row gap-2 h-7 items-center justify-start pb-1 pt-0 px-0 w-full border-b border-[#dcdcdc]'>
                       <svg
                         className='w-4 h-4 text-[#0f9058]'
@@ -903,11 +895,21 @@ export default function CandidateSearchSettingPage() {
                   disabled={favoriteToggleMutation.isPending}
                   className={`${
                     isFavorite 
-                      ? 'bg-[#FFDA5F] hover:bg-[#FFDA5F] text-[#323232]' 
-                      : 'bg-[#dcdcdc] hover:bg-[#c0c0c0]'
-                  } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-colors min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden ${
+                      ? 'bg-[#FFDA5F] text-[#323232]' 
+                      : 'bg-[#dcdcdc] text-white'
+                  } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden ${
                     favoriteToggleMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
+                  onMouseEnter={e => {
+                    if (!favoriteToggleMutation.isPending) {
+                      e.currentTarget.style.backgroundColor = isFavorite ? '#E5C54F' : '#c0c0c0';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!favoriteToggleMutation.isPending) {
+                      e.currentTarget.style.backgroundColor = isFavorite ? '#FFDA5F' : '#dcdcdc';
+                    }
+                  }}
                 >
                   <Star
                     size={12}
@@ -925,7 +927,13 @@ export default function CandidateSearchSettingPage() {
 
                 <button
                   onClick={handleApply}
-                  className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] transition-all hover:from-[#249881] hover:to-[#27668D] min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden'
+                  className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden'
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'linear-gradient(to right, #249881, #27668D)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'linear-gradient(to right, #26AF94, #3A93CB)';
+                  }}
                 >
                   <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] text-white whitespace-nowrap">
                     応募する
