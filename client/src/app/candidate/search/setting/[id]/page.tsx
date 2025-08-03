@@ -633,7 +633,7 @@ export default function CandidateSearchSettingPage() {
                           所定外労働の有無
                         </div>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                          {jobData.overtime ? (jobData.overtime.trim() === '' ? 'なし' : jobData.overtime) : 'なし'}
+                          {jobData.overtime ? (jobData.overtime.trim() === '' ? 'あり' : jobData.overtime) : 'あり'}
                         </div>
                       </div>
 

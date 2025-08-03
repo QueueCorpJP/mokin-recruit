@@ -11,7 +11,7 @@ export type Region = {
 };
 
 export const regions: Region[] = [
-  { name: '関東地方', prefectures: ['東京都', '茨城', '栃木', '群馬', '埼玉', '千葉', '神奈川'] },
+  { name: '関東地方', prefectures: ['東京', '茨城', '栃木', '群馬', '埼玉', '千葉', '神奈川'] },
   { name: '北海道地方', prefectures: ['北海道'] },
   { name: '東北地方', prefectures: ['青森', '岩手', '宮城', '秋田', '山形', '福島'] },
   { name: '北陸地方', prefectures: ['新潟', '富山', '石川', '福井'] },
