@@ -957,6 +957,13 @@ export default function CandidateSearchSettingConfirmPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '0 40px',
+                transition: 'all 0.2s ease-in-out',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(15, 144, 88, 0.1)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
               onClick={isSubmitted ? () => router.push('/candidate/message') : () => router.back()}
             >
@@ -981,6 +988,17 @@ export default function CandidateSearchSettingConfirmPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '0 40px',
+                transition: 'all 0.2s ease-in-out',
+              }}
+              onMouseEnter={e => {
+                if (!isUploading && (isSubmitted || canSubmit())) {
+                  e.currentTarget.style.background = 'linear-gradient(180deg, #12614E 0%, #1A8946 100%)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isUploading && (isSubmitted || canSubmit())) {
+                  e.currentTarget.style.background = 'linear-gradient(180deg, #198D76 0%, #1CA74F 100%)';
+                }
               }}
               onClick={isSubmitted ? () => router.push('/candidate/search/setting') : handleApplication}
               disabled={isUploading || (!isSubmitted && !canSubmit())}
