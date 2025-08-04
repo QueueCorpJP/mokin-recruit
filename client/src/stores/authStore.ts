@@ -189,13 +189,9 @@ export const authStore = createStore<AuthState>()(
       logout: async () => {
         const { userType } = get();
         try {
-          await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
+          // サーバーアクションを動的インポート
+          const { logoutAction } = await import('@/lib/auth/actions');
+          await logoutAction();
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Logout error:', error);

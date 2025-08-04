@@ -30,6 +30,8 @@ export interface FavoriteActionResult {
 }
 
 export async function getFavoriteList(params: FavoriteListParams = {}): Promise<FavoriteListResult> {
+  const startTime = performance.now();
+  
   try {
     // JWT検証のためのリクエストオブジェクトを作成
     const cookieStore = await cookies();
@@ -42,10 +44,15 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
       };
     }
 
-    // 仮のリクエストオブジェクトを作成（validateJWTがNextRequestを期待するため）
+    // NextRequestに準拠したリクエストオブジェクトを作成
     const mockRequest = {
-      headers: new Map([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore
+      headers: new Headers([['authorization', `Bearer ${token}`]]),
+      cookies: cookieStore,
+      nextUrl: { pathname: '/candidate/job/favorite' },
+      get: (name: string) => {
+        if (name === 'authorization') return `Bearer ${token}`;
+        return null;
+      }
     } as any;
 
     const authResult = await validateJWT(mockRequest);
@@ -63,8 +70,14 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
 
     const supabase = getSupabaseAdminClient();
 
-    // お気に入り求人を取得（求人詳細を含む）
-    const { data: favorites, error: favoritesError, count } = await supabase
+    // カウントクエリとデータクエリを分離して並列実行
+    const favoritesCountQuery = supabase
+      .from('favorites')
+      .select('id', { count: 'exact', head: true })
+      .eq('candidate_id', candidateId)
+      .match({ 'job_postings.status': 'PUBLISHED' });
+
+    const favoritesDataQuery = supabase
       .from('favorites')
       .select(`
         id,
@@ -90,11 +103,30 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
           appeal_points,
           image_urls
         )
-      `, { count: 'exact' })
+      `)
       .eq('candidate_id', candidateId)
       .eq('job_postings.status', 'PUBLISHED')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    // 並列実行
+    const [countResult, dataResult] = await Promise.all([
+      favoritesCountQuery,
+      favoritesDataQuery
+    ]);
+
+    const { count, error: countError } = countResult;
+    const { data: favorites, error: favoritesError } = dataResult;
+
+    if (countError) {
+      console.error('お気に入りカウントエラー:', {
+        message: countError.message || 'メッセージなし',
+        details: countError.details || 'detailsなし',
+        hint: countError.hint || 'hintなし',
+        code: countError.code || 'codeなし',
+        fullError: countError
+      });
+    }
 
     if (favoritesError) {
       console.error('お気に入り取得エラー:', favoritesError);
@@ -104,10 +136,10 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
       };
     }
 
-    // company_account_idを使って企業名を別途取得
-    const companyAccountIds = [...new Set(
+    // company_account_idを使って企業名を取得（必要な場合のみ）
+    const companyAccountIds = Array.from(new Set(
       favorites?.map((fav: any) => fav.job_postings?.company_account_id).filter(Boolean)
-    )];
+    ));
     
     let companyNamesMap: Record<string, any> = {};
     if (companyAccountIds.length > 0) {
@@ -138,6 +170,9 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
 
     const totalCount = count || 0;
     const totalPages = Math.ceil(totalCount / limit);
+
+    const endTime = performance.now();
+    console.log(`[OPTIMIZED] Favorites list completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Companies: ${companyAccountIds.length}`);
 
     return {
       success: true,
@@ -174,8 +209,13 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
     }
 
     const mockRequest = {
-      headers: new Map([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore
+      headers: new Headers([['authorization', `Bearer ${token}`]]),
+      cookies: cookieStore,
+      nextUrl: { pathname: '/candidate/job/favorite' },
+      get: (name: string) => {
+        if (name === 'authorization') return `Bearer ${token}`;
+        return null;
+      }
     } as any;
 
     const authResult = await validateJWT(mockRequest);
@@ -189,14 +229,25 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
     const candidateId = authResult.candidateId;
     const supabase = getSupabaseAdminClient();
 
-    // 求人が存在し、公開されているかチェック
-    const { data: jobData, error: jobError } = await supabase
-      .from('job_postings')
-      .select('id, status, title')
-      .eq('id', jobPostingId)
-      .single();
+    // 求人の存在チェックと既存のお気に入りチェックを並列実行
+    const [jobResult, favoriteResult] = await Promise.all([
+      supabase
+        .from('job_postings')
+        .select('id, status, title')
+        .eq('id', jobPostingId)
+        .single(),
+      supabase
+        .from('favorites')
+        .select('id')
+        .eq('candidate_id', candidateId)
+        .eq('job_posting_id', jobPostingId)
+        .maybeSingle()
+    ]);
 
-    if (jobError) {
+    const { data: jobData, error: jobError } = jobResult;
+    const { data: existingFavorite, error: checkError } = favoriteResult;
+
+    if (jobError || !jobData) {
       return {
         success: false,
         error: '指定された求人が存在しません'
@@ -209,14 +260,6 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
         error: 'この求人は現在お気に入りに追加できません'
       };
     }
-
-    // 既にお気に入りに追加されているかチェック
-    const { data: existingFavorite, error: checkError } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('candidate_id', candidateId)
-      .eq('job_posting_id', jobPostingId)
-      .single();
 
     if (existingFavorite) {
       return {
@@ -268,8 +311,13 @@ export async function removeFavorite(jobPostingId: string): Promise<FavoriteActi
     }
 
     const mockRequest = {
-      headers: new Map([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore
+      headers: new Headers([['authorization', `Bearer ${token}`]]),
+      cookies: cookieStore,
+      nextUrl: { pathname: '/candidate/job/favorite' },
+      get: (name: string) => {
+        if (name === 'authorization') return `Bearer ${token}`;
+        return null;
+      }
     } as any;
 
     const authResult = await validateJWT(mockRequest);

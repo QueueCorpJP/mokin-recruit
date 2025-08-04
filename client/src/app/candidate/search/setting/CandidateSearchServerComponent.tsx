@@ -38,9 +38,6 @@ export default async function CandidateSearchServerComponent({
     limit: 10
   };
 
-  // サーバーサイドで求人データを取得
-  const jobSearchResponse = await getJobSearchData(searchConditions);
-  
   let jobsWithFavorites: JobSearchResult[] = [];
   let pagination = {
     page: searchConditions.page,
@@ -50,19 +47,26 @@ export default async function CandidateSearchServerComponent({
   };
 
   try {
+    // サーバーサイドで求人データを取得
+    const jobSearchResponse = await getJobSearchData(searchConditions);
+    
     if (jobSearchResponse.success && jobSearchResponse.data) {
       const jobs = jobSearchResponse.data.jobs;
       pagination = jobSearchResponse.data.pagination;
       
-      // お気に入り状態を取得
+      // 求人データが存在する場合、お気に入り状態を並列で取得
       if (jobs.length > 0) {
         const jobIds = jobs.map(job => job.id);
+        
+        // お気に入り状態を非同期で取得（既に求人データは取得済みなので並列処理の必要なし）
         const favoriteResponse = await getFavoriteStatusServer(jobIds);
         
         jobsWithFavorites = jobs.map(job => ({
           ...job,
           starred: favoriteResponse.data?.[job.id] || false
         })) as JobSearchResult[];
+      } else {
+        jobsWithFavorites = jobs as JobSearchResult[];
       }
     } else {
       console.error('Failed to get jobs:', jobSearchResponse.error);

@@ -334,17 +334,20 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     logger.info('Looking up candidate information...');
     const supabase = getSupabaseAdminClient();
     
-    // まず候補者テーブルの存在確認（emailで検索）
+    // まず候補者テーブルの存在確認（emailで検索、大文字・小文字を区別しない）
+    const trimmedEmail = user.email?.trim().toLowerCase();
     const { data: candidateCheck, error: candidateCheckError } = await supabase
       .from('candidates')
       .select('id, email')
-      .eq('email', user.email)
+      .ilike('email', trimmedEmail)
       .maybeSingle();
 
     logger.info('Candidate lookup result:', {
-      email: user.email,
+      originalEmail: user.email,
+      searchEmail: trimmedEmail,
       found: !!candidateCheck,
       candidateId: candidateCheck?.id,
+      candidateEmail: candidateCheck?.email,
       sessionUserId: user.id,
       error: candidateCheckError?.message
     });
@@ -358,13 +361,16 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     }
 
     if (!candidateCheck) {
-      logger.warn('Candidate not found for email:', user.email);
+      logger.warn('Candidate not found for email:', {
+        original: user.email,
+        searched: trimmedEmail
+      });
       
       // 企業ユーザーかどうかチェック
       const { data: companyUser, error: companyError } = await supabase
         .from('company_users')
         .select('id, email')
-        .eq('email', user.email)
+        .ilike('email', trimmedEmail)
         .maybeSingle();
 
       if (companyUser) {
