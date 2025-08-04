@@ -259,7 +259,9 @@ export async function getJobSearchData(params: JobSearchParams): Promise<JobSear
     // キャッシュサイズを制限（メモリ使用量対策）
     if (searchCache.size > 100) {
       const oldestKey = searchCache.keys().next().value;
-      searchCache.delete(oldestKey);
+      if (oldestKey) {
+        searchCache.delete(oldestKey);
+      }
     }
   }
   
