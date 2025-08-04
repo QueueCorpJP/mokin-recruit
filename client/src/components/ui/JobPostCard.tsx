@@ -7,7 +7,7 @@ interface JobPostCardProps {
   title: string;
   tags: string[];
   companyName: string;
-  location: string;
+  location: string | string[];
   salary: string;
   starred: boolean;
   onStarClick?: () => void;

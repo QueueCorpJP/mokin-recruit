@@ -103,7 +103,7 @@ export async function GET(
         updated_at
       `)
       .eq('id', job.company_account_id)
-      .single();
+      .maybeSingle();
 
     if (companyError) {
       console.error('Failed to fetch company:', companyError);
