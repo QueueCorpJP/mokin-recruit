@@ -24,19 +24,23 @@
       "type": "sse",
       "url": "http://127.0.0.1:3845/sse"
     },
-
     "postman-api-mcp": {
       "command": "npx",
-     
       "args": [
-      "mcp-remote",
-      "https://mcp.postman.com/mcp",
-      "--header",
-      "Authorization: Bearer PMAK-688493a76a1676000190777b-5416d7a92dd911537e33441ea3b444c9cf"
+        "mcp-remote",
+        "https://mcp.postman.com/mcp",
+        "--header",
+        "Authorization: Bearer PMAK-688493a76a1676000190777b-5416d7a92dd911537e33441ea3b444c9cf"
       ],
       "env": {
         "POSTMAN_API_KEY": "PMAK-688493a76a1676000190777b-5416d7a92dd911537e33441ea3b444c9cf"
       }
     }
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase",
+    "playwright",
+    "Figma",
+    "postman-api-mcp"
+  ]
 }

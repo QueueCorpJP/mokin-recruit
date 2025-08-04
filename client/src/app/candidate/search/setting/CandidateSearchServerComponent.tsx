@@ -26,14 +26,15 @@ export default async function CandidateSearchServerComponent({
 }: CandidateSearchServerComponentProps) {
   
   // クエリパラメータから検索条件を構築
+  const awaitedSearchParams = await searchParams;
   const searchConditions = {
-    keyword: searchParams.keyword || '',
-    location: searchParams.location || '',
-    salaryMin: searchParams.salaryMin || '',
-    industries: parseArrayParam(searchParams.industries),
-    jobTypes: parseArrayParam(searchParams.jobTypes),
-    appealPoints: parseArrayParam(searchParams.appealPoints),
-    page: parseInt(searchParams.page || '1'),
+    keyword: awaitedSearchParams.keyword || '',
+    location: awaitedSearchParams.location || '',
+    salaryMin: awaitedSearchParams.salaryMin || '',
+    industries: parseArrayParam(awaitedSearchParams.industries),
+    jobTypes: parseArrayParam(awaitedSearchParams.jobTypes),
+    appealPoints: parseArrayParam(awaitedSearchParams.appealPoints),
+    page: parseInt(awaitedSearchParams.page || '1'),
     limit: 10
   };
 

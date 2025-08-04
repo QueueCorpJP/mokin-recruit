@@ -356,13 +356,13 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                         <div className='box-border content-stretch flex flex-row gap-6 items-center justify-start p-0 relative shrink-0'>
                           <div className='box-border content-stretch flex flex-row gap-2 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]'>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.salaryMin || '選択済項目が入ります'}
+                              {jobData.salaryMin ? `${jobData.salaryMin}万` : '選択済項目が入ります'}
                             </div>
                             <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                               〜
                             </div>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.salaryMax || '選択済項目が入ります'}
+                              {jobData.salaryMax ? `${jobData.salaryMax}万` : '選択済項目が入ります'}
                             </div>
                           </div>
                           <div className='box-border content-stretch flex flex-row gap-2 items-start justify-start p-0 relative shrink-0'>
@@ -400,11 +400,11 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                       </div>
 
                       {/* 勤務地 */}
-                      <div className='flex flex-row gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] shrink-0 font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
+                      <div className='flex flex-row items-center justify-center min-w-0 max-w-full'>
+                        <div className="font-['Noto_Sans_JP'] mr-[10px] shrink-0 font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
                           勤務地
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 gap-2">
                           <SingleRowLocationTags locations={jobData.locations} />
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                       {/* 勤務地補足 */}
                       <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          備考
+                          勤務地補足
                         </div>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
                           {jobData.locationNote}

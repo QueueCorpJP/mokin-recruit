@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useAuthUser, useAuthIsAuthenticated } from '@/stores/authStore';
 import { submitApplication } from './actions';
+import { AlignJustify } from 'lucide-react';
 
 interface CandidateApplicationClientProps {
   jobId: string;
@@ -619,55 +620,66 @@ export default function CandidateApplicationClient({
                   style={{
                     display: 'flex',
                     flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     gap: 10,
                     flex: 1,
                   }}
                 >
-                  <div
-                    style={{
-                      background: '#F9F9F9',
-                      borderRadius: 5,
-                      height: isMobile ? 'auto' : 176,
-                      width: isMobile ? '100%' : 200,
-                      padding: isMobile ? '8px 16px' : '0 24px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span
-                        style={{
-                          fontFamily: 'Noto Sans JP',
-                          fontWeight: 700,
-                          fontSize: 16,
-                          lineHeight: 2,
-                          letterSpacing: '0.1em',
-                          color: '#323232',
-                        }}
-                      >
-                        履歴書
-                      </span>
-                      {isResumeRequired && (
-                        <span
-                          style={{
-                            fontFamily: 'Noto Sans JP',
-                            fontWeight: 700,
-                            fontSize: 12,
-                            lineHeight: 1.5,
-                            letterSpacing: '0.1em',
-                            color: '#ff4444',
-                            background: '#ffe6e6',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                          }}
-                        >
-                          必須
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                 <div
+  style={{
+    display: 'flex',
+    justifyContent: 'flex-start',
+    width: '100%',
+  }}
+>
+  {/* 元の box */}
+  <div
+    style={{
+      background: '#F9F9F9',
+      borderRadius: 5,
+      height: isMobile ? 'auto' : 176,
+      width: isMobile ? '100%' : 200,
+      padding: isMobile ? '8px 16px' : '0 24px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: isMobile ? 'flex-start' : 'center',
+      alignItems: 'flex-start',
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+      <span
+        style={{
+          fontFamily: 'Noto Sans JP',
+          fontWeight: 700,
+          fontSize: 16,
+          lineHeight: 2,
+          letterSpacing: '0.1em',
+          color: '#323232',
+        }}
+      >
+        履歴書
+      </span>
+      {isResumeRequired && (
+        <span
+          style={{
+            fontFamily: 'Noto Sans JP',
+            fontWeight: 700,
+            fontSize: 12,
+            lineHeight: 1.5,
+            letterSpacing: '0.1em',
+            color: '#ff4444',
+            background: '#ffe6e6',
+            padding: '2px 6px',
+            borderRadius: '4px',
+          }}
+        >
+          必須
+        </span>
+      )}
+    </div>
+  </div>
+</div>
+
                   <div
                     style={{
                       display: 'flex',
@@ -766,6 +778,7 @@ export default function CandidateApplicationClient({
                   style={{
                     display: 'flex',
                     flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     gap: 10,
                     flex: 1,
                   }}
@@ -779,11 +792,11 @@ export default function CandidateApplicationClient({
                       padding: isMobile ? '8px 16px' : '0 24px',
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
+                      justifyContent: isMobile ? 'flex-start' : 'center',
+                      alignItems: isMobile ? 'flex-start' : 'center',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                       <span
                         style={{
                           fontFamily: 'Noto Sans JP',

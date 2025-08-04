@@ -358,7 +358,7 @@ export async function submitApplication(formData: FormData): Promise<Application
           .select('id')
           .maybeSingle();
           
-        if (createGroupError) {
+        if (createGroupError || !newGroup) {
           logger.error('Failed to create company group:', createGroupError);
           return {
             success: false,

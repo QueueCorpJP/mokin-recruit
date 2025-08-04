@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           .select('id')
           .maybeSingle();
           
-        if (createGroupError) {
+        if (createGroupError || !newGroup) {
           logger.error('Failed to create company group:', createGroupError);
           return NextResponse.json(
             { success: false, error: '企業グループ情報の作成に失敗しました' },

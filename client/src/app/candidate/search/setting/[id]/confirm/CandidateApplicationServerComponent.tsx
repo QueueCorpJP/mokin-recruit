@@ -29,9 +29,10 @@ export default async function CandidateApplicationServerComponent({
   const jobData = jobResponse.data;
 
   // searchParamsから取得（フォールバック用）
-  const jobTitle = (searchParams.title as string) || jobData.title;
-  const companyName = (searchParams.companyName as string) || jobData.companyName;
-  const requiredDocumentsParam = searchParams.requiredDocuments as string;
+  const awaitedSearchParams = await searchParams;
+  const jobTitle = (awaitedSearchParams.title as string) || jobData.title;
+  const companyName = (awaitedSearchParams.companyName as string) || jobData.companyName;
+  const requiredDocumentsParam = awaitedSearchParams.requiredDocuments as string;
   
   let requiredDocuments: string[] = [];
   if (requiredDocumentsParam) {
