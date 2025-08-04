@@ -7,7 +7,7 @@ import { EmptyMessageState } from './EmptyMessageState';
 import { MessageSearchFilter } from './MessageSearchFilter';
 import { MessageDetailHeader } from './MessageDetailHeader';
 import { MessageDetailBody } from './MessageDetailBody';
-import PaperclipIcon from '@/components/svg/PaperclipIcon'; // 添付アイコン用（なければ後で新規作成）
+// import PaperclipIcon from '@/components/svg/PaperclipIcon'; // 添付アイコン用（なければ後で新規作成）
 import { MessageInputBox } from './MessageInputBox';
 
 export interface MessageLayoutProps {

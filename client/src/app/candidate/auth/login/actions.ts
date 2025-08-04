@@ -107,7 +107,7 @@ export async function candidateLoginAction(formData: CandidateLoginFormData): Pr
     // エラーメッセージを適切に処理
     if (error instanceof Error) {
       // リダイレクトエラーは正常な処理として扱う（Next.jsが内部的に使用）
-      if (error.message === 'NEXT_REDIRECT' || error.digest?.includes('NEXT_REDIRECT')) {
+      if (error.message === 'NEXT_REDIRECT' || (error as any).digest?.includes('NEXT_REDIRECT')) {
         throw error; // リダイレクトを実行
       }
       

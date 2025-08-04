@@ -336,6 +336,15 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
     
     // まず候補者テーブルの存在確認（emailで検索、大文字・小文字を区別しない）
     const trimmedEmail = user.email?.trim().toLowerCase();
+    
+    if (!trimmedEmail) {
+      logger.error('Email is missing for user:', { userId: user.id });
+      return {
+        isValid: false,
+        error: 'Email is missing'
+      };
+    }
+    
     const { data: candidateCheck, error: candidateCheckError } = await supabase
       .from('candidates')
       .select('id, email')
