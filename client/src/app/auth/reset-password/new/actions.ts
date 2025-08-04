@@ -1,8 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/server/database/supabase';
-import { logger } from '@/lib/server/utils/logger';
+'use server'
+
 import { z } from 'zod';
-import { ensureSupabaseInitialized } from '@/lib/server/utils/api-init';
+import { logger } from '@/lib/server/utils/logger';
+import { redirect } from 'next/navigation';
+
+export interface NewPasswordFormData {
+  tokenHash?: string;
+  type?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  code?: string;
+  state?: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface NewPasswordResult {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
 
 // リクエストボディのバリデーションスキーマ（柔軟性を向上）
 const ResetPasswordSchema = z.object({
@@ -39,36 +56,27 @@ const ResetPasswordSchemaWithConfirm = ResetPasswordSchema.refine(
   path: ['tokenHash'],
 });
 
-export async function POST(request: NextRequest) {
-  // Supabase初期化を確実に実行
-  ensureSupabaseInitialized();
-
+export async function resetNewPasswordAction(formData: NewPasswordFormData, userType?: 'candidate' | 'company'): Promise<NewPasswordResult> {
   try {
-    const body = await request.json();
-
-    logger.info('🔍 Password reset request received:', {
-      hasTokenHash: !!body.tokenHash,
-      hasCode: !!body.code,
-      hasAccessToken: !!body.accessToken,
-      hasRefreshToken: !!body.refreshToken,
-      type: body.type,
-      state: body.state,
+    logger.info('Password reset request received:', {
+      hasTokenHash: !!formData.tokenHash,
+      hasCode: !!formData.code,
+      hasAccessToken: !!formData.accessToken,
+      hasRefreshToken: !!formData.refreshToken,
+      type: formData.type,
+      state: formData.state,
     });
 
     // バリデーション
-    const validationResult = ResetPasswordSchemaWithConfirm.safeParse(body);
+    const validationResult = ResetPasswordSchemaWithConfirm.safeParse(formData);
     if (!validationResult.success) {
       const firstError = validationResult.error.errors[0];
-      logger.warn('❌ Password reset validation failed:', firstError);
+      logger.warn('Password reset validation failed:', firstError);
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: firstError?.message || 'Invalid input',
-          field: firstError?.path?.[0] || 'general',
-        },
-        { status: 400 }
-      );
+      return {
+        success: false,
+        error: firstError?.message || 'Invalid input',
+      };
     }
 
     const {
@@ -81,7 +89,19 @@ export async function POST(request: NextRequest) {
       password,
     } = validationResult.data;
 
-    // Supabaseクライアントを取得
+    // Supabaseクライアントの動的インポートと取得
+    let getSupabaseClient;
+    try {
+      const supabaseModule = await import('@/lib/server/database/supabase');
+      getSupabaseClient = supabaseModule.getSupabaseClient;
+    } catch (importError) {
+      logger.error('Failed to import Supabase module:', importError);
+      return {
+        success: false,
+        error: 'サーバーライブラリの読み込みに失敗しました。',
+      };
+    }
+
     const supabase = getSupabaseClient();
 
     try {
@@ -90,9 +110,7 @@ export async function POST(request: NextRequest) {
 
       // 方法1: access_token + refresh_tokenを使用した直接セッション設定（最優先）
       if (accessToken && refreshToken) {
-        logger.info(
-          '🔑 Attempting access_token + refresh_token based authentication...'
-        );
+        logger.info('Attempting access_token + refresh_token based authentication...');
 
         try {
           const { data, error } = await supabase.auth.setSession({
@@ -104,22 +122,19 @@ export async function POST(request: NextRequest) {
           sessionError = error;
 
           if (sessionError) {
-            logger.warn(
-              '❌ Access token authentication failed:',
-              sessionError.message
-            );
+            logger.warn('Access token authentication failed:', sessionError.message);
           } else {
-            logger.info('✅ Access token authentication successful');
+            logger.info('Access token authentication successful');
           }
         } catch (tokenError) {
-          logger.warn('❌ Access token processing failed:', tokenError);
+          logger.warn('Access token processing failed:', tokenError);
           sessionError = tokenError;
         }
       }
 
       // 方法2: token_hashを使用したOTP検証（従来の方法）
       if (!sessionData && tokenHash) {
-        logger.info('🔑 Attempting token_hash based verification...');
+        logger.info('Attempting token_hash based verification...');
 
         const result = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
@@ -130,18 +145,15 @@ export async function POST(request: NextRequest) {
         sessionError = result.error;
 
         if (sessionError) {
-          logger.warn(
-            '❌ Token hash verification failed:',
-            sessionError.message
-          );
+          logger.warn('Token hash verification failed:', sessionError.message);
         } else {
-          logger.info('✅ Token hash verification successful');
+          logger.info('Token hash verification successful');
         }
       }
 
       // 方法3: codeを使用したOAuth/PKCE検証（新しい方法）
       if (!sessionData && code) {
-        logger.info('🔑 Attempting code based verification...');
+        logger.info('Attempting code based verification...');
 
         try {
           const result = await supabase.auth.exchangeCodeForSession(code);
@@ -149,19 +161,19 @@ export async function POST(request: NextRequest) {
           sessionError = result.error;
 
           if (sessionError) {
-            logger.warn('❌ Code verification failed:', sessionError.message);
+            logger.warn('Code verification failed:', sessionError.message);
           } else {
-            logger.info('✅ Code verification successful');
+            logger.info('Code verification successful');
           }
         } catch (codeError) {
-          logger.warn('❌ Code exchange failed:', codeError);
+          logger.warn('Code exchange failed:', codeError);
           sessionError = codeError;
         }
       }
 
       // すべての方法が失敗した場合
       if (sessionError || !sessionData?.session || !sessionData?.user) {
-        logger.error('❌ All authentication methods failed');
+        logger.error('All authentication methods failed');
 
         let errorMessage = 'リセットリンクが無効または期限切れです。';
 
@@ -184,33 +196,13 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        return NextResponse.json(
-          {
-            success: false,
-            error: errorMessage,
-            debug:
-              process.env.NODE_ENV === 'development'
-                ? {
-                    originalError: sessionError?.message,
-                    hasTokenHash: !!tokenHash,
-                    hasCode: !!code,
-                    hasAccessToken: !!accessToken,
-                    hasRefreshToken: !!refreshToken,
-                    authenticationMethod: accessToken
-                      ? 'access_token'
-                      : tokenHash
-                        ? 'token_hash'
-                        : code
-                          ? 'code'
-                          : 'none',
-                  }
-                : undefined,
-          },
-          { status: 400 }
-        );
+        return {
+          success: false,
+          error: errorMessage,
+        };
       }
 
-      logger.info('✅ Authentication successful, updating password for user:', {
+      logger.info('Authentication successful, updating password for user:', {
         userId: sessionData.user.id,
         email: sessionData.user.email,
         authMethod: accessToken
@@ -235,7 +227,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (updateError) {
-        logger.error('❌ Password update failed:', updateError);
+        logger.error('Password update failed:', updateError);
 
         let errorMessage = 'パスワードの更新に失敗しました。';
         if (updateError.message?.includes('password')) {
@@ -249,81 +241,40 @@ export async function POST(request: NextRequest) {
             'パスワードが弱すぎます。より強力なパスワードを設定してください。';
         }
 
-        return NextResponse.json(
-          {
-            success: false,
-            error: errorMessage,
-            debug:
-              process.env.NODE_ENV === 'development'
-                ? {
-                    originalError: updateError.message,
-                  }
-                : undefined,
-          },
-          { status: 400 }
-        );
+        return {
+          success: false,
+          error: errorMessage,
+        };
       }
 
-      logger.info('🎉 Password reset completed successfully for user:', {
+      logger.info('Password reset completed successfully for user:', {
         userId: updateData.user?.id,
         email: updateData.user?.email,
       });
 
-      return NextResponse.json({
-        success: true,
-        message: 'パスワードが正常に更新されました。',
-      });
-    } catch (supabaseError) {
-      logger.error('❌ Supabase operation failed:', supabaseError);
+      // 成功時は完了ページにリダイレクト
+      const redirectUrl = `/auth/reset-password/complete?userType=${userType || 'company'}`;
+      redirect(redirectUrl);
 
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'パスワードリセット処理中にエラーが発生しました。再度お試しください。',
-          debug:
-            process.env.NODE_ENV === 'development'
-              ? {
-                  originalError:
-                    supabaseError instanceof Error
-                      ? supabaseError.message
-                      : String(supabaseError),
-                }
-              : undefined,
-        },
-        { status: 500 }
-      );
+    } catch (supabaseError) {
+      logger.error('Supabase operation failed:', supabaseError);
+
+      return {
+        success: false,
+        error: 'パスワードリセット処理中にエラーが発生しました。再度お試しください。',
+      };
     }
   } catch (error) {
-    logger.error('❌ Reset password API error:', error);
+    logger.error('Reset password action error:', error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
-        debug:
-          process.env.NODE_ENV === 'development'
-            ? {
-                originalError:
-                  error instanceof Error ? error.message : String(error),
-              }
-            : undefined,
-      },
-      { status: 500 }
-    );
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      // Next.jsのredirectは内部的にエラーを投げるため、これは正常な動作
+      throw error;
+    }
+
+    return {
+      success: false,
+      error: 'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
+    };
   }
-}
-
-// OPTIONSメソッドのサポート（CORS対応）
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin':
-        process.env.CORS_ORIGIN || 'http://localhost:3000',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }

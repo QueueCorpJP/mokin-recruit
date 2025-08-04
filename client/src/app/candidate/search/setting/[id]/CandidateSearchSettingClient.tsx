@@ -824,38 +824,38 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
 
             {/* お気に入り・応募ボタン - スマホ時は企業情報の後に表示 */}
             <div
-              className='order-3 rounded-[24px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-3 sm:px-4 lg:px-16 py-3 sm:py-4 lg:py-5 fixed left-2 right-2 sm:left-4 sm:right-4 lg:left-10 lg:right-10 bottom-4 lg:bottom-[20px] z-50 overflow-hidden'
+              className='order-3 rounded-[24px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-3 sm:px-4 lg:px-16 py-3 sm:py-4 lg:py-5 fixed left-2 right-2 sm:left-4 sm:right-4 lg:left-10 lg:right-10 bottom-4 lg:bottom-[20px] z-50'
               style={{ 
                 background: 'rgba(255,255,255,0.9)'
               }}
             >
-              <div className='flex flex-col lg:flex-row gap-2 lg:gap-4 items-center justify-center w-full overflow-hidden'>
+              <div className='flex flex-col lg:flex-row gap-2 lg:gap-4 items-center justify-center w-full'>
                 <button
                   onClick={handleFavoriteToggle}
                   disabled={favoriteToggleMutation.isPending}
                   className={`${
                     isFavorite 
                       ? 'bg-[#FFDA5F] text-[#323232]' 
-                      : 'bg-[#dcdcdc] text-white'
-                  } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden ${
+                      : 'bg-[#FFF] text-[var(--3,#999)] border border-[var(--3,#999)]'
+                  } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] ${
                     favoriteToggleMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
                   onMouseEnter={e => {
                     if (!favoriteToggleMutation.isPending) {
-                      e.currentTarget.style.backgroundColor = isFavorite ? '#E5C54F' : '#c0c0c0';
+                      e.currentTarget.style.backgroundColor = isFavorite ? '#E5C54F' : '#f5f5f5';
                     }
                   }}
                   onMouseLeave={e => {
                     if (!favoriteToggleMutation.isPending) {
-                      e.currentTarget.style.backgroundColor = isFavorite ? '#FFDA5F' : '#dcdcdc';
+                      e.currentTarget.style.backgroundColor = isFavorite ? '#FFDA5F' : '#FFF';
                     }
                   }}
                 >
                   <Star
                     size={12}
-                    className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-white'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
+                    className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-[var(--3,#999)]'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
                   />
-                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-white'} whitespace-nowrap`}>
+                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-[var(--3,#999)]'} whitespace-nowrap`}>
                     {favoriteToggleMutation.isPending 
                       ? '処理中...' 
                       : isFavorite 
@@ -867,7 +867,11 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
 
                 <button
                   onClick={handleApply}
-                  className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] overflow-hidden'
+                  className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px]'
+                  style={{
+                    background: 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
+                    boxShadow: '0 5px 10px 0 rgba(0, 0, 0, 0.15)'
+                  }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = 'linear-gradient(to right, #249881, #27668D)';
                   }}

@@ -607,10 +607,10 @@ export default function CandidateApplicationClient({
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: isMobile ? 'flex-start' : 'center',
-                      alignItems: isMobile ? 'flex-start' : 'center',
+                      alignItems: 'flex-start',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span
                         style={{
                           fontFamily: 'Noto Sans JP',
@@ -742,10 +742,10 @@ export default function CandidateApplicationClient({
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: isMobile ? 'flex-start' : 'center',
-                      alignItems: isMobile ? 'flex-start' : 'center',
+                      alignItems: 'flex-start',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span
                         style={{
                           fontFamily: 'Noto Sans JP',
@@ -769,6 +769,8 @@ export default function CandidateApplicationClient({
                             color: '#ff4444',
                             background: '#ffe6e6',
                             padding: '2px 6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
                             borderRadius: '4px',
                           }}
                         >

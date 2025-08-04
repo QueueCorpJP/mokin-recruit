@@ -1,6 +1,5 @@
 import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Footer } from '@/components/ui/footer';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 
 export const metadata: Metadata = {
@@ -55,9 +54,6 @@ export default function ResetPasswordPage() {
           </Suspense>
         </div>
       </main>
-
-      {/* フッター */}
-      <Footer variant='login-before' />
     </div>
   );
 }

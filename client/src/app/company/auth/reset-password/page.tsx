@@ -1,7 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Footer } from '@/components/ui/footer';
-import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import ResetPasswordServerComponent from './ResetPasswordServerComponent';
 
 export const metadata: Metadata = {
   title: 'パスワードの再設定 | CuePoint',
@@ -51,13 +50,10 @@ export default function CompanyResetPasswordPage() {
         {/* フォームコンテナ */}
         <div className='relative w-full max-w-[800px]'>
           <Suspense fallback={<div className='text-center'>読み込み中...</div>}>
-            <ForgotPasswordForm userType='company' />
+            <ResetPasswordServerComponent />
           </Suspense>
         </div>
       </main>
-
-      {/* フッター */}
-      <Footer variant='login-before' />
     </div>
   );
 }

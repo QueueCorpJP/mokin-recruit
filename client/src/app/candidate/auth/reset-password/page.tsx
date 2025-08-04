@@ -1,7 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Footer } from '@/components/ui/footer';
-import CandidateForgotPasswordForm from '@/components/auth/CandidateForgotPasswordForm';
+import { CandidateResetPasswordServerComponent } from './CandidateResetPasswordServerComponent';
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
 
 export const metadata: Metadata = {
@@ -24,13 +23,10 @@ export default function CandidateResetPasswordPage() {
         {/* フォームコンテナ */}
         <div className='relative w-full max-w-[480px] md:max-w-[800px] mx-auto'>
           <Suspense fallback={<div className='text-center text-white'>読み込み中...</div>}>
-            <CandidateForgotPasswordForm />
+            <CandidateResetPasswordServerComponent />
           </Suspense>
         </div>
       </main>
-
-      {/* フッター */}
-      <Footer variant='login-before' />
     </CandidateAuthBackground>
   );
 }

@@ -100,7 +100,15 @@ function applyFilters(query: any, params: JobSearchParams) {
   return query;
 }
 
-async function searchJobsServer(params: JobSearchParams): Promise<JobSearchResponse> {
+
+// 簡単なメモリキャッシュ
+const searchCache = new Map<string, { data: JobSearchResponse; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5分
+
+// 最適化された検索関数 - すべての関連データを並列で取得
+async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSearchResponse> {
+  const startTime = performance.now();
+  
   try {
     const supabase = getSupabaseAdminClient();
     
@@ -109,7 +117,7 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
     const limit = params.limit || 10;
     const offset = (page - 1) * limit;
 
-    // カウントクエリ（軽量化）
+    // カウントクエリ（独立したクエリを作成）
     let countQuery = supabase
       .from('job_postings')
       .select('id', { count: 'exact', head: true })
@@ -117,7 +125,7 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
       .in('publication_type', ['public', 'members']);
     countQuery = applyFilters(countQuery, params);
 
-    // データ取得クエリ
+    // データ取得クエリ（独立したクエリを作成）
     let dataQuery = supabase
       .from('job_postings')
       .select(`
@@ -141,11 +149,14 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // 並列実行でパフォーマンス向上
+    // 最初の並列実行 - カウントとデータを同時に取得
+    const dbStartTime = performance.now();
     const [countResult, dataResult] = await Promise.all([
       countQuery,
       dataQuery
     ]);
+    const dbEndTime = performance.now();
+    console.log(`[OPTIMIZED] Job queries completed in ${(dbEndTime - dbStartTime).toFixed(2)}ms`);
 
     const { count, error: countError } = countResult;
     const { data: jobs, error: dataError } = dataResult;
@@ -154,7 +165,7 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
       console.error('Failed to count jobs:', countError);
     }
 
-    if (dataError) {
+    if (dataError || !jobs) {
       console.error('Failed to search jobs:', dataError);
       return {
         success: false,
@@ -162,15 +173,19 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
       };
     }
 
-    // 企業情報を取得
-    const companyIds = jobs?.map(job => job.company_account_id).filter(Boolean) || [];
-    const companyMap = new Map();
+    // 企業IDを抽出（重複を除去）
+    const companyIds = Array.from(new Set(jobs.map(job => job.company_account_id).filter(Boolean)));
     
+    // 二次並列実行 - 企業情報を取得（必要な場合のみ）
+    let companyMap = new Map();
     if (companyIds.length > 0) {
+      const companyStartTime = performance.now();
       const { data: companies, error: companyError } = await supabase
         .from('company_accounts')
         .select('id, company_name')
         .in('id', companyIds);
+      const companyEndTime = performance.now();
+      console.log(`[OPTIMIZED] Company queries completed in ${(companyEndTime - companyStartTime).toFixed(2)}ms for ${companyIds.length} unique companies`);
       
       if (!companyError && companies) {
         companies.forEach(company => {
@@ -180,7 +195,7 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
     }
 
     // データ変換
-    const transformedJobs = jobs?.map((job: any, index: number) => {
+    const transformedJobs = jobs.map((job: any, index: number) => {
       const companyName = companyMap.get(job.company_account_id) || `企業名未設定 #${index + 1}`;
       
       return {
@@ -208,10 +223,13 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
         image_urls: job.image_urls,
         company_name: companyName
       };
-    }) || [];
+    });
 
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
+
+    const endTime = performance.now();
+    console.log(`[OPTIMIZED] Search completed in ${(endTime - startTime).toFixed(2)}ms - Jobs: ${transformedJobs.length}, Companies: ${companyIds.length}`);
 
     return {
       success: true,
@@ -235,22 +253,23 @@ async function searchJobsServer(params: JobSearchParams): Promise<JobSearchRespo
   }
 }
 
-// 簡単なメモリキャッシュ
-const searchCache = new Map<string, { data: JobSearchResponse; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5分
-
 export async function getJobSearchData(params: JobSearchParams): Promise<JobSearchResponse> {
+  console.log('[getJobSearchData] Called with params:', JSON.stringify(params));
+  
   // キャッシュキーの生成
   const cacheKey = JSON.stringify(params);
   const cached = searchCache.get(cacheKey);
   
   // キャッシュが有効な場合は返す
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log('[getJobSearchData] Cache hit - returning cached data');
     return cached.data;
   }
   
-  // 新しいデータを取得
-  const result = await searchJobsServer(params);
+  console.log('[getJobSearchData] Cache miss - fetching new data');
+  
+  // 新しいデータを取得（最適化版を使用）
+  const result = await searchJobsServerOptimized(params);
   
   // 成功した場合のみキャッシュに保存
   if (result.success) {

@@ -30,9 +30,11 @@ const defaultMessages: Message[] = [
     isUnread: true,
     companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
     candidateName: '候補者名（もしくはID）テキスト',
-    messagePreview: 'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
+    messagePreview:
+      'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
     groupName: 'グループ名テキストグループ名テキスト',
-    jobTitle: '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
+    jobTitle:
+      '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
   },
   {
     id: '2',
@@ -40,9 +42,11 @@ const defaultMessages: Message[] = [
     isUnread: true,
     companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
     candidateName: '候補者名（もしくはID）テキスト',
-    messagePreview: 'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
+    messagePreview:
+      'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
     groupName: 'グループ名テキストグループ名テキスト',
-    jobTitle: '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
+    jobTitle:
+      '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
   },
   {
     id: '3',
@@ -50,16 +54,18 @@ const defaultMessages: Message[] = [
     isUnread: false,
     companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
     candidateName: '候補者名（もしくはID）テキスト',
-    messagePreview: 'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
+    messagePreview:
+      'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
     groupName: 'グループ名テキストグループ名テキスト',
-    jobTitle: '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
+    jobTitle:
+      '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
   },
 ];
 
-export function MessageList({ 
-  messages = defaultMessages, 
+export function MessageList({
+  messages = defaultMessages,
   onMessageClick,
-  className 
+  className,
 }: MessageListProps) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
@@ -75,36 +81,24 @@ export function MessageList({
       if (statusFilter === 'unread' && !message.isUnread) return false;
       if (statusFilter === 'read' && message.isUnread) return false;
     }
-    
+
     if (keyword) {
-      const searchText = `${message.companyName} ${message.candidateName} ${message.messagePreview} ${message.jobTitle}`.toLowerCase();
+      const searchText =
+        `${message.companyName} ${message.candidateName} ${message.messagePreview} ${message.jobTitle}`.toLowerCase();
       if (!searchText.includes(keyword.toLowerCase())) return false;
     }
-    
+
     return true;
   });
 
   return (
     <div className={cn('flex flex-col w-full h-full', className)}>
       {/* 右ボーダー */}
-      <div className="relative flex flex-col h-full">
-        <div className="absolute right-[-0.5px] top-0 bottom-0 border-r border-[#efefef] pointer-events-none" />
-        
-        {/* 検索フィルター */}
-        <div className="flex-shrink-0">
-          <MessageSearchFilter
-            statusValue={statusFilter}
-            groupValue={groupFilter}
-            keywordValue={keyword}
-            onStatusChange={setStatusFilter}
-            onGroupChange={setGroupFilter}
-            onKeywordChange={setKeyword}
-            onSearch={handleSearch}
-          />
-        </div>
+      <div className='relative flex flex-col h-full'>
+        <div className='absolute right-[-0.5px] top-0 bottom-0 border-r border-[#efefef] pointer-events-none' />
 
         {/* メッセージリスト */}
-        <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
+        <div className='flex-1 flex flex-col overflow-y-auto min-h-0'>
           {filteredMessages.map((message, index) => (
             <MessageItem
               key={message.id}
@@ -117,4 +111,4 @@ export function MessageList({
       </div>
     </div>
   );
-} 
+}

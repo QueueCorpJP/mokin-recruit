@@ -26,7 +26,7 @@ export function MessageItem({
   groupName,
   jobTitle,
   onClick,
-  className
+  className,
 }: MessageItemProps) {
   const handleClick = () => {
     onClick?.(id);
@@ -41,9 +41,9 @@ export function MessageItem({
         className
       )}
       onClick={handleClick}
-      role="button"
+      role='button'
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleClick();
@@ -51,7 +51,7 @@ export function MessageItem({
       }}
     >
       {/* タイムスタンプと未読ステータス */}
-      <div className="flex flex-row gap-6 items-center w-full">
+      <div className='flex flex-row gap-6 items-center w-full'>
         <div className="flex-1 font-['Noto_Sans_JP'] font-medium text-[14px] text-[#999999] tracking-[1.4px] leading-[1.6]">
           {timestamp}
         </div>
@@ -59,7 +59,7 @@ export function MessageItem({
       </div>
 
       {/* 企業名と候補者名 */}
-      <div className="flex flex-col gap-0 w-full">
+      <div className='flex flex-col gap-0 w-full'>
         <div className="font-['Noto_Sans_JP'] font-bold text-[14px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
           {companyName}
         </div>
@@ -69,35 +69,34 @@ export function MessageItem({
       </div>
 
       {/* メッセージプレビュー */}
-      <div 
+      <div
         className={cn(
           'font-["Noto_Sans_JP"] font-medium text-[14px] text-[#323232]',
-          'tracking-[1.4px] leading-[1.6] h-[38px]',
-          'overflow-hidden'
+          'tracking-[1.4px] leading-[1.6] h-[19px]', // 1行分の高さに変更
+          'overflow-hidden text-ellipsis whitespace-nowrap' // 1行のみ、...で省略
         )}
         style={{
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-          textOverflow: 'ellipsis'
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
         }}
       >
         {messagePreview}
       </div>
 
       {/* グループタグとジョブタイトル */}
-      <div className="flex flex-row gap-2 items-center w-full">
-        <MessageGroupTag>
-          {groupName}
-        </MessageGroupTag>
-        <div className={cn(
-          'flex-1 font-["Noto_Sans_JP"] font-medium text-[14px] text-[#0f9058]',
-          'tracking-[1.4px] leading-[1.6]',
-          'overflow-hidden text-ellipsis whitespace-nowrap'
-        )}>
+      <div className='flex flex-row gap-2 items-center w-full'>
+        <MessageGroupTag>{groupName}</MessageGroupTag>
+        <div
+          className={cn(
+            'flex-1 font-["Noto_Sans_JP"] font-medium text-[14px] text-[#0f9058]',
+            'tracking-[1.4px] leading-[1.6]',
+            'overflow-hidden text-ellipsis whitespace-nowrap'
+          )}
+        >
           {jobTitle}
         </div>
       </div>
     </div>
   );
-} 
+}

@@ -1,8 +1,6 @@
 import { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
-import { Navigation } from '@/components/ui/navigation';
-import { Footer } from '@/components/ui/footer';
-import { LoginForm } from '@/components/auth/LoginForm';
+import LoginServerComponent from './LoginServerComponent';
 
 export const metadata: Metadata = {
   title: '企業ログイン | CuePoint',
@@ -18,8 +16,6 @@ export const viewport: Viewport = {
 export default function CompanyLoginPage() {
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col'>
-      {/* ナビゲーション */}
-
       {/* メインコンテンツ */}
       <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}
@@ -55,13 +51,10 @@ export default function CompanyLoginPage() {
         {/* フォームコンテナ */}
         <div className='relative w-full max-w-[800px]'>
           <Suspense fallback={<div className='text-center'>読み込み中...</div>}>
-            <LoginForm userType='company' />
+            <LoginServerComponent />
           </Suspense>
         </div>
       </main>
-
-      {/* フッター */}
-      <Footer variant='login-before' />
     </div>
   );
 }

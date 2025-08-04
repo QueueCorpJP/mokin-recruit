@@ -112,17 +112,17 @@ export default function AuthBypassPage() {
       setMessage('');
       setError('');
 
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
+      // サーバーアクションを動的インポート
+      const { logoutAction } = await import('@/lib/auth/actions');
+      const result = await logoutAction();
 
-      if (response.ok) {
+      if (result.success) {
         setCurrentUser(null);
         setMessage('✅ ログアウトしました');
         localStorage.removeItem('dev-auth-token');
         localStorage.removeItem('dev-user-info');
       } else {
-        setError('ログアウトに失敗しました');
+        setError(result.error || 'ログアウトに失敗しました');
       }
     } catch (error) {
       setError('通信エラーが発生しました');

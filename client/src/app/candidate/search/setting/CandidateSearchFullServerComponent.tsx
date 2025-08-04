@@ -32,21 +32,21 @@ export default async function CandidateSearchFullServerComponent({
   searchParams = {} 
 }: CandidateSearchFullServerComponentProps) {
   
+  // searchParamsを待機
+  const awaitedSearchParams = await searchParams;
+  
   // クエリパラメータから検索条件を構築
   const searchConditions = {
-    keyword: searchParams.keyword || '',
-    location: searchParams.location || '',
-    salaryMin: searchParams.salaryMin || '',
-    industries: parseArrayParam(searchParams.industries),
-    jobTypes: parseArrayParam(searchParams.jobTypes),
-    appealPoints: parseArrayParam(searchParams.appealPoints),
-    page: parseInt(searchParams.page || '1'),
+    keyword: awaitedSearchParams.keyword || '',
+    location: awaitedSearchParams.location || '',
+    salaryMin: awaitedSearchParams.salaryMin || '',
+    industries: parseArrayParam(awaitedSearchParams.industries),
+    jobTypes: parseArrayParam(awaitedSearchParams.jobTypes),
+    appealPoints: parseArrayParam(awaitedSearchParams.appealPoints),
+    page: parseInt(awaitedSearchParams.page || '1'),
     limit: 10
   };
 
-  // サーバーサイドで求人データを取得
-  const jobSearchResponse = await getJobSearchData(searchConditions);
-  
   let jobsWithFavorites: JobSearchResult[] = [];
   let pagination = {
     page: searchConditions.page,
@@ -56,11 +56,14 @@ export default async function CandidateSearchFullServerComponent({
   };
 
   try {
+    // サーバーサイドで求人データを取得
+    const jobSearchResponse = await getJobSearchData(searchConditions);
+    
     if (jobSearchResponse.success && jobSearchResponse.data) {
       const jobs = jobSearchResponse.data.jobs;
       pagination = jobSearchResponse.data.pagination;
       
-      // お気に入り状態を取得
+      // 求人データが存在する場合、お気に入り状態を取得
       if (jobs.length > 0) {
         const jobIds = jobs.map(job => job.id);
         const favoriteResponse = await getFavoriteStatusServer(jobIds);
@@ -69,6 +72,8 @@ export default async function CandidateSearchFullServerComponent({
           ...job,
           starred: favoriteResponse.data?.[job.id] || false
         })) as JobSearchResult[];
+      } else {
+        jobsWithFavorites = jobs as JobSearchResult[];
       }
     } else {
       console.error('Failed to get jobs:', jobSearchResponse.error);
