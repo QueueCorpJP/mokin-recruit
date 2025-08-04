@@ -607,7 +607,7 @@ export default function CandidateApplicationClient({
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: isMobile ? 'flex-start' : 'center',
-                      alignItems: isMobile ? 'flex-start' : 'center',
+                      alignItems: 'flex-start',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
@@ -742,7 +742,7 @@ export default function CandidateApplicationClient({
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: isMobile ? 'flex-start' : 'center',
-                      alignItems: isMobile ? 'flex-start' : 'center',
+                      alignItems: 'flex-start',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
