@@ -625,60 +625,51 @@ export default function CandidateApplicationClient({
                     flex: 1,
                   }}
                 >
-                 <div
-  style={{
-    display: 'flex',
-    justifyContent: 'flex-start',
-    width: '100%',
-  }}
->
-  {/* 元の box */}
-  <div
-    style={{
-      background: '#F9F9F9',
-      borderRadius: 5,
-      height: isMobile ? 'auto' : 176,
-      width: isMobile ? '100%' : 200,
-      padding: isMobile ? '8px 16px' : '0 24px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: isMobile ? 'flex-start' : 'center',
-      alignItems: 'flex-start',
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-      <span
-        style={{
-          fontFamily: 'Noto Sans JP',
-          fontWeight: 700,
-          fontSize: 16,
-          lineHeight: 2,
-          letterSpacing: '0.1em',
-          color: '#323232',
-        }}
-      >
-        履歴書
-      </span>
-      {isResumeRequired && (
-        <span
-          style={{
-            fontFamily: 'Noto Sans JP',
-            fontWeight: 700,
-            fontSize: 12,
-            lineHeight: 1.5,
-            letterSpacing: '0.1em',
-            color: '#ff4444',
-            background: '#ffe6e6',
-            padding: '2px 6px',
-            borderRadius: '4px',
-          }}
-        >
-          必須
-        </span>
-      )}
-    </div>
-  </div>
-</div>
+                  <div
+                    style={{
+                      background: '#F9F9F9',
+                      borderRadius: 5,
+                      height: isMobile ? 'auto' : 176,
+                      width: isMobile ? '100%' : 200,
+                      padding: isMobile ? '8px 16px' : '0 24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: isMobile ? 'flex-start' : 'center',
+                      alignItems: isMobile ? 'flex-start' : 'center',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 700,
+                          fontSize: 16,
+                          lineHeight: 2,
+                          letterSpacing: '0.1em',
+                          color: '#323232',
+                        }}
+                      >
+                        履歴書
+                      </span>
+                      {isResumeRequired && (
+                        <span
+                          style={{
+                            fontFamily: 'Noto Sans JP',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            letterSpacing: '0.1em',
+                            color: '#ff4444',
+                            background: '#ffe6e6',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          必須
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
                   <div
                     style={{
@@ -704,21 +695,7 @@ export default function CandidateApplicationClient({
                         className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none cursor-pointer bg-transparent flex items-center justify-center'
                         style={{
                           width: isMobile ? '100%' : undefined,
-                          padding: '0 40px',
                           fontFamily: 'Noto Sans JP',
-                          borderRadius: '999px',
-                          border: '1px solid #999',
-                          color: '#323232',
-                          fontSize: '16px',
-                          fontWeight: 700,
-                          lineHeight: '2',
-                          letterSpacing: '0.1em',
-                          height: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: 'transparent',
-                          textAlign: 'center',
                         }}
                       >
                         履歴書をアップロード
