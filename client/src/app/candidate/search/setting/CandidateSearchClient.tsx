@@ -661,7 +661,7 @@ export default function CandidateSearchClient({
                     location={card.location}
                     salary={card.salary}
                     apell={card.apell}
-                    starred={card.starred}
+                    starred={card.starred || false}
                     onStarClick={() => handleStarClick(idx)}
                     isFavoriteLoading={favoriteLoading[card.id]}
                     jobId={card.id}
