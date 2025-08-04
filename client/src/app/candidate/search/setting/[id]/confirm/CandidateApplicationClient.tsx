@@ -532,7 +532,7 @@ export default function CandidateApplicationClient({
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
+                  alignItems: 'start',
                   gap: 24,
                   width: '100%',
                 }}
@@ -556,35 +556,7 @@ export default function CandidateApplicationClient({
                       <br />
                       書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
                     </p>
-                    {(isResumeRequired || isCareerRequired) && (
-                      <div
-                        style={{
-                          background: '#fff3cd',
-                          border: '1px solid #ffeaa7',
-                          borderRadius: '8px',
-                          padding: '12px 16px',
-                          marginTop: '16px',
-                          color: '#856404',
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontFamily: 'Noto Sans JP',
-                            fontWeight: 600,
-                            fontSize: 14,
-                            lineHeight: 1.6,
-                            letterSpacing: '0.1em',
-                            margin: 0,
-                          }}
-                        >
-                          <strong>この求人では以下の書類が必須です：</strong>
-                          <br />
-                          {isResumeRequired && '• 履歴書の提出が必須'}
-                          {isResumeRequired && isCareerRequired && <br />}
-                          {isCareerRequired && '• 職務経歴書の提出が必須'}
-                        </p>
-                      </div>
-                    )}
+                   
                   </div>
                  
                   {uploadError && (
