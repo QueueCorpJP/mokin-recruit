@@ -5,8 +5,8 @@ import './globals.css';
 // Stagewise Toolbar (development only)
 // import StagewiseToolbarClient from './stagewise-toolbar-client';
 
-// サーバーサイド初期化の実行
-import '@/lib/server/container/bindings';
+// NOTE: DI Container initialization moved to API routes for better performance
+// Previously: import '@/lib/server/container/bindings';
 
 // Providers
 import { QueryProvider } from '@/providers/QueryProvider';
@@ -82,14 +82,6 @@ export default function RootLayout({
         <link rel='preconnect' href='https://fonts.googleapis.com' crossOrigin='' />
         <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
         
-        {/* Critical fonts preload */}
-        <link
-          rel='preload'
-          href='https://fonts.gstatic.com/s/notosansjp/v52/O4ZMFGj0-KY-FVaUR6oxZKWjMw.woff2'
-          as='font'
-          type='font/woff2'
-          crossOrigin=''
-        />
 
         {/* Critical CSS - レスポンシブ対応のちらつき防止 */}
         <style

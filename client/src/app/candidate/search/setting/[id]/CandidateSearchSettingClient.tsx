@@ -219,6 +219,8 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                   src={jobData.companyLogo || '/company.jpg'}
                   alt={jobData.companyName}
                   fill
+                  sizes="40px"
+                  priority
                   className='object-cover'
                 />
               </div>

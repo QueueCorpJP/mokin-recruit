@@ -19,6 +19,7 @@ function DownIcon({ className }: { className?: string }) {
         src='/images/down.svg'
         alt='down-icon'
         fill
+        sizes="10px"
         className='object-contain'
       />
     </div>

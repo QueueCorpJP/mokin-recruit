@@ -172,6 +172,7 @@ export const getCurrentUserId = (): string | null => {
   
   // クッキーベースの認証状態から取得
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { authStore } = require('@/stores/authStore');
     const { user } = authStore.getState();
     if (user?.id) {

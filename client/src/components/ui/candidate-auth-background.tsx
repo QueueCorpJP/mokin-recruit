@@ -101,6 +101,7 @@ export function CandidateAuthBackground({
           src="/background.png"
           alt="背景画像"
           fill
+          sizes="100vw"
           priority
           className="object-cover object-center"
           style={{ objectPosition: 'center 15%' }}

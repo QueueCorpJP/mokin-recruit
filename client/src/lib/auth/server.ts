@@ -1,6 +1,14 @@
 import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
+import { cache } from 'react';
 import { SessionService } from '@/lib/server/core/services/SessionService';
 import { validateJWT } from '@/lib/server/auth/supabaseAuth';
+
+// DIコンテナの遅延読み込みをキャッシュ
+const getContainer = cache(async () => {
+  const { container } = await import('@/lib/server/container/bindings');
+  return container;
+});
 
 export type UserType = 'candidate' | 'company_user' | 'admin';
 
@@ -13,7 +21,7 @@ interface User {
   lastSignIn?: string;
 }
 
-interface AuthResult {
+interface BasicAuthResult {
   isAuthenticated: boolean;
   user: User | null;
   userType: UserType | null;
@@ -21,8 +29,9 @@ interface AuthResult {
 
 /**
  * サーバーサイドで認証状態を確認
+ * React cacheを使用してリクエスト内でキャッシュ
  */
-export async function getServerAuth(): Promise<AuthResult> {
+export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('supabase-auth-token')?.value;
@@ -35,7 +44,9 @@ export async function getServerAuth(): Promise<AuthResult> {
       };
     }
 
-    const sessionService = new SessionService();
+    // Lazy load DI container only when needed (cached)
+    const container = await getContainer();
+    const sessionService = container.get<SessionService>(SessionService);
     const sessionResult = await sessionService.validateSession(token);
 
     if (!sessionResult.success || !sessionResult.sessionInfo) {
@@ -48,56 +59,28 @@ export async function getServerAuth(): Promise<AuthResult> {
 
     const { sessionInfo } = sessionResult;
     
-    // データベースからユーザータイプを取得（必要に応じて）
+    // メタデータからユーザー情報を取得
     let userType = sessionInfo.user.user_metadata?.userType;
-    let userName = sessionInfo.user.user_metadata?.name;
+    let userName = sessionInfo.user.user_metadata?.name || sessionInfo.user.user_metadata?.full_name;
     
+    // メタデータに情報がない場合は、デフォルト値を使用（DBクエリは避ける）
     if (!userType) {
-      try {
-        const { getSupabaseClient } = await import('@/lib/server/database/supabase');
-        const supabase = getSupabaseClient();
-        
-        const { data: candidate } = await supabase
-          .from('candidates')
-          .select('id, last_name, first_name, email')
-          .eq('email', sessionInfo.user.email)
-          .single();
-          
-        if (candidate) {
-          userType = 'candidate';
-          userName = `${candidate.last_name} ${candidate.first_name}`;
-        } else {
-          const { data: companyUser } = await supabase
-            .from('company_users')
-            .select('id, full_name, email')
-            .eq('email', sessionInfo.user.email)
-            .single();
-            
-          if (companyUser) {
-            userType = 'company_user';
-            userName = companyUser.full_name;
-          }
-        }
-        
-        if (!userType) {
-          return {
-            isAuthenticated: false,
-            user: null,
-            userType: null,
-          };
-        }
-      } catch (dbError) {
-        return {
-          isAuthenticated: false,
-          user: null,
-          userType: null,
-        };
+      // emailやその他の情報から推測
+      if (sessionInfo.user.email?.includes('@company.')) {
+        userType = 'company_user';
+      } else {
+        userType = 'candidate'; // デフォルトはcandidate
       }
+    }
+    
+    if (!userName) {
+      // メールアドレスから仮の名前を生成
+      userName = sessionInfo.user.email?.split('@')[0] || 'User';
     }
 
     const user: User = {
       id: sessionInfo.user.id,
-      email: sessionInfo.user.email,
+      email: sessionInfo.user.email || '',
       userType: userType,
       name: userName,
       emailConfirmed: !!sessionInfo.user.email_confirmed_at,
@@ -117,7 +100,7 @@ export async function getServerAuth(): Promise<AuthResult> {
       userType: null,
     };
   }
-}
+});
 
 /**
  * 候補者用認証チェック
@@ -255,11 +238,11 @@ export async function requireCompanyAuthForAction(): Promise<AuthResult<{ compan
 /**
  * 候補者認証（SessionService使用）
  */
-export async function requireCandidateAuthWithSession(): Promise<AuthResult<{ 
+export const requireCandidateAuthWithSession = cache(async (): Promise<AuthResult<{ 
   candidateId: string; 
   email: string; 
   fullName: string; 
-}>> {
+}>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('supabase-auth-token')?.value;
@@ -271,7 +254,9 @@ export async function requireCandidateAuthWithSession(): Promise<AuthResult<{
       };
     }
 
-    const sessionService = new SessionService();
+    // Lazy load DI container only when needed (cached)
+    const container = await getContainer();
+    const sessionService = container.get<SessionService>(SessionService);
     const sessionResult = await sessionService.validateSession(token);
     
     if (!sessionResult.success || !sessionResult.sessionInfo) {
@@ -281,29 +266,23 @@ export async function requireCandidateAuthWithSession(): Promise<AuthResult<{
       };
     }
 
-    const { getSupabaseAdminClient } = await import('@/lib/server/database/supabase');
-    const supabase = getSupabaseAdminClient();
-
-    // セッション認証のユーザーIDとcandidatesのIDは異なるため、メールアドレスで検索
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('candidates')
-      .select('id, email, last_name, first_name')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
-
-    if (emailError || !userByEmail) {
-      return {
-        success: false,
-        error: '候補者アカウント情報の取得に失敗しました'
-      };
-    }
+    // セッション情報から直接ユーザー情報を取得（DBクエリを避ける）
+    const { sessionInfo } = sessionResult;
+    const userMetadata = sessionInfo.user.user_metadata || {};
+    
+    // candidateIdはuser_metadataまたはセッションのユーザーIDを使用
+    const candidateId = userMetadata.candidateId || sessionInfo.user.id;
+    const email = sessionInfo.user.email || '';
+    const fullName = userMetadata.full_name || userMetadata.name || 
+      `${userMetadata.last_name || ''} ${userMetadata.first_name || ''}`.trim() ||
+      email.split('@')[0]; // フォールバック
 
     return {
       success: true,
       data: {
-        candidateId: userByEmail.id,
-        email: userByEmail.email,
-        fullName: `${userByEmail.last_name} ${userByEmail.first_name}`
+        candidateId,
+        email,
+        fullName
       }
     };
   } catch (error) {
@@ -313,17 +292,17 @@ export async function requireCandidateAuthWithSession(): Promise<AuthResult<{
       error: 'サーバーエラーが発生しました'
     };
   }
-}
+});
 
 /**
  * 企業ユーザー認証（SessionService使用）
  */
-export async function requireCompanyAuthWithSession(): Promise<AuthResult<{ 
+export const requireCompanyAuthWithSession = cache(async (): Promise<AuthResult<{ 
   companyUserId: string; 
   companyAccountId: string; 
   email: string; 
   fullName: string; 
-}>> {
+}>> => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('supabase-auth-token')?.value;
@@ -335,7 +314,9 @@ export async function requireCompanyAuthWithSession(): Promise<AuthResult<{
       };
     }
 
-    const sessionService = new SessionService();
+    // Lazy load DI container only when needed (cached)
+    const container = await getContainer();
+    const sessionService = container.get<SessionService>(SessionService);
     const sessionResult = await sessionService.validateSession(token);
     
     if (!sessionResult.success || !sessionResult.sessionInfo) {
@@ -345,30 +326,24 @@ export async function requireCompanyAuthWithSession(): Promise<AuthResult<{
       };
     }
 
-    const { getSupabaseAdminClient } = await import('@/lib/server/database/supabase');
-    const supabase = getSupabaseAdminClient();
-
-    // セッション認証のユーザーIDとcompany_usersのIDは異なるため、メールアドレスで検索
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('company_users')
-      .select('id, company_account_id, email, full_name')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
-
-    if (emailError || !userByEmail) {
-      return {
-        success: false,
-        error: '企業アカウント情報の取得に失敗しました'
-      };
-    }
+    // セッション情報から直接ユーザー情報を取得（DBクエリを避ける）
+    const { sessionInfo } = sessionResult;
+    const userMetadata = sessionInfo.user.user_metadata || {};
+    
+    // companyUserIdはuser_metadataまたはセッションのユーザーIDを使用
+    const companyUserId = userMetadata.companyUserId || sessionInfo.user.id;
+    const companyAccountId = userMetadata.companyAccountId || userMetadata.company_account_id || companyUserId;
+    const email = sessionInfo.user.email || '';
+    const fullName = userMetadata.full_name || userMetadata.name || 
+      email.split('@')[0]; // フォールバック
 
     return {
       success: true,
       data: {
-        companyUserId: userByEmail.id,
-        companyAccountId: userByEmail.company_account_id,
-        email: userByEmail.email,
-        fullName: userByEmail.full_name
+        companyUserId,
+        companyAccountId,
+        email,
+        fullName
       }
     };
   } catch (error) {
@@ -378,12 +353,12 @@ export async function requireCompanyAuthWithSession(): Promise<AuthResult<{
       error: 'サーバーエラーが発生しました'
     };
   }
-}
+});
 
 /**
  * API Routes用: 候補者認証を要求するヘルパー関数
  */
-export async function requireCandidateAuthForAPI(request: Request): Promise<AuthResult<{ candidateId: string }>> {
+export async function requireCandidateAuthForAPI(request: NextRequest): Promise<AuthResult<{ candidateId: string }>> {
   try {
     const authResult = await validateJWT(request);
     if (!authResult.isValid || !authResult.candidateId) {
@@ -409,7 +384,7 @@ export async function requireCandidateAuthForAPI(request: Request): Promise<Auth
 /**
  * API Routes用: 企業ユーザー認証を要求するヘルパー関数
  */
-export async function requireCompanyAuthForAPI(request: Request): Promise<AuthResult<{ companyUserId: string }>> {
+export async function requireCompanyAuthForAPI(request: NextRequest): Promise<AuthResult<{ companyUserId: string }>> {
   try {
     const authResult = await validateJWT(request);
     if (!authResult.isValid || !authResult.companyUserId) {

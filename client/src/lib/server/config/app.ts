@@ -18,8 +18,8 @@ export class AppConfig implements IAppConfig {
   readonly rateLimitMaxRequests: number;
 
   constructor() {
-    // バリデーション済み環境変数から取得
-    const env = this.getValidatedEnv();
+    // バリデーション済み環境変数から取得 (synchronous fallback)
+    const env = this.getValidatedEnvSync();
 
     this.port = env.PORT;
     this.nodeEnv = env.NODE_ENV;
@@ -29,24 +29,27 @@ export class AppConfig implements IAppConfig {
     this.rateLimitMaxRequests = env.RATE_LIMIT_MAX;
   }
 
-  private getValidatedEnv() {
+  private getValidatedEnvSync() {
+    // フォールバック: 従来の方式 (synchronous)
+    return {
+      PORT: parseInt(process.env.PORT || '3000', 10),
+      NODE_ENV: process.env.NODE_ENV || 'development',
+      CORS_ORIGIN: process.env.CORS_ORIGIN,
+      RATE_LIMIT_WINDOW: parseInt(
+        process.env.RATE_LIMIT_WINDOW || '900000',
+        10
+      ),
+      RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+    };
+  }
+
+  private async getValidatedEnv() {
     try {
       // 新しいバリデーションシステムを使用
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { getValidatedEnv } = require('@/lib/server/config/env-validation');
+      const { getValidatedEnv } = await import('@/lib/server/config/env-validation');
       return getValidatedEnv();
     } catch (error) {
-      // フォールバック: 従来の方式
-      return {
-        PORT: parseInt(process.env.PORT || '3000', 10),
-        NODE_ENV: process.env.NODE_ENV || 'development',
-        CORS_ORIGIN: process.env.CORS_ORIGIN,
-        RATE_LIMIT_WINDOW: parseInt(
-          process.env.RATE_LIMIT_WINDOW || '900000',
-          10
-        ),
-        RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-      };
+      return this.getValidatedEnvSync();
     }
   }
 

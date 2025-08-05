@@ -17,11 +17,17 @@ export function AuthAwareNavigationServer({
   isLoggedIn = false,
   userInfo
 }: AuthAwareNavigationServerProps) {
+  // Transform userInfo to match Navigation's expected format
+  const navigationUserInfo = userInfo ? {
+    userName: userInfo.name,
+    companyName: userInfo.userType === 'company' ? userInfo.name : undefined
+  } : undefined;
+
   return (
     <Navigation
       variant={variant}
       isLoggedIn={isLoggedIn}
-      userInfo={userInfo}
+      userInfo={navigationUserInfo}
     />
   );
 }

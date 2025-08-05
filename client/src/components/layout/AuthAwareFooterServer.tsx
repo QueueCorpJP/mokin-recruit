@@ -17,11 +17,17 @@ export function AuthAwareFooterServer({
   isLoggedIn = false,
   userInfo
 }: AuthAwareFooterServerProps) {
+  // Transform userInfo to match Footer's expected format
+  const footerUserInfo = userInfo ? {
+    userName: userInfo.name,
+    companyName: userInfo.userType === 'company' ? userInfo.name : undefined
+  } : undefined;
+
   return (
     <Footer
       variant={variant}
       isLoggedIn={isLoggedIn}
-      userInfo={userInfo}
+      userInfo={footerUserInfo}
     />
   );
 }
