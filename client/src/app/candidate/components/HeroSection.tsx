@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ProfileIcon = () => (
   <svg
@@ -43,9 +44,12 @@ export function HeroSection() {
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
           <picture>
             <source media='(max-width: 768px)' srcSet='/image.png' />
-            <img
+            <Image
               src='/top.png'
               alt='hero'
+              width={1920}
+              height={1080}
+              priority
               className='w-full h-auto object-cover'
             />
           </picture>

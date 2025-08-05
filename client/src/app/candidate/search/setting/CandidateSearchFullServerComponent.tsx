@@ -9,6 +9,7 @@ import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
 import { Pagination } from '@/components/ui/Pagination';
 import SearchForm from './SearchForm';
+import Image from 'next/image';
 
 interface CandidateSearchFullServerComponentProps {
   searchParams?: {
@@ -198,11 +199,12 @@ export default async function CandidateSearchFullServerComponent({
                   <div key={job.id} className='border rounded-lg p-6 bg-white shadow-sm'>
                     <Link href={`/candidate/search/setting/${job.id}`} className='block'>
                       <div className='flex flex-col md:flex-row gap-4'>
-                        <div className='w-full md:w-32 h-32 bg-gray-200 rounded-lg overflow-hidden'>
-                          <img 
+                        <div className='relative w-full md:w-32 h-32 bg-gray-200 rounded-lg overflow-hidden'>
+                          <Image 
                             src={job.imageUrl || '/company.jpg'} 
                             alt={job.companyName}
-                            className='w-full h-full object-cover'
+                            fill
+                            className='object-cover'
                           />
                         </div>
                         <div className='flex-1'>

@@ -10,9 +10,23 @@ import '@/lib/server/container/bindings';
 
 // Providers
 import { QueryProvider } from '@/providers/QueryProvider';
-import { AuthInitializer } from '../components/AuthInitializer';
-import { AuthAwareNavigation } from '../components/layout/AuthAwareNavigation';
-import { AuthAwareFooter } from '../components/layout/AuthAwareFooter';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+// 重要でないコンポーネントを遅延読み込み
+const AuthAwareNavigation = dynamic(
+  () => import('../components/layout/AuthAwareNavigation').then(mod => ({ default: mod.AuthAwareNavigation })),
+  {
+    loading: () => <div className="h-[80px] bg-white border-b border-gray-200" />,
+  }
+);
+
+const AuthAwareFooter = dynamic(
+  () => import('../components/layout/AuthAwareFooter').then(mod => ({ default: mod.AuthAwareFooter })),
+  {
+    loading: () => <div className="min-h-[200px] bg-[#323232]" />,
+  }
+);
 
 // フォント最適化
 const inter = Inter({
@@ -25,9 +39,10 @@ const inter = Inter({
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
   display: 'swap',
-  preload: false,
+  preload: true,
   variable: '--font-noto-sans-jp',
   weight: ['400', '500', '700'],
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -63,23 +78,46 @@ export default function RootLayout({
         <link rel='dns-prefetch' href='//fonts.googleapis.com' />
         <link rel='dns-prefetch' href='//fonts.gstatic.com' />
 
-        {/* Preconnect */}
-        <link rel='preconnect' href='https://fonts.googleapis.com' />
+        {/* Preconnect - 最適化 */}
+        <link rel='preconnect' href='https://fonts.googleapis.com' crossOrigin='' />
+        <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
+        
+        {/* Critical fonts preload */}
         <link
-          rel='preconnect'
-          href='https://fonts.gstatic.com'
-          crossOrigin='anonymous'
+          rel='preload'
+          href='https://fonts.gstatic.com/s/notosansjp/v52/O4ZMFGj0-KY-FVaUR6oxZKWjMw.woff2'
+          as='font'
+          type='font/woff2'
+          crossOrigin=''
         />
 
         {/* Critical CSS - レスポンシブ対応のちらつき防止 */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-            html { 
-              font-family: var(--font-noto-sans-jp), system-ui, sans-serif; 
+            @font-face {
+              font-family: 'Noto Sans JP Fallback';
+              src: local('Noto Sans JP'), local('NotoSansJP-Regular'),
+                   local('ヒラギノ角ゴ ProN'), local('Hiragino Kaku Gothic ProN'),
+                   local('メイリオ'), local('Meiryo');
+              unicode-range: U+3000-9FFF, U+FF00-FFEF;
+              font-display: swap;
             }
+            
+            html { 
+              font-family: var(--font-noto-sans-jp), 'Noto Sans JP Fallback', system-ui, sans-serif; 
+            }
+            
             .font-noto-sans-jp { 
-              font-family: var(--font-noto-sans-jp), sans-serif; 
+              font-family: var(--font-noto-sans-jp), 'Noto Sans JP Fallback', sans-serif; 
+            }
+            
+            /* フォント読み込み中のレイアウトシフト防止 */
+            body {
+              font-synthesis: none;
+              text-rendering: optimizeLegibility;
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
             }
           `,
           }}
@@ -87,10 +125,7 @@ export default function RootLayout({
       </head>
       <body className={`antialiased`}>
         <QueryProvider>
-          <AuthInitializer />
-          <AuthAwareNavigation />
           {children}
-          <AuthAwareFooter />
           {/* <StagewiseToolbarClient /> */}
         </QueryProvider>
       </body>

@@ -6,12 +6,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import { Button } from '@/components/ui/button';
-import { useAuthRefresh } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { candidateLoginAction } from './actions';
 
 export function CandidateLoginClient() {
-  const refreshAuth = useAuthRefresh();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -43,9 +41,6 @@ export function CandidateLoginClient() {
 
         if (result.success) {
           setSuccess('ログインに成功しました！');
-          
-          // 認証状態をリフレッシュ（クッキーに保存されたトークンを使用）
-          await refreshAuth();
           
           // サーバーアクションでリダイレクトが処理されるため、ここでは何もしない
         } else {

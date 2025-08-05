@@ -5,7 +5,6 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
-import { useAuthRefresh } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { loginAction, LoginResult } from './actions';
 
@@ -14,7 +13,6 @@ interface LoginClientProps {
 }
 
 export function LoginClient({ userType }: LoginClientProps) {
-  const refreshAuth = useAuthRefresh();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -83,9 +81,6 @@ export function LoginClient({ userType }: LoginClientProps) {
         }
 
         setSuccess('ログインに成功しました！');
-
-        // 認証状態をリフレッシュ（クッキーに保存されたトークンを使用）
-        await refreshAuth();
 
       } catch (err) {
         // Next.jsのredirectエラーは正常な動作

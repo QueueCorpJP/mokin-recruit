@@ -3,7 +3,6 @@ export default function CompanyLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 認証はルートレイアウトのAuthInitializerで管理
-  // ページレベルでの認証制限が必要な場合は個別に実装
+  // 子レイアウト（auth、job、message、dashboard）がそれぞれの認証とヘッダー・フッターを管理
   return <>{children}</>;
 }

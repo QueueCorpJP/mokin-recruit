@@ -13,7 +13,7 @@ export const MessageDetailBody: React.FC<MessageDetailBodyProps> = ({
   return (
     <div
       className={cn(
-        'flex flex-col gap-6 p-4', // gap-6=24px, p-4=16px
+        'flex flex-col gap-6 p-4 bg-[#F9F9F9]', // gap-6=24px, p-4=16px, 背景色追加
         className
       )}
     >

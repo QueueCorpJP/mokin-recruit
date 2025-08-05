@@ -1,8 +1,7 @@
 'use server';
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { validateJWT } from '@/lib/server/auth/supabaseAuth';
-import { cookies } from 'next/headers';
+import { requireCandidateAuthWithSession } from '@/lib/auth/server';
 
 export interface FavoriteListParams {
   page?: number;
@@ -33,50 +32,23 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
   const startTime = performance.now();
   
   try {
-    // JWT検証のためのリクエストオブジェクトを作成
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-    
-    if (!token) {
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthWithSession();
+    if (!authResult.success) {
       return {
         success: false,
-        error: '認証トークンが見つかりません'
+        error: authResult.error
       };
     }
 
-    // NextRequestに準拠したリクエストオブジェクトを作成
-    const mockRequest = {
-      headers: new Headers([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore,
-      nextUrl: { pathname: '/candidate/job/favorite' },
-      get: (name: string) => {
-        if (name === 'authorization') return `Bearer ${token}`;
-        return null;
-      }
-    } as any;
-
-    const authResult = await validateJWT(mockRequest);
-    if (!authResult.isValid || !authResult.candidateId) {
-      return {
-        success: false,
-        error: '認証トークンが無効です'
-      };
-    }
-
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(50, Math.max(1, params.limit || 20));
     const offset = (page - 1) * limit;
 
     const supabase = getSupabaseAdminClient();
 
-    // カウントクエリとデータクエリを分離して並列実行
-    const favoritesCountQuery = supabase
-      .from('favorites')
-      .select('id', { count: 'exact', head: true })
-      .eq('candidate_id', candidateId)
-      .match({ 'job_postings.status': 'PUBLISHED' });
-
+    // データクエリのみを実行し、カウントも取得する最適化
     const favoritesDataQuery = supabase
       .from('favorites')
       .select(`
@@ -103,30 +75,14 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
           appeal_points,
           image_urls
         )
-      `)
+      `, { count: 'exact' })
       .eq('candidate_id', candidateId)
       .eq('job_postings.status', 'PUBLISHED')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // 並列実行
-    const [countResult, dataResult] = await Promise.all([
-      favoritesCountQuery,
-      favoritesDataQuery
-    ]);
-
-    const { count, error: countError } = countResult;
-    const { data: favorites, error: favoritesError } = dataResult;
-
-    if (countError) {
-      console.error('お気に入りカウントエラー:', {
-        message: countError.message || 'メッセージなし',
-        details: countError.details || 'detailsなし',
-        hint: countError.hint || 'hintなし',
-        code: countError.code || 'codeなし',
-        fullError: countError
-      });
-    }
+    // 単一クエリ実行
+    const { data: favorites, count, error: favoritesError } = await favoritesDataQuery;
 
     if (favoritesError) {
       console.error('お気に入り取得エラー:', favoritesError);
@@ -172,7 +128,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const totalPages = Math.ceil(totalCount / limit);
 
     const endTime = performance.now();
-    console.log(`[OPTIMIZED] Favorites list completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Companies: ${companyAccountIds.length}`);
+    console.log(`[OPTIMIZED] Favorites list completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Companies: ${companyAccountIds.length}, Total: ${totalCount}`);
 
     return {
       success: true,
@@ -198,35 +154,16 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
 
 export async function addFavorite(jobPostingId: string): Promise<FavoriteActionResult> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-    
-    if (!token) {
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthWithSession();
+    if (!authResult.success) {
       return {
         success: false,
-        error: '認証トークンが見つかりません'
+        error: authResult.error
       };
     }
 
-    const mockRequest = {
-      headers: new Headers([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore,
-      nextUrl: { pathname: '/candidate/job/favorite' },
-      get: (name: string) => {
-        if (name === 'authorization') return `Bearer ${token}`;
-        return null;
-      }
-    } as any;
-
-    const authResult = await validateJWT(mockRequest);
-    if (!authResult.isValid || !authResult.candidateId) {
-      return {
-        success: false,
-        error: '認証トークンが無効です'
-      };
-    }
-
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const supabase = getSupabaseAdminClient();
 
     // 求人の存在チェックと既存のお気に入りチェックを並列実行
@@ -300,35 +237,16 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
 
 export async function removeFavorite(jobPostingId: string): Promise<FavoriteActionResult> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-    
-    if (!token) {
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthWithSession();
+    if (!authResult.success) {
       return {
         success: false,
-        error: '認証トークンが見つかりません'
+        error: authResult.error
       };
     }
 
-    const mockRequest = {
-      headers: new Headers([['authorization', `Bearer ${token}`]]),
-      cookies: cookieStore,
-      nextUrl: { pathname: '/candidate/job/favorite' },
-      get: (name: string) => {
-        if (name === 'authorization') return `Bearer ${token}`;
-        return null;
-      }
-    } as any;
-
-    const authResult = await validateJWT(mockRequest);
-    if (!authResult.isValid || !authResult.candidateId) {
-      return {
-        success: false,
-        error: '認証トークンが無効です'
-      };
-    }
-
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const supabase = getSupabaseAdminClient();
 
     // お気に入りが存在するかチェック

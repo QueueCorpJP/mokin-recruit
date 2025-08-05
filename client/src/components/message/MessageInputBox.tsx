@@ -8,8 +8,10 @@ import { SelectInput } from '@/components/ui/select-input';
  * - padding: 上下16px, 左右24px
  * - 今後、入力欄やボタン等をこの中に追加予定
  */
-export const MessageInputBox: React.FC = () => {
-  // 仮のセレクト用オプション
+export const MessageInputBox: React.FC<{ isCandidatePage?: boolean }> = ({
+  isCandidatePage = false,
+}) => {
+  // company用セレクトのstate
   const templateOptions = [
     { value: '', label: 'テンプレート未選択' },
     { value: '1', label: '面談日程調整テンプレート' },
@@ -22,17 +24,97 @@ export const MessageInputBox: React.FC = () => {
       className='w-full px-6 py-4 bg-white border-t border-[#efefef]'
       // px-6: 左右24px, py-4: 上下16px
     >
-      {/* セレクトコンポーネント（左上配置） */}
-      <div className='w-full flex flex-row items-start'>
-        <SelectInput
-          options={templateOptions}
-          value={template}
-          onChange={setTemplate}
-          placeholder='テンプレート未選択'
-          className='w-[240px] font-bold text-[16px]'
-        />
+      {/* タグ風アウトラインボタン or セレクト */}
+      <div className='w-full flex flex-row flex-wrap md:flex-nowrap items-start mb-2 gap-x-2 gap-y-2'>
+        {isCandidatePage ? (
+          [
+            '話を聞いてみる',
+            '面談する（訪問）',
+            '面談する（オンライン）',
+            '質問する',
+          ].map((label, idx) => (
+            <button
+              key={label}
+              type='button'
+              className='px-4 py-1 border border-[#0F9058] text-[#0F9058] rounded-full text-[14px] font-bold bg-white w-auto flex-shrink-0'
+              style={{
+                paddingTop: 4,
+                paddingBottom: 4,
+                paddingLeft: 16,
+                paddingRight: 16,
+                borderColor: '#0F9058',
+                color: '#0F9058',
+                background: '#fff',
+                minWidth: 0,
+                display: 'inline-block',
+              }}
+            >
+              {label}
+            </button>
+          ))
+        ) : (
+          <SelectInput
+            options={templateOptions}
+            value={template}
+            onChange={setTemplate}
+            placeholder='テンプレート未選択'
+            className='w-[240px] font-bold text-[16px]'
+          />
+        )}
       </div>
-      {/* ここにメッセージ入力UIを追加していく */}
+      {/* テキスト入力欄 */}
+      <textarea
+        className='w-full min-h-[56px] resize-none bg-white outline-none text-[16px] font-bold leading-[2] placeholder:text-[#bbb] placeholder:font-bold placeholder:text-[16px] placeholder:leading-[2]'
+        placeholder='メッセージを入力'
+        rows={1}
+        style={{
+          lineHeight: '2',
+          fontWeight: 'bold',
+          fontSize: 16,
+          background: '#fff',
+          border: 'none',
+          padding: 0,
+        }}
+        // 入力が増えると自動で高さが増える
+        onInput={e => {
+          const target = e.target as HTMLTextAreaElement;
+          target.style.height = '56px';
+          target.style.height = target.scrollHeight + 'px';
+        }}
+      />
+      {/* 添付・送信エリア（デザインのみ、機能なし） */}
+      <div className='w-full flex flex-row items-center gap-2 mt-4 justify-between'>
+        {/* 左端：クリップアイコンボタン */}
+        <button
+          type='button'
+          className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
+        >
+          <img src='/images/clip.svg' alt='添付' className='w-6 h-6' />
+        </button>
+        {/* 添付ファイルタグ（ダミー） */}
+        <div className='flex flex-row gap-2 flex-1 ml-2'>
+          <div className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
+            <span className='text-[#323232] text-[14px] font-medium truncate'>
+              ファイル名テキストが入ります.pdf
+            </span>
+            <button
+              type='button'
+              className='ml-1 w-4 h-4 flex items-center justify-center bg-transparent border-none p-0 cursor-pointer'
+            >
+              <span className='text-[#999] text-[12px] font-bold'>×</span>
+            </button>
+          </div>
+        </div>
+        {/* 右端：送信ボタン */}
+        <button
+          type='button'
+          className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
+          style={{ maxWidth: 120, padding: '10px 24px' }}
+        >
+          <img src='/images/form.svg' alt='送信' className='w-4 h-4' />
+          送信
+        </button>
+      </div>
     </div>
   );
 };

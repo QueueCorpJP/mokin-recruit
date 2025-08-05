@@ -46,8 +46,13 @@ export default function MessagePage() {
   ];
 
   return (
-    <div className='min-h-screen bg-[#f9f9f9] flex flex-col'>
-      <MessageLayout messages={dummyMessages} />
+    <div className='flex flex-col bg-white'>
+      {/* ヘッダー（必要ならここに追加） */}
+      {/* メイン: メッセージ一覧＋詳細 */}
+      <div style={{ flex: '0 0 75vh', height: '75vh' }}>
+        <MessageLayout messages={dummyMessages} />
+      </div>
+      {/* フッター（仮）は削除 */}
     </div>
   );
 }

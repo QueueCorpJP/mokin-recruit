@@ -1,13 +1,5 @@
-// 🔥 根本修正: useAuth削除、個別フックのみエクスポート
-export { 
-  useAuthUser, 
-  useAuthUserType, 
-  useAuthIsAuthenticated, 
-  useAuthIsLoading, 
-  useAuthSession, 
-  useAuthInitialized,
-  useAuthRefresh,
-  useAuthLogout,
-  useAuthFetchSession,
-  type UserType 
-} from '../stores/authStore'; 
+// Server-side auth exports - these functions are now handled server-side
+export type { UserType } from '../lib/auth/server';
+
+// Note: Client-side auth hooks are no longer available in server components
+// Use getServerAuth() in server components instead 

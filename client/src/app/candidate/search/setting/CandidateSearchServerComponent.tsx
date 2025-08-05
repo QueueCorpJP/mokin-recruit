@@ -25,8 +25,10 @@ export default async function CandidateSearchServerComponent({
   searchParams = {} 
 }: CandidateSearchServerComponentProps) {
   
-  // クエリパラメータから検索条件を構築
+  // searchParamsをawait
   const awaitedSearchParams = await searchParams;
+  
+  // クエリパラメータから検索条件を構築
   const searchConditions = {
     keyword: awaitedSearchParams.keyword || '',
     location: awaitedSearchParams.location || '',

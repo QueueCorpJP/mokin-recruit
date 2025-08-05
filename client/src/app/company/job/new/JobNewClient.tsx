@@ -11,7 +11,7 @@ import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { FormFields } from '@/app/company/company/job/FormFields';
 import { ConfirmView } from '@/app/company/company/job/ConfirmView';
-import { useAuthUser } from '@/contexts/AuthContext';
+// Note: Auth is now handled server-side, user info passed as props
 import { createJob } from '../actions';
 
 interface JobNewClientProps {
@@ -21,7 +21,6 @@ interface JobNewClientProps {
 
 export default function JobNewClient({ initialCompanyGroups, currentUserId }: JobNewClientProps) {
   const router = useRouter();
-  const user = useAuthUser();
 
   // 各項目の状態
   const [group, setGroup] = useState('');
@@ -66,7 +65,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   const [showErrors, setShowErrors] = useState(false);
 
   // 下書き保存用のキー（ユーザー固有）
-  const actualCurrentUserId = user?.id || currentUserId;
+  const actualCurrentUserId = currentUserId;
   const DRAFT_KEY = `job_draft_data_${actualCurrentUserId || 'anonymous'}`;
 
   // 初期化時にデフォルトグループを設定

@@ -46,7 +46,15 @@ const nextConfig: NextConfig = {
 
   // 画像最適化の強化
   images: {
-    domains: ['localhost', '*.supabase.co', '*.vercel.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mjhqeagxibsklugikyma.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+    domains: ['localhost', 'mjhqeagxibsklugikyma.supabase.co'],
     unoptimized: false,
     // 画像最適化の設定
     formats: ['image/webp', 'image/avif'],

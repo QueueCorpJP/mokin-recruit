@@ -1,8 +1,7 @@
 'use server'
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { SessionService } from '@/lib/server/core/services/SessionService';
-import { cookies } from 'next/headers';
+import { requireCompanyAuthWithSession } from '@/lib/auth/server';
 
 // 求人データの型定義
 interface JobPosting {
@@ -32,33 +31,14 @@ export async function getCompanyJobs(params: {
   search?: string;
 }) {
   try {
-    const sessionService = new SessionService();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
-      return { success: false, error: '認証トークンがありません' };
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthWithSession();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
-    const sessionResult = await sessionService.validateSession(token);
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      return { success: false, error: '認証エラー' };
-    }
-
+    const { companyAccountId: userCompanyAccountId } = authResult.data;
     const supabase = getSupabaseAdminClient();
-
-    // セッション認証のユーザーIDとcompany_usersのIDは異なるため、メールアドレスで検索
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('company_users')
-      .select('id, company_account_id, email, full_name')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
-
-    if (emailError || !userByEmail) {
-      return { success: false, error: '企業アカウント情報の取得に失敗しました' };
-    }
-
-    const userCompanyAccountId = userByEmail.company_account_id;
 
     // 基本クエリ：同じ会社アカウントの求人のみ
     let query = supabase
@@ -223,34 +203,17 @@ export async function getCompanyJobs(params: {
 // 新規求人作成
 export async function createJob(data: any) {
   try {
-    const sessionService = new SessionService();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
-      return { success: false, error: '認証トークンがありません' };
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthWithSession();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
-    const sessionResult = await sessionService.validateSession(token);
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      return { success: false, error: '認証エラー' };
-    }
-
+    const { 
+      companyUserId: actualUserId, 
+      companyAccountId: userCompanyAccountId 
+    } = authResult.data;
     const supabase = getSupabaseAdminClient();
-
-    // ユーザー情報取得
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('company_users')
-      .select('id, company_account_id, email, full_name')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
-
-    if (emailError || !userByEmail) {
-      return { success: false, error: '企業アカウント情報の取得に失敗しました' };
-    }
-
-    const actualUserId = userByEmail.id;
-    const userCompanyAccountId = userByEmail.company_account_id;
 
     // 利用可能なグループを確認
     const { data: availableUsers } = await supabase
@@ -391,17 +354,10 @@ export async function createJob(data: any) {
 // 求人情報取得（編集用）
 export async function getJobForEdit(jobId: string) {
   try {
-    const sessionService = new SessionService();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
-      return { success: false, error: '認証トークンがありません' };
-    }
-
-    const sessionResult = await sessionService.validateSession(token);
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      return { success: false, error: '認証エラー' };
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthWithSession();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
     const supabase = getSupabaseAdminClient();
@@ -429,17 +385,10 @@ export async function getJobForEdit(jobId: string) {
 // 求人情報更新
 export async function updateJob(jobId: string, updateData: any) {
   try {
-    const sessionService = new SessionService();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
-      return { success: false, error: '認証トークンがありません' };
-    }
-
-    const sessionResult = await sessionService.validateSession(token);
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      return { success: false, error: '認証エラー' };
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthWithSession();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
     const supabase = getSupabaseAdminClient();
@@ -492,37 +441,20 @@ export async function deleteJob(jobId: string) {
 // グループ一覧取得
 export async function getCompanyGroups() {
   try {
-    const sessionService = new SessionService();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
-      return { success: false, error: '認証トークンがありません' };
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthWithSession();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
-    const sessionResult = await sessionService.validateSession(token);
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      return { success: false, error: '認証エラー' };
-    }
-
+    const { companyAccountId } = authResult.data;
     const supabase = getSupabaseAdminClient();
-
-    // ユーザー情報取得
-    const { data: userByEmail, error: emailError } = await supabase
-      .from('company_users')
-      .select('id, company_account_id')
-      .eq('email', sessionResult.sessionInfo.user.email)
-      .single();
-
-    if (emailError || !userByEmail) {
-      return { success: false, error: '企業アカウント情報の取得に失敗しました' };
-    }
 
     // 同じcompany_accountに属するユーザー一覧を取得
     const { data: groups, error } = await supabase
       .from('company_users')
       .select('id, email, full_name')
-      .eq('company_account_id', userByEmail.company_account_id)
+      .eq('company_account_id', companyAccountId)
       .order('created_at', { ascending: true });
 
     if (error) {
