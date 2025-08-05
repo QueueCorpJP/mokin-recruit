@@ -3,15 +3,26 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { useAuthUser, useAuthIsAuthenticated } from '@/stores/authStore';
+// import { useAuthUser } from '@/stores/authStore'; // Removed: Using server-side auth now
 import { submitApplication } from './actions';
 import { AlignJustify } from 'lucide-react';
+import Image from 'next/image';
+
+interface User {
+  id: string;
+  email: string;
+  userType: 'candidate' | 'company_user' | 'admin';
+  name?: string;
+  emailConfirmed: boolean;
+  lastSignIn?: string;
+}
 
 interface CandidateApplicationClientProps {
   jobId: string;
   jobTitle: string;
   companyName: string;
   requiredDocuments: string[];
+  user: User | null;
 }
 
 // useMediaQuery: メディアクエリ判定用カスタムフック
@@ -35,11 +46,10 @@ export default function CandidateApplicationClient({
   jobId,
   jobTitle,
   companyName,
-  requiredDocuments
+  requiredDocuments,
+  user
 }: CandidateApplicationClientProps) {
   const router = useRouter();
-  const user = useAuthUser();
-  const isAuthenticated = useAuthIsAuthenticated();
   
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resumeFiles, setResumeFiles] = useState<File[]>([]);
@@ -174,7 +184,7 @@ export default function CandidateApplicationClient({
 
   // 応募処理
   const handleApplication = async () => {
-    if (!isAuthenticated || !user) {
+    if (!user) {
       router.push('/candidate/auth/login');
       return;
     }
@@ -222,7 +232,6 @@ export default function CandidateApplicationClient({
       setIsSubmitted(true);
 
     } catch (error) {
-      console.error('Application error:', error);
       setUploadError(error instanceof Error ? error.message : '応募の送信に失敗しました');
     } finally {
       setIsUploading(false);
@@ -310,7 +319,7 @@ export default function CandidateApplicationClient({
                 alignSelf: 'stretch',
               }}
             >
-              <img
+              <Image
                 src='/images/boad.svg'
                 alt='ボードアイコン'
                 width={isMobile ? 24 : 32}
@@ -396,7 +405,7 @@ export default function CandidateApplicationClient({
                 alignSelf: 'stretch',
               }}
             >
-              <img
+              <Image
                 src='/images/boad.svg'
                 alt='ボードアイコン'
                 width={isMobile ? 24 : 32}
@@ -500,8 +509,8 @@ export default function CandidateApplicationClient({
                 }}
                 aria-label='応募完了イメージ'
               >
-                <img
-                  src='/images/complete.svg'
+                <Image
+                  src='/images/complete.svg'  
                   alt='応募完了イメージ'
                   width={isMobile ? 160 : 240}
                   height={isMobile ? 160 : 240}

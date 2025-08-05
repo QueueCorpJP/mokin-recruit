@@ -12,15 +12,15 @@ export function MessageGroupTag({ children, className }: MessageGroupTagProps) {
       className={cn(
         'bg-gradient-to-r from-[#86c36a] to-[#65bdac]',
         'text-white font-["Noto_Sans_JP"] font-bold text-[14px] tracking-[1.4px]',
-        'px-5 py-0 h-8 rounded-lg',
+        'h-8 rounded-lg w-[160px]',
         'flex items-center justify-center',
         'leading-[1.6] text-center',
-        'min-w-[160px] w-40 shrink-0',
-        'overflow-hidden text-ellipsis whitespace-nowrap',
         className
       )}
     >
-      {children}
+      <span className='block w-[120px] overflow-hidden text-ellipsis whitespace-nowrap'>
+        {children}
+      </span>
     </div>
   );
-} 
+}

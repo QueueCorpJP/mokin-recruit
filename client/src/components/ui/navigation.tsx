@@ -8,7 +8,7 @@ import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { useAuthLogout } from '@/contexts/AuthContext';
+// Note: Auth logout is now handled via server actions
 
 // Custom Icon Components
 
@@ -19,6 +19,7 @@ function DownIcon({ className }: { className?: string }) {
         src='/images/down.svg'
         alt='down-icon'
         fill
+        sizes="10px"
         className='object-contain'
       />
     </div>
@@ -171,7 +172,7 @@ export function Navigation({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const logout = useAuthLogout();
+  // Logout is now handled via server API endpoint
 
   // デバッグ用ログ
   useEffect(() => {
@@ -192,9 +193,19 @@ export function Navigation({
   // ログアウト処理
   const handleLogout = async () => {
     try {
-      await logout();
-      // ドロップダウンを閉じる
-      setOpenDropdown(null);
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        // ドロップダウンを閉じる
+        setOpenDropdown(null);
+        // ページをリロードして認証状態を更新
+        window.location.reload();
+      } else {
+        console.error('❌ ログアウトに失敗しました');
+      }
     } catch (error) {
       console.error('❌ ログアウト処理でエラーが発生しました:', error);
       setOpenDropdown(null);

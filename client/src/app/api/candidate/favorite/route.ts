@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/server/database/supabase';
-import { validateJWT } from '@/lib/server/auth/supabaseAuth';
+import { requireCandidateAuthForAPI } from '@/lib/auth/server';
 
 // お気に入り一覧取得 (GET)
 export async function GET(request: NextRequest) {
   try {
-    // JWTトークンの検証
-    const authResult = await validateJWT(request);
-    if (!authResult.isValid || !authResult.candidateId) {
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthForAPI(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { success: false, error: '認証トークンが無効です' },
+        { success: false, error: authResult.error },
         { status: 401 }
       );
     }
 
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
@@ -130,20 +130,19 @@ export async function POST(request: NextRequest) {
     console.log('Authorization header:', authHeader ? 'Present' : 'Missing');
     console.log('Cookie token:', cookieToken ? 'Present' : 'Missing');
     
-    // JWTトークンの検証
-    const authResult = await validateJWT(request);
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthForAPI(request);
     console.log('認証結果:', {
-      isValid: authResult.isValid,
-      candidateId: authResult.candidateId,
-      error: authResult.error
+      success: authResult.success,
+      error: authResult.success ? null : authResult.error
     });
     
-    if (!authResult.isValid) {
+    if (!authResult.success) {
       console.log('認証失敗 - 詳細:', authResult);
       return NextResponse.json(
         {
           success: false,
-          error: authResult.error || '認証トークンが無効です',
+          error: authResult.error,
           debug: {
             hasAuthHeader: !!authHeader,
             hasCookieToken: !!cookieToken,
@@ -154,21 +153,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authResult.candidateId) {
-      console.log('候補者ID取得失敗');
-      return NextResponse.json(
-        {
-          success: false,
-          error: '候補者情報が見つかりません。候補者としてログインしてください。',
-          debug: {
-            authResult: authResult
-          }
-        },
-        { status: 403 }
-      );
-    }
-
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const body = await request.json();
     const { job_posting_id } = body;
 
@@ -416,16 +401,16 @@ export async function POST(request: NextRequest) {
 // お気に入り削除 (DELETE)
 export async function DELETE(request: NextRequest) {
   try {
-    // JWTトークンの検証
-    const authResult = await validateJWT(request);
-    if (!authResult.isValid || !authResult.candidateId) {
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthForAPI(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { success: false, error: '認証トークンが無効です' },
+        { success: false, error: authResult.error },
         { status: 401 }
       );
     }
 
-    const candidateId = authResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     const { searchParams } = new URL(request.url);
     const job_posting_id = searchParams.get('job_posting_id');
 

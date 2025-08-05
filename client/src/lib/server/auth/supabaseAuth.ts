@@ -20,6 +20,7 @@ export interface AuthResult {
 export interface JWTValidationResult {
   isValid: boolean;
   candidateId?: string;
+  companyUserId?: string;
   user?: User;
   error?: string;
 }

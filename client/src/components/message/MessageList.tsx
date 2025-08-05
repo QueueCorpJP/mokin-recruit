@@ -20,6 +20,8 @@ export interface MessageListProps {
   messages?: Message[];
   onMessageClick?: (messageId: string) => void;
   className?: string;
+  isCandidatePage?: boolean;
+  selectedMessageId?: string | null;
 }
 
 // サンプルデータ
@@ -66,6 +68,8 @@ export function MessageList({
   messages = defaultMessages,
   onMessageClick,
   className,
+  isCandidatePage = false,
+  selectedMessageId,
 }: MessageListProps) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
@@ -105,6 +109,8 @@ export function MessageList({
               {...message}
               onClick={onMessageClick}
               className={index === filteredMessages.length - 1 ? 'mb-6' : ''}
+              isCandidatePage={isCandidatePage}
+              selected={selectedMessageId === message.id}
             />
           ))}
         </div>

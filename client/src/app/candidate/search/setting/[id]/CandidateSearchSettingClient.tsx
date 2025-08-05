@@ -6,6 +6,7 @@ import { Star } from 'lucide-react';
 import { useFavoriteStatusQuery, useFavoriteToggleMutation } from '@/hooks/useFavoriteApi';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { JobDetailData } from './actions';
+import Image from 'next/image';
 
 interface CandidateSearchSettingClientProps {
   initialJobData: JobDetailData | null;
@@ -122,8 +123,15 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
   const { data: favoriteStatus } = useFavoriteStatusQuery([jobId]);
   const favoriteToggleMutation = useFavoriteToggleMutation();
   
-  // お気に入り状態を取得
-  const isFavorite = favoriteStatus?.[jobId] || false;
+  // お気に入り状態をローカルステートで管理（即座の更新のため）
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  // favoriteStatusが更新されたらローカルステートも更新
+  useEffect(() => {
+    if (favoriteStatus !== undefined) {
+      setIsFavorite(favoriteStatus[jobId] || false);
+    }
+  }, [favoriteStatus, jobId]);
 
   // 画像の自動切り替え
   useEffect(() => {
@@ -141,6 +149,10 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
   const handleFavoriteToggle = async () => {
     if (favoriteToggleMutation.isPending) return; // 処理中は無効化
     
+    // 楽観的更新: 即座にUIを更新
+    const newFavoriteState = !isFavorite;
+    setIsFavorite(newFavoriteState);
+    
     try {
       await favoriteToggleMutation.mutateAsync({
         jobPostingId: jobId,
@@ -148,7 +160,8 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
       });
     } catch (error) {
       console.error('お気に入りの切り替えに失敗しました:', error);
-      // エラーの場合は何もしない（hookが自動でエラーハンドリング）
+      // エラーの場合は元の状態に戻す
+      setIsFavorite(!newFavoriteState);
     }
   };
 
@@ -201,14 +214,16 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
 
             {/* 企業情報 */}
             <div className='flex flex-row gap-4 items-center justify-start w-full'>
-              <div
-                className='bg-center bg-cover bg-no-repeat rounded-full shrink-0 w-10 h-10'
-                style={{
-                  backgroundImage: jobData.companyLogo
-                    ? `url(${jobData.companyLogo})`
-                    : 'url(/company.jpg)',
-                }}
-              />
+              <div className='relative rounded-full shrink-0 w-10 h-10 overflow-hidden'>
+                <Image
+                  src={jobData.companyLogo || '/company.jpg'}
+                  alt={jobData.companyName}
+                  fill
+                  sizes="40px"
+                  priority
+                  className='object-cover'
+                />
+              </div>
               <div className='flex-1'>
                 <span className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#0f9058] break-words overflow-wrap-break-word line-break-auto max-w-full">
                   {jobData.companyName}
@@ -225,15 +240,15 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                 {/* 画像・プログレス・タグセクション */}
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   {/* 画像 */}
-                  <div
-                    className='aspect-[300/200] bg-center bg-cover bg-no-repeat rounded-[10px] md:rounded-3xl w-full transition-all ease-in-out'
-                    style={{
-                      transitionDuration: '0.6s',
-                      backgroundImage: jobData.images[currentImageIndex]
-                        ? `url(${jobData.images[currentImageIndex]})`
-                        : 'url(/company.jpg)',
-                    }}
-                  />
+                  <div className='relative aspect-[300/200] rounded-[10px] md:rounded-3xl w-full overflow-hidden'>
+                    <Image
+                      src={jobData.images[currentImageIndex] || '/company.jpg'}
+                      alt={`${jobData.title} - 画像${currentImageIndex + 1}`}
+                      fill
+                      className='object-cover transition-all ease-in-out'
+                      style={{ transitionDuration: '0.6s' }}
+                    />
+                  </div>
 
                   {/* プログレスバー */}
                   {jobData.images && jobData.images.length > 1 && (
@@ -833,29 +848,19 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                 <button
                   onClick={handleFavoriteToggle}
                   disabled={favoriteToggleMutation.isPending}
-                  className={`${
-                    isFavorite 
-                      ? 'bg-[#FFDA5F] text-[#323232]' 
-                      : 'bg-[#FFF] text-[var(--3,#999)] border border-[var(--3,#999)]'
-                  } flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] ${
+                  className={`flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] ${
                     favoriteToggleMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
+                  } ${
+                    isFavorite 
+                      ? 'bg-[#FFDA5F] hover:bg-[#E5C54F] text-[#323232]' 
+                      : 'bg-white hover:bg-[#f5f5f5] text-[#999] border border-[#999]'
                   }`}
-                  onMouseEnter={e => {
-                    if (!favoriteToggleMutation.isPending) {
-                      e.currentTarget.style.backgroundColor = isFavorite ? '#E5C54F' : '#f5f5f5';
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!favoriteToggleMutation.isPending) {
-                      e.currentTarget.style.backgroundColor = isFavorite ? '#FFDA5F' : '#FFF';
-                    }
-                  }}
                 >
                   <Star
                     size={12}
-                    className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-[var(--3,#999)]'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
+                    className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-[#999]'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
                   />
-                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-[var(--3,#999)]'} whitespace-nowrap`}>
+                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-[#999]'} whitespace-nowrap`}>
                     {favoriteToggleMutation.isPending 
                       ? '処理中...' 
                       : isFavorite 

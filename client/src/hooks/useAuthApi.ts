@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authStore } from '../stores/authStore';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
-import type { UserType } from '../stores/authStore';
+import type { UserType } from '../lib/auth/server';
 
 // 型定義
 interface LoginData {
@@ -71,7 +70,6 @@ export const useSessionQuery = (enabled = true) => {
 // ログイン
 export const useLoginMutation = () => {
   const queryClient = useQueryClient();
-  const refreshAuth = authStore.getState().refreshAuth;
 
   return useMutation({
     mutationFn: async (data: LoginData) => {
@@ -81,7 +79,8 @@ export const useLoginMutation = () => {
     onSuccess: async () => {
       // ログイン成功後にセッション情報を再取得
       await queryClient.invalidateQueries({ queryKey: authKeys.session() });
-      await refreshAuth();
+      // Page refresh to update server-side auth state
+      window.location.reload();
     },
     onError: (error) => {
       logError(error as any, 'useLoginMutation');
@@ -92,7 +91,6 @@ export const useLoginMutation = () => {
 // ログアウト
 export const useLogoutMutation = () => {
   const queryClient = useQueryClient();
-  const reset = authStore.getState().reset;
 
   return useMutation({
     mutationFn: async () => {
@@ -101,12 +99,13 @@ export const useLogoutMutation = () => {
     onSuccess: () => {
       // 全てのキャッシュをクリア
       queryClient.clear();
-      reset();
+      // Page refresh to update server-side auth state
+      window.location.reload();
     },
     onError: (error) => {
       logError(error as any, 'useLogoutMutation');
-      // エラーが発生してもローカル状態はクリア
-      reset();
+      // エラーが発生してもページをリロード
+      window.location.reload();
     },
   });
 };
@@ -172,15 +171,13 @@ export const useNewPasswordMutation = () => {
 // 認証状態の更新（手動でセッションを再取得）
 export const useRefreshAuth = () => {
   const queryClient = useQueryClient();
-  const setLoading = authStore.getState().setLoading;
 
   return async () => {
-    setLoading(true);
     try {
       await queryClient.invalidateQueries({ queryKey: authKeys.session() });
       await queryClient.refetchQueries({ queryKey: authKeys.session() });
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      logError(error as any, 'useRefreshAuth');
     }
   };
 };

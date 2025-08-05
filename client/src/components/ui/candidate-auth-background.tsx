@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import Image from 'next/image';
 
 interface BallPosition {
   top?: string;
@@ -95,15 +96,17 @@ export function CandidateAuthBackground({
   return (
     <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col relative overflow-hidden'>
       {/* デスクトップ用PNG背景画像 */}
-      <div 
-        className='absolute inset-0 bg-no-repeat bg-center pointer-events-none hidden md:block'
-        style={{
-          backgroundImage: 'url(/background.png)',
-          backgroundSize: '100% auto',
-          backgroundPosition: 'center 15%',
-          zIndex: 1
-        }}
-      />
+      <div className='absolute inset-0 pointer-events-none hidden md:block' style={{ zIndex: 1 }}>
+        <Image
+          src="/background.png"
+          alt="背景画像"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover object-center"
+          style={{ objectPosition: 'center 15%' }}
+        />
+      </div>
       
       {/* スマホ用SVGボール背景 */}
       <div className='absolute inset-0 pointer-events-none md:hidden' style={{ zIndex: 1 }}>

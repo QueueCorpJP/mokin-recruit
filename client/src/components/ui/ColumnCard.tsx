@@ -19,6 +19,7 @@ export const ColumnCard: React.FC<ColumnCardProps> = ({
           src={imageUrl}
           alt={title}
           fill
+          sizes="(max-width: 768px) 100vw, 373px"
           className='object-cover transition-transform duration-300 group-hover:scale-110'
         />
       </div>

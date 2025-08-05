@@ -1,5 +1,6 @@
 import { getJobDetails } from './actions';
 import CandidateApplicationClient from './CandidateApplicationClient';
+import { requireCandidateAuth } from '@/lib/auth/server';
 
 interface CandidateApplicationServerComponentProps {
   params: { id: string };
@@ -11,6 +12,9 @@ export default async function CandidateApplicationServerComponent({
   searchParams
 }: CandidateApplicationServerComponentProps) {
   const jobId = params.id;
+
+  // 認証確認
+  const user = await requireCandidateAuth();
 
   // 求人情報を取得
   const jobResponse = await getJobDetails(jobId);
@@ -29,10 +33,9 @@ export default async function CandidateApplicationServerComponent({
   const jobData = jobResponse.data;
 
   // searchParamsから取得（フォールバック用）
-  const awaitedSearchParams = await searchParams;
-  const jobTitle = (awaitedSearchParams.title as string) || jobData.title;
-  const companyName = (awaitedSearchParams.companyName as string) || jobData.companyName;
-  const requiredDocumentsParam = awaitedSearchParams.requiredDocuments as string;
+  const jobTitle = (searchParams.title as string) || jobData.title;
+  const companyName = (searchParams.companyName as string) || jobData.companyName;
+  const requiredDocumentsParam = searchParams.requiredDocuments as string;
   
   let requiredDocuments: string[] = [];
   if (requiredDocumentsParam) {
@@ -64,6 +67,7 @@ export default async function CandidateApplicationServerComponent({
       jobTitle={jobTitle}
       companyName={companyName}
       requiredDocuments={requiredDocuments}
+      user={user}
     />
   );
 }

@@ -1,6 +1,28 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Font Optimization - Prevent Layout Shift */
+.fonts-loading {
+  opacity: 1;
+}
+
+.fonts-loaded {
+  opacity: 1;
+}
+
+/* Font loading states */
+html:not(.fonts-loaded) body {
+  font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
+}
+
+/* Prevent FOIT (Flash of Invisible Text) */
+@supports (font-display: swap) {
+  @font-face {
+    font-family: 'Noto Sans JP';
+    font-display: swap;
+  }
+}
+
 /* Tailwind CSS v4.0のホバー制限を回避するカスタムバリアント */
 @variant hover-always (&:hover);
 

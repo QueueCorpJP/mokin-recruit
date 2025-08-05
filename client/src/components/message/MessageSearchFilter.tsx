@@ -17,13 +17,13 @@ export interface MessageSearchFilterProps {
 }
 
 const statusOptions = [
-  { value: 'all', label: 'すべて' },
+  { value: 'all', label: '対応状況' },
   { value: 'unread', label: '未読' },
   { value: 'read', label: '既読' },
 ];
 
 const groupOptions = [
-  { value: 'all', label: 'すべて' },
+  { value: 'all', label: 'グループ' },
   { value: 'group1', label: 'グループ1' },
   { value: 'group2', label: 'グループ2' },
 ];
@@ -37,7 +37,13 @@ interface CustomDropdownProps {
   className?: string;
 }
 
-function CustomDropdown({ options, value, placeholder, onChange, className }: CustomDropdownProps) {
+function CustomDropdown({
+  options,
+  value,
+  placeholder,
+  onChange,
+  className,
+}: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find(option => option.value === value);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,7 +51,10 @@ function CustomDropdown({ options, value, placeholder, onChange, className }: Cu
   // 外側クリックで閉じる
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -59,7 +68,7 @@ function CustomDropdown({ options, value, placeholder, onChange, className }: Cu
   return (
     <div ref={dropdownRef} className={cn('relative', className)}>
       <button
-        type="button"
+        type='button'
         className={cn(
           'w-full bg-white border border-[#999999] rounded-[5px]',
           'pl-[11px] pr-4 py-2 flex items-center justify-between',
@@ -70,26 +79,22 @@ function CustomDropdown({ options, value, placeholder, onChange, className }: Cu
         <span className="font-['Noto_Sans_JP'] font-bold text-[14px] text-[#323232] tracking-[1.4px] leading-[1.6]">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <div className="w-3.5 h-[9.333px] flex items-center justify-center">
-          <svg
-            className="w-3.5 h-[9.333px]"
-            fill="none"
-            viewBox="0 0 14 10"
-          >
+        <div className='w-3.5 h-[9.333px] flex items-center justify-center'>
+          <svg className='w-3.5 h-[9.333px]' fill='none' viewBox='0 0 14 10'>
             <path
-              d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-              fill="#0F9058"
+              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+              fill='#0F9058'
             />
           </svg>
         </div>
       </button>
-      
+
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg z-10">
-          {options.map((option) => (
+        <div className='absolute top-full left-0 right-0 mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg z-10'>
+          {options.map(option => (
             <button
               key={option.value}
-              type="button"
+              type='button'
               className={cn(
                 'w-full px-[11px] py-2 text-left hover:bg-gray-50',
                 'font-["Noto_Sans_JP"] font-bold text-[14px] text-[#323232] tracking-[1.4px] leading-[1.6]',
@@ -117,7 +122,7 @@ export function MessageSearchFilter({
   onGroupChange,
   onKeywordChange,
   onSearch,
-  className
+  className,
 }: MessageSearchFilterProps) {
   return (
     <div
@@ -128,35 +133,35 @@ export function MessageSearchFilter({
       )}
     >
       {/* フィルター行 */}
-      <div className="flex flex-row gap-4 w-full">
-        <div className="flex-1">
+      <div className='flex flex-row gap-4 w-full'>
+        <div className='flex-1'>
           <CustomDropdown
             options={statusOptions}
             value={statusValue}
-            placeholder="対応状況"
+            placeholder='対応状況'
             onChange={onStatusChange}
-            className="w-full"
+            className='w-full'
           />
         </div>
-        <div className="flex-1">
+        <div className='flex-1'>
           <CustomDropdown
             options={groupOptions}
             value={groupValue}
-            placeholder="グループ"
+            placeholder='グループ'
             onChange={onGroupChange}
-            className="w-full"
+            className='w-full'
           />
         </div>
       </div>
 
       {/* 検索行 */}
-      <div className="flex flex-row gap-4 items-center w-full">
-        <div className="flex-1">
+      <div className='flex flex-row gap-4 items-center w-full'>
+        <div className='flex-1'>
           <Input
-            type="text"
-            placeholder="キーワード検索"
+            type='text'
+            placeholder='キーワード検索'
             value={keywordValue}
-            onChange={(e) => onKeywordChange?.(e.target.value)}
+            onChange={e => onKeywordChange?.(e.target.value)}
             className={cn(
               'bg-white border border-[#999999] rounded-[5px]',
               'px-[11px] py-1 text-[16px] font-["Noto_Sans_JP"] font-medium',
@@ -165,20 +170,16 @@ export function MessageSearchFilter({
             )}
           />
         </div>
-        <button
-          type="button"
+        <Button
+          type='button'
           onClick={onSearch}
-          className={cn(
-            'rounded-[32px] px-6 py-2 flex items-center justify-center gap-2',
-            'bg-gradient-to-r from-[#86c36a] to-[#65bdac]',
-            'hover:from-[#7ab05f] hover:to-[#5aa89d]',
-            'text-white font-["Noto_Sans_JP"] font-bold text-[14px] tracking-[1.4px] leading-[1.6]',
-            'transition-all duration-200'
-          )}
+          variant='green-gradient'
+          size='figma-default'
+          className='min-w-[78px] py-2 px-6 shadow-none'
         >
           検索
-        </button>
+        </Button>
       </div>
     </div>
   );
-} 
+}

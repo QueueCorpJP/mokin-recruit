@@ -8,7 +8,7 @@ import { InputField } from '@/components/ui/input-field';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
-import { useAuthRefresh } from '@/contexts/AuthContext';
+// import { useAuthRefresh } from '@/contexts/AuthContext'; // Removed: Using server-side auth now
 import Link from 'next/link';
 
 interface LoginFormProps {
@@ -17,7 +17,6 @@ interface LoginFormProps {
 
 export function LoginForm({ userType }: LoginFormProps) {
   const router = useRouter();
-  const refreshAuth = useAuthRefresh();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,10 +69,7 @@ export function LoginForm({ userType }: LoginFormProps) {
 
     startTransition(async () => {
       try {
-        // クライアントサイドでのみログ出力
-        if (typeof window !== 'undefined') {
-          console.log('🚀 Attempting login for:', email, 'userType:', userType);
-        }
+        // Login attempt
 
         const response = await fetch('/api/auth/login', {
           method: 'POST',
@@ -171,8 +167,8 @@ export function LoginForm({ userType }: LoginFormProps) {
 
           setSuccess('ログインに成功しました！');
 
-          // 認証状態をリフレッシュ（クッキーに保存されたトークンを使用）
-          await refreshAuth();
+          // サーバーコンポーネント認証に移行したため、リフレッシュは不要
+          // クッキーベースの認証なので、ページリロードで認証状態が反映される
 
           // 成功時は適切なダッシュボードにリダイレクト
           setTimeout(() => {

@@ -1,66 +1,49 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { getServerAuth } from '@/lib/auth/server';
+import { AccessRestricted } from '@/components/AccessRestricted';
+import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
+import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 
-import React, { useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-
-
-import { useAuthInitialized, useAuthIsLoading, useAuthIsAuthenticated, useAuthUserType } from '@/stores/authStore';
-
-export default function CompanyJobLayout({
+export default async function CompanyJobLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  
-  // 🔥 根本修正: 個別フック使用でオブジェクト返却を完全回避
-  const initialized = useAuthInitialized();
-  const isLoading = useAuthIsLoading();
-  const isAuthenticated = useAuthIsAuthenticated();
-  const userType = useAuthUserType();
+  // サーバーサイドで認証状態を確認（1回のみ）
+  const auth = await getServerAuth();
 
-  // 認証状態を計算（メモ化で再計算を抑制）
-  const authState = useMemo(() => {
-    const isAuthReady = initialized && !isLoading;
-    const isValidAuth = isAuthenticated && userType === 'company_user';
-    
-    return {
-      isAuthReady,
-      isValidAuth,
-      shouldShowLoading: !isAuthReady,
-      shouldRedirect: isAuthReady && !isValidAuth
-    };
-  }, [initialized, isLoading, isAuthenticated, userType]);
+  // 認証情報を整理
+  const userInfo = auth.isAuthenticated && auth.user ? {
+    name: auth.user.name || auth.user.email,
+    email: auth.user.email,
+    userType: auth.userType
+  } : undefined;
 
-  // 認証チェックと企業ユーザー制限
-  useEffect(() => {
-    if (authState.shouldRedirect) {
-      console.log('🔍 CompanyJobLayout - Redirecting to login');
-      router.push('/company/auth/login');
-    }
-  }, [authState.shouldRedirect, router]);
-
-  // ローディング表示
-  if (authState.shouldShowLoading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-gray-600'>読み込み中...</div>
-      </div>
-    );
+  // 認証されていない場合
+  if (!auth.isAuthenticated) {
+    return <AccessRestricted userType="company" />;
   }
 
-  // リダイレクト中表示
-  if (authState.shouldRedirect) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-gray-600'>ログインページに移動しています...</div>
-      </div>
-    );
+  // 企業ユーザーでない場合は候補者ページへリダイレクト
+  if (auth.userType !== 'company_user') {
+    redirect('/candidate');
   }
 
   return (
-    <div className='min-h-screen flex flex-col'>
-      <main className='flex-1'>{children}</main>
-    </div>
+    <>
+      <AuthAwareNavigationServer 
+        variant="company" 
+        isLoggedIn={auth.isAuthenticated}
+        userInfo={userInfo}
+      />
+      <div className='min-h-screen flex flex-col'>
+        <main className='flex-1'>{children}</main>
+      </div>
+      <AuthAwareFooterServer 
+        variant="company" 
+        isLoggedIn={auth.isAuthenticated}
+        userInfo={userInfo}
+      />
+    </>
   );
 }

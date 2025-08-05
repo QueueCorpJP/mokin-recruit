@@ -16,8 +16,8 @@ export class SupabaseConfig implements ISupabaseConfig {
   readonly isProduction: boolean;
 
   constructor() {
-    // バリデーション済み環境変数から取得
-    const env = this.getValidatedEnv();
+    // バリデーション済み環境変数から取得 (synchronous fallback)
+    const env = this.getValidatedEnvSync();
 
     this.supabaseUrl = env.SUPABASE_URL;
     this.supabaseAnonKey = env.SUPABASE_ANON_KEY;
@@ -31,20 +31,23 @@ export class SupabaseConfig implements ISupabaseConfig {
     this.validateConfiguration();
   }
 
-  private getValidatedEnv() {
+  private getValidatedEnvSync() {
+    // フォールバック: 従来の方式 (synchronous)
+    return {
+      SUPABASE_URL: process.env.SUPABASE_URL || '',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      NODE_ENV: process.env.NODE_ENV || 'development',
+    };
+  }
+
+  private async getValidatedEnv() {
     try {
       // 新しいバリデーションシステムを使用
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { getValidatedEnv } = require('@/lib/server/config/env-validation');
+      const { getValidatedEnv } = await import('@/lib/server/config/env-validation');
       return getValidatedEnv();
     } catch (error) {
-      // フォールバック: 従来の方式
-      return {
-        SUPABASE_URL: process.env.SUPABASE_URL || '',
-        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-        NODE_ENV: process.env.NODE_ENV || 'development',
-      };
+      return this.getValidatedEnvSync();
     }
   }
 

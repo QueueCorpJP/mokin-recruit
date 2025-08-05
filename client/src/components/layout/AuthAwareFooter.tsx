@@ -3,13 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Footer } from '@/components/ui/footer';
-import { useAuthUser, useAuthUserType, useAuthIsAuthenticated } from '@/contexts/AuthContext';
 
 export function AuthAwareFooter() {
-  // 🔥 根本修正: 個別フック使用でオブジェクト返却を完全回避
-  const user = useAuthUser();
-  const userType = useAuthUserType();
-  const isAuthenticated = useAuthIsAuthenticated();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -29,26 +24,20 @@ export function AuthAwareFooter() {
     return 'default';
   }, [pathname]);
 
-  // ユーザー情報を整形（メモ化）
-  const userInfo = useMemo(() => {
-    return user ? {
-      companyName: userType === 'company_user' ? user.name : undefined,
-      userName: userType === 'candidate' ? user.name : undefined,
-    } : undefined;
-  }, [user?.id, user?.name, userType]);
-
   // サーバーサイドレンダリング中はプレースホルダーを表示
   if (!mounted) {
     return <div className="min-h-[200px] bg-[#323232]" />;
   }
 
-  // フッターを表示しないページがあれば制限可能（現在は全ページで表示）
+  // サーバーコンポーネント認証に移行したため、クライアントサイドでは
+  // 認証状態を取得せずにフッターを表示
+  // 各ページで必要に応じてサーバーサイドで認証情報を渡す
   
   return (
     <Footer
       variant={variant}
-      isLoggedIn={isAuthenticated}  
-      userInfo={userInfo}
+      isLoggedIn={false} // Server-side auth migration: Will be handled per page
+      userInfo={undefined}
     />
   );
 }

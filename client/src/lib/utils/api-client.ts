@@ -170,17 +170,16 @@ export const getCurrentUserId = (): string | null => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
-  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  // クッキーベースの認証状態から取得
   try {
-    const authStorageData = sessionStorage.getItem('auth-storage');
-    if (authStorageData) {
-      const parsedData = JSON.parse(authStorageData);
-      if (parsedData?.state?.user?.id) {
-        return parsedData.state.user.id;
-      }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { authStore } = require('@/stores/authStore');
+    const { user } = authStore.getState();
+    if (user?.id) {
+      return user.id;
     }
   } catch (error) {
-    console.warn('Failed to get userId from sessionStorage:', error);
+    console.warn('Failed to get userId from authStore:', error);
   }
   
   // フォールバック: localStorage から取得（後方互換性のため）
@@ -196,17 +195,15 @@ export const getCurrentUserType = (): string | null => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
-  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  // クッキーベースの認証状態から取得
   try {
-    const authStorageData = sessionStorage.getItem('auth-storage');
-    if (authStorageData) {
-      const parsedData = JSON.parse(authStorageData);
-      if (parsedData?.state?.userType) {
-        return parsedData.state.userType;
-      }
+    const { authStore } = require('@/stores/authStore');
+    const { userType } = authStore.getState();
+    if (userType) {
+      return userType;
     }
   } catch (error) {
-    console.warn('Failed to get userType from sessionStorage:', error);
+    console.warn('Failed to get userType from authStore:', error);
   }
   
   // フォールバック: localStorage から取得（後方互換性のため）
@@ -222,18 +219,15 @@ export const getCompanyAccountId = (): string | null => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
-  // まずsessionStorageから取得（authStoreが使用している永続化方式）
+  // クッキーベースの認証状態から取得
   try {
-    const authStorageData = sessionStorage.getItem('auth-storage');
-    if (authStorageData) {
-      const parsedData = JSON.parse(authStorageData);
-      const user = parsedData?.state?.user;
-      if (user?.profile?.companyAccountId) {
-        return user.profile.companyAccountId;
-      }
+    const { authStore } = require('@/stores/authStore');
+    const { user } = authStore.getState();
+    if (user?.profile?.companyAccountId) {
+      return user.profile.companyAccountId;
     }
   } catch (error) {
-    console.warn('Failed to get companyAccountId from sessionStorage:', error);
+    console.warn('Failed to get companyAccountId from authStore:', error);
   }
   
   // フォールバック: localStorage から取得（後方互換性のため）

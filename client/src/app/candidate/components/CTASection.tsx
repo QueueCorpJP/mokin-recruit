@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export function CTASection() {
   return (
@@ -79,16 +80,20 @@ export function CTASection() {
           {/* 既存の円装飾は全て削除 */}
           {/* circle01.pngを配置 */}
           <div className='hidden md:block'>
-            <img
+            <Image
               src='/images/circle01.png'
               alt='circle01'
+              width={80}
+              height={80}
               className='absolute z-10'
               style={{ top: 30, left: -40 }}
             />
             {/* circle02.pngを配置 */}
-            <img
+            <Image
               src='/images/circle02.png'
               alt='circle02'
+              width={80}
+              height={80}
               className='absolute z-10'
               style={{ top: 32, right: -30 }}
             />

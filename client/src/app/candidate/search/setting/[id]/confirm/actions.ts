@@ -1,7 +1,7 @@
 'use server'
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { validateJWT } from '@/lib/server/auth/supabaseAuth';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { logger } from '@/lib/server/utils/logger';
 
 interface ApplicationResult {
@@ -191,41 +191,10 @@ export async function submitApplication(formData: FormData): Promise<Application
       };
     }
 
-    // サーバーサイドでのリクエスト作成（認証のため）
-    const { headers, cookies } = await import('next/headers');
-    const headersList = await headers();
-    const cookiesList = await cookies();
-    const cookieHeader = headersList.get('cookie') || '';
-    
-    logger.info('Authentication debug info:', {
-      hasCookieHeader: !!cookieHeader,
-      cookieHeader: cookieHeader,
-      supabaseAuthToken: cookiesList.get('supabase-auth-token')?.value,
-      allCookies: Array.from(cookiesList.getAll()).map(c => ({ name: c.name, hasValue: !!c.value }))
-    });
-    
-    // JWT認証（Cookie経由）- validateJWT関数に合わせてproperRequestオブジェクトを作成
-    const mockRequest = {
-      headers: {
-        get: (name: string) => {
-          if (name === 'cookie') return cookieHeader;
-          if (name === 'authorization') return headersList.get('authorization');
-          return headersList.get(name);
-        }
-      },
-      cookies: {
-        get: (name: string) => cookiesList.get(name)
-      }
-    } as any;
-    
-    const validationResult = await validateJWT(mockRequest);
-    logger.info('JWT validation result:', { 
-      isValid: validationResult.isValid, 
-      hasCandidateId: !!validationResult.candidateId 
-    });
-    
-    if (!validationResult.isValid || !validationResult.candidateId) {
-      logger.warn('Invalid JWT - authentication required');
+    // 統一的な認証チェック
+    const authResult = await requireCandidateAuthForAction();
+    if (!authResult.success) {
+      logger.warn('Authentication failed:', authResult.error);
       const authErrorResponse = {
         success: false,
         error: String('認証が必要です。ログインしてください。'),
@@ -235,7 +204,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       return authErrorResponse;
     }
 
-    const candidateId = validationResult.candidateId;
+    const candidateId = authResult.data.candidateId;
     logger.info(`Application attempt by candidate: ${candidateId}`);
 
     const supabase = getSupabaseAdminClient();
