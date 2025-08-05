@@ -44,12 +44,9 @@ export function HeroSection() {
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
           <picture>
             <source media='(max-width: 768px)' srcSet='/image.png' />
-            <Image
+            <img
               src='/top.png'
               alt='hero'
-              width={1920}
-              height={1080}
-              priority
               className='w-full h-auto object-cover'
             />
           </picture>
