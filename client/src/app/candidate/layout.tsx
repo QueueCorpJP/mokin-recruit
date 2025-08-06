@@ -8,7 +8,7 @@ export default async function CandidateLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // サーバーサイドで認証状態を確認（1回のみ）
+  // サーバーサイドで認証状態を確認（最適化済み: React cacheとMiddleware検証を活用）
   const auth = await getServerAuth();
 
   // 認証済みで候補者タイプでない場合は企業ページへリダイレクト

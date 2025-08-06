@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/server/utils/logger';
+import jwt from 'jsonwebtoken';
 
 /**
- * 認証ミドルウェア
- * 保護されたルートへのアクセス制御を行う
+ * 認証ミドルウェア（最適化版）
+ * - Supabase APIコールを削除
+ * - JWT検証のみでトークンの有効性を確認
+ * - ユーザー情報はJWTペイロードから取得
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -61,17 +62,6 @@ export async function middleware(request: NextRequest) {
   // 保護されたパスの認証チェック
   if (protectedPaths.some(path => pathname.startsWith(path))) {
     try {
-      // Supabaseクライアントの初期化
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        logger.error('Supabase configuration missing in middleware');
-        return NextResponse.redirect(new URL('/auth/login', request.url));
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
       // セッションの確認
       const token = request.cookies.get('supabase-auth-token')?.value;
       const bypassToken = request.cookies.get('auth-bypass-token')?.value;
@@ -89,42 +79,44 @@ export async function middleware(request: NextRequest) {
             );
 
             if (payload.bypass && payload.exp > Math.floor(Date.now() / 1000)) {
-              logger.info(
-                `🔓 Auth bypass used for ${pathname} by ${payload.userType}`
-              );
-
               // バイパスユーザー情報をヘッダーに追加
               const response = NextResponse.next();
               response.headers.set('x-user-id', payload.userId);
               response.headers.set('x-user-email', payload.email);
               response.headers.set('x-user-type', payload.userType);
               response.headers.set('x-auth-bypass', 'true');
+              response.headers.set('x-auth-validated', 'true');
 
               return response;
             }
           }
         } catch (error) {
-          logger.warn('Invalid bypass token:', error);
+          // バイパストークンエラーは無視
         }
       }
 
-      // 実際の認証チェック
+      // JWTトークンの簡易検証（Supabase APIコールなし）
       if (token) {
         try {
-          const { data, error } = await supabase.auth.getUser(token);
-          if (error || !data.user) {
-            throw new Error('Invalid token');
+          // JWTの基本的な検証のみ実行
+          const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
+          const payload = jwt.verify(token, jwtSecret) as any;
+          
+          // トークンの有効期限チェック
+          if (payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
+            // ユーザー情報をヘッダーに追加（詳細な検証は後続の処理で実行）
+            const response = NextResponse.next();
+            response.headers.set('x-user-id', payload.sub || '');
+            response.headers.set('x-user-email', payload.email || '');
+            response.headers.set('x-user-type', payload.user_metadata?.userType || '');
+            response.headers.set('x-auth-bypass', 'false');
+            response.headers.set('x-auth-validated', 'true');
+            response.headers.set('x-token-exp', String(payload.exp));
+
+            return response;
           }
-
-          // ユーザー情報をヘッダーに追加
-          const response = NextResponse.next();
-          response.headers.set('x-user-id', data.user.id);
-          response.headers.set('x-user-email', data.user.email || '');
-          response.headers.set('x-auth-bypass', 'false');
-
-          return response;
         } catch (error) {
-          logger.warn('Token validation failed:', error);
+          // JWT検証エラーは続行（リダイレクト処理へ）
         }
       }
 
@@ -143,7 +135,7 @@ export async function middleware(request: NextRequest) {
 
       return NextResponse.redirect(getLoginRedirect());
     } catch (error) {
-      logger.error('Middleware authentication error:', error);
+      console.error('Middleware authentication error:', error);
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
