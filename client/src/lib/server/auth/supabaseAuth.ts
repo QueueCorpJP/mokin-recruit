@@ -8,6 +8,37 @@ import jwt from 'jsonwebtoken';
 import { SessionService } from '@/lib/server/core/services/SessionService';
 import { NextRequest } from 'next/server';
 
+/**
+ * データベースからユーザータイプを判定
+ */
+async function determineUserTypeFromDb(email: string): Promise<'candidate' | 'company_user' | 'admin'> {
+  if (!email) {
+    return 'candidate';
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    
+    // company_usersテーブルでユーザーを検索
+    const { data: companyUser, error } = await supabase
+      .from('company_users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (!error && companyUser) {
+      return 'company_user';
+    }
+
+    // company_usersに存在しない場合はcandidate
+    return 'candidate';
+  } catch (error) {
+    logger.error('Error determining user type in supabaseAuth:', error);
+    // エラーが発生した場合はデフォルトでcandidate
+    return 'candidate';
+  }
+}
+
 // 認証結果の型定義
 export interface AuthResult {
   success: boolean;
@@ -99,7 +130,7 @@ export async function signInWithSupabase(
     }
 
     // カスタムJWTトークンを生成（既存のJWT設定と互換性のため）
-    const customToken = generateCustomJWT(data.user);
+    const customToken = await generateCustomJWT(data.user);
 
     logger.info(`User signed in successfully: ${email}`);
     return {
@@ -261,11 +292,40 @@ export async function signOutUser(): Promise<AuthResult> {
 /**
  * カスタムJWTトークンを生成（既存システムとの互換性のため）
  */
-function generateCustomJWT(user: User): string {
+async function generateCustomJWT(user: User): Promise<string> {
+  // データベースからユーザー情報を取得
+  let userType = 'candidate';
+  let companyUserId = null;
+  let companyAccountId = null;
+  
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    // company_usersテーブルで検索
+    const { data: companyUser } = await supabase
+      .from('company_users')
+      .select('id, company_account_id')
+      .eq('email', user.email)
+      .single();
+      
+    if (companyUser) {
+      userType = 'company_user';
+      companyUserId = companyUser.id;
+      companyAccountId = companyUser.company_account_id;
+    }
+  } catch (error) {
+    // エラーの場合はcandidateとして扱う
+    console.log('User not found in company_users, treating as candidate:', user.email);
+  }
+
   const payload = {
-    sub: user.id,
+    sub: companyUserId || user.id, // company_userの場合は正しいIDを使用
     email: user.email,
-    user_metadata: user.user_metadata,
+    user_metadata: {
+      ...user.user_metadata,
+      user_type: userType,
+      company_account_id: companyAccountId
+    },
     aud: 'authenticated',
     exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7日間
   };
@@ -306,11 +366,13 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
       const email = request.headers.get('x-user-email');
       
       if (userId && email) {
-        // Middlewareで検証済みの場合はそのまま使用
+        // データベースからuserTypeを判定（ヘッダーの情報は使わない）
+        const actualUserType = await determineUserTypeFromDb(email);
+        
         const user: User = {
           id: userId,
           email: email,
-          user_metadata: { userType },
+          user_metadata: { userType: actualUserType },
           app_metadata: {},
           aud: 'authenticated',
           created_at: '',
@@ -323,13 +385,13 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
         };
         
         // userTypeに基づいて適切なIDを返す
-        if (userType === 'candidate') {
+        if (actualUserType === 'candidate') {
           return {
             isValid: true,
             candidateId: userId,
             user: user
           };
-        } else if (userType === 'company_user') {
+        } else if (actualUserType === 'company_user') {
           return {
             isValid: true,
             companyUserId: userId,
@@ -388,9 +450,8 @@ export async function validateJWT(request: NextRequest): Promise<JWTValidationRe
       role: '',
     };
     
-    // ユーザータイプに基づいて返値を決定（DB検索なし）
-    const detectedUserType = payload.user_metadata?.userType || 
-      (payload.email?.includes('@company.') ? 'company_user' : 'candidate');
+    // ユーザータイプをデータベースから判定
+    const detectedUserType = await determineUserTypeFromDb(payload.email || '');
     
     if (request.nextUrl.pathname.startsWith('/api/candidate/') || detectedUserType === 'candidate') {
       // 候補者APIの場合

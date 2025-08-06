@@ -33,7 +33,9 @@ export async function getCompanyJobs(params: {
   try {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthWithSession();
+    console.log('🔍 getCompanyJobs - Auth result:', authResult);
     if (!authResult.success) {
+      console.log('❌ getCompanyJobs - Auth failed:', authResult.error);
       return { success: false, error: authResult.error };
     }
 
@@ -443,7 +445,9 @@ export async function getCompanyGroups() {
   try {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthWithSession();
+    console.log('🔍 getCompanyGroups - Auth result:', authResult);
     if (!authResult.success) {
+      console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
       return { success: false, error: authResult.error };
     }
 

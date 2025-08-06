@@ -20,7 +20,7 @@ export function AuthAwareNavigationServer({
   // Transform userInfo to match Navigation's expected format
   const navigationUserInfo = userInfo ? {
     userName: userInfo.name,
-    companyName: userInfo.userType === 'company' ? userInfo.name : undefined
+    companyName: userInfo.userType === 'company_user' ? userInfo.name : undefined
   } : undefined;
 
   return (

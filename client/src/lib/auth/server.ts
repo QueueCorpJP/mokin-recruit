@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { cache } from 'react';
 import jwt from 'jsonwebtoken';
+import { getSupabaseClient, getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 // JWT検証用の設定
 const JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
@@ -15,12 +16,54 @@ interface User {
   name?: string;
   emailConfirmed: boolean;
   lastSignIn?: string;
+  user_metadata?: {
+    user_type?: string;
+    company_account_id?: string;
+    [key: string]: any;
+  };
 }
 
 interface BasicAuthResult {
   isAuthenticated: boolean;
   user: User | null;
   userType: UserType | null;
+}
+
+/**
+ * データベースからユーザータイプを判定
+ */
+async function determineUserType(email: string): Promise<UserType> {
+  if (!email) {
+    return 'candidate';
+  }
+
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    // company_usersテーブルでユーザーを検索
+    const { data: companyUsers, error } = await supabase
+      .from('company_users')
+      .select('id, email')
+      .eq('email', email);
+
+    console.log('🔍 determineUserType - Database query result:', {
+      email,
+      companyUsers,
+      count: companyUsers?.length || 0,
+      error: error?.message
+    });
+
+    if (!error && companyUsers && companyUsers.length > 0) {
+      console.log('✅ determineUserType - User is company_user:', email);
+      return 'company_user';
+    }
+
+    console.log('👤 determineUserType - User is candidate (not in company_users):', email);
+    return 'candidate';
+  } catch (error) {
+    console.error('❌ Error determining user type:', error);
+    return 'candidate';
+  }
 }
 
 /**
@@ -39,22 +82,38 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
       // Middlewareで既に検証済み
       const userId = headerStore.get('x-user-id');
       const email = headerStore.get('x-user-email');
-      const userType = headerStore.get('x-user-type') as UserType;
+      const middlewareUserType = headerStore.get('x-user-type') as UserType | null;
       
       if (userId && email) {
+        // Middlewareで既に検証済みのユーザータイプを使用（DB クエリなし）
+        const userType = (middlewareUserType || 'candidate') as UserType;
+        
+        // デバッグ用ログ
+        console.log('🔍 getServerAuth - Header result:', {
+          email,
+          middlewareUserType,
+          dbUserType,
+          finalUserType: userType,
+          userId
+        });
+        
         const user: User = {
           id: userId,
           email: email,
-          userType: userType || 'candidate',
+          userType: userType,
           name: email.split('@')[0],
           emailConfirmed: true,
           lastSignIn: new Date().toISOString(),
+          user_metadata: {
+            user_type: userType,
+            company_account_id: userType === 'company_user' ? headerStore.get('x-company-account-id') : undefined
+          }
         };
         
         return {
           isAuthenticated: true,
           user,
-          userType: userType || 'candidate',
+          userType: userType,
         };
       }
     }
@@ -84,9 +143,9 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
         };
       }
       
-      // メタデータからユーザー情報を取得
+      // JWTのmetadataからユーザータイプを取得（DBクエリなし）
+      const userType = (payload.user_metadata?.user_type || 'candidate') as UserType;
       const userMetadata = payload.user_metadata || {};
-      const userType = userMetadata.userType || (payload.email?.includes('@company.') ? 'company_user' : 'candidate');
       const userName = userMetadata.name || userMetadata.full_name || payload.email?.split('@')[0] || 'User';
       
       const user: User = {
@@ -96,6 +155,7 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
         name: userName,
         emailConfirmed: true,
         lastSignIn: new Date().toISOString(),
+        user_metadata: payload.user_metadata || {}
       };
 
       return {
@@ -277,12 +337,21 @@ export const requireCompanyAuthWithSession = cache(async (): Promise<AuthResult<
   }
   
   const user = auth.user!;
-  // 注: companyAccountIdは本来JWTのmetadataに含めるべきだが、ここでは仮にuserIdを使用
+  
+  // JWTのmetadataからcompany_account_idを取得（高速化）
+  const companyAccountId = user.user_metadata?.company_account_id;
+  if (!companyAccountId) {
+    return {
+      success: false,
+      error: '企業アカウント情報が見つかりません。再ログインしてください。'
+    };
+  }
+  
   return {
     success: true,
     data: {
-      companyUserId: user.id,
-      companyAccountId: user.id, // TODO: 実際のcompanyAccountIdはログイン時にmetadataに追加する
+      companyUserId: user.id, // JWTのsubには正しいcompany_users.idが入っている
+      companyAccountId: companyAccountId,
       email: user.email,
       fullName: user.name || user.email.split('@')[0]
     }

@@ -102,16 +102,36 @@ export async function middleware(request: NextRequest) {
           const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
           const payload = jwt.verify(token, jwtSecret) as any;
           
+          // JWTペイロードのデバッグログ
+          console.log('🔍 middleware - JWT payload:', {
+            sub: payload.sub,
+            email: payload.email,
+            user_metadata: payload.user_metadata,
+            userType: payload.userType,
+            exp: payload.exp,
+            pathname
+          });
+          
           // トークンの有効期限チェック
           if (payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
-            // ユーザー情報をヘッダーに追加（詳細な検証は後続の処理で実行）
+            // JWTペイロードからユーザータイプを取得（ログイン時に設定される）
+            const userType = payload.user_metadata?.user_type || payload.userType || 'candidate';
+            
+            console.log('🔍 middleware - Setting userType:', userType, 'for email:', payload.email);
+            
+            // ユーザー情報をヘッダーに追加
             const response = NextResponse.next();
             response.headers.set('x-user-id', payload.sub || '');
             response.headers.set('x-user-email', payload.email || '');
-            response.headers.set('x-user-type', payload.user_metadata?.userType || '');
+            response.headers.set('x-user-type', userType);
             response.headers.set('x-auth-bypass', 'false');
             response.headers.set('x-auth-validated', 'true');
             response.headers.set('x-token-exp', String(payload.exp));
+            
+            // 企業ユーザーの場合、company_account_idも設定
+            if (userType === 'company_user' && payload.user_metadata?.company_account_id) {
+              response.headers.set('x-company-account-id', payload.user_metadata.company_account_id);
+            }
 
             return response;
           }
