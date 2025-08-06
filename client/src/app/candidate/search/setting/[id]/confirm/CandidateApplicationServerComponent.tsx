@@ -4,12 +4,10 @@ import { requireCandidateAuth } from '@/lib/auth/server';
 
 interface CandidateApplicationServerComponentProps {
   params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function CandidateApplicationServerComponent({
-  params,
-  searchParams
+  params
 }: CandidateApplicationServerComponentProps) {
   const jobId = params.id;
 
@@ -32,22 +30,10 @@ export default async function CandidateApplicationServerComponent({
 
   const jobData = jobResponse.data;
 
-  // searchParamsから取得（フォールバック用）
-  const jobTitle = (searchParams.title as string) || jobData.title;
-  const companyName = (searchParams.companyName as string) || jobData.companyName;
-  const requiredDocumentsParam = searchParams.requiredDocuments as string;
-  
-  let requiredDocuments: string[] = [];
-  if (requiredDocumentsParam) {
-    try {
-      requiredDocuments = JSON.parse(decodeURIComponent(requiredDocumentsParam));
-    } catch {
-      // パース失敗時はサーバーから取得したデータを使用
-      requiredDocuments = jobData.requiredDocuments;
-    }
-  } else {
-    requiredDocuments = jobData.requiredDocuments;
-  }
+  // サーバーから取得したデータを直接使用（URLパラメータは不要）
+  const jobTitle = jobData.title;
+  const companyName = jobData.companyName;
+  const requiredDocuments = jobData.requiredDocuments;
 
   // 求人が応募可能な状態かチェック
   if (jobData.status !== 'PUBLISHED') {

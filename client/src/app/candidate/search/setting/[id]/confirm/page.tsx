@@ -2,13 +2,11 @@ import CandidateApplicationServerComponent from './CandidateApplicationServerCom
 
 interface CandidateSearchSettingConfirmPageProps {
   params: Promise<{ id: string }>;
-  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function CandidateSearchSettingConfirmPage({
-  params,
-  searchParams
+  params
 }: CandidateSearchSettingConfirmPageProps) {
   const resolvedParams = await params;
-  return <CandidateApplicationServerComponent params={resolvedParams} searchParams={searchParams} />;
+  return <CandidateApplicationServerComponent params={resolvedParams} />;
 }

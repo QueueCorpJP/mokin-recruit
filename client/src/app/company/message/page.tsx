@@ -49,7 +49,7 @@ export default function MessagePage() {
     <div className='flex flex-col bg-white'>
       {/* ヘッダー（必要ならここに追加） */}
       {/* メイン: メッセージ一覧＋詳細 */}
-      <div style={{ flex: '0 0 75vh', height: '75vh' }}>
+      <div style={{ flex: '0 0 85vh', height: '85vh' }}>
         <MessageLayout messages={dummyMessages} />
       </div>
       {/* フッター（仮）は削除 */}
