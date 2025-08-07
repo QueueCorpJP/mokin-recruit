@@ -35,7 +35,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
 
   // 送信処理の共通関数
   const handleSendMessage = async () => {
-    if (message.trim() && onSendMessage && candidateId) {
+    if ((message.trim() || attachedFiles.length > 0) && onSendMessage && candidateId) {
       setIsUploading(true);
       try {
         let fileUrls: string[] = [];

@@ -200,11 +200,19 @@ export function MessageLayoutServer({
       selectedRoomId,
       userType,
       contentLength: content.length,
-      fileUrlsLength: fileUrls?.length || 0
+      fileUrlsLength: fileUrls?.length || 0,
+      hasContent: content.trim().length > 0,
+      hasFiles: (fileUrls?.length || 0) > 0
     });
 
     if (!selectedRoomId) {
       console.error('🔍 [MESSAGE SEND] No room selected');
+      return;
+    }
+
+    // メッセージまたはファイルのいずれかが必要
+    if (!content.trim() && (!fileUrls || fileUrls.length === 0)) {
+      console.error('🔍 [MESSAGE SEND] No content or files to send');
       return;
     }
     
