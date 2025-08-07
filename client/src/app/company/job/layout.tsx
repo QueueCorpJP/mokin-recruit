@@ -9,8 +9,21 @@ export default async function CompanyJobLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // サーバーサイドで認証状態を確認（1回のみ）
+  // サーバーサイドで認証状態を確認（candidateレイアウトと同じ仕組み）
   const auth = await getServerAuth();
+  
+  // デバッグ用ログ
+  console.log('🔍 company/job/layout - Auth result:', {
+    isAuthenticated: auth.isAuthenticated,
+    userType: auth.userType,
+    userEmail: auth.user?.email
+  });
+
+  // 認証済みで企業ユーザーでない場合は候補者ページへリダイレクト
+  if (auth.isAuthenticated && auth.userType !== 'company_user') {
+    console.log('🔄 Redirecting to candidate - userType is:', auth.userType);
+    redirect('/candidate');
+  }
 
   // 認証情報を整理
   const userInfo = auth.isAuthenticated && auth.user ? {
@@ -18,16 +31,8 @@ export default async function CompanyJobLayout({
     email: auth.user.email,
     userType: auth.userType
   } : undefined;
-
-  // 認証されていない場合
-  if (!auth.isAuthenticated) {
-    return <AccessRestricted userType="company" />;
-  }
-
-  // 企業ユーザーでない場合は候補者ページへリダイレクト
-  if (auth.userType !== 'company_user') {
-    redirect('/candidate');
-  }
+  
+  console.log('✅ Access granted to company/job - userType:', auth.userType);
 
   return (
     <>

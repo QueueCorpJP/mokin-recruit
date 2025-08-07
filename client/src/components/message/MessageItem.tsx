@@ -65,7 +65,7 @@ export function MessageItem({
 
       {/* candidate用: 画像＋テキスト横並び */}
       {isCandidatePage ? (
-        <div className='flex flex-row items-center gap-4 w-full'>
+        <div className='flex flex-row items-start gap-4 w-full'>
           {/* 画像用ダミーdiv（円形） */}
           <div
             style={{
@@ -80,7 +80,7 @@ export function MessageItem({
             <span className='text-[#999] text-xs'>画像</span>
           </div>
           {/* テキスト部分 */}
-          <div className='flex flex-col justify-center min-w-0'>
+          <div className='flex flex-col justify-start min-w-0 pt-1'>
             <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
               {companyName}
             </div>

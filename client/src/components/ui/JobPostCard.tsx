@@ -1,4 +1,5 @@
 import React from 'react';
+import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
   imageUrl: string;
@@ -56,7 +57,7 @@ export function JobPostCard({
           {isFavoriteLoading ? (
             // ローディングスピナー
             <div className="w-8 h-8 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <SpinnerIcon size="sm" />
             </div>
           ) : (
             <svg
@@ -109,7 +110,7 @@ export function JobPostCard({
               {isFavoriteLoading ? (
                 // ローディングスピナー
                 <div className="w-6 h-6 flex items-center justify-center">
-                  <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  <SpinnerIcon size="sm" className="w-3 h-3" />
                 </div>
               ) : (
                 <svg

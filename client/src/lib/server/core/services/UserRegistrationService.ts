@@ -15,6 +15,7 @@ import {
   CreateCompanyUserData,
 } from '@/infrastructure/database/CompanyUserRepository';
 import { PasswordService } from './PasswordService';
+import { getSupabaseAdminClient } from '@/database/supabase';
 import {
   AuthResult,
   IUserRegistrationService,
@@ -140,6 +141,18 @@ export class UserRegistrationService implements IUserRegistrationService {
       };
 
       const candidate = await this.candidateRepository.create(candidateData);
+      
+      // Supabaseのメタデータを更新してcandidateIdを追加
+      if (authResult.user) {
+        const supabase = getSupabaseAdminClient();
+        await supabase.auth.admin.updateUserById(authResult.user.id, {
+          user_metadata: {
+            ...authResult.user.user_metadata,
+            candidateId: candidate.id,
+            full_name: `${data.lastName} ${data.firstName}`,
+          }
+        });
+      }
 
       logger.info(`Candidate registration successful: ${candidate.email}`);
 
@@ -248,6 +261,18 @@ export class UserRegistrationService implements IUserRegistrationService {
 
       const companyUser =
         await this.companyUserRepository.create(companyUserData);
+        
+      // Supabaseのメタデータを更新してcompanyUserIdを追加
+      if (authResult.user) {
+        const supabase = getSupabaseAdminClient();
+        await supabase.auth.admin.updateUserById(authResult.user.id, {
+          user_metadata: {
+            ...authResult.user.user_metadata,
+            companyUserId: companyUser.id,
+            companyAccountId: data.companyAccountId,
+          }
+        });
+      }
 
       logger.info(`Company user registration successful: ${companyUser.email}`);
 

@@ -8,6 +8,37 @@ import jwt from 'jsonwebtoken';
 import { SessionService } from '@/lib/server/core/services/SessionService';
 import { NextRequest } from 'next/server';
 
+/**
+ * データベースからユーザータイプを判定
+ */
+async function determineUserTypeFromDb(email: string): Promise<'candidate' | 'company_user' | 'admin'> {
+  if (!email) {
+    return 'candidate';
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    
+    // company_usersテーブルでユーザーを検索
+    const { data: companyUser, error } = await supabase
+      .from('company_users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (!error && companyUser) {
+      return 'company_user';
+    }
+
+    // company_usersに存在しない場合はcandidate
+    return 'candidate';
+  } catch (error) {
+    logger.error('Error determining user type in supabaseAuth:', error);
+    // エラーが発生した場合はデフォルトでcandidate
+    return 'candidate';
+  }
+}
+
 // 認証結果の型定義
 export interface AuthResult {
   success: boolean;
@@ -99,7 +130,7 @@ export async function signInWithSupabase(
     }
 
     // カスタムJWTトークンを生成（既存のJWT設定と互換性のため）
-    const customToken = generateCustomJWT(data.user);
+    const customToken = await generateCustomJWT(data.user);
 
     logger.info(`User signed in successfully: ${email}`);
     return {
@@ -261,11 +292,40 @@ export async function signOutUser(): Promise<AuthResult> {
 /**
  * カスタムJWTトークンを生成（既存システムとの互換性のため）
  */
-function generateCustomJWT(user: User): string {
+async function generateCustomJWT(user: User): Promise<string> {
+  // データベースからユーザー情報を取得
+  let userType = 'candidate';
+  let companyUserId = null;
+  let companyAccountId = null;
+  
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    // company_usersテーブルで検索
+    const { data: companyUser } = await supabase
+      .from('company_users')
+      .select('id, company_account_id')
+      .eq('email', user.email)
+      .single();
+      
+    if (companyUser) {
+      userType = 'company_user';
+      companyUserId = companyUser.id;
+      companyAccountId = companyUser.company_account_id;
+    }
+  } catch (error) {
+    // エラーの場合はcandidateとして扱う
+    console.log('User not found in company_users, treating as candidate:', user.email);
+  }
+
   const payload = {
-    sub: user.id,
+    sub: companyUserId || user.id, // company_userの場合は正しいIDを使用
     email: user.email,
-    user_metadata: user.user_metadata,
+    user_metadata: {
+      ...user.user_metadata,
+      user_type: userType,
+      company_account_id: companyAccountId
+    },
     aud: 'authenticated',
     exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7日間
   };
@@ -290,121 +350,141 @@ export function verifyCustomJWT(token: string): {
 }
 
 /**
- * Next.js Request から JWT を検証し、候補者情報を取得
+ * Next.js Request から JWT を検証し、候補者情報を取得（最適化版）
+ * - DB検索を完全に削除
+ * - JWTのmetadataのみを使用
+ * - SessionServiceを使わず直接JWT検証
  */
 export async function validateJWT(request: NextRequest): Promise<JWTValidationResult> {
   try {
-    logger.info('JWT validation started');
-    const sessionService = new SessionService();
+    // まずMiddlewareで検証済みかチェック
+    const isValidated = request.headers.get('x-auth-validated') === 'true';
+    const userType = request.headers.get('x-user-type');
     
-    // Authorizationヘッダーまたはクッキーからトークンを取得
+    if (isValidated) {
+      const userId = request.headers.get('x-user-id');
+      const email = request.headers.get('x-user-email');
+      
+      if (userId && email) {
+        // データベースからuserTypeを判定（ヘッダーの情報は使わない）
+        const actualUserType = await determineUserTypeFromDb(email);
+        
+        const user: User = {
+          id: userId,
+          email: email,
+          user_metadata: { userType: actualUserType },
+          app_metadata: {},
+          aud: 'authenticated',
+          created_at: '',
+          updated_at: '',
+          email_confirmed_at: '',
+          phone_confirmed_at: '',
+          confirmed_at: '',
+          last_sign_in_at: '',
+          role: '',
+        };
+        
+        // userTypeに基づいて適切なIDを返す
+        if (actualUserType === 'candidate') {
+          return {
+            isValid: true,
+            candidateId: userId,
+            user: user
+          };
+        } else if (actualUserType === 'company_user') {
+          return {
+            isValid: true,
+            companyUserId: userId,
+            user: user
+          };
+        }
+      }
+    }
+    
+    // Middlewareで検証されていない場合のみトークン検証
     const authHeader = request.headers.get('authorization');
     const cookieToken = request.cookies.get('supabase-auth-token')?.value;
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
-    logger.info('Token sources:', {
-      hasAuthHeader: !!authHeader,
-      hasCookieToken: !!cookieToken,
-      hasToken: !!token
-    });
-
     if (!token) {
-      logger.warn('No authentication token provided');
       return {
         isValid: false,
         error: 'No authentication token provided'
       };
     }
 
-    // セッションを検証
-    logger.info('Validating session...');
-    const sessionResult = await sessionService.validateSession(token);
-
-    if (!sessionResult.success || !sessionResult.sessionInfo) {
-      logger.warn('Session validation failed:', sessionResult.error);
+    // JWTを直接検証（SessionService不使用）
+    const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
+    let payload: any;
+    
+    try {
+      payload = jwt.verify(token, jwtSecret);
+    } catch (error) {
       return {
         isValid: false,
-        error: sessionResult.error || 'Session validation failed'
-      };
-    }
-
-    const user = sessionResult.sessionInfo.user;
-    logger.info('Session validated for user:', { userId: user.id, email: user.email });
-
-    // 候補者情報を取得
-    logger.info('Looking up candidate information...');
-    const supabase = getSupabaseAdminClient();
-    
-    // まず候補者テーブルの存在確認（emailで検索、大文字・小文字を区別しない）
-    const trimmedEmail = user.email?.trim().toLowerCase();
-    
-    if (!trimmedEmail) {
-      logger.error('Email is missing for user:', { userId: user.id });
-      return {
-        isValid: false,
-        error: 'Email is missing'
+        error: 'Invalid JWT token'
       };
     }
     
-    const { data: candidateCheck, error: candidateCheckError } = await supabase
-      .from('candidates')
-      .select('id, email')
-      .ilike('email', trimmedEmail)
-      .maybeSingle();
-
-    logger.info('Candidate lookup result:', {
-      originalEmail: user.email,
-      searchEmail: trimmedEmail,
-      found: !!candidateCheck,
-      candidateId: candidateCheck?.id,
-      candidateEmail: candidateCheck?.email,
-      sessionUserId: user.id,
-      error: candidateCheckError?.message
-    });
-
-    if (candidateCheckError) {
-      logger.error('Candidate lookup database error:', candidateCheckError);
+    // トークンの有効期限チェック
+    if (!payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) {
       return {
         isValid: false,
-        error: `Database error: ${candidateCheckError.message}`
+        error: 'Token expired'
       };
     }
-
-    if (!candidateCheck) {
-      logger.warn('Candidate not found for email:', {
-        original: user.email,
-        searched: trimmedEmail
-      });
-      
-      // 企業ユーザーかどうかチェック
-      const { data: companyUser, error: companyError } = await supabase
-        .from('company_users')
-        .select('id, email')
-        .ilike('email', trimmedEmail)
-        .maybeSingle();
-
-      if (companyUser) {
-        logger.info('User is a company user, not a candidate');
+    
+    // ユーザー情報をJWTペイロードから取得
+    const user: User = {
+      id: payload.sub,
+      email: payload.email || '',
+      user_metadata: payload.user_metadata || {},
+      app_metadata: payload.app_metadata || {},
+      aud: payload.aud || 'authenticated',
+      created_at: '',
+      updated_at: '',
+      email_confirmed_at: '',
+      phone_confirmed_at: '',
+      confirmed_at: '',
+      last_sign_in_at: '',
+      role: '',
+    };
+    
+    // ユーザータイプをデータベースから判定
+    const detectedUserType = await determineUserTypeFromDb(payload.email || '');
+    
+    if (request.nextUrl.pathname.startsWith('/api/candidate/') || detectedUserType === 'candidate') {
+      // 候補者APIの場合
+      if (detectedUserType !== 'candidate') {
         return {
           isValid: false,
           error: 'This endpoint is for candidates only. Please use the company interface.'
         };
       }
-
       return {
-        isValid: false,
-        error: 'Candidate information not found. Please complete your candidate registration.'
+        isValid: true,
+        candidateId: payload.sub,
+        user: user
+      };
+    } else if (request.nextUrl.pathname.startsWith('/api/company/') || detectedUserType === 'company_user') {
+      // 企業ユーザーAPIの場合
+      if (detectedUserType !== 'company_user') {
+        return {
+          isValid: false,
+          error: 'This endpoint is for company users only. Please use the candidate interface.'
+        };
+      }
+      return {
+        isValid: true,
+        companyUserId: payload.sub,
+        user: user
       };
     }
-
-    logger.info('Candidate validation successful:', { 
-      candidateId: candidateCheck.id,
-      email: candidateCheck.email,
-      sessionUserId: user.id
-    });
+    
+    // デフォルトはcandidateとして扱う
     return {
       isValid: true,
-      candidateId: candidateCheck.id,
+      candidateId: payload.sub,
       user: user
     };
   } catch (error) {

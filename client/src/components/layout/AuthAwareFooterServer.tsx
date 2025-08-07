@@ -20,7 +20,7 @@ export function AuthAwareFooterServer({
   // Transform userInfo to match Footer's expected format
   const footerUserInfo = userInfo ? {
     userName: userInfo.name,
-    companyName: userInfo.userType === 'company' ? userInfo.name : undefined
+    companyName: userInfo.userType === 'company_user' ? userInfo.name : undefined
   } : undefined;
 
   return (

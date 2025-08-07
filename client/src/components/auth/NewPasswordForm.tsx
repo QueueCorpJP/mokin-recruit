@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { PasswordFormField } from '@/components/ui/password-form-field';
+import { ButtonLoading } from '@/components/ui/Loading';
 
 interface NewPasswordFormProps {
   onSubmit: (password: string, confirmPassword: string) => Promise<void>;
@@ -103,7 +104,7 @@ export function NewPasswordForm({
               <p className="adjustLetterSpacing block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre">
                 {isLoading || isPending ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <ButtonLoading />
                     {userType === 'company' ? '設定中' : '変更中'}
                   </span>
                 ) : (

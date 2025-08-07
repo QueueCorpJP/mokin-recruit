@@ -8,17 +8,14 @@ import { Button } from '@/components/ui/button';
 export interface MessageSearchFilterCandidateProps {
   companyValue?: string;
   keywordValue?: string;
+  messages?: Array<{ id: string; companyName: string; jobTitle: string }>;
   onCompanyChange?: (value: string) => void;
   onKeywordChange?: (value: string) => void;
   onSearch?: () => void;
   className?: string;
 }
 
-const companyOptions = [
-  { value: 'all', label: '企業名' },
-  { value: 'company1', label: '企業A' },
-  { value: 'company2', label: '企業B' },
-];
+// companyOptionsは動的に生成されるため削除
 
 interface CustomDropdownProps {
   options: { value: string; label: string }[];
@@ -105,11 +102,24 @@ function CustomDropdown({
 export function MessageSearchFilterCandidate({
   companyValue = 'all',
   keywordValue = '',
+  messages = [],
   onCompanyChange,
   onKeywordChange,
   onSearch,
   className,
 }: MessageSearchFilterCandidateProps) {
+  // messagesから企業名＋記事タイトルの組み合わせを生成
+  const companyJobOptions = React.useMemo(() => {
+    const allOption = { value: 'all', label: 'すべて' };
+    const roomOptions = messages
+      .map(message => ({
+        value: message.id,
+        label: `${message.companyName} - ${message.jobTitle}`
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label)); // ソート
+    
+    return [allOption, ...roomOptions];
+  }, [messages]);
   return (
     <div
       className={cn(
@@ -122,9 +132,9 @@ export function MessageSearchFilterCandidate({
       <div className='flex flex-row gap-4 w-full'>
         <div className='flex-1'>
           <CustomDropdown
-            options={companyOptions}
+            options={companyJobOptions}
             value={companyValue}
-            placeholder='企業名'
+            placeholder='企業名 - 記事タイトル'
             onChange={onCompanyChange}
             className='w-full'
           />
@@ -135,7 +145,7 @@ export function MessageSearchFilterCandidate({
         <div className='flex-1'>
           <Input
             type='text'
-            placeholder='キーワード検索'
+            placeholder='テキストが入ります'
             value={keywordValue}
             onChange={e => onKeywordChange?.(e.target.value)}
             className={cn(

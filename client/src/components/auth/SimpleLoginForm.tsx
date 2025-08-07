@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loading } from '@/components/ui/Loading';
 
 export function SimpleLoginForm() {
   const router = useRouter();
@@ -113,7 +113,7 @@ export function SimpleLoginForm() {
           >
             {isLoading ? (
               <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                <Loading inline size="sm" variant="white" />
                 ログイン中...
               </>
             ) : (

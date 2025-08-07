@@ -339,7 +339,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       }
     }
     
-    // 該当会社の最初のユーザーを取得
+    // 該当会社の最初のユーザーを取得（applicationテーブル用）
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
       .select('id')
@@ -403,6 +403,27 @@ export async function submitApplication(formData: FormData): Promise<Application
       candidateId,
       jobPostingId: jobId
     });
+
+    // ルームの作成（応募成功後にメッセージ用のルームを作成）
+    logger.info('Creating room for application messaging');
+    
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .insert({
+        type: 'direct',
+        candidate_id: candidateId,
+        company_group_id: validCompanyGroupId,
+        related_job_posting_id: jobId
+      })
+      .select('id')
+      .single();
+
+    if (roomError) {
+      logger.error('Failed to create room:', roomError);
+      // ルーム作成失敗してもアプリケーション自体は成功とする
+    } else {
+      logger.info('Room created successfully:', { roomId: room.id });
+    }
 
     const responseData = {
       success: true,

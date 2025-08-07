@@ -166,19 +166,8 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
   };
 
   const handleApply = () => {
-    // 必要な求人情報をクエリパラメータまたは状態として渡してconfirmページへ遷移
-    const queryParams = new URLSearchParams({
-      jobId: params.id as string,
-      title: encodeURIComponent(jobData?.title || ''),
-      companyName: encodeURIComponent(jobData?.companyName || ''),
-      employmentType: encodeURIComponent(jobData?.employmentType || ''),
-      locations: encodeURIComponent(jobData?.locations?.join(', ') || ''),
-      salaryMin: encodeURIComponent(jobData?.salaryMin || ''),
-      salaryMax: encodeURIComponent(jobData?.salaryMax || ''),
-      requiredDocuments: encodeURIComponent(JSON.stringify(jobData?.requiredDocuments || [])),
-    });
-    
-    router.push(`/candidate/search/setting/${params.id}/confirm?${queryParams.toString()}`);
+    // confirmページでサーバーから求人データを再取得するため、jobIdのみを渡す
+    router.push(`/candidate/search/setting/${params.id}/confirm`);
   };
 
   const handleBackToResults = () => {

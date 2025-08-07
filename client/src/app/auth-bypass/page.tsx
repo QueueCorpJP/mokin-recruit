@@ -6,10 +6,11 @@ import {
   Building2,
   LogIn,
   LogOut,
-  RefreshCw,
   AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Loading } from '@/components/ui/Loading';
 
 interface UserInfo {
   id: string;
@@ -274,7 +275,7 @@ export default function AuthBypassPage() {
               className='w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity'
             >
               {loading ? (
-                <RefreshCw className='w-5 h-5 animate-spin' />
+                <Loading inline size="md" />
               ) : (
                 <LogIn className='w-5 h-5' />
               )}
@@ -323,7 +324,7 @@ export default function AuthBypassPage() {
               className='w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity'
             >
               {loading ? (
-                <RefreshCw className='w-5 h-5 animate-spin' />
+                <Loading inline size="md" />
               ) : (
                 <LogIn className='w-5 h-5' />
               )}
@@ -345,7 +346,7 @@ export default function AuthBypassPage() {
               className='flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity'
             >
               {loading ? (
-                <RefreshCw className='w-5 h-5 animate-spin' />
+                <Loading inline size="md" />
               ) : (
                 <RefreshCw className='w-5 h-5' />
               )}
