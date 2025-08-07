@@ -116,7 +116,7 @@ export function MessageDetailContent({
                       return (
                         <div key={index} style={{ display: 'flex', alignItems: 'center', marginTop: 8, width: '100%' }}>
                           <Image
-                            src={isCandidatePage ? (isMyMessage ? '/images/Union.svg' : '/images/Unionwhite.svg') : '/images/Unionblue.svg'}
+                            src={isCandidatePage ? (isMyMessage ? '/images/Unionwhite.svg' : '/images/Union.svg') : '/images/Unionblue.svg'}
                             alt='File Icon'
                             width={16}
                             height={16}
@@ -130,14 +130,14 @@ export function MessageDetailContent({
                               marginLeft: 8,
                               fontWeight: 'bold',
                               fontSize: 14,
-                              color: isCandidatePage ? (isMyMessage ? '#0F9058' : '#999999') : '#29A8B9',
+                              color: isCandidatePage ? (isMyMessage ? '#999999' : '#0F9058') : '#29A8B9',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               display: 'inline-block',
                               maxWidth: 'calc(100% - 24px)',
                               textDecoration: 'underline',
-                              textDecorationColor: isCandidatePage ? (isMyMessage ? '#0F9058' : '#999999') : '#29A8B9',
+                              textDecorationColor: isCandidatePage ? (isMyMessage ? '#999999' : '#0F9058') : '#29A8B9',
                             }}
                           >
                             {fileName}
