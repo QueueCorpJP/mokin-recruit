@@ -220,7 +220,13 @@ export function MessageLayoutServer({
       let result;
       
       if (userType === 'candidate') {
-        console.log('🔍 [MESSAGE SEND] Using candidate sendMessage');
+        console.log('🔍 [MESSAGE SEND] Using candidate sendMessage with data:', {
+          room_id: selectedRoomId,
+          content,
+          message_type: 'GENERAL',
+          file_urls: fileUrls || [],
+          fileCount: (fileUrls || []).length
+        });
         // 候補者用の送信関数を使用
         result = await sendMessage({
           room_id: selectedRoomId,
@@ -229,7 +235,13 @@ export function MessageLayoutServer({
           file_urls: fileUrls || []
         });
       } else {
-        console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage');
+        console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage with data:', {
+          room_id: selectedRoomId,
+          content,
+          message_type: 'GENERAL',
+          file_urls: fileUrls || [],
+          fileCount: (fileUrls || []).length
+        });
         // 企業用の送信関数を使用
         result = await sendCompanyMessage({
           room_id: selectedRoomId,

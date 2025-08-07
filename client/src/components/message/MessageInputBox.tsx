@@ -55,15 +55,31 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           }
           
           const uploadResults = await uploadMultipleFiles(attachedFiles, candidateId, userType);
+          console.log('🔍 [MESSAGE INPUT DEBUG] Upload results received:', uploadResults);
+          
           fileUrls = uploadResults
             .filter(result => !result.error)
             .map(result => result.url);
           
+          console.log('🔍 [MESSAGE INPUT DEBUG] Filtered file URLs:', fileUrls);
+          
           // エラーがあった場合はユーザーに通知
           const errors = uploadResults.filter(result => result.error);
           if (errors.length > 0) {
-            console.error('File upload errors:', errors);
-            alert('一部のファイルのアップロードに失敗しました');
+            console.error('🔍 [MESSAGE INPUT DEBUG] File upload errors:', errors);
+            alert(`ファイルのアップロードに失敗しました: ${errors.map(e => e.error).join(', ')}`);
+            // エラーがある場合は送信を停止
+            return;
+          }
+          
+          // すべてのファイルがアップロードに成功しているか確認
+          if (fileUrls.length !== attachedFiles.length) {
+            console.error('🔍 [MESSAGE INPUT DEBUG] Mismatch between uploaded files and attached files:', {
+              attachedCount: attachedFiles.length,
+              uploadedCount: fileUrls.length
+            });
+            alert('一部のファイルのアップロードに失敗しました。再試行してください。');
+            return;
           }
         }
         
