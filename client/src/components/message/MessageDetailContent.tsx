@@ -67,7 +67,7 @@ export function MessageDetailContent({
         return (
           <div key={message.id} className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
             {/* 相手のメッセージの場合、左端に円形アイコン */}
-            {!isMyMessage && !isMobile && (
+            {!isMyMessage && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
                 40×40
               </div>
@@ -80,30 +80,12 @@ export function MessageDetailContent({
               }}
             >
               <div className='flex flex-row items-center w-full mb-2'>
-                {isMobile && !isMyMessage ? (
-                  <>
-                    <div className='flex flex-row items-center gap-2 flex-grow'>
-                      <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mr-2'>
-                        40×40
-                      </div>
-                      <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6]'>
-                        {messageCompanyName}
-                      </span>
-                    </div>
-                    <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] ml-auto'>
-                      {messageTime}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] flex-1'>
-                      {isMyMessage ? messageCandidateName : messageCompanyName}
-                    </span>
-                    <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
-                      {messageTime}
-                    </span>
-                  </>
-                )}
+                <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] flex-1'>
+                  {isMyMessage ? messageCandidateName : messageCompanyName}
+                </span>
+                <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
+                  {messageTime}
+                </span>
               </div>
               
               {/* メッセージ本体 - 自分は白、相手は緑 */}
@@ -169,7 +151,7 @@ export function MessageDetailContent({
             </div>
             
             {/* 自分のメッセージの場合、右端に円形アイコン */}
-            {isMyMessage && !isMobile && (
+            {isMyMessage && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
                 40×40
               </div>
