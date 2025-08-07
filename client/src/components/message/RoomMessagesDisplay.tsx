@@ -36,9 +36,9 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
         return (
           <div 
             key={message.id} 
-            className={`flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2 ${
+            className={`flex w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2 ${
               index > 0 ? 'mt-6' : ''
-            }`}
+            } ${isCompany ? 'justify-end' : 'justify-start'}`}
           >
             {!isCompany && !isMobile && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
@@ -47,8 +47,11 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
             )}
             
             <div
-              className='flex-1'
-              style={{ maxWidth: isMobile ? '100%' : isCompany ? 'calc(100% - 56px)' : '100%' }}
+              className={`flex flex-col ${isCompany ? 'items-end' : 'items-start'}`}
+              style={{ 
+                maxWidth: isMobile ? '80%' : '70%',
+                minWidth: '200px'
+              }}
             >
               <div className='flex flex-row items-center w-full mb-2'>
                 {isMobile ? (
@@ -79,7 +82,7 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                 )}
               </div>
               
-              <div className={`rounded-[5px] p-4 ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`}>
+              <div className={`rounded-[5px] w-fit ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`} style={{padding: '8px 16px 16px 16px'}}>
                 {/* 件名がある場合は表示 */}
                 {message.subject && (
                   <>
