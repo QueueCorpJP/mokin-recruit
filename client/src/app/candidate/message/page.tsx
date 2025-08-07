@@ -1,6 +1,6 @@
 import { requireCandidateAuth } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
-import { MessageLayoutServer } from '@/components/message/MessageLayoutServer';
+import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 
 export default async function MessagePage() {
   const user = await requireCandidateAuth();
@@ -38,7 +38,7 @@ export default async function MessagePage() {
   return (
     <div className='flex flex-col bg-white'>
       <div style={{ flex: '0 0 85vh', height: '85vh' }}>
-        <MessageLayoutServer 
+        <MessageLayoutWrapper 
           rooms={rooms}
           userId={user.id}
           userType="candidate"
