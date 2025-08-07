@@ -123,18 +123,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
               key={template.label}
               type='button'
               onClick={() => setMessage(template.text)}
-              className='px-4 py-1 border border-[#0F9058] text-[#0F9058] rounded-full text-[14px] font-bold bg-white w-auto flex-shrink-0 hover:bg-[#0F9058] hover:text-white transition-colors duration-200'
-              style={{
-                paddingTop: 4,
-                paddingBottom: 4,
-                paddingLeft: 16,
-                paddingRight: 16,
-                borderColor: '#0F9058',
-                color: '#0F9058',
-                background: '#fff',
-                minWidth: 0,
-                display: 'inline-block',
-              }}
+              className='px-4 py-1 border border-[#0F9058] text-[#0F9058] bg-white rounded-full text-[14px] font-bold w-auto flex-shrink-0 inline-block hover:bg-[rgba(15,144,88,0.20)] transition-colors duration-200'
             >
               {template.label}
             </button>
