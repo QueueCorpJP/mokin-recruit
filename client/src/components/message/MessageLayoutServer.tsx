@@ -44,12 +44,12 @@ export function MessageLayoutServer({
   
   const isCandidatePage = userType === 'candidate';
 
-  // 最初のルームを自動選択
-  useEffect(() => {
-    if (rooms.length > 0 && !selectedRoomId) {
-      setSelectedRoomId(rooms[0].id);
-    }
-  }, [rooms, selectedRoomId]);
+  // 最初のルームを自動選択（無効化）
+  // useEffect(() => {
+  //   if (rooms.length > 0 && !selectedRoomId) {
+  //     setSelectedRoomId(rooms[0].id);
+  //   }
+  // }, [rooms, selectedRoomId]);
 
   // 選択されたルームのメッセージを取得
   useEffect(() => {
