@@ -11,6 +11,7 @@ import './globals.css';
 // Providers
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { ToastProvider } from '@/components/ui/toast';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
@@ -119,8 +120,10 @@ export default function RootLayout({
       <body className={`antialiased`}>
         <QueryProvider>
           <AuthProvider>
-            {children}
-            {/* <StagewiseToolbarClient /> */}
+            <ToastProvider>
+              {children}
+              {/* <StagewiseToolbarClient /> */}
+            </ToastProvider>
           </AuthProvider>
         </QueryProvider>
       </body>
