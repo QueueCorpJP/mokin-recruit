@@ -1,7 +1,6 @@
-import { MessageLayoutServer } from '@/components/message/MessageLayoutServer';
+import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 import { requireCompanyAuthWithSession } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
-
 
 export default async function CompanyMessagePage() {
   // 統一的な認証チェック
@@ -39,7 +38,7 @@ export default async function CompanyMessagePage() {
   return (
     <div className='flex flex-col bg-white'>
       <div style={{ flex: '0 0 85vh', height: '85vh' }}>
-        <MessageLayoutServer 
+        <MessageLayoutWrapper 
           rooms={rooms} 
           userId={companyUserId}
           userType="company"

@@ -247,10 +247,10 @@ export async function uploadCompanyMessageFile(formData: FormData) {
       return { error: 'ユーザーIDが一致しません' };
     }
 
-    // ファイルサイズチェック（10MB）
-    const maxSize = 10 * 1024 * 1024;
+    // ファイルサイズチェック（5MB）
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      return { error: 'ファイルサイズは10MB以下にしてください' };
+      return { error: 'ファイルサイズは5MB以下にしてください' };
     }
 
     // ファイル形式チェック
@@ -283,20 +283,19 @@ export async function uploadCompanyMessageFile(formData: FormData) {
     // ファイル名の生成（タイムスタンプ + オリジナルファイル名）
     const timestamp = new Date().getTime();
     
-    // より堅牢なファイル名生成：特殊文字や日本語にも対応
+    // Supabaseストレージ対応のファイル名サニタイズ処理
     const sanitizeFileName = (name: string): string => {
       // 拡張子を分離
       const lastDotIndex = name.lastIndexOf('.');
       const extension = lastDotIndex !== -1 ? name.substring(lastDotIndex) : '';
       const nameWithoutExt = lastDotIndex !== -1 ? name.substring(0, lastDotIndex) : name;
       
-      // 危険な文字を置換（ファイルシステムで問題となる文字）
+      // Supabaseストレージで使用可能な文字のみ残す（英数字、ハイフン、アンダースコア、ピリオド）
       let sanitized = nameWithoutExt
-        .replace(/[\\/:*?"<>|]/g, '_') // ファイルシステムで危険な文字
-        .replace(/[\u0000-\u001f\u007f-\u009f]/g, '_') // 制御文字
-        .replace(/\s+/g, '_') // 空白をアンダースコアに
+        .replace(/[^a-zA-Z0-9\-_.]/g, '_') // 英数字、ハイフン、アンダースコア、ピリオド以外を_に置換
         .replace(/_+/g, '_') // 連続するアンダースコアを1つに
-        .replace(/^_|_$/g, ''); // 先頭と末尾のアンダースコアを削除
+        .replace(/^_|_$/g, '') // 先頭と末尾のアンダースコアを削除
+        .replace(/^\.|\.$/g, ''); // 先頭と末尾のピリオドを削除
       
       // 空になった場合やドットのみの場合のフォールバック
       if (!sanitized || sanitized === '.' || sanitized === '..') {
@@ -346,7 +345,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
         
         // 一般的なSupabaseエラーを分類
         if (error.message.includes('Payload too large') || error.message.includes('Request entity too large')) {
-          errorMessage = 'ファイルサイズが大きすぎます。10MB以下にしてください。';
+          errorMessage = 'ファイルサイズが大きすぎます。5MB以下にしてください。';
         } else if (error.message.includes('Invalid file type') || error.message.includes('content-type')) {
           errorMessage = 'サポートされていないファイル形式です。';
         } else if (error.message.includes('Duplicate') || error.message.includes('already exists')) {

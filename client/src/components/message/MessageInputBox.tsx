@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { SelectInput } from '@/components/ui/select-input';
 import { uploadMultipleFiles } from '@/lib/storage';
+import { useToast } from '@/components/ui/toast';
 
 interface MessageInputBoxProps {
   isCandidatePage?: boolean;
@@ -32,6 +33,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   // 送信処理の共通関数
   const handleSendMessage = async () => {
@@ -50,7 +52,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           
           if (!candidateId) {
             console.error('🔍 [MESSAGE INPUT DEBUG] candidateId is missing!');
-            alert('ユーザーIDが取得できませんでした。ページを再読み込みしてください。');
+            showToast('ユーザーIDが取得できませんでした。ページを再読み込みしてください。', 'error');
             return;
           }
           
@@ -67,7 +69,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           const errors = uploadResults.filter(result => result.error);
           if (errors.length > 0) {
             console.error('🔍 [MESSAGE INPUT DEBUG] File upload errors:', errors);
-            alert(`ファイルのアップロードに失敗しました: ${errors.map(e => e.error).join(', ')}`);
+            showToast(`ファイルのアップロードに失敗しました: ${errors.map(e => e.error).join(', ')}`, 'error');
             // エラーがある場合は送信を停止
             return;
           }
@@ -78,7 +80,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
               attachedCount: attachedFiles.length,
               uploadedCount: fileUrls.length
             });
-            alert('一部のファイルのアップロードに失敗しました。再試行してください。');
+            showToast('一部のファイルのアップロードに失敗しました。再試行してください。', 'error');
             return;
           }
         }
@@ -95,7 +97,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         }
       } catch (error) {
         console.error('Send message error:', error);
-        alert('メッセージの送信に失敗しました');
+        showToast('メッセージの送信に失敗しました', 'error');
       } finally {
         setIsUploading(false);
       }
@@ -107,6 +109,20 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files);
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      // ファイルサイズチェック
+      for (const file of newFiles) {
+        if (file.size > maxSize) {
+          showToast('ファイルサイズが5MBを超えています。5MB以下のファイルを選択してください。', 'error');
+          // ファイル入力をクリア
+          if (event.target) {
+            event.target.value = '';
+          }
+          return;
+        }
+      }
+      
       setAttachedFiles(prev => [...prev, ...newFiles]);
     }
   };
