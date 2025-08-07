@@ -105,7 +105,7 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
           lastSignIn: new Date().toISOString(),
           user_metadata: {
             user_type: userType,
-            company_account_id: userType === 'company_user' ? headerStore.get('x-company-account-id') : undefined
+            company_account_id: userType === 'company_user' ? headerStore.get('x-company-account-id') || undefined : undefined
           }
         };
         
