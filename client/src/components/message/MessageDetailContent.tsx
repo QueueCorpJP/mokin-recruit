@@ -65,7 +65,7 @@ export function MessageDetailContent({
             });
 
         return (
-          <div key={message.id} className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
+          <div key={message.id} className={`flex w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             {/* 相手のメッセージの場合、左端に円形アイコン */}
             {!isMyMessage && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
@@ -74,9 +74,10 @@ export function MessageDetailContent({
             )}
             
             <div
-              className='flex-1'
+              className={`flex flex-col ${isMyMessage ? 'items-end' : 'items-start'}`}
               style={{
-                maxWidth: isMobile ? '100%' : 'calc(100% - 56px)',
+                maxWidth: isMobile ? '80%' : '70%',
+                minWidth: '200px',
               }}
             >
               <div className='flex flex-row items-center w-full mb-2'>
@@ -89,7 +90,7 @@ export function MessageDetailContent({
               </div>
               
               {/* メッセージ本体 - 自分は白、相手は緑 */}
-              <div className={isMyMessage ? 'bg-white rounded-[5px] p-4' : `bg-[${isCandidatePage ? '#D2F1DA' : '#F0F9F3'}] rounded-[5px] p-4`}>
+              <div className={`${isMyMessage ? 'bg-white' : `bg-[${isCandidatePage ? '#D2F1DA' : '#F0F9F3'}]`} rounded-[5px] w-fit`} style={{padding: '16px'}}>
                 {/* 件名がある場合は表示 */}
                 {message.subject && (
                   <>
