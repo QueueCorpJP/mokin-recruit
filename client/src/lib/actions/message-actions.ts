@@ -1,9 +1,9 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCandidateAuth } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 export interface SendMessageData {
   room_id: string;
@@ -20,20 +20,43 @@ export async function sendMessage(data: SendMessageData) {
       return { error: 'Unauthorized' };
     }
 
-    const supabase = await createClient();
+    // RLS問題を解決するためAdmin clientを使用
+    const supabase = getSupabaseAdminClient();
+    console.log('🔧 [SEND MESSAGE] Using Supabase Admin client (RLS bypassed)');
 
-    // roomが候補者のものかチェック
-    const { data: room, error: roomError } = await supabase
+    // 候補者がルームに参加しているかチェック（roomsテーブルのcandidate_idで確認）
+    console.log('🔍 [SEND MESSAGE] Room validation check:', {
+      room_id: data.room_id,
+      user_id: user.id
+    });
+
+    // まず、ルームが存在するかチェック
+    const { data: roomExists, error: roomExistsError } = await supabase
       .from('rooms')
       .select('id, candidate_id, company_group_id')
       .eq('id', data.room_id)
-      .eq('candidate_id', user.id)
       .single();
 
-    if (roomError || !room) {
-      console.error('Room validation error:', roomError);
-      return { error: 'Room not found or unauthorized' };
+    console.log('🔍 [SEND MESSAGE] Room exists check:', {
+      roomExists,
+      roomExistsError
+    });
+
+    if (roomExistsError || !roomExists) {
+      console.error('Room does not exist:', roomExistsError);
+      return { error: 'Room not found' };
     }
+
+    // 候補者IDが一致するかチェック
+    if (roomExists.candidate_id !== user.id) {
+      console.error('Candidate ID mismatch:', {
+        roomCandidateId: roomExists.candidate_id,
+        userId: user.id
+      });
+      return { error: 'Unauthorized access to room' };
+    }
+
+    const room = roomExists;
 
     // メッセージを挿入
     const { data: message, error: messageError } = await supabase
@@ -80,7 +103,9 @@ export async function getRoomMessages(roomId: string) {
       return { error: 'Unauthorized' };
     }
 
-    const supabase = await createClient();
+    // RLS問題を解決するためAdmin clientを使用
+    const supabase = getSupabaseAdminClient();
+    console.log('🔧 [GET MESSAGES] Using Supabase Admin client (RLS bypassed)');
 
     // roomが候補者のものかチェック
     const { data: room, error: roomError } = await supabase

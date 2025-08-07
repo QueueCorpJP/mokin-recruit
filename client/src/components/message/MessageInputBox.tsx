@@ -25,8 +25,6 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   // company用セレクトのstate
   const templateOptions = [
     { value: '', label: 'テンプレート未選択' },
-    { value: '1', label: '面談日程調整テンプレート' },
-    { value: '2', label: '合否連絡テンプレート' },
   ];
   const [template, setTemplate] = useState('');
   const [message, setMessage] = useState('');

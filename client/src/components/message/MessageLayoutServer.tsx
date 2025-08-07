@@ -10,6 +10,7 @@ import { MessageInputBox } from './MessageInputBox';
 import { RoomList } from './RoomList';
 import { type Room } from '@/lib/rooms';
 import { getRoomMessages, sendCompanyMessage } from '@/lib/actions/messages';
+import { sendMessage } from '@/lib/actions/message-actions';
 import { ChatMessage } from '@/types/message';
 import { MessageLoading } from '@/components/ui/Loading';
 
@@ -169,12 +170,25 @@ export function MessageLayoutServer({
     if (!selectedRoomId) return;
     
     try {
-      const result = await sendCompanyMessage({
-        room_id: selectedRoomId,
-        content,
-        message_type: 'GENERAL',
-        file_urls: fileUrls || []
-      });
+      let result;
+      
+      if (userType === 'candidate') {
+        // 候補者用の送信関数を使用
+        result = await sendMessage({
+          room_id: selectedRoomId,
+          content,
+          message_type: 'GENERAL',
+          file_urls: fileUrls || []
+        });
+      } else {
+        // 企業用の送信関数を使用
+        result = await sendCompanyMessage({
+          room_id: selectedRoomId,
+          content,
+          message_type: 'GENERAL',
+          file_urls: fileUrls || []
+        });
+      }
 
       if (result.error) {
         console.error('Failed to send message:', result.error);

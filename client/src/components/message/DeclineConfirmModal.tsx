@@ -12,6 +12,9 @@ interface DeclineConfirmModalProps {
   onConfirm: () => void;
   companyName?: string;
   jobTitle?: string;
+  companyUserId?: string;
+  jobPostingId?: string;
+  roomId?: string;
 }
 
 export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
@@ -20,11 +23,15 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
   onConfirm,
   companyName = '企業名',
   jobTitle = '求人タイトル',
+  companyUserId,
+  jobPostingId,
+  roomId,
 }) => {
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [selectedDeclineReason, setSelectedDeclineReason] = useState('');
   const [showValidationError, setShowValidationError] = useState(false);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const declineReasonOptions = [
     { value: '', label: '未選択' },
@@ -50,19 +57,53 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
     setSelectedDeclineReason('');
     setShowValidationError(false);
     setIsSelectOpen(false);
+    setIsSubmitting(false);
     onClose();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedDeclineReason) {
       setShowValidationError(true);
       return;
     }
-    onConfirm();
-    setSelectedReasons([]);
-    setSelectedDeclineReason('');
-    setShowValidationError(false);
-    setIsSelectOpen(false);
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/message/decline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: selectedDeclineReason,
+          companyUserId,
+          jobPostingId,
+          roomId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('辞退理由の送信に失敗しました');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        onConfirm();
+        setSelectedReasons([]);
+        setSelectedDeclineReason('');
+        setShowValidationError(false);
+        setIsSelectOpen(false);
+      } else {
+        throw new Error(data.error || '辞退理由の送信に失敗しました');
+      }
+    } catch (error) {
+      console.error('辞退理由の送信エラー:', error);
+      alert('辞退理由の送信に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -163,7 +204,8 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
                   "min-w-[160px] h-[52px] rounded-full",
                   "bg-[#FF5B5B] text-white border-2 border-[#FF5B5B]",
                   "font-['Noto_Sans_JP'] font-bold text-[14px] leading-[200%] tracking-[1.4px] text-center",
-                  "hover:bg-[#FF4545] hover:border-[#FF4545] transition-colors"
+                  "hover:bg-[#FF4545] hover:border-[#FF4545] transition-colors",
+                  isSubmitting && "opacity-50 cursor-not-allowed hover:bg-[#FF5B5B] hover:border-[#FF5B5B]"
                 )}
                 style={{ 
                   padding: '16px 40px',
@@ -175,10 +217,11 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
                   lineHeight: '200%',
                   letterSpacing: '1.4px'
                 }}
-                onClick={onConfirm}
+                onClick={handleConfirm}
+                disabled={isSubmitting}
                 type="button"
               >
-                辞退理由を送信する
+                {isSubmitting ? '送信中...' : '辞退理由を送信する'}
               </Button>
             </div>
           </footer>
@@ -261,7 +304,8 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
               "w-full h-[48px] rounded-full",
               "bg-[#FF5B5B] text-white border-2 border-[#FF5B5B]",
               "font-['Noto_Sans_JP'] font-bold text-[14px] leading-[200%] tracking-[1.4px] text-center",
-              "hover:bg-[#FF4545] hover:border-[#FF4545] transition-colors"
+              "hover:bg-[#FF4545] hover:border-[#FF4545] transition-colors",
+              isSubmitting && "opacity-50 cursor-not-allowed hover:bg-[#FF5B5B] hover:border-[#FF5B5B]"
             )}
             style={{ 
               color: '#FFF',
@@ -272,10 +316,11 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
               lineHeight: '200%',
               letterSpacing: '1.4px'
             }}
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            disabled={isSubmitting}
             type="button"
           >
-            辞退理由を送信する
+            {isSubmitting ? '送信中...' : '辞退理由を送信する'}
           </Button>
           
         </footer>

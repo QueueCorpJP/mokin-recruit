@@ -16,10 +16,10 @@ CREATE TABLE public.application (
   career_history_url text,
   CONSTRAINT application_pkey PRIMARY KEY (id),
   CONSTRAINT application_company_account_id_fkey FOREIGN KEY (company_account_id) REFERENCES public.company_accounts(id),
-  CONSTRAINT application_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
   CONSTRAINT application_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
   CONSTRAINT application_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
-  CONSTRAINT application_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id)
+  CONSTRAINT application_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id),
+  CONSTRAINT application_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id)
 );
 CREATE TABLE public.candidates (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -41,6 +41,8 @@ CREATE TABLE public.candidates (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   last_login_at timestamp with time zone,
+  current_company text,
+  current_position text,
   CONSTRAINT candidates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.company_accounts (
@@ -69,12 +71,12 @@ CREATE TABLE public.company_user_group_permissions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   company_user_id uuid NOT NULL,
   company_group_id uuid NOT NULL,
-  permission_level text NOT NULL CHECK (permission_level = ANY (ARRAY['SCOUT_STAFF'::text, 'ADMINISTRATOR'::text])),
+  permission_level text NOT NULL CHECK (permission_level = ANY (ARRAY['SCOUT_STAFF'::text, 'ADMINISTRATOR'::text, 'ADMIN'::text])),
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT company_user_group_permissions_pkey PRIMARY KEY (id),
-  CONSTRAINT company_user_group_permissions_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
-  CONSTRAINT company_user_group_permissions_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id)
+  CONSTRAINT company_user_group_permissions_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
+  CONSTRAINT company_user_group_permissions_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id)
 );
 CREATE TABLE public.company_users (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -89,6 +91,21 @@ CREATE TABLE public.company_users (
   CONSTRAINT company_users_pkey PRIMARY KEY (id),
   CONSTRAINT company_users_company_account_id_fkey FOREIGN KEY (company_account_id) REFERENCES public.company_accounts(id)
 );
+CREATE TABLE public.decline_reasons (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  candidate_id uuid,
+  company_user_id uuid,
+  job_posting_id uuid,
+  room_id uuid,
+  reason text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT decline_reasons_pkey PRIMARY KEY (id),
+  CONSTRAINT decline_reasons_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
+  CONSTRAINT decline_reasons_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
+  CONSTRAINT decline_reasons_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
+  CONSTRAINT decline_reasons_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id)
+);
 CREATE TABLE public.favorites (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   candidate_id uuid NOT NULL,
@@ -96,8 +113,8 @@ CREATE TABLE public.favorites (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT favorites_pkey PRIMARY KEY (id),
-  CONSTRAINT favorites_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id),
-  CONSTRAINT favorites_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id)
+  CONSTRAINT favorites_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
+  CONSTRAINT favorites_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id)
 );
 CREATE TABLE public.job_postings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -136,14 +153,13 @@ CREATE TABLE public.job_postings (
   industry ARRAY,
   overtime text CHECK ((overtime = ANY (ARRAY['あり'::text, 'なし'::text])) OR overtime IS NULL),
   CONSTRAINT job_postings_pkey PRIMARY KEY (id),
-  CONSTRAINT job_postings_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_users(id)
+  CONSTRAINT job_postings_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id)
 );
 CREATE TABLE public.messages (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   room_id uuid NOT NULL,
   sender_type text NOT NULL CHECK (sender_type = ANY (ARRAY['CANDIDATE'::text, 'COMPANY_USER'::text])),
   sender_candidate_id uuid,
-  sender_company_user_id uuid,
   message_type text NOT NULL CHECK (message_type = ANY (ARRAY['SCOUT'::text, 'APPLICATION'::text, 'GENERAL'::text])),
   subject text,
   content text NOT NULL,
@@ -153,10 +169,12 @@ CREATE TABLE public.messages (
   replied_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  sender_company_group_id uuid,
+  file_urls jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT messages_pkey PRIMARY KEY (id),
-  CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
   CONSTRAINT messages_sender_candidate_id_fkey FOREIGN KEY (sender_candidate_id) REFERENCES public.candidates(id),
-  CONSTRAINT messages_sender_company_user_id_fkey FOREIGN KEY (sender_company_user_id) REFERENCES public.company_users(id)
+  CONSTRAINT messages_sender_company_group_id_fkey FOREIGN KEY (sender_company_group_id) REFERENCES public.company_groups(id),
+  CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id)
 );
 CREATE TABLE public.messages_backup (
   id uuid,
@@ -189,18 +207,6 @@ CREATE TABLE public.password_reset_tokens (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (id)
 );
-CREATE TABLE public.room_participants (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  room_id uuid NOT NULL,
-  participant_type text NOT NULL CHECK (participant_type = ANY (ARRAY['CANDIDATE'::text, 'COMPANY_USER'::text])),
-  candidate_id uuid,
-  company_user_id uuid,
-  joined_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT room_participants_pkey PRIMARY KEY (id),
-  CONSTRAINT room_participants_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
-  CONSTRAINT room_participants_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
-  CONSTRAINT room_participants_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id)
-);
 CREATE TABLE public.rooms (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   type text NOT NULL DEFAULT 'direct'::text CHECK (type = ANY (ARRAY['direct'::text, 'group'::text])),
@@ -208,7 +214,9 @@ CREATE TABLE public.rooms (
   company_group_id uuid,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  candidate_id uuid,
   CONSTRAINT rooms_pkey PRIMARY KEY (id),
-  CONSTRAINT rooms_related_job_posting_id_fkey FOREIGN KEY (related_job_posting_id) REFERENCES public.job_postings(id),
-  CONSTRAINT rooms_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id)
+  CONSTRAINT rooms_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
+  CONSTRAINT rooms_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
+  CONSTRAINT rooms_related_job_posting_id_fkey FOREIGN KEY (related_job_posting_id) REFERENCES public.job_postings(id)
 );

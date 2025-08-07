@@ -138,7 +138,7 @@ export function CandidateRoomMessages({
             </div>
             
             {/* 右側のアバター：自分（候補者）のメッセージの時のみ表示 */}
-            {isOwnMessage && !isMobile && (
+            {isOwnMessage && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
                 自分
               </div>
