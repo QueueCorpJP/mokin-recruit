@@ -82,7 +82,7 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                 )}
               </div>
               
-              <div className={`rounded-[5px] w-fit ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`} style={{padding: '16px'}}>
+              <div className={`rounded-[5px] w-fit ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`} style={{padding: '8px 16px 16px 16px'}}>
                 {/* 件名がある場合は表示 */}
                 {message.subject && (
                   <>

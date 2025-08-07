@@ -90,7 +90,7 @@ export function MessageDetailContent({
               </div>
               
               {/* メッセージ本体 - 自分は白、相手は緑 */}
-              <div className={`${isMyMessage ? 'bg-white' : `bg-[${isCandidatePage ? '#D2F1DA' : '#F0F9F3'}]`} rounded-[5px] w-fit`} style={{padding: '16px'}}>
+              <div className={`${isMyMessage ? 'bg-white' : `bg-[${isCandidatePage ? '#D2F1DA' : '#F0F9F3'}]`} rounded-[5px] w-fit`} style={{padding: '0px 16px 16px 16px'}}>
                 {/* 件名がある場合は表示 */}
                 {message.subject && (
                   <>
