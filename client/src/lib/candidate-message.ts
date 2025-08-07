@@ -122,8 +122,8 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
 
       // 企業情報を取得
       const companyParticipant = companyParticipants?.find((cp: any) => cp.room_id === roomId);
-      const companyUser = companyParticipant?.company_users;
-      const companyName = companyUser?.company_groups?.company_accounts?.company_name || 
+      const companyUser = Array.isArray(companyParticipant?.company_users) ? companyParticipant?.company_users[0] : companyParticipant?.company_users;
+      const companyName = companyUser?.company_groups?.[0]?.company_accounts?.[0]?.company_name || 
                          `${companyUser?.last_name || ''} ${companyUser?.first_name || ''}`.trim() || 
                          '企業担当者';
 
@@ -136,11 +136,15 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
 
       return {
         id: roomId,
+        companyGroupId: (companyUser?.company_groups?.[0] as any)?.id || '',
         companyName,
+        groupName: (companyUser?.company_groups?.[0] as any)?.group_name || 'グループ未設定',
         jobTitle: room?.job_postings?.title || '求人情報なし',
+        jobPostingId: room?.job_postings?.id || '',
         lastMessage: latestMessage?.content || '',
         lastMessageTime: latestMessage ? new Date(latestMessage.created_at).toLocaleString('ja-JP') : '',
         unreadCount,
+        isUnread: unreadCount > 0,
       };
     });
 

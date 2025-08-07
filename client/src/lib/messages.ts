@@ -98,9 +98,11 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
 
     // メッセージデータをMessage型に変換
     const messages: Message[] = (messagesData || []).map(msg => {
+      const candidate = Array.isArray(msg.candidates) ? msg.candidates[0] : msg.candidates;
+      const companyUser = Array.isArray(msg.company_users) ? msg.company_users[0] : msg.company_users;
       const senderName = msg.sender_type === 'CANDIDATE' 
-        ? (msg.candidates ? `${msg.candidates.first_name} ${msg.candidates.last_name}` : '候補者')
-        : msg.company_users?.full_name || '企業担当者';
+        ? (candidate ? `${candidate.first_name} ${candidate.last_name}` : '候補者')
+        : companyUser?.full_name || '企業担当者';
       
       return {
         id: String(msg.id),
@@ -188,20 +190,22 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
     }
 
     const messages: Message[] = (messagesData || []).map(msg => {
+      const candidate = Array.isArray(msg.candidates) ? msg.candidates[0] : msg.candidates;
+      const companyUser = Array.isArray(msg.company_users) ? msg.company_users[0] : msg.company_users;
       const senderName = msg.sender_type === 'CANDIDATE' 
-        ? (msg.candidates ? `${msg.candidates.first_name} ${msg.candidates.last_name}` : '候補者')
-        : msg.company_users?.full_name || '企業担当者';
+        ? (candidate ? `${candidate.first_name} ${candidate.last_name}` : '候補者')
+        : companyUser?.full_name || '企業担当者';
       
       return {
         id: String(msg.id),
         roomId: String(msg.room_id), // room_idを追加
         timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP')),
         isUnread: Boolean(msg.status !== 'READ'),
-        companyName: String(msg.rooms?.job_postings?.company_groups?.company_accounts?.company_name || '企業名'),
+        companyName: String((msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]?.company_accounts?.[0]?.company_name || '企業名'),
         candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
         messagePreview: String(msg.content || msg.subject || 'メッセージ'),
-        groupName: String(msg.rooms?.job_postings?.company_groups?.group_name || 'グループ'),
-        jobTitle: String(msg.rooms?.job_postings?.title || '求人タイトル'),
+        groupName: String((msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]?.group_name || 'グループ'),
+        jobTitle: String((msg.rooms as any)?.job_postings?.[0]?.title || '求人タイトル'),
       };
     });
 

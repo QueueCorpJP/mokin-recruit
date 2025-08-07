@@ -5,12 +5,11 @@ import { MessageDetailBody } from './MessageDetailBody';
 
 interface RoomMessage {
   id: string;
-  senderType: string;
+  senderType: 'CANDIDATE' | 'COMPANY_USER';
   senderName: string;
-  subject: string;
+  subject: any;
   content: string;
-  sentAt: string;
-  isOwnMessage: boolean;
+  createdAt: string;
 }
 
 interface RoomMessagesDisplayProps {
@@ -65,7 +64,7 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                       </span>
                     </div>
                     <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] ml-auto'>
-                      {new Date(message.sentAt).toLocaleString('ja-JP')}
+                      {message.createdAt}
                     </span>
                   </>
                 ) : (
@@ -74,7 +73,7 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                       {message.senderName}
                     </span>
                     <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
-                      {new Date(message.sentAt).toLocaleString('ja-JP')}
+                      {message.createdAt}
                     </span>
                   </>
                 )}
