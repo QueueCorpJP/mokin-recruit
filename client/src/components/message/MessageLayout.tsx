@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { MessageList, type Message } from './MessageList';
 import { EmptyMessageState } from './EmptyMessageState';
@@ -238,7 +239,7 @@ export function MessageLayout({
                         width: '100%',
                       }}
                     >
-                      <img
+                      <Image
                         src='/images/Union.svg'
                         alt='Union Icon'
                         width={16}
@@ -271,7 +272,7 @@ export function MessageLayout({
                         width: '100%',
                       }}
                     >
-                      <img
+                      <Image
                         src='/images/Union.svg'
                         alt='Union Icon'
                         width={16}
@@ -579,7 +580,7 @@ export function MessageLayout({
                           width: '100%',
                         }}
                       >
-                        <img
+                        <Image
                           src='/images/Union.svg'
                           alt='Union Icon'
                           width={16}
@@ -612,7 +613,7 @@ export function MessageLayout({
                           width: '100%',
                         }}
                       >
-                        <img
+                        <Image
                           src='/images/Union.svg'
                           alt='Union Icon'
                           width={16}

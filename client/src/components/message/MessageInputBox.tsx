@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { SelectInput } from '@/components/ui/select-input';
 import { uploadMultipleFiles } from '@/lib/storage';
 
@@ -134,7 +135,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
           onClick={handleClipClick}
         >
-          <img src='/images/clip.svg' alt='添付' className='w-6 h-6' />
+          <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
         </button>
         {/* 添付ファイルタグ */}
         <div className='flex flex-row gap-2 flex-1 ml-2'>
@@ -211,7 +212,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
             }
           }}
         >
-          <img src='/images/form.svg' alt='送信' className='w-4 h-4' />
+          <Image src='/images/form.svg' alt='送信' width={16} height={16} />
           送信
         </button>
       </div>

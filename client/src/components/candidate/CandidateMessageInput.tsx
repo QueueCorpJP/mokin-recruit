@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { sendCandidateMessage } from '@/lib/candidate-message';
 
 interface CandidateMessageInputProps {
@@ -121,7 +122,7 @@ export function CandidateMessageInput({
           className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
           disabled={isSending}
         >
-          <img src='/images/clip.svg' alt='添付' className='w-6 h-6' />
+          <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
         </button>
         
         {/* 添付ファイルタグ（ダミー） */}
@@ -147,7 +148,7 @@ export function CandidateMessageInput({
           className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed'
           style={{ maxWidth: 120, padding: '10px 24px' }}
         >
-          <img src='/images/form.svg' alt='送信' className='w-4 h-4' />
+          <Image src='/images/form.svg' alt='送信' width={16} height={16} />
           {isSending ? '送信中...' : '送信'}
         </button>
       </div>

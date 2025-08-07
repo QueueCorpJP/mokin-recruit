@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { SelectInput } from '@/components/ui/select-input';
 import { sendMessage } from '@/lib/actions';
 
@@ -172,7 +173,7 @@ export const MessageInputBoxServer: React.FC<{
           type='button'
           className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
         >
-          <img src='/images/Union.svg' alt='添付' className='w-6 h-6' />
+          <Image src='/images/Union.svg' alt='添付' width={24} height={24} />
         </button>
         <div className='flex flex-row gap-2 flex-1 ml-2'>
           <div className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
@@ -194,7 +195,7 @@ export const MessageInputBoxServer: React.FC<{
           className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed'
           style={{ maxWidth: 120, padding: '10px 24px' }}
         >
-          <img src='/images/complete.svg' alt='送信' className='w-4 h-4' />
+          <Image src='/images/complete.svg' alt='送信' width={16} height={16} />
           {isSending ? '送信中...' : '送信'}
         </button>
       </div>

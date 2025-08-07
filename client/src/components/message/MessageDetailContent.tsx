@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { ChatMessage } from '@/types/message';
 import { MessageDetailBody } from './MessageDetailBody';
 
@@ -132,7 +133,7 @@ export function MessageDetailContent({
                       
                       return (
                         <div key={index} style={{ display: 'flex', alignItems: 'center', marginTop: 8, width: '100%' }}>
-                          <img
+                          <Image
                             src={isCandidatePage ? (isMyMessage ? '/images/Union.svg' : '/images/Unionwhite.svg') : '/images/Unionblue.svg'}
                             alt='File Icon'
                             width={16}
