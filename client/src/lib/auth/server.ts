@@ -92,7 +92,6 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
         console.log('🔍 getServerAuth - Header result:', {
           email,
           middlewareUserType,
-          dbUserType,
           finalUserType: userType,
           userId
         });

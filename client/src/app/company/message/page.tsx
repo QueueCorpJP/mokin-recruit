@@ -1,58 +1,51 @@
-'use client';
+import { MessageLayoutServer } from '@/components/message/MessageLayoutServer';
+import { requireCompanyAuthWithSession } from '@/lib/auth/server';
+import { getRooms } from '@/lib/rooms';
 
-import { useState } from 'react';
-import { MessageLayout } from '@/components/message/MessageLayout';
-import { Message } from '@/components/message/MessageList';
 
-export default function MessagePage() {
-  // ダミーメッセージデータ
-  const dummyMessages: Message[] = [
-    {
-      id: '1',
-      timestamp: '2024/01/15 14:30',
-      isUnread: true,
-      companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
-      candidateName: '候補者名（もしくはID）テキスト',
-      messagePreview:
-        'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
-      groupName: 'グループ名テキストグループ名テキスト',
-      jobTitle:
-        '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
-    },
-    {
-      id: '2',
-      timestamp: '2024/01/15 13:45',
-      isUnread: true,
-      companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
-      candidateName: '候補者名（もしくはID）テキスト',
-      messagePreview:
-        'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
-      groupName: 'グループ名テキストグループ名テキスト',
-      jobTitle:
-        '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
-    },
-    {
-      id: '3',
-      timestamp: '2024/01/15 12:20',
-      isUnread: false,
-      companyName: '現職企業名テキスト現職企業名テキスト現職企業名テキスト',
-      candidateName: '候補者名（もしくはID）テキスト',
-      messagePreview:
-        'メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。メッセージ本文テキストが入ります。',
-      groupName: 'グループ名テキストグループ名テキスト',
-      jobTitle:
-        '求人名タイトルテキストが入ります。求人名タイトルテキストが入ります。',
-    },
-  ];
+export default async function CompanyMessagePage() {
+  // 統一的な認証チェック
+  const authResult = await requireCompanyAuthWithSession();
+  if (!authResult.success) {
+    return (
+      <div className='w-full flex flex-col items-center justify-center p-8'>
+        <div className='text-red-600 text-center'>
+          <h2 className='text-xl font-bold mb-2'>エラーが発生しました</h2>
+          <p>{authResult.error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { companyUserId, fullName } = authResult.data;
+  console.log('🔍 [STEP 1] Auth success:', { 
+    companyUserId, 
+    fullName,
+    userType: 'company'
+  });
+  
+  const rooms = await getRooms(companyUserId, 'company');
+  console.log('🔍 [STEP 2] Rooms returned:', { 
+    roomsCount: rooms.length,
+    rooms: rooms.map(r => ({
+      id: r.id,
+      candidateName: r.candidateName,
+      companyName: r.companyName,
+      groupName: r.groupName,
+      jobTitle: r.jobTitle
+    }))
+  });
 
   return (
     <div className='flex flex-col bg-white'>
-      {/* ヘッダー（必要ならここに追加） */}
-      {/* メイン: メッセージ一覧＋詳細 */}
       <div style={{ flex: '0 0 85vh', height: '85vh' }}>
-        <MessageLayout messages={dummyMessages} />
+        <MessageLayoutServer 
+          rooms={rooms} 
+          userId={companyUserId}
+          userType="company"
+          companyUserName={fullName}
+        />
       </div>
-      {/* フッター（仮）は削除 */}
     </div>
   );
 }

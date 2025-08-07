@@ -67,6 +67,7 @@ export function CandidateMessageLayout({
         <div className='flex-1 min-h-0 flex flex-col h-full'>
           <MessageDetailHeader
             candidateName="" // 候補者側では自分の名前は不要
+            companyName={selectedRoom.companyName}
             jobTitle={selectedRoom.jobTitle}
             onDetailClick={() => {
               // TODO: 詳細ボタンのクリック処理
@@ -142,6 +143,7 @@ export function CandidateMessageLayout({
           <>
             <MessageDetailHeader
               candidateName="" // 候補者側では自分の名前は不要
+              companyName={selectedRoom.companyName}
               jobTitle={selectedRoom.jobTitle}
               onDetailClick={() => {
                 // TODO: 詳細ボタンのクリック処理

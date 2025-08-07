@@ -43,5 +43,10 @@
         "POSTMAN_API_KEY": "PMAK-688493a76a1676000190777b-5416d7a92dd911537e33441ea3b444c9cf"
       }
     }
+  },
+  "permissions": {
+    "allow": [
+      "mcp__supabase__list_projects"
+    ]
   }
 }

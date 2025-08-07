@@ -47,7 +47,7 @@ async function getRoomsForCandidate(candidateId: string): Promise<Message[]> {
     
     messages.push({
       id: room.id,
-      timestamp: lastMessage ? new Date(lastMessage.sent_at).toLocaleString('ja-JP', {
+      timestamp: room.created_at ? new Date(room.created_at).toLocaleString('ja-JP', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -78,6 +78,9 @@ export default async function MessagePage() {
   }
 
   const messages = await getRoomsForCandidate(user.id);
+  
+  // 候補者の名前を取得
+  const candidateName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '候補者';
 
   return (
     <div className='flex flex-col bg-white'>
@@ -85,6 +88,8 @@ export default async function MessagePage() {
         <MessageLayout 
           messages={messages}
           isCandidatePage={true}
+          candidateId={user.id}
+          candidateName={candidateName}
         />
       </div>
     </div>

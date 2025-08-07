@@ -1,112 +1,75 @@
-import { useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useMessageStore } from '@/stores/messageStore';
-import { useQueryClient } from '@tanstack/react-query';
-import type { Message } from '@/components/message/MessageList';
+import { useEffect, useRef, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { ChatMessage } from '@/types/message';
+import { sendMessage, getRoomMessages } from '@/lib/actions/message-actions';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'placeholder-url',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-);
-
-export const useRealTimeMessages = (userId: string, userType: string) => {
-  const { addMessage, updateMessage } = useMessageStore();
-  const queryClient = useQueryClient();
+export const useRealTimeMessages = (roomId: string | null, candidateId?: string) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const channelRef = useRef<any>(null);
 
+  // メッセージ状態の変化をログ
   useEffect(() => {
-    if (!userId || !userType) return;
+    console.log('Messages state changed:', messages);
+  }, [messages]);
 
+  // メッセージの初期読み込み
+  useEffect(() => {
+    if (!roomId) {
+      setMessages([]);
+      return;
+    }
+
+    const loadMessages = async () => {
+      setIsLoading(true);
+      try {
+        console.log('Loading messages for room:', roomId);
+        const result = await getRoomMessages(roomId);
+        console.log('getRoomMessages result:', result);
+        if (result.messages) {
+          console.log('Setting messages:', result.messages);
+          setMessages(result.messages);
+        } else if (result.error) {
+          console.error('Error from getRoomMessages:', result.error);
+        }
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [roomId]);
+
+  // リアルタイム購読設定
+  useEffect(() => {
+    if (!roomId || !candidateId) return;
+
+    const supabase = createClient();
+    
     // リアルタイムチャンネルの設定
     const channel = supabase
-      .channel('messages')
+      .channel(`messages-${roomId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
+          filter: `room_id=eq.${roomId}`,
         },
-        async (payload) => {
-          const newMessage = payload.new as any;
+        (payload) => {
+          const newMessage = payload.new as ChatMessage;
           console.log('New message received:', newMessage);
           
-          // ユーザーが参加しているルームのメッセージかチェック
-          const { data: participantData } = await supabase
-            .from('room_participants')
-            .select('room_id')
-            .eq(
-              userType === 'candidate' ? 'candidate_id' : 'company_user_id',
-              userId
-            )
-            .eq('participant_type', userType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER');
-
-          const userRoomIds = participantData?.map(p => p.room_id) || [];
-          
-          if (userRoomIds.includes(newMessage.room_id)) {
-            // メッセージの詳細情報を取得
-            const { data: messageDetail } = await supabase
-              .from('messages')
-              .select(`
-                id,
-                room_id,
-                sender_type,
-                sender_candidate_id,
-                sender_company_user_id,
-                subject,
-                content,
-                status,
-                created_at,
-                candidates:sender_candidate_id (
-                  first_name,
-                  last_name,
-                  email
-                ),
-                company_users:sender_company_user_id (
-                  full_name,
-                  email
-                ),
-                rooms:room_id (
-                  job_postings:related_job_posting_id (
-                    title,
-                    company_groups:company_group_id (
-                      group_name,
-                      company_accounts:company_account_id (
-                        company_name
-                      )
-                    )
-                  )
-                )
-              `)
-              .eq('id', newMessage.id)
-              .single();
-
-            if (messageDetail) {
-              const msg = messageDetail;
-              const senderName = msg.sender_type === 'CANDIDATE' 
-                ? (msg.candidates ? `${msg.candidates.first_name} ${msg.candidates.last_name}` : '候補者')
-                : msg.company_users?.full_name || '企業担当者';
-
-              const formattedMessage: Message = {
-                id: String(msg.id),
-                roomId: String(msg.room_id),
-                timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP')),
-                isUnread: Boolean(msg.status !== 'READ'),
-                companyName: String(msg.rooms?.job_postings?.company_groups?.company_accounts?.company_name || '企業名'),
-                candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
-                messagePreview: String(msg.content || msg.subject || 'メッセージ'),
-                groupName: String(msg.rooms?.job_postings?.company_groups?.group_name || 'グループ'),
-                jobTitle: String(msg.rooms?.job_postings?.title || '求人タイトル'),
-              };
-              
-              addMessage(formattedMessage);
-              
-              // React Queryキャッシュも更新
-              queryClient.setQueryData(['messages', userId, userType], (oldData: Message[] | undefined) => {
-                return oldData ? [...oldData, formattedMessage] : [formattedMessage];
-              });
+          setMessages(prev => {
+            // 重複チェック
+            if (prev.some(msg => msg.id === newMessage.id)) {
+              return prev;
             }
-          }
+            return [...prev, newMessage];
+          });
         }
       )
       .on(
@@ -115,43 +78,20 @@ export const useRealTimeMessages = (userId: string, userType: string) => {
           event: 'UPDATE',
           schema: 'public',
           table: 'messages',
+          filter: `room_id=eq.${roomId}`,
         },
-        async (payload) => {
-          const updatedMessage = payload.new as any;
+        (payload) => {
+          const updatedMessage = payload.new as ChatMessage;
           console.log('Message updated:', updatedMessage);
           
-          // ユーザーが参加しているルームのメッセージかチェック
-          const { data: participantData } = await supabase
-            .from('room_participants')
-            .select('room_id')
-            .eq(
-              userType === 'candidate' ? 'candidate_id' : 'company_user_id',
-              userId
-            )
-            .eq('participant_type', userType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER');
-
-          const userRoomIds = participantData?.map(p => p.room_id) || [];
-          
-          if (userRoomIds.includes(updatedMessage.room_id)) {
-            updateMessage(updatedMessage.id, {
-              isUnread: updatedMessage.status !== 'READ',
-            });
-            
-            // React Queryキャッシュも更新
-            queryClient.setQueryData(['messages', userId, userType], (oldData: Message[] | undefined) => {
-              return oldData?.map(msg => 
-                msg.id === updatedMessage.id 
-                  ? { ...msg, isUnread: updatedMessage.status !== 'READ' }
-                  : msg
-              );
-            });
-          }
+          setMessages(prev => prev.map(msg => 
+            msg.id === updatedMessage.id ? updatedMessage : msg
+          ));
         }
       )
       .subscribe();
 
     channelRef.current = channel;
-
 
     // クリーンアップ
     return () => {
@@ -159,29 +99,35 @@ export const useRealTimeMessages = (userId: string, userType: string) => {
         channelRef.current.unsubscribe();
       }
     };
-  }, [userId, userType, addMessage, updateMessage, queryClient]);
+  }, [roomId, candidateId]);
 
-  // メッセージ送信（リアルタイム通信も含む）
-  const sendRealTimeMessage = async (content: string, roomId: string) => {
+  // メッセージ送信
+  const sendRealTimeMessage = async (content: string, subject?: string, fileUrls?: string[]) => {
+    if (!roomId) throw new Error('Room ID is required');
+    
     try {
-      // サーバーアクション経由で送信
-      const { sendMessage } = await import('@/lib/actions');
-      
-      const senderType = userType === 'candidate' ? 'candidate' : 'company';
-      const result = await sendMessage(roomId, content, senderType, userId);
+      const result = await sendMessage({
+        room_id: roomId,
+        content,
+        subject,
+        message_type: 'GENERAL',
+        file_urls: fileUrls,
+      });
 
-      if (!result.success) {
-        throw new Error(result.error || 'メッセージの送信に失敗しました');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       return result.message;
     } catch (error) {
-      console.error('Error sending real-time message:', error);
+      console.error('Error sending message:', error);
       throw error;
     }
   };
 
   return {
+    messages,
+    isLoading,
     sendRealTimeMessage,
   };
 };

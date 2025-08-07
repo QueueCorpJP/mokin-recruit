@@ -12,6 +12,7 @@ export interface RoomItemProps {
   isUnread?: boolean;
   jobTitle: string;
   groupName?: string;
+  currentCompany?: string;
   onClick?: (id: string) => void;
   className?: string;
   isCandidatePage?: boolean;
@@ -27,6 +28,7 @@ export function RoomItem({
   isUnread = false,
   jobTitle,
   groupName = '',
+  currentCompany = '',
   onClick,
   className,
   isCandidatePage = false,
@@ -100,11 +102,13 @@ export function RoomItem({
           </div>
         </div>
       ) : (
-        // company用: 従来のレイアウト
+        // company用: message.mdの要件に合わせたレイアウト
         <div className='flex flex-col gap-0 w-full'>
+          {/* 現職企業名 */}
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
-            {companyName}
+            {currentCompany}
           </div>
+          {/* 候補者名 */}
           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#0f9058] tracking-[1.6px] leading-[2]">
             {candidateName}
           </div>

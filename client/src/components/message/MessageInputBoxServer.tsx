@@ -172,7 +172,7 @@ export const MessageInputBoxServer: React.FC<{
           type='button'
           className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
         >
-          <img src='/images/file.svg' alt='添付' className='w-6 h-6' />
+          <img src='/images/Union.svg' alt='添付' className='w-6 h-6' />
         </button>
         <div className='flex flex-row gap-2 flex-1 ml-2'>
           <div className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>

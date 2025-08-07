@@ -8,19 +8,26 @@ import { MessageSearchFilter } from './MessageSearchFilter';
 import { MessageSearchFilterCandidate } from './MessageSearchFilterCandidate';
 import { MessageDetailHeader } from './MessageDetailHeader';
 import { MessageDetailBody } from './MessageDetailBody';
+import { MessageDetailContent } from './MessageDetailContent';
 // import PaperclipIcon from '@/components/svg/PaperclipIcon'; // 添付アイコン用（なければ後で新規作成）
 import { MessageInputBox } from './MessageInputBox';
+import { ChatMessage } from '@/types/message';
+import { useRealTimeMessages } from '@/hooks/useRealTimeMessages';
 
 export interface MessageLayoutProps {
   className?: string;
   messages?: import('./MessageList').Message[];
   isCandidatePage?: boolean;
+  candidateId?: string;
+  candidateName?: string;
 }
 
 export function MessageLayout({
   className,
   messages,
   isCandidatePage,
+  candidateId,
+  candidateName,
 }: MessageLayoutProps) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
     null
@@ -34,6 +41,12 @@ export function MessageLayout({
   // モバイル判定
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
+  
+  // リアルタイムメッセージ機能
+  const { messages: chatMessages, isLoading, sendRealTimeMessage } = useRealTimeMessages(
+    selectedMessageId,
+    candidateId
+  );
 
   useEffect(() => {
     const checkMobile = () => {
@@ -53,14 +66,28 @@ export function MessageLayout({
     setSelectedMessageId(null);
   };
 
+  // メッセージ送信処理
+  const handleSendMessage = async (content: string, fileUrls?: string[]) => {
+    if (!selectedMessageId) return;
+    
+    try {
+      await sendRealTimeMessage(content, undefined, fileUrls);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // エラーハンドリング（必要に応じてユーザーに通知）
+    }
+  };
+
   // フィルタ処理
   const filteredMessages = (messages || []).filter(message => {
     if (isCandidatePage) {
-      if (companyFilter !== 'all' && message.companyName !== companyFilter)
+      // 特定のroomが選択されている場合
+      if (companyFilter !== 'all' && message.id !== companyFilter)
         return false;
+      // キーワード検索：企業名と記事タイトルで検索
       if (
         keyword &&
-        !`${message.companyName} ${message.candidateName} ${message.messagePreview} ${message.jobTitle}`
+        !`${message.companyName} ${message.jobTitle}`
           .toLowerCase()
           .includes(keyword.toLowerCase())
       )
@@ -81,6 +108,13 @@ export function MessageLayout({
     return true;
   });
 
+  // フィルタ後のメッセージをソート（企業名＋記事タイトルの組み合わせでソート）
+  const sortedFilteredMessages = filteredMessages.sort((a, b) => {
+    const aKey = `${a.companyName} - ${a.jobTitle}`;
+    const bKey = `${b.companyName} - ${b.jobTitle}`;
+    return aKey.localeCompare(bKey, 'ja');
+  });
+
   // モバイル: 詳細モード
   if (isMobile && isMobileDetailMode && selectedMessageId) {
     return (
@@ -89,11 +123,15 @@ export function MessageLayout({
         <div className='flex-1 min-h-0 flex flex-col h-full'>
           <MessageDetailHeader
             candidateName={
-              filteredMessages.find(m => m.id === selectedMessageId)
+              sortedFilteredMessages.find(m => m.id === selectedMessageId)
                 ?.candidateName || ''
             }
+            companyName={
+              sortedFilteredMessages.find(m => m.id === selectedMessageId)
+                ?.companyName || ''
+            }
             jobTitle={
-              filteredMessages.find(m => m.id === selectedMessageId)
+              sortedFilteredMessages.find(m => m.id === selectedMessageId)
                 ?.jobTitle || ''
             }
             onDetailClick={() => {
@@ -103,6 +141,24 @@ export function MessageLayout({
             isCandidatePage={isCandidatePage}
           />
           <div className='flex-1 overflow-y-auto'>
+            {(() => {
+              console.log('MessageLayout debug:', {
+                selectedMessageId,
+                chatMessagesLength: chatMessages?.length || 0,
+                chatMessages: chatMessages,
+                isLoading
+              });
+              return selectedMessageId && chatMessages && chatMessages.length > 0;
+            })() ? (
+              <MessageDetailContent
+                messages={chatMessages}
+                isCandidatePage={isCandidatePage}
+                candidateId={candidateId}
+                candidateName={candidateName}
+                companyName={sortedFilteredMessages.find(m => m.id === selectedMessageId)?.companyName}
+                isMobile={isMobile}
+              />
+            ) : (
             <MessageDetailBody>
               {/* 企業名テキスト〜白背景ボックスまでを1つの要素でまとめる */}
               <div className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
@@ -327,9 +383,14 @@ export function MessageLayout({
                 </div>
               </div>
             </MessageDetailBody>
+            )}
           </div>
           {/* 入力欄（下部固定） */}
-          <MessageInputBox isCandidatePage={isCandidatePage} />
+          <MessageInputBox 
+            isCandidatePage={isCandidatePage} 
+            onSendMessage={handleSendMessage}
+            candidateId={candidateId}
+          />
         </div>
       </div>
     );
@@ -348,6 +409,7 @@ export function MessageLayout({
           <MessageSearchFilterCandidate
             companyValue={companyFilter}
             keywordValue={keyword}
+            messages={messages}
             onCompanyChange={setCompanyFilter}
             onKeywordChange={setKeyword}
             onSearch={() => {}}
@@ -365,7 +427,7 @@ export function MessageLayout({
         )}
         <div className='flex-1 min-h-0'>
           <MessageList
-            messages={filteredMessages}
+            messages={sortedFilteredMessages}
             onMessageClick={handleMessageClick}
             isCandidatePage={isCandidatePage}
             selectedMessageId={selectedMessageId}
@@ -379,6 +441,7 @@ export function MessageLayout({
             <MessageSearchFilterCandidate
               companyValue={companyFilter}
               keywordValue={keyword}
+              messages={messages}
               onCompanyChange={setCompanyFilter}
               onKeywordChange={setKeyword}
               onSearch={() => {}}
@@ -410,11 +473,15 @@ export function MessageLayout({
           <>
             <MessageDetailHeader
               candidateName={
-                filteredMessages.find(m => m.id === selectedMessageId)
+                sortedFilteredMessages.find(m => m.id === selectedMessageId)
                   ?.candidateName || ''
               }
+              companyName={
+                sortedFilteredMessages.find(m => m.id === selectedMessageId)
+                  ?.companyName || ''
+              }
               jobTitle={
-                filteredMessages.find(m => m.id === selectedMessageId)
+                sortedFilteredMessages.find(m => m.id === selectedMessageId)
                   ?.jobTitle || ''
               }
               onDetailClick={() => {
@@ -424,6 +491,24 @@ export function MessageLayout({
               isCandidatePage={isCandidatePage}
             />
             <div className='flex-1 overflow-y-auto'>
+              {(() => {
+                console.log('PC MessageLayout debug:', {
+                  selectedMessageId,
+                  chatMessagesLength: chatMessages?.length || 0,
+                  chatMessages: chatMessages,
+                  isLoading
+                });
+                return selectedMessageId && chatMessages && chatMessages.length > 0;
+              })() ? (
+                <MessageDetailContent
+                  messages={chatMessages}
+                  isCandidatePage={isCandidatePage}
+                  candidateId={candidateId}
+                  candidateName={candidateName}
+                  companyName={sortedFilteredMessages.find(m => m.id === selectedMessageId)?.companyName}
+                  isMobile={isMobile}
+                />
+              ) : (
               <MessageDetailBody>
                 {/* 企業名テキスト〜白背景ボックスまでを1つの要素でまとめる */}
                 <div className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
@@ -584,9 +669,14 @@ export function MessageLayout({
                   </div>
                 </div>
               </MessageDetailBody>
+              )}
             </div>
             {/* 入力欄（下部固定） */}
-            <MessageInputBox isCandidatePage={isCandidatePage} />
+            <MessageInputBox 
+              isCandidatePage={isCandidatePage} 
+              onSendMessage={handleSendMessage}
+              candidateId={candidateId}
+            />
           </>
         ) : (
           <EmptyMessageState />

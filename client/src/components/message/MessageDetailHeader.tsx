@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 
 export interface MessageDetailHeaderProps {
   candidateName: string;
+  companyName?: string; // 追加
   jobTitle: string;
   onDetailClick?: () => void;
   className?: string;
@@ -13,6 +14,7 @@ export interface MessageDetailHeaderProps {
 
 export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
   candidateName,
+  companyName,
   jobTitle,
   onDetailClick,
   className,
@@ -29,26 +31,39 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
       )}
       style={{ minHeight: 56 }}
     >
-      {/* モバイル時のみ左端にarrow.svgを表示 */}
+      {/* モバイル時のみ左端にflow-arrow.svgを表示 */}
       <img
-        src='/images/arrow.svg'
+        src='/images/flow-arrow.svg'
         alt='戻る'
         className='block md:hidden w-6 h-6 mr-2 flex-shrink-0 cursor-pointer'
         style={{ minWidth: 24 }}
         onClick={onBackClick}
       />
       <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6'>
-        <div
+        {companyName && (
+          <div
+            className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[2] max-w-[188px] md:max-w-[240px]'
+            style={{ 
+              height: 32,
+              fontWeight: 700,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {companyName}
+          </div>
+        )}
+        {/* <div
           className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[2] truncate whitespace-nowrap max-w-full w-full overflow-hidden'
           style={{ maxWidth: 240 }}
         >
           {candidateName}
-        </div>
+        </div> */}
         <div
-          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 truncate whitespace-nowrap'
+          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 truncate whitespace-nowrap max-w-[188px] md:max-w-[544px]'
           style={{
             textDecorationColor: '#0F9058',
-            maxWidth: '100%',
           }}
         >
           {jobTitle}

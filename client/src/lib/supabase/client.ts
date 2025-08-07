@@ -10,7 +10,9 @@ export function createClient() {
 
   return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: false,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
     },
   });
 }
