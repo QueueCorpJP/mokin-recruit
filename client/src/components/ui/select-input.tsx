@@ -20,6 +20,9 @@ interface SelectInputProps {
   style?: React.CSSProperties;
   onChange?: (value: string) => void;
   onBlur?: () => void;
+  onFocus?: () => void;
+  onOpen?: () => void;
+  onClose?: () => void;
   'data-testid'?: string;
 }
 
@@ -70,6 +73,9 @@ export function SelectInput({
   style,
   onChange,
   onBlur,
+  onFocus,
+  onOpen,
+  onClose,
   'data-testid': testId,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,6 +110,9 @@ export function SelectInput({
         selectRef.current &&
         !selectRef.current.contains(event.target as Node)
       ) {
+        if (isOpen) {
+          onClose?.();
+        }
         setIsOpen(false);
         onBlur?.();
       }
@@ -111,7 +120,7 @@ export function SelectInput({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onBlur]);
+  }, [onBlur, onClose, isOpen]);
 
   // propsのvalueが変更された時に内部状態を同期
   useEffect(() => {
@@ -127,6 +136,7 @@ export function SelectInput({
 
     setSelectedValue(optionValue);
     setIsOpen(false);
+    onClose?.();
     onChange?.(optionValue);
     onBlur?.();
   };
@@ -134,7 +144,14 @@ export function SelectInput({
   // トグル処理
   const handleToggle = () => {
     if (disabled) return;
-    setIsOpen(!isOpen);
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    
+    if (newIsOpen) {
+      onOpen?.();
+    } else {
+      onClose?.();
+    }
   };
 
   // キーボード操作
@@ -145,16 +162,24 @@ export function SelectInput({
       case 'Enter':
       case ' ':
         event.preventDefault();
-        setIsOpen(!isOpen);
+        const newIsOpen = !isOpen;
+        setIsOpen(newIsOpen);
+        if (newIsOpen) {
+          onOpen?.();
+        } else {
+          onClose?.();
+        }
         break;
       case 'Escape':
         setIsOpen(false);
+        onClose?.();
         onBlur?.();
         break;
       case 'ArrowDown':
         event.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
+          onOpen?.();
         } else {
           // フォーカスを次の選択肢に移動
           const currentIndex = options.findIndex(
@@ -192,14 +217,14 @@ export function SelectInput({
         type='button'
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         disabled={disabled}
         className={cn(
           // 基本スタイル（Figma準拠）
-          'flex items-center justify-between',
+          'flex items-center justify-between w-full',
           'bg-white border border-[#999999] rounded-[8px] text-left',
           'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
-          className?.includes('w-full') && 'w-full',
 
           // 状態別スタイル
           !disabled &&
@@ -223,7 +248,7 @@ export function SelectInput({
           ],
 
           // テキスト色
-          selectedValue ? 'text-[#323232]' : 'text-[#999999]'
+          selectedValue ? 'text-[#323232]' : 'text-[#323232]'
         )}
         style={{
           padding: '4px 16px 4px 11px',

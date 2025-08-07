@@ -163,7 +163,7 @@ export function MessageSearchFilter({
         <div className='flex-1'>
           <Input
             type='text'
-            placeholder='候補者名または現在の在籍企業名で検索'
+            placeholder='キーワード検索'
             value={keywordValue}
             onChange={e => onKeywordChange?.(e.target.value)}
             onKeyDown={e => {

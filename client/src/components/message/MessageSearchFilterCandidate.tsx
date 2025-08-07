@@ -145,7 +145,7 @@ export function MessageSearchFilterCandidate({
         <div className='flex-1'>
           <Input
             type='text'
-            placeholder='キーワード検索'
+            placeholder='テキストが入ります'
             value={keywordValue}
             onChange={e => onKeywordChange?.(e.target.value)}
             className={cn(
