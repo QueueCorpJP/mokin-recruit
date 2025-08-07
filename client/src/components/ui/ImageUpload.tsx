@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useToast } from './toast';
 
 interface ImageUploadProps {
   images: File[];
@@ -8,10 +9,23 @@ interface ImageUploadProps {
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxImages = 5 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
+    
     const newFiles = Array.from(files);
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    // ファイルサイズチェック
+    for (const file of newFiles) {
+      if (file.size > maxSize) {
+        showToast('ファイルサイズが5MBを超えています。5MB以下のファイルを選択してください。', 'error');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+    }
+    
     const merged = [...images, ...newFiles].slice(0, maxImages);
     onChange(merged);
     if (fileInputRef.current) fileInputRef.current.value = '';
