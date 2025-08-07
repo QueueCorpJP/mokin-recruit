@@ -138,7 +138,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
         </button>
         {/* 添付ファイルタグ */}
-        <div className='flex flex-row gap-2 flex-1 ml-2'>
+        <div className='flex flex-col gap-2 flex-1 ml-2'>
           {attachedFiles.map((file, index) => (
             <div key={index} className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
               <span className='text-[#323232] text-[14px] font-medium truncate'>

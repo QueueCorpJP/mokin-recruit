@@ -94,6 +94,38 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
   }
 }
 
+// 企業ユーザー用: ルームのメッセージを既読にする専用関数
+export async function markRoomMessagesAsRead(roomId: string): Promise<{ success: boolean; error?: string }> {
+  console.log('🔍 [markRoomMessagesAsRead] Marking messages as read for room:', roomId);
+  
+  const supabase = getSupabaseAdminClient();
+
+  try {
+    // 企業側宛ての未読メッセージ（候補者から送信された'SENT'ステータスのメッセージ）を既読にする
+    const { error: readUpdateError } = await supabase
+      .from('messages')
+      .update({
+        status: 'READ',
+        read_at: new Date().toISOString()
+      })
+      .eq('room_id', roomId)
+      .eq('status', 'SENT')
+      .eq('sender_type', 'CANDIDATE'); // 候補者からのメッセージのみ
+
+    if (readUpdateError) {
+      console.error('❌ [markRoomMessagesAsRead] Failed to update read status:', readUpdateError);
+      return { success: false, error: readUpdateError.message };
+    }
+
+    console.log('✅ [markRoomMessagesAsRead] Successfully updated read status for room:', roomId);
+    return { success: true };
+
+  } catch (error) {
+    console.error('❌ [markRoomMessagesAsRead] Unexpected error:', error);
+    return { success: false, error: 'Internal server error' };
+  }
+}
+
 export interface SendCompanyMessageData {
   room_id: string;
   content: string;

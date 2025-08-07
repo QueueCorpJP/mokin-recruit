@@ -24,7 +24,7 @@ export function Logo({
     src={logoSrc}
     alt="Mokin Recruit"
     fill
-    sizes="(max-width: 768px) 32px, 180px"
+    sizes="(max-width: 768px) 152px, 180px"
     priority
     className="object-contain block"
     style={{ verticalAlign: 'middle' }}
