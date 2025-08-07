@@ -163,7 +163,7 @@ export function MessageLayout({
                 isMobile={isMobile}
               />
             ) : (
-            <MessageDetailBody>
+            <MessageDetailBody isCandidatePage={isCandidatePage}>
               {/* 企業名テキスト〜白背景ボックスまでを1つの要素でまとめる */}
               <div className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
                 {/* ここで左端の円形だけのdiv（isMobile && ... 40×40）は削除 */}
@@ -515,7 +515,7 @@ export function MessageLayout({
                   isMobile={isMobile}
                 />
               ) : (
-              <MessageDetailBody>
+              <MessageDetailBody isCandidatePage={isCandidatePage}>
                 {/* 企業名テキスト〜白背景ボックスまでを1つの要素でまとめる */}
                 <div className='flex flex-row items-start justify-between w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2'>
                   {/* モバイル時のみ左端に40px円形アイコン */}

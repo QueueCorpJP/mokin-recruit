@@ -4,16 +4,19 @@ import { cn } from '@/lib/utils';
 export interface MessageDetailBodyProps {
   children: React.ReactNode;
   className?: string;
+  isCandidatePage?: boolean;
 }
 
 export const MessageDetailBody: React.FC<MessageDetailBodyProps> = ({
   children,
   className,
+  isCandidatePage = false,
 }) => {
   return (
     <div
       className={cn(
-        'flex flex-col gap-6 p-4 bg-[#EFEFEF]', // gap-6=24px, p-4=16px, 背景色追加
+        'flex flex-col gap-6 p-4',
+        isCandidatePage ? 'bg-[#F9F9F9]' : 'bg-[#EFEFEF]', // 候補者画面は#F9F9F9、企業画面は#EFEFEF
         className
       )}
     >
