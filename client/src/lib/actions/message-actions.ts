@@ -119,6 +119,21 @@ export async function getRoomMessages(roomId: string) {
       return { error: 'Failed to fetch messages' };
     }
 
+    // 候補者宛ての未読メッセージ（企業から送信された'SENT'ステータスのメッセージ）を既読にする
+    const { error: readUpdateError } = await supabase
+      .from('messages')
+      .update({
+        status: 'READ',
+        read_at: new Date().toISOString()
+      })
+      .eq('room_id', roomId)
+      .eq('status', 'SENT')
+      .eq('sender_type', 'COMPANY_USER'); // 企業からのメッセージのみ
+
+    if (readUpdateError) {
+      console.warn('Failed to update read status:', readUpdateError);
+    }
+
     return { messages };
   } catch (error) {
     console.error('Get room messages error:', error);

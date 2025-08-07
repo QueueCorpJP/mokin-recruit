@@ -17,6 +17,7 @@ export interface RoomItemProps {
   className?: string;
   isCandidatePage?: boolean;
   selected?: boolean;
+  unreadCount?: number; // 未読メッセージ数を追加
 }
 
 export function RoomItem({
@@ -33,6 +34,7 @@ export function RoomItem({
   className,
   isCandidatePage = false,
   selected = false,
+  unreadCount = 0,
 }: RoomItemProps) {
   const handleClick = () => {
     onClick?.(id);
@@ -62,7 +64,7 @@ export function RoomItem({
         <div className="flex-1 font-['Noto_Sans_JP'] font-medium text-[14px] text-[#999999] tracking-[1.4px] leading-[1.6]">
           {lastMessageTime || ''}
         </div>
-        <StatusIndicator isUnread={isUnread} />
+        <StatusIndicator isUnread={unreadCount > 0} />
       </div>
 
       {/* candidate用: 画像＋テキスト横並び */}

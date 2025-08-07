@@ -13,6 +13,7 @@ import { MessageDetailContent } from './MessageDetailContent';
 import { MessageInputBox } from './MessageInputBox';
 import { ChatMessage } from '@/types/message';
 import { useRealTimeMessages } from '@/hooks/useRealTimeMessages';
+import { MessageLoading } from '@/components/ui/Loading';
 
 export interface MessageLayoutProps {
   className?: string;
@@ -141,7 +142,9 @@ export function MessageLayout({
             isCandidatePage={isCandidatePage}
           />
           <div className='flex-1 overflow-y-auto'>
-            {(() => {
+            {isLoading ? (
+              <MessageLoading />
+            ) : (() => {
               console.log('MessageLayout debug:', {
                 selectedMessageId,
                 chatMessagesLength: chatMessages?.length || 0,
@@ -491,7 +494,9 @@ export function MessageLayout({
               isCandidatePage={isCandidatePage}
             />
             <div className='flex-1 overflow-y-auto'>
-              {(() => {
+              {isLoading ? (
+                <MessageLoading />
+              ) : (() => {
                 console.log('PC MessageLayout debug:', {
                   selectedMessageId,
                   chatMessagesLength: chatMessages?.length || 0,

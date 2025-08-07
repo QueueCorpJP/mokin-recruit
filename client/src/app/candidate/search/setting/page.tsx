@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import CandidateSearchServerComponent from './CandidateSearchServerComponent';
+import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface CandidateSearchPageProps {
   searchParams?: {
@@ -17,7 +18,7 @@ function LoadingSpinner() {
   return (
     <div className='w-full h-screen flex items-center justify-center bg-[#f9f9f9]'>
       <div className='text-center'>
-        <div className='w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4'></div>
+        <SpinnerIcon size="lg" className="mx-auto mb-4" />
         <p className='text-gray-500'>読み込み中...</p>
       </div>
     </div>

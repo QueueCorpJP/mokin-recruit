@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Loading } from '@/components/ui/Loading';
 import { resetPasswordRequestAction, ResetPasswordResult } from './actions';
 
 interface ResetPasswordClientProps {
@@ -203,7 +204,7 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
             >
               {isPending ? (
                 <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  <Loading inline size="sm" variant="white" />
                   送信中...
                 </>
               ) : (

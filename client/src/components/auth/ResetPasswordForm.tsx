@@ -16,11 +16,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Eye,
   EyeOff,
-  Loader2,
   Lock,
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/Loading';
 import Link from 'next/link';
 
 interface ResetPasswordFormData {
@@ -329,7 +329,7 @@ export default function ResetPasswordForm() {
           >
             {isLoading ? (
               <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                <Loading inline size="sm" variant="white" />
                 パスワードをリセット中...
               </>
             ) : (

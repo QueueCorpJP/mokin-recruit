@@ -1,5 +1,6 @@
 import { NewPasswordClient } from './NewPasswordClient';
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
+import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface NewPasswordServerComponentProps {
   searchParams?: { [key: string]: string | string[] | undefined };
@@ -18,7 +19,7 @@ export default async function NewPasswordServerComponent({ searchParams }: NewPa
           <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] tracking-[2.4px] md:tracking-[3.2px]'>
             パスワードの再設定
           </h1>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058] mx-auto'></div>
+          <SpinnerIcon size="lg" variant="primary" className="mx-auto" />
           <p className='text-[#323232] font-medium text-[14px] md:text-[16px]'>{message}</p>
         </div>
       </div>
@@ -33,7 +34,7 @@ export default async function NewPasswordServerComponent({ searchParams }: NewPa
           <h1 className='text-[#0F9058] font-bold text-[24px] md:text-[32px] leading-[1.6] md:leading-[51.2px] tracking-[2.4px] md:tracking-[0.1em]'>
             パスワードの再設定
           </h1>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F9058] mx-auto'></div>
+          <SpinnerIcon size="lg" variant="primary" className="mx-auto" />
           <p className='text-[#323232] font-medium text-[14px] md:text-[16px]'>{message}</p>
         </div>
       </div>

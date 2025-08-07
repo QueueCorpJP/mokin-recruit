@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MessageDetailBody } from './MessageDetailBody';
+import { MessageLoading } from '@/components/ui/Loading';
 
 interface RoomMessage {
   id: string;
@@ -75,9 +76,7 @@ export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesCli
   if (loading) {
     return (
       <MessageDetailBody>
-        <div className="text-center text-gray-500 p-8">
-          メッセージを読み込み中...
-        </div>
+        <MessageLoading />
       </MessageDetailBody>
     );
   }

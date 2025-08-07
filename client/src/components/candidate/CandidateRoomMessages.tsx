@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getCandidateRoomMessages } from '@/lib/candidate-message';
 import { CandidateMessage } from '@/types/candidate-message';
 import { MessageDetailBody } from '@/components/message/MessageDetailBody';
+import { MessageLoading } from '@/components/ui/Loading';
 
 interface CandidateRoomMessagesProps {
   roomId: string;
@@ -47,9 +48,7 @@ export function CandidateRoomMessages({
   if (loading) {
     return (
       <MessageDetailBody>
-        <div className="text-center text-gray-500 p-8">
-          読み込み中...
-        </div>
+        <MessageLoading />
       </MessageDetailBody>
     );
   }

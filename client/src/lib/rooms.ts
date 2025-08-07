@@ -14,6 +14,7 @@ export interface Room {
   jobTitle: string;
   groupName?: string;
   currentCompany?: string;
+  unreadCount?: number; // 未読メッセージ数を追加
 }
 
 export async function getRooms(userId: string, userType: 'candidate' | 'company'): Promise<Room[]> {
@@ -265,8 +266,22 @@ async function buildRoomsData(
     const jobPosting = jobPostings.find((jp: any) => jp.id === room.related_job_posting_id);
     const jobTitle = jobPosting?.title || '求人情報なし';
 
-    // 未読判定
-    const hasUnread = roomMessages.some((m: any) => m.status !== 'read');
+    // 未読メッセージ数の計算（送信者によって分ける）
+    let unreadCount = 0;
+    if (userType === 'candidate') {
+      // 候補者側: 企業からのメッセージ（COMPANY_USER）で'SENT'ステータスのものをカウント
+      unreadCount = roomMessages.filter((m: any) => 
+        m.sender_type === 'COMPANY_USER' && m.status === 'SENT'
+      ).length;
+    } else {
+      // 企業側: 候補者からのメッセージ（CANDIDATE）で'SENT'ステータスのものをカウント
+      unreadCount = roomMessages.filter((m: any) => 
+        m.sender_type === 'CANDIDATE' && m.status === 'SENT'
+      ).length;
+    }
+
+    // 未読判定（後方互換性のため）
+    const hasUnread = unreadCount > 0;
 
     // 会社名と候補者名を設定
     let companyName = '';
@@ -306,6 +321,7 @@ async function buildRoomsData(
       jobTitle,
       groupName,
       currentCompany,
+      unreadCount,
     };
 
     console.log(`✅ [BUILD] Room ${index + 1} processed:`, finalRoom);

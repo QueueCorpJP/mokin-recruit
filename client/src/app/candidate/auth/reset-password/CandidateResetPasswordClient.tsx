@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Loading } from '@/components/ui/Loading';
 import { candidateResetPasswordRequestAction } from './actions';
 
 interface ForgotPasswordFormData {
@@ -203,7 +204,7 @@ export function CandidateResetPasswordClient() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  <Loading inline size="sm" variant="white" />
                   送信中
                 </>
               ) : (

@@ -11,6 +11,7 @@ import { RoomList } from './RoomList';
 import { type Room } from '@/lib/rooms';
 import { getRoomMessages, sendCompanyMessage } from '@/lib/actions/messages';
 import { ChatMessage } from '@/types/message';
+import { MessageLoading } from '@/components/ui/Loading';
 
 export interface MessageLayoutServerProps {
   className?: string;
@@ -22,7 +23,7 @@ export interface MessageLayoutServerProps {
 
 export function MessageLayoutServer({
   className,
-  rooms,
+  rooms: initialRooms,
   userId,
   userType = 'company',
   companyUserName,
@@ -31,8 +32,11 @@ export function MessageLayoutServer({
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState(''); // 実際の検索に使用するキーワード
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'company'>('date');
   const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>(initialRooms); // roomsを状態管理
 
   // 最初のルームを自動選択
   useEffect(() => {
@@ -49,6 +53,15 @@ export function MessageLayoutServer({
         try {
           const messages = await getRoomMessages(selectedRoomId);
           setRoomMessages(messages);
+          
+          // メッセージを読み込んだ後、そのroomの未読数を0にリセット
+          setRooms(prevRooms => 
+            prevRooms.map(room => 
+              room.id === selectedRoomId 
+                ? { ...room, unreadCount: 0, isUnread: false }
+                : room
+            )
+          );
         } catch (error) {
           console.error('Failed to load messages:', error);
           setRoomMessages([]);
@@ -86,19 +99,67 @@ export function MessageLayoutServer({
     setSelectedRoomId(null);
   };
 
+  // 利用可能なグループリストを生成
+  const availableGroups = React.useMemo(() => {
+    const uniqueGroups = Array.from(
+      new Set(rooms.map(room => room.companyName).filter(Boolean))
+    ).map(groupName => ({
+      value: groupName,
+      label: groupName
+    }));
+    return uniqueGroups;
+  }, [rooms]);
+
   // フィルタリング処理
-  const filteredRooms = rooms.filter(room => {
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'unread' && !room.isUnread) return false;
-      if (statusFilter === 'read' && room.isUnread) return false;
-    }
-    if (groupFilter !== 'all' && room.groupName !== groupFilter) return false;
-    if (keyword) {
-      const searchText = `${room.companyName} ${room.candidateName} ${room.lastMessage} ${room.jobTitle}`.toLowerCase();
-      if (!searchText.includes(keyword.toLowerCase())) return false;
-    }
-    return true;
-  });
+  const filteredRooms = React.useMemo(() => {
+    let filtered = rooms.filter(room => {
+      // 対応状況フィルター
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'unread' && !room.isUnread) return false;
+        if (statusFilter === 'read' && room.isUnread) return false;
+      }
+      
+      // グループフィルター（企業側では会社名でフィルター）
+      if (groupFilter !== 'all' && room.companyName !== groupFilter) return false;
+      
+      // キーワード検索（候補者名と現在の在籍企業名でフィルター）
+      if (searchKeyword) {
+        const searchText = `${room.candidateName} ${room.currentCompany || ''}`.toLowerCase();
+        if (!searchText.includes(searchKeyword.toLowerCase())) return false;
+      }
+      
+      return true;
+    });
+
+    // ソート処理
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return (a.candidateName || '').localeCompare(b.candidateName || '', 'ja');
+        case 'company':
+          return (a.currentCompany || '').localeCompare(b.currentCompany || '', 'ja');
+        case 'date':
+        default:
+          // 日付順（未読メッセージを優先、その後最新メッセージ順）
+          if (a.isUnread !== b.isUnread) {
+            return a.isUnread ? -1 : 1; // 未読を上に
+          }
+          const aTime = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+          const bTime = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+          return bTime - aTime; // 新しいメッセージを上に
+      }
+    });
+  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy]);
+
+  // 検索実行
+  const handleSearch = React.useCallback(() => {
+    setSearchKeyword(keyword);
+  }, [keyword]);
+
+  // 初期表示時に検索キーワードを空に設定（リアルタイムフィルタリングのため）
+  useEffect(() => {
+    setSearchKeyword('');
+  }, []);
 
   const selectedRoom = filteredRooms.find(room => room.id === selectedRoomId);
   const isCandidatePage = userType === 'candidate';
@@ -145,9 +206,7 @@ export function MessageLayoutServer({
           />
           <div className='flex-1 overflow-y-auto'>
             {isLoadingMessages ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-gray-500">メッセージを読み込み中...</div>
-              </div>
+              <MessageLoading />
             ) : (
               <MessageDetailContent
                 messages={roomMessages}
@@ -186,7 +245,8 @@ export function MessageLayoutServer({
           onStatusChange={setStatusFilter}
           onGroupChange={setGroupFilter}
           onKeywordChange={setKeyword}
-          onSearch={() => {}}
+          onSearch={handleSearch}
+          availableGroups={availableGroups}
         />
         <div className='flex-1 min-h-0'>
           <RoomList
@@ -208,7 +268,8 @@ export function MessageLayoutServer({
             onStatusChange={setStatusFilter}
             onGroupChange={setGroupFilter}
             onKeywordChange={setKeyword}
-            onSearch={() => {}}
+            onSearch={handleSearch}
+            availableGroups={availableGroups}
           />
           <div className='flex-1 min-h-0'>
             <RoomList
@@ -237,9 +298,7 @@ export function MessageLayoutServer({
             />
             <div className='flex-1 overflow-y-auto'>
               {isLoadingMessages ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-gray-500">メッセージを読み込み中...</div>
-                </div>
+                <MessageLoading />
               ) : (
                 <MessageDetailContent
                   messages={roomMessages}

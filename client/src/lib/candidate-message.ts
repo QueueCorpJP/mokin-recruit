@@ -103,13 +103,13 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       console.error('Error fetching latest messages:', messagesError);
     }
 
-    // 未読メッセージ数を取得
+    // 未読メッセージ数を取得（企業からのメッセージで'SENT'ステータスのもの）
     const { data: unreadCounts, error: unreadError } = await supabase
       .from('messages')
       .select('room_id')
       .in('room_id', roomIds)
-      .neq('sender_candidate_id', candidateId)
-      .neq('status', 'read');
+      .eq('sender_type', 'COMPANY_USER')
+      .eq('status', 'SENT');
 
     if (unreadError) {
       console.error('Error fetching unread counts:', unreadError);

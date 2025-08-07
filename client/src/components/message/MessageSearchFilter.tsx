@@ -14,6 +14,7 @@ export interface MessageSearchFilterProps {
   onKeywordChange?: (value: string) => void;
   onSearch?: () => void;
   className?: string;
+  availableGroups?: { value: string; label: string }[]; // 利用可能なグループのリスト
 }
 
 const statusOptions = [
@@ -22,10 +23,8 @@ const statusOptions = [
   { value: 'read', label: '既読' },
 ];
 
-const groupOptions = [
+const defaultGroupOptions = [
   { value: 'all', label: 'グループ' },
-  { value: 'group1', label: 'グループ1' },
-  { value: 'group2', label: 'グループ2' },
 ];
 
 // カスタムドロップダウンコンポーネント（Figmaデザインに合わせて）
@@ -123,7 +122,12 @@ export function MessageSearchFilter({
   onKeywordChange,
   onSearch,
   className,
+  availableGroups,
 }: MessageSearchFilterProps) {
+  // グループオプションの生成（availableGroupsがあればそれを使用、なければデフォルト）
+  const groupOptions = availableGroups 
+    ? [{ value: 'all', label: 'グループ' }, ...availableGroups]
+    : defaultGroupOptions;
   return (
     <div
       className={cn(
@@ -159,9 +163,14 @@ export function MessageSearchFilter({
         <div className='flex-1'>
           <Input
             type='text'
-            placeholder='キーワード検索'
+            placeholder='候補者名または現在の在籍企業名で検索'
             value={keywordValue}
             onChange={e => onKeywordChange?.(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                onSearch?.();
+              }
+            }}
             className={cn(
               'bg-white border border-[#999999] rounded-[5px]',
               'px-[11px] py-1 text-[16px] font-["Noto_Sans_JP"] font-medium',

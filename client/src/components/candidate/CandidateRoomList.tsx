@@ -3,6 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { CandidateRoom } from '@/types/candidate-message';
+import { StatusIndicator } from '@/components/message/StatusIndicator';
 
 interface CandidateRoomListProps {
   rooms: CandidateRoom[];
@@ -75,18 +76,16 @@ function CandidateRoomItem({
             <span className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[1.6]'>
               {room.companyName}
             </span>
-            {room.unreadCount > 0 && (
-              <div className='bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-1'>
-                {room.unreadCount > 99 ? '99+' : room.unreadCount}
-              </div>
-            )}
           </div>
         </div>
-        {room.lastMessageTime && (
-          <span className='font-["Noto_Sans_JP"] font-medium text-[12px] text-[#999999] tracking-[0.1em] leading-[1.6]'>
-            {room.lastMessageTime}
-          </span>
-        )}
+        <div className='flex items-center gap-2'>
+          {room.lastMessageTime && (
+            <span className='font-["Noto_Sans_JP"] font-medium text-[12px] text-[#999999] tracking-[0.1em] leading-[1.6]'>
+              {room.lastMessageTime}
+            </span>
+          )}
+          <StatusIndicator isUnread={room.unreadCount > 0} />
+        </div>
       </div>
 
       {/* 求人タイトル */}
