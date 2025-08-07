@@ -110,7 +110,7 @@ export function MessageSearchFilterCandidate({
 }: MessageSearchFilterCandidateProps) {
   // messagesから企業名＋記事タイトルの組み合わせを生成
   const companyJobOptions = React.useMemo(() => {
-    const allOption = { value: 'all', label: 'すべて' };
+    const allOption = { value: 'all', label: '企業名' };
     const roomOptions = messages
       .map(message => ({
         value: message.id,
@@ -134,7 +134,7 @@ export function MessageSearchFilterCandidate({
           <CustomDropdown
             options={companyJobOptions}
             value={companyValue}
-            placeholder='企業名 - 記事タイトル'
+            placeholder='企業名'
             onChange={onCompanyChange}
             className='w-full'
           />

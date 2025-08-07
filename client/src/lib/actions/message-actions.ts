@@ -166,6 +166,55 @@ export async function getRoomMessages(roomId: string) {
   }
 }
 
+// 候補者用: ルームのメッセージを既読にする専用関数
+export async function markCandidateRoomMessagesAsRead(roomId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await requireCandidateAuth();
+    if (!user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const supabase = getSupabaseAdminClient();
+    console.log('🔧 [markCandidateRoomMessagesAsRead] Using Supabase Admin client (RLS bypassed)');
+
+    // roomが候補者のものかチェック
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('id, candidate_id')
+      .eq('id', roomId)
+      .eq('candidate_id', user.id)
+      .single();
+
+    if (roomError || !room) {
+      console.error('Room access error:', roomError);
+      return { success: false, error: 'Room not found or unauthorized' };
+    }
+
+    // 候補者宛ての未読メッセージ（企業から送信された'SENT'ステータスのメッセージ）を既読にする
+    const { error: readUpdateError } = await supabase
+      .from('messages')
+      .update({
+        status: 'READ',
+        read_at: new Date().toISOString()
+      })
+      .eq('room_id', roomId)
+      .eq('status', 'SENT')
+      .eq('sender_type', 'COMPANY_USER'); // 企業からのメッセージのみ
+
+    if (readUpdateError) {
+      console.error('Failed to update read status:', readUpdateError);
+      return { success: false, error: readUpdateError.message };
+    }
+
+    console.log('✅ [markCandidateRoomMessagesAsRead] Successfully updated read status for room:', roomId);
+    return { success: true };
+
+  } catch (error) {
+    console.error('Mark candidate room messages as read error:', error);
+    return { success: false, error: 'Internal server error' };
+  }
+}
+
 // ファイルアップロード用のサーバーアクション
 export async function uploadMessageFile(formData: FormData) {
   try {

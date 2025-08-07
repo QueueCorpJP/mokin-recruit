@@ -10,8 +10,8 @@ import { MessageDetailContent } from './MessageDetailContent';
 import { MessageInputBox } from './MessageInputBox';
 import { RoomList } from './RoomList';
 import { type Room } from '@/lib/rooms';
-import { getRoomMessages, sendCompanyMessage } from '@/lib/actions/messages';
-import { sendMessage } from '@/lib/actions/message-actions';
+import { getRoomMessages, sendCompanyMessage, markRoomMessagesAsRead } from '@/lib/actions/messages';
+import { sendMessage, markCandidateRoomMessagesAsRead } from '@/lib/actions/message-actions';
 import { ChatMessage } from '@/types/message';
 import { MessageLoading } from '@/components/ui/Loading';
 
@@ -44,12 +44,12 @@ export function MessageLayoutServer({
   
   const isCandidatePage = userType === 'candidate';
 
-  // 最初のルームを自動選択
-  useEffect(() => {
-    if (rooms.length > 0 && !selectedRoomId) {
-      setSelectedRoomId(rooms[0].id);
-    }
-  }, [rooms, selectedRoomId]);
+  // 最初のルームを自動選択（無効化）
+  // useEffect(() => {
+  //   if (rooms.length > 0 && !selectedRoomId) {
+  //     setSelectedRoomId(rooms[0].id);
+  //   }
+  // }, [rooms, selectedRoomId]);
 
   // 選択されたルームのメッセージを取得
   useEffect(() => {
@@ -60,14 +60,27 @@ export function MessageLayoutServer({
           const messages = await getRoomMessages(selectedRoomId);
           setRoomMessages(messages);
           
-          // メッセージを読み込んだ後、そのroomの未読数を0にリセット
-          setRooms(prevRooms => 
-            prevRooms.map(room => 
-              room.id === selectedRoomId 
-                ? { ...room, unreadCount: 0, isUnread: false }
-                : room
-            )
-          );
+          // 専用の関数を使ってメッセージを既読にマーク
+          let markAsReadResult;
+          if (isCandidatePage) {
+            markAsReadResult = await markCandidateRoomMessagesAsRead(selectedRoomId);
+          } else {
+            markAsReadResult = await markRoomMessagesAsRead(selectedRoomId);
+          }
+          
+          if (markAsReadResult.success) {
+            console.log('✅ Messages marked as read successfully');
+            // データベース更新が成功した場合のみローカル状態を更新
+            setRooms(prevRooms => 
+              prevRooms.map(room => 
+                room.id === selectedRoomId 
+                  ? { ...room, unreadCount: 0, isUnread: false }
+                  : room
+              )
+            );
+          } else {
+            console.warn('⚠️ Failed to mark messages as read:', markAsReadResult.error);
+          }
         } catch (error) {
           console.error('Failed to load messages:', error);
           setRoomMessages([]);
@@ -80,7 +93,7 @@ export function MessageLayoutServer({
     } else {
       setRoomMessages([]);
     }
-  }, [selectedRoomId]);
+  }, [selectedRoomId, isCandidatePage]);
   
   // モバイル判定
   const [isMobile, setIsMobile] = useState(false);

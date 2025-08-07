@@ -33,6 +33,59 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 送信処理の共通関数
+  const handleSendMessage = async () => {
+    if (message.trim() && onSendMessage && candidateId) {
+      setIsUploading(true);
+      try {
+        let fileUrls: string[] = [];
+        
+        // ファイルがある場合はStorageにアップロード
+        if (attachedFiles.length > 0) {
+          console.log('🔍 [MESSAGE INPUT DEBUG] Starting file upload:', {
+            candidateId,
+            fileCount: attachedFiles.length,
+            files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
+          });
+          
+          if (!candidateId) {
+            console.error('🔍 [MESSAGE INPUT DEBUG] candidateId is missing!');
+            alert('ユーザーIDが取得できませんでした。ページを再読み込みしてください。');
+            return;
+          }
+          
+          const uploadResults = await uploadMultipleFiles(attachedFiles, candidateId, userType);
+          fileUrls = uploadResults
+            .filter(result => !result.error)
+            .map(result => result.url);
+          
+          // エラーがあった場合はユーザーに通知
+          const errors = uploadResults.filter(result => result.error);
+          if (errors.length > 0) {
+            console.error('File upload errors:', errors);
+            alert('一部のファイルのアップロードに失敗しました');
+          }
+        }
+        
+        // メッセージを送信
+        onSendMessage(message.trim(), fileUrls);
+        setMessage('');
+        setAttachedFiles([]);
+        
+        // テキストエリアの高さをリセット
+        const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.style.height = '56px';
+        }
+      } catch (error) {
+        console.error('Send message error:', error);
+        alert('メッセージの送信に失敗しました');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   // ファイル選択ハンドラー
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -70,18 +123,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
               key={template.label}
               type='button'
               onClick={() => setMessage(template.text)}
-              className='px-4 py-1 border border-[#0F9058] text-[#0F9058] rounded-full text-[14px] font-bold bg-white w-auto flex-shrink-0'
-              style={{
-                paddingTop: 4,
-                paddingBottom: 4,
-                paddingLeft: 16,
-                paddingRight: 16,
-                borderColor: '#0F9058',
-                color: '#0F9058',
-                background: '#fff',
-                minWidth: 0,
-                display: 'inline-block',
-              }}
+              className='px-4 py-1 border border-[#0F9058] text-[#0F9058] bg-white rounded-full text-[14px] font-bold w-auto flex-shrink-0 inline-block hover:bg-[rgba(15,144,88,0.20)] transition-colors duration-200'
             >
               {template.label}
             </button>
@@ -118,8 +160,8 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           target.style.height = target.scrollHeight + 'px';
         }}
       />
-      {/* 添付・送信エリア（デザインのみ、機能なし） */}
-      <div className='w-full flex flex-row items-center gap-2 mt-4 justify-between'>
+      {/* 添付・送信エリア */}
+      <div className='w-full mt-4'>
         {/* 隠れたファイル入力 */}
         <input
           type="file"
@@ -129,92 +171,71 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           multiple
           accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg"
         />
-        {/* 左端：クリップアイコンボタン */}
-        <button
-          type='button'
-          className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer'
-          onClick={handleClipClick}
-        >
-          <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
-        </button>
-        {/* 添付ファイルタグ */}
-        <div className='flex flex-row gap-2 flex-1 ml-2'>
-          {attachedFiles.map((file, index) => (
-            <div key={index} className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
-              <span className='text-[#323232] text-[14px] font-medium truncate'>
-                {file.name}
-              </span>
-              <button
-                type='button'
-                className='ml-1 w-4 h-4 flex items-center justify-center bg-transparent border-none p-0 cursor-pointer'
-                onClick={() => removeFile(index)}
-              >
-                <span className='text-[#999] text-[12px] font-bold'>×</span>
-              </button>
-            </div>
-          ))}
+        
+        {/* クリップアイコンとファイルタグ */}
+        <div className='flex flex-row items-start gap-2 justify-between md:items-center'>
+          {/* 左端：クリップアイコンボタン */}
+          <button
+            type='button'
+            className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer flex-shrink-0'
+            onClick={handleClipClick}
+          >
+            <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
+          </button>
+          
+          {/* 添付ファイルタグ */}
+          <div className='flex flex-col gap-2 flex-1 ml-2'>
+            {attachedFiles.map((file, index) => (
+              <div key={index} className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
+                <span className='text-[#323232] text-[14px] font-medium truncate'>
+                  {file.name}
+                </span>
+                <button
+                  type='button'
+                  className='ml-1 cursor-pointer border-none p-0 bg-transparent'
+                  onClick={() => removeFile(index)}
+                  style={{
+                    display: 'flex',
+                    width: '8px',
+                    height: '8px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '10px',
+                    aspectRatio: '1',
+                  }}
+                >
+                  <span className='text-[20px] font-medium' style={{ color: '#0F9058' }}>×</span>
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          {/* PC時のみ右端に送信ボタン */}
+          <button
+            type='button'
+            className='hidden md:flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
+            style={{ maxWidth: 120, padding: '10px 24px' }}
+            disabled={isUploading}
+            onClick={handleSendMessage}
+          >
+            <Image src='/images/form.svg' alt='送信' width={16} height={16} />
+            送信
+          </button>
         </div>
-        {/* 右端：送信ボタン */}
-        <button
-          type='button'
-          className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
-          style={{ maxWidth: 120, padding: '10px 24px' }}
-          disabled={isUploading}
-          onClick={async () => {
-            if (message.trim() && onSendMessage && candidateId) {
-              setIsUploading(true);
-              try {
-                let fileUrls: string[] = [];
-                
-                // ファイルがある場合はStorageにアップロード
-                if (attachedFiles.length > 0) {
-                  console.log('🔍 [MESSAGE INPUT DEBUG] Starting file upload:', {
-                    candidateId,
-                    fileCount: attachedFiles.length,
-                    files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
-                  });
-                  
-                  if (!candidateId) {
-                    console.error('🔍 [MESSAGE INPUT DEBUG] candidateId is missing!');
-                    alert('ユーザーIDが取得できませんでした。ページを再読み込みしてください。');
-                    return;
-                  }
-                  
-                  const uploadResults = await uploadMultipleFiles(attachedFiles, candidateId, userType);
-                  fileUrls = uploadResults
-                    .filter(result => !result.error)
-                    .map(result => result.url);
-                  
-                  // エラーがあった場合はユーザーに通知
-                  const errors = uploadResults.filter(result => result.error);
-                  if (errors.length > 0) {
-                    console.error('File upload errors:', errors);
-                    alert('一部のファイルのアップロードに失敗しました');
-                  }
-                }
-                
-                // メッセージを送信
-                onSendMessage(message.trim(), fileUrls);
-                setMessage('');
-                setAttachedFiles([]);
-                
-                // テキストエリアの高さをリセット
-                const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-                if (textarea) {
-                  textarea.style.height = '56px';
-                }
-              } catch (error) {
-                console.error('Send message error:', error);
-                alert('メッセージの送信に失敗しました');
-              } finally {
-                setIsUploading(false);
-              }
-            }
-          }}
-        >
-          <Image src='/images/form.svg' alt='送信' width={16} height={16} />
-          送信
-        </button>
+        
+        {/* モバイル時のみ送信ボタンを下に表示 */}
+        <div className='flex justify-end mt-3 md:hidden'>
+          <button
+            type='button'
+            className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
+            style={{ maxWidth: 120, padding: '10px 24px' }}
+            disabled={isUploading}
+            onClick={handleSendMessage}
+          >
+            <Image src='/images/form.svg' alt='送信' width={16} height={16} />
+            送信
+          </button>
+        </div>
       </div>
     </div>
   );
