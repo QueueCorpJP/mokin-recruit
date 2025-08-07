@@ -27,7 +27,7 @@ export function MessageDetailContent({
   
   if (messages.length === 0) {
     return (
-      <MessageDetailBody>
+      <MessageDetailBody isCandidatePage={isCandidatePage}>
         <div className="p-4 text-center text-gray-500">
           メッセージがありません
         </div>
@@ -36,7 +36,7 @@ export function MessageDetailContent({
   }
 
   return (
-    <MessageDetailBody>
+    <MessageDetailBody isCandidatePage={isCandidatePage}>
       {messages.map((message) => {
         const isMyMessage = isCandidatePage 
           ? message.sender_type === 'CANDIDATE' 

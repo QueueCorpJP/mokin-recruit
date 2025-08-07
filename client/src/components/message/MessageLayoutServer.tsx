@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { EmptyMessageState } from './EmptyMessageState';
 import { MessageSearchFilter } from './MessageSearchFilter';
+import { MessageSearchFilterCandidate } from './MessageSearchFilterCandidate';
 import { MessageDetailHeader } from './MessageDetailHeader';
 import { MessageDetailContent } from './MessageDetailContent';
 import { MessageInputBox } from './MessageInputBox';
@@ -33,11 +34,15 @@ export function MessageLayoutServer({
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
+  // 候補者用フィルター
+  const [companyFilter, setCompanyFilter] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState(''); // 実際の検索に使用するキーワード
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'company'>('date');
   const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [rooms, setRooms] = useState<Room[]>(initialRooms); // roomsを状態管理
+  
+  const isCandidatePage = userType === 'candidate';
 
   // 最初のルームを自動選択
   useEffect(() => {
@@ -114,19 +119,31 @@ export function MessageLayoutServer({
   // フィルタリング処理
   const filteredRooms = React.useMemo(() => {
     let filtered = rooms.filter(room => {
-      // 対応状況フィルター
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'unread' && !room.isUnread) return false;
-        if (statusFilter === 'read' && room.isUnread) return false;
-      }
-      
-      // グループフィルター（企業側では会社名でフィルター）
-      if (groupFilter !== 'all' && room.companyName !== groupFilter) return false;
-      
-      // キーワード検索（候補者名と現在の在籍企業名でフィルター）
-      if (searchKeyword) {
-        const searchText = `${room.candidateName} ${room.currentCompany || ''}`.toLowerCase();
-        if (!searchText.includes(searchKeyword.toLowerCase())) return false;
+      if (isCandidatePage) {
+        // 候補者用フィルタリング
+        if (companyFilter !== 'all' && room.id !== companyFilter) return false;
+        
+        // キーワード検索：企業名と求人タイトルで検索
+        if (searchKeyword) {
+          const searchText = `${room.companyName} ${room.jobTitle}`.toLowerCase();
+          if (!searchText.includes(searchKeyword.toLowerCase())) return false;
+        }
+      } else {
+        // 企業用フィルタリング
+        // 対応状況フィルター
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'unread' && !room.isUnread) return false;
+          if (statusFilter === 'read' && room.isUnread) return false;
+        }
+        
+        // グループフィルター（企業側では会社名でフィルター）
+        if (groupFilter !== 'all' && room.companyName !== groupFilter) return false;
+        
+        // キーワード検索（候補者名と現在の在籍企業名でフィルター）
+        if (searchKeyword) {
+          const searchText = `${room.candidateName} ${room.currentCompany || ''}`.toLowerCase();
+          if (!searchText.includes(searchKeyword.toLowerCase())) return false;
+        }
       }
       
       return true;
@@ -150,7 +167,7 @@ export function MessageLayoutServer({
           return bTime - aTime; // 新しいメッセージを上に
       }
     });
-  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy]);
+  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy, isCandidatePage, companyFilter]);
 
   // 検索実行
   const handleSearch = React.useCallback(() => {
@@ -163,7 +180,6 @@ export function MessageLayoutServer({
   }, []);
 
   const selectedRoom = filteredRooms.find(room => room.id === selectedRoomId);
-  const isCandidatePage = userType === 'candidate';
 
   // メッセージ送信処理
   const handleSendMessage = async (content: string, fileUrls?: string[]) => {
@@ -270,16 +286,31 @@ export function MessageLayoutServer({
         style={{ background: '#fff', height: '100%' }}
       >
         {/* フィルターUIを最上部に配置 */}
-        <MessageSearchFilter
-          statusValue={statusFilter}
-          groupValue={groupFilter}
-          keywordValue={keyword}
-          onStatusChange={setStatusFilter}
-          onGroupChange={setGroupFilter}
-          onKeywordChange={setKeyword}
-          onSearch={handleSearch}
-          availableGroups={availableGroups}
-        />
+        {isCandidatePage ? (
+          <MessageSearchFilterCandidate
+            companyValue={companyFilter}
+            keywordValue={keyword}
+            messages={rooms.map(room => ({
+              id: room.id,
+              companyName: room.companyName,
+              jobTitle: room.jobTitle
+            }))}
+            onCompanyChange={setCompanyFilter}
+            onKeywordChange={setKeyword}
+            onSearch={handleSearch}
+          />
+        ) : (
+          <MessageSearchFilter
+            statusValue={statusFilter}
+            groupValue={groupFilter}
+            keywordValue={keyword}
+            onStatusChange={setStatusFilter}
+            onGroupChange={setGroupFilter}
+            onKeywordChange={setKeyword}
+            onSearch={handleSearch}
+            availableGroups={availableGroups}
+          />
+        )}
         <div className='flex-1 min-h-0'>
           <RoomList
             rooms={filteredRooms}
@@ -293,16 +324,31 @@ export function MessageLayoutServer({
       {/* モバイル時は一覧のみ表示 */}
       {isMobile && !isMobileDetailMode && (
         <div className='flex-1 min-w-0 flex flex-col h-full md:hidden'>
-          <MessageSearchFilter
-            statusValue={statusFilter}
-            groupValue={groupFilter}
-            keywordValue={keyword}
-            onStatusChange={setStatusFilter}
-            onGroupChange={setGroupFilter}
-            onKeywordChange={setKeyword}
-            onSearch={handleSearch}
-            availableGroups={availableGroups}
-          />
+          {isCandidatePage ? (
+            <MessageSearchFilterCandidate
+              companyValue={companyFilter}
+              keywordValue={keyword}
+              messages={rooms.map(room => ({
+                id: room.id,
+                companyName: room.companyName,
+                jobTitle: room.jobTitle
+              }))}
+              onCompanyChange={setCompanyFilter}
+              onKeywordChange={setKeyword}
+              onSearch={handleSearch}
+            />
+          ) : (
+            <MessageSearchFilter
+              statusValue={statusFilter}
+              groupValue={groupFilter}
+              keywordValue={keyword}
+              onStatusChange={setStatusFilter}
+              onGroupChange={setGroupFilter}
+              onKeywordChange={setKeyword}
+              onSearch={handleSearch}
+              availableGroups={availableGroups}
+            />
+          )}
           <div className='flex-1 min-h-0'>
             <RoomList
               rooms={filteredRooms}
