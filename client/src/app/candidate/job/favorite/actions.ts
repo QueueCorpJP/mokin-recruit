@@ -37,8 +37,8 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const authResult = await requireCandidateAuthWithSession();
     console.log('[DEBUG] Favorite page - auth result:', { 
       success: authResult.success, 
-      error: authResult.error,
-      hasData: !!authResult.data 
+      error: authResult.success ? undefined : authResult.error,
+      hasData: authResult.success ? !!authResult.data : false
     });
     
     if (!authResult.success) {

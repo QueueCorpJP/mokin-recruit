@@ -60,14 +60,15 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
       <div className='w-full flex flex-row flex-wrap md:flex-nowrap items-start mb-2 gap-x-2 gap-y-2'>
         {isCandidatePage ? (
           [
-            '話を聞いてみる',
-            '面談する（訪問）',
-            '面談する（オンライン）',
-            '質問する',
-          ].map((label, idx) => (
+            { label: '話を聞いてみる', text: 'ご紹介いただいた求人について、ぜひお話を聞かせていただければと思います。どうぞよろしくお願いいたします。' },
+            { label: '面談する（訪問）', text: 'ご紹介いただいた求人に興味があります。可能でしたら、御社にお伺いして面談をさせていただければと思います。ご検討のほど、よろしくお願いいたします。' },
+            { label: '面談する（オンライン）', text: 'ご紹介いただいた求人に興味があります。可能でしたら、オンラインで面談をさせていただければと思います。ご検討のほど、よろしくお願いいたします。' },
+            { label: '質問する', text: 'ご紹介いただいた求人について質問があります。お時間のある時に教えていただければ幸いです。よろしくお願いいたします。' },
+          ].map((template) => (
             <button
-              key={label}
+              key={template.label}
               type='button'
+              onClick={() => setMessage(template.text)}
               className='px-4 py-1 border border-[#0F9058] text-[#0F9058] rounded-full text-[14px] font-bold bg-white w-auto flex-shrink-0'
               style={{
                 paddingTop: 4,
@@ -81,7 +82,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
                 display: 'inline-block',
               }}
             >
-              {label}
+              {template.label}
             </button>
           ))
         ) : (

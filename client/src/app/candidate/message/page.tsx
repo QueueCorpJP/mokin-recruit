@@ -15,7 +15,7 @@ export default async function MessagePage() {
 
   console.log('🔍 [CANDIDATE PAGE] Auth success:', { 
     candidateId: user.id,
-    fullName: user.fullName,
+    fullName: user.name,
     userType: 'candidate'
   });
 
@@ -33,7 +33,7 @@ export default async function MessagePage() {
   });
   
   // 候補者の名前を取得
-  const candidateName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '候補者';
+  const candidateName = user.name || '候補者';
 
   return (
     <div className='flex flex-col bg-white'>
@@ -42,7 +42,6 @@ export default async function MessagePage() {
           rooms={rooms}
           userId={user.id}
           userType="candidate"
-          candidateName={candidateName}
         />
       </div>
     </div>

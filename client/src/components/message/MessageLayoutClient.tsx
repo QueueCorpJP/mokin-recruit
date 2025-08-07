@@ -3,7 +3,7 @@
 import React from 'react';
 import { MessageLayout } from './MessageLayout';
 import type { Message } from './MessageList';
-import type { Room } from './RoomList';
+import type { Room } from '@/lib/rooms';
 
 export interface MessageLayoutClientProps {
   messages?: Message[];

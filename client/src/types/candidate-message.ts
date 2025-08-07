@@ -2,11 +2,15 @@
 
 export interface CandidateRoom {
   id: string;
+  companyGroupId: string;
   companyName: string;
+  groupName: string;
   jobTitle: string;
+  jobPostingId: string;
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount: number;
+  isUnread: boolean;
 }
 
 export interface CandidateMessage {

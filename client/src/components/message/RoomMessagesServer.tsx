@@ -1,5 +1,5 @@
 import React from 'react';
-import { getRoomMessages } from '@/lib/roomMessages';
+import { getRoomMessages } from '@/lib/actions';
 import { RoomMessagesDisplay } from './RoomMessagesDisplay';
 
 interface RoomMessagesServerProps {

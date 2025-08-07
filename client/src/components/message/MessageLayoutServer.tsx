@@ -167,12 +167,23 @@ export function MessageLayoutServer({
 
   // メッセージ送信処理
   const handleSendMessage = async (content: string, fileUrls?: string[]) => {
-    if (!selectedRoomId) return;
+    console.log('🔍 [MESSAGE SEND] Starting send process:', {
+      selectedRoomId,
+      userType,
+      contentLength: content.length,
+      fileUrlsLength: fileUrls?.length || 0
+    });
+
+    if (!selectedRoomId) {
+      console.error('🔍 [MESSAGE SEND] No room selected');
+      return;
+    }
     
     try {
       let result;
       
       if (userType === 'candidate') {
+        console.log('🔍 [MESSAGE SEND] Using candidate sendMessage');
         // 候補者用の送信関数を使用
         result = await sendMessage({
           room_id: selectedRoomId,
@@ -181,6 +192,7 @@ export function MessageLayoutServer({
           file_urls: fileUrls || []
         });
       } else {
+        console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage');
         // 企業用の送信関数を使用
         result = await sendCompanyMessage({
           room_id: selectedRoomId,
@@ -190,16 +202,22 @@ export function MessageLayoutServer({
         });
       }
 
+      console.log('🔍 [MESSAGE SEND] Send result:', result);
+
       if (result.error) {
         console.error('Failed to send message:', result.error);
+        alert('メッセージの送信に失敗しました: ' + result.error);
         return;
       }
 
       // メッセージ送信成功後、メッセージリストを再読み込み
+      console.log('🔍 [MESSAGE SEND] Reloading messages');
       const updatedMessages = await getRoomMessages(selectedRoomId);
       setRoomMessages(updatedMessages);
+      console.log('🔍 [MESSAGE SEND] Messages reloaded:', updatedMessages.length);
     } catch (error) {
       console.error('Failed to send message:', error);
+      alert('メッセージの送信中にエラーが発生しました: ' + error);
     }
   };
 
