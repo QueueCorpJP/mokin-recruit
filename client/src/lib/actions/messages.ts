@@ -259,7 +259,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'image/jpeg',
-      'image/jpg',
+      'image/jpg', // 一部のシステムでjpegがjpgとして認識される場合に対応
       'image/png',
       'image/gif',
       'image/bmp',
@@ -268,18 +268,60 @@ export async function uploadCompanyMessageFile(formData: FormData) {
       'text/plain'
     ];
     
+    // デバッグ用：実際のファイル形式をログ出力
+    console.log('🔍 [COMPANY UPLOAD DEBUG] File info:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified
+    });
+    
     if (!allowedTypes.includes(file.type)) {
       return { error: 'PDF、Word、画像ファイル、テキストファイルのみアップロード可能です' };
     }
 
     // ファイル名の生成（タイムスタンプ + オリジナルファイル名）
     const timestamp = new Date().getTime();
-    const sanitizedFileName = file.name
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '');
+    
+    // より堅牢なファイル名生成：特殊文字や日本語にも対応
+    const sanitizeFileName = (name: string): string => {
+      // 拡張子を分離
+      const lastDotIndex = name.lastIndexOf('.');
+      const extension = lastDotIndex !== -1 ? name.substring(lastDotIndex) : '';
+      const nameWithoutExt = lastDotIndex !== -1 ? name.substring(0, lastDotIndex) : name;
+      
+      // 危険な文字を置換（ファイルシステムで問題となる文字）
+      let sanitized = nameWithoutExt
+        .replace(/[\\/:*?"<>|]/g, '_') // ファイルシステムで危険な文字
+        .replace(/[\u0000-\u001f\u007f-\u009f]/g, '_') // 制御文字
+        .replace(/\s+/g, '_') // 空白をアンダースコアに
+        .replace(/_+/g, '_') // 連続するアンダースコアを1つに
+        .replace(/^_|_$/g, ''); // 先頭と末尾のアンダースコアを削除
+      
+      // 空になった場合やドットのみの場合のフォールバック
+      if (!sanitized || sanitized === '.' || sanitized === '..') {
+        sanitized = 'file';
+      }
+      
+      // 長すぎる場合は短縮（拡張子込みで100文字以内）
+      const maxLength = 100 - extension.length - `${timestamp}_`.length;
+      if (sanitized.length > maxLength) {
+        sanitized = sanitized.substring(0, maxLength);
+      }
+      
+      return sanitized + extension;
+    };
+    
+    const sanitizedFileName = sanitizeFileName(file.name);
     const fileName = `${timestamp}_${sanitizedFileName}`;
     const filePath = `company/${companyUserId}/messages/${fileName}`;
+    
+    console.log('🔍 [COMPANY UPLOAD DEBUG] File path generation:', {
+      original: file.name,
+      sanitized: sanitizedFileName,
+      final: fileName,
+      filePath: filePath
+    });
 
     console.log('🔍 [SERVER ACTION] Uploading company message file:', filePath);
 
@@ -296,7 +338,27 @@ export async function uploadCompanyMessageFile(formData: FormData) {
 
     if (error) {
       console.error('Supabase company message file upload error:', error);
-      return { error: 'ファイルのアップロードに失敗しました' };
+      // より詳細なエラーメッセージを提供
+      let errorMessage = 'ファイルのアップロードに失敗しました';
+      
+      if (error.message) {
+        console.error('Detailed error:', error.message);
+        
+        // 一般的なSupabaseエラーを分類
+        if (error.message.includes('Payload too large') || error.message.includes('Request entity too large')) {
+          errorMessage = 'ファイルサイズが大きすぎます。10MB以下にしてください。';
+        } else if (error.message.includes('Invalid file type') || error.message.includes('content-type')) {
+          errorMessage = 'サポートされていないファイル形式です。';
+        } else if (error.message.includes('Duplicate') || error.message.includes('already exists')) {
+          errorMessage = '同じファイルが既に存在します。しばらく待ってから再試行してください。';
+        } else if (error.message.includes('Permission') || error.message.includes('Unauthorized')) {
+          errorMessage = 'ファイルのアップロード権限がありません。';
+        } else if (error.message.includes('Network') || error.message.includes('timeout')) {
+          errorMessage = 'ネットワークエラーです。インターネット接続を確認してください。';
+        }
+      }
+      
+      return { error: errorMessage };
     }
 
     // 公開URLを取得
