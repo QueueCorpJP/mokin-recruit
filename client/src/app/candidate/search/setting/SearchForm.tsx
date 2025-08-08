@@ -135,7 +135,7 @@ export default function SearchForm({
           {selectedJobTypes.length > 0 && (
             <div className='flex flex-col items-start mt-2'>
               <div className='flex flex-col gap-2 w-full'>
-                {selectedJobTypes.map(item => (
+                {selectedJobTypes.slice(0, 6).map(item => (
                   <div
                     key={item}
                     className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -156,6 +156,13 @@ export default function SearchForm({
                     </button>
                   </div>
                 ))}
+                {selectedJobTypes.length > 6 && (
+                  <div className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'>
+                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                      +{selectedJobTypes.length - 6}件
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -174,7 +181,7 @@ export default function SearchForm({
           {selectedLocations.length > 0 && (
             <div className='flex flex-col items-start mt-2'>
               <div className='flex flex-row flex-wrap gap-2 max-w-[205px] w-full'>
-                {selectedLocations.map(item => (
+                {selectedLocations.slice(0, 6).map(item => (
                   <div
                     key={item}
                     className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -195,6 +202,13 @@ export default function SearchForm({
                     </button>
                   </div>
                 ))}
+                {selectedLocations.length > 6 && (
+                  <div className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'>
+                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                      +{selectedLocations.length - 6}件
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -306,7 +320,7 @@ export default function SearchForm({
             {selectedIndustries.length > 0 && (
               <div className='flex flex-col items-start mt-2'>
                 <div className='flex flex-col gap-2 w-full'>
-                  {selectedIndustries.map(item => (
+                  {selectedIndustries.slice(0, 6).map(item => (
                     <div
                       key={item}
                       className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -327,6 +341,13 @@ export default function SearchForm({
                       </button>
                     </div>
                   ))}
+                  {selectedIndustries.length > 6 && (
+                    <div className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'>
+                      <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                        +{selectedIndustries.length - 6}件
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
