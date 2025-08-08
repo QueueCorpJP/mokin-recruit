@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ChevronLeft } from 'lucide-react';
@@ -26,6 +26,16 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
   isCandidatePage = false,
 }) => {
   const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleDeclineClick = () => {
     setIsDeclineModalOpen(true);
@@ -54,30 +64,27 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
         style={{ minWidth: 24 }}
         onClick={onBackClick}
       />
-      <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6'>
-        {companyName && (
+      <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6 mr-2 md:mr-0'>
+        {/* 企業グループ名（候補者画面）または候補者名（企業画面） */}
+        {(companyName || candidateName) && (
           <div
-            className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[2] overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[240px]'
+            className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[2] overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0'
             style={{ 
               height: 32,
               fontWeight: 700,
-              maxWidth: 'calc(100vw - 48px - 32px - 140px - 30px)', // 全体padding - 矢印+margin - ボタン幅 - 余裕をもった間隔
+              maxWidth: isMobile ? 'calc(100vw - 48px - 120px - 64px)' : '230px' // モバイル時: もう少し短く（+32px余裕を追加）
             }}
           >
-            {companyName}
+            {isCandidatePage ? companyName : candidateName}
           </div>
         )}
-        {/* <div
-          className='font-["Noto_Sans_JP"] font-bold text-[16px] text-[#323232] tracking-[0.1em] leading-[2] truncate whitespace-nowrap max-w-full w-full overflow-hidden'
-          style={{ maxWidth: 240 }}
-        >
-          {candidateName}
-        </div> */}
+        {/* 記事タイトル */}
         <div
-          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 overflow-hidden text-ellipsis whitespace-nowrap md:max-w-[544px]'
+          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 overflow-hidden text-ellipsis whitespace-nowrap'
           style={{
             textDecorationColor: '#0F9058',
-            maxWidth: 'calc(100vw - 48px - 32px - 140px - 30px)', // 全体padding - 矢印+margin - ボタン幅 - 余裕をもった間隔
+            maxWidth: isMobile ? 'calc(100vw - 48px - 120px - 64px)' : 'none', // モバイル時: もう少し短く（+32px余裕を追加）
+            marginRight: isMobile ? '0' : '24px' // PC時のみmarginRight
           }}
         >
           {jobTitle}
