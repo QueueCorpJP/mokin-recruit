@@ -109,14 +109,14 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     const tempMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
       room_id: roomId,
-      sender_id: candidateId || '',
+      sender_candidate_id: candidateId || null,
       sender_type: candidateId ? 'CANDIDATE' : 'COMPANY_USER',
       content,
       subject,
       message_type: 'GENERAL',
       file_urls: fileUrls,
       sent_at: new Date().toISOString(),
-      is_read: false,
+      status: 'SENT',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
