@@ -142,7 +142,7 @@ export function MessageLayout({
             onBackClick={handleBack}
             isCandidatePage={isCandidatePage}
           />
-          <div className='flex-1 overflow-y-auto'>
+          <div className='flex-1 overflow-y-auto scrollbar-hide'>
             {isLoading ? (
               <MessageLoading />
             ) : (() => {
@@ -494,7 +494,7 @@ export function MessageLayout({
               onBackClick={handleBack}
               isCandidatePage={isCandidatePage}
             />
-            <div className='flex-1 overflow-y-auto'>
+            <div className='flex-1 overflow-y-auto scrollbar-hide'>
               {isLoading ? (
                 <MessageLoading />
               ) : (() => {

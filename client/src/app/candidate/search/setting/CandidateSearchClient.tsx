@@ -226,6 +226,11 @@ export default function CandidateSearchClient({
   );
   const [isSearchConditionActive, setIsSearchConditionActive] = useState(false);
 
+  // タグ展開状態の管理
+  const [showAllJobTypes, setShowAllJobTypes] = useState(false);
+  const [showAllLocations, setShowAllLocations] = useState(false);
+  const [showAllIndustries, setShowAllIndustries] = useState(false);
+
   // ページネーション処理（サーバーサイド）
   const handlePageChange = (page: number) => {
     fetchJobs(page);
@@ -287,7 +292,7 @@ export default function CandidateSearchClient({
                       {selectedJobTypes.length > 0 && (
                         <div className='flex flex-col items-start mt-2'>
                           <div className='flex flex-col gap-2 w-full'>
-                            {selectedJobTypes.map(item => (
+                            {(showAllJobTypes ? selectedJobTypes : selectedJobTypes.slice(0, 6)).map(item => (
                               <div
                                 key={item}
                                 className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -308,6 +313,14 @@ export default function CandidateSearchClient({
                                 </button>
                               </div>
                             ))}
+                            {selectedJobTypes.length > 6 && (
+                              <button
+                                onClick={() => setShowAllJobTypes(!showAllJobTypes)}
+                                className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
+                              >
+                                {showAllJobTypes ? '折りたたむ' : `+${selectedJobTypes.length - 6}件`}
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
@@ -326,7 +339,7 @@ export default function CandidateSearchClient({
                       {selectedLocations.length > 0 && (
                         <div className='flex flex-col items-start mt-2'>
                           <div className='flex flex-row flex-wrap gap-2 max-w-[205px] w-full'>
-                            {selectedLocations.map(item => (
+                            {(showAllLocations ? selectedLocations : selectedLocations.slice(0, 6)).map(item => (
                               <div
                                 key={item}
                                 className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -347,6 +360,14 @@ export default function CandidateSearchClient({
                                 </button>
                               </div>
                             ))}
+                            {selectedLocations.length > 6 && (
+                              <button
+                                onClick={() => setShowAllLocations(!showAllLocations)}
+                                className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
+                              >
+                                {showAllLocations ? '折りたたむ' : `+${selectedLocations.length - 6}件`}
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
@@ -458,7 +479,7 @@ export default function CandidateSearchClient({
                         {selectedIndustries.length > 0 && (
                           <div className='flex flex-col items-start mt-2'>
                             <div className='flex flex-col gap-2 w-full'>
-                              {selectedIndustries.map(item => (
+                              {(showAllIndustries ? selectedIndustries : selectedIndustries.slice(0, 6)).map(item => (
                                 <div
                                   key={item}
                                   className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -479,6 +500,14 @@ export default function CandidateSearchClient({
                                   </button>
                                 </div>
                               ))}
+                              {selectedIndustries.length > 6 && (
+                                <button
+                                  onClick={() => setShowAllIndustries(!showAllIndustries)}
+                                  className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
+                                >
+                                  {showAllIndustries ? '折りたたむ' : `+${selectedIndustries.length - 6}件`}
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

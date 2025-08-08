@@ -14,6 +14,7 @@ import { getRoomMessages, sendCompanyMessage, markRoomMessagesAsRead } from '@/l
 import { sendMessage, markCandidateRoomMessagesAsRead } from '@/lib/actions/message-actions';
 import { ChatMessage } from '@/types/message';
 import { MessageLoading } from '@/components/ui/Loading';
+import { useToast } from '@/components/ui/toast';
 
 export interface MessageLayoutServerProps {
   className?: string;
@@ -30,6 +31,7 @@ export function MessageLayoutServer({
   userType = 'company',
   companyUserName,
 }: MessageLayoutServerProps) {
+  const { showToast } = useToast();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
@@ -255,7 +257,7 @@ export function MessageLayoutServer({
 
       if (result.error) {
         console.error('Failed to send message:', result.error);
-        alert('メッセージの送信に失敗しました: ' + result.error);
+        showToast('メッセージの送信に失敗しました。しばらく時間をおいてから再度お試しください。', 'error');
         return;
       }
 
@@ -266,7 +268,7 @@ export function MessageLayoutServer({
       console.log('🔍 [MESSAGE SEND] Messages reloaded:', updatedMessages.length);
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('メッセージの送信中にエラーが発生しました: ' + error);
+      showToast('メッセージの送信中にエラーが発生しました。ネットワーク接続を確認してから再度お試しください。', 'error');
     }
   };
 
@@ -285,7 +287,7 @@ export function MessageLayoutServer({
             onBackClick={handleBack}
             isCandidatePage={isCandidatePage}
           />
-          <div className='flex-1 overflow-y-auto'>
+          <div className='flex-1 overflow-y-auto scrollbar-hide'>
             {isLoadingMessages ? (
               <MessageLoading />
             ) : (
@@ -407,7 +409,7 @@ export function MessageLayoutServer({
               onBackClick={handleBack}
               isCandidatePage={isCandidatePage}
             />
-            <div className='flex-1 overflow-y-auto'>
+            <div className='flex-1 overflow-y-auto scrollbar-hide'>
               {isLoadingMessages ? (
                 <MessageLoading />
               ) : (
