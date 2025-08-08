@@ -101,9 +101,36 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     };
   }, [roomId, candidateId]);
 
-  // メッセージ送信
+  // メッセージ送信（楽観的更新）
   const sendRealTimeMessage = async (content: string, subject?: string, fileUrls?: string[]) => {
     if (!roomId) throw new Error('Room ID is required');
+    
+    // 楽観的UIアップデート用の一時メッセージ
+    const tempMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      room_id: roomId,
+      sender_id: candidateId || '',
+      sender_type: candidateId ? 'CANDIDATE' : 'COMPANY_USER',
+      content,
+      subject,
+      message_type: 'GENERAL',
+      file_urls: fileUrls,
+      sent_at: new Date().toISOString(),
+      is_read: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    // 楽観的更新: すぐにUIに反映
+    setMessages(prev => [...prev, tempMessage]);
+    
+    // スクロールをトリガー（少し遅延を入れる）
+    setTimeout(() => {
+      const scrollableContainer = document.getElementById('message-detail-body');
+      if (scrollableContainer) {
+        scrollableContainer.scrollTop = scrollableContainer.scrollHeight;
+      }
+    }, 50);
     
     try {
       const result = await sendMessage({
@@ -115,12 +142,23 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
       });
 
       if (result.error) {
+        // エラー時は楽観的更新を元に戻す
+        setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
         throw new Error(result.error);
+      }
+
+      // 成功時は一時メッセージを実際のメッセージに置き換え
+      if (result.message) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempMessage.id ? result.message! : msg
+        ));
       }
 
       return result.message;
     } catch (error) {
       console.error('Error sending message:', error);
+      // エラー時は楽観的更新を元に戻す
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
       throw error;
     }
   };

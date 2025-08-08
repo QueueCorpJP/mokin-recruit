@@ -32,12 +32,14 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   const [message, setMessage] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
 
   // 送信処理の共通関数
   const handleSendMessage = async () => {
-    if ((message.trim() || attachedFiles.length > 0) && onSendMessage && candidateId) {
+    if ((message.trim() || attachedFiles.length > 0) && onSendMessage && candidateId && !isSending) {
+      setIsSending(true);
       setIsUploading(true);
       try {
         let fileUrls: string[] = [];
@@ -69,7 +71,8 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           const errors = uploadResults.filter(result => result.error);
           if (errors.length > 0) {
             console.error('🔍 [MESSAGE INPUT DEBUG] File upload errors:', errors);
-            showToast(`ファイルのアップロードに失敗しました: ${errors.map(e => e.error).join(', ')}`, 'error');
+            // ユーザーフレンドリーなエラーメッセージを表示
+            showToast('ファイルのアップロードに失敗しました。ファイルの合計サイズは5MB以下にしてください。', 'error');
             // エラーがある場合は送信を停止
             return;
           }
@@ -100,6 +103,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         showToast('メッセージの送信に失敗しました', 'error');
       } finally {
         setIsUploading(false);
+        setIsSending(false);
       }
     }
   };
@@ -109,18 +113,31 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxTotalSize = 5 * 1024 * 1024; // 合計5MB
       
-      // ファイルサイズチェック
-      for (const file of newFiles) {
-        if (file.size > maxSize) {
-          showToast('ファイルサイズが5MBを超えています。5MB以下のファイルを選択してください。', 'error');
-          // ファイル入力をクリア
-          if (event.target) {
-            event.target.value = '';
-          }
-          return;
+      // 既存ファイルのサイズを計算
+      const existingSize = attachedFiles.reduce((total, file) => total + file.size, 0);
+      
+      // 新規ファイルのサイズを計算
+      const newFilesSize = newFiles.reduce((total, file) => total + file.size, 0);
+      
+      // 合計サイズをチェック
+      const totalSize = existingSize + newFilesSize;
+      
+      if (totalSize > maxTotalSize) {
+        const currentSizeMB = (existingSize / (1024 * 1024)).toFixed(2);
+        const newSizeMB = (newFilesSize / (1024 * 1024)).toFixed(2);
+        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+        
+        showToast(
+          `ファイルの合計サイズは5MB以下にしてください。現在: ${currentSizeMB}MB + 新規: ${newSizeMB}MB = 合計: ${totalSizeMB}MB`,
+          'error'
+        );
+        // ファイル入力をクリア
+        if (event.target) {
+          event.target.value = '';
         }
+        return;
       }
       
       setAttachedFiles(prev => [...prev, ...newFiles]);
@@ -217,41 +234,50 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           
           {/* 添付ファイルタグ */}
           <div className='flex flex-col gap-2 flex-1 ml-2'>
-            {attachedFiles.map((file, index) => (
-              <div key={index} className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[200px]'>
-                <span className='text-[#323232] text-[14px] font-medium truncate'>
-                  {file.name}
-                </span>
-                <button
-                  type='button'
-                  className='ml-1 cursor-pointer border-none p-0 bg-transparent'
-                  onClick={() => removeFile(index)}
-                  style={{
-                    display: 'flex',
-                    width: '8px',
-                    height: '8px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '10px',
-                    aspectRatio: '1',
-                  }}
-                >
-                  <span className='text-[20px] font-medium' style={{ color: '#0F9058' }}>×</span>
-                </button>
+            {attachedFiles.map((file, index) => {
+              const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+              return (
+                <div key={index} className='bg-[#EFEFEF] rounded-[5px] px-2 py-1 flex items-center max-w-[300px]'>
+                  <span className='text-[#323232] text-[14px] font-medium truncate flex-1'>
+                    {file.name} ({fileSizeMB}MB)
+                  </span>
+                  <button
+                    type='button'
+                    className='ml-1 cursor-pointer border-none p-0 bg-transparent'
+                    onClick={() => removeFile(index)}
+                    style={{
+                      display: 'flex',
+                      width: '8px',
+                      height: '8px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '10px',
+                      aspectRatio: '1',
+                    }}
+                  >
+                    <span className='text-[20px] font-medium' style={{ color: '#0F9058' }}>×</span>
+                  </button>
+                </div>
+              );
+            })}
+            {/* 合計サイズ表示 */}
+            {attachedFiles.length > 0 && (
+              <div className='text-[12px] text-[#999999] mt-1'>
+                合計: {(attachedFiles.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(2)}MB / 5.00MB
               </div>
-            ))}
+            )}
           </div>
           
           {/* PC時のみ右端に送信ボタン */}
           <button
             type='button'
-            className='hidden md:flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
+            className={`hidden md:flex items-center gap-2 ${isSending ? 'bg-[#999999]' : 'bg-[#0F9058]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors`}
             style={{ maxWidth: 120, padding: '10px 24px' }}
-            disabled={isUploading}
+            disabled={isSending}
             onClick={handleSendMessage}
           >
             <Image src='/images/form.svg' alt='送信' width={16} height={16} />
-            送信
+            {isSending ? '送信中...' : '送信'}
           </button>
         </div>
         
@@ -259,13 +285,13 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         <div className='flex justify-end mt-3 md:hidden'>
           <button
             type='button'
-            className='flex items-center gap-2 bg-[#0F9058] text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2'
+            className={`flex items-center gap-2 ${isSending ? 'bg-[#999999]' : 'bg-[#0F9058]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors`}
             style={{ maxWidth: 120, padding: '10px 24px' }}
-            disabled={isUploading}
+            disabled={isSending}
             onClick={handleSendMessage}
           >
             <Image src='/images/form.svg' alt='送信' width={16} height={16} />
-            送信
+            {isSending ? '送信中...' : '送信'}
           </button>
         </div>
       </div>
