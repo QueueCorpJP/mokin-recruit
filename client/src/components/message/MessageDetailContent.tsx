@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ChatMessage } from '@/types/message';
 import { MessageDetailBody } from './MessageDetailBody';
@@ -25,6 +25,28 @@ export function MessageDetailContent({
   console.log('MessageDetailContent received messages:', messages);
   console.log('Messages count:', messages.length);
   
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // メッセージが更新されたら自動スクロール
+  useEffect(() => {
+    const scrollToBottom = () => {
+      // 親のスクロール可能な要素を取得
+      const scrollableContainer = document.getElementById('message-detail-body');
+      if (scrollableContainer && messagesEndRef.current) {
+        // スクロール可能なコンテナを最下部までスクロール
+        scrollableContainer.scrollTop = scrollableContainer.scrollHeight;
+        // または、要素をビューポートにスクロール
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    };
+    
+    // 少し遅延を入れてDOMが更新された後にスクロール
+    const timeoutId = setTimeout(scrollToBottom, 150);
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
+  
   if (messages.length === 0) {
     return (
       <MessageDetailBody isCandidatePage={isCandidatePage}>
@@ -37,7 +59,8 @@ export function MessageDetailContent({
 
   return (
     <MessageDetailBody isCandidatePage={isCandidatePage}>
-      {messages.map((message) => {
+      <div ref={messagesContainerRef}>
+        {messages.map((message) => {
         const isMyMessage = isCandidatePage 
           ? message.sender_type === 'CANDIDATE' 
           : message.sender_type === 'COMPANY_USER';
@@ -160,6 +183,8 @@ export function MessageDetailContent({
           </div>
         );
       })}
+        <div ref={messagesEndRef} style={{ height: '1px' }} />
+      </div>
     </MessageDetailBody>
   );
 }

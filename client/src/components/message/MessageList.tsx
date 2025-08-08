@@ -102,7 +102,7 @@ export function MessageList({
         <div className='absolute right-[-0.5px] top-0 bottom-0 border-r border-[#efefef] pointer-events-none' />
 
         {/* メッセージリスト */}
-        <div className='flex-1 flex flex-col overflow-y-auto min-h-0'>
+        <div className='flex-1 flex flex-col overflow-y-auto scrollbar-hide min-h-0'>
           {filteredMessages.map((message, index) => (
             <MessageItem
               key={message.id}
