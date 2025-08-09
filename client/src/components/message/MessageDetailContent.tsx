@@ -91,8 +91,14 @@ export function MessageDetailContent({
           <div key={message.id} className={`flex w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
             {/* 相手のメッセージの場合、左端に円形アイコン */}
             {!isMyMessage && (
-              <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
-                40×40
+              <div className='w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 mt-[27px]'>
+                <Image
+                  src='/images/user.svg'
+                  alt='User'
+                  width={40}
+                  height={40}
+                  className='object-cover'
+                />
               </div>
             )}
             
@@ -176,8 +182,14 @@ export function MessageDetailContent({
             
             {/* 自分のメッセージの場合、右端に円形アイコン */}
             {isMyMessage && (
-              <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
-                40×40
+              <div className='w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 mt-[27px]'>
+                <Image
+                  src='/images/user.svg'
+                  alt='User'
+                  width={40}
+                  height={40}
+                  className='object-cover'
+                />
               </div>
             )}
           </div>

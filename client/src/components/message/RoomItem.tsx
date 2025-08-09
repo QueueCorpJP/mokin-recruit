@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { StatusIndicator } from './StatusIndicator';
 import { MessageGroupTag } from './MessageGroupTag';
+import Image from 'next/image';
 
 export interface RoomItemProps {
   id: string;
@@ -75,16 +76,20 @@ export function RoomItem({
             style={{
               width: 78,
               height: 78,
-              background: '#e0e0e0',
               borderRadius: '50%',
             }}
-            className='flex-shrink-0 flex items-center justify-center'
+            className='flex-shrink-0 flex items-center justify-center bg-gray-100 overflow-hidden'
           >
-            {/* ここに画像やアイコンを将来的に挿入 */}
-            <span className='text-[#999] text-xs'>画像</span>
+            <Image
+              src='/images/user.svg'
+              alt='Company'
+              width={78}
+              height={78}
+              className='object-cover'
+            />
           </div>
           {/* テキスト部分 */}
-          <div className='flex flex-col justify-center min-w-0'>
+          <div className='flex flex-col justify-between min-w-0' style={{ minHeight: '78px' }}>
             <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
               {companyName}
             </div>
@@ -104,36 +109,35 @@ export function RoomItem({
           </div>
         </div>
       ) : (
-        // company用: message.mdの要件に合わせたレイアウト
-        <div className='flex flex-col gap-0 w-full'>
-          {/* 現職企業名 */}
-          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
-            {currentCompany}
+        // company用: message.mdの要件に合わせたレイアウト - flexで高さ管理
+        <>
+          <div className='flex flex-col gap-0 w-full'>
+            {/* 現職企業名 */}
+            <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] tracking-[1.4px] leading-[1.6] truncate">
+              {currentCompany}
+            </div>
+            {/* 候補者名 */}
+            <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#0f9058] tracking-[1.6px] leading-[2]">
+              {candidateName}
+            </div>
           </div>
-          {/* 候補者名 */}
-          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#0f9058] tracking-[1.6px] leading-[2]">
-            {candidateName}
+          
+          {/* メッセージプレビュー - 固定高さのコンテナ内で上揃え */}
+          <div className='flex items-start' style={{ minHeight: '44px', height: '44px' }}>
+            <div
+              className="font-['Noto_Sans_JP'] font-medium text-[14px] text-[#323232] tracking-[1.4px] leading-[1.6]"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {lastMessage || ''}
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* メッセージプレビュー（candidate用は非表示） */}
-      {!isCandidatePage && lastMessage && (
-        <div
-          className={cn(
-            'font-["Noto_Sans_JP"] font-medium text-[14px] text-[#323232]',
-            'tracking-[1.4px] leading-[1.6] h-[38px]',
-            'overflow-hidden text-ellipsis whitespace-nowrap',
-            'flex items-center'
-          )}
-          style={{
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-          }}
-        >
-          {lastMessage}
-        </div>
+        </>
       )}
 
       {/* グループタグとジョブタイトル */}
