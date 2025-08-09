@@ -289,12 +289,13 @@ export default function CandidateTaskPage() {
     color: '#0F9058',
     lineHeight: '200%',
     margin: 0,
-    whiteSpace: 'nowrap',
+    whiteSpace: 'normal',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     display: 'flex',
     alignItems: 'center',
     gap: '2px',
+    wordBreak: 'break-word',
   };
 
   // --- やることリスト用ラッパー（縦並び・gap:8px） ---
@@ -321,6 +322,8 @@ export default function CandidateTaskPage() {
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
+    minWidth: 0,
+    flex: 1,
   };
   const todoBodyTextStyle: React.CSSProperties = {
     fontSize: '10px',
@@ -367,8 +370,19 @@ export default function CandidateTaskPage() {
                           style={{ display: 'block' }}
                         />
                         <div style={todoTextsWrapperStyle}>
-                          <span style={qaLinkTextStyle}>{item.title}</span>
-                          <p style={todoBodyTextStyle}>{item.description}</p>
+                          <span style={{
+                            ...qaLinkTextStyle,
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}>{item.title}</span>
+                          <p style={{
+                            ...todoBodyTextStyle,
+                            fontSize: '10px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>{item.description}</p>
                         </div>
                       </div>
                     </div>
