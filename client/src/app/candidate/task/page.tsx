@@ -157,19 +157,17 @@ export default function CandidateTaskPage() {
     return Date.now() - date.getTime() < seventyTwoHoursInMs;
   };
 
-  // 表示条件関数（トリガー関数）- message.mdの仕様に基づく
-  const checkProfileIncomplete = () => userState.profileIncomplete;
+  // 表示条件関数（トリガー関数）- 全て表示するためにtrue
+  const checkProfileIncomplete = () => true;
   
-  // スカウト関連（空のトリガー関数で非表示）
-  const checkNewScout = () => false;
-  const checkUnreadScout = () => false;
+  // スカウト関連（デフォルト表示）
+  const checkNewScout = () => true;
+  const checkUnreadScout = () => true;
   
-  // メッセージ関連（message.mdの仕様）
-  const checkNewMessage = () => 
-    userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
+  // メッセージ関連（デフォルト表示）
+  const checkNewMessage = () => true;
     
-  const checkUnreadMessage = () => 
-    userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
+  const checkUnreadMessage = () => true;
 
   // サブテキストを動的に生成する関数
   const generateSubText = (companyName?: string, jobTitle?: string): string => {
@@ -184,7 +182,7 @@ export default function CandidateTaskPage() {
     {
       id: '1',
       title: '会員情報を充実させましょう。スカウトが届きやすくなります。',
-      description: '', // サブテキストなし
+      description: 'スカウトが届きやすくなります',
       iconSrc: '/images/check.svg',
       triggerFunction: checkProfileIncomplete,
       navigateTo: '/candidate/profile', // 会員情報編集ページ
