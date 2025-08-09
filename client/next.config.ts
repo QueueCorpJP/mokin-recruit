@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
     // フォント最適化の設定（Next.js 15では未サポートのため削除）
   },
 
+  // プロダクションビルドでconsole.logを削除
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error'], // console.errorは残す
+    } : false,
+  },
+
   // サーバー外部パッケージ（Next.js 15の新しい設定）
   serverExternalPackages: ['bcryptjs'],
 

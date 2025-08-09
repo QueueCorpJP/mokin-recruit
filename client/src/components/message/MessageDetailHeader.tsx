@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronLeft } from 'lucide-react';
+import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { DeclineConfirmModal } from './DeclineConfirmModal';
 
 export interface MessageDetailHeaderProps {
@@ -59,11 +59,16 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
       style={{ minHeight: 56 }}
     >
       {/* モバイル時のみ左端に戻る矢印を表示 */}
-      <ChevronLeft
-        className='block md:hidden w-6 h-6 mr-2 flex-shrink-0 cursor-pointer text-[#0F9058]'
+      <div 
+        className='block md:hidden mr-2 flex-shrink-0 cursor-pointer'
         style={{ minWidth: 24 }}
         onClick={onBackClick}
-      />
+      >
+        <PaginationArrow
+          direction="left"
+          className="w-6 h-6"
+        />
+      </div>
       <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6 mr-2 md:mr-0'>
         {/* 企業グループ名（候補者画面）または候補者名（企業画面） */}
         {(companyName || candidateName) && (
@@ -72,7 +77,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
             style={{ 
               height: 32,
               fontWeight: 700,
-              maxWidth: isMobile ? 'calc(100vw - 48px - 120px - 64px)' : '230px' // モバイル時: もう少し短く（+32px余裕を追加）
+              maxWidth: isMobile ? 'calc(100vw - 230px)' : '230px' // モバイル時: padding48px + arrow32px + button120px + margin30px
             }}
           >
             {isCandidatePage ? companyName : candidateName}
@@ -83,7 +88,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
           className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 overflow-hidden text-ellipsis whitespace-nowrap'
           style={{
             textDecorationColor: '#0F9058',
-            maxWidth: isMobile ? 'calc(100vw - 48px - 120px - 64px)' : 'none', // モバイル時: もう少し短く（+32px余裕を追加）
+            maxWidth: isMobile ? 'calc(100vw - 230px)' : 'none', // モバイル時: padding48px + arrow32px + button120px + margin30px
             marginRight: isMobile ? '0' : '24px' // PC時のみmarginRight
           }}
         >

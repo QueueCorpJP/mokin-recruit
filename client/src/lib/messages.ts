@@ -107,7 +107,13 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
       return {
         id: String(msg.id),
         roomId: String(msg.room_id), // room_idを追加
-        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP')),
+        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })),
         isUnread: Boolean(msg.status !== 'READ'),
         companyName: String('企業名'), // TODO: room情報から取得
         candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
@@ -199,7 +205,13 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
       return {
         id: String(msg.id),
         roomId: String(msg.room_id), // room_idを追加
-        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP')),
+        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })),
         isUnread: Boolean(msg.status !== 'READ'),
         companyName: String((msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]?.company_accounts?.[0]?.company_name || '企業名'),
         candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
