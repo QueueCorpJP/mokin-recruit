@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
@@ -51,13 +51,11 @@ interface UserState {
 }
 
 export default function CandidateTaskPage() {
-  // --- レスポンシブ対応: モバイル判定 ---
-  const [isMobile, setIsMobile] = useState(false);
   // --- ページネーション用の状態 ---
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
-  // ユーザー状態（実際はAPIから取得）
+  // ユーザー状態（APIから取得）
   const [userState, setUserState] = useState<UserState>({
     // 会員情報関連（空のトリガー関数で非表示）
     profileIncomplete: false,
@@ -88,6 +86,62 @@ export default function CandidateTaskPage() {
     unreadMessageJobTitle: undefined,
     unreadMessageRoomId: undefined,
   });
+  
+  // メッセージデータを取得
+  useEffect(() => {
+    const fetchMessageData = async () => {
+      try {
+        // Server Actionを作成してメッセージデータを取得
+        const response = await fetch('/api/candidate/task-data', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch task data');
+        }
+        
+        const { rooms } = await response.json();
+        
+        // 未読メッセージがあるルームを探す
+        const unreadRooms = rooms.filter((room: any) => room.unreadCount && room.unreadCount > 0);
+        
+        if (unreadRooms.length > 0) {
+          const firstUnreadRoom = unreadRooms[0];
+          const messageTime = firstUnreadRoom.lastMessageTime 
+            ? new Date(firstUnreadRoom.lastMessageTime) 
+            : new Date();
+          
+          // 72時間以内かどうかで振り分け
+          if (isWithin72Hours(messageTime)) {
+            // 新着メッセージ（72時間以内）
+            setUserState(prev => ({
+              ...prev,
+              hasNewMessage: true,
+              newMessageDate: messageTime,
+              newMessageCompanyName: firstUnreadRoom.companyName,
+              newMessageJobTitle: firstUnreadRoom.jobTitle,
+              newMessageRoomId: firstUnreadRoom.id
+            }));
+          } else {
+            // 未読メッセージ（72時間経過）
+            setUserState(prev => ({
+              ...prev,
+              hasUnreadMessage: true,
+              unreadMessageDate: messageTime,
+              unreadMessageCompanyName: firstUnreadRoom.companyName,
+              unreadMessageJobTitle: firstUnreadRoom.jobTitle,
+              unreadMessageRoomId: firstUnreadRoom.id
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch message data:', error);
+      }
+    };
+    
+    fetchMessageData();
+  }, []);
 
   // 72時間経過を判定するヘルパー関数（message.mdの仕様）
   const is72HoursPassed = (date?: Date): boolean => {
@@ -180,14 +234,6 @@ export default function CandidateTaskPage() {
     currentPage * itemsPerPage
   );
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // タスクアイテムクリックハンドラー（message.mdの仕様に基づく）
   const handleTaskItemClick = (item: TaskItem) => {
@@ -212,66 +258,7 @@ export default function CandidateTaskPage() {
     }
   };
 
-  // --- ページ全体ラッパーのスタイル ---
-  const pageWrapperStyle: React.CSSProperties = isMobile
-    ? {
-        paddingTop: '16px',
-        paddingRight: '24px',
-        paddingBottom: '80px',
-        paddingLeft: '24px',
-        minHeight: '60vh',
-        boxSizing: 'border-box',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        background: '#F9F9F9',
-      }
-    : {
-        paddingTop: '40px',
-        paddingRight: '80px',
-        paddingBottom: '80px',
-        paddingLeft: '80px',
-        minHeight: '60vh',
-        boxSizing: 'border-box',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        background: '#F9F9F9',
-      };
 
-  // --- 中央コンテンツラッパーのスタイル ---
-  const contentWrapperStyle: React.CSSProperties = {
-    width: '100%',
-    maxWidth: '1280px',
-    margin: '0 auto',
-  };
-
-  // --- 2カラムレイアウトのスタイル ---
-  const twoColumnFlexStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    gap: '80px',
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: isMobile ? 'stretch' : 'flex-start',
-  };
-  // --- 左カラム（メイン） ---
-  const mainColumnStyle: React.CSSProperties = {
-    maxWidth: '880px',
-    padding: isMobile ? '0' : '16px 24px',
-    flex: 1,
-    boxSizing: 'border-box',
-    width: isMobile ? '100%' : undefined,
-  };
-  // --- 右カラム（サイド） ---
-  const sideColumnStyle: React.CSSProperties = {
-    maxWidth: isMobile ? 'none' : '320px',
-    flex: isMobile ? undefined : '0 0 320px',
-    boxSizing: 'border-box',
-    width: isMobile ? '100%' : undefined,
-  };
 
   // --- 見出しリスト用ラッパー ---
   const headingListStyle: React.CSSProperties = {
@@ -343,12 +330,12 @@ export default function CandidateTaskPage() {
   };
 
   return (
-    <div style={pageWrapperStyle}>
-      <main style={contentWrapperStyle}>
+    <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10">
+      <main className="w-full max-w-[1280px] mx-auto">
         {/* 2カラムレイアウト: PCは横並び, モバイルは縦並び */}
-        <div style={twoColumnFlexStyle}>
+        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start">
           {/* 左カラム（メインコンテンツ） */}
-          <div style={mainColumnStyle}>
+          <div className="max-w-[880px] md:px-6 flex-1 box-border w-full">
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
                 iconSrc='/images/list.svg'
@@ -456,7 +443,7 @@ export default function CandidateTaskPage() {
                       color: '#323232',
                       fontSize: '16px',
                       textAlign: 'center',
-                      whiteSpace: isMobile ? 'normal' : 'nowrap',
+                      whiteSpace: 'normal',
                       letterSpacing: '1.6px',
                     }}>
                       <p style={{
@@ -489,18 +476,12 @@ export default function CandidateTaskPage() {
             </div>
           </div>
           {/* 右カラム（サイドコンテンツ） */}
-          <div style={sideColumnStyle}>
+          <div className="w-full md:max-w-[320px] md:flex-none">
             {/* バナー画像を表示 */}
             <img
               src='/images/banner01.png'
               alt='バナー画像01'
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                borderRadius: '8px',
-                marginBottom: '80px',
-              }}
+              className="w-full h-auto block rounded-lg mb-20"
             />
             {/* 見出しリスト（縦並び・gap8px） */}
             <div style={headingListStyle}>
