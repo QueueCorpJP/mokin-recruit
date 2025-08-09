@@ -466,7 +466,11 @@ export default function CandidateTaskPage() {
                       variant="blue-gradient"
                       size="figma-default"
                       onClick={() => router.push('/candidate/search/setting')}
-                      style={{ paddingTop: '16px', paddingBottom: '16px' }}
+                      style={{ 
+                        paddingTop: '16px', 
+                        paddingBottom: '16px'
+                      }}
+                      className="w-full md:w-auto"
                     >
                       求人を探す
                     </Button>
