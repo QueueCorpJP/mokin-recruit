@@ -82,7 +82,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
           >
             {isMobile 
               ? (isCandidatePage ? companyName : candidateName)
-              : ((isCandidatePage ? companyName : candidateName)?.length > 15 
+              : ((isCandidatePage ? companyName : candidateName)?.length && (isCandidatePage ? companyName : candidateName)!.length > 15
                   ? `${(isCandidatePage ? companyName : candidateName)?.substring(0, 15)}...` 
                   : (isCandidatePage ? companyName : candidateName))
             }
