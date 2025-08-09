@@ -241,7 +241,13 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
         senderName,
         subject: msg.subject,
         content: msg.content || '',
-        createdAt: new Date(msg.created_at).toLocaleString('ja-JP'),
+        createdAt: new Date(msg.created_at).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
       };
     });
 

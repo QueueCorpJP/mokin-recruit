@@ -17,18 +17,17 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: false,
   },
 
-  // Vercel deployment optimization
+  // Vercel deployment optimization - simplified
   experimental: {
-    // パフォーマンス最適化
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-label',
-    ],
-    // ページ遷移の最適化
-    scrollRestoration: true,
-    // esmExternals: true, // 一時的にコメントアウト
-    // フォント最適化の設定（Next.js 15では未サポートのため削除）
+    // ページ遷移の最適化を一時的に無効
+    // scrollRestoration: true,
+  },
+
+  // プロダクションビルドでconsole.logを削除
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error'], // console.errorは残す
+    } : false,
   },
 
   // サーバー外部パッケージ（Next.js 15の新しい設定）
@@ -68,48 +67,9 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 31536000, // 1年
   },
 
-  // バンドル分析とコード分割
-  webpack: (config, { dev, isServer }) => {
-    // プロダクション環境でのバンドル最適化
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 5,
-              reuseExistingChunk: true,
-            },
-            // UI コンポーネントの分離
-            ui: {
-              test: /[\\/]src[\\/]components[\\/]ui[\\/]/,
-              name: 'ui-components',
-              chunks: 'all',
-              priority: 8,
-            },
-            // 認証関連の分離
-            auth: {
-              test: /[\\/]src[\\/]components[\\/]auth[\\/]/,
-              name: 'auth-components',
-              chunks: 'all',
-              priority: 7,
-            },
-          },
-        },
-      };
-    }
-
-    // SVG最適化
+  // Simplified webpack config
+  webpack: (config, { isServer }) => {
+    // SVG最適化のみ維持
     config.module.rules.push({
       test: /\.svg$/,
       use: ['@svgr/webpack'],
@@ -119,8 +79,6 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
-        net: false,
-        tls: false,
       };
     }
 
