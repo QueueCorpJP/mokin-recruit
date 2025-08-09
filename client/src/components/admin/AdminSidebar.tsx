@@ -1,20 +1,10 @@
 'use client';
 
-import {
-  BarChartIcon,
-  BuildingIcon,
-  FileTextIcon,
-  HomeIcon,
-  MailIcon,
-  MegaphoneIcon,
-  NewspaperIcon,
-  UsersIcon,
-} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { cn } from "@/lib/utils";
-
+import Image from "next/image";
 // Separator component (inline)
 interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "horizontal" | "vertical";
@@ -41,37 +31,37 @@ Separator.displayName = "Separator";
 // Navigation data structure for better maintainability
 const navigationItems = [
   {
-    icon: <HomeIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/home.svg" alt="home" width={20} height={20} />,
     title: "管理画面ホーム",
     href: "/admin",
     subItems: [],
   },
   {
-    icon: <FileTextIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/ofer.svg" alt="file-text" width={20} height={20} />,
     title: "求人",
     href: "/admin/job",
     subItems: ["求人一覧", "新規求人作成", "要確認求人"],
   },
   {
-    icon: <MailIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/mail.svg" alt="mail" width={20} height={20} />,
     title: "メッセージ",
     href: "/admin/message",
     subItems: ["メッセージ一覧", "要確認メッセージ", "NGワード設定"],
   },
   {
-    icon: <BuildingIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/company.svg" alt="building" width={20} height={20} />,
     title: "企業アカウント",
     href: "/admin/company",
     subItems: ["企業一覧", "新規企業アカウント追加"],
   },
   {
-    icon: <UsersIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/candidate.svg" alt="users" width={20} height={20} />,
     title: "候補者",
     href: "/admin/candidate",
     subItems: ["候補者一覧", "新規追加", "登録待ち書類"],
   },
   {
-    icon: <NewspaperIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/media.svg" alt="newspaper" width={20} height={20} />,
     title: "メディア",
     href: "/admin/media",
     subItems: [
@@ -84,13 +74,13 @@ const navigationItems = [
     ],
   },
   {
-    icon: <MegaphoneIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/notice.svg" alt="megaphone" width={20} height={20} />,
     title: "運営からのお知らせ",
     href: "/admin/notice",
     subItems: ["お知らせ一覧", "お知らせ追加"],
   },
   {
-    icon: <BarChartIcon className="w-5 h-5" />,
+    icon: <Image src="/images/admin/chert.svg" alt="bar-chart" width={20} height={20} />,
     title: "分析",
     href: "/admin/analytics",
     subItems: ["企業・候補者分析"],

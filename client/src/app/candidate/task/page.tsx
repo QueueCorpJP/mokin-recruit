@@ -4,12 +4,182 @@ import { ChevronRightIcon } from 'lucide-react';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+
+// タスクアイテムの型定義
+interface TaskItem {
+  id: string;
+  title: string;
+  description: string;
+  iconSrc?: string;
+  completed?: boolean;
+  triggerFunction: () => boolean; // 表示条件を判定する関数
+  navigateTo?: string;
+}
+
+// ユーザー状態の型定義（実際のAPIから取得するデータを想定）
+interface UserState {
+  // 会員情報関連
+  profileIncomplete: boolean; // 会員情報が不完全かどうか
+  
+  // スカウト関連
+  hasNewScout: boolean; // 新着スカウトの有無
+  newScoutDate?: Date; // 新着スカウト受信日時
+  newScoutCompanyName?: string; // スカウト企業名
+  newScoutJobTitle?: string; // 求人タイトル
+  newScoutRoomId?: string; // スカウトのメッセージルームID
+  
+  hasUnreadScout: boolean; // 未読スカウトの有無（72h経過）
+  unreadScoutDate?: Date; // 未読スカウト受信日時
+  unreadScoutCompanyName?: string; // 未読スカウト企業名
+  unreadScoutJobTitle?: string; // 未読求人タイトル
+  unreadScoutRoomId?: string; // 未読スカウトのメッセージルームID
+  
+  // メッセージ関連
+  hasNewMessage: boolean; // 新着メッセージの有無
+  newMessageDate?: Date; // 新着メッセージ受信日時
+  newMessageCompanyName?: string; // メッセージ企業名
+  newMessageJobTitle?: string; // メッセージ求人タイトル
+  newMessageRoomId?: string; // 新着メッセージのルームID
+  
+  hasUnreadMessage: boolean; // 未読メッセージの有無（72h経過）
+  unreadMessageDate?: Date; // 未読メッセージ受信日時
+  unreadMessageCompanyName?: string; // 未読メッセージ企業名
+  unreadMessageJobTitle?: string; // 未読メッセージ求人タイトル
+  unreadMessageRoomId?: string; // 未読メッセージのルームID
+}
 
 export default function CandidateTaskPage() {
   // --- レスポンシブ対応: モバイル判定 ---
   const [isMobile, setIsMobile] = useState(false);
   // --- ページネーション用の状態 ---
   const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+
+  // ユーザー状態（実際はAPIから取得）
+  const [userState, setUserState] = useState<UserState>({
+    // 会員情報関連（空のトリガー関数で非表示）
+    profileIncomplete: false,
+    
+    // スカウト関連（空のトリガー関数で非表示）
+    hasNewScout: false,
+    newScoutDate: undefined,
+    newScoutCompanyName: undefined,
+    newScoutJobTitle: undefined,
+    newScoutRoomId: undefined,
+    
+    hasUnreadScout: false,
+    unreadScoutDate: undefined,
+    unreadScoutCompanyName: undefined,
+    unreadScoutJobTitle: undefined,
+    unreadScoutRoomId: undefined,
+    
+    // メッセージ関連（message.mdの仕様に従って実装）
+    hasNewMessage: false,
+    newMessageDate: undefined,
+    newMessageCompanyName: undefined,
+    newMessageJobTitle: undefined,
+    newMessageRoomId: undefined,
+    
+    hasUnreadMessage: false,
+    unreadMessageDate: undefined,
+    unreadMessageCompanyName: undefined,
+    unreadMessageJobTitle: undefined,
+    unreadMessageRoomId: undefined,
+  });
+
+  // 72時間経過を判定するヘルパー関数（message.mdの仕様）
+  const is72HoursPassed = (date?: Date): boolean => {
+    if (!date) return false;
+    const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
+    return Date.now() - date.getTime() >= seventyTwoHoursInMs;
+  };
+
+  // 72時間以内かどうかを判定するヘルパー関数
+  const isWithin72Hours = (date?: Date): boolean => {
+    if (!date) return false;
+    const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
+    return Date.now() - date.getTime() < seventyTwoHoursInMs;
+  };
+
+  // 表示条件関数（トリガー関数）- message.mdの仕様に基づく
+  const checkProfileIncomplete = () => userState.profileIncomplete;
+  
+  // スカウト関連（空のトリガー関数で非表示）
+  const checkNewScout = () => false;
+  const checkUnreadScout = () => false;
+  
+  // メッセージ関連（message.mdの仕様）
+  const checkNewMessage = () => 
+    userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
+    
+  const checkUnreadMessage = () => 
+    userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
+
+  // サブテキストを動的に生成する関数
+  const generateSubText = (companyName?: string, jobTitle?: string): string => {
+    if (companyName && jobTitle) {
+      return `${companyName} | ${jobTitle}`;
+    }
+    return '企業名 | 求人タイトル'; // デフォルト値
+  };
+
+  // タスクリストのデータ（message.mdの仕様に基づく）
+  const taskItems: TaskItem[] = [
+    {
+      id: '1',
+      title: '会員情報を充実させましょう。スカウトが届きやすくなります。',
+      description: '', // サブテキストなし
+      iconSrc: '/images/check.svg',
+      triggerFunction: checkProfileIncomplete,
+      navigateTo: '/candidate/profile', // 会員情報編集ページ
+    },
+    {
+      id: '2',
+      title: 'あなたにスカウトが届きました！内容を確認しましょう。',
+      description: generateSubText(userState.newScoutCompanyName, userState.newScoutJobTitle),
+      iconSrc: '/images/check.svg',
+      triggerFunction: checkNewScout,
+      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
+    },
+    {
+      id: '3',
+      title: '未読のスカウトがあります。早めに確認しましょう。',
+      description: generateSubText(userState.unreadScoutCompanyName, userState.unreadScoutJobTitle),
+      iconSrc: '/images/check.svg',
+      triggerFunction: checkUnreadScout,
+      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
+    },
+    {
+      id: '4',
+      title: '企業からメッセージが届きました！内容を確認しましょう。',
+      description: generateSubText(userState.newMessageCompanyName, userState.newMessageJobTitle),
+      iconSrc: '/images/check.svg',
+      triggerFunction: checkNewMessage,
+      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
+    },
+    {
+      id: '5',
+      title: '未読のメッセージがあります。早めに確認しましょう。',
+      description: generateSubText(userState.unreadMessageCompanyName, userState.unreadMessageJobTitle),
+      iconSrc: '/images/check.svg',
+      triggerFunction: checkUnreadMessage,
+      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
+    },
+  ];
+
+  // トリガー関数の条件を満たすアイテムのみをフィルタリング
+  const visibleItems = taskItems.filter(item => item.triggerFunction());
+
+  // ページごとに表示するアイテム数
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+  const displayedItems = visibleItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 600);
@@ -18,6 +188,29 @@ export default function CandidateTaskPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // タスクアイテムクリックハンドラー（message.mdの仕様に基づく）
+  const handleTaskItemClick = (item: TaskItem) => {
+    if (item.navigateTo) {
+      // メッセージ関連のタスクの場合、特定のチャットルームを開く
+      if (item.id === '2' && userState.newScoutRoomId) {
+        // 新着スカウトの場合
+        router.push(`/candidate/message?room=${userState.newScoutRoomId}`);
+      } else if (item.id === '3' && userState.unreadScoutRoomId) {
+        // 未読スカウトの場合
+        router.push(`/candidate/message?room=${userState.unreadScoutRoomId}`);
+      } else if (item.id === '4' && userState.newMessageRoomId) {
+        // 新着メッセージの場合
+        router.push(`/candidate/message?room=${userState.newMessageRoomId}`);
+      } else if (item.id === '5' && userState.unreadMessageRoomId) {
+        // 未読メッセージの場合
+        router.push(`/candidate/message?room=${userState.unreadMessageRoomId}`);
+      } else {
+        // その他のタスクの場合は通常の遷移
+        router.push(item.navigateTo);
+      }
+    }
+  };
 
   // --- ページ全体ラッパーのスタイル ---
   const pageWrapperStyle: React.CSSProperties = isMobile
@@ -166,154 +359,133 @@ export default function CandidateTaskPage() {
             </div>
             {/* やることリストを格納するラッパー */}
             <div style={todoListWrapperStyle}>
-              {/* やることリストのアイテム例 */}
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>会員情報を充実させましょう。</span>
-                    <p style={todoBodyTextStyle}>
-                      スカウトが届きやすくなります。
-                    </p>
+              {displayedItems.length > 0 ? (
+                <>
+                  {/* タスクリストのアイテムを動的に生成 */}
+                  {displayedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        ...todoItemStyle,
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => handleTaskItemClick(item)}
+                    >
+                      <div style={todoItemRowStyle}>
+                        <img
+                          src={item.iconSrc || '/images/check.svg'}
+                          alt={item.completed ? '完了チェック' : 'タスクアイコン'}
+                          width={48}
+                          height={48}
+                          style={{ display: 'block' }}
+                        />
+                        <div style={todoTextsWrapperStyle}>
+                          <span style={qaLinkTextStyle}>{item.title}</span>
+                          <p style={todoBodyTextStyle}>{item.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {/* ページネーション */}
+                  <div style={{ marginTop: '40px' }}>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                </>
+              ) : (
+                /* 空の状態のコンポーネント - Figmaデザイン完全再現 */
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: '80px',
+                  padding: '0',
+                  width: '100%',
+                }}>
+                  {/* メインコンテンツ */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '40px',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    padding: '80px 0',
+                    width: '100%',
+                  }}>
+                    {/* リストアイコン（大） - 120px 灰色 */}
+                    <div style={{
+                      position: 'relative',
+                      width: '120px',
+                      height: '120px',
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: 'auto',
+                        aspectRatio: '50.0049/42.1957',
+                        left: '0',
+                        right: '0',
+                        top: 'calc(50% + 0.293px)',
+                        transform: 'translateY(-50%)',
+                      }}>
+                        <img
+                          src='/images/list.svg'
+                          alt=''
+                          style={{
+                            display: 'block',
+                            maxWidth: 'none',
+                            width: '100%',
+                            height: '100%',
+                            filter: 'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(95%)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* 説明文 */}
+                    <div style={{
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      fontWeight: 500,
+                      lineHeight: 2,
+                      fontStyle: 'normal',
+                      position: 'relative',
+                      color: '#323232',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      whiteSpace: isMobile ? 'normal' : 'nowrap',
+                      letterSpacing: '1.6px',
+                    }}>
+                      <p style={{
+                        display: 'block',
+                        margin: 0,
+                        marginBottom: '0',
+                      }}>
+                        企業からの新しいスカウトやメッセージがあると、
+                      </p>
+                      <p style={{
+                        display: 'block',
+                        margin: 0,
+                      }}>
+                        こちらに一覧で表示されます。
+                      </p>
+                    </div>
+
+                    {/* 求人を探すボタン */}
+                    <Button
+                      variant="blue-gradient"
+                      size="figma-default"
+                      onClick={() => router.push('/candidate/search/setting')}
+                      style={{ paddingTop: '16px', paddingBottom: '16px' }}
+                    >
+                      求人を探す
+                    </Button>
                   </div>
                 </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>あなたにスカウトが届きました！内容を確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>未読のスカウトがあります。早めに確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>企業からメッセージが届きました！内容を確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>未読のメッセージがあります。早めに確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>会員情報を充実させましょう。</span>
-                    <p style={todoBodyTextStyle}>
-                      スカウトが届きやすくなります。
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>あなたにスカウトが届きました！内容を確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>未読のスカウトがあります。早めに確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-              <div style={todoItemStyle}>
-                <div style={todoItemRowStyle}>
-                  <img
-                    src='/images/check.svg'
-                    alt='完了チェック'
-                    width={48}
-                    height={48}
-                    style={{ display: 'block' }}
-                  />
-                  <div style={todoTextsWrapperStyle}>
-                    <span style={qaLinkTextStyle}>企業からメッセージが届きました！内容を確認しましょう。</span>
-                    <p style={todoBodyTextStyle}>対象の企業名テキスト | 求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキストがあります。求人タイトルテキスト…</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* ページネーション（暫定: 5ページ想定） */}
-            <div style={{ marginTop: '40px' }}>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={5}
-                onPageChange={setCurrentPage}
-              />
+              )}
             </div>
           </div>
           {/* 右カラム（サイドコンテンツ） */}

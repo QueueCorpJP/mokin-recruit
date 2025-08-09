@@ -10,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/admin/ui/breadcrumb';
-import { ChevronRightIcon } from 'lucide-react';
+import { PaginationArrow } from '@/components/svg/PaginationArrow';
 
 interface BreadcrumbConfig {
   [key: string]: string;
@@ -55,7 +55,8 @@ export function AdminBreadcrumb() {
 
   const breadcrumbs = generateBreadcrumbs();
   
-  if (breadcrumbs.length <= 1) {
+  // トップページ（/admin）の場合でも管理者トップを表示
+  if (breadcrumbs.length === 0) {
     return null;
   }
 
@@ -83,7 +84,7 @@ export function AdminBreadcrumb() {
               </BreadcrumbItem>
               {index < breadcrumbs.length - 1 && (
                 <BreadcrumbSeparator>
-                  <ChevronRightIcon className="w-4 h-4 text-[#0f9058]" />
+                  <PaginationArrow direction="right" className="h-2 breadcrumb-arrow" />
                 </BreadcrumbSeparator>
               )}
             </div>

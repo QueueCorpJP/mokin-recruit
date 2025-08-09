@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
-import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { PaginationArrow } from "@/components/svg/PaginationArrow";
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
@@ -79,10 +79,10 @@ const BreadcrumbSeparator = ({
   <li
     role="presentation"
     aria-hidden="true"
-    className={cn("[&>svg]:w-3.5 [&>svg]:h-3.5", className)}
+    className={cn("[&>svg]:w-3.5 [&>svg]:h-3.5 [&>svg.breadcrumb-arrow]:!w-2 [&>svg.breadcrumb-arrow]:!h-2", className)}
     {...props}
   >
-    {children ?? <ChevronRightIcon />}
+    {children ?? <PaginationArrow direction="right" className="h-2 breadcrumb-arrow" />}
   </li>
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
@@ -97,7 +97,7 @@ const BreadcrumbEllipsis = ({
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
-    <MoreHorizontalIcon className="h-4 w-4" />
+    {/* More icon placeholder */}
     <span className="sr-only">More</span>
   </span>
 );
