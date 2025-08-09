@@ -69,7 +69,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
           className="w-6 h-6"
         />
       </div>
-      <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6 mr-2 md:mr-0'>
+      <div className='flex flex-col md:flex-row flex-1 min-w-0 items-start md:items-center gap-1 md:gap-6 mr-4 md:mr-6'>
         {/* 企業グループ名（候補者画面）または候補者名（企業画面） */}
         {(companyName || candidateName) && (
           <div
@@ -77,18 +77,23 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
             style={{ 
               height: 32,
               fontWeight: 700,
-              maxWidth: isMobile ? 'calc(100vw - 230px)' : '230px' // モバイル時: padding48px + arrow32px + button120px + margin30px
+              maxWidth: isMobile ? 'calc(100vw - 240px)' : '270px' // モバイル時も求人タイトルと同じ幅制限、PC時は15文字分（約270px）
             }}
           >
-            {isCandidatePage ? companyName : candidateName}
+            {isMobile 
+              ? (isCandidatePage ? companyName : candidateName)
+              : ((isCandidatePage ? companyName : candidateName)?.length > 15 
+                  ? `${(isCandidatePage ? companyName : candidateName)?.substring(0, 15)}...` 
+                  : (isCandidatePage ? companyName : candidateName))
+            }
           </div>
         )}
         {/* 記事タイトル */}
         <div
-          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 overflow-hidden text-ellipsis whitespace-nowrap'
+          className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#0F9058] tracking-[0.1em] leading-[1.6] underline underline-offset-2 overflow-hidden text-ellipsis whitespace-nowrap flex-1'
           style={{
             textDecorationColor: '#0F9058',
-            maxWidth: isMobile ? 'calc(100vw - 230px)' : 'none', // モバイル時: padding48px + arrow32px + button120px + margin30px
+            maxWidth: isMobile ? 'calc(100vw - 240px)' : '500px', // モバイル時はそのまま、PC時は少し縮めて500px
             marginRight: isMobile ? '0' : '24px' // PC時のみmarginRight
           }}
         >
@@ -101,7 +106,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
             borderColor: '#FF5B5B',
             color: '#FF5B5B',
           }}
-          className='rounded-full px-6 py-2 h-auto text-[14px] font-bold min-w-[120px] border border-[#FF5B5B] bg-transparent hover:bg-[rgba(255,91,91,0.2)]'
+          className='rounded-full px-6 py-2 h-auto text-[14px] font-bold min-w-[120px] border border-[#FF5B5B] bg-transparent hover:bg-[rgba(255,91,91,0.2)] flex-shrink-0'
           onClick={handleDeclineClick}
           type='button'
         >
@@ -110,7 +115,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
       ) : (
         <Button
           variant='small-green-outline'
-          className='rounded-full px-6 py-2 h-auto text-[14px] font-bold border-[#0F9058] text-[#0F9058] min-w-[120px] hover:bg-[rgba(15,144,88,0.2)]'
+          className='rounded-full px-6 py-2 h-auto text-[14px] font-bold border-[#0F9058] text-[#0F9058] min-w-[120px] hover:bg-[rgba(15,144,88,0.2)] flex-shrink-0'
           onClick={onDetailClick}
           type='button'
         >

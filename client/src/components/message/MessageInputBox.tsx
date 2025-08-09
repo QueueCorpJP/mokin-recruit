@@ -192,7 +192,34 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
             <button
               key={template.label}
               type='button'
-              onClick={() => setMessage(template.text)}
+              onClick={() => {
+                setMessage(template.text);
+                // テンプレート設定後にテキストエリアの高さを再計算
+                setTimeout(() => {
+                  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+                  if (textarea) {
+                    const initialHeight = 56;
+                    const lineHeight = 32;
+                    
+                    // 高さをリセットして再計算
+                    textarea.style.height = initialHeight + 'px';
+                    const scrollHeight = textarea.scrollHeight;
+                    
+                    // 行数計算
+                    const additionalHeight = scrollHeight - initialHeight;
+                    const calculatedLines = Math.floor(additionalHeight / lineHeight) + 1;
+                    
+                    setCurrentLines(calculatedLines);
+                    
+                    // 8行以下の場合は高さを自動調整、8行を超える場合は固定
+                    if (calculatedLines <= 8) {
+                      textarea.style.height = scrollHeight + 'px';
+                    } else {
+                      textarea.style.height = '256px';
+                    }
+                  }
+                }, 0);
+              }}
               className='px-4 py-1 border border-[#0F9058] text-[#0F9058] bg-white rounded-full text-[14px] font-bold w-auto flex-shrink-0 inline-block hover:bg-[rgba(15,144,88,0.20)] transition-colors duration-200'
             >
               {template.label}
@@ -332,7 +359,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           {/* PC時のみ右端に送信ボタン */}
           <button
             type='button'
-            className={`hidden md:flex items-center gap-2 ${isSending || message.length > 2000 ? 'bg-[#999999]' : 'bg-[#0F9058]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors`}
+            className={`hidden md:flex items-center gap-2 ${isSending || message.length > 2000 ? 'bg-[#999999]' : 'bg-[#0F9058] hover:bg-[#0D7A4A]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors duration-200`}
             style={{ maxWidth: 120, padding: '10px 24px' }}
             disabled={isSending || message.length > 2000}
             onClick={handleSendMessage}
@@ -346,7 +373,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         <div className='flex justify-end mt-3 md:hidden'>
           <button
             type='button'
-            className={`flex items-center gap-2 ${isSending || message.length > 2000 ? 'bg-[#999999]' : 'bg-[#0F9058]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors`}
+            className={`flex items-center gap-2 ${isSending || message.length > 2000 ? 'bg-[#999999]' : 'bg-[#0F9058] hover:bg-[#0D7A4A]'} text-white font-bold text-[14px] leading-[1.6] tracking-[0.1em] rounded-[32px] px-6 py-2 transition-colors duration-200`}
             style={{ maxWidth: 120, padding: '10px 24px' }}
             disabled={isSending || message.length > 2000}
             onClick={handleSendMessage}
