@@ -467,8 +467,9 @@ export default function CandidateTaskPage() {
                       size="figma-default"
                       onClick={() => router.push('/candidate/search/setting')}
                       style={{ 
-                        paddingTop: '16px', 
-                        paddingBottom: '16px'
+                        paddingTop: '20px', 
+                        paddingBottom: '20px',
+                        fontSize: '16px'
                       }}
                       className="w-full md:w-auto"
                     >
@@ -522,7 +523,11 @@ export default function CandidateTaskPage() {
               />
               {/* QA一覧を見るリンクボックス */}
               <div style={qaLinkBoxStyle}>
-                <span style={{...qaLinkTextStyle, fontWeight: '700'}}>
+                <span style={{
+                  ...qaLinkTextStyle, 
+                  fontWeight: 'bold',
+                  fontFamily: "'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif"
+                }}>
                   Q&amp;A一覧を見る
                 </span>
                 <ChevronRightIcon
