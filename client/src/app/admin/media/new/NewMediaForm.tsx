@@ -34,6 +34,25 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
     }
   };
 
+  const handlePreview = () => {
+    if (!title.trim()) {
+      setError('タイトルを入力してください');
+      return;
+    }
+
+    const articleData = {
+      title,
+      categoryId: selectedCategoryId,
+      tags,
+      content: content || '<p>記事内容がここに表示されます</p>',
+      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
+      thumbnailName: thumbnail?.name || null
+    };
+
+    sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    router.push('/admin/media/preview');
+  };
+
   const handleSubmit = async (status: 'DRAFT' | 'PUBLISHED') => {
     if (!title.trim()) {
       setError('タイトルを入力してください');
@@ -110,9 +129,8 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             {isLoading ? '保存中...' : '下書き保存'}
           </Button>
           <Button 
-            onClick={() => handleSubmit('PUBLISHED')}
-            disabled={isLoading}
-            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50"
+            onClick={handlePreview}
+            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800"
             style={{
               fontFamily: 'Inter',
               fontSize: '16px',
@@ -120,7 +138,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
               lineHeight: 1.6
             }}
           >
-            {isLoading ? '保存中...' : '記事を保存する'}
+            確認
           </Button>
         </div>
       </div>
@@ -339,9 +357,8 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           一覧に戻る
         </Button>
         <Button 
-          onClick={() => handleSubmit('PUBLISHED')}
-          disabled={isLoading}
-          className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50"
+          onClick={handlePreview}
+          className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800"
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',
@@ -349,7 +366,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             lineHeight: 1.6
           }}
         >
-          {isLoading ? '保存中...' : '記事を保存する'}
+          確認
         </Button>
       </div>
     </div>
