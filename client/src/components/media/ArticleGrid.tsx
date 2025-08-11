@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';
 
 interface MediaArticle {
@@ -17,6 +20,7 @@ interface ArticleGridProps {
 const ITEMS_PER_PAGE = 9;
 
 export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   
   const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE);
@@ -34,24 +38,34 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
         {currentArticles.map((article) => (
           <article
             key={article.id}
+            onClick={() => router.push(`/candidate/media/${article.id}`)}
             className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 cursor-pointer group"
           >
             {/* 画像エリア */}
             <div className="relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden">
+              <img 
+                src={article.imageUrl} 
+                alt={article.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
               <div className="absolute top-3 left-3 z-10">
-                <img src={article.imageUrl} alt={article.title} />
+                <span className="bg-white/90 text-[#323232] text-[12px] font-medium px-2 py-1 rounded">
+                  {article.date}
+                </span>
               </div>
-              <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 group-hover:scale-110 transition-transform duration-500" />
             </div>
 
             {/* コンテンツエリア */}
             <div className="p-[24px] pb-[40px]">
-              <p className="text-[18px] font-bold text-[#323232] line-clamp-2 mb-[16px] Noto_Sans_JP">
+              <h3 className="text-[18px] font-bold text-[#323232] line-clamp-2 mb-[8px] Noto_Sans_JP">
+                {article.title}
+              </h3>
+              <p className="text-[14px] text-[#666666] line-clamp-3 mb-[16px] Noto_Sans_JP">
                 {article.description}
               </p>
               <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
-                  {article.category}
-                </span>
+                {article.category}
+              </span>
             </div>
           </article>
         ))}

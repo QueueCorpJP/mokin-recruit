@@ -93,23 +93,24 @@ export const AdminSidebar = (): React.JSX.Element => {
     <nav className="flex flex-col items-start gap-4 p-6 bg-r-ul-TKL border-r border-[#efefef]">
       {navigationItems.map((section, index) => (
         <React.Fragment key={`nav-section-${index}`}>
-          <Link href={section.href} className="flex items-center gap-2 w-full">
+          <div className="flex items-center gap-2 w-full">
             {section.icon}
             <span className="font-bold Noto_Sans_JP text-[#323232] tracking-[1.6px] leading-[200%] whitespace-nowrap">
               {section.title}
             </span>
-          </Link>
+          </div>
 
           {section.subItems.map((item, subIndex) => (
-            <div
+            <Link
+              href={subIndex === 0 ? section.href : '#'}
               key={`sub-item-${index}-${subIndex}`}
-              className="flex items-center gap-2 pl-7 w-full"
+              className="flex items-center gap-2 pl-7 w-full hover:opacity-80"
             >
               <div className="w-1.5 h-1.5 bg-ZC-dn-VC rounded-[3px]" />
               <span className="font-bold Noto_Sans_JP text-[#323232] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">
                 {item}
               </span>
-            </div>
+            </Link>
           ))}
 
           {index < navigationItems.length - 1 && (

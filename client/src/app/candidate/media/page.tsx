@@ -1,8 +1,7 @@
-'use client';
-
 import React from 'react';
 import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
+import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
 interface MediaArticle {
   id: string;
@@ -13,6 +12,7 @@ interface MediaArticle {
   imageUrl: string;
 }
 
+// モックデータ（Supabaseからのデータが取得できない場合の代替）
 const mockArticles: MediaArticle[] = [
   {
     id: '1',
@@ -135,20 +135,87 @@ const sideArticles = [
   }
 ];
 
-export default function MediaPage() {
+export default async function MediaPage() {
+  let articles: MediaArticle[] = [];
+  let error: string | null = null;
+
+  try {
+    // サーバーサイドでSupabaseから記事を取得
+    const supabase = createServerAdminClient();
+    const { data: fetchedArticles, error: supabaseError } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('status', 'PUBLISHED')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (supabaseError) {
+      throw supabaseError;
+    }
+
+    // Supabaseの記事データをMediaArticle形式に変換
+    articles = (fetchedArticles || []).map(article => ({
+      id: article.id,
+      date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '.'),
+      category: 'メディア', // デフォルトカテゴリ（後でリレーション対応）
+      title: article.title,
+      description: article.excerpt || (typeof article.content === 'string' 
+        ? article.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
+        : 'No description available'),
+      imageUrl: article.thumbnail_url || '/images/media01.jpg' // デフォルト画像
+    }));
+  } catch (err) {
+    console.error('記事の取得に失敗:', err);
+    error = '記事の読み込みに失敗しました';
+    // エラー時はモックデータを表示
+    articles = mockArticles;
+  }
+
+  const displayArticles = articles.length > 0 ? articles : mockArticles;
+
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[#17856F] to-[#229A4E]">
+    <div className="min-h-screen bg-gradient-to-t from-[#17856F] to-[#229A4E] relative overflow-hidden">
+      {/* 背景の半円SVG */}
+      <div className="absolute top-0 right-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="90" 
+          height="128" 
+          viewBox="0 0 90 128" 
+          fill="none"
+          className="w-32 h-32"
+        >
+          <circle cx="64.5" cy="64" r="64" fill="url(#paint0_linear_media_top)"/>
+          <defs>
+            <linearGradient id="paint0_linear_media_top" x1="64.5" y1="128" x2="64.5" y2="0" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#198D76"/>
+              <stop offset="1" stopColor="#1CA74F"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
       {/* ヘッダー */}
-      <header className=" px-[80px] py-[75px]">
+      <header className=" px-[80px] py-[75px] relative z-10">
         <div className="max-w-7xl text-center">
           <h1 className="text-[32px] font-bold text-[#FFF] Noto_Sans_JP">メディア</h1>
         </div>
       </header>
 
       {/* メインコンテンツ */}
-      <main className="w-full md:px-[80px] md:py-[80px] px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden">
+      <main className="w-full md:px-[80px] md:py-[80px] px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
         <div className="flex flex-col lg:flex-row gap-[80px]">
-          <ArticleGrid articles={mockArticles} />
+          {error && (
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-2">{error}</p>
+              <p className="text-gray-600 text-sm">モックデータを表示しています</p>
+            </div>
+          )}
+          <ArticleGrid articles={displayArticles} />
           <PopularArticlesSidebar articles={sideArticles} />
         </div>
       </main>
