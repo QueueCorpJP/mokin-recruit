@@ -138,7 +138,7 @@ class ArticleService {
     return {
       ...data,
       content: this.parseContent(data.content)
-    };
+    } as unknown as Article;
   }
 
   // 記事一覧を取得
@@ -179,7 +179,7 @@ class ArticleService {
       articles: data.map(article => ({
         ...article,
         content: this.parseContent(article.content)
-      })),
+      })) as Article[],
       total: count || 0
     };
   }
@@ -206,7 +206,7 @@ class ArticleService {
       throw new Error(`カテゴリの取得に失敗しました: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as unknown as ArticleCategory[];
   }
 
   // タグを取得
@@ -220,7 +220,7 @@ class ArticleService {
       throw new Error(`タグの取得に失敗しました: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as unknown as ArticleTag[];
   }
 
   // タグを作成または取得（サーバーサイドのAPIを呼び出し）
