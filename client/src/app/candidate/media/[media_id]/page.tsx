@@ -197,8 +197,8 @@ export default function MediaDetailPage() {
       <MediaHeader title="メディア" />
 
       {/* メインコンテンツ */}
-      <main className="w-full px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="md:px-[80px] md:py-[80px] px-[16px] py-[40px]">
+      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
+        <div className="md:px-[80px] md:py-[80px] px-[16px] py-[40px] gap-[80px]">
           
           <div className="flex flex-col lg:flex-row gap-[80px]">
             {/* 記事本文 */}
@@ -289,7 +289,7 @@ export default function MediaDetailPage() {
 
           {/* おすすめ記事 */}
           <section className="mt-[80px]">
-            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+            <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
               <img src="/images/recommend.svg" alt="recommend" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">おすすめ記事</h2>
             </div>
@@ -321,7 +321,7 @@ export default function MediaDetailPage() {
 
           {/* 新着記事 */}
           <section className="mt-[80px]">
-            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+            <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
               <img src="/images/new.svg" alt="new" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
             </div>
