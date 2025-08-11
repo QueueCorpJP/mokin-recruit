@@ -17,12 +17,6 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: false,
   },
 
-  // Vercel deployment optimization - simplified
-  experimental: {
-    // ページ遷移の最適化を一時的に無効
-    // scrollRestoration: true,
-  },
-
   // プロダクションビルドでconsole.logを削除
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
@@ -33,17 +27,13 @@ const nextConfig: NextConfig = {
   // サーバー外部パッケージ（Next.js 15の新しい設定）
   serverExternalPackages: ['bcryptjs'],
 
-  // Turbopack configuration (simplified for compatibility)
-  // turbopack: {
-  //   rules: {
-  //     '*.svg': {
-  //       loaders: ['@svgr/webpack'],
-  //       as: '*.js',
-  //     },
-  //   },
-  // },
+  // パフォーマンス実験的機能
+  experimental: {
+    optimizeCss: true,
+    serverMinification: true,
+  },
 
-  // 画像最適化の強化
+  // 画像最適化の強化（パフォーマンス重視）
   images: {
     remotePatterns: [
       {
@@ -55,20 +45,18 @@ const nextConfig: NextConfig = {
     ],
     domains: ['localhost', 'mjhqeagxibsklugikyma.supabase.co'],
     unoptimized: false,
-    // 画像最適化の設定
     formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // 画像品質の最適化（Next.js 15では別の方法で設定）
-    // プリロード設定
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // 画像キャッシュの最適化
-    minimumCacheTTL: 31536000, // 1年
+    minimumCacheTTL: 31536000,
+    // ローダー最適化
+    loader: 'default',
   },
 
-  // Simplified webpack config
-  webpack: (config, { isServer }) => {
+  // Enhanced webpack config with memory optimization
+  webpack: (config, { isServer, dev }) => {
     // SVG最適化のみ維持
     config.module.rules.push({
       test: /\.svg$/,
@@ -79,8 +67,76 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
       };
     }
+
+    // Memory optimization for production builds
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        minimize: true,
+        sideEffects: false,
+        usedExports: true,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            framework: {
+              chunks: 'all',
+              name: 'framework',
+              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            lib: {
+              test(module) {
+                return module.size() > 160000 &&
+                  /node_modules[\\/]/.test(module.identifier());
+              },
+              name(module) {
+                const hash = require('crypto')
+                  .createHash('sha1')
+                  .update(module.identifier())
+                  .digest('hex');
+                return `lib-${hash.substring(0, 8)}`;
+              },
+              priority: 30,
+              minChunks: 1,
+              reuseExistingChunk: true,
+            },
+            commons: {
+              name: 'commons',
+              minChunks: 2,
+              priority: 20,
+            },
+            shared: {
+              name(module, chunks) {
+                return `shared-${require('crypto')
+                  .createHash('sha1')
+                  .update(chunks.map(c => c.name).join('_'))
+                  .digest('hex')
+                  .substring(0, 8)}`;
+              },
+              priority: 10,
+              minChunks: 2,
+              reuseExistingChunk: true,
+            },
+          },
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+        },
+      };
+    }
+
+    // Node polyfills prevention
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'bcryptjs': require.resolve('bcryptjs'),
+    };
 
     return config;
   },

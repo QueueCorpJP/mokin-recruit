@@ -8,6 +8,7 @@
     "client"
   ],
   "scripts": {
+    "preinstall": "node scripts/check-node-version.js",
     "dev": "npm run dev --workspace=client -- --hostname 0.0.0.0",
     "dev:client": "npm run dev --workspace=client -- --hostname 0.0.0.0",
     "build": "npm run build --workspace=client",
@@ -25,7 +26,11 @@
     "docker:down": "docker-compose down",
     "docker:build": "docker-compose build",
     "clean": "npm run clean --workspace=client && rm -rf node_modules",
-    "clean:client": "npm run clean --workspace=client"
+    "clean:client": "npm run clean --workspace=client",
+    "fix:memory": "node scripts/fix-memory-leak.js",
+    "monitor:memory": "node --expose-gc scripts/monitor-memory.js",
+    "rebuild": "npm run clean && npm install",
+    "postinstall": "echo 'Dependencies installed. Run npm run dev to start.'"
   },
   "keywords": [
     "転職",
@@ -45,8 +50,8 @@
     "prettier": "^3.1.1"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=20.0.0 <23.0.0",
+    "npm": ">=10.0.0"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0"

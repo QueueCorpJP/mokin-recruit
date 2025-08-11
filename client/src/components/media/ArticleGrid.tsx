@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Pagination } from '@/components/ui/Pagination';
 
 interface MediaArticle {
@@ -23,10 +24,18 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   
-  const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentArticles = articles.slice(startIndex, endIndex);
+  const totalPages = useMemo(() => Math.ceil(articles.length / ITEMS_PER_PAGE), [articles.length]);
+  
+  const currentArticles = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return articles.slice(startIndex, endIndex);
+  }, [articles, currentPage]);
+  
+  const handleArticleClick = useCallback((articleId: string) => {
+    router.prefetch(`/candidate/media/${articleId}`);
+    router.push(`/candidate/media/${articleId}`);
+  }, [router]);
 
   return (
     <div className="flex-1">
@@ -38,15 +47,20 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
         {currentArticles.map((article) => (
           <article
             key={article.id}
-            onClick={() => router.push(`/candidate/media/${article.id}`)}
+            onClick={() => handleArticleClick(article.id)}
             className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 cursor-pointer group"
           >
-            {/* 画像エリア */}
+            {/* 画像エリア - パフォーマンス最適化 */}
             <div className="relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden">
-              <img 
-                src={article.imageUrl} 
+              <Image
+                src={article.imageUrl}
                 alt={article.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGBkRMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
               <div className="absolute top-3 left-3 z-10">
                 <span className="bg-white/90 text-[#323232] text-[12px] font-medium px-2 py-1 rounded">

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
+import { unstable_cache } from 'next/cache';
 
 interface MediaArticle {
   id: string;
@@ -12,7 +13,7 @@ interface MediaArticle {
   imageUrl: string;
 }
 
-// モックデータ（Supabaseからのデータが取得できない場合の代替）
+// 軽量化されたモックデータ
 const mockArticles: MediaArticle[] = [
   {
     id: '1',
@@ -135,73 +136,71 @@ const sideArticles = [
   }
 ];
 
-export default async function MediaPage() {
-  let articles: MediaArticle[] = [];
-  let error: string | null = null;
+// キャッシュされた記事取得関数
+const getCachedArticles = unstable_cache(
+  async (): Promise<MediaArticle[]> => {
+    try {
+      const supabase = createServerAdminClient();
+      const { data: fetchedArticles, error: supabaseError } = await supabase
+        .from('articles')
+        .select('id, title, excerpt, content, thumbnail_url, published_at, created_at')
+        .eq('status', 'PUBLISHED')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-  try {
-    // サーバーサイドでSupabaseから記事を取得
-    const supabase = createServerAdminClient();
-    const { data: fetchedArticles, error: supabaseError } = await supabase
-      .from('articles')
-      .select('*')
-      .eq('status', 'PUBLISHED')
-      .order('created_at', { ascending: false })
-      .limit(20);
+      if (supabaseError) {
+        throw supabaseError;
+      }
 
-    if (supabaseError) {
-      throw supabaseError;
+      return (fetchedArticles || []).map(article => ({
+        id: article.id,
+        date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '.'),
+        category: 'メディア',
+        title: article.title,
+        description: article.excerpt || (typeof article.content === 'string' 
+          ? article.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
+          : 'No description available'),
+        imageUrl: article.thumbnail_url || '/images/media01.jpg'
+      }));
+    } catch (err) {
+      console.error('記事の取得に失敗:', err);
+      return mockArticles;
     }
+  },
+  ['media-articles'],
+  { revalidate: 300 } // 5分間キャッシュ
+);
 
-    // Supabaseの記事データをMediaArticle形式に変換
-    articles = (fetchedArticles || []).map(article => ({
-      id: article.id,
-      date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).replace(/\//g, '.'),
-      category: 'メディア', // デフォルトカテゴリ（後でリレーション対応）
-      title: article.title,
-      description: article.excerpt || (typeof article.content === 'string' 
-        ? article.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
-        : 'No description available'),
-      imageUrl: article.thumbnail_url || '/images/media01.jpg' // デフォルト画像
-    }));
-  } catch (err) {
-    console.error('記事の取得に失敗:', err);
-    error = '記事の読み込みに失敗しました';
-    // エラー時はモックデータを表示
-    articles = mockArticles;
-  }
-
-  const displayArticles = articles.length > 0 ? articles : mockArticles;
+export default async function MediaPage() {
+  const articles = await getCachedArticles();
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[#17856F] to-[#229A4E] relative overflow-hidden">
-      {/* 背景の半円SVG */}
-      <div className="absolute top-0 right-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="90" 
-          height="128" 
-          viewBox="0 0 90 128" 
-          fill="none"
-          className="w-32 h-32"
-        >
-          <circle cx="64.5" cy="64" r="64" fill="url(#paint0_linear_media_top)"/>
-          <defs>
-            <linearGradient id="paint0_linear_media_top" x1="64.5" y1="128" x2="64.5" y2="0" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#198D76"/>
-              <stop offset="1" stopColor="#1CA74F"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+      
 
       {/* ヘッダー */}
-      <header className=" px-[80px] py-[75px] relative z-10">
-        <div className="max-w-7xl text-center">
+      <header className="px-[80px] py-[120px] relative z-10 h-[400px] flex items-center justify-center">
+        {/* 完全な半円背景 */}
+        <div className="absolute inset-0 overflow-visible" style={{ zIndex: -1 }}>
+          <div className="relative w-full h-full">
+            <div 
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+              style={{
+                width: '120vw',
+                height: '60vw',
+                maxWidth: '1200px',
+                maxHeight: '600px',
+                borderRadius: '50%',
+                background: 'linear-gradient(180deg, #1CA74F 0%, #198D76 100%)'
+              }}
+            />
+          </div>
+        </div>
+        <div className="text-center relative z-10">
           <h1 className="text-[32px] font-bold text-[#FFF] Noto_Sans_JP">メディア</h1>
         </div>
       </header>
@@ -209,13 +208,25 @@ export default async function MediaPage() {
       {/* メインコンテンツ */}
       <main className="w-full md:px-[80px] md:py-[80px] px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
         <div className="flex flex-col lg:flex-row gap-[80px]">
-          {error && (
-            <div className="text-center py-8">
-              <p className="text-red-600 mb-2">{error}</p>
-              <p className="text-gray-600 text-sm">モックデータを表示しています</p>
+          <Suspense fallback={
+            <div className="flex-1 animate-pulse">
+              <div className="h-8 bg-gray-200 rounded mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-[10px] overflow-hidden">
+                    <div className="h-[200px] bg-gray-200"></div>
+                    <div className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-          <ArticleGrid articles={displayArticles} />
+          }>
+            <ArticleGrid articles={articles} />
+          </Suspense>
           <PopularArticlesSidebar articles={sideArticles} />
         </div>
       </main>
