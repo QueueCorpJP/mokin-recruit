@@ -207,7 +207,7 @@ export default async function MediaPage() {
 
       {/* メインコンテンツ */}
       <main className="w-full md:px-[80px] md:py-[80px] px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="flex flex-col lg:flex-row gap-[80px]">
+        <div className="flex flex-col lg:flex-row gap-[40px] lg:gap-[80px]">
           <Suspense fallback={
             <div className="flex-1 animate-pulse">
               <div className="h-8 bg-gray-200 rounded mb-6"></div>

@@ -281,8 +281,8 @@ export default function MediaDetailPage() {
 
             </article>
 
-            {/* サイドバー */}
-            <aside className="lg:w-[280px] lg:flex-shrink-0">
+            {/* サイドバー（デスクトップ表示用） */}
+            <aside className="hidden lg:block lg:w-[280px] lg:flex-shrink-0">
               <PopularArticlesSidebar articles={sideArticles} />
             </aside>
           </div>
@@ -350,6 +350,11 @@ export default function MediaDetailPage() {
               ))}
             </div>
           </section>
+
+          {/* サイドバー（モバイル表示用） */}
+          <div className="lg:hidden mt-[80px]">
+            <PopularArticlesSidebar articles={sideArticles} />
+          </div>
 
         </div>
       </main>
