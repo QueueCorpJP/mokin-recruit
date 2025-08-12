@@ -49,49 +49,10 @@ export function CandidateDashboardClient({
                   <SectionHeading
                     iconSrc='/images/list.svg'
                     iconAlt='やることリストアイコン'
+                    style={{ width: '100%' }}
                   >
                     やることリスト
                   </SectionHeading>
-                  {/* 質問アイコンとポップアップ */}
-                  <div
-                    style={{
-                      marginLeft: 16,
-                      display: 'flex',
-                      alignItems: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    <img
-                      src='/images/question.svg'
-                      alt='質問アイコン'
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setShowQuestionPopup(prev => !prev)}
-                      width={24}
-                      height={24}
-                    />
-                    {showQuestionPopup && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: 24 + 8, // アイコン幅24px + 8px
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 489,
-                          height: 48,
-                          padding: 16,
-                          background: '#F0F9F3',
-                          display: 'flex',
-                          alignItems: 'center',
-                          boxSizing: 'content-box',
-                          zIndex: 10,
-                          borderRadius: 8,
-                          boxShadow: '0 0 8px 0 rgba(0,0,0,0.05)',
-                        }}
-                      >
-                        ここにダミーの説明テキストが入ります。
-                      </div>
-                    )}
-                  </div>
                 </div>
                 {/* やることリストを格納するラッパー */}
                 <div
