@@ -1,0 +1,93 @@
+/* media.mdの仕様に基づくHTMLタグスタイル */
+
+/* h2スタイル */
+.prose h2,
+.media-content-editor h2 {
+  color: #0F9058 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 24px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: 160% !important; /* 38.4px */
+  letter-spacing: 2.4px !important;
+}
+
+/* liスタイル */
+.prose li,
+.media-content-editor li {
+  display: flex !important;
+  padding: 24px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  align-self: stretch !important;
+  border-radius: 24px !important;
+  border: 2px solid #0F9058 !important;
+  margin-bottom: 16px !important;
+}
+
+/* pスタイル */
+.prose p,
+.media-content-editor p {
+  color: #323232 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
+}
+
+/* 線のスタイル */
+.prose hr,
+.media-content-editor hr {
+  fill: #0F9058 !important;
+  stroke-width: 2px !important;
+  stroke: #0F9058 !important;
+  height: 0 !important;
+  align-self: stretch !important;
+  border: none !important;
+  border-top: 2px solid #0F9058 !important;
+  margin: 24px 0 !important;
+}
+
+/* テーブルスタイル */
+.prose table,
+.media-content-editor table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 24px 0 !important;
+}
+
+/* テーブルヘッダー（コラム名）スタイル */
+.prose th,
+.media-content-editor th {
+  display: flex !important;
+  padding: 16px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  align-content: center !important;
+  gap: 24px !important;
+  align-self: stretch !important;
+  flex-wrap: wrap !important;
+  border: 1px solid #DCDCDC !important;
+  background: #EFEFEF !important;
+  font-family: "Noto Sans JP" !important;
+  font-weight: 700 !important;
+}
+
+/* テーブルセル（列データ）スタイル */
+.prose td,
+.media-content-editor td {
+  display: flex !important;
+  padding: 16px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  align-content: center !important;
+  gap: 24px !important;
+  align-self: stretch !important;
+  flex-wrap: wrap !important;
+  border: 1px solid #DCDCDC !important;
+  font-family: "Noto Sans JP" !important;
+  font-weight: 500 !important;
+}

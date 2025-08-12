@@ -1,2 +1,14 @@
-candidate/medeiaのメディアタイトルのヘッダー部分の背景に以下のベクターを追加してください。これはバックグラウンドカラーの前でメディアという文字の後ろ。
+candidate/mediaなどでのヘッダのバックグラウンドカラーのcircle.svgの表示がfigmaと違うから完全にfigma通りの配置にしてください
+
+fill: linear-gradient(0deg, #198D76 0%, #1CA74F 100%);
+
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="200" viewBox="0 0 1280 200" fill="none">
+  <path d="M640 -27C882.58 -27 1105.3 58.02 1280 199.89H0C174.7 58.02 397.42 -27 640 -27Z" fill="url(#paint0_linear_5275_20012)"/>
+  <defs>
+    <linearGradient id="paint0_linear_5275_20012" x1="640" y1="199.89" x2="640" y2="-27" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#198D76"/>
+      <stop offset="1" stop-color="#1CA74F"/>
+    </linearGradient>
+  </defs>
+</svg>
 
