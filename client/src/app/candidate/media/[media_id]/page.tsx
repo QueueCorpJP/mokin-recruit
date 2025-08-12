@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { MediaHeader } from '@/components/media/MediaHeader';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { articleService, type Article } from '@/lib/services/articleService';
+import { mediaService } from '@/lib/services/mediaService.client';
 
 const mockArticle = {
   id: '1',
@@ -40,28 +41,6 @@ const mockArticle = {
   }
 };
 
-const sideArticles = [
-  {
-    id: 's1',
-    category: 'ピックアップ',
-    title: 'テキストが入ります'
-  },
-  {
-    id: 's2',
-    category: 'ランキング',
-    title: 'テキストが入ります'
-  },
-  {
-    id: 's3',
-    category: 'お知らせ',
-    title: 'テキストが入ります'
-  },
-  {
-    id: 's4',
-    category: 'キャンペーン',
-    title: 'テキストが入ります'
-  }
-];
 
 const recommendedArticles = [
   {
@@ -123,9 +102,14 @@ export default function MediaDetailPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarData, setSidebarData] = useState({
+    popularArticles: [],
+    categories: [],
+    tags: []
+  });
 
   useEffect(() => {
-    const fetchArticle = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const mediaId = params.media_id as string;
@@ -135,7 +119,13 @@ export default function MediaDetailPage() {
           return;
         }
 
-        const fetchedArticle = await articleService.getArticle(mediaId);
+        // 記事とサイドバーデータを並列取得
+        const [fetchedArticle, popularArticles, categories, tags] = await Promise.all([
+          articleService.getArticle(mediaId),
+          mediaService.getPopularArticles(5),
+          mediaService.getCategories(),
+          mediaService.getTags()
+        ]);
         
         if (!fetchedArticle) {
           setError('記事が見つかりませんでした');
@@ -148,16 +138,17 @@ export default function MediaDetailPage() {
         }
 
         setArticle(fetchedArticle);
+        setSidebarData({ popularArticles, categories, tags });
         setError(null);
       } catch (err) {
-        console.error('記事の取得に失敗:', err);
+        console.error('データの取得に失敗:', err);
         setError('記事の読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchArticle();
+    fetchData();
   }, [params.media_id]);
 
   if (loading) {
@@ -198,11 +189,11 @@ export default function MediaDetailPage() {
 
       {/* メインコンテンツ */}
       <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="md:px-[80px] md:py-[80px] px-[16px] py-[40px]">
+        <div className="w-full md:py-[80px] py-[40px]">
           
-          <div className="flex flex-col lg:flex-row lg:gap-[80px]">
-            {/* 記事本文 */}
-            <article className="flex-1 lg:min-w-[800px] lg:max-w-[800px]">
+          <div className="flex flex-col lg:flex-row lg:justify-between px-[16px] md:px-[80px]">
+            {/* 記事本文 - 右側のサイドバーとの間に80pxの余白を確保 */}
+            <article className="flex-1 lg:pr-[80px]">
               
               {/* 日時 */}
               <div className="mb-[16px]">
@@ -213,7 +204,7 @@ export default function MediaDetailPage() {
               
               {/* 記事タイトルセクション */}
               <div className="mb-[32px]">
-                <h1 className="text-[32px] font-bold text-[#323232] mb-[16px] Noto_Sans_JP leading-[1.5]">
+                <h1 className="text-[32px] text-[#323232] mb-[16px] font-noto-sans-jp leading-[1.5]" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif' }}>
                   {article.title}
                 </h1>
                 <div className="flex items-center gap-[16px]">
@@ -245,23 +236,6 @@ export default function MediaDetailPage() {
                 }}
               />
 
-              {/* 記事フッター */}
-              <footer className="mb-[40px] pt-8 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-500">
-                    公開日: {formattedDate}
-                    {article.views_count && (
-                      <span className="ml-4">閲覧数: {article.views_count.toLocaleString()}</span>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => router.push('/candidate/media')}
-                    className="bg-[#0F9058] text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors"
-                  >
-                    メディア一覧に戻る
-                  </button>
-                </div>
-              </footer>
 
               {/* CTAバナー */}
               <div className="mb-[60px]">
@@ -281,14 +255,18 @@ export default function MediaDetailPage() {
 
             </article>
 
-            {/* サイドバー（デスクトップ表示用） */}
-            <aside className="hidden lg:block lg:w-[280px] lg:flex-shrink-0">
-              <PopularArticlesSidebar articles={sideArticles} />
+            {/* サイドバー（デスクトップ表示用） - 固定幅280px */}
+            <aside className="hidden lg:block lg:w-[280px] flex-shrink-0">
+              <PopularArticlesSidebar 
+                articles={sidebarData.popularArticles} 
+                categories={sidebarData.categories}
+                tags={sidebarData.tags}
+              />
             </aside>
           </div>
 
           {/* おすすめ記事 */}
-          <section className="mt-[80px]">
+          <section className="mt-[80px] px-[16px] md:px-[80px]">
             <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
               <img src="/images/recommend.svg" alt="recommend" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">おすすめ記事</h2>
@@ -307,7 +285,7 @@ export default function MediaDetailPage() {
                     />
                   </div>
                   <div className="p-[24px]">
-                    <p className="text-[16px] font-bold text-[#323232] line-clamp-2 mb-[16px] Noto_Sans_JP">
+                    <p className="text-[16px] font-extrabold text-[#323232] line-clamp-2 mb-[16px] Noto_Sans_JP tracking-tight">
                       {article.description}
                     </p>
                     <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
@@ -320,7 +298,7 @@ export default function MediaDetailPage() {
           </section>
 
           {/* 新着記事 */}
-          <section className="mt-[80px]">
+          <section className="mt-[80px] px-[16px] md:px-[80px]">
             <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
               <img src="/images/new.svg" alt="new" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
@@ -339,7 +317,7 @@ export default function MediaDetailPage() {
                     />
                   </div>
                   <div className="p-[24px]">
-                    <p className="text-[16px] font-bold text-[#323232] line-clamp-2 mb-[16px] Noto_Sans_JP">
+                    <p className="text-[16px] font-extrabold text-[#323232] line-clamp-2 mb-[16px] Noto_Sans_JP tracking-tight">
                       {article.description}
                     </p>
                     <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
@@ -352,8 +330,12 @@ export default function MediaDetailPage() {
           </section>
 
           {/* サイドバー（モバイル表示用） */}
-          <div className="lg:hidden mt-[80px]">
-            <PopularArticlesSidebar articles={sideArticles} />
+          <div className="lg:hidden mt-[80px] px-[16px] md:px-[80px]">
+            <PopularArticlesSidebar 
+              articles={sidebarData.popularArticles} 
+              categories={sidebarData.categories}
+              tags={sidebarData.tags}
+            />
           </div>
 
         </div>

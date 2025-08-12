@@ -71,7 +71,7 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
 
             {/* コンテンツエリア */}
             <div className="p-[24px] pb-[40px]">
-              <h3 className="text-[18px] font-bold text-[#323232] line-clamp-2 mb-[8px] Noto_Sans_JP">
+              <h3 className="text-[18px] font-extrabold text-[#323232] line-clamp-2 mb-[8px] Noto_Sans_JP tracking-tight">
                 {article.title}
               </h3>
               <p className="text-[14px] text-[#666666] line-clamp-3 mb-[16px] Noto_Sans_JP">

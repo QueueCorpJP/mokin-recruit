@@ -1,57 +1,104 @@
 import React from 'react';
 
-interface SideArticle {
+interface PopularArticle {
   id: string;
-  category: string;
   title: string;
+  views_count?: number;
+}
+
+interface Category {
+  name: string;
+  count: number;
+}
+
+interface Tag {
+  name: string;
+  count: number;
 }
 
 interface PopularArticlesSidebarProps {
-  articles: SideArticle[];
+  articles?: PopularArticle[];
+  categories?: Category[];
+  tags?: Tag[];
 }
 
-export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({ articles }) => {
+export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({ 
+  articles = [], 
+  categories = [], 
+  tags = [] 
+}) => {
   return (
     <aside className="lg:max-w-[240px] flex flex-col gap-[40px]">
-      <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px]">
-        <img src="/images/king.svg" alt="king" />
-        <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">人気記事</h2>
-      </div>
-      <div className="flex flex-col gap-[8px] mt-[-16px]">
-        {articles.map((article) => (
-          <div
-            key={article.id}
-            className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow cursor-pointer"
-          >
-            <div className="flex items-center gap-[16px] flex-row">
-             
-                <img src="/images/new.svg" alt="new" />
-                <h4 className="font-bold text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap font-[14px] Noto_Sans_JP">
-                  {article.title}
-                </h4>
-
-            </div>
+      {/* 人気記事セクション */}
+      {articles.length > 0 && (
+        <>
+          <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px]">
+            <img src="/images/king.svg" alt="king" />
+            <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">人気記事</h2>
           </div>
-        ))}       
-      </div>
+          <div className="flex flex-col gap-[8px] mt-[-16px]">
+            {articles.slice(0, 5).map((article) => (
+              <div
+                key={article.id}
+                className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-center gap-[16px] flex-row">
+                  <img src="/images/king.svg" alt="popular" />
+                  <h4 className="text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-noto-sans-jp" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif' }}>
+                    {article.title}
+                  </h4>
+                </div>
+              </div>
+            ))}       
+          </div>
+        </>
+      )}
+
+      {/* カテゴリーセクション */}
       <div className="flex flex-col gap-[8px]">
-        
-      <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
-        <img src="/images/cotegory.svg" alt="category" />
-        <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">カテゴリー</h2>
+        <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
+          <img src="/images/cotegory.svg" alt="category" />
+          <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">カテゴリー</h2>
+        </div>
+        {categories.length > 0 ? (
+          <div className="flex flex-wrap gap-[8px]">
+            {categories.slice(0, 10).map((category, index) => (
+              <span 
+                key={index} 
+                className="bg-[#0F9058] text-[#FFF] text-[14px] font-bold px-[16px] py-[4px] w-fit rounded-full cursor-pointer hover:bg-[#0D7347] transition-colors"
+                title={`${category.count}件の記事`}
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[#999] text-[14px]">カテゴリーがありません</div>
+        )}
       </div>
-      <div className="flex flex-wrap gap-[8px]">
-  {articles.map((article, index) => (
-    <span key={index} className="bg-[#0F9058] text-[#FFF] text-[14px] font-bold px-[16px] py-[4px] w-fit rounded-full">
-      {article.category}
-    </span>
-  ))}
-</div>
+
+      {/* タグセクション */}
+      <div className="flex flex-col gap-[8px]">
+        <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
+          <img src="/images/tag.svg" alt="tag" />
+          <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">タグ</h2>
+        </div>
+        {tags.length > 0 ? (
+          <div className="flex flex-wrap gap-[8px]">
+            {tags.slice(0, 15).map((tag, index) => (
+              <span 
+                key={index} 
+                className="bg-[#E8F5E8] text-[#0F9058] text-[12px] font-medium px-[12px] py-[2px] w-fit rounded-full cursor-pointer hover:bg-[#D4EBD4] transition-colors"
+                title={`${tag.count}件の記事`}
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[#999] text-[14px]">タグがありません</div>
+        )}
       </div>
-      <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
-        <img src="/images/tag.svg" alt="tag" />
-        <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">タグ</h2>
-      </div> 
     </aside>
   );
 };
