@@ -9,10 +9,12 @@ export interface MessageSearchFilterCandidateProps {
   companyValue?: string;
   jobValue?: string;
   keywordValue?: string;
+  searchTarget?: 'company' | 'job';
   messages?: Array<{ id: string; companyName: string; jobTitle: string }>;
   onCompanyChange?: (value: string) => void;
   onJobChange?: (value: string) => void;
   onKeywordChange?: (value: string) => void;
+  onSearchTargetChange?: (target: 'company' | 'job') => void;
   onSearch?: () => void;
   className?: string;
 }
@@ -35,7 +37,10 @@ function CustomDropdown({
   className,
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const selectedOption = options.find(option => option.value === value);
+  const selectedOption = React.useMemo(() => 
+    options.find(option => option.value === value), 
+    [options, value]
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +64,7 @@ function CustomDropdown({
         type='button'
         className={cn(
           'w-full bg-white border border-[#999999] rounded-[5px]',
-          'pl-[11px] pr-4 py-2 flex items-center justify-between',
+          'pl-[11px] pr-4 py-1 flex items-center justify-between h-[38px]',
           'text-left focus:outline-none focus:ring-2 focus:ring-[#0f9058]'
         )}
         onClick={() => setIsOpen(!isOpen)}
@@ -83,11 +88,12 @@ function CustomDropdown({
               key={option.value}
               type='button'
               className={cn(
-                'w-full px-[11px] py-2 text-left hover:bg-gray-50',
+                'w-full px-[11px] py-2 text-left hover:bg-gray-100',
                 'font-["Noto_Sans_JP"] font-bold text-[14px] text-[#323232] tracking-[1.4px] leading-[1.6]',
-                option.value === value && 'bg-gray-100'
+                option.value === value && 'bg-gray-50'
               )}
               onClick={() => {
+                console.log('Option clicked:', option.value, option.label);
                 onChange?.(option.value);
                 setIsOpen(false);
               }}
@@ -105,13 +111,21 @@ export function MessageSearchFilterCandidate({
   companyValue = 'all',
   jobValue = 'all',
   keywordValue = '',
+  searchTarget = 'company',
   messages = [],
   onCompanyChange,
   onJobChange,
   onKeywordChange,
+  onSearchTargetChange,
   onSearch,
   className,
 }: MessageSearchFilterCandidateProps) {
+  // 検索対象のオプション
+  const searchTargetOptions = [
+    { value: 'company', label: '企業名' },
+    { value: 'job', label: '求人名' }
+  ];
+  
   // 企業名のオプションを生成
   const companyOptions = React.useMemo(() => {
     const allOption = { value: 'all', label: '企業名' };
@@ -126,20 +140,6 @@ export function MessageSearchFilterCandidate({
     return [allOption, ...uniqueCompanies];
   }, [messages]);
   
-  // 求人名のオプションを生成
-  const jobOptions = React.useMemo(() => {
-    const allOption = { value: 'all', label: '求人名' };
-    const uniqueJobs = Array.from(new Set(messages.map(m => m.jobTitle)))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b))
-      .map(job => ({
-        value: job,
-        label: job
-      }));
-    
-    return [allOption, ...uniqueJobs];
-  }, [messages]);
-  
   return (
     <div
       className={cn(
@@ -148,33 +148,29 @@ export function MessageSearchFilterCandidate({
         className
       )}
     >
-      {/* フィルター行 */}
-      <div className='flex flex-row gap-4 w-full'>
-        <div className='flex-1'>
+      {/* 検索対象選択 */}
+      <div className='flex flex-row gap-4 items-center w-full'>
+        <div className='w-full'>
           <CustomDropdown
-            options={jobOptions}
-            value={jobValue}
-            placeholder='求人名'
-            onChange={onJobChange}
-            className='w-full'
-          />
-        </div>
-        <div className='flex-1'>
-          <CustomDropdown
-            options={companyOptions}
-            value={companyValue}
-            placeholder='企業名'
-            onChange={onCompanyChange}
+            options={searchTargetOptions}
+            value={searchTarget}
+            placeholder='検索対象'
+            onChange={(value) => {
+              console.log('Search target changed to:', value);
+              if (value === 'company' || value === 'job') {
+                onSearchTargetChange?.(value);
+              }
+            }}
             className='w-full'
           />
         </div>
       </div>
-      {/* 検索行 */}
+      {/* 検索入力行 */}
       <div className='flex flex-row gap-4 items-center w-full'>
         <div className='flex-1'>
           <Input
             type='text'
-            placeholder='テキストが入ります'
+            placeholder='キーワード検索'
             value={keywordValue}
             onChange={e => onKeywordChange?.(e.target.value)}
             className={cn(

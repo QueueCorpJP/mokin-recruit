@@ -85,10 +85,50 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   });
 
   const addImage = () => {
-    const url = window.prompt('画像URLを入力してください');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      
+      if (!files || files.length === 0) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+          const response = await fetch('/api/upload-content-image', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          const result = await response.json();
+          
+          if (result.success && result.url) {
+            const imageOrder = Date.now() + i;
+            editor?.chain()
+              .focus()
+              .setImage({ 
+                src: result.url
+              })
+              .run();
+          } else {
+            console.error('画像アップロードに失敗:', result.error);
+            alert('画像のアップロードに失敗しました: ' + (result.error || '不明なエラー'));
+          }
+        } catch (error) {
+          console.error('画像アップロードエラー:', error);
+          alert('画像のアップロードに失敗しました');
+        }
+      }
+    };
+    
+    input.click();
   };
 
   const insertTable = () => {
@@ -98,23 +138,31 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
     const numRows = parseInt(rows || '3');
     const numCols = parseInt(cols || '3');
     
-    let tableHtml = '<table>';
+    if (numRows <= 0 || numCols <= 0) {
+      alert('行数と列数は1以上の数値を入力してください');
+      return;
+    }
+    
+    // HTMLでテーブルを作成して挿入
+    let tableHtml = '<table class="media-table">';
     
     // ヘッダー行
-    tableHtml += '<tr>';
+    tableHtml += '<thead><tr>';
     for (let i = 0; i < numCols; i++) {
-      tableHtml += '<th>カラム' + (i + 1) + '</th>';
+      tableHtml += '<th class="table-header-cell">カラム' + (i + 1) + '</th>';
     }
-    tableHtml += '</tr>';
+    tableHtml += '</tr></thead>';
     
     // データ行
+    tableHtml += '<tbody>';
     for (let i = 0; i < numRows - 1; i++) {
       tableHtml += '<tr>';
       for (let j = 0; j < numCols; j++) {
-        tableHtml += '<td>データ</td>';
+        tableHtml += '<td class="table-cell">データ</td>';
       }
       tableHtml += '</tr>';
     }
+    tableHtml += '</tbody>';
     
     tableHtml += '</table>';
     editor?.commands.insertContent(tableHtml);
@@ -145,15 +193,6 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           className="h-8 px-2"
         >
           I
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'outline'}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className="h-8 px-2"
-        >
-          H1
         </Button>
         <Button
           type="button"

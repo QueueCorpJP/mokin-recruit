@@ -360,15 +360,15 @@ export default function CandidateSearchClient({
                                 </button>
                               </div>
                             ))}
-                            {selectedLocations.length > 6 && (
-                              <button
-                                onClick={() => setShowAllLocations(!showAllLocations)}
-                                className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
-                              >
-                                {showAllLocations ? '折りたたむ' : `+${selectedLocations.length - 6}件`}
-                              </button>
-                            )}
                           </div>
+                          {selectedLocations.length > 6 && (
+                            <button
+                              onClick={() => setShowAllLocations(!showAllLocations)}
+                              className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0 mt-2 w-full text-center"
+                            >
+                              {showAllLocations ? '折りたたむ' : `+${selectedLocations.length - 6}件`}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

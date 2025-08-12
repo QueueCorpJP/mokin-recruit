@@ -34,7 +34,7 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
               >
                 <div className="flex items-center gap-[16px] flex-row">
                   <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} />
-                  <h4 className="text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-noto-sans-jp" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif' }}>
+                  <h4 className="text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-noto-sans-jp" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     {article.title}
                   </h4>
                 </div>
@@ -55,7 +55,11 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
             {categories.slice(0, 10).map((category, index) => (
               <span 
                 key={index} 
-                className="bg-[#0F9058] text-[#FFF] text-[14px] font-bold px-[16px] py-[4px] w-fit rounded-full cursor-pointer hover:bg-[#0D7347] transition-colors"
+                className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] w-fit rounded-full cursor-pointer hover:bg-[#0D7347] transition-colors"
+                style={{ 
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                }}
                 title={`${category.count}件の記事`}
                 onClick={() => onCategoryClick?.(category.name)}
               >
@@ -79,7 +83,11 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
             {tags.slice(0, 15).map((tag, index) => (
               <span 
                 key={index} 
-                className="bg-[#E8F5E8] text-[#0F9058] text-[12px] font-medium px-[12px] py-[2px] w-fit rounded-full cursor-pointer hover:bg-[#D4EBD4] transition-colors"
+                className="text-[#0F9058] text-[16px] cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ 
+                  fontWeight: 700,
+                  fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                }}
                 title={`${tag.count}件の記事`}
                 onClick={() => onTagClick?.(tag.name)}
               >

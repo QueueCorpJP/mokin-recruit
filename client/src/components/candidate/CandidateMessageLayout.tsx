@@ -27,10 +27,15 @@ export function CandidateMessageLayout({
   // フィルター状態
   const [companyFilter, setCompanyFilter] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [searchTarget, setSearchTarget] = useState<'company' | 'job'>('company');
   
   // モバイル判定
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
+  
+  const handleSearchTargetChange = (target: 'company' | 'job') => {
+    setSearchTarget(target);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,11 +56,28 @@ export function CandidateMessageLayout({
     setSelectedRoomId(null);
   };
 
-  // フィルタリング（簡易版）
+  // フィルタリングとソート
   const filteredRooms = rooms.filter(room => {
     if (companyFilter && !room.companyName.includes(companyFilter)) return false;
-    if (keyword && !room.jobTitle.includes(keyword) && !room.lastMessage?.includes(keyword)) return false;
+    
+    // キーワード検索：選択された検索対象に応じて検索
+    if (keyword) {
+      const searchText = searchTarget === 'company' 
+        ? room.companyName.toLowerCase()
+        : room.jobTitle.toLowerCase();
+      if (!searchText.includes(keyword.toLowerCase())) {
+        return false;
+      }
+    }
+    
     return true;
+  }).sort((a, b) => {
+    // 選択された検索対象に応じてソート
+    if (searchTarget === 'company') {
+      return a.companyName.localeCompare(b.companyName, 'ja');
+    } else {
+      return a.jobTitle.localeCompare(b.jobTitle, 'ja');
+    }
   });
 
   const selectedRoom = filteredRooms.find(r => r.id === selectedRoomId);
@@ -104,8 +126,15 @@ export function CandidateMessageLayout({
         <MessageSearchFilterCandidate
           companyValue={companyFilter}
           keywordValue={keyword}
+          searchTarget={searchTarget}
+          messages={filteredRooms.map(room => ({
+            id: room.id,
+            companyName: room.companyName,
+            jobTitle: room.jobTitle
+          }))}
           onCompanyChange={setCompanyFilter}
           onKeywordChange={setKeyword}
+          onSearchTargetChange={handleSearchTargetChange}
           onSearch={() => {}}
         />
         <div className='flex-1 min-h-0'>
@@ -123,8 +152,15 @@ export function CandidateMessageLayout({
           <MessageSearchFilterCandidate
             companyValue={companyFilter}
             keywordValue={keyword}
+            searchTarget={searchTarget}
+            messages={filteredRooms.map(room => ({
+              id: room.id,
+              companyName: room.companyName,
+              jobTitle: room.jobTitle
+            }))}
             onCompanyChange={setCompanyFilter}
             onKeywordChange={setKeyword}
+            onSearchTargetChange={handleSearchTargetChange}
             onSearch={() => {}}
           />
           <div className='flex-1 min-h-0'>

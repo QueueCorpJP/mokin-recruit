@@ -576,5 +576,3 @@ export function CandidateDashboardClient({
     </div>
   );
 }
-client/src/components/ui/JobPostCard.tsx
-client/src/components/ui/JobListCard.tsx

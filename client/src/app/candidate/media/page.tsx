@@ -32,7 +32,7 @@ const getArticles = async (): Promise<MediaArticle[]> => {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
-      }).replace(/\//g, '.'),
+      }),
       categories: article.categories || ['メディア'],
       title: article.title,
       description: article.excerpt || 'No description available',

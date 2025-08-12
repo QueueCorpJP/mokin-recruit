@@ -40,12 +40,17 @@ export function MessageLayoutServer({
   const [companyFilter, setCompanyFilter] = useState('all');
   const [jobFilter, setJobFilter] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState(''); // 実際の検索に使用するキーワード
+  const [searchTarget, setSearchTarget] = useState<'company' | 'job'>('company');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'company'>('date');
   const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [rooms, setRooms] = useState<Room[]>(initialRooms); // roomsを状態管理
   
   const isCandidatePage = userType === 'candidate';
+  
+  const handleSearchTargetChange = (target: 'company' | 'job') => {
+    setSearchTarget(target);
+  };
 
   // 最初のルームを自動選択（無効化）
   // useEffect(() => {
@@ -140,10 +145,14 @@ export function MessageLayoutServer({
         if (companyFilter !== 'all' && room.companyName !== companyFilter) return false;
         if (jobFilter !== 'all' && room.jobTitle !== jobFilter) return false;
         
-        // キーワード検索：企業名と求人タイトルで検索
-        if (searchKeyword) {
-          const searchText = `${room.companyName} ${room.jobTitle}`.toLowerCase();
-          if (!searchText.includes(searchKeyword.toLowerCase())) return false;
+        // キーワード検索：選択された検索対象に応じて検索
+        if (keyword) {
+          const searchText = searchTarget === 'company' 
+            ? room.companyName.toLowerCase()
+            : room.jobTitle.toLowerCase();
+          if (!searchText.includes(keyword.toLowerCase())) {
+            return false;
+          }
         }
       } else {
         // 企業用フィルタリング
@@ -168,23 +177,32 @@ export function MessageLayoutServer({
 
     // ソート処理
     return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return (a.candidateName || '').localeCompare(b.candidateName || '', 'ja');
-        case 'company':
-          return (a.currentCompany || '').localeCompare(b.currentCompany || '', 'ja');
-        case 'date':
-        default:
-          // 日付順（未読メッセージを優先、その後最新メッセージ順）
-          if (a.isUnread !== b.isUnread) {
-            return a.isUnread ? -1 : 1; // 未読を上に
-          }
-          const aTime = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-          const bTime = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
-          return bTime - aTime; // 新しいメッセージを上に
+      if (isCandidatePage) {
+        // 選択された検索対象に応じてソート
+        if (searchTarget === 'company') {
+          return (a.companyName || '').localeCompare(b.companyName || '', 'ja');
+        } else {
+          return (a.jobTitle || '').localeCompare(b.jobTitle || '', 'ja');
+        }
+      } else {
+        switch (sortBy) {
+          case 'name':
+            return (a.candidateName || '').localeCompare(b.candidateName || '', 'ja');
+          case 'company':
+            return (a.currentCompany || '').localeCompare(b.currentCompany || '', 'ja');
+          case 'date':
+          default:
+            // 日付順（未読メッセージを優先、その後最新メッセージ順）
+            if (a.isUnread !== b.isUnread) {
+              return a.isUnread ? -1 : 1; // 未読を上に
+            }
+            const aTime = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+            const bTime = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+            return bTime - aTime; // 新しいメッセージを上に
+        }
       }
     });
-  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy, isCandidatePage, companyFilter, jobFilter]);
+  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy, isCandidatePage, companyFilter, jobFilter, searchTarget, keyword]);
 
   // 検索実行
   const handleSearch = React.useCallback(() => {
@@ -328,6 +346,7 @@ export function MessageLayoutServer({
             companyValue={companyFilter}
             jobValue={jobFilter}
             keywordValue={keyword}
+            searchTarget={searchTarget}
             messages={rooms.map(room => ({
               id: room.id,
               companyName: room.companyName,
@@ -336,6 +355,7 @@ export function MessageLayoutServer({
             onCompanyChange={setCompanyFilter}
             onJobChange={setJobFilter}
             onKeywordChange={setKeyword}
+            onSearchTargetChange={handleSearchTargetChange}
             onSearch={handleSearch}
           />
         ) : (
@@ -368,6 +388,7 @@ export function MessageLayoutServer({
               companyValue={companyFilter}
               jobValue={jobFilter}
               keywordValue={keyword}
+              searchTarget={searchTarget}
               messages={rooms.map(room => ({
                 id: room.id,
                 companyName: room.companyName,
@@ -376,6 +397,7 @@ export function MessageLayoutServer({
               onCompanyChange={setCompanyFilter}
               onJobChange={setJobFilter}
               onKeywordChange={setKeyword}
+              onSearchTargetChange={handleSearchTargetChange}
               onSearch={handleSearch}
             />
           ) : (
