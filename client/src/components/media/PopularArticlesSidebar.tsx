@@ -32,7 +32,7 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
             {articles.slice(0, 5).map((article, index) => (
               <div
                 key={article.id}
-                className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-shadow cursor-pointer"
                 onClick={() => router.push(`/candidate/media/${article.id}`)}
               >
                 <div className="flex items-center gap-[16px] flex-row">
