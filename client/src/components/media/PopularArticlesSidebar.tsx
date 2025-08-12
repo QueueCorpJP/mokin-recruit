@@ -37,7 +37,16 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
               >
                 <div className="flex items-center gap-[16px] flex-row">
                   <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} />
-                  <h4 className="text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-noto-sans-jp" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                  <h4 
+                    className="text-[#323232] overflow-hidden text-ellipsis text-[14px] font-noto-sans-jp" 
+                    style={{ 
+                      fontWeight: 700, 
+                      fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical'
+                    }}
+                  >
                     {article.title}
                   </h4>
                 </div>
