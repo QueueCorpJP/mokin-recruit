@@ -38,6 +38,7 @@ export function MessageLayoutServer({
   const [keyword, setKeyword] = useState('');
   // 候補者用フィルター
   const [companyFilter, setCompanyFilter] = useState('all');
+  const [jobFilter, setJobFilter] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState(''); // 実際の検索に使用するキーワード
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'company'>('date');
   const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
@@ -136,7 +137,8 @@ export function MessageLayoutServer({
     let filtered = rooms.filter(room => {
       if (isCandidatePage) {
         // 候補者用フィルタリング
-        if (companyFilter !== 'all' && room.id !== companyFilter) return false;
+        if (companyFilter !== 'all' && room.companyName !== companyFilter) return false;
+        if (jobFilter !== 'all' && room.jobTitle !== jobFilter) return false;
         
         // キーワード検索：企業名と求人タイトルで検索
         if (searchKeyword) {
@@ -182,7 +184,7 @@ export function MessageLayoutServer({
           return bTime - aTime; // 新しいメッセージを上に
       }
     });
-  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy, isCandidatePage, companyFilter]);
+  }, [rooms, statusFilter, groupFilter, searchKeyword, sortBy, isCandidatePage, companyFilter, jobFilter]);
 
   // 検索実行
   const handleSearch = React.useCallback(() => {
@@ -324,6 +326,7 @@ export function MessageLayoutServer({
         {isCandidatePage ? (
           <MessageSearchFilterCandidate
             companyValue={companyFilter}
+            jobValue={jobFilter}
             keywordValue={keyword}
             messages={rooms.map(room => ({
               id: room.id,
@@ -331,6 +334,7 @@ export function MessageLayoutServer({
               jobTitle: room.jobTitle
             }))}
             onCompanyChange={setCompanyFilter}
+            onJobChange={setJobFilter}
             onKeywordChange={setKeyword}
             onSearch={handleSearch}
           />
@@ -362,6 +366,7 @@ export function MessageLayoutServer({
           {isCandidatePage ? (
             <MessageSearchFilterCandidate
               companyValue={companyFilter}
+              jobValue={jobFilter}
               keywordValue={keyword}
               messages={rooms.map(room => ({
                 id: room.id,
@@ -369,6 +374,7 @@ export function MessageLayoutServer({
                 jobTitle: room.jobTitle
               }))}
               onCompanyChange={setCompanyFilter}
+              onJobChange={setJobFilter}
               onKeywordChange={setKeyword}
               onSearch={handleSearch}
             />

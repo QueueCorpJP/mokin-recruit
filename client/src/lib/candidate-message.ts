@@ -142,7 +142,13 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
         jobTitle: room?.job_postings?.title || '求人情報なし',
         jobPostingId: room?.job_postings?.id || '',
         lastMessage: latestMessage?.content || '',
-        lastMessageTime: latestMessage ? new Date(latestMessage.created_at).toLocaleString('ja-JP') : '',
+        lastMessageTime: latestMessage ? new Date(latestMessage.created_at).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '',
         unreadCount,
         isUnread: unreadCount > 0,
       };
@@ -208,7 +214,13 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
         senderType: msg.sender_type === 'CANDIDATE' ? 'CANDIDATE' : 'COMPANY',
         senderName,
         isOwnMessage,
-        createdAt: new Date(msg.created_at).toLocaleString('ja-JP'),
+        createdAt: new Date(msg.created_at).toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
       };
     });
 

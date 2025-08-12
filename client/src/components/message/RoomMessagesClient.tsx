@@ -137,7 +137,13 @@ export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesCli
                       </span>
                     </div>
                     <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] ml-auto'>
-                      {new Date(message.sentAt).toLocaleString('ja-JP')}
+                      {new Date(message.sentAt).toLocaleString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </span>
                   </>
                 ) : (
@@ -146,7 +152,13 @@ export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesCli
                       {message.senderName}
                     </span>
                     <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
-                      {new Date(message.sentAt).toLocaleString('ja-JP')}
+                      {new Date(message.sentAt).toLocaleString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </span>
                   </>
                 )}

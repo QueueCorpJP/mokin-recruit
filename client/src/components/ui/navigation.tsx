@@ -366,10 +366,10 @@ export function Navigation({
       },
       {
         label: '対応リスト',
-        href: '/company/responses',
+        href: '/company/task',
         icon: ResponseListIcon,
         hasDropdown: false,
-        isActive: pathname.startsWith('/company/responses'),
+        isActive: pathname.startsWith('/company/task'),
       },
       {
         label: 'ヘルプ',
@@ -638,10 +638,10 @@ export function Navigation({
       },
       {
         label: 'やることリスト',
-        href: '/candidate/todo',
+        href: '/candidate/task',
         icon: ResponseListIcon,
         hasDropdown: false,
-        isActive: pathname.startsWith('/candidate/todo'),
+        isActive: pathname.startsWith('/candidate/task'),
       },
       {
         label: 'プロフィール確認・編集',

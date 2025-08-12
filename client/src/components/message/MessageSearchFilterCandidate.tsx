@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 
 export interface MessageSearchFilterCandidateProps {
   companyValue?: string;
+  jobValue?: string;
   keywordValue?: string;
   messages?: Array<{ id: string; companyName: string; jobTitle: string }>;
   onCompanyChange?: (value: string) => void;
+  onJobChange?: (value: string) => void;
   onKeywordChange?: (value: string) => void;
   onSearch?: () => void;
   className?: string;
@@ -101,25 +103,43 @@ function CustomDropdown({
 
 export function MessageSearchFilterCandidate({
   companyValue = 'all',
+  jobValue = 'all',
   keywordValue = '',
   messages = [],
   onCompanyChange,
+  onJobChange,
   onKeywordChange,
   onSearch,
   className,
 }: MessageSearchFilterCandidateProps) {
-  // messagesから企業名＋記事タイトルの組み合わせを生成
-  const companyJobOptions = React.useMemo(() => {
+  // 企業名のオプションを生成
+  const companyOptions = React.useMemo(() => {
     const allOption = { value: 'all', label: '企業名' };
-    const roomOptions = messages
-      .map(message => ({
-        value: message.id,
-        label: `${message.companyName} - ${message.jobTitle}`
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label)); // ソート
+    const uniqueCompanies = Array.from(new Set(messages.map(m => m.companyName)))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+      .map(company => ({
+        value: company,
+        label: company
+      }));
     
-    return [allOption, ...roomOptions];
+    return [allOption, ...uniqueCompanies];
   }, [messages]);
+  
+  // 求人名のオプションを生成
+  const jobOptions = React.useMemo(() => {
+    const allOption = { value: 'all', label: '求人名' };
+    const uniqueJobs = Array.from(new Set(messages.map(m => m.jobTitle)))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+      .map(job => ({
+        value: job,
+        label: job
+      }));
+    
+    return [allOption, ...uniqueJobs];
+  }, [messages]);
+  
   return (
     <div
       className={cn(
@@ -132,7 +152,16 @@ export function MessageSearchFilterCandidate({
       <div className='flex flex-row gap-4 w-full'>
         <div className='flex-1'>
           <CustomDropdown
-            options={companyJobOptions}
+            options={jobOptions}
+            value={jobValue}
+            placeholder='求人名'
+            onChange={onJobChange}
+            className='w-full'
+          />
+        </div>
+        <div className='flex-1'>
+          <CustomDropdown
+            options={companyOptions}
             value={companyValue}
             placeholder='企業名'
             onChange={onCompanyChange}
