@@ -9,9 +9,6 @@ import { articleService, type Article } from '@/lib/services/articleService';
 import { mediaService, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/mediaService.client';
 import '@/styles/media-content.css';
 
-
-
-
 export default function MediaDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,7 +26,6 @@ export default function MediaDetailPage() {
   });
   const [recommendedArticles, setRecommendedArticles] = useState<any[]>([]);
   const [newArticles, setNewArticles] = useState<any[]>([]);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,7 +238,6 @@ export default function MediaDetailPage() {
                 </div>
               </div>
 
-
               {/* メイン画像 */}
               {article.thumbnail_url && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
@@ -263,7 +258,6 @@ export default function MediaDetailPage() {
                     : JSON.stringify(article.content) 
                 }}
               />
-
 
               {/* CTAバナー */}
               <div className="mb-[60px]">
@@ -296,144 +290,158 @@ export default function MediaDetailPage() {
           </div>
 
           {/* おすすめ記事 */}
-          <section className="mt-[80px] px-[16px] md:px-[80px]">
-            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
-              <img src="/images/new.svg" alt="new" />
-              <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">おすすめ記事</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
-              {recommendedArticles.map((article) => (
-                <article
-                  key={article.id}
-                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="relative h-[200px] bg-gray-200 overflow-hidden">
-                    <img 
-                      src={article.imageUrl} 
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+          <section className="mt-[80px]">
+            <div className="px-[16px] md:px-[80px]">
+              <div className="flex flex-col lg:flex-row lg:justify-between">
+                <div className="flex-1 lg:pr-[360px]">
+                  <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+                    <img src="/images/new.svg" alt="new" />
+                    <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">おすすめ記事</h2>
                   </div>
-                  <div className="p-[24px]">
-                    <h3 className="text-[16px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden"
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          textOverflow: 'ellipsis',
-                          fontWeight: 700,
-                          fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                        }}>
-                      {article.title}
-                    </h3>
-                    <div className="space-y-2">
-                      {article.categories && article.categories.length > 0 && (
-                        <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '32px' }}>
-                          {article.categories.map((category: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
-                              style={{ 
-                                fontWeight: 700,
-                                fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                              }}
-                            >
-                              {category}
-                            </span>
-                          ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
+                  {recommendedArticles.map((article) => (
+                    <article
+                      key={article.id}
+                      onClick={() => router.push(`/candidate/media/${article.id}`)}
+                      className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
+                    >
+                      <div className="relative h-[200px] bg-gray-200 overflow-hidden">
+                        <img 
+                          src={article.imageUrl} 
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-[24px]">
+                        <h3 className="text-[16px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              textOverflow: 'ellipsis',
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            }}>
+                          {article.title}
+                        </h3>
+                        <div className="space-y-2">
+                          {article.categories && article.categories.length > 0 && (
+                            <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '32px' }}>
+                              {article.categories.map((category: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
+                                  style={{ 
+                                    fontWeight: 700,
+                                    fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                                  }}
+                                >
+                                  {category}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {article.tags && article.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '72px' }}>
+                              {article.tags.map((tag: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className="text-[#0F9058] text-[16px]"
+                                  style={{ 
+                                    fontWeight: 700,
+                                    fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                                  }}
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {article.tags && article.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '72px' }}>
-                          {article.tags.map((tag: string, index: number) => (
-                            <span
-                              key={index}
-                              className="text-[#0F9058] text-[16px]"
-                              style={{ 
-                                fontWeight: 700,
-                                fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                              }}
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    </article>
+                  ))}
                   </div>
-                </article>
-              ))}
+                </div>
+              </div>
             </div>
           </section>
 
           {/* 新着記事 */}
-          <section className="mt-[80px] px-[16px] md:px-[80px]">
-            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
-              <img src="/images/new.svg" alt="new" />
-              <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
-              {newArticles.map((article) => (
-                <article
-                  key={article.id}
-                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="relative h-[200px] bg-gray-200 overflow-hidden">
-                    <img 
-                      src={article.imageUrl} 
-                      alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+          <section className="mt-[80px]">
+            <div className="px-[16px] md:px-[80px]">
+              <div className="flex flex-col lg:flex-row lg:justify-between">
+                <div className="flex-1 lg:pr-[360px]">
+                  <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+                    <img src="/images/new.svg" alt="new" />
+                    <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
                   </div>
-                  <div className="p-[24px]">
-                    <h3 className="text-[16px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden"
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          textOverflow: 'ellipsis',
-                          fontWeight: 700,
-                          fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                        }}>
-                      {article.title}
-                    </h3>
-                    <div className="space-y-2">
-                      {article.categories && article.categories.length > 0 && (
-                        <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '32px' }}>
-                          {article.categories.map((category: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
-                              style={{ 
-                                fontWeight: 700,
-                                fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                              }}
-                            >
-                              {category}
-                            </span>
-                          ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
+                  {newArticles.map((article) => (
+                    <article
+                      key={article.id}
+                      onClick={() => router.push(`/candidate/media/${article.id}`)}
+                      className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
+                    >
+                      <div className="relative h-[200px] bg-gray-200 overflow-hidden">
+                        <img 
+                          src={article.imageUrl} 
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-[24px]">
+                        <h3 className="text-[16px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              textOverflow: 'ellipsis',
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            }}>
+                          {article.title}
+                        </h3>
+                        <div className="space-y-2">
+                          {article.categories && article.categories.length > 0 && (
+                            <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '32px' }}>
+                              {article.categories.map((category: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
+                                  style={{ 
+                                    fontWeight: 700,
+                                    fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                                  }}
+                                >
+                                  {category}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {article.tags && article.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '72px' }}>
+                              {article.tags.map((tag: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className="text-[#0F9058] text-[16px]"
+                                  style={{ 
+                                    fontWeight: 700,
+                                    fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                                  }}
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {article.tags && article.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '72px' }}>
-                          {article.tags.map((tag: string, index: number) => (
-                            <span
-                              key={index}
-                              className="text-[#0F9058] text-[16px]"
-                              style={{ 
-                                fontWeight: 700,
-                                fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                              }}
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    </article>
+                  ))}
                   </div>
-                </article>
-              ))}
+                </div>
+              </div>
             </div>
           </section>
 
