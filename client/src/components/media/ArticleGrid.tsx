@@ -8,7 +8,7 @@ import { Pagination } from '@/components/ui/Pagination';
 interface MediaArticle {
   id: string;
   date: string;
-  category: string;
+  categories: string[];
   title: string;
   description: string;
   imageUrl: string;
@@ -16,11 +16,13 @@ interface MediaArticle {
 
 interface ArticleGridProps {
   articles: MediaArticle[];
+  filterType?: 'all' | 'category' | 'tag';
+  filterValue?: string;
 }
 
 const ITEMS_PER_PAGE = 9;
 
-export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
+export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType = 'all', filterValue }) => {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -37,11 +39,36 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
     router.push(`/candidate/media/${articleId}`);
   }, [router]);
 
+  const getSectionInfo = () => {
+    switch (filterType) {
+      case 'category':
+        return {
+          icon: '/images/cotegory.svg',
+          title: filterValue || 'カテゴリー',
+          alt: 'category'
+        };
+      case 'tag':
+        return {
+          icon: '/images/tag.svg',
+          title: filterValue || 'タグ',
+          alt: 'tag'
+        };
+      default:
+        return {
+          icon: '/images/new.svg',
+          title: '新着記事',
+          alt: 'new'
+        };
+    }
+  };
+
+  const sectionInfo = getSectionInfo();
+
   return (
     <div className="flex-1">
       <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[24px]">
-      <img src="/images/new.svg" alt="new" />
-      <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
+        <img src={sectionInfo.icon} alt={sectionInfo.alt} />
+        <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">{sectionInfo.title}</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
         {currentArticles.map((article) => (
@@ -62,11 +89,6 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
                 placeholder="blur"
                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGBkRMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
-              <div className="absolute top-3 left-3 z-10">
-                <span className="bg-white/90 text-[#323232] text-[12px] font-medium px-2 py-1 rounded">
-                  {article.date}
-                </span>
-              </div>
             </div>
 
             {/* コンテンツエリア */}
@@ -77,9 +99,18 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles }) => {
               <p className="text-[14px] text-[#666666] line-clamp-3 mb-[16px] Noto_Sans_JP">
                 {article.description}
               </p>
-              <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
-                {article.category}
-              </span>
+              {article.categories && article.categories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {article.categories.map((category, index) => (
+                    <span
+                      key={index}
+                      className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </article>
         ))}

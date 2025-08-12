@@ -6,95 +6,10 @@ import { MediaHeader } from '@/components/media/MediaHeader';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { articleService, type Article } from '@/lib/services/articleService';
 import { mediaService } from '@/lib/services/mediaService.client';
-
-const mockArticle = {
-  id: '1',
-  date: '2024.12.28',
-  category: '転職ノウハウ',
-  title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-  supervisor: {
-    name: '渡辺 貴明',
-    description: 'メルセネール株式会社取締役。東京工業大学工学部卒業。大学卒業後、独立系コンサルティングファームにて製造業のクライアントを中心に業務改革支援に従事。その後、アビームコンサルティング株式会社の戦略部門に転じ、経営戦略・事業戦略策定やM&A、新規事業開発、組織/人材開発に従事。メルセネール株式会社では事業責任者を務める。'
-  },
-  imageUrl: '/images/media-detail-main.jpg',
-  content: {
-    intro: 'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。',
-    section1: {
-      title: 'h2テキストが入ります。h2テキストが入ります。h2テキストが入ります。',
-      content: 'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。'
-    },
-    section2: {
-      imageUrl: '/images/media-detail-image1.jpg',
-      content: 'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。'
-    },
-    tableData: {
-      headers: ['カラム', 'カラム', 'カラム'],
-      rows: [
-        ['テキスト', 'テキスト', 'テキスト'],
-        ['テキスト', 'テキスト', 'テキスト'],
-        ['テキスト', 'テキスト', 'テキスト']
-      ]
-    },
-    section3: {
-      content: 'テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。'
-    }
-  }
-};
+import '@/styles/media-content.css';
 
 
-const recommendedArticles = [
-  {
-    id: 'r1',
-    date: '2024.12.27',
-    category: '転職ノウハウ',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media01.jpg'
-  },
-  {
-    id: 'r2',
-    date: '2024.12.26',
-    category: 'キャリア',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media02.jpg'
-  },
-  {
-    id: 'r3',
-    date: '2024.12.25',
-    category: '面接対策',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media03.jpg'
-  }
-];
 
-const newArticles = [
-  {
-    id: 'n1',
-    date: '2024.12.28',
-    category: '転職ノウハウ',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media04.jpg'
-  },
-  {
-    id: 'n2',
-    date: '2024.12.27',
-    category: 'キャリア',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media05.jpg'
-  },
-  {
-    id: 'n3',
-    date: '2024.12.26',
-    category: '業界研究',
-    title: 'テキストが入ります。テキストが入ります。',
-    description: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-    imageUrl: '/images/media06.jpg'
-  }
-];
 
 export default function MediaDetailPage() {
   const params = useParams();
@@ -107,6 +22,8 @@ export default function MediaDetailPage() {
     categories: [],
     tags: []
   });
+  const [recommendedArticles, setRecommendedArticles] = useState<any[]>([]);
+  const [newArticles, setNewArticles] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,11 +37,13 @@ export default function MediaDetailPage() {
         }
 
         // 記事とサイドバーデータを並列取得
-        const [fetchedArticle, popularArticles, categories, tags] = await Promise.all([
+        const [fetchedArticle, popularArticles, categories, tags, recommended, latest] = await Promise.all([
           articleService.getArticle(mediaId),
           mediaService.getPopularArticles(5),
           mediaService.getCategories(),
-          mediaService.getTags()
+          mediaService.getTags(),
+          mediaService.getPopularArticles(3), // おすすめ記事として人気記事を取得
+          mediaService.getPopularArticles(3)  // 新着記事として人気記事を一時的に使用
         ]);
         
         if (!fetchedArticle) {
@@ -139,6 +58,34 @@ export default function MediaDetailPage() {
 
         setArticle(fetchedArticle);
         setSidebarData({ popularArticles, categories, tags });
+        setRecommendedArticles(recommended.map(article => ({
+          id: article.id,
+          date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).replace(/\//g, '.'),
+          categories: ['メディア'],
+          title: article.title,
+          description: article.excerpt || (typeof article.content === 'string' 
+            ? article.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
+            : 'No description available'),
+          imageUrl: article.thumbnail_url || '/images/media01.jpg'
+        })));
+        setNewArticles(latest.map(article => ({
+          id: article.id,
+          date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).replace(/\//g, '.'),
+          categories: ['メディア'],
+          title: article.title,
+          description: article.excerpt || (typeof article.content === 'string' 
+            ? article.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...'
+            : 'No description available'),
+          imageUrl: article.thumbnail_url || '/images/media01.jpg'
+        })));
         setError(null);
       } catch (err) {
         console.error('データの取得に失敗:', err);
@@ -183,13 +130,13 @@ export default function MediaDetailPage() {
   const formattedDate = `${day}/${month}/${year}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F]">
+    <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative">
       {/* ヘッダー */}
       <MediaHeader title="メディア" />
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="w-full md:py-[80px] py-[40px]">
+      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%]">
+        <div className="w-full md:py-[75px] py-[40px]">
           
           <div className="flex flex-col lg:flex-row lg:justify-between px-[16px] md:px-[80px]">
             {/* 記事本文 - 右側のサイドバーとの間に80pxの余白を確保 */}
@@ -208,9 +155,18 @@ export default function MediaDetailPage() {
                   {article.title}
                 </h1>
                 <div className="flex items-center gap-[16px]">
-                  <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
-                    メディア
-                  </span>
+                  {(article as any).article_category_relations?.map((relation: any, index: number) => (
+                    <span
+                      key={index}
+                      className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full"
+                    >
+                      {relation.article_categories?.name || 'メディア'}
+                    </span>
+                  )) || (
+                    <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
+                      メディア
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -267,8 +223,8 @@ export default function MediaDetailPage() {
 
           {/* おすすめ記事 */}
           <section className="mt-[80px] px-[16px] md:px-[80px]">
-            <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
-              <img src="/images/recommend.svg" alt="recommend" />
+            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+              <img src="/images/new.svg" alt="new" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">おすすめ記事</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
@@ -299,7 +255,7 @@ export default function MediaDetailPage() {
 
           {/* 新着記事 */}
           <section className="mt-[80px] px-[16px] md:px-[80px]">
-            <div className="flex flex-row gap-[12px] justify-end items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
+            <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
               <img src="/images/new.svg" alt="new" />
               <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着記事</h2>
             </div>

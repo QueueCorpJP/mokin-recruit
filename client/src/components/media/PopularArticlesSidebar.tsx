@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 interface PopularArticle {
@@ -20,12 +21,16 @@ interface PopularArticlesSidebarProps {
   articles?: PopularArticle[];
   categories?: Category[];
   tags?: Tag[];
+  onCategoryClick?: (categoryName: string) => void;
+  onTagClick?: (tagName: string) => void;
 }
 
 export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({ 
   articles = [], 
   categories = [], 
-  tags = [] 
+  tags = [],
+  onCategoryClick,
+  onTagClick
 }) => {
   return (
     <aside className="lg:max-w-[240px] flex flex-col gap-[40px]">
@@ -37,13 +42,13 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
             <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">人気記事</h2>
           </div>
           <div className="flex flex-col gap-[8px] mt-[-16px]">
-            {articles.slice(0, 5).map((article) => (
+            {articles.slice(0, 5).map((article, index) => (
               <div
                 key={article.id}
                 className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="flex items-center gap-[16px] flex-row">
-                  <img src="/images/king.svg" alt="popular" />
+                  <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} />
                   <h4 className="text-[#323232] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-noto-sans-jp" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", sans-serif' }}>
                     {article.title}
                   </h4>
@@ -67,6 +72,7 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
                 key={index} 
                 className="bg-[#0F9058] text-[#FFF] text-[14px] font-bold px-[16px] py-[4px] w-fit rounded-full cursor-pointer hover:bg-[#0D7347] transition-colors"
                 title={`${category.count}件の記事`}
+                onClick={() => onCategoryClick?.(category.name)}
               >
                 {category.name}
               </span>
@@ -90,6 +96,7 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
                 key={index} 
                 className="bg-[#E8F5E8] text-[#0F9058] text-[12px] font-medium px-[12px] py-[2px] w-fit rounded-full cursor-pointer hover:bg-[#D4EBD4] transition-colors"
                 title={`${tag.count}件の記事`}
+                onClick={() => onTagClick?.(tag.name)}
               >
                 #{tag.name}
               </span>

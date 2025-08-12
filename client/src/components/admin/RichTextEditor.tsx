@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Button } from '@/components/admin/ui/button';
+import '@/styles/media-content.css';
 
 interface RichTextEditorProps {
   content: string;
@@ -36,8 +37,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   };
 
   const insertTable = () => {
-    // Table functionality will be added later
-    const tableHtml = '<table><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr><tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr></table>';
+ const tableHtml = '<table><tr><th>カラム</th><th>カラム</th><th>カラム</th></tr><tr><td>テキスト</td><td>テキスト</td><td>テキスト</td></tr><tr><td>テキスト</td><td>テキスト</td><td>テキスト</td></tr></table>';
     editor?.commands.insertContent(tableHtml);
   };
 
@@ -145,7 +145,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       <div className="min-h-[400px] p-4">
         <EditorContent
           editor={editor}
-          className="prose prose-lg max-w-none focus:outline-none"
+          className="prose prose-lg max-w-none focus:outline-none media-content-editor"
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',
