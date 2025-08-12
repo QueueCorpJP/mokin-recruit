@@ -3,8 +3,58 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import { Node, mergeAttributes } from '@tiptap/core';
 import { Button } from '@/components/admin/ui/button';
 import '@/styles/media-content.css';
+
+// カスタム目次ノード
+const TableOfContents = Node.create({
+  name: 'tableOfContents',
+  group: 'block',
+  content: 'tocTitle tocItem*',
+  
+  parseHTML() {
+    return [{
+      tag: 'div.table-of-contents',
+    }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'table-of-contents' }), 0]
+  },
+})
+
+const TocTitle = Node.create({
+  name: 'tocTitle',
+  group: 'block',
+  content: 'text*',
+
+  parseHTML() {
+    return [{
+      tag: 'div.toc-title',
+    }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'toc-title' }), 0]
+  },
+})
+
+const TocItem = Node.create({
+  name: 'tocItem',
+  group: 'block',
+  content: 'text*',
+
+  parseHTML() {
+    return [{
+      tag: 'div.toc-item',
+    }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'toc-item' }), 0]
+  },
+})
 
 interface RichTextEditorProps {
   content: string;
@@ -21,11 +71,16 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           class: 'max-w-full h-auto',
         },
       }),
+      TableOfContents,
+      TocTitle,
+      TocItem,
     ],
     content,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      console.log('Generated HTML:', html);
+      onChange(html);
     },
   });
 
@@ -37,7 +92,31 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   };
 
   const insertTable = () => {
- const tableHtml = '<table><tr><th>カラム</th><th>カラム</th><th>カラム</th></tr><tr><td>テキスト</td><td>テキスト</td><td>テキスト</td></tr><tr><td>テキスト</td><td>テキスト</td><td>テキスト</td></tr></table>';
+    const rows = window.prompt('行数を入力してください (デフォルト: 3)', '3');
+    const cols = window.prompt('列数を入力してください (デフォルト: 3)', '3');
+    
+    const numRows = parseInt(rows || '3');
+    const numCols = parseInt(cols || '3');
+    
+    let tableHtml = '<table>';
+    
+    // ヘッダー行
+    tableHtml += '<tr>';
+    for (let i = 0; i < numCols; i++) {
+      tableHtml += '<th>カラム' + (i + 1) + '</th>';
+    }
+    tableHtml += '</tr>';
+    
+    // データ行
+    for (let i = 0; i < numRows - 1; i++) {
+      tableHtml += '<tr>';
+      for (let j = 0; j < numCols; j++) {
+        tableHtml += '<td>データ</td>';
+      }
+      tableHtml += '</tr>';
+    }
+    
+    tableHtml += '</table>';
     editor?.commands.insertContent(tableHtml);
   };
 
@@ -133,11 +212,56 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <Button
           type="button"
           size="sm"
+          variant={editor.isActive('blockquote') ? 'default' : 'outline'}
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className="h-8 px-2"
+        >
+          💬 引用
+        </Button>
+        <Button
+          type="button"
+          size="sm"
           variant="outline"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className="h-8 px-2"
         >
           ─ 区切り
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            editor?.chain()
+              .focus()
+              .insertContent([
+                {
+                  type: 'tableOfContents',
+                  content: [
+                    {
+                      type: 'tocTitle',
+                      content: [{ type: 'text', text: '目次' }],
+                    },
+                    {
+                      type: 'tocItem',
+                      content: [{ type: 'text', text: '項目1' }],
+                    },
+                    {
+                      type: 'tocItem',
+                      content: [{ type: 'text', text: '項目2' }],
+                    },
+                    {
+                      type: 'tocItem',
+                      content: [{ type: 'text', text: '項目3' }],
+                    },
+                  ],
+                },
+              ])
+              .run();
+          }}
+          className="h-8 px-2"
+        >
+          📋 目次
         </Button>
       </div>
 

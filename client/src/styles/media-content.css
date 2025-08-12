@@ -15,6 +15,21 @@
 /* liスタイル */
 .prose li,
 .media-content-editor li {
+  color: #323232 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
+  list-style-type: disc !important;
+  margin-bottom: 8px !important;
+  display: list-item !important;
+}
+
+/* 目次スタイル */
+.prose .table-of-contents,
+.media-content-editor .table-of-contents {
   display: flex !important;
   padding: 24px !important;
   flex-direction: column !important;
@@ -23,7 +38,32 @@
   align-self: stretch !important;
   border-radius: 24px !important;
   border: 2px solid #0F9058 !important;
-  margin-bottom: 16px !important;
+  margin: 16px 0 !important;
+}
+
+.prose .table-of-contents .toc-title,
+.media-content-editor .table-of-contents .toc-title {
+  color: #0F9058 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 18px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: 160% !important; /* 28.8px */
+  letter-spacing: 1.8px !important;
+  margin: 0 !important;
+}
+
+.prose .table-of-contents .toc-item,
+.media-content-editor .table-of-contents .toc-item {
+  color: #323232 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* pスタイル */
@@ -90,4 +130,30 @@
   border: 1px solid #DCDCDC !important;
   font-family: "Noto Sans JP" !important;
   font-weight: 500 !important;
+}
+
+/* 引用コンテナスタイル */
+.prose blockquote,
+.media-content-editor blockquote {
+  display: flex !important;
+  width: 960px !important;
+  max-width: 100% !important;
+  padding: 16px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 16px 0 !important;
+  border-left: 4px solid #0F9058 !important;
+  background-color: #f8f9fa !important;
+}
+
+.prose blockquote p,
+.media-content-editor blockquote p {
+  color: #323232 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
+  margin: 0 !important;
 }
