@@ -185,11 +185,11 @@ export default function MediaDetailPage() {
     );
   }
 
-  const formattedDate = new Date(article.published_at || article.created_at!).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\//g, '.');
+  const date = new Date(article.published_at || article.created_at!);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  const formattedDate = `${day}/${month}/${year}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F]">
@@ -198,11 +198,11 @@ export default function MediaDetailPage() {
 
       {/* メインコンテンツ */}
       <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="md:px-[80px] md:py-[80px] px-[16px] py-[40px] gap-[80px]">
+        <div className="md:px-[80px] md:py-[80px] px-[16px] py-[40px]">
           
-          <div className="flex flex-col lg:flex-row gap-[80px]">
+          <div className="flex flex-col lg:flex-row lg:gap-[80px]">
             {/* 記事本文 */}
-            <article className="flex-1 max-w-[800px]">
+            <article className="flex-1 lg:min-w-[800px] lg:max-w-[800px]">
               
               {/* 日時 */}
               <div className="mb-[16px]">
@@ -281,8 +281,8 @@ export default function MediaDetailPage() {
 
             </article>
 
-            {/* サイドバー */}
-            <aside className="lg:w-[280px]">
+            {/* サイドバー（デスクトップ表示用） */}
+            <aside className="hidden lg:block lg:w-[280px] lg:flex-shrink-0">
               <PopularArticlesSidebar articles={sideArticles} />
             </aside>
           </div>
@@ -350,6 +350,11 @@ export default function MediaDetailPage() {
               ))}
             </div>
           </section>
+
+          {/* サイドバー（モバイル表示用） */}
+          <div className="lg:hidden mt-[80px]">
+            <PopularArticlesSidebar articles={sideArticles} />
+          </div>
 
         </div>
       </main>
