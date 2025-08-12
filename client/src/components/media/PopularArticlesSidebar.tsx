@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import type { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/mediaService.client';
 
 interface PopularArticlesSidebarProps {
@@ -17,6 +18,7 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
   onCategoryClick,
   onTagClick
 }) => {
+  const router = useRouter();
   return (
     <aside className="lg:max-w-[240px] flex flex-col gap-[40px]">
       {/* 人気記事セクション */}
@@ -30,7 +32,8 @@ export const PopularArticlesSidebar: React.FC<PopularArticlesSidebarProps> = ({
             {articles.slice(0, 5).map((article, index) => (
               <div
                 key={article.id}
-                className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-[#FFF] rounded-[8px] p-[16px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-shadow cursor-pointer"
+                onClick={() => router.push(`/candidate/media/${article.id}`)}
               >
                 <div className="flex items-center gap-[16px] flex-row">
                   <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} />
