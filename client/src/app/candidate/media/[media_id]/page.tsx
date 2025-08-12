@@ -305,7 +305,7 @@ export default function MediaDetailPage() {
               {recommendedArticles.map((article) => (
                 <article
                   key={article.id}
-                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 cursor-pointer group"
+                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative h-[200px] bg-gray-200 overflow-hidden">
                     <img 
@@ -376,7 +376,7 @@ export default function MediaDetailPage() {
               {newArticles.map((article) => (
                 <article
                   key={article.id}
-                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 cursor-pointer group"
+                  className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative h-[200px] bg-gray-200 overflow-hidden">
                     <img 

@@ -163,7 +163,7 @@ export default function MediaPage() {
       />
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%] pt-[75px]">
+      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%]">
         <div className="px-[16px] md:px-[80px] py-[40px] md:py-[75px]">
           <div className="flex flex-col lg:flex-row lg:justify-between">
             {/* 記事グリッド - 右側のサイドバーとの間に80pxの余白を確保 */}

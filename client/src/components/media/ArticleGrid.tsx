@@ -84,7 +84,7 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType =
             <article
               key={article.id}
               onClick={() => handleArticleClick(article.id)}
-              className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 cursor-pointer group"
+              className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
             >
               {/* 画像エリア - パフォーマンス最適化 */}
               <div className="relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden">
