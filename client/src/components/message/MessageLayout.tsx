@@ -40,6 +40,12 @@ export function MessageLayout({
   const [keyword, setKeyword] = useState('');
   // candidate用フィルターstate
   const [companyFilter, setCompanyFilter] = useState('all');
+  const [searchTarget, setSearchTarget] = useState<'company' | 'job'>('company');
+  
+  const handleSearchTargetChange = (target: 'company' | 'job') => {
+    console.log('MessageLayout - searchTarget changing from', searchTarget, 'to', target);
+    setSearchTarget(target);
+  };
   // モバイル判定
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
@@ -86,14 +92,15 @@ export function MessageLayout({
       // 特定のroomが選択されている場合
       if (companyFilter !== 'all' && message.id !== companyFilter)
         return false;
-      // キーワード検索：企業名と記事タイトルで検索
-      if (
-        keyword &&
-        !`${message.companyName} ${message.jobTitle}`
-          .toLowerCase()
-          .includes(keyword.toLowerCase())
-      )
-        return false;
+      // キーワード検索：選択された検索対象に応じて検索
+      if (keyword) {
+        const searchText = searchTarget === 'company' 
+          ? message.companyName.toLowerCase()
+          : message.jobTitle.toLowerCase();
+        if (!searchText.includes(keyword.toLowerCase())) {
+          return false;
+        }
+      }
       return true;
     }
     if (statusFilter !== 'all') {
@@ -110,11 +117,21 @@ export function MessageLayout({
     return true;
   });
 
-  // フィルタ後のメッセージをソート（企業名＋記事タイトルの組み合わせでソート）
+  // フィルタ後のメッセージをソート
   const sortedFilteredMessages = filteredMessages.sort((a, b) => {
-    const aKey = `${a.companyName} - ${a.jobTitle}`;
-    const bKey = `${b.companyName} - ${b.jobTitle}`;
-    return aKey.localeCompare(bKey, 'ja');
+    if (isCandidatePage) {
+      // 選択された検索対象に応じてソート
+      if (searchTarget === 'company') {
+        return a.companyName.localeCompare(b.companyName, 'ja');
+      } else {
+        return a.jobTitle.localeCompare(b.jobTitle, 'ja');
+      }
+    } else {
+      // 従来のソート（企業名＋記事タイトル）
+      const aKey = `${a.companyName} - ${a.jobTitle}`;
+      const bKey = `${b.companyName} - ${b.jobTitle}`;
+      return aKey.localeCompare(bKey, 'ja');
+    }
   });
 
   // モバイル: 詳細モード
@@ -413,9 +430,11 @@ export function MessageLayout({
           <MessageSearchFilterCandidate
             companyValue={companyFilter}
             keywordValue={keyword}
+            searchTarget={searchTarget}
             messages={messages}
             onCompanyChange={setCompanyFilter}
             onKeywordChange={setKeyword}
+            onSearchTargetChange={handleSearchTargetChange}
             onSearch={() => {}}
           />
         ) : (
@@ -445,9 +464,11 @@ export function MessageLayout({
             <MessageSearchFilterCandidate
               companyValue={companyFilter}
               keywordValue={keyword}
+              searchTarget={searchTarget}
               messages={messages}
               onCompanyChange={setCompanyFilter}
               onKeywordChange={setKeyword}
+              onSearchTargetChange={handleSearchTargetChange}
               onSearch={() => {}}
             />
           ) : (
@@ -659,14 +680,34 @@ export function MessageLayout({
                     style={{ maxWidth: 'calc(100% - 56px)' }}
                   >
                     <div className='flex flex-row items-center justify-between w-full mb-2'>
-                      <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6]'>
+                      <span 
+                        className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] hidden md:block'
+                        style={{
+                          maxWidth: '150px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        企業名テキスト
+                      </span>
+                      <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] md:hidden'>
                         企業名テキスト
                       </span>
                       <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6]'>
                         yyyy/mm/dd hh:mm
                       </span>
                     </div>
-                    <div className='bg-[#D2F1DA] rounded-[5px] p-4'>
+                    <div 
+                      className='bg-[#D2F1DA] rounded-[5px] p-4 hidden md:block'
+                      style={{ maxWidth: 'calc(100% - 158px)' }}
+                    >
+                      <div className='font-["Noto_Sans_JP"] font-medium text-[16px] text-[#323232] tracking-[0.1em] leading-[2] whitespace-pre-line overflow-hidden'>
+                        スカウト本文テキストが入ります。スカウト本文テキストが入ります。スカウト本文テキストが入ります。
+                        スカウト本文テキストが入ります。スカウト本文テキストが入ります。
+                      </div>
+                    </div>
+                    <div className='bg-[#D2F1DA] rounded-[5px] p-4 md:hidden'>
                       <div className='font-["Noto_Sans_JP"] font-medium text-[16px] text-[#323232] tracking-[0.1em] leading-[2] whitespace-pre-line max-w-full overflow-hidden'>
                         スカウト本文テキストが入ります。スカウト本文テキストが入ります。スカウト本文テキストが入ります。
                         スカウト本文テキストが入ります。スカウト本文テキストが入ります。

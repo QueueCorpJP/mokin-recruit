@@ -97,44 +97,63 @@
   width: 100% !important;
   border-collapse: collapse !important;
   margin: 24px 0 !important;
+  display: table !important;
 }
 
-/* テーブルヘッダー（コラム名）スタイル */
+/* テーブル行スタイル */
+.prose tr,
+.media-content-editor tr,
+.prose .table-header,
+.media-content-editor .table-header,
+.prose .table-row,
+.media-content-editor .table-row {
+  display: table-row !important;
+}
+
+/* テーブルヘッダー（コラム名コンテナ）スタイル */
 .prose th,
-.media-content-editor th {
-  display: flex !important;
+.media-content-editor th,
+.prose .table-header-cell,
+.media-content-editor .table-header-cell {
+  display: table-cell !important;
   padding: 16px !important;
-  justify-content: center !important;
-  align-items: center !important;
-  align-content: center !important;
-  gap: 24px !important;
-  align-self: stretch !important;
-  flex-wrap: wrap !important;
+  text-align: center !important;
+  vertical-align: middle !important;
   border: 1px solid #DCDCDC !important;
   background: #EFEFEF !important;
+  color: #323232 !important;
   font-family: "Noto Sans JP" !important;
-  font-weight: 700 !important;
-}
-
-/* テーブルセル（列データ）スタイル */
-.prose td,
-.media-content-editor td {
-  display: flex !important;
-  padding: 16px !important;
-  justify-content: center !important;
-  align-items: center !important;
-  align-content: center !important;
-  gap: 24px !important;
-  align-self: stretch !important;
-  flex-wrap: wrap !important;
-  border: 1px solid #DCDCDC !important;
-  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
   font-weight: 500 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
 }
 
-/* 引用コンテナスタイル */
+/* テーブルセル（列のコンテナ）スタイル */
+.prose td,
+.media-content-editor td,
+.prose .table-cell,
+.media-content-editor .table-cell {
+  display: table-cell !important;
+  padding: 16px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  border: 1px solid #DCDCDC !important;
+  color: #323232 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 200% !important; /* 32px */
+  letter-spacing: 1.6px !important;
+}
+
+/* 著者コンテナスタイル */
 .prose blockquote,
-.media-content-editor blockquote {
+.media-content-editor blockquote,
+.prose .author-container,
+.media-content-editor .author-container {
   display: flex !important;
   width: 960px !important;
   max-width: 100% !important;
@@ -142,12 +161,15 @@
   align-items: center !important;
   gap: 10px !important;
   margin: 16px 0 !important;
-  border-left: 4px solid #0F9058 !important;
-  background-color: #f8f9fa !important;
+  border-top: 1px solid #0F9058 !important;
+  border-bottom: 1px solid #0F9058 !important;
+  background: #F0F9F3 !important;
 }
 
 .prose blockquote p,
-.media-content-editor blockquote p {
+.media-content-editor blockquote p,
+.prose .author-container p,
+.media-content-editor .author-container p {
   color: #323232 !important;
   font-family: "Noto Sans JP" !important;
   font-size: 16px !important;
@@ -156,4 +178,14 @@
   line-height: 200% !important; /* 32px */
   letter-spacing: 1.6px !important;
   margin: 0 !important;
+}
+
+/* 画像のスタイル（サムネと同じデザイン） */
+.prose img,
+.media-content-editor img {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 24px !important;
+  margin: 24px 0 !important;
 }
