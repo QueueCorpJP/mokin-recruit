@@ -3,6 +3,7 @@ import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 import { unstable_cache } from 'next/cache';
+import { mediaService } from '@/lib/services/mediaService';
 
 interface MediaArticle {
   id: string;
@@ -113,28 +114,6 @@ const mockArticles: MediaArticle[] = [
   }
 ];
 
-const sideArticles = [
-  {
-    id: 's1',
-    category: 'ピックアップ',
-    title: '今週の注目記事'
-  },
-  {
-    id: 's2',
-    category: 'ランキング',
-    title: '月間人気記事TOP10'
-  },
-  {
-    id: 's3',
-    category: 'お知らせ',
-    title: '新着求人情報'
-  },
-  {
-    id: 's4',
-    category: 'キャンペーン',
-    title: '転職成功で特典GET'
-  }
-];
 
 // キャッシュされた記事取得関数
 const getCachedArticles = unstable_cache(
@@ -175,8 +154,25 @@ const getCachedArticles = unstable_cache(
   { revalidate: 300 } // 5分間キャッシュ
 );
 
+// サイドバーデータ取得関数
+const getCachedSidebarData = unstable_cache(
+  async () => {
+    const [popularArticles, categories, tags] = await Promise.all([
+      mediaService.getPopularArticles(5),
+      mediaService.getCategories(),
+      mediaService.getTags()
+    ]);
+    return { popularArticles, categories, tags };
+  },
+  ['media-sidebar'],
+  { revalidate: 300 } // 5分間キャッシュ
+);
+
 export default async function MediaPage() {
-  const articles = await getCachedArticles();
+  const [articles, sidebarData] = await Promise.all([
+    getCachedArticles(),
+    getCachedSidebarData()
+  ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[#17856F] to-[#229A4E] relative overflow-hidden">
@@ -206,28 +202,50 @@ export default async function MediaPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="w-full md:px-[80px] md:py-[80px] px-[16px] py-[40px] bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
-        <div className="flex flex-col lg:flex-row gap-[40px] lg:gap-[80px]">
-          <Suspense fallback={
-            <div className="flex-1 animate-pulse">
-              <div className="h-8 bg-gray-200 rounded mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
-                {[...Array(9)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-[10px] overflow-hidden">
-                    <div className="h-[200px] bg-gray-200"></div>
-                    <div className="p-6">
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    </div>
+      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10">
+        <div className="px-[16px] md:px-[80px] py-[40px] md:py-[80px]">
+          <div className="flex flex-col lg:flex-row lg:justify-between">
+            {/* 記事グリッド - 右側のサイドバーとの間に80pxの余白を確保 */}
+            <div className="flex-1 lg:pr-[80px]">
+              <Suspense fallback={
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-6"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
+                    {[...Array(9)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-[10px] overflow-hidden">
+                        <div className="h-[200px] bg-gray-200"></div>
+                        <div className="p-6">
+                          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
+                          <div className="h-6 bg-gray-200 rounded w-20"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              }>
+                <ArticleGrid articles={articles} />
+              </Suspense>
             </div>
-          }>
-            <ArticleGrid articles={articles} />
-          </Suspense>
-          <PopularArticlesSidebar articles={sideArticles} />
+
+            {/* サイドバー - 固定幅280px */}
+            <aside className="hidden lg:block lg:w-[280px] flex-shrink-0">
+              <PopularArticlesSidebar 
+                articles={sidebarData.popularArticles} 
+                categories={sidebarData.categories}
+                tags={sidebarData.tags}
+              />
+            </aside>
+          </div>
+          
+          {/* モバイル表示用サイドバー */}
+          <div className="lg:hidden mt-[40px]">
+            <PopularArticlesSidebar 
+              articles={sidebarData.popularArticles} 
+              categories={sidebarData.categories}
+              tags={sidebarData.tags}
+            />
+          </div>
         </div>
       </main>
     </div>
