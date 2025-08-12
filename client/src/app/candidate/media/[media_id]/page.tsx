@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { MediaHeader } from '@/components/media/MediaHeader';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { articleService, type Article } from '@/lib/services/articleService';
-import { mediaService } from '@/lib/services/mediaService.client';
+import { mediaService, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/mediaService.client';
 import '@/styles/media-content.css';
 
 
@@ -17,7 +17,11 @@ export default function MediaDetailPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarData, setSidebarData] = useState({
+  const [sidebarData, setSidebarData] = useState<{
+    popularArticles: PopularArticle[];
+    categories: ArticleCategory[];
+    tags: ArticleTag[];
+  }>({
     popularArticles: [],
     categories: [],
     tags: []

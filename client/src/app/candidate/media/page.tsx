@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { MediaHeader } from '@/components/media/MediaHeader';
-import { mediaService, type Article } from '@/lib/services/mediaService.client';
+import { mediaService, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/mediaService.client';
 
 interface MediaArticle {
   id: string;
@@ -54,7 +54,11 @@ interface FilterState {
 export default function MediaPage() {
   const [articles, setArticles] = useState<MediaArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<MediaArticle[]>([]);
-  const [sidebarData, setSidebarData] = useState({
+  const [sidebarData, setSidebarData] = useState<{
+    popularArticles: PopularArticle[];
+    categories: ArticleCategory[];
+    tags: ArticleTag[];
+  }>({
     popularArticles: [],
     categories: [],
     tags: []
