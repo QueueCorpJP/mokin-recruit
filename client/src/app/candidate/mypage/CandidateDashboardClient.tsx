@@ -7,6 +7,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
 import { MessageListCard, Message } from '@/components/ui/MessageListCard';
 import { JobPostCard } from '@/components/ui/JobPostCard';
+import React, { useState } from 'react';
 
 interface User {
   id: string;
@@ -25,6 +26,7 @@ export function CandidateDashboardClient({
   user,
 }: CandidateDashboardClientProps) {
   const router = useRouter();
+  const [showQuestionPopup, setShowQuestionPopup] = useState(false);
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -36,13 +38,60 @@ export function CandidateDashboardClient({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
               {/* やることリスト */}
               <div>
-                <div style={{ marginBottom: '8px' }}>
+                <div
+                  style={{
+                    marginBottom: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    position: 'relative',
+                  }}
+                >
                   <SectionHeading
                     iconSrc='/images/list.svg'
                     iconAlt='やることリストアイコン'
                   >
                     やることリスト
                   </SectionHeading>
+                  {/* 質問アイコンとポップアップ */}
+                  <div
+                    style={{
+                      marginLeft: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src='/images/question.svg'
+                      alt='質問アイコン'
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setShowQuestionPopup(prev => !prev)}
+                      width={24}
+                      height={24}
+                    />
+                    {showQuestionPopup && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 24 + 8, // アイコン幅24px + 8px
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 489,
+                          height: 48,
+                          padding: 16,
+                          background: '#F0F9F3',
+                          display: 'flex',
+                          alignItems: 'center',
+                          boxSizing: 'content-box',
+                          zIndex: 10,
+                          borderRadius: 8,
+                          boxShadow: '0 0 8px 0 rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        ここにダミーの説明テキストが入ります。
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {/* やることリストを格納するラッパー */}
                 <div
@@ -241,7 +290,7 @@ export function CandidateDashboardClient({
                   style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
                 >
                   {/* PC用（md以上） */}
-                  <div className='hidden md:flex flex-col gap-4'>
+                  <div className='hidden md:flex flex-col gap-2'>
                     {[1, 2, 3].map(i => (
                       <JobPostCard
                         key={`pc-${i}`}
@@ -314,7 +363,8 @@ export function CandidateDashboardClient({
                   <span
                     style={{
                       color: '#FFF',
-                      fontFamily: 'Noto Sans JP',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
                       fontWeight: 700,
                       fontSize: 16,
                       lineHeight: '2em',
@@ -356,67 +406,206 @@ export function CandidateDashboardClient({
           </div>
           {/* 右カラム（FAQ/バナー） */}
           <div className='w-full md:max-w-[320px] md:flex-none'>
-            {/* バナー画像を表示 */}
-            <img
-              src='/images/banner01.png'
-              alt='バナー画像01'
-              className='w-full h-auto block rounded-lg mb-20'
-            />
-            {/* 見出しリスト（縦並び・gap8px） */}
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            >
-              <SectionHeading
-                iconSrc='/images/question.svg'
-                iconAlt='よくある質問アイコン'
-              >
-                よくある質問
-              </SectionHeading>
-              {/* FAQボックス（ダミー） */}
-              <FaqBox
-                title='退会したい場合はどうすればいいですか？'
-                body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
-              />
-              <FaqBox
-                title='パスワードを忘れた場合はどうすればいいですか？'
-                body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
-              />
-              {/* QA一覧を見るリンクボックス（ダミー） */}
+            {/* 3セクションをflex縦並びでラップ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
+              {/* お知らせ一覧セクション */}
               <div
-                style={{
-                  background: '#fff',
-                  padding: '15px 24px',
-                  borderRadius: '8px',
-                  boxSizing: 'border-box',
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
               >
-                <span
+                <SectionHeading
+                  iconSrc='/images/oshirase.svg'
+                  iconAlt='お知らせアイコン'
+                >
+                  お知らせ一覧
+                </SectionHeading>
+                {/* お知らせ1 */}
+                <div
                   style={{
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    color: '#0F9058',
-                    lineHeight: '200%',
-                    fontFamily:
-                      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-                    whiteSpace: 'normal',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2px',
-                    wordBreak: 'break-word',
+                    background: '#fff',
+                    padding: '15px 24px',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
                   }}
                 >
-                  Q&A一覧を見る
-                </span>
-                {/* アイコンは省略可 */}
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      lineHeight: '160%',
+                      color: '#999999',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                      display: 'block',
+                      marginBottom: 4,
+                    }}
+                  >
+                    2025/4/19
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#323232',
+                      lineHeight: '200%',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                    }}
+                  >
+                    システムメンテナンスのお知らせ
+                  </div>
+                </div>
+                {/* お知らせ2 */}
+                <div
+                  style={{
+                    background: '#fff',
+                    padding: '15px 24px',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      lineHeight: '160%',
+                      color: '#999999',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                      display: 'block',
+                      marginBottom: 4,
+                    }}
+                  >
+                    2025/4/19
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#323232',
+                      lineHeight: '200%',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                    }}
+                  >
+                    新機能リリースのお知らせ
+                  </div>
+                </div>
+                {/* お知らせ一覧を見るリンクボックス */}
+                <div
+                  style={{
+                    background: '#fff',
+                    padding: '15px 24px',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      color: '#0F9058',
+                      lineHeight: '200%',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                      whiteSpace: 'normal',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    お知らせ一覧を見る
+                  </span>
+                  <img
+                    src='/images/arrow.svg'
+                    alt='arrow'
+                    width={12}
+                    height={12}
+                    style={{ display: 'block' }}
+                  />
+                </div>
+              </div>
+              {/* バナー画像を表示 */}
+              <img
+                src='/images/banner01.png'
+                alt='バナー画像01'
+                className='w-full h-auto block rounded-lg'
+              />
+              {/* FAQ/QAセクション */}
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+              >
+                <SectionHeading
+                  iconSrc='/images/question.svg'
+                  iconAlt='よくある質問アイコン'
+                >
+                  よくある質問
+                </SectionHeading>
+                {/* FAQボックス（ダミー） */}
+                <FaqBox
+                  title='退会したい場合はどうすればいいですか？'
+                  body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
+                />
+                <FaqBox
+                  title='パスワードを忘れた場合はどうすればいいですか？'
+                  body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
+                />
+                {/* QA一覧を見るリンクボックス（ダミー） */}
+                <div
+                  style={{
+                    background: '#fff',
+                    padding: '15px 24px',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      color: '#0F9058',
+                      lineHeight: '200%',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                      whiteSpace: 'normal',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    Q&A一覧を見る
+                  </span>
+                  <img
+                    src='/images/arrow.svg'
+                    alt='arrow'
+                    width={12}
+                    height={12}
+                    style={{ display: 'block' }}
+                  />
+                </div>
               </div>
             </div>
           </div>
