@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
 
   // パフォーマンス実験的機能
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     serverMinification: true,
   },
 
@@ -93,11 +93,11 @@ const nextConfig: NextConfig = {
               enforce: true,
             },
             lib: {
-              test(module) {
+              test(module: any) {
                 return module.size() > 160000 &&
                   /node_modules[\\/]/.test(module.identifier());
               },
-              name(module) {
+              name(module: any) {
                 const hash = require('crypto')
                   .createHash('sha1')
                   .update(module.identifier())
@@ -114,10 +114,10 @@ const nextConfig: NextConfig = {
               priority: 20,
             },
             shared: {
-              name(module, chunks) {
+              name(module: any, chunks: any) {
                 return `shared-${require('crypto')
                   .createHash('sha1')
-                  .update(chunks.map(c => c.name).join('_'))
+                  .update(chunks.map((c: any) => c.name).join('_'))
                   .digest('hex')
                   .substring(0, 8)}`;
               },
