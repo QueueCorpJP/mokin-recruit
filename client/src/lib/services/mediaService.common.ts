@@ -3,6 +3,10 @@ export interface PopularArticle {
   title: string;
   views_count: number;
   published_at: string;
+  created_at: string;
+  excerpt?: string;
+  content?: any;
+  thumbnail_url?: string;
 }
 
 export interface ArticleCategory {
@@ -33,7 +37,7 @@ export const createMediaService = (supabaseClient: any) => ({
     try {
       const { data, error } = await supabaseClient
         .from('articles')
-        .select('id, title, views_count, published_at')
+        .select('id, title, views_count, published_at, created_at, excerpt, content, thumbnail_url')
         .eq('status', 'PUBLISHED')
         .order('views_count', { ascending: false })
         .limit(limit);
@@ -73,7 +77,7 @@ export const createMediaService = (supabaseClient: any) => ({
           count: publishedCount
         };
       }).filter((cat: ArticleCategory) => cat.count > 0)
-        .sort((a, b) => b.count - a.count) || [];
+        .sort((a: ArticleCategory, b: ArticleCategory) => b.count - a.count) || [];
       
       console.log('取得したカテゴリー:', categories);
       return categories;
@@ -110,7 +114,7 @@ export const createMediaService = (supabaseClient: any) => ({
           count: publishedCount
         };
       }).filter((tag: ArticleTag) => tag.count > 0)
-        .sort((a, b) => b.count - a.count)
+        .sort((a: ArticleTag, b: ArticleTag) => b.count - a.count)
         .slice(0, 20) || [];
       
       console.log('取得したタグ:', tags);

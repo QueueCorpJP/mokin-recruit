@@ -1,26 +1,11 @@
 'use client';
 import React from 'react';
-
-interface PopularArticle {
-  id: string;
-  title: string;
-  views_count?: number;
-}
-
-interface Category {
-  name: string;
-  count: number;
-}
-
-interface Tag {
-  name: string;
-  count: number;
-}
+import type { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/mediaService.client';
 
 interface PopularArticlesSidebarProps {
   articles?: PopularArticle[];
-  categories?: Category[];
-  tags?: Tag[];
+  categories?: ArticleCategory[];
+  tags?: ArticleTag[];
   onCategoryClick?: (categoryName: string) => void;
   onTagClick?: (tagName: string) => void;
 }

@@ -1,14 +1,65 @@
-candidate/mediaなどでのヘッダのバックグラウンドカラーのcircle.svgの表示がfigmaと違うから完全にfigma通りの配置にしてください
+admin/media/newで以下の要素を指定した場合のcandidate/media/[media_id]での表示のされ方をいかにまとめたのですべてしっかり修正または追加してください。
+テーブルを作るときはもっとわかりやすく作成できるようにしてデザインは今のままでいい。
+これはadmin/previewページもこのデザインにしてください
 
-fill: linear-gradient(0deg, #198D76 0%, #1CA74F 100%);
+li
 
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="200" viewBox="0 0 1280 200" fill="none">
-  <path d="M640 -27C882.58 -27 1105.3 58.02 1280 199.89H0C174.7 58.02 397.42 -27 640 -27Z" fill="url(#paint0_linear_5275_20012)"/>
-  <defs>
-    <linearGradient id="paint0_linear_5275_20012" x1="640" y1="199.89" x2="640" y2="-27" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#198D76"/>
-      <stop offset="1" stop-color="#1CA74F"/>
-    </linearGradient>
-  </defs>
-</svg>
+color: var(--, #323232);
+font-family: "Noto Sans JP";
+font-size: 16px;
+font-style: normal;
+font-weight: 500;
+line-height: 200%; /* 32px */
+letter-spacing: 1.6px;
+
+目次
+display: flex;
+padding: 24px;
+flex-direction: column;
+align-items: flex-start;
+gap: 8px;
+align-self: stretch;
+
+border-radius: 24px;
+border: 2px solid var(--, #0F9058);
+
+目次内テキスト
+color: var(--, #323232);
+
+/* 本文_bold */
+font-family: "Noto Sans JP";
+font-size: 16px;
+font-style: normal;
+font-weight: 700;
+line-height: 200%; /* 32px */
+letter-spacing: 1.6px;
+
+目次という文字
+color: var(--, #0F9058);
+
+/* h4_bold */
+font-family: "Noto Sans JP";
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: 160%; /* 28.8px */
+letter-spacing: 1.8px;
+
+引用コンテナ
+
+display: flex;
+width: 960px;
+padding: 16px;
+align-items: center;
+gap: 10px;
+
+引用コンテナないの文字
+
+color: var(--, #323232);
+font-family: "Noto Sans JP";
+font-size: 16px;
+font-style: normal;
+font-weight: 500;
+line-height: 200%; /* 32px */
+letter-spacing: 1.6px;
 
