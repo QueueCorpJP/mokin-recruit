@@ -85,10 +85,52 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   });
 
   const addImage = () => {
-    const url = window.prompt('画像URLを入力してください');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      
+      if (!files || files.length === 0) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+          const response = await fetch('/api/upload-content-image', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          const result = await response.json();
+          
+          if (result.success && result.url) {
+            const imageOrder = Date.now() + i;
+            editor?.chain()
+              .focus()
+              .setImage({ 
+                src: result.url,
+                'data-image-order': imageOrder.toString(),
+                'data-image-position': editor.state.selection.from.toString()
+              })
+              .run();
+          } else {
+            console.error('画像アップロードに失敗:', result.error);
+            alert('画像のアップロードに失敗しました: ' + (result.error || '不明なエラー'));
+          }
+        } catch (error) {
+          console.error('画像アップロードエラー:', error);
+          alert('画像のアップロードに失敗しました');
+        }
+      }
+    };
+    
+    input.click();
   };
 
   const insertTable = () => {

@@ -34,7 +34,7 @@ export async function saveArticle(formData: FormData) {
       const finalPath = `thumbnails/${sanitizedFilename}`;
       
       const { data, error: uploadError } = await supabase.storage
-        .from('articles')
+        .from('blog')
         .upload(finalPath, thumbnail);
 
       if (uploadError) {
@@ -42,7 +42,7 @@ export async function saveArticle(formData: FormData) {
       }
 
       const { data: urlData } = supabase.storage
-        .from('articles')
+        .from('blog')
         .getPublicUrl(data.path);
 
       thumbnailUrl = urlData.publicUrl;
@@ -56,6 +56,9 @@ export async function saveArticle(formData: FormData) {
       .replace(/^-+|-+$/g, '')
       + '-' + Date.now();
 
+    // コンテンツ内の画像情報を抽出
+    const contentImages = extractImagesFromContent(content);
+
     // 記事を作成
     const { data: article, error: createError } = await supabase
       .from('articles')
@@ -66,7 +69,8 @@ export async function saveArticle(formData: FormData) {
         status,
         thumbnail_url: thumbnailUrl,
         excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
-        published_at: status === 'PUBLISHED' ? new Date().toISOString() : null
+        published_at: status === 'PUBLISHED' ? new Date().toISOString() : null,
+        content_images: contentImages
       })
       .select()
       .single();
@@ -129,5 +133,74 @@ export async function saveArticle(formData: FormData) {
   } catch (error) {
     console.error('記事の保存に失敗:', error);
     throw error;
+  }
+}
+
+interface ContentImage {
+  url: string;
+  order: number;
+  position: number;
+  filename: string;
+  uploadedAt: string;
+}
+
+function extractImagesFromContent(content: string): ContentImage[] {
+  const images: ContentImage[] = [];
+  const imgRegex = /<img[^>]+src="([^"]*)"[^>]*data-image-order="([^"]*)"[^>]*data-image-position="([^"]*)"[^>]*>/g;
+  
+  let match;
+  while ((match = imgRegex.exec(content)) !== null) {
+    const [, url, order, position] = match;
+    const filename = url.split('/').pop() || '';
+    
+    images.push({
+      url,
+      order: parseInt(order),
+      position: parseInt(position),
+      filename,
+      uploadedAt: new Date().toISOString()
+    });
+  }
+  
+  return images.sort((a, b) => a.order - b.order);
+}
+
+export async function uploadImageToSupabase(formData: FormData): Promise<{success: boolean, url?: string, error?: string}> {
+  const file = formData.get('file') as File;
+  
+  if (!file) {
+    return { success: false, error: 'ファイルが選択されていません' };
+  }
+
+  const supabase = createServerAdminClient();
+
+  try {
+    // ファイル名をサニタイズ
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const sanitizedFilename = file.name
+      .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '-')
+      .replace(/[-]{2,}/g, '-')
+      .replace(/^-+|-+$/g, '') || `content-image-${Date.now()}.${fileExtension}`;
+    
+    const finalPath = `content/${sanitizedFilename}`;
+    
+    const { data, error: uploadError } = await supabase.storage
+      .from('blog')
+      .upload(finalPath, file);
+
+    if (uploadError) {
+      console.error('画像アップロードエラー:', uploadError);
+      return { success: false, error: 'ファイルのアップロードに失敗しました' };
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('blog')
+      .getPublicUrl(data.path);
+
+    return { success: true, url: urlData.publicUrl };
+  } catch (error) {
+    console.error('画像アップロードエラー:', error);
+    return { success: false, error: 'サーバーエラーが発生しました' };
   }
 }
