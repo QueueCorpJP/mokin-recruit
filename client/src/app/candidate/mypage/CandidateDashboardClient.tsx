@@ -5,6 +5,8 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
+import { MessageListCard, Message } from '@/components/ui/MessageListCard';
+import { JobPostCard } from '@/components/ui/JobPostCard';
 
 interface User {
   id: string;
@@ -30,9 +32,10 @@ export function CandidateDashboardClient({
         {/* --- ここからやることリスト＋FAQ/バナーの2カラムレイアウト --- */}
         <div className='flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start'>
           {/* 左カラム（やることリスト2セット） */}
-          <div className='max-w-[880px] w-full flex-1 box-border px-6 md:px-0'>
-            {[0, 1].map(idx => (
-              <div key={idx} style={idx === 1 ? { marginTop: 80 } : {}}>
+          <div className='w-full max-w-[880px] flex-1 box-border md:px-6 px-0'>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
+              {/* やることリスト */}
+              <div>
                 <div style={{ marginBottom: '8px' }}>
                   <SectionHeading
                     iconSrc='/images/list.svg'
@@ -150,7 +153,206 @@ export function CandidateDashboardClient({
                   </Button>
                 </div>
               </div>
-            ))}
+              {/* 新着メッセージ */}
+              <div>
+                <div style={{ marginBottom: 8 }}>
+                  <SectionHeading
+                    iconSrc='/images/mail.svg'
+                    iconAlt='メッセージリストアイコン'
+                  >
+                    新着メッセージ
+                  </SectionHeading>
+                </div>
+                <MessageListCard
+                  messages={[
+                    {
+                      id: '1',
+                      sender: '株式会社サンプル',
+                      body: 'ご応募ありがとうございます。',
+                      date: '2024-06-01',
+                    },
+                    {
+                      id: '2',
+                      sender: '人事部',
+                      body: '面接日程のご連絡です。',
+                      date: '2024-06-02',
+                    },
+                    {
+                      id: '3',
+                      sender: '採用担当',
+                      body: '書類選考通過のお知らせ。',
+                      date: '2024-06-03',
+                    },
+                  ]}
+                />
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginTop: 24,
+                  }}
+                >
+                  <Button
+                    variant='green-outline'
+                    size='lg'
+                    style={{
+                      paddingLeft: 40,
+                      paddingRight: 40,
+                      height: 60,
+                      borderRadius: '999px',
+                    }}
+                  >
+                    メッセージ一覧を見る
+                  </Button>
+                </div>
+              </div>
+              {/* おすすめの求人 */}
+              <div>
+                <div style={{ marginBottom: 8 }}>
+                  <SectionHeading
+                    iconSrc='/images/boad02.svg'
+                    iconAlt='求人カードアイコン'
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        width: '100%',
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>おすすめの求人</span>
+                      <svg
+                        width='16'
+                        height='16'
+                        viewBox='0 0 24 25'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M21.75 12.9141C21.75 10.3282 20.7228 7.84825 18.8943 6.01977C17.0658 4.19129 14.5859 3.16406 12 3.16406C9.41414 3.16406 6.93419 4.19129 5.10571 6.01977C3.27723 7.84825 2.25 10.3282 2.25 12.9141C2.25 15.4999 3.27723 17.9799 5.10571 19.8084C6.93419 21.6368 9.41414 22.6641 12 22.6641C14.5859 22.6641 17.0658 21.6368 18.8943 19.8084C20.7228 17.9799 21.75 15.4999 21.75 12.9141ZM0 12.9141C0 9.73146 1.26428 6.67922 3.51472 4.42878C5.76516 2.17834 8.8174 0.914063 12 0.914062C15.1826 0.914063 18.2348 2.17834 20.4853 4.42878C22.7357 6.67922 24 9.73146 24 12.9141C24 16.0967 22.7357 19.1489 20.4853 21.3993C18.2348 23.6498 15.1826 24.9141 12 24.9141C8.8174 24.9141 5.76516 23.6498 3.51472 21.3993C1.26428 19.1489 0 16.0967 0 12.9141ZM7.95938 8.6625C8.32969 7.61719 9.32344 6.91406 10.4344 6.91406H13.1672C14.8031 6.91406 16.125 8.24063 16.125 9.87188C16.125 10.9313 15.5578 11.9109 14.6391 12.4406L13.125 13.3078C13.1156 13.9172 12.6141 14.4141 12 14.4141C11.3766 14.4141 10.875 13.9125 10.875 13.2891V12.6562C10.875 12.2531 11.0906 11.8828 11.4422 11.6812L13.5187 10.4906C13.7391 10.3641 13.875 10.1297 13.875 9.87656C13.875 9.48281 13.5562 9.16875 13.1672 9.16875H10.4344C10.275 9.16875 10.1344 9.26719 10.0828 9.41719L10.0641 9.47344C9.85781 10.0594 9.21094 10.3641 8.62969 10.1578C8.04844 9.95156 7.73906 9.30469 7.94531 8.72344L7.96406 8.66719L7.95938 8.6625ZM10.5 17.4141C10.5 17.0162 10.658 16.6347 10.9393 16.3534C11.2206 16.0721 11.6022 15.9141 12 15.9141C12.3978 15.9141 12.7794 16.0721 13.0607 16.3534C13.342 16.6347 13.5 17.0162 13.5 17.4141C13.5 17.8119 13.342 18.1934 13.0607 18.4747C12.7794 18.756 12.3978 18.9141 12 18.9141C11.6022 18.9141 11.2206 18.756 10.9393 18.4747C10.658 18.1934 10.5 17.8119 10.5 17.4141Z'
+                          fill='#999999'
+                        />
+                      </svg>
+                    </div>
+                  </SectionHeading>
+                </div>
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+                >
+                  {/* PC用（md以上） */}
+                  <div className='hidden md:flex flex-col gap-4'>
+                    {[1, 2, 3].map(i => (
+                      <JobPostCard
+                        key={`pc-${i}`}
+                        imageUrl='https://placehold.jp/477x318.png'
+                        imageAlt='サンプル求人画像'
+                        title={`注目のフルスタックエンジニア募集！${i}`}
+                        tags={['リモート可', '急成長', '自社サービス']}
+                        companyName='株式会社イノベーション'
+                        location={['東京都', 'リモート']}
+                        salary='年収800万円〜1200万円'
+                        apell={['新規事業', '裁量大', 'フレックス']}
+                        starred={false}
+                        onStarClick={() => {}}
+                        isFavoriteLoading={false}
+                        jobId={`sample-job-${i}`}
+                        onClick={() => {}}
+                        className='mypage-jobpostcard-custom'
+                        variant='mypage-simple'
+                        rightColumnHeight='101px'
+                        cardHeight='149px'
+                        imageWidth={151.5}
+                        imageHeight={101}
+                        showApell={false}
+                      />
+                    ))}
+                  </div>
+                  {/* モバイル用（md未満） */}
+                  <div className='flex flex-col gap-4 md:hidden'>
+                    {[1, 2, 3].map(i => (
+                      <JobPostCard
+                        key={`sp-${i}`}
+                        imageUrl='https://placehold.jp/477x318.png'
+                        imageAlt='サンプル求人画像'
+                        title={`注目のフルスタックエンジニア募集！${i}`}
+                        tags={['リモート可', '急成長', '自社サービス']}
+                        companyName='株式会社イノベーション'
+                        location={['東京都', 'リモート']}
+                        salary='年収800万円〜1200万円'
+                        apell={['新規事業', '裁量大', 'フレックス']}
+                        starred={false}
+                        onStarClick={() => {}}
+                        isFavoriteLoading={false}
+                        jobId={`sample-job-${i}`}
+                        onClick={() => {}}
+                        showApell={false}
+                        imageHeight={208}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* もっと見るボタン（Figma仕様） */}
+                <button
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 15,
+                    padding: '15px 24px',
+                    borderRadius: 10,
+                    background:
+                      'linear-gradient(90deg, #198D76 0%, #1CA74F 100%)',
+                    boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    marginTop: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Noto Sans JP',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      lineHeight: '2em',
+                      letterSpacing: '0.1em',
+                      textAlign: 'left',
+                      flex: 1,
+                    }}
+                  >
+                    もっと見る
+                  </span>
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 12,
+                      height: 12,
+                    }}
+                  >
+                    <svg
+                      width='12'
+                      height='12'
+                      viewBox='0 0 12 12'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M4 2L8 6L4 10'
+                        stroke='#FFF'
+                        strokeWidth='2'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
           {/* 右カラム（FAQ/バナー） */}
           <div className='w-full md:max-w-[320px] md:flex-none'>
