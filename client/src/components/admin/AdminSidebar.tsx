@@ -106,8 +106,8 @@ export const AdminSidebar = (): React.JSX.Element => {
               key={`sub-item-${index}-${subIndex}`}
               className="flex items-center gap-2 pl-7 w-full hover:opacity-80"
             >
-              <div className="w-1.5 h-1.5 bg-ZC-dn-VC rounded-[3px]" />
-              <span className="font-bold Noto_Sans_JP text-[#323232] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">
+              <span className="text-[#999] text-[12px] leading-[200%]">•</span>
+              <span className="font-bold Noto_Sans_JP text-[#999] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">
                 {item}
               </span>
             </Link>

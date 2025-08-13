@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/admin/ui/button';
+import '@/styles/media-content.css';
 
 interface PreviewData {
   title: string;
@@ -22,7 +23,9 @@ export default function PreviewPage() {
   useEffect(() => {
     const storedData = sessionStorage.getItem('previewArticle');
     if (storedData) {
-      setPreviewData(JSON.parse(storedData));
+      const data = JSON.parse(storedData);
+      console.log('Preview data content:', data.content);
+      setPreviewData(data);
     } else {
       router.push('/admin/media/new');
     }
@@ -42,11 +45,15 @@ export default function PreviewPage() {
       formData.append('content', previewData.content);
       formData.append('status', status);
       
-      if (previewData.thumbnailName) {
-        const thumbnailFile = await fetch(previewData.thumbnail!)
-          .then(res => res.blob())
-          .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
-        formData.append('thumbnail', thumbnailFile);
+      if (previewData.thumbnailName && previewData.thumbnail) {
+        try {
+          const thumbnailFile = await fetch(previewData.thumbnail)
+            .then(res => res.blob())
+            .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
+          formData.append('thumbnail', thumbnailFile);
+        } catch (error) {
+          console.warn('サムネイル画像の処理に失敗しました:', error);
+        }
       }
 
       const response = await fetch('/api/admin/articles', {
@@ -182,14 +189,26 @@ export default function PreviewPage() {
               
               {/* 記事タイトルセクション */}
               <div className="mb-[32px]">
-                <h1 className="text-[32px] font-bold text-[#323232] mb-[16px] Noto_Sans_JP leading-[1.5]">
+                <h1 className="text-[32px] text-[#323232] mb-[16px] font-noto-sans-jp leading-[1.5]" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                   {previewData.title}
                 </h1>
                 <div className="flex items-center gap-[16px]">
-                  <span className="bg-[#0F9058] text-[#FFF] text-[14px] font-medium px-[16px] py-[4px] rounded-full">
+                  <span
+                    className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
+                    style={{ 
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  >
                     メディア
                   </span>
-                  <span className="bg-yellow-600 text-white text-[14px] font-medium px-[16px] py-[4px] rounded-full">
+                  <span 
+                    className="bg-yellow-600 text-white text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
+                    style={{ 
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  >
                     プレビュー
                   </span>
                 </div>
@@ -197,7 +216,7 @@ export default function PreviewPage() {
 
               {/* メイン画像 */}
               {previewData.thumbnail && (
-                <div className="relative w-full aspect-[16/9] bg-gray-200 overflow-hidden mb-[40px]">
+                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
                   <img 
                     src={previewData.thumbnail} 
                     alt={previewData.title}
