@@ -1,21 +1,20 @@
 'use client';
 
-import { Button } from "@/components/admin/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/admin/ui/table";
 import { useEffect, useState } from 'react';
 import { articleService, Article } from '@/lib/services/articleService';
+import { MediaTableRow } from '@/components/admin/ui/MediaTableRow';
+import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
+import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
+import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
 export default function MediaPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -61,19 +60,82 @@ export default function MediaPage() {
   };
 
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return '未設定';
+    if (!dateString) return { date: '未設定', time: '' };
     const date = new Date(dateString);
     const dateStr = date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    });
+    }).replace(/\//g, '/');
     const timeStr = date.toLocaleTimeString('ja-JP', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
     return { date: dateStr, time: timeStr };
   };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleNewArticle = () => {
+    window.location.href = '/admin/media/new';
+  };
+
+  const handleEdit = (articleId: string) => {
+    window.open(`/admin/media/${articleId}`, '_blank');
+  };
+
+  const handleDelete = async (articleId: string, articleTitle: string) => {
+    if (confirm(`記事「${articleTitle}」を削除しますか？`)) {
+      try {
+        // TODO: 削除APIを実装
+        console.log('Delete article:', articleId);
+        // 削除後にリストを更新
+        setArticles(articles.filter(a => a.id !== articleId));
+      } catch (error) {
+        console.error('削除に失敗しました:', error);
+      }
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    const totalPages = Math.ceil(articles.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const columns = [
+    { key: 'datetime', label: '日時', sortable: true, width: 'w-[180px]' },
+    { key: 'status', label: 'ステータス', sortable: true, width: 'w-[120px]' },
+    { key: 'title', label: 'タイトル', sortable: true, width: 'flex-1' },
+    { key: 'actions', label: 'アクション', sortable: false, width: 'w-[200px]' }
+  ];
+
+  // ページネーション
+  const paginatedArticles = articles.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const totalPages = Math.ceil(articles.length / itemsPerPage);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
@@ -84,178 +146,50 @@ export default function MediaPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-end">
-        <Button className="bg-black text-white px-6 py-2 rounded-full">
-          新規記事追加
-        </Button>
+        <NewArticleButton />
       </div>
 
-      {/* メディア記事一覧テーブル */}
-      <div className="bg-white border border-gray-300 rounded">
-        <Table>
-          <TableHeader className="bg-black">
-            <TableRow>
-              <TableHead className="border-r border-gray-600 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#fff'
-                  }}>
-                    ステータス
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-600 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#fff'
-                  }}>
-                    最終更新日付
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-600 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#fff'
-                  }}>
-                    カテゴリ
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-600 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#fff'
-                  }}>
-                    記事タイトルが入ります。
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="px-3 py-2">
-                <span style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6,
-                  color: '#fff'
-                }}>
-                  {/* 操作列 */}
-                </span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {articles.map((article, index) => {
-              const dateTime = formatDate(article.updated_at || article.created_at);
-              return (
-                <TableRow key={article.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <TableCell className="border-r border-gray-200 px-3 py-4">
-                    <Button 
-                      className={`px-3 py-1 rounded text-sm ${getStatusStyle(article.status)}`}
-                      style={{
-                        fontFamily: 'Inter',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: 1.6
-                      }}
-                    >
-                      {getStatusText(article.status)}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6
-                  }}>
-                    {typeof dateTime === 'object' ? (
-                      <>
-                        <div>{dateTime.date}</div>
-                        <div>{dateTime.time}</div>
-                      </>
-                    ) : (
-                      <div>{dateTime}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6
-                  }}>
-                    {/* カテゴリ表示 - 現在は実装されていないため空 */}
-                    -
-                  </TableCell>
-                  <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6
-                  }}>
-                    <button
-                      onClick={() => window.open(`/admin/media/${article.id}`, '_blank')}
-                      className="text-left hover:text-blue-600 hover:underline transition-colors cursor-pointer"
-                    >
-                      {article.title}
-                    </button>
-                  </TableCell>
-                  <TableCell className="px-3 py-4">
-                    <Button 
-                      variant="outline"
-                      className="border border-gray-400 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-50"
-                      style={{
-                        fontFamily: 'Inter',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: 1.6
-                      }}
-                      onClick={() => {
-                        if (confirm('この記事を削除しますか？')) {
-                          // TODO: 削除機能を実装
-                          console.log('Delete article:', article.id);
-                        }
-                      }}
-                    >
-                      削除する
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+      {/* テーブルコンテナ */}
+      <div className="bg-white rounded-lg shadow-sm">
+        {/* テーブルヘッダー */}
+        <MediaTableHeader
+          columns={columns}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+
+        {/* メディア記事一覧 */}
+        <div className="divide-y divide-gray-200">
+          {paginatedArticles.map((article) => {
+            const dateTime = formatDate(article.updated_at || article.created_at);
+            
+            return (
+              <MediaTableRow
+                key={article.id || `article-${paginatedArticles.indexOf(article)}`}
+                date={dateTime.date}
+                time={dateTime.time}
+                status={getStatusText(article.status)}
+                content={article.title}
+                onEdit={() => article.id && handleEdit(article.id)}
+                onDelete={() => article.id && handleDelete(article.id, article.title)}
+              />
+            );
+          })}
+        </div>
       </div>
 
       {/* ページネーション */}
-      <div className="flex justify-center gap-4 mt-6">
-        <Button className="bg-black text-white px-6 py-2 rounded-full">
-          前へ
-        </Button>
-        <Button className="bg-black text-white px-6 py-2 rounded-full">
-          次へ
-        </Button>
+      <div className="flex justify-center mt-8">
+        <PaginationButtons
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          previousDisabled={currentPage === 1}
+          nextDisabled={currentPage === totalPages || totalPages === 0}
+        />
       </div>
     </div>
   );

@@ -1,70 +1,25 @@
-admin/media/newで以下の要素を指定した場合のcandidate/media/[media_id]での表示のされ方をいかにまとめたのですべてしっかり修正または追加してください。
-テーブルを作るときはもっとわかりやすく作成できるようにしてデザインは今のままでいい。
-これはadmin/previewページもこのデザインにしてください
+admin/mediaページにて一覧の列の表示を以下のfigmaデザインを再現してください
+以下はコンポーネントとしてほかのページでも使いたいので中の文字や内容の個数などは変更可能にしていい感じにコンポーネント化してください。既存のデザインを完全に置き換えてください。
 
-写真はサムネとまったく同じデザインにしてください。
+列
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139835&m=dev
 
-テーブルは何コラム何列が指定してからそのテーブルが表示されるようにして今はただのテキストが表示されるが実際のテーブルが表示されるようにしてください。
+上のバー
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139814&m=dev
 
-テーブルの表示もしっかり同じにしてください
-コラム名コンテナ
-display: flex;
-padding: 16px;
-justify-content: center;
-align-items: center;
-align-content: center;
-gap: 24px;
-align-self: stretch;
-flex-wrap: wrap;
+新規記事追加ボタン
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139811&m=dev
 
-コラム名コンテナ内テキスト
+前へボタンをこちらに置き換えてください　戻るボタン
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139852&m=dev
 
-color: var(--, #323232);
-font-family: "Noto Sans JP";
-font-size: 16px;
-font-style: normal;
-font-weight: 500;
-line-height: 200%; /* 32px */
-letter-spacing: 1.6px;
+次へボタンを完全に置き換えてください　次へボタン
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139851&m=dev
 
-列のコンテナ
-display: flex;
-padding: 16px;
-justify-content: center;
-align-items: center;
-align-content: center;
-gap: 24px;
-align-self: stretch;
-flex-wrap: wrap;
 
-列のコンテナ内テキスト
+消去ボタン
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139842&m=dev
 
-color: var(--, #323232);
-font-family: "Noto Sans JP";
-font-size: 16px;
-font-style: normal;
-font-weight: 500;
-line-height: 200%; /* 32px */
-letter-spacing: 1.6px;
 
-著者コンテナ
-
-display: flex;
-width: 960px;
-padding: 16px;
-align-items: center;
-gap: 10px;
-
-border-top: 1px solid var(--, #0F9058);
-border-bottom: 1px solid var(--, #0F9058);
-background: var(--, #F0F9F3);
-
-著者コンテナテキスト
-
-color: var(--, #323232);
-font-family: "Noto Sans JP";
-font-size: 16px;
-font-style: normal;
-font-weight: 500;
-line-height: 200%; /* 32px */
-letter-spacing: 1.6px;
+編集ボタン
+https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-139841&m=dev

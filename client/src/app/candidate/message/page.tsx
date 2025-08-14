@@ -2,7 +2,11 @@ import { requireCandidateAuth } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 
-export default async function MessagePage() {
+export default async function MessagePage({
+  searchParams
+}: {
+  searchParams: { room?: string }
+}) {
   const user = await requireCandidateAuth();
 
   if (!user) {
@@ -42,6 +46,7 @@ export default async function MessagePage() {
           rooms={rooms}
           userId={user.id}
           userType="candidate"
+          initialRoomId={searchParams.room}
         />
       </div>
     </div>

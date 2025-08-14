@@ -310,6 +310,7 @@ export default function CandidateTaskPage() {
     boxSizing: 'border-box',
     borderRadius: '8px',
     boxShadow: '0 0 20px rgba(0,0,0,0.05)',
+    transition: 'background 0.2s ease',
   };
   const todoItemRowStyle: React.CSSProperties = {
     display: 'flex',
@@ -356,6 +357,12 @@ export default function CandidateTaskPage() {
                       style={{
                         ...todoItemStyle,
                         cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#E9E9E9';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#FFFFFF';
                       }}
                       onClick={() => handleTaskItemClick(item)}
                     >
