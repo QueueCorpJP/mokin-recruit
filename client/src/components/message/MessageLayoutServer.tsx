@@ -22,6 +22,7 @@ export interface MessageLayoutServerProps {
   userId?: string;
   userType?: 'candidate' | 'company';
   companyUserName?: string;
+  initialRoomId?: string;
 }
 
 export function MessageLayoutServer({
@@ -30,9 +31,10 @@ export function MessageLayoutServer({
   userId,
   userType = 'company',
   companyUserName,
+  initialRoomId,
 }: MessageLayoutServerProps) {
   const { showToast } = useToast();
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(initialRoomId || null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [groupFilter, setGroupFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
@@ -46,18 +48,26 @@ export function MessageLayoutServer({
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [rooms, setRooms] = useState<Room[]>(initialRooms); // roomsを状態管理
   
+  // モバイル判定 - 初期ルーム設定より前に定義
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
+  
   const isCandidatePage = userType === 'candidate';
   
   const handleSearchTargetChange = (target: 'company' | 'job') => {
     setSearchTarget(target);
   };
 
-  // 最初のルームを自動選択（無効化）
-  // useEffect(() => {
-  //   if (rooms.length > 0 && !selectedRoomId) {
-  //     setSelectedRoomId(rooms[0].id);
-  //   }
-  // }, [rooms, selectedRoomId]);
+  // URLパラメータから初期ルームIDを設定
+  useEffect(() => {
+    if (initialRoomId && rooms.some(room => room.id === initialRoomId)) {
+      setSelectedRoomId(initialRoomId);
+      // モバイルの場合は詳細モードに切り替え
+      if (isMobile) {
+        setIsMobileDetailMode(true);
+      }
+    }
+  }, [initialRoomId, rooms, isMobile]);
 
   // 選択されたルームのメッセージを取得
   useEffect(() => {
@@ -103,10 +113,7 @@ export function MessageLayoutServer({
     }
   }, [selectedRoomId, isCandidatePage]);
   
-  // モバイル判定
-  const [isMobile, setIsMobile] = useState(false);
-  const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
-
+  // モバイル判定のuseEffect
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);

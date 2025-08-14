@@ -47,18 +47,18 @@ export const MediaTableHeader: React.FC<MediaTableHeaderProps> = ({
                   height="5"
                   viewBox="0 0 8 5"
                   fill="none"
-                  className={`${sortColumn === column.key && sortDirection === 'asc' ? 'opacity-100' : 'opacity-30'}`}
+                  className={`${sortColumn === column.key && sortDirection === 'asc' ? 'opacity-100' : 'opacity-60'}`}
                 >
-                  <path d="M4 0L7.5 5H0.5L4 0Z" fill="#0F9058" />
+                  <path d="M4 0L7.5 5H0.5L4 0Z" fill={sortColumn === column.key && sortDirection === 'asc' ? '#0F9058' : '#323232'} />
                 </svg>
                 <svg
                   width="8"
                   height="5"
                   viewBox="0 0 8 5"
                   fill="none"
-                  className={`${sortColumn === column.key && sortDirection === 'desc' ? 'opacity-100' : 'opacity-30'}`}
+                  className={`${sortColumn === column.key && sortDirection === 'desc' ? 'opacity-100' : 'opacity-60'}`}
                 >
-                  <path d="M4 5L0.5 0H7.5L4 5Z" fill="#0F9058" />
+                  <path d="M4 5L0.5 0H7.5L4 5Z" fill={sortColumn === column.key && sortDirection === 'desc' ? '#0F9058' : '#323232'} />
                 </svg>
               </div>
             )}
