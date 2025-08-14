@@ -3,7 +3,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
-import { useFavoriteStatusQuery, useFavoriteToggleMutation } from '@/hooks/useFavoriteApi';
+import {
+  useFavoriteStatusQuery,
+  useFavoriteToggleMutation,
+} from '@/hooks/useFavoriteApi';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { JobDetailData } from './actions';
 import Image from 'next/image';
@@ -15,19 +18,21 @@ interface CandidateSearchSettingClientProps {
 // 雇用形態の英語→日本語マッピング
 const getEmploymentTypeInJapanese = (employmentType: string): string => {
   const mapping: Record<string, string> = {
-    'FULL_TIME': '正社員',
-    'CONTRACT': '契約社員',
-    '正社員': '正社員',
-    '契約社員': '契約社員',
-    '業務委託': '業務委託',
-    'その他': 'その他'
+    FULL_TIME: '正社員',
+    CONTRACT: '契約社員',
+    正社員: '正社員',
+    契約社員: '契約社員',
+    業務委託: '業務委託',
+    その他: 'その他',
   };
-  
+
   return mapping[employmentType] || employmentType;
 };
 
 // 勤務地タグの一行表示用コンポーネント
-const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations }) => {
+const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({
+  locations,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(locations.length);
 
@@ -44,22 +49,23 @@ const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations })
       // 各タグの幅を計算
       for (let i = 0; i < locations.length; i++) {
         // タグの幅を概算（パディング48px + フォントサイズ14px * 文字数 * 0.9）
-        const estimatedTagWidth = 48 + (locations[i].length * 14 * 0.9);
+        const estimatedTagWidth = 48 + locations[i].length * 14 * 0.9;
         const gapWidth = i > 0 ? 8 : 0; // gap分
         const totalWidthWithTag = currentWidth + gapWidth + estimatedTagWidth;
-        
+
         // 次のタグを追加した場合の幅をチェック
         const remainingTags = locations.length - i - 1;
         const needsEllipsis = remainingTags > 0;
-        
+
         // 省略記号が必要な場合はその分も考慮
-        const finalWidth = totalWidthWithTag + (needsEllipsis ? 8 + ellipsisWidth : 0);
-        
+        const finalWidth =
+          totalWidthWithTag + (needsEllipsis ? 8 + ellipsisWidth : 0);
+
         if (finalWidth > containerWidth) {
           // このタグを追加すると溢れる場合
           break;
         }
-        
+
         currentWidth = totalWidthWithTag;
         count++;
       }
@@ -72,7 +78,7 @@ const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations })
     const resizeObserver = new ResizeObserver(() => {
       setTimeout(calculateVisibleTags, 0);
     });
-    
+
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
@@ -84,7 +90,10 @@ const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations })
   }, [locations]);
 
   return (
-    <div ref={containerRef} className='flex flex-nowrap gap-2 items-center justify-start w-full overflow-hidden'>
+    <div
+      ref={containerRef}
+      className='flex flex-nowrap gap-2 items-center justify-start w-full overflow-hidden'
+    >
       {locations.slice(0, visibleCount).map(item => (
         <div
           key={item}
@@ -110,22 +119,24 @@ const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({ locations })
   );
 };
 
-export default function CandidateSearchSettingClient({ initialJobData }: CandidateSearchSettingClientProps) {
+export default function CandidateSearchSettingClient({
+  initialJobData,
+}: CandidateSearchSettingClientProps) {
   const router = useRouter();
   const params = useParams();
   const [jobData] = useState<JobDetailData | null>(initialJobData);
-  
+
   // 画像カルーセル用のstate
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   // お気に入り機能のhook
   const jobId = params.id as string;
   const { data: favoriteStatus } = useFavoriteStatusQuery([jobId]);
   const favoriteToggleMutation = useFavoriteToggleMutation();
-  
+
   // お気に入り状態をローカルステートで管理（即座の更新のため）
   const [isFavorite, setIsFavorite] = useState(false);
-  
+
   // favoriteStatusが更新されたらローカルステートも更新
   useEffect(() => {
     if (favoriteStatus !== undefined) {
@@ -138,8 +149,8 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
     if (!jobData || !jobData.images || jobData.images.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
-        (prevIndex + 1) % jobData.images.length
+      setCurrentImageIndex(
+        prevIndex => (prevIndex + 1) % jobData.images.length
       );
     }, 2500); // 2.5秒間隔
 
@@ -148,15 +159,15 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
 
   const handleFavoriteToggle = async () => {
     if (favoriteToggleMutation.isPending) return; // 処理中は無効化
-    
+
     // 楽観的更新: 即座にUIを更新
     const newFavoriteState = !isFavorite;
     setIsFavorite(newFavoriteState);
-    
+
     try {
       await favoriteToggleMutation.mutateAsync({
         jobPostingId: jobId,
-        isFavorite: isFavorite
+        isFavorite: isFavorite,
       });
     } catch (error) {
       console.error('お気に入りの切り替えに失敗しました:', error);
@@ -197,7 +208,7 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
           {/* ヘッダー部分 */}
           <div className='flex flex-col gap-6 items-start justify-start w-full mb-10'>
             {/* 求人タイトル */}
-            <h1 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
+            <h1 className="font-['Noto_Sans_JP'] font-bold text-[20px] lg:text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
               {jobData.title}
             </h1>
 
@@ -208,7 +219,7 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                   src={jobData.companyLogo || '/company.jpg'}
                   alt={jobData.companyName}
                   fill
-                  sizes="40px"
+                  sizes='40px'
                   priority
                   className='object-cover'
                 />
@@ -243,10 +254,12 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                   {jobData.images && jobData.images.length > 1 && (
                     <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
                       {jobData.images.map((_, index) => (
-                        <div 
+                        <div
                           key={index}
                           className={`flex-1 h-full rounded-[5px] transition-colors ease-in-out ${
-                            index === currentImageIndex ? 'bg-[#0f9058]' : 'bg-[#dcdcdc]'
+                            index === currentImageIndex
+                              ? 'bg-[#0f9058]'
+                              : 'bg-[#dcdcdc]'
                           }`}
                           style={{ transitionDuration: '0.6s' }}
                         />
@@ -258,7 +271,7 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                 {/* ポジション概要セクション */}
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   <div className='flex flex-row gap-3 h-10 items-center justify-start pb-2 pt-0 px-0 w-full border-b-2 border-[#dcdcdc]'>
-                    <h2 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
+                    <h2 className="font-['Noto_Sans_JP'] font-bold text-[20px] lg:text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
                       ポジション概要
                     </h2>
                   </div>
@@ -287,7 +300,7 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                 {/* 求める人物像セクション */}
                 <div className='flex flex-col gap-4 items-start justify-start w-full'>
                   <div className='flex flex-row gap-3 h-10 items-center justify-start pb-2 pt-0 px-0 w-full border-b-2 border-[#dcdcdc]'>
-                    <h2 className="font-['Noto_Sans_JP'] font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
+                    <h2 className="font-['Noto_Sans_JP'] font-bold text-[20px] lg:text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
                       求める人物像
                     </h2>
                   </div>
@@ -314,317 +327,331 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                 </div>
 
                 {/* 職種から下のセクション群 */}
-            <div className='flex flex-col gap-2 items-start justify-start w-full overflow-hidden'>
-                {/* 職種 */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        職種
+                <div className='flex flex-col gap-2 items-start justify-start w-full overflow-hidden'>
+                  {/* 職種 */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          職種
+                        </div>
                       </div>
-                    </div>
-                    <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <TagDisplay items={jobData.jobTypes} borderRadius="5px" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 業種 */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        業種
+                      <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        <TagDisplay
+                          items={jobData.jobTypes}
+                          borderRadius='5px'
+                        />
                       </div>
-                    </div>
-                    <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <TagDisplay items={jobData.industries} borderRadius="5px" />
                     </div>
                   </div>
-                </div>
 
-                {/* 条件・待遇 */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        条件・待遇
+                  {/* 業種 */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          業種
+                        </div>
+                      </div>
+                      <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        <TagDisplay
+                          items={jobData.industries}
+                          borderRadius='5px'
+                        />
                       </div>
                     </div>
-                    <div className='bg-white flex flex-col gap-6 w-full items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      {/* 想定年収 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                  </div>
+
+                  {/* 条件・待遇 */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
                         <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          想定年収
+                          条件・待遇
                         </div>
-                        <div className='box-border content-stretch flex flex-row gap-6 items-center justify-start p-0 relative shrink-0'>
-                          <div className='box-border content-stretch flex flex-row gap-2 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]'>
-                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.salaryMin ? `${jobData.salaryMin}万` : '選択済項目が入ります'}
+                      </div>
+                      <div className='bg-white flex flex-col gap-6 w-full items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        {/* 想定年収 */}
+                        <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            想定年収
+                          </div>
+                          <div className='box-border content-stretch flex flex-row gap-6 items-center justify-start p-0 relative shrink-0'>
+                            <div className='box-border content-stretch flex flex-row gap-2 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]'>
+                              <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
+                                {jobData.salaryMin
+                                  ? `${jobData.salaryMin}万`
+                                  : '選択済項目が入ります'}
+                              </div>
+                              <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                                〜
+                              </div>
+                              <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
+                                {jobData.salaryMax
+                                  ? `${jobData.salaryMax}万`
+                                  : '選択済項目が入ります'}
+                              </div>
                             </div>
-                            <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                              〜
-                            </div>
-                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.salaryMax ? `${jobData.salaryMax}万` : '選択済項目が入ります'}
-                            </div>
-                          </div>
-                          <div className='box-border content-stretch flex flex-row gap-2 items-start justify-start p-0 relative shrink-0'>
-                            <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                              応相談
+                            <div className='box-border content-stretch flex flex-row gap-2 items-start justify-start p-0 relative shrink-0'>
+                              <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                                応相談
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 年収補足 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] flex items-center font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          年収補足
-                        </div>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                            {jobData.salaryNote}
+                        {/* 年収補足 */}
+                        <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] flex items-center font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            年収補足
+                          </div>
+                          <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
+                              {jobData.salaryNote}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 仕切り線 */}
-                      <div className='h-0 relative shrink-0 w-full'>
-                        <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
-                          <svg
-                            className='block size-full'
-                            fill='none'
-                            preserveAspectRatio='none'
-                            viewBox='0 0 628 2'
-                          >
-                            <path d='M0 1H628' stroke='#EFEFEF' />
-                          </svg>
-                        </div>
-                      </div>
-
-                      {/* 勤務地 */}
-                      <div className='flex flex-row items-center justify-center min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] mr-[10px] shrink-0 font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
-                          勤務地
-                        </div>
-                        <div className="min-w-0 flex-1 gap-2">
-                          <SingleRowLocationTags locations={jobData.locations} />
-                        </div>
-                      </div>
-
-                      {/* 勤務地補足 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          勤務地補足
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.locationNote}
-                        </div>
-                      </div>
-
-                      {/* 仕切り線 */}
-                      <div className='h-0 relative shrink-0 w-full'>
-                        <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
-                          <svg
-                            className='block size-full'
-                            fill='none'
-                            preserveAspectRatio='none'
-                            viewBox='0 0 628 2'
-                          >
-                            <path d='M0 1H628' stroke='#EFEFEF' />
-                          </svg>
-                        </div>
-                      </div>
-
-                      {/* 雇用形態 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          雇用形態
-                        </div>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                            {getEmploymentTypeInJapanese(jobData.employmentType)}
+                        {/* 仕切り線 */}
+                        <div className='h-0 relative shrink-0 w-full'>
+                          <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
+                            <svg
+                              className='block size-full'
+                              fill='none'
+                              preserveAspectRatio='none'
+                              viewBox='0 0 628 2'
+                            >
+                              <path d='M0 1H628' stroke='#EFEFEF' />
+                            </svg>
                           </div>
                         </div>
-                      </div>
 
-                      {/* 雇用形態補足 */}
-                      <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          雇用形態補足
-                        </div>
-                        <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0'>
-                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                            {jobData.employmentTypeNote}
+                        {/* 勤務地 */}
+                        <div className='flex flex-row items-center justify-center min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] mr-[10px] shrink-0 font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
+                            勤務地
+                          </div>
+                          <div className='min-w-0 flex-1 gap-2'>
+                            <SingleRowLocationTags
+                              locations={jobData.locations}
+                            />
                           </div>
                         </div>
-                      </div>
 
-                      {/* 仕切り線 */}
-                      <div className='h-0 relative shrink-0 w-full'>
-                        <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
-                          <svg
-                            className='block size-full'
-                            fill='none'
-                            preserveAspectRatio='none'
-                            viewBox='0 0 628 2'
-                          >
-                            <path d='M0 1H628' stroke='#EFEFEF' />
-                          </svg>
+                        {/* 勤務地補足 */}
+                        <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            勤務地補足
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                            {jobData.locationNote}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* 就業時間 */}
-                      <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
-                          就業時間
+                        {/* 仕切り線 */}
+                        <div className='h-0 relative shrink-0 w-full'>
+                          <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
+                            <svg
+                              className='block size-full'
+                              fill='none'
+                              preserveAspectRatio='none'
+                              viewBox='0 0 628 2'
+                            >
+                              <path d='M0 1H628' stroke='#EFEFEF' />
+                            </svg>
+                          </div>
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                          {jobData.workingHours}
-                        </div>
-                      </div>
 
-                      {/* 所定外労働の有無 */}
-                      <div className='flex flex-col gap-2 items-start justify-start w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          所定外労働の有無
+                        {/* 雇用形態 */}
+                        <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            雇用形態
+                          </div>
+                          <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
+                              {getEmploymentTypeInJapanese(
+                                jobData.employmentType
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                          {jobData.overtime ? (jobData.overtime.trim() === '' ? 'あり' : jobData.overtime) : 'あり'}
-                        </div>
-                      </div>
 
-                      {/* 備考 */}
-                      {jobData.overtimeMemo && (
+                        {/* 雇用形態補足 */}
+                        <div className='flex flex-col gap-2 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            雇用形態補足
+                          </div>
+                          <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0'>
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
+                              {jobData.employmentTypeNote}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 仕切り線 */}
+                        <div className='h-0 relative shrink-0 w-full'>
+                          <div className='absolute bottom-[-0.5px] left-0 right-0 top-[-0.5px]'>
+                            <svg
+                              className='block size-full'
+                              fill='none'
+                              preserveAspectRatio='none'
+                              viewBox='0 0 628 2'
+                            >
+                              <path d='M0 1H628' stroke='#EFEFEF' />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* 就業時間 */}
+                        <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
+                            就業時間
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
+                            {jobData.workingHours}
+                          </div>
+                        </div>
+
+                        {/* 所定外労働の有無 */}
                         <div className='flex flex-col gap-2 items-start justify-start w-full'>
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                            備考
+                            所定外労働の有無
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                            {jobData.overtimeMemo}
+                            {jobData.overtime
+                              ? jobData.overtime.trim() === ''
+                                ? 'あり'
+                                : jobData.overtime
+                              : 'あり'}
                           </div>
                         </div>
-                      )}
 
-                      {/* 休日・休暇 */}
-                      <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
-                          休日・休暇
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                          {jobData.holidays}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                        {/* 備考 */}
+                        {jobData.overtimeMemo && (
+                          <div className='flex flex-col gap-2 items-start justify-start w-full'>
+                            <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                              備考
+                            </div>
+                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
+                              {jobData.overtimeMemo}
+                            </div>
+                          </div>
+                        )}
 
-                {/* 選考情報 */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        選考情報
-                      </div>
-                    </div>
-                    <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                        {jobData.selectionProcess}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* アピールポイント */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        アピールポイント
-                      </div>
-                    </div>
-                    <div className='bg-white flex flex-col gap-3 w-full items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      {/* 業務・ポジション */}
-                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          業務・ポジション
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.appealPoints.business.join('、')}
-                        </div>
-                      </div>
-
-                      {/* 企業・組織 */}
-                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          企業・組織
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.appealPoints.company.join('、')}
-                        </div>
-                      </div>
-
-                      {/* チーム・文化 */}
-                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          チーム・文化
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.appealPoints.team.join('、')}
-                        </div>
-                      </div>
-
-                      {/* 働き方・制度 */}
-                      <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
-                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                          働き方・制度
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                          {jobData.appealPoints.workstyle.join('、')}
+                        {/* 休日・休暇 */}
+                        <div className='flex flex-col md:flex-col gap-2 md:gap-2.5 items-start justify-start w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232] md:min-w-[80px]">
+                            休日・休暇
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
+                            {jobData.holidays}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-            <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-
-    {/* ラベル部分（左側） */}
-    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-        受動喫煙防止措置
-      </div>
-    </div>
-
-    {/* 内容部分（右側） */}
-    <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-        {jobData.smoke}
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-                {/* 応募時のレジュメ提出 */}
-                <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                  <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
-                    <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
-                      <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                        応募時のレジュメ提出
+                  {/* 選考情報 */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          選考情報
+                        </div>
                       </div>
-                    </div>
-                    <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                        {jobData.resumeRequired.join('、')}
+                      <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
+                          {jobData.selectionProcess}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* アピールポイント */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          アピールポイント
+                        </div>
+                      </div>
+                      <div className='bg-white flex flex-col gap-3 w-full items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        {/* 業務・ポジション */}
+                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            業務・ポジション
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                            {jobData.appealPoints.business.join('、')}
+                          </div>
+                        </div>
+
+                        {/* 企業・組織 */}
+                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            企業・組織
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                            {jobData.appealPoints.company.join('、')}
+                          </div>
+                        </div>
+
+                        {/* チーム・文化 */}
+                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            チーム・文化
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                            {jobData.appealPoints.team.join('、')}
+                          </div>
+                        </div>
+
+                        {/* 働き方・制度 */}
+                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                          <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                            働き方・制度
+                          </div>
+                          <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
+                            {jobData.appealPoints.workstyle.join('、')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      {/* ラベル部分（左側） */}
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          受動喫煙防止措置
+                        </div>
+                      </div>
+
+                      {/* 内容部分（右側） */}
+                      <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
+                          {jobData.smoke}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 応募時のレジュメ提出 */}
+                  <div className='flex flex-col gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                    <div className='flex flex-col lg:flex-row gap-0 items-stretch justify-start w-full max-w-full overflow-hidden rounded-[10px]'>
+                      <div className='bg-[#efefef] px-6 py-3 flex items-center w-full lg:w-[200px] lg:flex-shrink-0 rounded-t-[10px] lg:rounded-l-[10px] lg:rounded-tr-none'>
+                        <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                          応募時のレジュメ提出
+                        </div>
+                      </div>
+                      <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
+                        <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
+                          {jobData.resumeRequired.join('、')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
@@ -829,8 +856,8 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
             {/* お気に入り・応募ボタン - スマホ時は企業情報の後に表示 */}
             <div
               className='order-3 rounded-[24px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-3 sm:px-4 lg:px-16 py-3 sm:py-4 lg:py-5 fixed left-2 right-2 sm:left-4 sm:right-4 lg:left-10 lg:right-10 bottom-4 lg:bottom-[20px] z-50'
-              style={{ 
-                background: 'rgba(255,255,255,0.9)'
+              style={{
+                background: 'rgba(255,255,255,0.9)',
               }}
             >
               <div className='flex flex-col lg:flex-row gap-2 lg:gap-4 items-center justify-center w-full'>
@@ -838,10 +865,12 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                   onClick={handleFavoriteToggle}
                   disabled={favoriteToggleMutation.isPending}
                   className={`flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-auto lg:min-w-40 px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px] ${
-                    favoriteToggleMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
+                    favoriteToggleMutation.isPending
+                      ? 'opacity-70 cursor-not-allowed'
+                      : ''
                   } ${
-                    isFavorite 
-                      ? 'bg-[#FFDA5F] hover:bg-[#E5C54F] text-[#323232]' 
+                    isFavorite
+                      ? 'bg-[#FFDA5F] hover:bg-[#E5C54F] text-[#323232]'
                       : 'bg-white hover:bg-[#f5f5f5] text-[#999] border border-[#999]'
                   }`}
                 >
@@ -849,13 +878,14 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                     size={12}
                     className={`${isFavorite ? 'fill-[#323232] text-[#323232]' : 'text-[#999]'} flex-shrink-0 sm:w-[14px] sm:h-[14px]`}
                   />
-                  <span className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-[#999]'} whitespace-nowrap`}>
-                    {favoriteToggleMutation.isPending 
-                      ? '処理中...' 
-                      : isFavorite 
-                        ? 'お気に入り解除' 
-                        : 'お気に入りに登録'
-                    }
+                  <span
+                    className={`font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] ${isFavorite ? 'text-[#323232]' : 'text-[#999]'} whitespace-nowrap`}
+                  >
+                    {favoriteToggleMutation.isPending
+                      ? '処理中...'
+                      : isFavorite
+                        ? 'お気に入り解除'
+                        : 'お気に入りに登録'}
                   </span>
                 </button>
 
@@ -863,20 +893,22 @@ export default function CandidateSearchSettingClient({ initialJobData }: Candida
                   onClick={handleApply}
                   className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px]'
                   style={{
-                    background: 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
-                    boxShadow: '0 5px 10px 0 rgba(0, 0, 0, 0.15)'
+                    background:
+                      'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
+                    boxShadow: '0 5px 10px 0 rgba(0, 0, 0, 0.15)',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #249881, #27668D)';
+                    e.currentTarget.style.background =
+                      'linear-gradient(to right, #249881, #27668D)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #26AF94, #3A93CB)';
+                    e.currentTarget.style.background =
+                      'linear-gradient(to right, #26AF94, #3A93CB)';
                   }}
                 >
                   <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.4] sm:leading-[1.6] lg:leading-[2] tracking-[0.6px] sm:tracking-[0.8px] lg:tracking-[1.6px] text-white whitespace-nowrap">
                     応募する
                   </span>
-                
                 </button>
               </div>
             </div>
