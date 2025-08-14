@@ -169,13 +169,13 @@ export default function MediaPage() {
             
             return (
               <MediaTableRow
-                key={article.id}
+                key={article.id || `article-${paginatedArticles.indexOf(article)}`}
                 date={dateTime.date}
                 time={dateTime.time}
                 status={getStatusText(article.status)}
                 content={article.title}
-                onEdit={() => handleEdit(article.id)}
-                onDelete={() => handleDelete(article.id, article.title)}
+                onEdit={() => article.id && handleEdit(article.id)}
+                onDelete={() => article.id && handleDelete(article.id, article.title)}
               />
             );
           })}
