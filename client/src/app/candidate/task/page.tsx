@@ -157,17 +157,17 @@ export default function CandidateTaskPage() {
     return Date.now() - date.getTime() < seventyTwoHoursInMs;
   };
 
-  // 表示条件関数（トリガー関数）- 全て表示するためにtrue
-  const checkProfileIncomplete = () => true;
+  // 表示条件関数（トリガー関数）- userStateに基づいて条件判定
+  const checkProfileIncomplete = () => userState.profileIncomplete;
   
-  // スカウト関連（デフォルト表示）
-  const checkNewScout = () => true;
-  const checkUnreadScout = () => true;
+  // スカウト関連（userStateに基づいて判定）
+  const checkNewScout = () => userState.hasNewScout && isWithin72Hours(userState.newScoutDate);
+  const checkUnreadScout = () => userState.hasUnreadScout && is72HoursPassed(userState.unreadScoutDate);
   
-  // メッセージ関連（デフォルト表示）
-  const checkNewMessage = () => true;
+  // メッセージ関連（userStateに基づいて判定）
+  const checkNewMessage = () => userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
     
-  const checkUnreadMessage = () => true;
+  const checkUnreadMessage = () => userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
 
   // サブテキストを動的に生成する関数
   const generateSubText = (companyName?: string, jobTitle?: string): string => {

@@ -6,7 +6,7 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
-import { Input } from "@/components/admin/ui/input";
+import { SearchBar } from '@/components/admin/ui/SearchBar';
 
 export default function MessagePage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,17 +93,12 @@ export default function MessagePage() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="企業名・候補者名・求人タイトルで検索"
-            className="w-80 border border-gray-300"
-          />
-          <button className="px-4 py-2 bg-[#0F9058] text-white rounded-md hover:bg-[#0D7A4A] transition-colors">
-            検索
-          </button>
-        </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="企業名・候補者名・求人タイトルで検索"
+          onSearch={() => console.log('Search:', searchTerm)}
+        />
         <div className="flex gap-3">
           <AdminButton
             href="/admin/message/confirm"
@@ -117,7 +112,7 @@ export default function MessagePage() {
       </div>
 
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg">
         {/* テーブルヘッダー */}
         <MediaTableHeader
           columns={columns}
@@ -127,7 +122,7 @@ export default function MessagePage() {
         />
 
         {/* メッセージ一覧 */}
-        <div className="divide-y divide-gray-200">
+        <div className="mt-2 space-y-2">
           {paginatedData.map((message) => (
             <AdminTableRow
               key={message.id}

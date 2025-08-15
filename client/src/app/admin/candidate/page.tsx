@@ -6,7 +6,8 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
-import { Input } from "@/components/admin/ui/input";
+import { SearchBar } from '@/components/admin/ui/SearchBar';
+import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { Checkbox } from "@/components/admin/ui/checkbox";
 
 export default function CandidatePage() {
@@ -112,20 +113,13 @@ export default function CandidatePage() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="候補者名・ID・メールで検索"
-            className="w-80 border border-gray-300"
-          />
-          <button className="px-4 py-2 bg-[#0F9058] text-white rounded-md hover:bg-[#0D7A4A] transition-colors">
-            検索
-          </button>
-          <button className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
-            絞り込み
-          </button>
-        </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="候補者名・ID・メールで検索"
+          onSearch={() => console.log('Search:', searchTerm)}
+          onFilter={() => console.log('Filter')}
+        />
         <div className="flex gap-3">
           <AdminButton
             onClick={() => console.log('Export CSV')}
@@ -150,9 +144,9 @@ export default function CandidatePage() {
       )}
 
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-lg overflow-x-auto">
         {/* テーブルヘッダー */}
-        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b-2 border-[#E5E5E5]">
+        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]">
           <div className="w-[50px] px-3">
             <Checkbox
               checked={selectedCandidates.length === paginatedData.length}
@@ -171,14 +165,16 @@ export default function CandidatePage() {
                 </span>
                 {column.sortable && (
                   <div className="flex flex-col gap-0.5">
-                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none" 
-                      className={`${sortColumn === column.key && sortDirection === 'asc' ? 'opacity-100' : 'opacity-30'}`}>
-                      <path d="M4 0L7.5 5H0.5L4 0Z" fill="#0F9058" />
-                    </svg>
-                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none"
-                      className={`${sortColumn === column.key && sortDirection === 'desc' ? 'opacity-100' : 'opacity-30'}`}>
-                      <path d="M4 5L0.5 0H7.5L4 5Z" fill="#0F9058" />
-                    </svg>
+                    <ArrowIcon
+                      direction="up"
+                      size={8}
+                      color="#0F9058"
+                    />
+                    <ArrowIcon
+                      direction="down"
+                      size={8}
+                      color="#0F9058"
+                    />
                   </div>
                 )}
               </div>
@@ -187,81 +183,48 @@ export default function CandidatePage() {
         </div>
 
         {/* 候補者一覧 */}
-        <div className="divide-y divide-gray-200">
+        <div className="mt-2 space-y-2">
           {paginatedData.map((candidate) => (
-            <div key={candidate.id} className="flex items-center px-5 py-4 hover:bg-gray-50 transition-colors">
-              <div className="w-[50px] px-3">
-                <Checkbox
-                  checked={selectedCandidates.includes(candidate.id)}
-                  onCheckedChange={(checked) => handleSelectCandidate(candidate.id, checked as boolean)}
-                />
-              </div>
-              <div className="w-[140px] px-3">
-                <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {candidate.lastLoginDate}
-                </div>
-                <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {candidate.lastLoginTime}
-                </div>
-              </div>
-              <div className="w-[140px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.userIdText}
-                </p>
-              </div>
-              <div className="w-[150px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.userName}
-                </p>
-              </div>
-              <div className="w-[120px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.occupation}
-                </p>
-              </div>
-              <div className="w-[80px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {candidate.gender}
-                </p>
-              </div>
-              <div className="w-[80px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {candidate.age}歳
-                </p>
-              </div>
-              <div className="w-[140px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.salary}
-                </p>
-              </div>
-              <div className="w-[140px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.phone}
-                </p>
-              </div>
-              <div className="w-[180px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.email}
-                </p>
-              </div>
-              <div className="w-[150px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {candidate.location}
-                </p>
-              </div>
-              <div className="w-[200px] flex-shrink-0 flex items-center justify-end gap-3">
-                <ActionButton
-                  text="編集"
-                  variant="edit"
-                  onClick={() => handleEdit(candidate.id)}
-                />
-                <ActionButton
-                  text="削除"
-                  variant="delete"
-                  onClick={() => handleDelete(candidate.id)}
-                />
-              </div>
-            </div>
+            <AdminTableRow
+              key={candidate.id}
+              columns={[
+                {
+                  content: (
+                    <Checkbox
+                      checked={selectedCandidates.includes(candidate.id)}
+                      onCheckedChange={(checked) => handleSelectCandidate(candidate.id, checked as boolean)}
+                    />
+                  ),
+                  width: 'w-[50px]'
+                },
+                {
+                  content: (
+                    <div>
+                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {candidate.lastLoginDate}
+                      </div>
+                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {candidate.lastLoginTime}
+                      </div>
+                    </div>
+                  ),
+                  width: 'w-[140px]'
+                },
+                { content: candidate.userIdText, width: 'w-[140px]' },
+                { content: candidate.userName, width: 'w-[150px]' },
+                { content: candidate.occupation, width: 'w-[120px]' },
+                { content: candidate.gender, width: 'w-[80px]' },
+                { content: `${candidate.age}歳`, width: 'w-[80px]' },
+                { content: candidate.salary, width: 'w-[140px]' },
+                { content: candidate.phone, width: 'w-[140px]' },
+                { content: candidate.email, width: 'w-[180px]' },
+                { content: candidate.location, width: 'w-[150px]' }
+              ]}
+              actions={[
+                <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(candidate.id)} />,
+                <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(candidate.id)} />
+              ]}
+            />
           ))}
         </div>
       </div>
