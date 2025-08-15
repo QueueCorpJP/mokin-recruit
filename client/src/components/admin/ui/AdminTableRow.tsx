@@ -20,7 +20,8 @@ export const AdminTableRow: React.FC<AdminTableRowProps> = ({
 
   return (
     <div 
-      className={`flex items-center px-5 py-4 border-b border-[#E5E5E5] hover:bg-gray-50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      className={`flex items-center px-5 py-4 bg-white hover:bg-gray-50 transition-colors rounded-lg ${onClick ? 'cursor-pointer' : ''}`}
+      style={{ boxShadow: '0 2px 20px 0 rgba(0, 0, 0, 0.05)' }}
       onClick={onClick}
     >
       {/* Data Columns */}

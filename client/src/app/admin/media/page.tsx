@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { articleService, Article } from '@/lib/services/articleService';
-import { MediaTableRow } from '@/components/admin/ui/MediaTableRow';
-import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
+import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+import { ActionButton } from '@/components/admin/ui/ActionButton';
+import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 
 export default function MediaPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -36,14 +37,17 @@ export default function MediaPage() {
     fetchArticles();
   }, []);
 
-  const getStatusStyle = (status: Article['status']) => {
-    if (status === 'PUBLISHED') {
-      return 'bg-green-600 text-white';
-    } else if (status === 'DRAFT') {
-      return 'bg-yellow-600 text-white';
-    } else {
-      return 'bg-gray-600 text-white';
-    }
+  const getStatusBadge = (status: Article['status']) => {
+    const statusText = getStatusText(status);
+    const statusClass = status === 'PUBLISHED' 
+      ? 'bg-[#D2F1DA] text-[#0F9058]' 
+      : 'bg-gray-100 text-gray-600';
+    
+    return (
+      <span className={`inline-block px-3 py-1 rounded-[5px] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] ${statusClass}`}>
+        {statusText}
+      </span>
+    );
   };
 
   const getStatusText = (status: Article['status']) => {
@@ -153,29 +157,73 @@ export default function MediaPage() {
       </div>
 
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg overflow-x-auto">
         {/* テーブルヘッダー */}
-        <MediaTableHeader
-          columns={columns}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-        />
+        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]">
+          {columns.map((column) => (
+            <div
+              key={column.key}
+              className={`${column.width || 'flex-1'} px-3 ${column.sortable ? 'cursor-pointer select-none' : ''}`}
+              onClick={() => column.sortable && handleSort(column.key)}
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px]">
+                  {column.label}
+                </span>
+                {column.sortable && (
+                  <div className="flex flex-col gap-0.5">
+                    <ArrowIcon
+                      direction="up"
+                      size={8}
+                      color="#0F9058"
+                    />
+                    <ArrowIcon
+                      direction="down"
+                      size={8}
+                      color="#0F9058"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* メディア記事一覧 */}
-        <div className="divide-y divide-gray-200">
+        <div className="mt-2 space-y-2">
           {paginatedArticles.map((article) => {
             const dateTime = formatDate(article.updated_at || article.created_at);
             
             return (
-              <MediaTableRow
+              <AdminTableRow
                 key={article.id || `article-${paginatedArticles.indexOf(article)}`}
-                date={dateTime.date}
-                time={dateTime.time}
-                status={getStatusText(article.status)}
-                content={article.title}
-                onEdit={() => article.id && handleEdit(article.id)}
-                onDelete={() => article.id && handleDelete(article.id, article.title)}
+                columns={[
+                  {
+                    content: (
+                      <div>
+                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {dateTime.date}
+                        </div>
+                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {dateTime.time}
+                        </div>
+                      </div>
+                    ),
+                    width: 'w-[180px]'
+                  },
+                  {
+                    content: getStatusBadge(article.status),
+                    width: 'w-[120px]'
+                  },
+                  {
+                    content: article.title,
+                    width: 'flex-1'
+                  }
+                ]}
+                actions={[
+                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => article.id && handleEdit(article.id)} />,
+                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => article.id && handleDelete(article.id, article.title)} />
+                ]}
               />
             );
           })}

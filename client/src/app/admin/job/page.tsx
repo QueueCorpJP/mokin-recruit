@@ -6,7 +6,8 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
-import { Input } from "@/components/admin/ui/input";
+import { SearchBar } from '@/components/admin/ui/SearchBar';
+import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { Checkbox } from "@/components/admin/ui/checkbox";
 
 export default function Job() {
@@ -134,20 +135,13 @@ export default function Job() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="企業名・求人タイトル・職種で検索"
-            className="w-96 border border-gray-300"
-          />
-          <button className="px-4 py-2 bg-[#0F9058] text-white rounded-md hover:bg-[#0D7A4A] transition-colors">
-            検索
-          </button>
-          <button className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
-            絞り込み
-          </button>
-        </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="企業名・求人タイトル・職種で検索"
+          onSearch={() => console.log('Search:', searchTerm)}
+          onFilter={() => console.log('Filter')}
+        />
         <AdminButton
           href="/admin/job/new"
           text="新規求人作成"
@@ -178,9 +172,9 @@ export default function Job() {
       )}
 
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-lg overflow-x-auto">
         {/* テーブルヘッダー */}
-        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b-2 border-[#E5E5E5]">
+        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]">
           <div className="w-[50px] px-3">
             <Checkbox
               checked={selectedJobs.length === paginatedData.length && paginatedData.length > 0}
@@ -199,14 +193,16 @@ export default function Job() {
                 </span>
                 {column.sortable && (
                   <div className="flex flex-col gap-0.5">
-                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none" 
-                      className={`${sortColumn === column.key && sortDirection === 'asc' ? 'opacity-100' : 'opacity-30'}`}>
-                      <path d="M4 0L7.5 5H0.5L4 0Z" fill="#0F9058" />
-                    </svg>
-                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none"
-                      className={`${sortColumn === column.key && sortDirection === 'desc' ? 'opacity-100' : 'opacity-30'}`}>
-                      <path d="M4 5L0.5 0H7.5L4 5Z" fill="#0F9058" />
-                    </svg>
+                    <ArrowIcon
+                      direction="up"
+                      size={8}
+                      color="#0F9058"
+                    />
+                    <ArrowIcon
+                      direction="down"
+                      size={8}
+                      color="#0F9058"
+                    />
                   </div>
                 )}
               </div>
@@ -215,75 +211,60 @@ export default function Job() {
         </div>
 
         {/* 求人一覧 */}
-        <div className="divide-y divide-gray-200">
+        <div className="mt-2 space-y-2">
           {paginatedData.map((job) => (
-            <div key={job.id} className="flex items-center px-5 py-4 hover:bg-gray-50 transition-colors">
-              <div className="w-[50px] px-3">
-                <Checkbox
-                  checked={selectedJobs.includes(job.id)}
-                  onCheckedChange={(checked) => handleSelectJob(job.id, checked as boolean)}
-                />
-              </div>
-              <div className="w-[150px] px-3">
-                <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {job.updateDate}
-                </div>
-                <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {job.updateTime}
-                </div>
-              </div>
-              <div className="w-[120px] px-3">
-                {getStatusBadge(job.status)}
-              </div>
-              <div className="w-[120px] px-3">
-                {getPeriodBadge(job.publicPeriod)}
-              </div>
-              <div className="w-[200px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {job.company}
-                </p>
-              </div>
-              <div className="w-[150px] px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {job.position}
-                </p>
-              </div>
-              <div className="w-[180px] px-3">
-                <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                  {job.jobId}
-                </div>
-                <div className="font-['Noto_Sans_JP'] text-[12px] font-medium text-gray-500 leading-[1.4] tracking-[1.2px]">
-                  {job.companyId}
-                </div>
-              </div>
-              <div className="flex-1 px-3">
-                <p className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] truncate">
-                  {job.title}
-                </p>
-              </div>
-              <div className="w-[250px] flex-shrink-0 flex items-center justify-end gap-2">
-                {job.status === '承認待ち' && (
-                  <ActionButton
-                    text="承認"
-                    variant="approve"
-                    onClick={() => handleApprove(job.id)}
-                    size="small"
-                  />
-                )}
-                <ActionButton
-                  text="編集"
-                  variant="edit"
-                  onClick={() => handleEdit(job.id)}
-                  size="small"
-                />
-                <ActionButton
-                  text="削除"
-                  variant="delete"
-                  onClick={() => handleDelete(job.id)}
-                  size="small"
-                />
-              </div>
-            </div>
+            <AdminTableRow
+              key={job.id}
+              columns={[
+                {
+                  content: (
+                    <Checkbox
+                      checked={selectedJobs.includes(job.id)}
+                      onCheckedChange={(checked) => handleSelectJob(job.id, checked as boolean)}
+                    />
+                  ),
+                  width: 'w-[50px]'
+                },
+                {
+                  content: (
+                    <div>
+                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {job.updateDate}
+                      </div>
+                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {job.updateTime}
+                      </div>
+                    </div>
+                  ),
+                  width: 'w-[150px]'
+                },
+                { content: getStatusBadge(job.status), width: 'w-[120px]' },
+                { content: getPeriodBadge(job.publicPeriod), width: 'w-[120px]' },
+                { content: job.company, width: 'w-[200px]' },
+                { content: job.position, width: 'w-[150px]' },
+                {
+                  content: (
+                    <div>
+                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {job.jobId}
+                      </div>
+                      <div className="font-['Noto_Sans_JP'] text-[12px] font-medium text-gray-500 leading-[1.4] tracking-[1.2px]">
+                        {job.companyId}
+                      </div>
+                    </div>
+                  ),
+                  width: 'w-[180px]'
+                },
+                { content: job.title, width: 'flex-1' }
+              ]}
+              actions={[
+                ...(job.status === '承認待ち' ? [
+                  <ActionButton key="approve" text="承認" variant="approve" onClick={() => handleApprove(job.id)} size="small" />
+                ] : []),
+                <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(job.id)} size="small" />,
+                <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(job.id)} size="small" />
+              ]}
+            />
           ))}
         </div>
       </div>
