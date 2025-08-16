@@ -15,6 +15,8 @@ interface CandidateAuthBackgroundProps {
   topRightBallPosition?: BallPosition;
   leftCenterBallPosition?: BallPosition;
   bottomRightBallPosition?: BallPosition;
+  // 背景画像の位置調整
+  backgroundPosition?: string;
 }
 
 // 右上のボール用SVG
@@ -82,7 +84,8 @@ export function CandidateAuthBackground({
   // 元のクラス名に対応する正確な値をデフォルト値として設定
   topRightBallPosition = { top: '6.666667%', right: '-2rem' }, // top-1/15 -right-8
   leftCenterBallPosition = { top: '25%', left: '-4rem', transform: 'translateY(-50%)' }, // top-1/4 -left-16 transform -translate-y-1/2
-  bottomRightBallPosition = { top: '30.303030%', right: '-4rem' } // top-10/33 -right-16
+  bottomRightBallPosition = { top: '30.303030%', right: '-4rem' }, // top-10/33 -right-16
+  backgroundPosition = 'center 15%'
 }: CandidateAuthBackgroundProps) {
   
   // 位置オブジェクトをCSSスタイルに変換
@@ -104,7 +107,7 @@ export function CandidateAuthBackground({
           sizes="100vw"
           priority
           className="object-cover object-center"
-          style={{ objectPosition: 'center 15%' }}
+          style={{ objectPosition: backgroundPosition }}
         />
       </div>
       

@@ -43,12 +43,12 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
   };
 
   const buttonContent = (
-    <span className="font-['Noto_Sans_JP'] font-bold text-white leading-[2] tracking-[1.6px]">
+    <span className="font-['Noto_Sans_JP'] font-bold text-white text-center text-nowrap leading-[2] tracking-[1.6px]">
       {text}
     </span>
   );
 
-  const buttonStyles = `inline-flex items-center justify-center rounded-[32px] shadow-lg hover:shadow-xl transition-all ${getSizeStyles()} ${getVariantStyles()} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+  const buttonStyles = `box-border content-stretch flex flex-row gap-2.5 items-center justify-center rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:shadow-[0px_5px_10px_0px_rgba(0,0,0,0.25)] transition-all ${getSizeStyles()} ${getVariantStyles()} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
 
   if (disabled) {
     return (
