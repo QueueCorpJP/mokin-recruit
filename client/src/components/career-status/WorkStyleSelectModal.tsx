@@ -5,22 +5,27 @@ import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const workStyles = [
-  '事業責任者や事業部長を目指したい',
-  '経営に近い立場で意思決定に関わりたい',
-  '0→1のプロダクト／市場を開拓したい',
-  '興味のある働き方テキストが入ります。',
-  '興味のある働き方テキストが入ります。',
-  '興味のある働き方テキストが入ります。',
-  '興味のある働き方テキストが入ります。',
-  '興味のある働き方テキストが入ります。',
+interface WorkStyle {
+  id: string;
+  name: string;
+}
+
+const workStyles: WorkStyle[] = [
+  { id: 'business-leader', name: '事業責任者や事業部長を目指したい' },
+  { id: 'management', name: '経営に近い立場で意思決定に関わりたい' },
+  { id: 'product-innovation', name: '0→1のプロダクト／市場を開拓したい' },
+  { id: 'interest-text1', name: '興味のある働き方テキストが入ります。' },
+  { id: 'interest-text2', name: '興味のある働き方テキストが入ります。' },
+  { id: 'interest-text3', name: '興味のある働き方テキストが入ります。' },
+  { id: 'interest-text4', name: '興味のある働き方テキストが入ります。' },
+  { id: 'interest-text5', name: '興味のある働き方テキストが入ります。' },
 ];
 
 interface WorkStyleSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (_selectedStyles: string[]) => void;
-  initialSelected?: string[];
+  onConfirm: (_selectedStyles: WorkStyle[]) => void;
+  initialSelected?: WorkStyle[];
   maxSelections?: number;
 }
 
@@ -31,16 +36,17 @@ export default function WorkStyleSelectModal({
   initialSelected = [],
   maxSelections = workStyles.length,
 }: WorkStyleSelectModalProps) {
-  const [selectedStyles, setSelectedStyles] = useState<string[]>(initialSelected);
+  const [selectedStyles, setSelectedStyles] = useState<WorkStyle[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     setSelectedStyles(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (style: string) => {
-    if (selectedStyles.includes(style)) {
-      setSelectedStyles(selectedStyles.filter(s => s !== style));
+  const handleCheckboxChange = (style: WorkStyle) => {
+    const isSelected = selectedStyles.some(s => s.id === style.id);
+    if (isSelected) {
+      setSelectedStyles(selectedStyles.filter(s => s.id !== style.id));
     } else {
       if (selectedStyles.length < maxSelections) {
         setSelectedStyles([...selectedStyles, style]);
@@ -76,13 +82,13 @@ export default function WorkStyleSelectModal({
 
         <div className="grid grid-cols-1 gap-4">
           {workStyles.map((style) => {
-            const isSelected = selectedStyles.includes(style);
+            const isSelected = selectedStyles.some(s => s.id === style.id);
             const isDisabled = !isSelected && selectedStyles.length >= maxSelections;
 
             return (
-              <div key={style} className="flex items-center">
+              <div key={style.id} className="flex items-center">
                 <Checkbox
-                  label={style}
+                  label={style.name}
                   checked={isSelected}
                   onChange={() => handleCheckboxChange(style)}
                   disabled={isDisabled}

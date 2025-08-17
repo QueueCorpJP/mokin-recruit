@@ -40,11 +40,16 @@ const regions = [
   },
 ];
 
+interface Prefecture {
+  id: string;
+  name: string;
+}
+
 interface WorkLocationSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (_selectedLocations: string[]) => void;
-  initialSelected?: string[];
+  onConfirm: (_selectedLocations: Prefecture[]) => void;
+  initialSelected?: Prefecture[];
 }
 
 export default function WorkLocationSelectModal({
@@ -53,7 +58,7 @@ export default function WorkLocationSelectModal({
   onConfirm,
   initialSelected = [],
 }: WorkLocationSelectModalProps) {
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(initialSelected);
+  const [selectedLocations, setSelectedLocations] = useState<Prefecture[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const MAX_SELECTION = 47;
 
@@ -61,9 +66,12 @@ export default function WorkLocationSelectModal({
     setSelectedLocations(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (location: string) => {
-    if (selectedLocations.includes(location)) {
-      setSelectedLocations(selectedLocations.filter(l => l !== location));
+  const handleCheckboxChange = (locationName: string) => {
+    const location: Prefecture = { id: locationName.toLowerCase().replace(/[^a-z0-9]/g, ''), name: locationName };
+    const isSelected = selectedLocations.some(l => l.name === locationName);
+    
+    if (isSelected) {
+      setSelectedLocations(selectedLocations.filter(l => l.name !== locationName));
     } else {
       if (selectedLocations.length < MAX_SELECTION) {
         setSelectedLocations([...selectedLocations, location]);
@@ -83,7 +91,11 @@ export default function WorkLocationSelectModal({
     if (isAllSelected) {
       setSelectedLocations([]);
     } else {
-      setSelectedLocations(allPrefectures.slice(0, MAX_SELECTION));
+      const allPrefectureObjects = allPrefectures.slice(0, MAX_SELECTION).map(name => ({
+        id: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        name
+      }));
+      setSelectedLocations(allPrefectureObjects);
     }
   };
 
@@ -123,7 +135,7 @@ export default function WorkLocationSelectModal({
             </h3>
             <div className="flex flex-wrap gap-6">
               {region.prefectures.map(prefecture => {
-                const isSelected = selectedLocations.includes(prefecture);
+                const isSelected = selectedLocations.some(l => l.name === prefecture);
                 const isDisabled = !isSelected && selectedLocations.length >= MAX_SELECTION;
 
                 return (
