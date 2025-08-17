@@ -15,6 +15,13 @@ const pageTitleConfig: PageTitleConfig = {
   '/admin/company': '企業アカウント管理',
   '/admin/candidate': '候補者管理',
   '/admin/media': 'メディア記事一覧',
+  '/admin/media/new': '新規記事追加',
+  '/admin/media/edit': '記事編集',
+  '/admin/media/preview': 'プレビュー',
+  '/admin/media/edit/preview': 'プレビュー',
+  '/admin/media/category': 'カテゴリ管理',
+  '/admin/media/tag': 'タグ管理',
+  '/admin/media/tag/new': 'タグ作成',
   '/admin/notice': '運営からのお知らせ管理',
   '/admin/analytics': '分析',
 };
@@ -29,13 +36,9 @@ export function AdminPageTitle() {
       return pageTitleConfig[pathname];
     }
     
-    // 部分一致でチェック（サブページの場合）
-    const segments = pathname.split('/').filter(segment => segment !== '');
-    for (let i = segments.length; i > 0; i--) {
-      const path = '/' + segments.slice(0, i).join('/');
-      if (pageTitleConfig[path]) {
-        return pageTitleConfig[path];
-      }
+    // 動的ルートのチェック
+    if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
+      return '記事詳細';
     }
     
     // デフォルトタイトル

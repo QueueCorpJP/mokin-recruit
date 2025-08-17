@@ -73,24 +73,27 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       Image.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto',
+          style: 'max-width: 100%; height: auto; display: block;',
         },
       }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
           class: 'border-collapse border border-gray-300 w-full mb-4',
-          style: 'max-width: 100%; table-layout: auto;',
+          style: 'max-width: 100%; table-layout: fixed; word-wrap: break-word;',
         },
       }),
       TableRow,
       TableHeader.configure({
         HTMLAttributes: {
           class: 'border border-gray-300 bg-gray-50 px-4 py-2 font-semibold',
+          style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
         },
       }),
       TableCell.configure({
         HTMLAttributes: {
           class: 'border border-gray-300 px-4 py-2',
+          style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
         },
       }),
       TableOfContents,
@@ -337,14 +340,19 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       </div>
 
       {/* エディタエリア */}
-      <div className="min-h-[400px] p-4">
+      <div className="min-h-[400px] p-4 overflow-hidden">
         <EditorContent
           editor={editor}
-          className="prose prose-lg max-w-none focus:outline-none media-content-editor"
+          className="prose prose-lg max-w-none focus:outline-none media-content-editor overflow-hidden"
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',
             lineHeight: 1.6,
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word',
+            maxWidth: '100%',
+            width: '100%',
           }}
         />
       </div>
