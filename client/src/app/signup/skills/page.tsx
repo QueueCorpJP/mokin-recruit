@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -152,16 +150,7 @@ export default function SignupSkillsPage() {
   // PCとモバイルで異なるコンポーネントをレンダリング
   if (isDesktop) {
     return (
-      <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <Navigation
-          variant="candidate"
-          isLoggedIn={false}
-          userInfo={undefined}
-        />
-
-        {/* PC Version */}
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
           <main
             className="flex relative py-20 flex-col items-center justify-start"
             style={{
@@ -654,20 +643,12 @@ export default function SignupSkillsPage() {
             </div>
           </main>
         </form>
-
-        <AuthAwareFooter />
-      </div>
     );
   }
 
   // Mobile Version
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
-      {/* SP (Mobile) Version */}
-      <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)}>
         <main
           className="flex relative pt-6 pb-20 flex-col items-center px-4"
           style={{
@@ -1049,8 +1030,5 @@ export default function SignupSkillsPage() {
           </div>
         </main>
       </form>
-
-      <AuthAwareFooter />
-    </div>
   );
 }

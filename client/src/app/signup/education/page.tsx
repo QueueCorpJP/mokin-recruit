@@ -4,12 +4,14 @@ import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 import { Navigation } from '@/components/ui/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 
@@ -86,6 +88,11 @@ export default function SignupEducationPage() {
 
   const selectedIndustries = watch('industries');
   const selectedJobTypes = watch('jobTypes');
+  const finalEducation = watch('finalEducation');
+  const schoolName = watch('schoolName');
+
+  // School autocomplete
+  const { suggestions: schoolSuggestions } = useSchoolAutocomplete(schoolName, finalEducation);
 
   // 最終学歴の選択肢
   const educationOptions = [
@@ -452,11 +459,16 @@ export default function SignupEducationPage() {
                     </label>
                   </div>
                   <div className="w-[400px]">
-                    <input
-                      type="text"
+                    <AutocompleteInput
+                      value={schoolName}
+                      onChange={(value) => setValue('schoolName', value, { shouldValidate: true })}
                       placeholder="学校名を入力"
-                      {...register('schoolName')}
-                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                      suggestions={schoolSuggestions.map(s => ({ 
+                        id: s.id, 
+                        name: s.name, 
+                        category: s.category 
+                      }))}
+                      className={errors.schoolName ? 'border-red-500' : ''}
                     />
                     {errors.schoolName && (
                       <p className="text-red-500 text-sm mt-1">
@@ -929,11 +941,16 @@ export default function SignupEducationPage() {
                   <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                     学校名
                   </label>
-                  <input
-                    type="text"
+                  <AutocompleteInput
+                    value={schoolName}
+                    onChange={(value) => setValue('schoolName', value, { shouldValidate: true })}
                     placeholder="学校名を入力"
-                    {...register('schoolName')}
-                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                    suggestions={schoolSuggestions.map(s => ({ 
+                      id: s.id, 
+                      name: s.name, 
+                      category: s.category 
+                    }))}
+                    className={errors.schoolName ? 'border-red-500' : ''}
                   />
                   {errors.schoolName && (
                     <p className="text-red-500 text-sm">

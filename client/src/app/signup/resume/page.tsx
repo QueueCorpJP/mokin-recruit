@@ -1,13 +1,12 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { uploadResumeFiles } from './actions';
 
 // ファイルアップロード用のバリデーションスキーマ
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -75,6 +74,8 @@ export default function SignupResumePage() {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [careerSummaryFile, setCareerSummaryFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const careerInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,12 +100,15 @@ export default function SignupResumePage() {
 
   // ファイル選択処理
   const handleFileSelect = (type: 'resume' | 'career', file: File | null) => {
+    console.log('File selected:', type, file?.name, file?.size);
     if (type === 'resume') {
       setResumeFile(file);
       setValue('resumeFile', file);
+      console.log('Resume file set:', file?.name);
     } else {
       setCareerSummaryFile(file);
       setValue('careerSummaryFile', file);
+      console.log('Career file set:', file?.name);
     }
     trigger();
   };
@@ -133,20 +137,44 @@ export default function SignupResumePage() {
   };
 
   // 「アップした書類で登録する」ボタンクリック
-  const handleUploadSubmit = handleSubmit(() => {
-    // バリデーション成功時のみ遷移
-    router.push('/signup/resume/complete');
+  const handleUploadSubmit = handleSubmit(async () => {
+    if (!resumeFile && !careerSummaryFile) {
+      setUploadError('少なくとも1つのファイルをアップロードしてください');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      
+      if (resumeFile) {
+        formData.append('resumeFile', resumeFile);
+      }
+      
+      if (careerSummaryFile) {
+        formData.append('careerSummaryFile', careerSummaryFile);
+      }
+      
+      formData.append('agreement', (agreement ?? false).toString());
+      
+      await uploadResumeFiles(formData);
+      // 成功時はactions.tsでリダイレクトされる
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError(error instanceof Error ? error.message : 'アップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
   });
 
   // アップロードボタンが有効かどうか
   const isUploadButtonEnabled =
-    (resumeFile || careerSummaryFile) && agreement && isValid;
+    (resumeFile || careerSummaryFile) && agreement && isValid && !isUploading;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
+    <>
       {/* 条件レンダリング - PC Version */}
       {isDesktop ? (
         <main
@@ -400,6 +428,12 @@ export default function SignupResumePage() {
                     {errors.agreement.message}
                   </p>
                 )}
+                
+                {uploadError && (
+                  <p className="text-red-500 text-[14px] font-medium text-center">
+                    {uploadError}
+                  </p>
+                )}
 
                 {/* Submit Button */}
                 <button
@@ -411,7 +445,7 @@ export default function SignupResumePage() {
                       : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
                   }`}
                 >
-                  アップした書類で登録する
+                  {isUploading ? 'アップロード中...' : 'アップした書類で登録する'}
                 </button>
               </div>
             </div>
@@ -658,6 +692,12 @@ export default function SignupResumePage() {
                     {errors.agreement.message}
                   </p>
                 )}
+                
+                {uploadError && (
+                  <p className="text-red-500 text-[14px] font-medium text-center">
+                    {uploadError}
+                  </p>
+                )}
 
                 {/* Submit Button */}
                 <button
@@ -669,15 +709,13 @@ export default function SignupResumePage() {
                       : 'bg-[#dcdcdc] text-[#999999]'
                   }`}
                 >
-                  アップした書類で登録する
+                  {isUploading ? 'アップロード中...' : 'アップした書類で登録する'}
                 </button>
               </div>
             </div>
           </div>
         </main>
       )}
-
-      <AuthAwareFooter />
-    </div>
+    </>
   );
 }

@@ -1,45 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { Loading } from '@/components/ui/Loading';
 import { useRouter } from 'next/navigation';
-import { signupVerifyAction } from './actions';
-
-interface SignupVerifyFormData {
-  password: string;
-}
+import { signupVerifyAction, resendVerificationCodeAction } from './actions';
 
 export function SignupVerifyClient() {
   const router = useRouter();
-  const [formData, setFormData] = useState<SignupVerifyFormData>({
-    password: '',
-  });
+  const [verificationCode, setVerificationCode] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
     'idle' | 'success' | 'error'
   >('idle');
   const [message, setMessage] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [codeError, setCodeError] = useState('');
 
-  const validatePassword = (password: string): boolean => {
-    if (!password) {
-      setPasswordError('認証パスワードは必須です');
+  // ローカルストレージからメールアドレスを取得
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('signup_email');
+      if (savedEmail) {
+        setEmail(savedEmail);
+      }
+    }
+  }, []);
+
+  const validateCode = (code: string): boolean => {
+    if (!code) {
+      setCodeError('認証コードは必須です');
       return false;
     }
-    if (password.length < 4) {
-      setPasswordError('認証パスワードは4文字以上で入力してください');
+    if (code.length !== 6) {
+      setCodeError('認証コードは6桁で入力してください');
       return false;
     }
-    setPasswordError('');
+    setCodeError('');
     return true;
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFormData({ password: value });
-    if (passwordError) {
-      setPasswordError('');
+    setVerificationCode(value);
+    if (codeError) {
+      setCodeError('');
     }
     if (submitStatus !== 'idle') {
       setSubmitStatus('idle');
@@ -49,7 +54,7 @@ export function SignupVerifyClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validatePassword(formData.password)) {
+    if (!validateCode(verificationCode)) {
       return;
     }
 
@@ -58,19 +63,18 @@ export function SignupVerifyClient() {
 
     try {
       const result = await signupVerifyAction({
-        password: formData.password
+        verificationCode: verificationCode,
+        email: email
       });
 
       if (result.success) {
-        setSubmitStatus('success');
-        setMessage(
-          result.message ||
-            'サインアップが完了しました。'
-        );
-        // 成功時に次のページに遷移（パスワード設定ページへ）
-        setTimeout(() => {
-          router.push('/signup/set-password');
-        }, 2000);
+        // ユーザーIDをローカルストレージに保存
+        if (typeof window !== 'undefined' && result.userId) {
+          localStorage.setItem('signup_user_id', result.userId);
+        }
+
+        // 成功時に直接パスワード設定ページに遷移
+        router.push('/signup/password');
       } else {
         setSubmitStatus('error');
         setMessage(
@@ -88,37 +92,34 @@ export function SignupVerifyClient() {
     }
   };
 
-  if (submitStatus === 'success') {
-    return (
-      <div className='w-full max-w-none md:min-w-auto flex flex-col items-center relative bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
-        <div className='flex flex-col gap-6 md:gap-10 items-center justify-start relative w-full mx-auto px-6 md:px-20 py-10 md:py-20'>
-          {/* 成功ヘッダー */}
-          <div className='flex flex-col gap-4 md:gap-6 items-center w-full text-center'>
-            <div className='mx-auto w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center'>
-              <CheckCircle className='w-5 h-5 md:w-6 md:h-6 text-green-600' />
-            </div>
-            <div className='text-[#0f9058] text-[24px] md:text-[32px] font-bold w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 700,
-              lineHeight: '1.6',
-              letterSpacing: '2.4px',
-            }}>
-              <p className='block leading-[1.6] md:tracking-[3.2px]'>認証完了</p>
-            </div>
-            <div className='text-[#323232] text-[14px] md:text-[16px] w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 500,
-              lineHeight: '2',
-              letterSpacing: '1.4px',
-            }}>
-              <p className='block mb-0 md:tracking-[1.6px]'>{message}</p>
-              <p className='block mb-0 md:tracking-[1.6px]'>パスワード設定ページに移動します...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleResendCode = async () => {
+    if (!email) {
+      setSubmitStatus('error');
+      setMessage('メールアドレスが見つかりません。最初からやり直してください。');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const result = await resendVerificationCodeAction(email);
+      
+      if (result.success) {
+        setSubmitStatus('idle');
+        setMessage(result.message || '新しい認証コードを送信しました。');
+      } else {
+        setSubmitStatus('error');
+        setMessage(result.error || '認証コードの再送信に失敗しました。');
+      }
+    } catch (error) {
+      console.error('Resend code error:', error);
+      setSubmitStatus('error');
+      setMessage('ネットワークエラーが発生しました。');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   return (
     <div className='w-full max-w-none md:min-w-auto flex flex-col items-center relative bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
@@ -131,7 +132,7 @@ export function SignupVerifyClient() {
             lineHeight: '1.6',
             letterSpacing: '2.4px',
           }}>
-            <p className='block leading-[1.6] md:tracking-[3.2px]'>サインアップ認証</p>
+            <p className='block leading-[1.6] md:tracking-[3.2px]'>認証コードの入力</p>
           </div>
           <div className='text-[#323232] text-[14px] md:text-[16px] w-full' style={{
             fontFamily: 'Noto Sans JP, sans-serif',
@@ -140,10 +141,10 @@ export function SignupVerifyClient() {
             letterSpacing: '1.4px',
           }}>
             <p className='block mb-0 md:tracking-[1.6px]'>
-              メールで送信された認証パスワードを入力してください。
+              認証コードを{email ? email : '~~~~~~~~~~~~~~'}に送りました。
             </p>
             <p className='block md:tracking-[1.6px]'>
-              認証後、パスワード設定ページに進みます。
+              メールアドレスに届いた6桁の半角英数字を入力してください。
             </p>
           </div>
         </div>
@@ -165,10 +166,11 @@ export function SignupVerifyClient() {
                 <div className='flex items-center w-full h-full'>
                   <div className='flex items-center justify-start p-[11px] w-full gap-2.5'>
                     <input
-                      type='password'
-                      placeholder='認証パスワードを入力'
-                      value={formData.password}
-                      onChange={handlePasswordChange}
+                      type='text'
+                      placeholder='6桁の認証コードを入力'
+                      value={verificationCode}
+                      onChange={handleCodeChange}
+                      maxLength={6}
                       className='grow min-w-0 bg-transparent text-[#999999] font-medium text-[14px] md:text-[16px] outline-none placeholder-[#999999]'
                       style={{
                         fontFamily: 'Noto Sans JP, sans-serif',
@@ -182,20 +184,44 @@ export function SignupVerifyClient() {
                   </div>
                 </div>
               </div>
-              {passwordError && (
+              {codeError && (
                 <div className='mt-1 text-xs text-red-500 flex items-center'>
                   <AlertCircle className='w-3 h-3 mr-1' />
-                  {passwordError}
+                  {codeError}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* 再送信セクション */}
+          <div className='flex flex-col gap-1 items-center justify-start w-full'>
+            <div className='font-bold text-[#323232] text-[14px] text-center tracking-[1.4px] leading-[1.6] w-full' style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+            }}>
+              <p className='block leading-[1.6]'>
+                認証コードが受け取れなかった場合は、新規のコードを発行してください。
+              </p>
+            </div>
+            <button
+              type='button'
+              onClick={handleResendCode}
+              disabled={isLoading || !email}
+              className='flex items-center justify-center p-0 w-full md:w-36 text-[#323232] underline font-bold text-[14px] tracking-[1.4px] disabled:opacity-50'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+              }}
+            >
+              <p className='block leading-[1.6] text-[14px] whitespace-pre'>
+                新しいコードを発行する
+              </p>
+            </button>
           </div>
 
           {/* 送信ボタン - レスポンシブ対応 */}
           <div className='flex justify-center w-full'>
             <button
               type='submit'
-              disabled={isLoading || !formData.password}
+              disabled={isLoading || !verificationCode}
               className='flex items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:max-w-[170px] px-6 sm:px-10 py-3 md:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[14px] md:text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',

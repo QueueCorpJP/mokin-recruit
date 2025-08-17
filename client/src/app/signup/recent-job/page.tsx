@@ -1,17 +1,19 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useCompanyAutocomplete } from '@/hooks/useCompanyAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
+import { saveRecentJobAction } from './actions';
+import { useEffect } from 'react';
 
 // フォームスキーマの定義
 const recentJobSchema = z
@@ -70,6 +72,8 @@ export default function SignupRecentJobPage() {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -98,6 +102,10 @@ export default function SignupRecentJobPage() {
   const selectedIndustries = watch('industries');
   const selectedJobTypes = watch('jobTypes');
   const startYear = watch('startYear');
+  const companyName = watch('companyName');
+
+  // Company autocomplete
+  const { suggestions: companySuggestions, loading: companyLoading } = useCompanyAutocomplete(companyName);
 
   // 年の選択肢を生成（1973年から現在の年まで）
   const currentYear = new Date().getFullYear();
@@ -125,10 +133,44 @@ export default function SignupRecentJobPage() {
     (i + 1).toString().padStart(2, '0'),
   );
 
-  const onSubmit = (_data: RecentJobFormData) => {
-    // TODO: APIを呼び出してデータを保存
-    // 次の画面へ遷移
-    router.push('/signup/resume');
+  // Get user ID from cookies
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const getCookieValue = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const savedUserId = getCookieValue('signup_user_id');
+      if (savedUserId) {
+        setUserId(savedUserId);
+      }
+    }
+  }, []);
+
+  const onSubmit = async (data: RecentJobFormData) => {
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await saveRecentJobAction(data, userId);
+      
+      if (result.success) {
+        router.push('/signup/resume');
+      } else {
+        console.error('Recent job save failed:', result.error);
+        // You could add error state handling here
+      }
+    } catch (error) {
+      console.error('Recent job save error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // モーダルから選択された値を設定
@@ -178,10 +220,7 @@ export default function SignupRecentJobPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
+    <>
       {/* Conditional Rendering based on screen size */}
       {isDesktop ? (
         /* PC Version */
@@ -280,11 +319,17 @@ export default function SignupRecentJobPage() {
                   </label>
                 </div>
                 <div className="w-[400px]">
-                  <input
-                    type="text"
+                  <AutocompleteInput
+                    value={companyName}
+                    onChange={(value) => setValue('companyName', value, { shouldValidate: true })}
                     placeholder="企業名を入力"
-                    {...register('companyName')}
-                    className={`w-full px-[11px] py-[11px] bg-white border ${errors.companyName ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                    suggestions={companySuggestions.map(c => ({ 
+                      id: c.id, 
+                      name: c.name, 
+                      category: c.address 
+                    }))}
+                    loading={companyLoading}
+                    className={errors.companyName ? 'border-red-500' : ''}
                   />
                   {errors.companyName && (
                     <p className="mt-1 text-red-500 text-[14px]">
@@ -712,11 +757,17 @@ export default function SignupRecentJobPage() {
                 <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                   企業名
                 </label>
-                <input
-                  type="text"
+                <AutocompleteInput
+                  value={companyName}
+                  onChange={(value) => setValue('companyName', value, { shouldValidate: true })}
                   placeholder="企業名を入力"
-                  {...register('companyName')}
-                  className={`w-full px-[11px] py-[11px] bg-white border ${errors.companyName ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                  suggestions={companySuggestions.map(c => ({ 
+                    id: c.id, 
+                    name: c.name, 
+                    category: c.address 
+                  }))}
+                  loading={companyLoading}
+                  className={errors.companyName ? 'border-red-500' : ''}
                 />
                 {errors.companyName && (
                   <p className="text-red-500 text-[14px]">
@@ -1049,8 +1100,6 @@ export default function SignupRecentJobPage() {
         </main>
       )}
 
-      <AuthAwareFooter />
-
       {/* Modals */}
       <IndustrySelectModal
         isOpen={isIndustryModalOpen}
@@ -1067,6 +1116,6 @@ export default function SignupRecentJobPage() {
         initialSelected={selectedJobTypes}
         maxSelections={3}
       />
-    </div>
+    </>
   );
 }

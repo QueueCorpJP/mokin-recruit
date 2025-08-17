@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -19,10 +17,14 @@ import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { type Industry } from '@/constants/industry-data';
+import { Button } from '@/components/ui/button';
+import { saveCareerStatusAction } from './actions';
+import { useEffect } from 'react';
 
 export default function SignupCareerStatusPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userId, setUserId] = useState('');
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     targetIndex: number | null;
@@ -79,12 +81,42 @@ export default function SignupCareerStatusPage() {
   const selectedExperience = watch('hasCareerChange');
   const currentActivityStatus = watch('currentActivityStatus');
 
+  // Get user ID from cookies
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const getCookieValue = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return null;
+      };
+
+      const savedUserId = getCookieValue('signup_user_id');
+      if (savedUserId) {
+        setUserId(savedUserId);
+      }
+    }
+  }, []);
+
   const onSubmit: SubmitHandler<CareerStatusFormData> = async (data) => {
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      localStorage.setItem('signupCareerStatus', JSON.stringify(data));
-      router.push('/signup/recent-job');
-    } catch {
+      const result = await saveCareerStatusAction(data, userId);
+      
+      if (result.success) {
+        router.push('/signup/recent-job');
+      } else {
+        console.error('Career status save failed:', result.error);
+        // You could add error state handling here
+      }
+    } catch (error) {
+      console.error('Career status save error:', error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -102,10 +134,7 @@ export default function SignupCareerStatusPage() {
     }
   };
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
+    <>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         {isDesktop ? (
           /* PC Version */
@@ -779,17 +808,15 @@ export default function SignupCareerStatusPage() {
                 )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
                 disabled={isSubmitting || !isValid}
-                className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] min-w-[160px] transition-all ${
-                  isValid && !isSubmitting
-                    ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white hover:from-[#1e8544] hover:to-[#147362]'
-                    : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-                }`}
+                variant="green-gradient"
+                size="figma-default"
+                className="min-w-[160px] text-[16px] tracking-[1.6px]"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
-              </button>
+              </Button>
             </div>
           </main>
         ) : (
@@ -1379,17 +1406,15 @@ export default function SignupCareerStatusPage() {
                 )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
                 disabled={isSubmitting || !isValid}
-                className={`w-full px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] transition-all ${
-                  isValid && !isSubmitting
-                    ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white'
-                    : 'bg-[#dcdcdc] text-[#999999]'
-                }`}
+                variant="green-gradient"
+                size="figma-default"
+                className="w-full text-[16px] tracking-[1.6px]"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
-              </button>
+              </Button>
             </div>
           </main>
         )}
@@ -1422,8 +1447,6 @@ export default function SignupCareerStatusPage() {
             : []
         }
       />
-
-      <AuthAwareFooter />
-    </div>
+    </>
   );
 }

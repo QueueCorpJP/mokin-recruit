@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useRouter } from 'next/navigation';
 
 export default function SignupCompletePage() {
@@ -12,9 +10,7 @@ export default function SignupCompletePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
+    <>
 
       {/* PC Version */}
       <main
@@ -1684,8 +1680,6 @@ export default function SignupCompletePage() {
           </button>
         </div>
       </main>
-
-      <AuthAwareFooter />
-    </div>
+    </>
   );
 }

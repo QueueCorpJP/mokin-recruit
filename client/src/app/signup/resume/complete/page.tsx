@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useRouter } from 'next/navigation';
 
 export default function SignupResumeCompletePage() {
@@ -12,10 +10,7 @@ export default function SignupResumeCompletePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
+    <>
       {/* PC Version */}
       <main
         className="hidden lg:flex relative py-20 flex-col items-center justify-start"
@@ -953,8 +948,6 @@ export default function SignupResumeCompletePage() {
           </button>
         </div>
       </main>
-
-      <AuthAwareFooter />
-    </div>
+    </>
   );
 }

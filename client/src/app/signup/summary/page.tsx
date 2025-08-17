@@ -2,24 +2,29 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
+import { saveSummaryData } from './actions';
 
 export default function SignupSummaryPage() {
   const router = useRouter();
   const [jobSummary, setJobSummary] = useState('');
   const [selfPR, setSelfPR] = useState('');
 
-  const handleSubmit = () => {
-    // フォームデータを保存（任意項目のため、空でも進める）
-    // 実際のアプリケーションでは、ここでAPIを呼び出してデータを保存
-    router.push('/signup/complete');
+  const handleSubmit = async () => {
+    try {
+      await saveSummaryData({
+        jobSummary: jobSummary || undefined,
+        selfPR: selfPR || undefined,
+      });
+      // リダイレクトはServer Action内で処理される
+    } catch (error) {
+      console.error('Summary data save error:', error);
+      // エラーの場合は手動でページ遷移
+      router.push('/signup/complete');
+    }
   };
+  
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-
+    <>
       {/* PC Version */}
       <main
         className="hidden lg:flex relative py-20 flex-col items-center justify-start"
@@ -302,8 +307,6 @@ export default function SignupSummaryPage() {
           </button>
         </div>
       </main>
-
-      <AuthAwareFooter />
-    </div>
+    </>
   );
 }
