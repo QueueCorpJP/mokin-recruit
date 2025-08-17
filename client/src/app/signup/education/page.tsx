@@ -8,7 +8,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
@@ -61,7 +60,6 @@ type EducationFormData = z.infer<typeof educationSchema>;
 
 export default function SignupEducationPage() {
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
 
@@ -249,8 +247,9 @@ export default function SignupEducationPage() {
     <div className="min-h-screen flex flex-col">
 
       {/* Conditional Rendering based on screen size */}
-      {isDesktop ? (
-        /* PC Version */
+      {/* PC Version */}
+      <div className="hidden lg:block">
+        {/* PC Version */}
         <main
           className="flex relative py-20 flex-col items-center justify-start"
           style={{
@@ -834,8 +833,11 @@ export default function SignupEducationPage() {
             </div>
           </form>
         </main>
-      ) : (
-        /* SP (Mobile) Version */
+      </div>
+      
+      {/* SP (Mobile) Version */}
+      <div className="lg:hidden">
+        {/* SP (Mobile) Version */}
         <main
           className="flex relative pt-6 pb-20 flex-col items-center px-4"
           style={{
@@ -1258,7 +1260,7 @@ export default function SignupEducationPage() {
             </div>
           </form>
         </main>
-      )}
+      </div>
 
       {/* Modals */}
       <IndustrySelectModal

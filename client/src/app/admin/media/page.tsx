@@ -7,13 +7,11 @@ import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
-import { SearchBar } from '@/components/admin/ui/SearchBar';
 
 export default function MediaPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,9 +128,10 @@ export default function MediaPage() {
   };
 
   const columns = [
-    { key: 'datetime', label: '日時', sortable: true, width: 'w-[180px]' },
     { key: 'status', label: 'ステータス', sortable: true, width: 'w-[120px]' },
-    { key: 'title', label: 'タイトル', sortable: true, width: 'flex-1' },
+    { key: 'datetime', label: '最終更新日付', sortable: true, width: 'w-[180px]' },
+    { key: 'category', label: 'カテゴリ', sortable: true, width: 'w-[150px]' },
+    { key: 'title', label: '記事タイトル', sortable: true, width: 'flex-1' },
     { key: 'actions', label: 'アクション', sortable: false, width: 'w-[200px]' }
   ];
 
@@ -155,12 +154,18 @@ export default function MediaPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-between items-center">
-        <SearchBar
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="記事タイトルで検索"
-          onSearch={() => console.log('Search:', searchTerm)}
-        />
+        <h1 
+          className="text-2xl font-bold"
+          style={{
+            fontFamily: 'Inter',
+            fontSize: '24px',
+            fontWeight: 700,
+            lineHeight: 1.6,
+            color: '#323232'
+          }}
+        >
+          メディア記事一覧
+        </h1>
         <NewArticleButton />
       </div>
 
@@ -207,6 +212,10 @@ export default function MediaPage() {
                 key={article.id || `article-${paginatedArticles.indexOf(article)}`}
                 columns={[
                   {
+                    content: getStatusBadge(article.status),
+                    width: 'w-[120px]'
+                  },
+                  {
                     content: (
                       <div>
                         <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
@@ -220,8 +229,12 @@ export default function MediaPage() {
                     width: 'w-[180px]'
                   },
                   {
-                    content: getStatusBadge(article.status),
-                    width: 'w-[120px]'
+                    content: (
+                      <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {article.category?.name || '-'}
+                      </span>
+                    ),
+                    width: 'w-[150px]'
                   },
                   {
                     content: article.title,

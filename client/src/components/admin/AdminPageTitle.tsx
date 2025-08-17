@@ -14,7 +14,7 @@ const pageTitleConfig: PageTitleConfig = {
   '/admin/message': 'メッセージ管理',
   '/admin/company': '企業アカウント管理',
   '/admin/candidate': '候補者管理',
-  '/admin/media': 'メディア管理',
+  '/admin/media': 'メディア記事一覧',
   '/admin/notice': '運営からのお知らせ管理',
   '/admin/analytics': '分析',
 };

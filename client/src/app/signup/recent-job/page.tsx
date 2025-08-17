@@ -8,7 +8,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useCompanyAutocomplete } from '@/hooks/useCompanyAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
@@ -69,7 +68,6 @@ type RecentJobFormData = z.infer<typeof recentJobSchema>;
 
 export default function SignupRecentJobPage() {
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [userId, setUserId] = useState('');
@@ -221,9 +219,8 @@ export default function SignupRecentJobPage() {
 
   return (
     <>
-      {/* Conditional Rendering based on screen size */}
-      {isDesktop ? (
-        /* PC Version */
+      {/* PC Version */}
+      <div className="hidden lg:block">
         <main
           className="flex relative py-20 flex-col items-center justify-start"
           style={{
@@ -681,8 +678,9 @@ export default function SignupRecentJobPage() {
             </button>
           </div>
         </main>
-      ) : (
-        /* SP (Mobile) Version */
+      </div>
+      {/* Mobile Version */}
+      <div className="lg:hidden">
         <main
           className="flex relative pt-6 pb-20 flex-col items-center px-4"
           style={{
@@ -1098,7 +1096,7 @@ export default function SignupRecentJobPage() {
             </button>
           </div>
         </main>
-      )}
+      </div>
 
       {/* Modals */}
       <IndustrySelectModal

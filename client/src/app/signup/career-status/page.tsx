@@ -14,7 +14,6 @@ import {
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { type Industry } from '@/constants/industry-data';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ export default function SignupCareerStatusPage() {
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
     [key: number]: Industry[];
   }>({});
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const methods = useForm({
     resolver: zodResolver(careerStatusSchema),
@@ -137,8 +135,9 @@ export default function SignupCareerStatusPage() {
   return (
     <>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        {isDesktop ? (
-          /* PC Version */
+        {/* PC Version */}
+        <div className="hidden lg:block">
+          {/* PC Version */}
           <main
             className="flex relative py-20 flex-col items-center justify-start"
             style={{
@@ -823,8 +822,11 @@ export default function SignupCareerStatusPage() {
               </Button>
             </div>
           </main>
-        ) : (
-          /* SP (Mobile) Version */
+        </div>
+        
+        {/* SP (Mobile) Version */}
+        <div className="lg:hidden">
+          {/* SP (Mobile) Version */}
           <main
             className="flex relative pt-6 pb-20 flex-col items-center px-4"
             style={{
@@ -1424,7 +1426,7 @@ export default function SignupCareerStatusPage() {
               </Button>
             </div>
           </main>
-        )}
+        </div>
       </form>
 
       {/* Industry Select Modal */}

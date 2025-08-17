@@ -61,8 +61,19 @@ export default function PreviewPage() {
         body: formData,
       });
 
+      console.log('API Response status:', response.status);
+      console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('記事の保存に失敗しました');
+        const errorText = await response.text();
+        console.error('API Error response:', errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || `記事の保存に失敗しました (${response.status})`);
+        } catch (parseError) {
+          throw new Error(`記事の保存に失敗しました (${response.status}): ${errorText}`);
+        }
       }
 
       sessionStorage.removeItem('previewArticle');
@@ -113,7 +124,7 @@ export default function PreviewPage() {
             <Button 
               onClick={handleCancel}
               variant="outline"
-              className="border border-gray-400 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-50"
+              className="border border-gray-400 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-50 min-w-[140px]"
               style={{
                 fontFamily: 'Inter',
                 fontSize: '14px',
@@ -121,25 +132,12 @@ export default function PreviewPage() {
                 lineHeight: 1.6
               }}
             >
-              キャンセル
-            </Button>
-            <Button 
-              onClick={handleEdit}
-              variant="outline"
-              className="border border-gray-400 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-50"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                fontWeight: 700,
-                lineHeight: 1.6
-              }}
-            >
-              編集に戻る
+              戻る
             </Button>
             <Button 
               onClick={() => handleSave('DRAFT')}
               disabled={isLoading}
-              className="bg-white text-black border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-50 disabled:opacity-50"
+              className="bg-white text-[#323232] border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-50 disabled:opacity-50 min-w-[140px]"
               style={{
                 fontFamily: 'Inter',
                 fontSize: '14px',
@@ -147,12 +145,12 @@ export default function PreviewPage() {
                 lineHeight: 1.6
               }}
             >
-              {isLoading ? '保存中...' : '下書き保存'}
+              {isLoading ? '保存中...' : '記事を下書き保存'}
             </Button>
             <Button 
               onClick={() => handleSave('PUBLISHED')}
               disabled={isLoading}
-              className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50"
+              className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50 min-w-[140px]"
               style={{
                 fontFamily: 'Inter',
                 fontSize: '14px',
@@ -160,7 +158,7 @@ export default function PreviewPage() {
                 lineHeight: 1.6
               }}
             >
-              {isLoading ? '保存中...' : '記事を公開'}
+              {isLoading ? '保存中...' : '記事を投稿する'}
             </Button>
           </div>
         </div>
@@ -232,6 +230,51 @@ export default function PreviewPage() {
               />
 
             </article>
+
+            {/* 下部ボタンエリア */}
+            <div className="w-full max-w-[800px] mx-auto py-8">
+              <div className="flex justify-center gap-3">
+                <Button 
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="border border-gray-400 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-50 min-w-[140px]"
+                  style={{
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    lineHeight: 1.6
+                  }}
+                >
+                  戻る
+                </Button>
+                <Button 
+                  onClick={() => handleSave('DRAFT')}
+                  disabled={isLoading}
+                  className="bg-white text-[#323232] border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-50 disabled:opacity-50 min-w-[140px]"
+                  style={{
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    lineHeight: 1.6
+                  }}
+                >
+                  {isLoading ? '保存中...' : '記事を下書き保存'}
+                </Button>
+                <Button 
+                  onClick={() => handleSave('PUBLISHED')}
+                  disabled={isLoading}
+                  className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 disabled:opacity-50 min-w-[140px]"
+                  style={{
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    lineHeight: 1.6
+                  }}
+                >
+                  {isLoading ? '保存中...' : '記事を投稿する'}
+                </Button>
+              </div>
+            </div>
           </div>
 
         </div>

@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, KeyboardEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // 言語レベルの選択肢
 const ENGLISH_LEVELS = [
@@ -85,7 +84,6 @@ type SkillsFormData = z.infer<typeof skillsSchema>;
 
 export default function SignupSkillsPage() {
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [skillInput, setSkillInput] = useState('');
 
   const {
@@ -152,19 +150,19 @@ export default function SignupSkillsPage() {
     router.push('/signup/expectation');
   };
 
-  // PCとモバイルで異なるコンポーネントをレンダリング
-  if (isDesktop) {
-    return (
-      <form onSubmit={handleSubmit(onSubmit)}>
-          <main
-            className="flex relative py-20 flex-col items-center justify-start"
-            style={{
-              backgroundImage: "url('/background-pc.svg')",
-              backgroundPosition: 'center top',
-              backgroundRepeat: 'no-repeat',
-              backgroundSize: 'cover',
-            }}
-          >
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* PC Version */}
+      <div className="hidden lg:block">
+        <main
+          className="flex relative py-20 flex-col items-center justify-start"
+          style={{
+            backgroundImage: "url('/background-pc.svg')",
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+          }}
+        >
             {/* Container */}
             <div className="bg-white rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20 w-[1000px] flex flex-col gap-10 items-center">
               {/* Title */}
@@ -647,22 +645,18 @@ export default function SignupSkillsPage() {
               </button>
             </div>
           </main>
-        </form>
-    );
-  }
-
-  // Mobile Version
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-        <main
-          className="flex relative pt-6 pb-20 flex-col items-center px-4"
-          style={{
-            backgroundImage: "url('/background-sp.svg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
-          }}
-        >
+        </div>
+        {/* Mobile Version */}
+        <div className="lg:hidden">
+          <main
+            className="flex relative pt-6 pb-20 flex-col items-center px-4"
+            style={{
+              backgroundImage: "url('/background-sp.svg')",
+              backgroundPosition: 'center top',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: 'cover',
+            }}
+          >
           {/* Container */}
           <div className="bg-white rounded-3xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 py-10 mx-4 w-full flex flex-col gap-10 items-center">
             {/* Progress Indicator */}
@@ -1034,6 +1028,7 @@ export default function SignupSkillsPage() {
             </button>
           </div>
         </main>
-      </form>
+      </div>
+    </form>
   );
 }

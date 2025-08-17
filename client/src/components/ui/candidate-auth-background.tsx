@@ -97,7 +97,7 @@ export function CandidateAuthBackground({
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col relative overflow-hidden'>
+    <div className='md:min-h-screen bg-gradient-to-t from-[#17856f] to-[#229a4e] flex flex-col relative overflow-hidden'>
       {/* デスクトップ用PNG背景画像 */}
       <div className='absolute inset-0 pointer-events-none hidden md:block' style={{ zIndex: 1 }}>
         <Image

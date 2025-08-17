@@ -175,101 +175,130 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   return (
     <div className="border border-gray-300 rounded-none">
       {/* ツールバー */}
-      <div className="border-b border-gray-300 p-2 flex flex-wrap gap-1 bg-gray-50">
-        <Button
+      <div className="border-b border-gray-300 p-2 flex flex-wrap gap-1">
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('bold') ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('bold') ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('bold') ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
           B
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('italic') ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('italic') ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('italic') ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
           I
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('heading', { level: 2 }) ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('heading', { level: 2 }) ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
           H2
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('heading', { level: 3 }) ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('heading', { level: 3 }) ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
           H3
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('bulletList') ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('bulletList') ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('bulletList') ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
-          • List
-        </Button>
-        <Button
+          箇条書き
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('orderedList') ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('orderedList') ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('orderedList') ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
-          1. List
-        </Button>
-        <Button
+          番号付き
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="outline"
           onClick={addImage}
-          className="h-8 px-2"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          style={{
+            boxShadow: 'none'
+          }}
         >
-          📷 画像
-        </Button>
-        <Button
+          画像
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="outline"
           onClick={insertTable}
-          className="h-8 px-2"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          style={{
+            boxShadow: 'none'
+          }}
         >
-          📋 テーブル
-        </Button>
-        <Button
+          テーブル
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant={editor.isActive('blockquote') ? 'default' : 'outline'}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className="h-8 px-2"
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
+            editor.isActive('blockquote') ? 'border-b-2 border-[#323232]' : ''
+          }`}
+          style={{
+            borderBottom: editor.isActive('blockquote') ? '2px solid #323232' : 'none',
+            boxShadow: 'none'
+          }}
         >
-          💬 引用
-        </Button>
-        <Button
+          引用
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="outline"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="h-8 px-2"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          style={{
+            boxShadow: 'none'
+          }}
         >
-          ─ 区切り
-        </Button>
-        <Button
+          区切り線
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="outline"
           onClick={() => {
             editor?.chain()
               .focus()
@@ -298,10 +327,13 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
               ])
               .run();
           }}
-          className="h-8 px-2"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          style={{
+            boxShadow: 'none'
+          }}
         >
-          📋 目次
-        </Button>
+          目次
+        </button>
       </div>
 
       {/* エディタエリア */}

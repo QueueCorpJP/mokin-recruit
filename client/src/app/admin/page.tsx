@@ -11,7 +11,7 @@ export default function AdminPage() {
       {/* 要対応リストセクション */}
       <div className="mb-8">
         <h2 style={{
-          color: '#000',
+          color: '#323232',
           fontFamily: 'Inter',
           fontSize: '32px',
           fontStyle: 'normal',
@@ -35,7 +35,7 @@ export default function AdminPage() {
               求人
             </span>
             <span style={{
-              color: '#000',
+              color: '#323232',
               fontFamily: 'Inter',
               fontSize: '16px',
               fontStyle: 'normal',
@@ -59,7 +59,7 @@ export default function AdminPage() {
               メッセージ
             </span>
             <span style={{
-              color: '#000',
+              color: '#323232',
               fontFamily: 'Inter',
               fontSize: '16px',
               fontStyle: 'normal',
@@ -83,7 +83,7 @@ export default function AdminPage() {
               レジュメ
             </span>
             <span style={{
-              color: '#000',
+              color: '#323232',
               fontFamily: 'Inter',
               fontSize: '16px',
               fontStyle: 'normal',
@@ -100,7 +100,7 @@ export default function AdminPage() {
       {/* 運営メモセクション */}
       <div>
         <h2 style={{
-          color: '#000',
+          color: '#323232',
           fontFamily: 'Inter',
           fontSize: '32px',
           fontStyle: 'normal',
@@ -118,7 +118,7 @@ export default function AdminPage() {
             placeholder="運営に関するメモを自由に入力できます。"
             className="w-full h-full border-none outline-none resize-none bg-transparent"
             style={{
-              color: memo ? '#000' : '#bababa',
+              color: memo ? '#323232' : '#bababa',
               fontFamily: 'Inter',
               fontSize: '16px',
               fontStyle: 'normal',

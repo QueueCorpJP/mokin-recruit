@@ -104,7 +104,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             fontSize: '24px',
             fontWeight: 700,
             lineHeight: 1.6,
-            color: '#000'
+            color: '#323232'
           }}
         >
           新規記事追加
@@ -120,7 +120,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           <AdminButton
             onClick={() => handleSubmit('DRAFT')}
             text={isLoading ? '保存中...' : '下書き保存'}
-            variant="secondary"
+            variant="primary"
             disabled={isLoading}
           />
           <AdminButton
@@ -150,32 +150,20 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           <FormFieldHeader>
             カテゴリ
           </FormFieldHeader>
-          <div className="flex gap-2 mb-3">
-            <span 
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                fontWeight: 700,
-                lineHeight: 1.6
-              }}
-            >
-              カテゴリA
-            </span>
-            <span 
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                fontWeight: 700,
-                lineHeight: 1.6
-              }}
-            >
-              カテゴリB
-            </span>
-          </div>
+          {selectedCategoryId && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              <div
+                className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
+                style={{ borderRadius: '10px' }}
+              >
+                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                  {categories.find(cat => cat.id === selectedCategoryId)?.name || ''}
+                </span>
+              </div>
+            </div>
+          )}
           <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-            <SelectTrigger className="w-full h-12 border border-gray-300 rounded-none">
+            <SelectTrigger className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] shadow-none">
               <SelectValue placeholder="カテゴリを選択してください" />
             </SelectTrigger>
             <SelectContent>
@@ -277,7 +265,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
         <AdminButton
           onClick={handleCancel}
           text="一覧に戻る"
-          variant="secondary"
+          variant="green-outline"
         />
         <AdminButton
           onClick={handlePreview}
