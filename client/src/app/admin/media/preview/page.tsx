@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/admin/ui/button';
+import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import '@/styles/media-content.css';
 
 interface PreviewData {
@@ -19,6 +20,8 @@ export default function PreviewPage() {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [savedArticleId, setSavedArticleId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem('previewArticle');
@@ -76,8 +79,10 @@ export default function PreviewPage() {
         }
       }
 
+      const result = await response.json();
+      setSavedArticleId(result.article?.id || null);
       sessionStorage.removeItem('previewArticle');
-      router.push('/admin/media');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('記事の保存に失敗:', error);
       setError(error instanceof Error ? error.message : '記事の保存に失敗しました');
@@ -93,6 +98,20 @@ export default function PreviewPage() {
   const handleCancel = () => {
     if (confirm('プレビューを終了して一覧に戻りますか？')) {
       sessionStorage.removeItem('previewArticle');
+      router.push('/admin/media');
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowSuccessModal(false);
+    router.push('/admin/media');
+  };
+
+  const handleViewArticle = () => {
+    setShowSuccessModal(false);
+    if (savedArticleId) {
+      router.push(`/admin/media/${savedArticleId}`);
+    } else {
       router.push('/admin/media');
     }
   };
@@ -279,6 +298,17 @@ export default function PreviewPage() {
 
         </div>
       </main>
+
+      {/* 成功通知モーダル */}
+      <AdminNotificationModal
+        isOpen={showSuccessModal}
+        onConfirm={handleBackToList}
+        onSecondaryAction={handleViewArticle}
+        title="記事追加完了"
+        description="記事の投稿、保存をしました。"
+        confirmText="記事一覧に戻る"
+        secondaryText="記事を確認する"
+      />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createClientSupabaseClient } from '@/lib/supabase/client';
 
 interface SignupContextType {
   candidateId: string | null;

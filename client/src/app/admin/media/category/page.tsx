@@ -26,6 +26,8 @@ export default function CategoryPage() {
   const [deletedCategoryName, setDeletedCategoryName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -57,7 +59,39 @@ export default function CategoryPage() {
   };
   
   const handleEdit = (categoryId: string) => {
-    console.log('Edit category:', categoryId);
+    const category = categories.find(c => c.id === categoryId);
+    if (category) {
+      setEditingCategoryId(categoryId);
+      setEditingCategoryName(category.name);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingCategoryId && editingCategoryName.trim()) {
+      try {
+        await articleService.updateCategory(editingCategoryId, editingCategoryName.trim());
+        setEditingCategoryId(null);
+        setEditingCategoryName('');
+        // リストを再取得
+        fetchCategories();
+      } catch (err) {
+        console.error('カテゴリの更新に失敗:', err);
+        setError(err instanceof Error ? err.message : 'カテゴリの更新に失敗しました');
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
   };
 
   const handleDelete = (categoryId: string) => {
@@ -203,7 +237,21 @@ export default function CategoryPage() {
               key={category.id}
               columns={[
                 {
-                  content: (
+                  content: editingCategoryId === category.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingCategoryName}
+                        onChange={(e) => setEditingCategoryName(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']"
+                        autoFocus
+                      />
+                      <span className="text-[14px] font-medium text-[#666] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']">
+                        （該当記事{category.articleCount}件）
+                      </span>
+                    </div>
+                  ) : (
                     <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
                       {category.name}（該当記事{category.articleCount}件）
                     </span>
@@ -211,10 +259,15 @@ export default function CategoryPage() {
                   width: 'flex-1'
                 }
               ]}
-              actions={[
-                <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(category.id)} />,
-                <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(category.id)} />
-              ]}
+              actions={
+                editingCategoryId === category.id ? [
+                  <ActionButton key="save" text="保存" variant="edit" onClick={handleSaveEdit} />,
+                  <ActionButton key="cancel" text="キャンセル" variant="delete" onClick={handleCancelEdit} />
+                ] : [
+                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(category.id!)} />,
+                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(category.id!)} />
+                ]
+              }
             />
           ))}
         </div>

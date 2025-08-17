@@ -5,17 +5,21 @@ import React from 'react';
 interface AdminNotificationModalProps {
   isOpen: boolean;
   onConfirm: () => void;
+  onSecondaryAction?: () => void;
   title: string;
   description: string;
   confirmText?: string;
+  secondaryText?: string;
 }
 
 export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
   isOpen,
   onConfirm,
+  onSecondaryAction,
   title,
   description,
-  confirmText = "確認"
+  confirmText = "確認",
+  secondaryText
 }) => {
   if (!isOpen) return null;
 
@@ -47,8 +51,8 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
           </p>
         </div>
 
-        {/* 確認ボタンのみ */}
-        <div className="flex justify-center">
+        {/* ボタンエリア */}
+        <div className={`flex ${onSecondaryAction && secondaryText ? 'justify-between' : 'justify-center'}`}>
           <button
             onClick={onConfirm}
             className="bg-[#0F9058] text-white font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0A7A46] transition-colors"
@@ -60,6 +64,20 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
           >
             {confirmText}
           </button>
+          
+          {onSecondaryAction && secondaryText && (
+            <button
+              onClick={onSecondaryAction}
+              className="bg-white text-[#0F9058] border border-[#0F9058] font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0F9058] hover:text-white transition-colors"
+              style={{
+                width: '198px',
+                height: '51px',
+                fontFamily: 'Inter'
+              }}
+            >
+              {secondaryText}
+            </button>
+          )}
         </div>
       </div>
     </div>

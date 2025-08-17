@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
@@ -9,25 +9,16 @@ import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+import { articleService, ArticleTag } from '@/lib/services/articleService';
 
-interface Tag {
-  id: string;
-  name: string;
+interface Tag extends ArticleTag {
   articleCount: number;
 }
 
 export default function TagPage() {
-  const [tags, setTags] = useState<Tag[]>([
-    { id: '1', name: 'タグ', articleCount: 5 },
-    { id: '2', name: 'タグB', articleCount: 3 },
-    { id: '3', name: 'タグC', articleCount: 8 },
-    { id: '4', name: 'タグD', articleCount: 2 },
-    { id: '5', name: 'タグE', articleCount: 12 },
-    { id: '6', name: 'タグF', articleCount: 1 },
-    { id: '7', name: 'タグG', articleCount: 7 },
-    { id: '8', name: 'タグH', articleCount: 4 },
-    { id: '9', name: 'タグI', articleCount: 6 },
-  ]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
@@ -35,10 +26,72 @@ export default function TagPage() {
   const [deletedTagName, setDeletedTagName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTagName, setEditingTagName] = useState('');
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  const fetchTags = async () => {
+    try {
+      setLoading(true);
+      const tagData = await articleService.getTags();
+      
+      const tagsWithCount = await Promise.all(
+        tagData.map(async (tag) => {
+          const articleCount = await articleService.getTagArticleCount(tag.id!);
+          return {
+            ...tag,
+            articleCount
+          };
+        })
+      );
+
+      setTags(tagsWithCount);
+    } catch (err) {
+      console.error('タグの取得に失敗:', err);
+      setError(err instanceof Error ? err.message : 'タグの取得に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleEdit = (tagId: string) => {
-    console.log('Edit tag:', tagId);
+    const tag = tags.find(t => t.id === tagId);
+    if (tag) {
+      setEditingTagId(tagId);
+      setEditingTagName(tag.name);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingTagId && editingTagName.trim()) {
+      try {
+        await articleService.updateTag(editingTagId, editingTagName.trim());
+        setEditingTagId(null);
+        setEditingTagName('');
+        // リストを再取得
+        fetchTags();
+      } catch (err) {
+        console.error('タグの更新に失敗:', err);
+        setError(err instanceof Error ? err.message : 'タグの更新に失敗しました');
+      }
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTagId(null);
+    setEditingTagName('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
   };
 
   const handleDelete = (tagId: string) => {
@@ -49,13 +102,20 @@ export default function TagPage() {
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (tagToDelete) {
-      setTags(tags.filter(tag => tag.id !== tagToDelete.id));
-      setDeletedTagName(tagToDelete.name);
-      setShowDeleteModal(false);
-      setTagToDelete(null);
-      setShowDeletedModal(true);
+      try {
+        await articleService.deleteTag(tagToDelete.id!);
+        setDeletedTagName(tagToDelete.name);
+        setShowDeleteModal(false);
+        setTagToDelete(null);
+        setShowDeletedModal(true);
+        // リストを再取得
+        fetchTags();
+      } catch (err) {
+        console.error('タグの削除に失敗:', err);
+        setError(err instanceof Error ? err.message : 'タグの削除に失敗しました');
+      }
     }
   };
 
@@ -74,16 +134,18 @@ export default function TagPage() {
     setNewTagName('');
   };
 
-  const handleConfirmAdd = (tagName: string) => {
+  const handleConfirmAdd = async (tagName: string) => {
     if (tagName.trim()) {
-      const newTag: Tag = {
-        id: (tags.length + 1).toString(),
-        name: tagName.trim(),
-        articleCount: 0
-      };
-      setTags([...tags, newTag]);
-      setShowModal(false);
-      setNewTagName('');
+      try {
+        await articleService.createTag(tagName.trim());
+        setShowModal(false);
+        setNewTagName('');
+        // リストを再取得
+        fetchTags();
+      } catch (err) {
+        console.error('タグの作成に失敗:', err);
+        setError(err instanceof Error ? err.message : 'タグの作成に失敗しました');
+      }
     }
   };
 
@@ -116,6 +178,14 @@ export default function TagPage() {
     currentPage * itemsPerPage
   );
   const totalPages = Math.ceil(tags.length / itemsPerPage);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
+  }
+
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-red-600">エラー: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -167,7 +237,21 @@ export default function TagPage() {
               key={tag.id}
               columns={[
                 {
-                  content: (
+                  content: editingTagId === tag.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingTagName}
+                        onChange={(e) => setEditingTagName(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']"
+                        autoFocus
+                      />
+                      <span className="text-[14px] font-medium text-[#666] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']">
+                        （該当記事{tag.articleCount}件）
+                      </span>
+                    </div>
+                  ) : (
                     <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
                       {tag.name}（該当記事{tag.articleCount}件）
                     </span>
@@ -175,10 +259,15 @@ export default function TagPage() {
                   width: 'flex-1'
                 }
               ]}
-              actions={[
-                <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(tag.id)} />,
-                <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(tag.id)} />
-              ]}
+              actions={
+                editingTagId === tag.id ? [
+                  <ActionButton key="save" text="保存" variant="edit" onClick={handleSaveEdit} />,
+                  <ActionButton key="cancel" text="キャンセル" variant="delete" onClick={handleCancelEdit} />
+                ] : [
+                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(tag.id!)} />,
+                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(tag.id!)} />
+                ]
+              }
             />
           ))}
         </div>

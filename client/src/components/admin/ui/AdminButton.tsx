@@ -7,7 +7,7 @@ interface AdminButtonProps {
   href?: string;
   onClick?: () => void;
   text: string;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'green-outline';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
 }
@@ -26,6 +26,8 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
         return 'secondary';
       case 'danger':
         return 'destructive';
+      case 'green-outline':
+        return 'green-outline';
       default:
         return 'green-gradient';
     }

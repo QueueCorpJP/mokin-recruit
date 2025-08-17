@@ -20,11 +20,22 @@
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 200% !important; /* 32px */
+  line-height: 1.3 !important;
   letter-spacing: 1.6px !important;
-  list-style-type: disc !important;
   margin-bottom: 8px !important;
   display: list-item !important;
+}
+
+/* 箇条書きリスト（ul）のliスタイル */
+.prose ul li,
+.media-content-editor ul li {
+  list-style-type: disc !important;
+}
+
+/* 番号付きリスト（ol）のliスタイル */
+.prose ol li,
+.media-content-editor ol li {
+  list-style-type: decimal !important;
 }
 
 /* 目次スタイル */
@@ -74,8 +85,9 @@
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 200% !important; /* 32px */
+  line-height: 1.3 !important;
   letter-spacing: 1.6px !important;
+  margin-bottom: 16px !important;
 }
 
 /* 線のスタイル */
@@ -116,18 +128,18 @@
 .prose .table-header-cell,
 .media-content-editor .table-header-cell {
   display: table-cell !important;
-  padding: 16px !important;
+  padding: 8px 12px !important;
   text-align: center !important;
   vertical-align: middle !important;
   border: 1px solid #DCDCDC !important;
   background: #EFEFEF !important;
   color: #323232 !important;
   font-family: "Noto Sans JP" !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 200% !important; /* 32px */
-  letter-spacing: 1.6px !important;
+  line-height: 1.0 !important;
+  letter-spacing: 1.4px !important;
 }
 
 /* テーブルセル（列のコンテナ）スタイル */
@@ -136,17 +148,17 @@
 .prose .table-cell,
 .media-content-editor .table-cell {
   display: table-cell !important;
-  padding: 16px !important;
+  padding: 8px 12px !important;
   text-align: center !important;
   vertical-align: middle !important;
   border: 1px solid #DCDCDC !important;
   color: #323232 !important;
   font-family: "Noto Sans JP" !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 200% !important; /* 32px */
-  letter-spacing: 1.6px !important;
+  line-height: 1.0 !important;
+  letter-spacing: 1.4px !important;
 }
 
 /* 著者コンテナスタイル */
