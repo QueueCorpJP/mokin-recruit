@@ -1,0 +1,5 @@
+GbizのKeyは以下です。これは企業の情報があるAPIです。これを使ってsignup配下の登録項目で企業名を入力時にそのapiを使って提案してくれるようにしてください。
+8OkrmyrMcPzyJSbJWepoq5QCnH8gSjQP
+
+schools_by_education.jsonを使ってsignupの項目の登録時に学校名を入力するところがあるから入力時に提案してくれるようにしてください。
+

@@ -7,11 +7,13 @@ import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
+import { SearchBar } from '@/components/admin/ui/SearchBar';
 
 export default function MediaPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -152,7 +154,13 @@ export default function MediaPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex justify-between items-center">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="記事タイトルで検索"
+          onSearch={() => console.log('Search:', searchTerm)}
+        />
         <NewArticleButton />
       </div>
 

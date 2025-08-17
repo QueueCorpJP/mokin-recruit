@@ -1,271 +1,96 @@
-"use client"
-import { useState, useEffect } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { FaqBox } from '@/components/ui/FaqBox';
-import { Pagination } from '@/components/ui/Pagination';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { getRooms } from '@/lib/rooms';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
+import TaskList from './TaskList';
 
-// タスクアイテムの型定義
-interface TaskItem {
+interface Room {
   id: string;
-  title: string;
-  description: string;
-  iconSrc?: string;
-  completed?: boolean;
-  triggerFunction: () => boolean; // 表示条件を判定する関数
-  navigateTo?: string;
+  companyName: string;
+  jobTitle: string;
+  lastMessageTime?: string;
+  unreadCount?: number;
 }
 
-// ユーザー状態の型定義（実際のAPIから取得するデータを想定）
-interface UserState {
-  // 会員情報関連
-  profileIncomplete: boolean; // 会員情報が不完全かどうか
+interface TaskData {
+  hasNewMessage: boolean;
+  newMessageDate?: Date;
+  newMessageCompanyName?: string;
+  newMessageJobTitle?: string;
+  newMessageRoomId?: string;
   
-  // スカウト関連
-  hasNewScout: boolean; // 新着スカウトの有無
-  newScoutDate?: Date; // 新着スカウト受信日時
-  newScoutCompanyName?: string; // スカウト企業名
-  newScoutJobTitle?: string; // 求人タイトル
-  newScoutRoomId?: string; // スカウトのメッセージルームID
-  
-  hasUnreadScout: boolean; // 未読スカウトの有無（72h経過）
-  unreadScoutDate?: Date; // 未読スカウト受信日時
-  unreadScoutCompanyName?: string; // 未読スカウト企業名
-  unreadScoutJobTitle?: string; // 未読求人タイトル
-  unreadScoutRoomId?: string; // 未読スカウトのメッセージルームID
-  
-  // メッセージ関連
-  hasNewMessage: boolean; // 新着メッセージの有無
-  newMessageDate?: Date; // 新着メッセージ受信日時
-  newMessageCompanyName?: string; // メッセージ企業名
-  newMessageJobTitle?: string; // メッセージ求人タイトル
-  newMessageRoomId?: string; // 新着メッセージのルームID
-  
-  hasUnreadMessage: boolean; // 未読メッセージの有無（72h経過）
-  unreadMessageDate?: Date; // 未読メッセージ受信日時
-  unreadMessageCompanyName?: string; // 未読メッセージ企業名
-  unreadMessageJobTitle?: string; // 未読メッセージ求人タイトル
-  unreadMessageRoomId?: string; // 未読メッセージのルームID
+  hasUnreadMessage: boolean;
+  unreadMessageDate?: Date;
+  unreadMessageCompanyName?: string;
+  unreadMessageJobTitle?: string;
+  unreadMessageRoomId?: string;
 }
 
-export default function CandidateTaskPage() {
-  // --- ページネーション用の状態 ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const router = useRouter();
-
-  // ユーザー状態（APIから取得）
-  const [userState, setUserState] = useState<UserState>({
-    // 会員情報関連（空のトリガー関数で非表示）
-    profileIncomplete: false,
-    
-    // スカウト関連（空のトリガー関数で非表示）
-    hasNewScout: false,
-    newScoutDate: undefined,
-    newScoutCompanyName: undefined,
-    newScoutJobTitle: undefined,
-    newScoutRoomId: undefined,
-    
-    hasUnreadScout: false,
-    unreadScoutDate: undefined,
-    unreadScoutCompanyName: undefined,
-    unreadScoutJobTitle: undefined,
-    unreadScoutRoomId: undefined,
-    
-    // メッセージ関連（message.mdの仕様に従って実装）
-    hasNewMessage: false,
-    newMessageDate: undefined,
-    newMessageCompanyName: undefined,
-    newMessageJobTitle: undefined,
-    newMessageRoomId: undefined,
-    
-    hasUnreadMessage: false,
-    unreadMessageDate: undefined,
-    unreadMessageCompanyName: undefined,
-    unreadMessageJobTitle: undefined,
-    unreadMessageRoomId: undefined,
-  });
+async function getTaskData(): Promise<TaskData> {
+  const authResult = await requireCandidateAuthForAction();
   
-  // メッセージデータを取得
-  useEffect(() => {
-    const fetchMessageData = async () => {
-      try {
-        // Server Actionを作成してメッセージデータを取得
-        const response = await fetch('/api/candidate/task-data', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch task data');
-        }
-        
-        const { rooms } = await response.json();
-        
-        // 未読メッセージがあるルームを探す
-        const unreadRooms = rooms.filter((room: any) => room.unreadCount && room.unreadCount > 0);
-        
-        if (unreadRooms.length > 0) {
-          const firstUnreadRoom = unreadRooms[0];
-          const messageTime = firstUnreadRoom.lastMessageTime 
-            ? new Date(firstUnreadRoom.lastMessageTime) 
-            : new Date();
-          
-          // 72時間以内かどうかで振り分け
-          if (isWithin72Hours(messageTime)) {
-            // 新着メッセージ（72時間以内）
-            setUserState(prev => ({
-              ...prev,
-              hasNewMessage: true,
-              newMessageDate: messageTime,
-              newMessageCompanyName: firstUnreadRoom.companyName,
-              newMessageJobTitle: firstUnreadRoom.jobTitle,
-              newMessageRoomId: firstUnreadRoom.id
-            }));
-          } else {
-            // 未読メッセージ（72時間経過）
-            setUserState(prev => ({
-              ...prev,
-              hasUnreadMessage: true,
-              unreadMessageDate: messageTime,
-              unreadMessageCompanyName: firstUnreadRoom.companyName,
-              unreadMessageJobTitle: firstUnreadRoom.jobTitle,
-              unreadMessageRoomId: firstUnreadRoom.id
-            }));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch message data:', error);
-      }
+  if (!authResult.success) {
+    redirect('/candidate/login');
+  }
+
+  const { candidateId } = authResult.data;
+  
+  try {
+    const rooms = await getRooms(candidateId, 'candidate');
+    
+    const unreadRooms = rooms.filter((room: Room) => room.unreadCount && room.unreadCount > 0);
+    
+    const taskData: TaskData = {
+      hasNewMessage: false,
+      hasUnreadMessage: false,
     };
     
-    fetchMessageData();
-  }, []);
-
-  // 72時間経過を判定するヘルパー関数（message.mdの仕様）
-  const is72HoursPassed = (date?: Date): boolean => {
-    if (!date) return false;
-    const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
-    return Date.now() - date.getTime() >= seventyTwoHoursInMs;
-  };
-
-  // 72時間以内かどうかを判定するヘルパー関数
-  const isWithin72Hours = (date?: Date): boolean => {
-    if (!date) return false;
-    const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
-    return Date.now() - date.getTime() < seventyTwoHoursInMs;
-  };
-
-  // 表示条件関数（トリガー関数）- userStateに基づいて条件判定
-  const checkProfileIncomplete = () => userState.profileIncomplete;
-  
-  // スカウト関連（userStateに基づいて判定）
-  const checkNewScout = () => userState.hasNewScout && isWithin72Hours(userState.newScoutDate);
-  const checkUnreadScout = () => userState.hasUnreadScout && is72HoursPassed(userState.unreadScoutDate);
-  
-  // メッセージ関連（userStateに基づいて判定）
-  const checkNewMessage = () => userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
-    
-  const checkUnreadMessage = () => userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
-
-  // サブテキストを動的に生成する関数
-  const generateSubText = (companyName?: string, jobTitle?: string): string => {
-    if (companyName && jobTitle) {
-      return `${companyName} | ${jobTitle}`;
-    }
-    return '企業名 | 求人タイトル'; // デフォルト値
-  };
-
-  // タスクリストのデータ（message.mdの仕様に基づく）
-  const taskItems: TaskItem[] = [
-    {
-      id: '1',
-      title: '会員情報を充実させましょう。スカウトが届きやすくなります。',
-      description: 'スカウトが届きやすくなります',
-      iconSrc: '/images/check.svg',
-      triggerFunction: checkProfileIncomplete,
-      navigateTo: '/candidate/profile', // 会員情報編集ページ
-    },
-    {
-      id: '2',
-      title: 'あなたにスカウトが届きました！内容を確認しましょう。',
-      description: generateSubText(userState.newScoutCompanyName, userState.newScoutJobTitle),
-      iconSrc: '/images/check.svg',
-      triggerFunction: checkNewScout,
-      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
-    },
-    {
-      id: '3',
-      title: '未読のスカウトがあります。早めに確認しましょう。',
-      description: generateSubText(userState.unreadScoutCompanyName, userState.unreadScoutJobTitle),
-      iconSrc: '/images/check.svg',
-      triggerFunction: checkUnreadScout,
-      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
-    },
-    {
-      id: '4',
-      title: '企業からメッセージが届きました！内容を確認しましょう。',
-      description: generateSubText(userState.newMessageCompanyName, userState.newMessageJobTitle),
-      iconSrc: '/images/check.svg',
-      triggerFunction: checkNewMessage,
-      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
-    },
-    {
-      id: '5',
-      title: '未読のメッセージがあります。早めに確認しましょう。',
-      description: generateSubText(userState.unreadMessageCompanyName, userState.unreadMessageJobTitle),
-      iconSrc: '/images/check.svg',
-      triggerFunction: checkUnreadMessage,
-      navigateTo: `/candidate/message`, // 対象の企業とのメッセージ画面
-    },
-  ];
-
-  // トリガー関数の条件を満たすアイテムのみをフィルタリング
-  const visibleItems = taskItems.filter(item => item.triggerFunction());
-
-  // ページごとに表示するアイテム数
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
-  const displayedItems = visibleItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-
-  // タスクアイテムクリックハンドラー（message.mdの仕様に基づく）
-  const handleTaskItemClick = (item: TaskItem) => {
-    if (item.navigateTo) {
-      // メッセージ関連のタスクの場合、特定のチャットルームを開く
-      if (item.id === '2' && userState.newScoutRoomId) {
-        // 新着スカウトの場合
-        router.push(`/candidate/message?room=${userState.newScoutRoomId}`);
-      } else if (item.id === '3' && userState.unreadScoutRoomId) {
-        // 未読スカウトの場合
-        router.push(`/candidate/message?room=${userState.unreadScoutRoomId}`);
-      } else if (item.id === '4' && userState.newMessageRoomId) {
-        // 新着メッセージの場合
-        router.push(`/candidate/message?room=${userState.newMessageRoomId}`);
-      } else if (item.id === '5' && userState.unreadMessageRoomId) {
-        // 未読メッセージの場合
-        router.push(`/candidate/message?room=${userState.unreadMessageRoomId}`);
+    if (unreadRooms.length > 0) {
+      const firstUnreadRoom = unreadRooms[0];
+      const messageTime = firstUnreadRoom.lastMessageTime 
+        ? new Date(firstUnreadRoom.lastMessageTime) 
+        : new Date();
+      
+      const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
+      const isWithin72Hours = Date.now() - messageTime.getTime() < seventyTwoHoursInMs;
+      
+      if (isWithin72Hours) {
+        taskData.hasNewMessage = true;
+        taskData.newMessageDate = messageTime;
+        taskData.newMessageCompanyName = firstUnreadRoom.companyName;
+        taskData.newMessageJobTitle = firstUnreadRoom.jobTitle;
+        taskData.newMessageRoomId = firstUnreadRoom.id;
       } else {
-        // その他のタスクの場合は通常の遷移
-        router.push(item.navigateTo);
+        taskData.hasUnreadMessage = true;
+        taskData.unreadMessageDate = messageTime;
+        taskData.unreadMessageCompanyName = firstUnreadRoom.companyName;
+        taskData.unreadMessageJobTitle = firstUnreadRoom.jobTitle;
+        taskData.unreadMessageRoomId = firstUnreadRoom.id;
       }
     }
-  };
+    
+    return taskData;
+  } catch (error) {
+    console.error('Failed to fetch task data:', error);
+    return {
+      hasNewMessage: false,
+      hasUnreadMessage: false,
+    };
+  }
+}
 
+export default async function CandidateTaskPage() {
+  const taskData = await getTaskData();
 
-
-  // --- 見出しリスト用ラッパー ---
   const headingListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
   };
 
-  // --- QAリンクボックス用スタイル ---
   const qaLinkBoxStyle: React.CSSProperties = {
     background: '#fff',
     padding: '15px 24px',
@@ -278,8 +103,8 @@ export default function CandidateTaskPage() {
     cursor: 'pointer',
     fontWeight: 700,
     boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-
   };
+
   const qaLinkTextStyle: React.CSSProperties = {
     fontSize: '16px',
     fontWeight: 700,
@@ -296,47 +121,10 @@ export default function CandidateTaskPage() {
     wordBreak: 'break-word',
   };
 
-  // --- やることリスト用ラッパー（縦並び・gap:8px） ---
-  const todoListWrapperStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  };
-
-  // --- やることリストの各アイテム ---
-  const todoItemStyle: React.CSSProperties = {
-    background: '#FFFFFF',
-    padding: '16px 24px',
-    boxSizing: 'border-box',
-    borderRadius: '8px',
-    boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-    transition: 'background 0.2s ease',
-  };
-  const todoItemRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '16px',
-  };
-  const todoTextsWrapperStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    minWidth: 0,
-    flex: 1,
-  };
-  const todoBodyTextStyle: React.CSSProperties = {
-    fontSize: '10px',
-    lineHeight: '160%',
-    color: '#999999',
-    margin: 0,
-  };
-
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10">
       <main className="w-full max-w-[1280px] mx-auto">
-        {/* 2カラムレイアウト: PCは横並び, モバイルは縦並び */}
         <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start">
-          {/* 左カラム（メインコンテンツ） */}
           <div className="max-w-[880px] md:px-6 flex-1 box-border w-full">
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
@@ -346,168 +134,16 @@ export default function CandidateTaskPage() {
                 やることリスト
               </SectionHeading>
             </div>
-            {/* やることリストを格納するラッパー */}
-            <div style={todoListWrapperStyle}>
-              {displayedItems.length > 0 ? (
-                <>
-                  {/* タスクリストのアイテムを動的に生成 */}
-                  {displayedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        ...todoItemStyle,
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#E9E9E9';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#FFFFFF';
-                      }}
-                      onClick={() => handleTaskItemClick(item)}
-                    >
-                      <div style={todoItemRowStyle}>
-                        <img
-                          src={item.iconSrc || '/images/check.svg'}
-                          alt={item.completed ? '完了チェック' : 'タスクアイコン'}
-                          width={48}
-                          height={48}
-                          style={{ display: 'block' }}
-                        />
-                        <div style={todoTextsWrapperStyle}>
-                          <span style={{
-                            ...qaLinkTextStyle,
-                            whiteSpace: 'normal',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word'
-                          }}>{item.title}</span>
-                          <p style={{
-                            ...todoBodyTextStyle,
-                            fontSize: '10px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>{item.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {/* ページネーション */}
-                  <div style={{ marginTop: '40px' }}>
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setCurrentPage}
-                    />
-                  </div>
-                </>
-              ) : (
-                /* 空の状態のコンポーネント - Figmaデザイン完全再現 */
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  gap: '80px',
-                  padding: '0',
-                  width: '100%',
-                }}>
-                  {/* メインコンテンツ */}
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '40px',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    padding: '80px 0',
-                    width: '100%',
-                  }}>
-                    {/* リストアイコン（大） - 120px 灰色 */}
-                    <div style={{
-                      position: 'relative',
-                      width: '120px',
-                      height: '120px',
-                    }}>
-                      <div style={{
-                        position: 'absolute',
-                        width: '100%',
-                        height: 'auto',
-                        aspectRatio: '50.0049/42.1957',
-                        left: '0',
-                        right: '0',
-                        top: 'calc(50% + 0.293px)',
-                        transform: 'translateY(-50%)',
-                      }}>
-                        <img
-                          src='/images/list.svg'
-                          alt=''
-                          style={{
-                            display: 'block',
-                            maxWidth: 'none',
-                            width: '100%',
-                            height: '100%',
-                            filter: 'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(95%)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* 説明文 */}
-                    <div style={{
-                      fontFamily: "'Noto Sans JP', sans-serif",
-                      fontWeight: 500,
-                      lineHeight: 2,
-                      fontStyle: 'normal',
-                      position: 'relative',
-                      color: '#323232',
-                      fontSize: '16px',
-                      textAlign: 'center',
-                      whiteSpace: 'normal',
-                      letterSpacing: '1.6px',
-                    }}>
-                      <p style={{
-                        display: 'block',
-                        margin: 0,
-                        marginBottom: '0',
-                      }}>
-                        企業からの新しいスカウトやメッセージがあると、
-                      </p>
-                      <p style={{
-                        display: 'block',
-                        margin: 0,
-                      }}>
-                        こちらに一覧で表示されます。
-                      </p>
-                    </div>
-
-                    {/* 求人を探すボタン */}
-                    <Button
-                      variant="blue-gradient"
-                      size="figma-default"
-                      onClick={() => router.push('/candidate/search/setting')}
-                      style={{ 
-                        paddingTop: '20px', 
-                        paddingBottom: '20px',
-                        fontSize: '16px'
-                      }}
-                      className="w-full md:w-auto"
-                    >
-                      求人を探す
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            
+            <TaskList initialTaskData={taskData} />
           </div>
-          {/* 右カラム（サイドコンテンツ） */}
+          
           <div className="w-full md:max-w-[320px] md:flex-none">
-            {/* バナー画像を表示 */}
             <img
               src='/images/banner01.png'
               alt='バナー画像01'
               className="w-full h-auto block rounded-lg mb-20"
             />
-            {/* 見出しリスト（縦並び・gap8px） */}
             <div style={headingListStyle}>
               <SectionHeading
                 iconSrc='/images/question.svg'
@@ -515,7 +151,6 @@ export default function CandidateTaskPage() {
               >
                 よくある質問
               </SectionHeading>
-              {/* FAQボックス（共通コンポーネント化） */}
               <FaqBox
                 title='退会したい場合はどうすればいいですか？退会手続きの流れを教えてください。'
                 body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。退会後はすべてのデータが削除されます。'
@@ -540,7 +175,6 @@ export default function CandidateTaskPage() {
                 title='面接日程の調整はどのように行いますか？'
                 body='メッセージ機能を使って企業担当者と直接日程調整が可能です。'
               />
-              {/* QA一覧を見るリンクボックス */}
               <div style={qaLinkBoxStyle}>
                 <span style={{
                   ...qaLinkTextStyle, 

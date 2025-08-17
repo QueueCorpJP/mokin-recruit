@@ -255,9 +255,9 @@ export function Navigation({
 
             {/* Desktop Buttons */}
             <div className='hidden lg:flex items-center gap-[16px]'>
-              {candidateButtons.map(btn => (
+              {candidateButtons.map((btn, index) => (
                 <Button
-                  key={btn.label}
+                  key={`${btn.label}-${index}`}
                   variant={btn.variant as any}
                   size={btn.size as any}
                   className={btn.className}
@@ -399,8 +399,8 @@ export function Navigation({
             <nav className='hidden lg:flex items-center ml-[40px]'>
               {/* すべてのナビゲーション項目を配置 */}
               <div className='flex items-center gap-10'>
-                {navigationItems.map(item => (
-                  <div key={item.label} className='relative'>
+                {navigationItems.map((item, index) => (
+                  <div key={`${item.label}-${index}`} className='relative'>
                     {item.hasDropdown ? (
                       <div>
                         <button
@@ -421,9 +421,9 @@ export function Navigation({
                         {/* ドロップダウンメニュー */}
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
-                            {item.dropdownItems?.map(dropdownItem => (
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
-                                key={dropdownItem.label}
+                                key={`${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
                                 className={cn(
                                   'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
@@ -517,8 +517,8 @@ export function Navigation({
           {isMenuOpen && (
             <div className='lg:hidden border-t border-gray-200 bg-white'>
               <div className='px-4 py-2 space-y-1'>
-                {navigationItems.map(item => (
-                  <div key={item.label}>
+                {navigationItems.map((item, index) => (
+                  <div key={`nav-${item.label}-${index}`}>
                     {item.hasDropdown ? (
                       <div>
                         <button
@@ -533,9 +533,9 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
-                            {item.dropdownItems?.map(dropdownItem => (
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
-                                key={dropdownItem.label}
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {
@@ -678,7 +678,7 @@ export function Navigation({
                               ? 'text-[#0F9058]'
                               : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]',
                             item.isActive &&
-                              'after:content-["" ] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
+                              'after:content-[""] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
                           )}
                         >
                           <item.icon className='w-5 h-5' />
@@ -687,9 +687,9 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
-                            {item.dropdownItems?.map(dropdownItem => (
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
-                                key={dropdownItem.label}
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
                                 className={cn(
                                   'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
@@ -711,7 +711,7 @@ export function Navigation({
                         className={cn(
                           'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                           item.isActive
-                            ? 'text-[#0F9058] after:content-["" ] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
+                            ? 'text-[#0F9058] after:content-[""] after:absolute after:left-0 after:bottom-[-20px] after:w-full after:h-[3px] after:bg-[#0F9058]'
                             : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]'
                         )}
                       >
@@ -781,8 +781,8 @@ export function Navigation({
           {isMenuOpen && (
             <div className='lg:hidden border-t border-gray-200 bg-white'>
               <div className='px-4 py-2 space-y-1'>
-                {navigationItems.map(item => (
-                  <div key={item.label}>
+                {navigationItems.map((item, index) => (
+                  <div key={`nav-${item.label}-${index}`}>
                     {item.hasDropdown ? (
                       <div>
                         <button
@@ -797,9 +797,9 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
-                            {item.dropdownItems?.map(dropdownItem => (
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
-                                key={dropdownItem.label}
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {

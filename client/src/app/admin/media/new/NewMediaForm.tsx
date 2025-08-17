@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/admin/ui/button';
 import { Input } from '@/components/admin/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
+import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
 
 interface ArticleCategory {
   id: string;
@@ -115,74 +117,39 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
         )}
 
         <div className="mb-6 flex justify-end gap-4">
-          <Button 
+          <AdminButton
             onClick={() => handleSubmit('DRAFT')}
+            text={isLoading ? '保存中...' : '下書き保存'}
+            variant="secondary"
             disabled={isLoading}
-            className="bg-white text-black border border-gray-300 px-6 py-2 rounded-full hover:bg-gray-50 disabled:opacity-50"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
-            {isLoading ? '保存中...' : '下書き保存'}
-          </Button>
-          <Button 
+          />
+          <AdminButton
             onClick={handlePreview}
-            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
-            確認
-          </Button>
+            text="確認"
+          />
         </div>
       </div>
 
       <div className="space-y-6">
         {/* タイトル */}
         <div>
-          <label 
-            className="block mb-2 bg-black text-white px-4 py-2"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
+          <FormFieldHeader>
             タイトル
-          </label>
-          <Input
+          </FormFieldHeader>
+          <AdminTextarea
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full h-12 border border-gray-300 rounded-none"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.6
-            }}
+            onChange={setTitle}
+            placeholder="記事のタイトルを入力してください"
+            height="h-20"
+            rows={2}
           />
         </div>
 
         {/* カテゴリ */}
         <div>
-          <label 
-            className="block mb-2 bg-black text-white px-4 py-2"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
+          <FormFieldHeader>
             カテゴリ
-          </label>
+          </FormFieldHeader>
           <div className="flex gap-2 mb-3">
             <span 
               className="bg-green-600 text-white px-3 py-1 rounded text-sm"
@@ -223,62 +190,34 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
 
         {/* タグ */}
         <div>
-          <label 
-            className="block mb-2 bg-black text-white px-4 py-2"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
+          <FormFieldHeader>
             タグ
-          </label>
-          <Input
+          </FormFieldHeader>
+          <AdminTextarea
             value={tags}
-            onChange={(e) => setTags(e.target.value)}
+            onChange={setTags}
             placeholder="タグをカンマ区切りで入力 (例: React, TypeScript, Web開発)"
-            className="w-full h-12 border border-gray-300 rounded-none"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.6
-            }}
+            height="h-16"
+            rows={2}
           />
         </div>
 
         {/* サムネイル */}
         <div>
-          <label 
-            className="block mb-2 bg-black text-white px-4 py-2"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
+          <FormFieldHeader>
             サムネイル
-          </label>
+          </FormFieldHeader>
           <div className="flex gap-4">
             <div className="bg-red-100 border-2 border-dashed border-red-400 w-16 h-16 flex items-center justify-center rounded">
               <span className="text-red-500 text-xs">10</span>
             </div>
             <div className="flex flex-col gap-2">
-              <Button 
-                variant="outline"
-                className="border border-gray-300 text-black px-4 py-1 rounded text-sm hover:bg-gray-50"
-                style={{
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
-                  fontWeight: 400,
-                  lineHeight: 1.6
-                }}
+              <AdminButton
                 onClick={() => document.getElementById('thumbnail-input')?.click()}
-              >
-                画像をアップロード
-              </Button>
+                text="画像をアップロード"
+                variant="secondary"
+                size="small"
+              />
               <input
                 id="thumbnail-input"
                 type="file"
@@ -308,17 +247,9 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
 
         {/* 内容 */}
         <div>
-          <label 
-            className="block mb-2 bg-black text-white px-4 py-2"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontWeight: 700,
-              lineHeight: 1.6
-            }}
-          >
+          <FormFieldHeader>
             内容
-          </label>
+          </FormFieldHeader>
           <RichTextEditor
             content={content}
             onChange={setContent}
@@ -343,31 +274,15 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
 
       {/* 下部ボタン */}
       <div className="flex justify-center gap-4 mt-8 mb-8">
-        <Button 
+        <AdminButton
           onClick={handleCancel}
-          variant="outline"
-          className="border border-gray-400 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-50"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '16px',
-            fontWeight: 700,
-            lineHeight: 1.6
-          }}
-        >
-          一覧に戻る
-        </Button>
-        <Button 
+          text="一覧に戻る"
+          variant="secondary"
+        />
+        <AdminButton
           onClick={handlePreview}
-          className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '16px',
-            fontWeight: 700,
-            lineHeight: 1.6
-          }}
-        >
-          確認
-        </Button>
+          text="確認"
+        />
       </div>
     </div>
   );

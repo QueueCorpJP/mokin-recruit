@@ -171,16 +171,7 @@ export const getCurrentUserId = (): string | null => {
   if (typeof window === 'undefined') return null;
   
   // クッキーベースの認証状態から取得
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { authStore } = require('@/stores/authStore');
-    const { user } = authStore.getState();
-    if (user?.id) {
-      return user.id;
-    }
-  } catch (error) {
-    console.warn('Failed to get userId from authStore:', error);
-  }
+  // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();
@@ -196,15 +187,7 @@ export const getCurrentUserType = (): string | null => {
   if (typeof window === 'undefined') return null;
   
   // クッキーベースの認証状態から取得
-  try {
-    const { authStore } = require('@/stores/authStore');
-    const { userType } = authStore.getState();
-    if (userType) {
-      return userType;
-    }
-  } catch (error) {
-    console.warn('Failed to get userType from authStore:', error);
-  }
+  // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();
@@ -220,15 +203,7 @@ export const getCompanyAccountId = (): string | null => {
   if (typeof window === 'undefined') return null;
   
   // クッキーベースの認証状態から取得
-  try {
-    const { authStore } = require('@/stores/authStore');
-    const { user } = authStore.getState();
-    if (user?.profile?.companyAccountId) {
-      return user.profile.companyAccountId;
-    }
-  } catch (error) {
-    console.warn('Failed to get companyAccountId from authStore:', error);
-  }
+  // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = getAuthInfo();

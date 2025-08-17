@@ -1,0 +1,884 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+
+// 定数定義
+const EDUCATION_OPTIONS = [
+  { value: 'graduate_school', label: '大学院卒' },
+  { value: 'university', label: '大学卒' },
+  { value: 'vocational', label: '専門学校卒' },
+  { value: 'junior_college', label: '短大卒' },
+  { value: 'technical_college', label: '高専卒' },
+  { value: 'high_school', label: '高校卒' },
+  { value: 'junior_high', label: '中学卒' },
+];
+
+const EXPERIENCE_YEARS_OPTIONS = [
+  { value: 'no_experience', label: '未経験' },
+  { value: 'less_than_1', label: '1年未満' },
+  { value: '1_2', label: '1-2年' },
+  { value: '3_5', label: '3-5年' },
+  { value: '6_10', label: '6-10年' },
+  { value: 'more_than_10', label: '10年以上' },
+];
+
+// 年の選択肢を生成
+const generateYearOptions = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = currentYear; year >= 1950; year--) {
+    years.push({ value: year.toString(), label: year.toString() });
+  }
+  return years;
+};
+
+// 月の選択肢を生成
+const generateMonthOptions = () => {
+  const months = [];
+  for (let month = 1; month <= 12; month++) {
+    months.push({ value: month.toString(), label: `${month}` });
+  }
+  return months;
+};
+
+// フォームスキーマ
+const formSchema = z.object({
+  education: z.string().min(1, { message: '最終学歴を選択してください' }),
+  schoolName: z.string().min(1, { message: '学校名を入力してください' }),
+  department: z.string().min(1, { message: '学部・専門・学科を入力してください' }),
+  graduationYear: z.string().min(1, { message: '卒業年を選択してください' }),
+  graduationMonth: z.string().min(1, { message: '卒業月を選択してください' }),
+  industries: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        experienceYears: z
+          .string()
+          .min(1, { message: '経験年数を選択してください' }),
+      }),
+    )
+    .optional(),
+  jobTypes: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        experienceYears: z
+          .string()
+          .min(1, { message: '経験年数を選択してください' }),
+      }),
+    )
+    .optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function EducationPage() {
+  const router = useRouter();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
+  const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<FormValues>({
+    mode: 'onChange',
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      education: '',
+      schoolName: '',
+      department: '',
+      graduationYear: '',
+      graduationMonth: '',
+      industries: [],
+      jobTypes: [],
+    },
+  });
+
+  const watchedIndustries = watch('industries') || [];
+  const watchedJobTypes = watch('jobTypes') || [];
+
+  // フォーム送信処理
+  const onSubmit = async (_data: FormValues) => {
+    // ここで実際のAPI呼び出しやデータ保存処理を行う
+    router.push('/signup/skills');
+  };
+
+  // 業種選択処理
+  const handleIndustrySelect = (
+    selectedIndustries: Array<{ id: string; name: string }>,
+  ) => {
+    const industriesWithExperience = selectedIndustries.map((industry) => ({
+      ...industry,
+      experienceYears: '',
+    }));
+    setValue('industries', industriesWithExperience, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  // 職種選択処理
+  const handleJobTypeSelect = (
+    selectedJobTypes: Array<{ id: string; name: string }>,
+  ) => {
+    const jobTypesWithExperience = selectedJobTypes.map((jobType) => ({
+      ...jobType,
+      experienceYears: '',
+    }));
+    setValue('jobTypes', jobTypesWithExperience, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+
+      {/* PC Version */}
+      {isDesktop ? (
+        <main
+          className="hidden lg:flex relative py-20 flex-col items-center justify-start"
+          style={{
+            backgroundImage: "url('/background-pc.svg')",
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+          }}
+        >
+          {/* Container */}
+          <div className="bg-white rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20 w-[1000px] flex flex-col gap-10 items-center">
+            {/* Title */}
+            <div className="flex flex-col gap-6 items-center w-full">
+              <h1 className="text-[#0f9058] text-[32px] font-bold tracking-[3.2px] text-center">
+                会員情報
+              </h1>
+            </div>
+
+            {/* Progress Tabs */}
+            <div className="flex flex-row w-full h-[45px]">
+              <div className="flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <svg
+                    width="24"
+                    height="25"
+                    viewBox="0 0 24 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8.625 3.5H15.375C15.5813 3.5 15.75 3.66875 15.75 3.875V5.75H8.25V3.875C8.25 3.66875 8.41875 3.5 8.625 3.5ZM6 3.875V5.75H3C1.34531 5.75 0 7.09531 0 8.75V13.25H9H15H24V8.75C24 7.09531 22.6547 5.75 21 5.75H18V3.875C18 2.42656 16.8234 1.25 15.375 1.25H8.625C7.17656 1.25 6 2.42656 6 3.875ZM24 14.75H15V16.25C15 17.0797 14.3297 17.75 13.5 17.75H10.5C9.67031 17.75 9 17.0797 9 16.25V14.75H0V20.75C0 22.4047 1.34531 23.75 3 23.75H21C22.6547 23.75 24 22.4047 24 20.75V14.75Z"
+                      fill="#0F9058"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[#0f9058] text-[18px] font-bold tracking-[1.8px]">
+                  経歴詳細
+                </span>
+              </div>
+              <div className="flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <svg
+                    width="25"
+                    height="25"
+                    viewBox="0 0 25 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M0.78125 6.5H24.2188C24.65 6.5 25 6.85 25 7.28125V10.3125C25 10.7438 24.65 11.0938 24.2188 11.0938H0.78125C0.35 11.0938 0 10.7438 0 10.3125V7.28125C0 6.85 0.35 6.5 0.78125 6.5ZM24.2188 13.3906H0.78125C0.35 13.3906 0 13.7406 0 14.1719V17.2031C0 17.6344 0.35 17.9844 0.78125 17.9844H24.2188C24.65 17.9844 25 17.6344 25 17.2031V14.1719C25 13.7406 24.65 13.3906 24.2188 13.3906ZM24.2188 20.2812H0.78125C0.35 20.2812 0 20.6313 0 21.0625V24.0938C0 24.525 0.35 24.875 0.78125 24.875H24.2188C24.65 24.875 25 24.525 25 24.0938V21.0625C25 20.6313 24.65 20.2812 24.2188 20.2812ZM21.0938 0.125H3.90625L1.17188 2.85938C1.02813 3.00312 0.953125 3.19688 0.953125 3.40625V4.20312H24.0469V3.40625C24.0469 3.19688 23.9719 3.00312 23.8281 2.85938L21.0938 0.125Z"
+                      fill="#DCDCDC"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[#999999] text-[18px] font-bold tracking-[1.8px]">
+                  スキル
+                </span>
+              </div>
+              <div className="flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <svg
+                    width="28"
+                    height="20"
+                    viewBox="0 0 28 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3.11111 0C1.39289 0 0 1.39289 0 3.11111V16.8889C0 18.6071 1.39289 20 3.11111 20H24.8889C26.6071 20 28 18.6071 28 16.8889V3.11111C28 1.39289 26.6071 0 24.8889 0H3.11111ZM3.88889 4.44444H11.6667V6.66667H3.88889V4.44444ZM15.5556 4.44444H24.1111V6.66667H15.5556V4.44444ZM3.88889 8.88889H11.6667V11.1111H3.88889V8.88889ZM15.5556 8.88889H24.1111V11.1111H15.5556V8.88889ZM3.88889 13.3333H11.6667V15.5556H3.88889V13.3333ZM15.5556 13.3333H24.1111V15.5556H15.5556V13.3333Z"
+                      fill="#DCDCDC"
+                    />
+                  </svg>
+                </div>
+                <span className="text-[#999999] text-[18px] font-bold tracking-[1.8px]">
+                  会員情報
+                </span>
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="flex flex-col gap-8 w-full">
+              {/* Education Level */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    最終学歴
+                    <span className="text-[#f55353] ml-1">*</span>
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <select
+                    {...register('education')}
+                    className={`w-full px-[15px] py-[13px] bg-white border ${errors.education ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                  >
+                    <option value="">選択してください</option>
+                    {EDUCATION_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.education && (
+                    <p className="text-red-500 text-[14px] mt-2">
+                      {errors.education.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* School Name */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    学校名
+                    <span className="text-[#f55353] ml-1">*</span>
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="学校名を入力"
+                    {...register('schoolName')}
+                    className={`w-full px-[15px] py-[13px] bg-white border ${errors.schoolName ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                  />
+                  {errors.schoolName && (
+                    <p className="text-red-500 text-[14px] mt-2">
+                      {errors.schoolName.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Department */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    学部・専門・学科
+                    <span className="text-[#f55353] ml-1">*</span>
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="学部・専門・学科を入力"
+                    {...register('department')}
+                    className={`w-full px-[15px] py-[13px] bg-white border ${errors.department ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                  />
+                  {errors.department && (
+                    <p className="text-red-500 text-[14px] mt-2">
+                      {errors.department.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Graduation Date */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    卒業年月
+                    <span className="text-[#f55353] ml-1">*</span>
+                  </label>
+                </div>
+                <div className="flex-1 flex gap-2">
+                  <select
+                    {...register('graduationYear')}
+                    className={`flex-1 px-[15px] py-[13px] bg-white border ${errors.graduationYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                  >
+                    <option value="">年</option>
+                    {generateYearOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}年
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    {...register('graduationMonth')}
+                    className={`w-[100px] px-[15px] py-[13px] bg-white border ${errors.graduationMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                  >
+                    <option value="">月</option>
+                    {generateMonthOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}月
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {(errors.graduationYear || errors.graduationMonth) && (
+                <p className="text-red-500 text-[14px] ml-[240px] -mt-6">
+                  {errors.graduationYear?.message || errors.graduationMonth?.message}
+                </p>
+              )}
+
+              {/* Industries */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    業種
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsIndustryModalOpen(true)}
+                    className="w-full px-[15px] py-[13px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] text-left"
+                  >
+                    {watchedIndustries.length > 0
+                      ? `${watchedIndustries.length}個選択中`
+                      : '業種を選択'}
+                  </button>
+                  {watchedIndustries.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {watchedIndustries.map((industry, index) => (
+                        <div
+                          key={industry.id}
+                          className="flex items-center gap-2 px-4 py-2 bg-[#f9f9f9] rounded-full"
+                        >
+                          <span className="text-[14px] text-[#323232] font-medium">
+                            {industry.name}
+                          </span>
+                          <span className="text-[14px] text-[#323232]">
+                            経験年数：
+                          </span>
+                          <select
+                            value={industry.experienceYears}
+                            onChange={(e) => {
+                              const updated = [...watchedIndustries];
+                              updated[index] = {
+                                ...updated[index],
+                                experienceYears: e.target.value,
+                              };
+                              setValue('industries', updated, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
+                            className="text-[14px] bg-transparent border-none outline-none"
+                          >
+                            <option value="">未選択</option>
+                            {EXPERIENCE_YEARS_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-[14px] text-[#323232]">▼</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue(
+                                'industries',
+                                watchedIndustries.filter((_, i) => i !== index),
+                                {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                },
+                              );
+                            }}
+                            className="text-[#999999] hover:text-[#323232] ml-2"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {errors.industries && (
+                    <p className="text-red-500 text-[14px] mt-2">
+                      {Array.isArray(errors.industries)
+                        ? errors.industries[0]?.experienceYears?.message
+                        : errors.industries.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Job Types */}
+              <div className="flex flex-row items-start gap-10">
+                <div className="w-[200px] flex-shrink-0">
+                  <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                    職種
+                  </label>
+                </div>
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsJobTypeModalOpen(true)}
+                    className="w-full px-[15px] py-[13px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] text-left"
+                  >
+                    {watchedJobTypes.length > 0
+                      ? `${watchedJobTypes.length}個選択中`
+                      : '職種を選択'}
+                  </button>
+                  {watchedJobTypes.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {watchedJobTypes.map((jobType, index) => (
+                        <div
+                          key={jobType.id}
+                          className="flex items-center gap-2 px-4 py-2 bg-[#f9f9f9] rounded-full"
+                        >
+                          <span className="text-[14px] text-[#323232] font-medium">
+                            {jobType.name}
+                          </span>
+                          <span className="text-[14px] text-[#323232]">
+                            経験年数：
+                          </span>
+                          <select
+                            value={jobType.experienceYears}
+                            onChange={(e) => {
+                              const updated = [...watchedJobTypes];
+                              updated[index] = {
+                                ...updated[index],
+                                experienceYears: e.target.value,
+                              };
+                              setValue('jobTypes', updated, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
+                            className="text-[14px] bg-transparent border-none outline-none"
+                          >
+                            <option value="">未選択</option>
+                            {EXPERIENCE_YEARS_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-[14px] text-[#323232]">▼</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue(
+                                'jobTypes',
+                                watchedJobTypes.filter((_, i) => i !== index),
+                                {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                },
+                              );
+                            }}
+                            className="text-[#999999] hover:text-[#323232] ml-2"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {errors.jobTypes && (
+                    <p className="text-red-500 text-[14px] mt-2">
+                      {Array.isArray(errors.jobTypes)
+                        ? errors.jobTypes[0]?.experienceYears?.message
+                        : errors.jobTypes.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmit(onSubmit)}
+              disabled={!isValid}
+              className={`px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
+                isValid
+                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white cursor-pointer'
+                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
+              }`}
+            >
+              次へ
+            </button>
+          </div>
+        </main>
+      ) : (
+        /* SP (Mobile) Version */
+        <main
+          className="flex relative pt-6 pb-20 flex-col items-center px-4"
+          style={{
+            backgroundImage: "url('/background-sp.svg')",
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+          }}
+        >
+          {/* Container */}
+          <div className="bg-white rounded-3xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 py-10 mx-4 w-full flex flex-col gap-10 items-center">
+            {/* Progress Indicator */}
+            <div className="flex flex-row gap-4 items-center w-full pb-4 border-b border-[#efefef]">
+              <div className="relative w-[72px] h-[72px]">
+                <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                  <circle
+                    cx="36"
+                    cy="36"
+                    r="28.8"
+                    stroke="#e0e0e0"
+                    strokeWidth="7.2"
+                    fill="none"
+                    strokeLinecap="round"
+                    transform="rotate(-90 36 36)"
+                  />
+                  <circle
+                    cx="36"
+                    cy="36"
+                    r="28.8"
+                    stroke="#0f9058"
+                    strokeWidth="7.2"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray="60.32 120.64"
+                    transform="rotate(-90 36 36)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <span className="text-[#0f9058] text-[24px] font-medium tracking-[2.4px]">
+                      1
+                    </span>
+                    <span className="text-[#999999] text-[17px] font-medium tracking-[1.7px]">
+                      /3
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <p className="text-[#999999] text-[16px] font-bold tracking-[1.6px]">
+                  会員情報
+                </p>
+                <p className="text-[#0f9058] text-[20px] font-bold tracking-[2px]">
+                  学歴・職歴
+                </p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="text-[#323232] text-[16px] leading-8 tracking-[1.6px] text-center font-bold">
+              <p>
+                最終学歴と職歴を教えてください。
+                <br />
+                企業からのスカウトに影響します。
+              </p>
+            </div>
+
+            {/* Form Fields */}
+            <div className="flex flex-col gap-6 w-full">
+              {/* Education Level */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  最終学歴
+                  <span className="text-[#f55353] ml-1">*</span>
+                </label>
+                <select
+                  {...register('education')}
+                  className={`w-full px-[11px] py-[11px] bg-white border ${errors.education ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                >
+                  <option value="">選択してください</option>
+                  {EDUCATION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.education && (
+                  <p className="text-red-500 text-[14px]">
+                    {errors.education.message}
+                  </p>
+                )}
+              </div>
+
+              {/* School Name */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  学校名
+                  <span className="text-[#f55353] ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="学校名を入力"
+                  {...register('schoolName')}
+                  className={`w-full px-[11px] py-[11px] bg-white border ${errors.schoolName ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                />
+                {errors.schoolName && (
+                  <p className="text-red-500 text-[14px]">
+                    {errors.schoolName.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Department */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  学部・専門・学科
+                  <span className="text-[#f55353] ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="学部・専門・学科を入力"
+                  {...register('department')}
+                  className={`w-full px-[11px] py-[11px] bg-white border ${errors.department ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                />
+                {errors.department && (
+                  <p className="text-red-500 text-[14px]">
+                    {errors.department.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Graduation Date */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  卒業年月
+                  <span className="text-[#f55353] ml-1">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    {...register('graduationYear')}
+                    className={`flex-1 px-[11px] py-[11px] bg-white border ${errors.graduationYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                  >
+                    <option value="">年</option>
+                    {generateYearOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    {...register('graduationMonth')}
+                    className={`w-[80px] px-[11px] py-[11px] bg-white border ${errors.graduationMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]`}
+                  >
+                    <option value="">月</option>
+                    {generateMonthOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}月
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {(errors.graduationYear || errors.graduationMonth) && (
+                  <p className="text-red-500 text-[14px]">
+                    {errors.graduationYear?.message || errors.graduationMonth?.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Industries */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  業種
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsIndustryModalOpen(true)}
+                  className="w-full px-4 py-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] text-left"
+                >
+                  {watchedIndustries.length > 0
+                    ? `${watchedIndustries.length}個選択中`
+                    : '業種を選択'}
+                </button>
+                {watchedIndustries.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {watchedIndustries.map((industry, index) => (
+                      <div
+                        key={industry.id}
+                        className="flex items-center gap-2 px-3 py-2 bg-[#f9f9f9] rounded-full"
+                      >
+                        <span className="text-[14px] text-[#323232] font-medium">
+                          {industry.name}
+                        </span>
+                        <select
+                          value={industry.experienceYears}
+                          onChange={(e) => {
+                            const updated = [...watchedIndustries];
+                            updated[index] = {
+                              ...updated[index],
+                              experienceYears: e.target.value,
+                            };
+                            setValue('industries', updated, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                          className="text-[14px] bg-transparent border-none outline-none"
+                        >
+                          <option value="">経験年数</option>
+                          {EXPERIENCE_YEARS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setValue(
+                              'industries',
+                              watchedIndustries.filter((_, i) => i !== index),
+                              {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              },
+                            );
+                          }}
+                          className="text-[#999999] hover:text-[#323232]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {errors.industries && (
+                  <p className="text-red-500 text-[14px]">
+                    {Array.isArray(errors.industries)
+                      ? errors.industries[0]?.experienceYears?.message
+                      : errors.industries.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Job Types */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
+                  職種
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsJobTypeModalOpen(true)}
+                  className="w-full px-4 py-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] text-left"
+                >
+                  {watchedJobTypes.length > 0
+                    ? `${watchedJobTypes.length}個選択中`
+                    : '職種を選択'}
+                </button>
+                {watchedJobTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {watchedJobTypes.map((jobType, index) => (
+                      <div
+                        key={jobType.id}
+                        className="flex items-center gap-2 px-3 py-2 bg-[#f9f9f9] rounded-full"
+                      >
+                        <span className="text-[14px] text-[#323232] font-medium">
+                          {jobType.name}
+                        </span>
+                        <select
+                          value={jobType.experienceYears}
+                          onChange={(e) => {
+                            const updated = [...watchedJobTypes];
+                            updated[index] = {
+                              ...updated[index],
+                              experienceYears: e.target.value,
+                            };
+                            setValue('jobTypes', updated, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                          className="text-[14px] bg-transparent border-none outline-none"
+                        >
+                          <option value="">経験年数</option>
+                          {EXPERIENCE_YEARS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setValue(
+                              'jobTypes',
+                              watchedJobTypes.filter((_, i) => i !== index),
+                              {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              },
+                            );
+                          }}
+                          className="text-[#999999] hover:text-[#323232]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {errors.jobTypes && (
+                  <p className="text-red-500 text-[14px]">
+                    {Array.isArray(errors.jobTypes)
+                      ? errors.jobTypes[0]?.experienceYears?.message
+                      : errors.jobTypes.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmit(onSubmit)}
+              disabled={!isValid}
+              className={`w-full py-4 rounded-full shadow-[0px_2px_6px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.4px] ${
+                isValid
+                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white'
+                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
+              }`}
+            >
+              次へ
+            </button>
+          </div>
+        </main>
+      )}
+
+      {/* Modals */}
+      <IndustrySelectModal
+        isOpen={isIndustryModalOpen}
+        onClose={() => setIsIndustryModalOpen(false)}
+        onConfirm={handleIndustrySelect}
+        initialSelected={watchedIndustries.map(({ id, name }) => ({
+          id,
+          name,
+        }))}
+      />
+      <JobTypeSelectModal
+        isOpen={isJobTypeModalOpen}
+        onClose={() => setIsJobTypeModalOpen(false)}
+        onConfirm={handleJobTypeSelect}
+        initialSelected={watchedJobTypes.map(({ id, name }) => ({ id, name }))}
+      />
+
+    </div>
+  );
+}

@@ -28,7 +28,7 @@ export function PasswordFormField({
 
   return (
     <div className={`flex flex-col md:flex-row gap-2 md:gap-4 items-start w-full ${className}`}>
-      <div className='flex flex-row items-center justify-start md:justify-end pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
+      <div className='flex flex-row items-center justify-start pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
         <label 
           htmlFor={id}
           className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'

@@ -58,8 +58,7 @@ export function NewPasswordForm({
           </div>
 
           {/* フォームフィールド */}
-          <div className="box-border content-stretch cursor-pointer flex flex-col gap-6 items-end justify-start p-0 relative shrink-0 w-full">
-            
+          <div className='flex flex-col gap-6 items-center w-full max-w-[400px]'>
             {/* 新規パスワード */}
             <PasswordFormField
               id="new-password"
@@ -83,36 +82,40 @@ export function NewPasswordForm({
                 minLength={8}
               />
               {confirmPassword && !isConfirmPasswordValid && (
-                <div className="flex justify-center md:justify-end">
-                  <div className="w-full max-w-[400px] md:w-[400px] md:ml-[144px]">
-                    <p className='text-sm text-red-600 text-center md:text-left'>
-                      パスワードが一致しません
-                    </p>
-                  </div>
+                <div className="w-full">
+                  <p className='text-sm text-red-600 text-center'>
+                    パスワードが一致しません
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
           {/* 設定するボタン */}
-          <button
-            type="submit"
-            disabled={!isFormValid || isLoading || isPending}
-            className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:min-w-40 px-6 sm:px-10 py-3 md:py-3.5 relative rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] shrink-0 bg-[#0F9058] hover:bg-[#0D7A4A] disabled:bg-[#999999] disabled:cursor-not-allowed transition-colors"
-          >
-            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#ffffff] text-[0px] text-center text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
-              <p className="adjustLetterSpacing block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre">
-                {isLoading || isPending ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <ButtonLoading />
-                    {userType === 'company' ? '設定中' : '変更中'}
-                  </span>
-                ) : (
-                  userType === 'company' ? '設定する' : 'パスワードを変更する'
-                )}
-              </p>
-            </div>
-          </button>
+          <div className='flex justify-center w-full'>
+            <button
+              type='submit'
+              disabled={!isFormValid || isLoading || isPending}
+              className='flex items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:max-w-[170px] px-6 sm:px-10 py-3 md:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[14px] md:text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '1.4px',
+              }}
+            >
+              {isLoading || isPending ? (
+                <>
+                  <ButtonLoading />
+                  設定中
+                </>
+              ) : (
+                <p className='block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre md:tracking-[1.6px]'>
+                  設定する
+                </p>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer
 export default async function CandidateLayout({
   children,
 }: {
+  
   children: React.ReactNode;
 }) {
   // サーバーサイドで認証状態を確認（最適化済み: React cacheとMiddleware検証を活用）
