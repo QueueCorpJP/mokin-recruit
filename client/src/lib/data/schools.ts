@@ -1,5 +1,5 @@
 // School data loader for autocomplete
-import schoolsData from '../../schools_by_education.json';
+import schoolsData from '../../../schools_by_education.json';
 
 export interface SchoolSuggestion {
   id: string;

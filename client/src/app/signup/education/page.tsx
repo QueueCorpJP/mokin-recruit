@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
@@ -228,8 +226,6 @@ export default function SignupEducationPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
 
       {/* Conditional Rendering based on screen size */}
       {isDesktop ? (
@@ -1259,7 +1255,6 @@ export default function SignupEducationPage() {
         maxSelections={3}
       />
 
-      <AuthAwareFooter />
     </div>
   );
 }

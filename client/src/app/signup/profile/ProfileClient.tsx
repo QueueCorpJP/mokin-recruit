@@ -1,7 +1,5 @@
 'use client';
 
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import {
   GENDER_OPTIONS,
   INCOME_RANGES,

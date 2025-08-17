@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -149,7 +147,6 @@ export default function EducationPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
 
       {/* PC Version */}
       {isDesktop ? (
@@ -882,7 +879,6 @@ export default function EducationPage() {
         initialSelected={watchedJobTypes.map(({ id, name }) => ({ id, name }))}
       />
 
-      <AuthAwareFooter />
     </div>
   );
 }

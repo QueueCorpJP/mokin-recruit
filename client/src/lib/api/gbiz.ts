@@ -1,6 +1,4 @@
 // Gbiz API client for company name suggestions
-const GBIZ_API_KEY = '8OkrmyrMcPzyJSbJWepoq5QCnH8gSjQP';
-const GBIZ_BASE_URL = 'https://info.gbiz.go.jp/hojin/v1';
 
 export interface CompanySuggestion {
   id: string;
@@ -19,14 +17,6 @@ export interface GbizSearchResponse {
 }
 
 export class GbizApiClient {
-  private apiKey: string;
-  private baseUrl: string;
-
-  constructor() {
-    this.apiKey = GBIZ_API_KEY;
-    this.baseUrl = GBIZ_BASE_URL;
-  }
-
   async searchCompanies(query: string, limit = 10): Promise<CompanySuggestion[]> {
     if (!query || query.trim().length < 2) {
       return [];
@@ -36,10 +26,9 @@ export class GbizApiClient {
       const params = new URLSearchParams({
         name: query.trim(),
         limit: limit.toString(),
-        key: this.apiKey,
       });
 
-      const response = await fetch(`${this.baseUrl}/hojin?${params.toString()}`, {
+      const response = await fetch(`/api/company/search?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -47,7 +36,7 @@ export class GbizApiClient {
       });
 
       if (!response.ok) {
-        console.warn('Gbiz API request failed:', response.status, response.statusText);
+        console.warn('Company search API request failed:', response.status, response.statusText);
         return [];
       }
 

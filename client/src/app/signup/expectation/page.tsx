@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { Navigation } from '@/components/ui/navigation';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useForm } from 'react-hook-form';
@@ -157,11 +155,6 @@ export default function SignupExpectationPage() {
       />
 
       <div className="min-h-screen flex flex-col">
-        <Navigation
-          variant="candidate"
-          isLoggedIn={false}
-          userInfo={undefined}
-        />
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* PC Version */}
@@ -916,7 +909,6 @@ export default function SignupExpectationPage() {
           )}
         </form>
 
-        <AuthAwareFooter />
       </div>
     </>
   );
