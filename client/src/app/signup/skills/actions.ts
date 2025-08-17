@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
 interface SkillsFormData {
   englishLevel: string;
@@ -27,23 +28,44 @@ export async function saveSkillsData(formData: SkillsFormData) {
       }
     );
 
-    const { data: uuidData, error: uuidError } = await supabase.rpc('gen_random_uuid');
-    const candidateId = uuidData || crypto.randomUUID();
+    // Get or create candidate ID using the centralized function
+    const candidateId = await getOrCreateCandidateId();
+    console.log('Using candidate ID for skills data:', candidateId);
 
-    console.log('Candidate ID for skills data:', candidateId);
-
-    // Save skills data
-    const { data: skillsData, error: skillsError } = await supabase
+    // Save skills data - use insert with manual conflict handling since no unique constraint on candidate_id
+    const { data: existingSkills } = await supabase
       .from('skills')
-      .upsert({
-        candidate_id: candidateId,
-        english_level: formData.englishLevel,
-        other_languages: JSON.stringify(formData.otherLanguages),
-        skills_list: formData.skills,
-        qualifications: formData.qualifications || null,
-      }, {
-        onConflict: 'candidate_id'
-      });
+      .select('id')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    let skillsError;
+    if (existingSkills) {
+      // Update existing record
+      const { error } = await supabase
+        .from('skills')
+        .update({
+          english_level: formData.englishLevel,
+          other_languages: JSON.stringify(formData.otherLanguages),
+          skills_list: formData.skills,
+          qualifications: formData.qualifications || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('candidate_id', candidateId);
+      skillsError = error;
+    } else {
+      // Insert new record
+      const { error } = await supabase
+        .from('skills')
+        .insert({
+          candidate_id: candidateId,
+          english_level: formData.englishLevel,
+          other_languages: JSON.stringify(formData.otherLanguages),
+          skills_list: formData.skills,
+          qualifications: formData.qualifications || null,
+        });
+      skillsError = error;
+    }
 
     if (skillsError) {
       throw new Error(`Skills data save failed: ${skillsError.message}`);

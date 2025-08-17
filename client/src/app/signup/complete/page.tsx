@@ -53,55 +53,55 @@ export default function SignupCompletePage() {
                     <path
                       d="M93.6016 38.1577H126.169"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M91.0938 53.1917H123.666"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M104.793 47.5115H137.361"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M92.7656 43.1704H102.538"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M91.4297 47.5115H101.202"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M131.348 38.1577H142.952"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M137.038 60.2417H119.705C119.618 60.2417 119.553 60.1588 119.575 60.0759L120.351 57.0962C120.369 57.0395 120.421 56.9958 120.482 56.9958H137.815C137.902 56.9958 137.968 57.0787 137.946 57.1616L137.169 60.1414C137.152 60.1981 137.1 60.2417 137.038 60.2417Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
                       d="M115.492 60.2417H98.1585C98.0713 60.2417 98.0059 60.1588 98.0277 60.0759L98.8042 57.0962C98.8217 57.0395 98.874 56.9958 98.9351 56.9958H116.268C116.355 56.9958 116.421 57.0787 116.399 57.1616L115.622 60.1414C115.605 60.1981 115.553 60.2417 115.492 60.2417Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
@@ -112,7 +112,7 @@ export default function SignupCompletePage() {
                   <path
                     d="M158.08 94.2796H64.483C63.497 94.2796 62.7815 93.3503 63.0302 92.3992L71.7687 58.8282C71.9432 58.1651 72.5409 57.7026 73.2214 57.7026H166.819C167.805 57.7026 168.52 58.6319 168.272 59.583L159.533 93.154C159.359 93.8171 158.761 94.2796 158.08 94.2796Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -122,13 +122,13 @@ export default function SignupCompletePage() {
                   <path
                     d="M92.0977 91.771H138.949"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M79.0703 55.1941H118.653"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -178,79 +178,79 @@ export default function SignupCompletePage() {
                   <path
                     d="M135.773 79.8828C135.738 80.0268 133.727 84.817 133.727 84.817L135.493 85.7027L134.996 86.6974"
                     stroke="#008448"
-                    stroke-width="0.49"
+                    strokeWidth="0.49"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M144.474 79.8828C144.439 80.0268 144.06 84.817 144.06 84.817L141.848 85.7027V86.6974"
                     stroke="#008448"
-                    stroke-width="0.49"
+                    strokeWidth="0.49"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M148.768 86.7627H127.723C126.754 86.7627 126.165 85.9774 126.405 85.0089L131.715 63.7145C131.954 62.746 132.936 61.9607 133.905 61.9607H154.95C155.919 61.9607 156.508 62.746 156.268 63.7145L150.958 85.0089C150.718 85.9774 149.737 86.7627 148.768 86.7627Z"
                     stroke="white"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M75.5625 63.2126H108.13"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M73.0586 78.2422H105.626"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M86.7539 72.5664H119.321"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M74.7305 68.2212H84.4986"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M73.3906 72.5664H83.1631"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M113.309 63.2126H124.918"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M118.999 85.2969H101.666C101.579 85.2969 101.514 85.214 101.535 85.1311L102.312 82.1514C102.329 82.0947 102.382 82.051 102.443 82.051H119.776C119.863 82.051 119.929 82.1339 119.907 82.2168L119.13 85.1965C119.113 85.2533 119.06 85.2969 118.999 85.2969Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M97.4525 85.2969H80.1195C80.0322 85.2969 79.9668 85.214 79.9886 85.1311L80.7652 82.1514C80.7826 82.0947 80.835 82.051 80.896 82.051H98.2291C98.3163 82.051 98.3818 82.1339 98.36 82.2168L97.5834 85.1965C97.5703 85.2533 97.5136 85.2969 97.4525 85.2969Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M117.402 51.4377H137.698"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -260,55 +260,55 @@ export default function SignupCompletePage() {
                   <path
                     d="M76.5664 110.312H109.134"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M74.0586 125.342H106.631"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M87.7578 119.666H120.325"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M75.7305 115.321H85.5029"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M74.3945 119.666H84.167"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M114.312 110.312H125.922"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M120.003 132.396H102.67C102.583 132.396 102.518 132.314 102.539 132.231L103.316 129.251C103.333 129.194 103.386 129.151 103.447 129.151H120.78C120.867 129.151 120.933 129.234 120.911 129.316L120.134 132.296C120.121 132.353 120.064 132.396 120.003 132.396Z"
                     stroke="#9CCFB8"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M98.4564 132.396H81.1234C81.0361 132.396 80.9707 132.314 80.9925 132.231L81.7691 129.251C81.7865 129.194 81.8389 129.151 81.9 129.151H99.233C99.3202 129.151 99.3857 129.234 99.3639 129.316L98.5873 132.296C98.5698 132.353 98.5175 132.396 98.4564 132.396Z"
                     stroke="#9CCFB8"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -323,55 +323,55 @@ export default function SignupCompletePage() {
                     <path
                       d="M66.875 155.074H99.4469"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M64.3711 170.104H96.9387"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M78.0664 164.428H110.638"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M66.043 160.083H75.8111"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M64.707 164.428H74.4751"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M104.621 155.074H116.23"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M110.312 177.158H92.9789C92.8916 177.158 92.8262 177.075 92.848 176.992L93.6245 174.013C93.642 173.956 93.6943 173.912 93.7554 173.912H111.088C111.176 173.912 111.241 173.995 111.219 174.078L110.443 177.058C110.43 177.115 110.373 177.158 110.312 177.158Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
                       d="M88.7689 177.158H71.4359C71.3486 177.158 71.2832 177.075 71.305 176.992L72.0816 174.013C72.099 173.956 72.1514 173.912 72.2125 173.912H89.5455C89.6327 173.912 89.6982 173.995 89.6764 174.078L88.8998 177.058C88.8867 177.115 88.83 177.158 88.7689 177.158Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
@@ -382,25 +382,25 @@ export default function SignupCompletePage() {
                   <path
                     d="M128.93 184.636H145.63"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M72.1406 139.874H111.894"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M120.992 139.874H130.682"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M162.832 103.297H166.191C167.177 103.297 167.884 104.253 167.592 105.195L166.174 109.811"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -550,49 +550,49 @@ export default function SignupCompletePage() {
                   <path
                     d="M222.125 91.1038L225.964 104.798"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M219.746 91.8977C219.746 91.8977 220.623 94.5284 223.502 96.2822"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M224.129 88.6389C224.129 88.6389 224.631 85.1312 228.64 84.8826"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M204.463 87.1379C204.463 87.1379 200.371 93.8609 200.414 95.4489C200.458 97.0369 203.089 101.544 203.089 101.544L206.348 110.06"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M218.617 115.072L223.002 110.06"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M181.878 82.7534L176.738 81.2832C176.738 81.2832 177.201 82.4219 177.532 82.7534C177.868 83.0894 181.459 84.3415 181.459 84.3415"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M177.531 82.7534C177.531 82.7534 178.033 84.2586 178.282 84.5072C178.53 84.7559 181.706 85.6764 181.706 85.6764"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M182.629 81.5015L184.195 82.723L185.386 82.4176"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -610,19 +610,19 @@ export default function SignupCompletePage() {
                   <path
                     d="M209.809 132.859L210.598 129.352"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M209.348 129.688L210.268 127.681"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M209.684 126.097L209.348 132.859H210.434L212.188 129.853"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -712,103 +712,103 @@ export default function SignupCompletePage() {
                   <path
                     d="M32.9844 139.661C32.9844 139.661 37.1638 153.089 40.2963 159.655"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M41.4922 162.338C41.4922 162.338 44.0269 160.846 46.566 162.338"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M41.043 163.978C41.043 163.978 43.1327 162.783 46.7145 165.322"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M25.3789 160.545C25.3789 160.545 27.0193 159.053 30.7494 160.693"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M26.5742 162.037C26.5742 162.037 28.9606 160.841 31.1987 162.635"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M32.0897 164.428L31.1953 194.862"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M44.4258 138.914C44.4258 138.914 47.8069 140.904 49.1986 137.719"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M47.8047 139.311C47.8047 139.311 49.3971 151.645 49.0001 159.803"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M19.5586 92.9578L21.151 110.068"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M46.8633 98.9258C46.8633 98.9258 58.6513 107.429 64.1701 105.788"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M60.8867 96.8362C60.8867 96.8362 63.2731 98.1799 63.1248 101.312"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M60.293 95.6451C60.293 95.6451 62.8277 94.8991 64.3197 97.4339"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M46.4152 85.3491C46.4152 85.3491 40.1504 88.6299 44.3255 96.2428"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M71.3086 69.9096L72.4778 68.8669C72.4778 68.8669 73.298 68.8669 73.7343 69.3861"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M72.6992 70.0798C72.6992 70.0057 74.3658 69.1113 74.3658 69.1113C74.3658 69.1113 75.884 69.4822 76.1065 70.2805C76.329 71.0745 76.1545 71.4977 76.1545 71.4977"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M74.6641 71.5238C74.7382 71.4977 76.7756 71.6242 76.7756 71.6242C76.7756 71.6242 77.5216 72.1215 77.4955 73.09C77.4693 74.0586 77.1508 75.0184 77.1508 75.0184C77.1508 75.0184 76.4266 76.0523 75.1832 76.0261"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M75.8316 73.6135C75.8316 73.6135 76.0803 74.0105 75.7575 74.7304C75.4346 75.4502 75.042 77.3393 73.6328 78.2249"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                 </g>
@@ -888,55 +888,55 @@ export default function SignupCompletePage() {
                     <path
                       d="M78.5039 31.7981H105.644"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M76.4141 44.3264H103.557"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M87.8281 39.5928H114.968"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M77.8047 35.9756H85.9484"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M76.6914 39.5928H84.8351"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M109.957 31.7981H119.628"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M114.701 50.2015H100.257C100.184 50.2015 100.13 50.1324 100.148 50.0633L100.795 47.5802C100.81 47.5329 100.853 47.4966 100.904 47.4966H115.348C115.421 47.4966 115.476 47.5657 115.458 47.6347L114.81 50.1178C114.796 50.1651 114.752 50.2015 114.701 50.2015Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
                       d="M96.7443 50.2015H82.3001C82.2274 50.2015 82.1728 50.1324 82.191 50.0633L82.8382 47.5802C82.8527 47.5329 82.8963 47.4966 82.9472 47.4966H97.3914C97.4641 47.4966 97.5187 47.5657 97.5005 47.6347L96.8534 50.1178C96.8388 50.1651 96.7952 50.2015 96.7443 50.2015Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
@@ -947,7 +947,7 @@ export default function SignupCompletePage() {
                   <path
                     d="M132.234 78.5665H54.2364C53.4148 78.5665 52.8186 77.7921 53.0258 76.9995L60.3079 49.0237C60.4533 48.4711 60.9514 48.0857 61.5185 48.0857H139.517C140.338 48.0857 140.934 48.8601 140.727 49.6526L133.445 77.6285C133.3 78.1811 132.802 78.5665 132.234 78.5665Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -957,13 +957,13 @@ export default function SignupCompletePage() {
                   <path
                     d="M77.25 76.4761H116.293"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M66.3945 45.9951H99.3803"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1013,79 +1013,79 @@ export default function SignupCompletePage() {
                   <path
                     d="M113.643 66.5691C113.614 66.6891 111.938 70.6809 111.938 70.6809L113.41 71.419L112.995 72.2479"
                     stroke="#008448"
-                    stroke-width="0.49"
+                    strokeWidth="0.49"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M120.892 66.5691C120.863 66.6891 120.546 70.6809 120.546 70.6809L118.703 71.419V72.2479"
                     stroke="#008448"
-                    stroke-width="0.49"
+                    strokeWidth="0.49"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M124.474 72.3024H106.936C106.128 72.3024 105.638 71.648 105.838 70.8409L110.262 53.0955C110.462 52.2884 111.28 51.634 112.087 51.634H129.625C130.432 51.634 130.923 52.2884 130.723 53.0955L126.299 70.8409C126.099 71.648 125.281 72.3024 124.474 72.3024Z"
                     stroke="white"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M63.4688 52.6772H90.6084"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M61.3828 65.2021H88.5225"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M72.7969 60.4722H99.9366"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M62.7773 56.8511H70.9174"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M61.6602 60.4722H69.8039"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M94.9258 52.6772H104.6"
                     stroke="#91CAB0"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M99.6662 71.0809H85.222C85.1492 71.0809 85.0947 71.0118 85.1129 70.9427L85.76 68.4596C85.7746 68.4123 85.8182 68.376 85.8691 68.376H100.313C100.386 68.376 100.441 68.4451 100.422 68.5141L99.7752 70.9972C99.7607 71.0445 99.7171 71.0809 99.6662 71.0809Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M81.7091 71.0809H67.2649C67.1922 71.0809 67.1377 71.0118 67.1559 70.9427L67.803 68.4596C67.8175 68.4123 67.8612 68.376 67.9121 68.376H82.3563C82.429 68.376 82.4835 68.4451 82.4653 68.5141L81.8182 70.9972C81.8073 71.0445 81.76 71.0809 81.7091 71.0809Z"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M98.3359 42.865H115.249"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1095,55 +1095,55 @@ export default function SignupCompletePage() {
                   <path
                     d="M64.3047 91.9272H91.4444"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M62.2148 104.452H89.3582"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M73.6328 99.7219H100.772"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M63.6094 96.1008H71.7531"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M62.4961 99.7219H70.6398"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M95.7617 91.9272H105.436"
                     stroke="#B8DDCC"
-                    stroke-width="3.45"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="3.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M100.502 110.33H86.0579C85.9852 110.33 85.9307 110.261 85.9488 110.192L86.596 107.709C86.6105 107.662 86.6541 107.625 86.705 107.625H101.149C101.222 107.625 101.276 107.695 101.258 107.764L100.611 110.247C100.6 110.294 100.553 110.33 100.502 110.33Z"
                     stroke="#9CCFB8"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M82.5451 110.33H68.1009C68.0282 110.33 67.9736 110.261 67.9918 110.192L68.6389 107.709C68.6535 107.662 68.6971 107.625 68.748 107.625H83.1922C83.2649 107.625 83.3195 107.695 83.3013 107.764L82.6541 110.247C82.6396 110.294 82.596 110.33 82.5451 110.33Z"
                     stroke="#9CCFB8"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1158,55 +1158,55 @@ export default function SignupCompletePage() {
                     <path
                       d="M56.2344 129.229H83.3777"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M54.1445 141.753H81.2842"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M65.5586 137.023H92.7019"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M55.5391 133.402H63.6792"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M54.4258 137.023H62.5659"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M87.6875 129.229H97.3618"
                       stroke="#B8DDCC"
-                      stroke-width="3.45"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="3.45"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                     <path
                       d="M92.4279 147.632H77.9837C77.911 147.632 77.8564 147.563 77.8746 147.494L78.5218 145.011C78.5363 144.963 78.5799 144.927 78.6308 144.927H93.075C93.1477 144.927 93.2023 144.996 93.1841 145.065L92.537 147.548C92.526 147.596 92.4788 147.632 92.4279 147.632Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
                       d="M74.4748 147.632H60.0306C59.9578 147.632 59.9033 147.563 59.9215 147.494L60.5686 145.011C60.5832 144.963 60.6268 144.927 60.6777 144.927H75.1219C75.1946 144.927 75.2491 144.996 75.231 145.065L74.5838 147.548C74.5729 147.596 74.5257 147.632 74.4748 147.632Z"
                       stroke="#9CCFB8"
-                      stroke-width="1.15"
+                      strokeWidth="1.15"
                       stroke-miterlimit="10"
                     />
                     <path
@@ -1217,25 +1217,25 @@ export default function SignupCompletePage() {
                   <path
                     d="M107.941 153.863H121.858"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M60.6172 116.562H93.7447"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M101.328 116.562H109.403"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M136.195 86.0813H138.995C139.816 86.0813 140.405 86.8775 140.162 87.6628L138.98 91.5092"
                     stroke="#80C1A4"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1385,49 +1385,49 @@ export default function SignupCompletePage() {
                   <path
                     d="M185.605 75.9197L188.805 87.3318"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M183.621 76.5815C183.621 76.5815 184.352 78.7738 186.751 80.2353"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M187.273 73.8656C187.273 73.8656 187.692 70.9426 191.033 70.7354"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M170.886 72.615C170.886 72.615 167.476 78.2174 167.512 79.5408C167.548 80.8641 169.741 84.6197 169.741 84.6197L172.456 91.7164"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M182.684 95.8936L186.337 91.7163"
                     stroke="#5CB48D"
-                    stroke-width="1.15"
+                    strokeWidth="1.15"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M152.064 68.9613L147.781 67.7361C147.781 67.7361 148.167 68.685 148.443 68.9613C148.723 69.2412 151.715 70.2846 151.715 70.2846"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M148.445 68.9612C148.445 68.9612 148.863 70.2155 149.071 70.4227C149.278 70.6299 151.925 71.397 151.925 71.397"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M152.691 67.9177L153.997 68.9357L154.989 68.6812"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1445,19 +1445,19 @@ export default function SignupCompletePage() {
                   <path
                     d="M175.344 110.716L176.002 107.793"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M174.957 108.073L175.724 106.401"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M175.237 105.081L174.957 110.716H175.862L177.324 108.211"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
@@ -1547,103 +1547,103 @@ export default function SignupCompletePage() {
                   <path
                     d="M27.9922 116.384C27.9922 116.384 31.4751 127.574 34.0854 133.046"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M35.082 135.282C35.082 135.282 37.1943 134.038 39.3102 135.282"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M34.707 136.649C34.707 136.649 36.4485 135.652 39.4333 137.768"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M21.6523 133.787C21.6523 133.787 23.0193 132.544 26.1278 133.911"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M22.6484 135.031C22.6484 135.031 24.6371 134.034 26.5022 135.529"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M27.2492 137.023L26.5039 162.385"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M37.5273 115.762C37.5273 115.762 40.3449 117.42 41.5047 114.766"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M40.3438 116.093C40.3438 116.093 41.6707 126.371 41.3399 133.169"
                     stroke="#16935D"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M16.8047 77.4648L18.1317 91.7236"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M39.5586 82.4382C39.5586 82.4382 49.382 89.524 53.981 88.157"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M51.2422 80.6968C51.2422 80.6968 53.2309 81.8165 53.1072 84.4269"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M50.75 79.7045C50.75 79.7045 52.8623 79.0828 54.1056 81.1951"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M39.1833 71.1245C39.1833 71.1245 33.9625 73.8585 37.4418 80.2026"
                     stroke="#3DA578"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M59.9297 58.2581L60.904 57.3892C60.904 57.3892 61.5875 57.3892 61.9511 57.8218"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M61.0898 58.3999C61.0898 58.3381 62.4786 57.5928 62.4786 57.5928C62.4786 57.5928 63.7438 57.9018 63.9292 58.5671C64.1147 59.2288 63.9692 59.5814 63.9692 59.5814"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M62.7227 59.6033C62.7845 59.5815 64.4823 59.6869 64.4823 59.6869C64.4823 59.6869 65.104 60.1014 65.0822 60.9085C65.0603 61.7156 64.7949 62.5154 64.7949 62.5154C64.7949 62.5154 64.1914 63.3771 63.1553 63.3552"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                   <path
                     d="M63.6995 61.3447C63.6995 61.3447 63.9068 61.6756 63.6377 62.2754C63.3687 62.8753 63.0415 64.4495 61.8672 65.1875"
                     stroke="#FFC2D2"
-                    stroke-width="1.03"
+                    strokeWidth="1.03"
                     stroke-miterlimit="10"
                   />
                 </g>

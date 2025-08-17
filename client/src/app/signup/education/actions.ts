@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
 interface EducationFormData {
   finalEducation: string;
@@ -30,24 +31,46 @@ export async function saveEducationData(formData: EducationFormData) {
       }
     );
 
-    const { data: uuidData, error: uuidError } = await supabase.rpc('gen_random_uuid');
-    const candidateId = uuidData || crypto.randomUUID();
+    // Get or create candidate ID using the centralized function
+    const candidateId = await getOrCreateCandidateId();
+    console.log('Using candidate ID for education data:', candidateId);
 
-    console.log('Candidate ID for education data:', candidateId);
-
-    // Save education data
-    const { data: educationData, error: educationError } = await supabase
+    // Save education data - use insert with manual conflict handling since no unique constraint on candidate_id
+    const { data: existingEducation } = await supabase
       .from('education')
-      .upsert({
-        candidate_id: candidateId,
-        final_education: formData.finalEducation,
-        school_name: formData.schoolName || null,
-        department: formData.department || null,
-        graduation_year: formData.graduationYear || null,
-        graduation_month: formData.graduationMonth || null,
-      }, {
-        onConflict: 'candidate_id'
-      });
+      .select('id')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    let educationError;
+    if (existingEducation) {
+      // Update existing record
+      const { error } = await supabase
+        .from('education')
+        .update({
+          final_education: formData.finalEducation,
+          school_name: formData.schoolName || null,
+          department: formData.department || null,
+          graduation_year: formData.graduationYear || null,
+          graduation_month: formData.graduationMonth || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('candidate_id', candidateId);
+      educationError = error;
+    } else {
+      // Insert new record
+      const { error } = await supabase
+        .from('education')
+        .insert({
+          candidate_id: candidateId,
+          final_education: formData.finalEducation,
+          school_name: formData.schoolName || null,
+          department: formData.department || null,
+          graduation_year: formData.graduationYear || null,
+          graduation_month: formData.graduationMonth || null,
+        });
+      educationError = error;
+    }
 
     if (educationError) {
       throw new Error(`Education data save failed: ${educationError.message}`);

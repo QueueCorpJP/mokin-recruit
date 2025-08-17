@@ -12,6 +12,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
+import { saveEducationData } from './actions';
 
 // フォームスキーマの定義
 const educationSchema = z.object({
@@ -143,10 +144,30 @@ export default function SignupEducationPage() {
     '20年以上',
   ];
 
-  const onSubmit = (_data: EducationFormData) => {
-    // TODO: APIを呼び出してデータを保存
-    // 次の画面へ遷移
-    router.push('/signup/skills');
+  const onSubmit = async (data: EducationFormData) => {
+    try {
+      const formattedData = {
+        finalEducation: data.finalEducation,
+        schoolName: data.schoolName,
+        department: data.department,
+        graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
+        graduationMonth: data.graduationMonth ? parseInt(data.graduationMonth) : undefined,
+        industries: data.industries.map(industry => ({
+          id: industry.id,
+          name: industry.name,
+          experienceYears: industry.experienceYears ? parseInt(industry.experienceYears.replace(/[^\d]/g, '')) : 0
+        })),
+        jobTypes: data.jobTypes.map(jobType => ({
+          id: jobType.id,
+          name: jobType.name,
+          experienceYears: jobType.experienceYears ? parseInt(jobType.experienceYears.replace(/[^\d]/g, '')) : 0
+        }))
+      };
+      
+      await saveEducationData(formattedData);
+    } catch (error) {
+      console.error('Education data save failed:', error);
+    }
   };
 
   // モーダルから選択された値を設定

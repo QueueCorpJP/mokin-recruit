@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
 interface SummaryFormData {
   jobSummary?: string;
@@ -25,21 +26,40 @@ export async function saveSummaryData(formData: SummaryFormData) {
       }
     );
 
-    const { data: uuidData, error: uuidError } = await supabase.rpc('gen_random_uuid');
-    const candidateId = uuidData || crypto.randomUUID();
+    // Get or create candidate ID using the centralized function
+    const candidateId = await getOrCreateCandidateId();
+    console.log('Using candidate ID for summary data:', candidateId);
 
-    console.log('Candidate ID for summary data:', candidateId);
-
-    // Save summary data
-    const { data: summaryData, error: summaryError } = await supabase
+    // Save summary data - use insert with manual conflict handling since no unique constraint on candidate_id
+    const { data: existingSummary } = await supabase
       .from('job_summary')
-      .upsert({
-        candidate_id: candidateId,
-        job_summary: formData.jobSummary || null,
-        self_pr: formData.selfPR || null,
-      }, {
-        onConflict: 'candidate_id'
-      });
+      .select('id')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    let summaryError;
+    if (existingSummary) {
+      // Update existing record
+      const { error } = await supabase
+        .from('job_summary')
+        .update({
+          job_summary: formData.jobSummary || null,
+          self_pr: formData.selfPR || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('candidate_id', candidateId);
+      summaryError = error;
+    } else {
+      // Insert new record
+      const { error } = await supabase
+        .from('job_summary')
+        .insert({
+          candidate_id: candidateId,
+          job_summary: formData.jobSummary || null,
+          self_pr: formData.selfPR || null,
+        });
+      summaryError = error;
+    }
 
     if (summaryError) {
       throw new Error(`Summary data save failed: ${summaryError.message}`);

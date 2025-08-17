@@ -26,7 +26,7 @@ export function CompanyNameInput({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Debounced search
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

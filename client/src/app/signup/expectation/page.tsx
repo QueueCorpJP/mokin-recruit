@@ -12,6 +12,7 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { type Industry } from '@/constants/industry-data';
 import { type JobType } from '@/constants/job-type-data';
+import { saveExpectationData } from './actions';
 
 const expectationSchema = z.object({
   desiredIncome: z.string().min(1, '希望年収を選択してください'),
@@ -81,8 +82,12 @@ export default function SignupExpectationPage() {
 
   const formData = watch();
 
-  const onSubmit = () => {
-    router.push('/signup/summary');
+  const onSubmit = async (data: ExpectationFormData) => {
+    try {
+      await saveExpectationData(data);
+    } catch (error) {
+      console.error('Expectation data save failed:', error);
+    }
   };
 
   const handleRemoveIndustry = (id: string) => {
@@ -457,9 +462,9 @@ export default function SignupExpectationPage() {
                       </button>
                       {formData.workLocations.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {formData.workLocations.map((location) => (
+                          {formData.workLocations.map((location, index) => (
                             <div
-                              key={location.id}
+                              key={`desktop-${location.id || location.name}-${index}`}
                               className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                             >
                               <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
@@ -799,9 +804,9 @@ export default function SignupExpectationPage() {
                     </button>
                     {formData.workLocations.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {formData.workLocations.map((location) => (
+                        {formData.workLocations.map((location, index) => (
                           <div
-                            key={location.id}
+                            key={`mobile-${location.id || location.name}-${index}`}
                             className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                           >
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
