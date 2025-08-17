@@ -73,24 +73,27 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       Image.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto',
+          style: 'max-width: 100%; height: auto; display: block;',
         },
       }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
           class: 'border-collapse border border-gray-300 w-full mb-4',
-          style: 'max-width: 100%; table-layout: auto;',
+          style: 'max-width: 100%; table-layout: fixed; word-wrap: break-word;',
         },
       }),
       TableRow,
       TableHeader.configure({
         HTMLAttributes: {
           class: 'border border-gray-300 bg-gray-50 px-4 py-2 font-semibold',
+          style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
         },
       }),
       TableCell.configure({
         HTMLAttributes: {
           class: 'border border-gray-300 px-4 py-2',
+          style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
         },
       }),
       TableOfContents,
@@ -179,12 +182,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('bold') ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('bold') ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           B
@@ -192,12 +197,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('italic') ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('italic') ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           I
@@ -205,12 +212,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('heading', { level: 2 }) ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('heading', { level: 2 }) ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           H2
@@ -218,12 +227,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('heading', { level: 3 }) ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('heading', { level: 3 }) ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           H3
@@ -231,12 +242,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('bulletList') ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('bulletList') ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           箇条書き
@@ -244,12 +257,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('orderedList') ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('orderedList') ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           番号付き
@@ -257,9 +272,11 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={addImage}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
           style={{
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           画像
@@ -267,9 +284,11 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={insertTable}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
           style={{
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           テーブル
@@ -277,12 +296,14 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold ${
+          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('blockquote') ? 'border-b-2 border-[#323232]' : ''
           }`}
           style={{
             borderBottom: editor.isActive('blockquote') ? '2px solid #323232' : 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           引用
@@ -290,9 +311,11 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         <button
           type="button"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
           style={{
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
           }}
         >
           区切り線
@@ -327,9 +350,10 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
               ])
               .run();
           }}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors font-bold"
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
           style={{
-            boxShadow: 'none'
+            boxShadow: 'none',
+            fontWeight: 'bold'
           }}
         >
           目次
@@ -337,14 +361,19 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       </div>
 
       {/* エディタエリア */}
-      <div className="min-h-[400px] p-4">
+      <div className="min-h-[400px] p-4 overflow-hidden">
         <EditorContent
           editor={editor}
-          className="prose prose-lg max-w-none focus:outline-none media-content-editor"
+          className="prose prose-lg max-w-none focus:outline-none media-content-editor overflow-hidden"
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',
             lineHeight: 1.6,
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word',
+            maxWidth: '100%',
+            width: '100%',
           }}
         />
       </div>

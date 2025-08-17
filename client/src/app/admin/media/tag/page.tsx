@@ -5,7 +5,6 @@ import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
-import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
@@ -19,12 +18,10 @@ export default function TagPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
   const [deletedTagName, setDeletedTagName] = useState('');
-  const [newTagName, setNewTagName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState('');
@@ -130,29 +127,9 @@ export default function TagPage() {
   };
 
   const handleAddTag = () => {
-    setShowModal(true);
-    setNewTagName('');
+    window.location.href = '/admin/media/tag/new';
   };
 
-  const handleConfirmAdd = async (tagName: string) => {
-    if (tagName.trim()) {
-      try {
-        await articleService.createTag(tagName.trim());
-        setShowModal(false);
-        setNewTagName('');
-        // リストを再取得
-        fetchTags();
-      } catch (err) {
-        console.error('タグの作成に失敗:', err);
-        setError(err instanceof Error ? err.message : 'タグの作成に失敗しました');
-      }
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setNewTagName('');
-  };
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -288,17 +265,6 @@ export default function TagPage() {
           disabled={currentPage === totalPages || totalPages === 0}
         />
       </div>
-
-      {/* 追加モーダル */}
-      <AdminModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        onConfirm={handleConfirmAdd}
-        title="タグ追加"
-        description="追加したいタグ名を入力してください。"
-        inputValue={newTagName}
-        onInputChange={setNewTagName}
-      />
 
       {/* 削除確認モーダル */}
       <AdminConfirmModal

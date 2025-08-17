@@ -200,4 +200,32 @@
   height: auto !important;
   border-radius: 24px !important;
   margin: 24px 0 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+/* エディタ全体のコンテンツ幅制限 */
+.media-content-editor {
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+.media-content-editor * {
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
+
+/* テーブルの幅制限を強化 */
+.prose table,
+.media-content-editor table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }

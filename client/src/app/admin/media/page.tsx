@@ -102,10 +102,6 @@ export default function MediaPage() {
     window.location.href = '/admin/media/new';
   };
 
-  const handleEdit = (articleId: string) => {
-    window.open(`/admin/media/${articleId}`, '_blank');
-  };
-
   const handleDelete = (article: Article) => {
     setArticleToDelete(article);
     setShowDeleteModal(true);
@@ -160,7 +156,7 @@ export default function MediaPage() {
     { key: 'datetime', label: '最終更新日付', sortable: true, width: 'w-[180px]' },
     { key: 'category', label: 'カテゴリ', sortable: true, width: 'w-[150px]' },
     { key: 'title', label: '記事タイトル', sortable: true, width: 'flex-1' },
-    { key: 'actions', label: 'アクション', sortable: false, width: 'w-[200px]' }
+    { key: 'actions', label: 'アクション', sortable: false, width: 'w-[120px]' }
   ];
 
   // ソート処理
@@ -220,24 +216,12 @@ export default function MediaPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-between items-center">
-        <h1 
-          className="text-2xl font-bold"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '24px',
-            fontWeight: 700,
-            lineHeight: 1.6,
-            color: '#323232'
-          }}
-        >
-          メディア記事一覧
-        </h1>
+      <div className="mb-6 flex justify-end items-center">
         <NewArticleButton />
       </div>
 
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg overflow-x-auto">
+      <div className="bg-white rounded-lg overflow-hidden">
         {/* テーブルヘッダー */}
         <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]">
           {columns.map((column) => (
@@ -310,12 +294,18 @@ export default function MediaPage() {
                     width: 'w-[150px]'
                   },
                   {
-                    content: article.title,
+                    content: (
+                      <span 
+                        className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] block truncate"
+                        title={article.title}
+                      >
+                        {article.title.length > 5 ? `${article.title.substring(0, 5)}...` : article.title}
+                      </span>
+                    ),
                     width: 'flex-1'
                   }
                 ]}
                 actions={[
-                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => article.id && handleEdit(article.id)} />,
                   <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(article)} />
                 ]}
               />

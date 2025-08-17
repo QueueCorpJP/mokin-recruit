@@ -114,7 +114,8 @@ export const AdminSidebar = React.memo((): React.JSX.Element => {
         <React.Fragment key={section.href}>
           <Link 
             href={section.href}
-            className="flex items-center gap-2 w-full hover:opacity-80"
+            prefetch={true}
+            className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity duration-150"
           >
             {section.icon}
             <span className="font-bold Noto_Sans_JP text-[#323232] tracking-[1.6px] leading-[200%] whitespace-nowrap">
@@ -128,7 +129,8 @@ export const AdminSidebar = React.memo((): React.JSX.Element => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-2 w-full hover:opacity-80"
+                  prefetch={true}
+                  className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity duration-150"
                 >
                   <span className="text-[#323232] text-[12px] leading-[200%]">•</span>
                   <span className="font-bold Noto_Sans_JP text-[#323232] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">

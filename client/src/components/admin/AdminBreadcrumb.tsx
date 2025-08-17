@@ -25,6 +25,13 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/admin/company': '企業アカウント管理',
   '/admin/candidate': '候補者管理',
   '/admin/media': 'メディア記事一覧',
+  '/admin/media/new': '新規記事作成',
+  '/admin/media/edit': '記事編集',
+  '/admin/media/preview': 'プレビュー',
+  '/admin/media/edit/preview': 'プレビュー',
+  '/admin/media/category': 'カテゴリ管理',
+  '/admin/media/tag': 'タグ管理',
+  '/admin/media/tag/new': 'タグ作成',
   '/admin/notice': '運営からのお知らせ管理',
   '/admin/analytics': '分析',
 };
@@ -43,6 +50,7 @@ export function AdminBreadcrumb() {
       const isLast = i === pathSegments.length - 1;
       const title = breadcrumbConfig[currentPath] || pathSegments[i];
       
+      // 全ての階層を表示
       breadcrumbs.push({
         href: currentPath,
         title,

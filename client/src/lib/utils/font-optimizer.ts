@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const fontOptimizer = {
   preloadFonts: () => {
     if (typeof window === 'undefined') return;
@@ -86,7 +87,7 @@ export const fontOptimizer = {
 
 declare global {
   interface Window {
-    FontFaceObserver: any;
+    FontFaceObserver?: any;
   }
 }
 
