@@ -86,7 +86,7 @@ export const fontOptimizer = {
 
 declare global {
   interface Window {
-    FontFaceObserver: any;
+    FontFaceObserver?: any;
   }
 }
 
