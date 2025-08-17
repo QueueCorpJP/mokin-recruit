@@ -221,20 +221,6 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
   return (
     <div className="min-h-screen">
       <div className="mb-6">
-        <h1 
-          className="text-2xl font-bold mb-6"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '24px',
-            fontWeight: 700,
-            lineHeight: 1.6,
-            color: '#323232'
-          }}
-        >
-          新規記事追加
-        </h1>
-
-
         <div className="mb-6 flex justify-end gap-4">
           <div style={{ width: '170px' }}>
             <AdminButton

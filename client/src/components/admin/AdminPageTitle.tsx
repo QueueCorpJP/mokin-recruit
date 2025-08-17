@@ -50,7 +50,7 @@ export function AdminPageTitle() {
   return (
     <div className="mb-6">
       <h1 style={{
-        color: '#000',
+        color: '#323232',
         fontFamily: 'Inter',
         fontSize: '32px',
         fontStyle: 'normal',

@@ -48,21 +48,6 @@ export default function NewTagPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto">
-        {/* ヘッダー */}
-        <div className="mb-6">
-          <h1 
-            className="text-2xl font-bold mb-4"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '24px',
-              fontWeight: 700,
-              lineHeight: 1.6,
-              color: '#323232'
-            }}
-          >
-            タグ作成
-          </h1>
-        </div>
 
         {/* タグ作成フォーム */}
         <div className="bg-white rounded-lg p-6">
@@ -96,13 +81,12 @@ export default function NewTagPage() {
                 onClick={handleBack}
                 text="戻る"
                 variant="secondary"
-                type="button"
                 disabled={loading}
               />
               <AdminButton
+                onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
                 text={loading ? '作成中...' : 'タグを作成'}
                 variant="primary"
-                type="submit"
                 disabled={loading || !tagName.trim()}
               />
             </div>

@@ -216,19 +216,7 @@ export default function MediaPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-between items-center">
-        <h1 
-          className="text-2xl font-bold"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '24px',
-            fontWeight: 700,
-            lineHeight: 1.6,
-            color: '#323232'
-          }}
-        >
-          メディア記事一覧
-        </h1>
+      <div className="mb-6 flex justify-end items-center">
         <NewArticleButton />
       </div>
 

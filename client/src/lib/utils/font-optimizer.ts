@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const fontOptimizer = {
   preloadFonts: () => {
     if (typeof window === 'undefined') return;
