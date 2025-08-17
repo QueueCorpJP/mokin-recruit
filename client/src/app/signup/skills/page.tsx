@@ -71,6 +71,11 @@ const skillsSchema = z.object({
           });
         }
       });
+    })
+    .transform((languages) => {
+      return languages.filter(
+        (lang) => lang.language && lang.language !== ''
+      );
     }),
   skills: z.array(z.string()).min(3, 'スキルは最低3つ以上入力してください'),
   qualifications: z.string().optional(),

@@ -18,6 +18,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { type Industry } from '@/constants/industry-data';
 import { Button } from '@/components/ui/button';
+import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { saveCareerStatusAction } from './actions';
 import { useEffect } from 'react';
 
@@ -660,12 +661,15 @@ export default function SignupCareerStatusPage() {
                           <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px] pt-[11px] min-w-[130px] text-right">
                             企業名
                           </label>
-                          <input
-                            type="text"
+                          <CompanyNameInput
+                            value={watch(`selectionEntries.${index}.companyName`) || ''}
+                            onChange={(value) => {
+                              setValue(`selectionEntries.${index}.companyName`, value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
                             placeholder="企業名を入力"
-                            {...register(
-                              `selectionEntries.${index}.companyName`,
-                            )}
                             className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                           />
                         </div>
@@ -1264,11 +1268,14 @@ export default function SignupCareerStatusPage() {
                           <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                             企業名
                           </label>
-                          <input
-                            type="text"
-                            {...register(
-                              `selectionEntries.${index}.companyName`,
-                            )}
+                          <CompanyNameInput
+                            value={watch(`selectionEntries.${index}.companyName`) || ''}
+                            onChange={(value) => {
+                              setValue(`selectionEntries.${index}.companyName`, value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
                             placeholder="企業名を入力"
                             className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                           />
