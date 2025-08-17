@@ -34,7 +34,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             fontWeight: 500,
             lineHeight: 2,
             letterSpacing: '1.6px',
-            color: value ? '#000000' : '#999999'
+            color: value ? '#323232' : '#999999'
           }}
         />
       </div>

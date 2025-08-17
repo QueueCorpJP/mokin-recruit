@@ -14,6 +14,9 @@ export interface Article {
   views_count?: number;
   meta_title?: string;
   meta_description?: string;
+  category?: ArticleCategory;
+  categories?: ArticleCategory[];
+  tags?: ArticleTag[];
 }
 
 export interface ArticleCategory {
@@ -150,8 +153,17 @@ class ArticleService {
   } = {}): Promise<{ articles: Article[]; total: number }> {
     let query = this.supabase
       .from('articles')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
+      .select(`
+        *,
+        article_category_relations (
+          article_categories (
+            id,
+            name,
+            description
+          )
+        )
+      `, { count: 'exact' })
+      .order('updated_at', { ascending: false });
 
     if (options.status) {
       query = query.eq('status', options.status);
@@ -176,17 +188,19 @@ class ArticleService {
     }
 
     return {
-      articles: data.map(article => ({
+      articles: data.map((article: any) => ({
         ...article,
-        content: this.parseContent(article.content)
-      })) as Article[],
+        content: this.parseContent(article.content),
+        category: article.article_category_relations?.[0]?.article_categories || null,
+        categories: article.article_category_relations?.map((rel: any) => rel.article_categories) || []
+      } as Article)),
       total: count || 0
     };
   }
 
   // 記事を削除（サーバーサイドのAPIを呼び出し）
   async deleteArticle(id: string): Promise<void> {
-    const response = await fetch(`/api/articles/${id}`, {
+    const response = await fetch(`/api/admin/articles/${id}`, {
       method: 'DELETE'
     });
 
@@ -209,6 +223,63 @@ class ArticleService {
     return (data || []) as unknown as ArticleCategory[];
   }
 
+  // カテゴリを作成
+  async createCategory(name: string, description?: string): Promise<ArticleCategory> {
+    const { data, error } = await this.supabase
+      .from('article_categories')
+      .insert([{ name, description }])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`カテゴリの作成に失敗しました: ${error.message}`);
+    }
+
+    return data as unknown as ArticleCategory;
+  }
+
+  // カテゴリを更新
+  async updateCategory(id: string, name: string, description?: string): Promise<ArticleCategory> {
+    const { data, error } = await this.supabase
+      .from('article_categories')
+      .update({ name, description })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`カテゴリの更新に失敗しました: ${error.message}`);
+    }
+
+    return data as unknown as ArticleCategory;
+  }
+
+  // カテゴリを削除
+  async deleteCategory(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('article_categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`カテゴリの削除に失敗しました: ${error.message}`);
+    }
+  }
+
+  // カテゴリの記事数を取得
+  async getCategoryArticleCount(categoryId: string): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('article_category_relations')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', categoryId);
+
+    if (error) {
+      throw new Error(`カテゴリの記事数取得に失敗しました: ${error.message}`);
+    }
+
+    return count || 0;
+  }
+
   // タグを取得
   async getTags(): Promise<ArticleTag[]> {
     const { data, error } = await this.supabase
@@ -221,6 +292,63 @@ class ArticleService {
     }
 
     return (data || []) as unknown as ArticleTag[];
+  }
+
+  // タグを作成
+  async createTag(name: string): Promise<ArticleTag> {
+    const { data, error } = await this.supabase
+      .from('article_tags')
+      .insert([{ name }])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`タグの作成に失敗しました: ${error.message}`);
+    }
+
+    return data as unknown as ArticleTag;
+  }
+
+  // タグを更新
+  async updateTag(id: string, name: string): Promise<ArticleTag> {
+    const { data, error } = await this.supabase
+      .from('article_tags')
+      .update({ name })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`タグの更新に失敗しました: ${error.message}`);
+    }
+
+    return data as unknown as ArticleTag;
+  }
+
+  // タグを削除
+  async deleteTag(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('article_tags')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`タグの削除に失敗しました: ${error.message}`);
+    }
+  }
+
+  // タグの記事数を取得
+  async getTagArticleCount(tagId: string): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('article_tag_relations')
+      .select('*', { count: 'exact', head: true })
+      .eq('tag_id', tagId);
+
+    if (error) {
+      throw new Error(`タグの記事数取得に失敗しました: ${error.message}`);
+    }
+
+    return count || 0;
   }
 
   // タグを作成または取得（サーバーサイドのAPIを呼び出し）

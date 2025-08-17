@@ -1,5 +1,6 @@
 import { Navigation } from '@/components/ui/navigation';
 import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
+import { SignupProvider } from '@/contexts/SignupContext';
 
 export default function SignupLayout({
   children,
@@ -7,10 +8,12 @@ export default function SignupLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
-      {children}
-      <AuthAwareFooter />
-    </div>
+    <SignupProvider>
+      <div className="md:min-h-screen flex flex-col">
+        <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
+        {children}
+        <AuthAwareFooter />
+      </div>
+    </SignupProvider>
   );
 }

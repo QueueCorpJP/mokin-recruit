@@ -20,7 +20,6 @@ export default function SignupProfilePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState('');
-  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,10 +38,6 @@ export default function SignupProfilePage() {
         setUserId(userIdFromCookie);
       }
       
-      setIsDesktop(window.innerWidth >= 1024);
-      const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
     }
     
     // Return a no-op cleanup function for server-side rendering
@@ -119,8 +114,9 @@ export default function SignupProfilePage() {
 
 
       <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}>
-        {isDesktop ? (
-          /* PC Version */
+        {/* PC Version */}
+        <div className="hidden lg:block">
+          {/* PC Version */}
           <main
             className="flex relative py-20 flex-col items-center justify-start"
             style={{
@@ -610,8 +606,11 @@ export default function SignupProfilePage() {
               </Button>
             </div>
           </main>
-        ) : (
-          /* SP (Mobile) Version */
+        </div>
+        
+        {/* SP (Mobile) Version */}
+        <div className="lg:hidden">
+          {/* SP (Mobile) Version */}
           <main
             className="flex relative pt-6 pb-20 flex-col items-center px-5"
             style={{
@@ -1065,7 +1064,7 @@ export default function SignupProfilePage() {
               </Button>
             </div>
           </main>
-        )}
+        </div>
       </form>
 
      

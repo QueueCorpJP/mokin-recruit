@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { uploadResumeFiles } from './actions';
 
 // ファイルアップロード用のバリデーションスキーマ
@@ -71,7 +70,6 @@ type ResumeUploadFormData = z.infer<typeof resumeUploadSchema>;
 
 export default function SignupResumePage() {
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [careerSummaryFile, setCareerSummaryFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -176,7 +174,7 @@ export default function SignupResumePage() {
   return (
     <>
       {/* 条件レンダリング - PC Version */}
-      {isDesktop ? (
+      <div className="hidden lg:block">
         <main
           className="hidden lg:flex relative py-20 flex-col items-center justify-start"
           style={{
@@ -451,7 +449,8 @@ export default function SignupResumePage() {
             </div>
           </div>
         </main>
-      ) : (
+      </div>
+      <div className="lg:hidden">
         /* SP (Mobile) Version */
         <main
           className="lg:hidden flex relative pt-6 pb-20 flex-col items-center px-4"
@@ -715,7 +714,7 @@ export default function SignupResumePage() {
             </div>
           </div>
         </main>
-      )}
+      </div>
     </>
   );
 }

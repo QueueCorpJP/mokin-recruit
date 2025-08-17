@@ -14,10 +14,10 @@ import {
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { type Industry } from '@/constants/industry-data';
 import { Button } from '@/components/ui/button';
+import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { saveCareerStatusAction } from './actions';
 import { useEffect } from 'react';
 
@@ -32,7 +32,6 @@ export default function SignupCareerStatusPage() {
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
     [key: number]: Industry[];
   }>({});
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const methods = useForm({
     resolver: zodResolver(careerStatusSchema),
@@ -136,8 +135,9 @@ export default function SignupCareerStatusPage() {
   return (
     <>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        {isDesktop ? (
-          /* PC Version */
+        {/* PC Version */}
+        <div className="hidden lg:block">
+          {/* PC Version */}
           <main
             className="flex relative py-20 flex-col items-center justify-start"
             style={{
@@ -660,12 +660,15 @@ export default function SignupCareerStatusPage() {
                           <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px] pt-[11px] min-w-[130px] text-right">
                             企業名
                           </label>
-                          <input
-                            type="text"
+                          <CompanyNameInput
+                            value={watch(`selectionEntries.${index}.companyName`) || ''}
+                            onChange={(value) => {
+                              setValue(`selectionEntries.${index}.companyName`, value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
                             placeholder="企業名を入力"
-                            {...register(
-                              `selectionEntries.${index}.companyName`,
-                            )}
                             className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                           />
                         </div>
@@ -819,8 +822,11 @@ export default function SignupCareerStatusPage() {
               </Button>
             </div>
           </main>
-        ) : (
-          /* SP (Mobile) Version */
+        </div>
+        
+        {/* SP (Mobile) Version */}
+        <div className="lg:hidden">
+          {/* SP (Mobile) Version */}
           <main
             className="flex relative pt-6 pb-20 flex-col items-center px-4"
             style={{
@@ -1264,11 +1270,14 @@ export default function SignupCareerStatusPage() {
                           <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                             企業名
                           </label>
-                          <input
-                            type="text"
-                            {...register(
-                              `selectionEntries.${index}.companyName`,
-                            )}
+                          <CompanyNameInput
+                            value={watch(`selectionEntries.${index}.companyName`) || ''}
+                            onChange={(value) => {
+                              setValue(`selectionEntries.${index}.companyName`, value, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }}
                             placeholder="企業名を入力"
                             className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                           />
@@ -1417,7 +1426,7 @@ export default function SignupCareerStatusPage() {
               </Button>
             </div>
           </main>
-        )}
+        </div>
       </form>
 
       {/* Industry Select Modal */}

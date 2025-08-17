@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +11,7 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { type Industry } from '@/constants/industry-data';
 import { type JobType } from '@/constants/job-type-data';
+import { saveExpectationData } from './actions';
 
 const expectationSchema = z.object({
   desiredIncome: z.string().min(1, '希望年収を選択してください'),
@@ -55,7 +55,6 @@ type ExpectationFormData = z.infer<typeof expectationSchema>;
 
 export default function SignupExpectationPage() {
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
@@ -81,8 +80,12 @@ export default function SignupExpectationPage() {
 
   const formData = watch();
 
-  const onSubmit = () => {
-    router.push('/signup/summary');
+  const onSubmit = async (data: ExpectationFormData) => {
+    try {
+      await saveExpectationData(data);
+    } catch (error) {
+      console.error('Expectation data save failed:', error);
+    }
   };
 
   const handleRemoveIndustry = (id: string) => {
@@ -158,7 +161,7 @@ export default function SignupExpectationPage() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* PC Version */}
-          {isDesktop ? (
+          <div className="hidden lg:block">
             <main
               className="hidden lg:flex relative py-20 flex-col items-center justify-start"
               style={{
@@ -457,9 +460,9 @@ export default function SignupExpectationPage() {
                       </button>
                       {formData.workLocations.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {formData.workLocations.map((location) => (
+                          {formData.workLocations.map((location, index) => (
                             <div
-                              key={location.id}
+                              key={`desktop-${location.id || location.name}-${index}`}
                               className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                             >
                               <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
@@ -569,8 +572,9 @@ export default function SignupExpectationPage() {
                 </button>
               </div>
             </main>
-          ) : (
-            /* SP (Mobile) Version */
+          </div>
+          <div className="lg:hidden">
+            {/* SP (Mobile) Version */}
             <main
               className="lg:hidden flex relative pt-6 pb-20 flex-col items-center px-4"
               style={{
@@ -799,9 +803,9 @@ export default function SignupExpectationPage() {
                     </button>
                     {formData.workLocations.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {formData.workLocations.map((location) => (
+                        {formData.workLocations.map((location, index) => (
                           <div
-                            key={location.id}
+                            key={`mobile-${location.id || location.name}-${index}`}
                             className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                           >
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
@@ -906,7 +910,7 @@ export default function SignupExpectationPage() {
                 </button>
               </div>
             </main>
-          )}
+          </div>
         </form>
 
       </div>

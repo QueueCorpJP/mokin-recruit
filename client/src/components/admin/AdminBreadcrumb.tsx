@@ -24,7 +24,7 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/admin/message': 'メッセージ管理',
   '/admin/company': '企業アカウント管理',
   '/admin/candidate': '候補者管理',
-  '/admin/media': 'メディア管理',
+  '/admin/media': 'メディア記事一覧',
   '/admin/notice': '運営からのお知らせ管理',
   '/admin/analytics': '分析',
 };
@@ -68,7 +68,13 @@ export function AdminBreadcrumb() {
             <div key={breadcrumb.href} className="flex items-center gap-2">
               <BreadcrumbItem>
                 {breadcrumb.isLast ? (
-                  <BreadcrumbPage className="font-bold text-[#333]">
+                  <BreadcrumbPage 
+                    className="font-bold text-[#333]"
+                    style={{
+                      fontFamily: 'Inter, "Noto Sans JP", sans-serif',
+                      fontWeight: 700
+                    }}
+                  >
                     {breadcrumb.title}
                   </BreadcrumbPage>
                 ) : (
@@ -76,6 +82,10 @@ export function AdminBreadcrumb() {
                     <Link
                       href={breadcrumb.href}
                       className="font-bold text-[#333] hover:text-[#0f9058] transition-colors"
+                      style={{
+                        fontFamily: 'Inter, "Noto Sans JP", sans-serif',
+                        fontWeight: 700
+                      }}
                     >
                       {breadcrumb.title}
                     </Link>

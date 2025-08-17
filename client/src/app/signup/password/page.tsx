@@ -2,7 +2,7 @@
 
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { setPasswordAction } from './actions';
 import { Button } from '@/components/ui/button';
@@ -35,12 +35,12 @@ function PasswordFormCard({
   error,
 }: PasswordFormCardProps) {
   return (
-    <div className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start relative shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] shrink-0 p-[80px] rounded-[40px] w-[800px] min-w-[720px]">
+    <div className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start relative shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] shrink-0 p-6 md:p-[80px] rounded-3xl md:rounded-[40px] w-full max-w-[480px] md:w-[800px] md:min-w-[720px]">
       <div className="box-border content-stretch flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold items-center justify-start leading-[0] p-0 relative shrink-0 text-center w-full gap-6">
-        <div className="relative shrink-0 text-[#0f9058] w-full text-[32px] tracking-[3.2px]">
+        <div className="relative shrink-0 text-[#0f9058] w-full text-[24px] md:text-[32px] tracking-[2.4px] md:tracking-[3.2px]">
           <p className="block leading-[1.6]">パスワード</p>
         </div>
-        <div className="relative shrink-0 text-[#323232] text-[16px] tracking-[1.6px] w-full leading-[2]">
+        <div className="relative shrink-0 text-[#323232] text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px] w-full leading-[2]">
           <p className="block leading-[2]">
             半角英数字・記号のみ、8文字以上でパスワードを設定してください
           </p>
@@ -55,20 +55,20 @@ function PasswordFormCard({
           </div>
         )}
         
-        <div className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0">
-          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0">
-            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]">
+        <div className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full">
+          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0 md:w-48">
+            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[14px] md:text-[16px] text-left text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
               <p className="block leading-[2] whitespace-pre">新規パスワード</p>
             </div>
           </div>
-          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-[400px]">
+          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative flex-1">
             <div className="bg-[#ffffff] box-border content-stretch flex flex-row h-[50px] items-center justify-between p-[11px] relative rounded-[5px] shrink-0 w-full border border-[#999999] border-solid">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => onPasswordChange(e.target.value)}
                 placeholder="半角英数字・記号のみ、8文字以上"
-                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[16px] text-left tracking-[1.6px] bg-transparent outline-none"
+                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[14px] md:text-[16px] text-left tracking-[1.4px] md:tracking-[1.6px] bg-transparent outline-none"
                 disabled={isLoading}
               />
               <button
@@ -83,20 +83,20 @@ function PasswordFormCard({
           </div>
         </div>
 
-        <div className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0">
-          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0">
-            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]">
+        <div className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full">
+          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0 md:w-48">
+            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[14px] md:text-[16px] text-left text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
               <p className="block leading-[2] whitespace-pre">新規パスワード再入力</p>
             </div>
           </div>
-          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-[400px]">
+          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative flex-1">
             <div className="bg-[#ffffff] box-border content-stretch flex flex-row h-[50px] items-center justify-between p-[11px] relative rounded-[5px] shrink-0 w-full border border-[#999999] border-solid">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => onConfirmPasswordChange(e.target.value)}
                 placeholder="確認のためもう一度入力"
-                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[16px] text-left tracking-[1.6px] bg-transparent outline-none"
+                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[14px] md:text-[16px] text-left tracking-[1.4px] md:tracking-[1.6px] bg-transparent outline-none"
                 disabled={isLoading}
               />
               <button
@@ -116,7 +116,7 @@ function PasswordFormCard({
         onClick={onSubmit}
         variant="green-gradient"
         size="figma-default"
-        className="min-w-40 text-[16px] tracking-[1.6px]"
+        className="min-w-40 w-full md:w-auto text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px]"
         disabled={isLoading || !password || !confirmPassword}
       >
         {isLoading ? '設定中...' : '設定する'}
@@ -148,7 +148,7 @@ export default function SignupPasswordPage() {
     }
   }, [router]);
 
-  const validatePasswords = (): boolean => {
+  const validatePasswords = useCallback((): boolean => {
     if (!password) {
       setError('パスワードは必須です');
       return false;
@@ -163,9 +163,9 @@ export default function SignupPasswordPage() {
     }
     setError('');
     return true;
-  };
+  }, [password, confirmPassword]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!validatePasswords() || !userId) {
       return;
     }
@@ -192,11 +192,19 @@ export default function SignupPasswordPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [validatePasswords, userId, router]);
+
+  const handleTogglePasswordVisibility = useCallback(() => {
+    setShowPassword(!showPassword);
+  }, [showPassword]);
+
+  const handleToggleConfirmPasswordVisibility = useCallback(() => {
+    setShowConfirmPassword(!showConfirmPassword);
+  }, [showConfirmPassword]);
 
   return (
     <CandidateAuthBackground>
-      <main className='flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-20 lg:pb-[460px] mb-0 flex justify-center items-start relative w-full'>
+      <main className='md:flex-1 px-4 sm:px-6 md:px-[80px] pt-6 md:pt-[80px] pb-20 md:pb-[460px] mb-0 flex justify-center items-start relative w-full'>
         <PasswordFormCard
           password={password}
           confirmPassword={confirmPassword}
@@ -204,10 +212,8 @@ export default function SignupPasswordPage() {
           showConfirmPassword={showConfirmPassword}
           onPasswordChange={setPassword}
           onConfirmPasswordChange={setConfirmPassword}
-          onTogglePasswordVisibility={() => setShowPassword(!showPassword)}
-          onToggleConfirmPasswordVisibility={() =>
-            setShowConfirmPassword(!showConfirmPassword)
-          }
+          onTogglePasswordVisibility={handleTogglePasswordVisibility}
+          onToggleConfirmPasswordVisibility={handleToggleConfirmPasswordVisibility}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           error={error}

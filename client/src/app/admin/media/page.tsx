@@ -4,19 +4,22 @@ import { useEffect, useState } from 'react';
 import { articleService, Article } from '@/lib/services/articleService';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
-import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
-import { SearchBar } from '@/components/admin/ui/SearchBar';
+import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
+import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 
 export default function MediaPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeletedModal, setShowDeletedModal] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
+  const [deletedArticleTitle, setDeletedArticleTitle] = useState('');
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -103,17 +106,40 @@ export default function MediaPage() {
     window.open(`/admin/media/${articleId}`, '_blank');
   };
 
-  const handleDelete = async (articleId: string, articleTitle: string) => {
-    if (confirm(`記事「${articleTitle}」を削除しますか？`)) {
+  const handleDelete = (article: Article) => {
+    setArticleToDelete(article);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (articleToDelete) {
       try {
-        // TODO: 削除APIを実装
-        console.log('Delete article:', articleId);
-        // 削除後にリストを更新
-        setArticles(articles.filter(a => a.id !== articleId));
-      } catch (error) {
-        console.error('削除に失敗しました:', error);
+        await articleService.deleteArticle(articleToDelete.id!);
+        setDeletedArticleTitle(articleToDelete.title);
+        setShowDeleteModal(false);
+        setArticleToDelete(null);
+        setShowDeletedModal(true);
+        // リストを再取得
+        const response = await articleService.getArticles({
+          limit: 30,
+          offset: 0
+        });
+        setArticles(response.articles);
+      } catch (err) {
+        console.error('メディアの削除に失敗:', err);
+        setError(err instanceof Error ? err.message : 'メディアの削除に失敗しました');
       }
     }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setArticleToDelete(null);
+  };
+
+  const handleCloseDeletedModal = () => {
+    setShowDeletedModal(false);
+    setDeletedArticleTitle('');
   };
 
   const handlePrevious = () => {
@@ -130,18 +156,58 @@ export default function MediaPage() {
   };
 
   const columns = [
-    { key: 'datetime', label: '日時', sortable: true, width: 'w-[180px]' },
     { key: 'status', label: 'ステータス', sortable: true, width: 'w-[120px]' },
-    { key: 'title', label: 'タイトル', sortable: true, width: 'flex-1' },
+    { key: 'datetime', label: '最終更新日付', sortable: true, width: 'w-[180px]' },
+    { key: 'category', label: 'カテゴリ', sortable: true, width: 'w-[150px]' },
+    { key: 'title', label: '記事タイトル', sortable: true, width: 'flex-1' },
     { key: 'actions', label: 'アクション', sortable: false, width: 'w-[200px]' }
   ];
 
+  // ソート処理
+  const sortedArticles = [...articles].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+    
+    let aValue: string;
+    let bValue: string;
+    
+    switch (sortColumn) {
+      case 'status':
+        aValue = getStatusText(a.status);
+        bValue = getStatusText(b.status);
+        break;
+      case 'datetime':
+        aValue = a.updated_at || a.created_at || '';
+        bValue = b.updated_at || b.created_at || '';
+        break;
+      case 'category':
+        aValue = a.categories && a.categories.length > 0 
+          ? a.categories.map(cat => cat.name).sort((x, y) => x.localeCompare(y, 'ja')).join('、')
+          : a.category?.name || '';
+        bValue = b.categories && b.categories.length > 0 
+          ? b.categories.map(cat => cat.name).sort((x, y) => x.localeCompare(y, 'ja')).join('、')
+          : b.category?.name || '';
+        break;
+      case 'title':
+        aValue = a.title;
+        bValue = b.title;
+        break;
+      default:
+        return 0;
+    }
+    
+    if (sortDirection === 'asc') {
+      return aValue.localeCompare(bValue);
+    } else {
+      return bValue.localeCompare(aValue);
+    }
+  });
+
   // ページネーション
-  const paginatedArticles = articles.slice(
+  const paginatedArticles = sortedArticles.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(articles.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedArticles.length / itemsPerPage);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
@@ -155,12 +221,18 @@ export default function MediaPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* 上部の機能エリア */}
       <div className="mb-6 flex justify-between items-center">
-        <SearchBar
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="記事タイトルで検索"
-          onSearch={() => console.log('Search:', searchTerm)}
-        />
+        <h1 
+          className="text-2xl font-bold"
+          style={{
+            fontFamily: 'Inter',
+            fontSize: '24px',
+            fontWeight: 700,
+            lineHeight: 1.6,
+            color: '#323232'
+          }}
+        >
+          メディア記事一覧
+        </h1>
         <NewArticleButton />
       </div>
 
@@ -207,6 +279,10 @@ export default function MediaPage() {
                 key={article.id || `article-${paginatedArticles.indexOf(article)}`}
                 columns={[
                   {
+                    content: getStatusBadge(article.status),
+                    width: 'w-[120px]'
+                  },
+                  {
                     content: (
                       <div>
                         <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
@@ -220,8 +296,18 @@ export default function MediaPage() {
                     width: 'w-[180px]'
                   },
                   {
-                    content: getStatusBadge(article.status),
-                    width: 'w-[120px]'
+                    content: (
+                      <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {article.categories && article.categories.length > 0 
+                          ? article.categories
+                              .map(cat => cat.name)
+                              .sort((a, b) => a.localeCompare(b, 'ja'))
+                              .join('、')
+                          : article.category?.name || '-'
+                        }
+                      </span>
+                    ),
+                    width: 'w-[150px]'
                   },
                   {
                     content: article.title,
@@ -230,7 +316,7 @@ export default function MediaPage() {
                 ]}
                 actions={[
                   <ActionButton key="edit" text="編集" variant="edit" onClick={() => article.id && handleEdit(article.id)} />,
-                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => article.id && handleDelete(article.id, article.title)} />
+                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(article)} />
                 ]}
               />
             );
@@ -239,14 +325,58 @@ export default function MediaPage() {
       </div>
 
       {/* ページネーション */}
-      <div className="flex justify-center mt-8">
-        <PaginationButtons
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          previousDisabled={currentPage === 1}
-          nextDisabled={currentPage === totalPages || totalPages === 0}
-        />
+      <div className="flex justify-center gap-[74px] mt-8">
+        <button
+          onClick={handlePrevious}
+          disabled={currentPage === 1}
+          className={`px-6 py-3 rounded-full font-['Inter'] text-[16px] font-bold leading-[1.6] transition-colors ${
+            currentPage === 1
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-[#0F9058] text-white hover:bg-[#0A7A46]'
+          }`}
+          style={{
+            minWidth: '120px',
+            height: '48px'
+          }}
+        >
+          前へ
+        </button>
+        <button
+          onClick={handleNext}
+          disabled={currentPage === totalPages || totalPages === 0}
+          className={`px-6 py-3 rounded-full font-['Inter'] text-[16px] font-bold leading-[1.6] transition-colors ${
+            currentPage === totalPages || totalPages === 0
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-[#0F9058] text-white hover:bg-[#0A7A46]'
+          }`}
+          style={{
+            minWidth: '120px',
+            height: '48px'
+          }}
+        >
+          次へ
+        </button>
       </div>
+
+      {/* 削除確認モーダル */}
+      <AdminConfirmModal
+        isOpen={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="メディア削除"
+        description={`このメディアを削除してよいですか？`}
+        confirmText="削除する"
+        cancelText="閉じる"
+      />
+
+      {/* 削除完了通知モーダル */}
+      <AdminNotificationModal
+        isOpen={showDeletedModal}
+        onConfirm={handleCloseDeletedModal}
+        title="メディア削除完了"
+        description={`メディアの削除が完了しました。`}
+        confirmText="メディア一覧に戻る"
+      />
     </div>
   );
 }

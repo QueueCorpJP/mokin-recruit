@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface AdminButtonProps {
   href?: string;
   onClick?: () => void;
   text: string;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'green-outline';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
 }
@@ -20,59 +20,51 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
   size = 'medium',
   disabled = false
 }) => {
-  const getVariantStyles = () => {
+  const getVariant = () => {
     switch (variant) {
       case 'secondary':
-        return 'bg-gray-500 hover:bg-gray-600';
+        return 'secondary';
       case 'danger':
-        return 'bg-[#FF5B5B] hover:bg-[#E54545]';
+        return 'destructive';
+      case 'green-outline':
+        return 'green-outline';
       default:
-        return 'bg-gradient-to-b from-[#0F9058] to-[#0D7A4A] hover:from-[#0D7A4A] hover:to-[#0B6940]';
+        return 'green-gradient';
     }
   };
 
-  const getSizeStyles = () => {
+  const getSize = () => {
     switch (size) {
       case 'small':
-        return 'px-4 py-2 text-[14px]';
+        return 'figma-small';
       case 'large':
-        return 'px-12 py-4 text-[18px]';
+        return 'lg';
       default:
-        return 'px-10 py-3.5 text-[16px]';
+        return 'figma-default';
     }
   };
-
-  const buttonContent = (
-    <span className="font-['Noto_Sans_JP'] font-bold text-white text-center text-nowrap leading-[2] tracking-[1.6px]">
-      {text}
-    </span>
-  );
-
-  const buttonStyles = `box-border content-stretch flex flex-row gap-2.5 items-center justify-center rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:shadow-[0px_5px_10px_0px_rgba(0,0,0,0.25)] transition-all ${getSizeStyles()} ${getVariantStyles()} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-
-  if (disabled) {
-    return (
-      <button disabled className={buttonStyles}>
-        {buttonContent}
-      </button>
-    );
-  }
-
-  if (onClick) {
-    return (
-      <button onClick={onClick} className={buttonStyles}>
-        {buttonContent}
-      </button>
-    );
-  }
 
   if (href) {
     return (
-      <Link href={href} className={buttonStyles}>
-        {buttonContent}
-      </Link>
+      <Button
+        asChild
+        variant={getVariant()}
+        size={getSize()}
+        disabled={disabled}
+      >
+        <a href={href}>{text}</a>
+      </Button>
     );
   }
 
-  return null;
+  return (
+    <Button
+      onClick={onClick}
+      variant={getVariant()}
+      size={getSize()}
+      disabled={disabled}
+    >
+      {text}
+    </Button>
+  );
 };
