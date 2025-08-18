@@ -70,6 +70,10 @@ export default function WorkStyleSelectModal({
       height={isDesktop ? "680px" : "90vh"}
       selectedCount={selectedStyles.length}
       totalCount={maxSelections}
+      customHeader={{
+        title: "希望する役割・責任範囲",
+        description: "どんな立場で、どのように価値を発揮したいか"
+      }}
     >
       <div className="space-y-6">
         {maxSelections < workStyles.length && selectedStyles.length >= maxSelections && (

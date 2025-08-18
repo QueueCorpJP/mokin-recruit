@@ -19,6 +19,10 @@ export interface ModalProps {
   totalCount?: number;
   hideCategoryText?: boolean;
   showSelectionCount?: boolean;
+  customHeader?: {
+    title: string;
+    description: string;
+  };
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -38,6 +42,7 @@ export const Modal: React.FC<ModalProps> = ({
   totalCount,
   hideCategoryText = false,
   showSelectionCount = false,
+  customHeader,
 }) => {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -98,6 +103,16 @@ export const Modal: React.FC<ModalProps> = ({
               <h3 className="font-['Noto_Sans_JP'] w-full text-lg md:text-[20px] font-bold leading-[160%] tracking-[1.5px] md:tracking-[2px] text-[#323232] border-b-2 border-[#E5E7EB] pb-2">
                 業種カテゴリーテキスト
               </h3>
+            </div>
+          )}
+          {customHeader && (
+            <div className='w-full -mx-4 md:-mx-6 px-4 md:px-6'>
+              <h3 className="text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-2">
+                {customHeader.title}
+              </h3>
+              <p className="text-[#323232] text-[14px] font-medium tracking-[1.4px] border-b-2 border-[#E5E7EB] pb-3">
+                {customHeader.description}
+              </p>
             </div>
           )}
           {children}
