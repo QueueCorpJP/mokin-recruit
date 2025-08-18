@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Navigation } from '@/components/ui/navigation';
 
 export default function WithdrawalPage() {
   const router = useRouter();
@@ -21,8 +20,6 @@ export default function WithdrawalPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navigation variant="candidate" isLoggedIn={true} />
-      
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >

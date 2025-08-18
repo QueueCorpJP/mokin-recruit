@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Navigation } from '@/components/ui/navigation';
 
 const closeIcon = "http://localhost:3845/assets/a0396fedb26c10cbda7f34a7019f04ee792845d6.svg";
 const modalCloseIcon = "http://localhost:3845/assets/ca527250688df149a478765bdeb765225fed4f49.svg";
@@ -252,8 +251,6 @@ export default function NgCompanyPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navigation variant="candidate" isLoggedIn={true} />
-      
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >

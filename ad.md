@@ -1,21 +1,47 @@
-admin/media/categoryぺーじにて以下をfigma mcpでアクセスしてレイアウトなどを取り込み既存のuiコンポーネントのみで作ってください。
-ヘッダー、フッター、パンくずリスト、ナブバーはすでにあるので無視してください。
+admin/settingぺーじにてブロック企業?マークを押したら以下のやつがでるようにして
 
 
-ページ全体
-https://www.figma.com/design/qyApM0fuIL9ImMtvwE1otX/%E3%80%90%E9%96%8B%E7%99%BA%E4%BC%9A%E7%A4%BE%E6%A7%98%E5%85%B1%E6%9C%89%E7%94%A8%E3%80%91DRSPJ_%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3?node-id=2533-152487&m=dev
 
-モーダルで消去や追加をしてほしくてモーダルのデザインは
-・width: 604px;
-height: 335px;
-flex-shrink: 0;
+display: flex;
+padding: 16px;
+flex-direction: column;
+justify-conte
+align-items: center;
+gap: 4px;
+
+position: absolute;
+right: -583px;
+top: 23px;
+
+border-radius: 5px;
+background: var(--, #F0F9F3);
+
+/* Drop Shadow */
+box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.05);
+
+上の文字
+文字は　ブロック企業とは
+color: var(--, #323232);
+
+/* ミニ_bold */
+font-family: "Noto Sans JP";
+font-size: 14px;
+font-style: normal;
+font-weight: 700;
+line-height: 160%; /* 22.4px */
+letter-spacing: 1.4px;
+
+下の文字
+文字は　現職や転職活動中の企業など、スカウトを受けたくない企業をブロックできます。 一部の企業は自動で登録されるので、安心してご利用いただけます。
+color: var(--, #323232);
+
+/* ミニ */
+font-family: "Noto Sans JP";
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: 160%; /* 22.4px */
+letter-spacing: 1.4px;
 
 
-border-radius: 16px;
-border: 1px solid #323232;
-background: #FFF;
-
-モーダルないのpaddingは80pxにしてください。
-
-上中央にカテゴリ追加という文字を24pxの大きさで表示して下に追加したいカテゴリ名を入力してください。という16pxの文字でその下に343pxのinputをおいてその下に二つ横並びで閉じるボタンと確認するボタンをおいてそれぞれ横幅は198pxで文字は16pxにして閉じるのほうは背景は透明でふちは緑の既存のやつで確認するボタンは緑の既存のuiボタンにしてください。
-このモーダルはほかのページでも使うからモーダルないのタイトルは何にでも変えられるようにするのと中の16pxの文字も変えられるようにコンポーネントにしてください
+あとsettingは以下のページをすべてほかのページを参考にしてスマホ画面時のtailwindを追加してほしくてパソコン画面の時のデザインは一切変えないでください   

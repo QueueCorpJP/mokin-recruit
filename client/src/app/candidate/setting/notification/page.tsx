@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Navigation } from '@/components/ui/navigation';
 
 const radioButtonCheckedIcon = "http://localhost:3845/assets/ef86984da22dab6a3dfc16094acebf72af43f90c.svg";
 
@@ -112,8 +111,6 @@ export default function NotificationSettingPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navigation variant="candidate" isLoggedIn={true} />
-      
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Navigation } from '@/components/ui/navigation';
 
 const downIcon = "http://localhost:3845/assets/b8ec927e1b16d99a848effc5e2833c8d0e7ca488.svg";
 
@@ -48,8 +47,6 @@ export default function WithdrawalReasonPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navigation variant="candidate" isLoggedIn={true} />
-      
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >

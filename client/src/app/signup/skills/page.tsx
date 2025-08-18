@@ -1,10 +1,8 @@
 'use client';
 
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useState, KeyboardEvent, useEffect } from 'react';
+import { useState, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { saveSkillsData } from './actions';
 
 // 言語レベルの選択肢
 const ENGLISH_LEVELS = [
@@ -45,113 +43,131 @@ const OTHER_LANGUAGES = [
   { value: 'burmese', label: 'ミャンマー語' },
 ] as const;
 
-// バリデーションスキーマ
-const skillsSchema = z.object({
-  englishLevel: z.string().min(1, '英語レベルを選択してください'),
-  otherLanguages: z
-    .array(
-      z.object({
-        language: z.string(),
-        level: z.string(),
-      }),
-    )
-    .max(5, '言語は最大5つまで追加できます')
-    .superRefine((languages, ctx) => {
-      languages.forEach((lang, index) => {
-        if (
-          lang.language &&
-          lang.language !== '' &&
-          (!lang.level || lang.level === '')
-        ) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: '言語を選択した場合はレベルも選択してください',
-            path: [index, 'level'],
-          });
-        }
-      });
-    })
-    .transform((languages) => {
-      return languages.filter(
-        (lang) => lang.language && lang.language !== ''
-      );
-    }),
-  skills: z.array(z.string()).min(3, 'スキルは最低3つ以上入力してください'),
-  qualifications: z.string().optional(),
-});
+interface LanguageEntry {
+  language: string;
+  level: string;
+}
 
-type SkillsFormData = z.infer<typeof skillsSchema>;
+interface SkillsFormData {
+  englishLevel: string;
+  otherLanguages: LanguageEntry[];
+  skills: string[];
+  qualifications: string;
+}
 
 export default function SignupSkillsPage() {
   const router = useRouter();
   const [skillInput, setSkillInput] = useState('');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-    formState: { errors, isValid },
-  } = useForm<SkillsFormData>({
-    resolver: zodResolver(skillsSchema),
-    mode: 'onChange',
-    defaultValues: {
-      englishLevel: '',
-      otherLanguages: [],
-      skills: [],
-      qualifications: '',
-    },
+  const [formData, setFormData] = useState<SkillsFormData>({
+    englishLevel: '',
+    otherLanguages: [{ language: '', level: '' }],
+    skills: [],
+    qualifications: '',
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'otherLanguages',
-  });
-
-  const watchOtherLanguages = watch('otherLanguages');
-  const watchSkills = watch('skills');
-
-  // Initialize with one empty language field
-  useEffect(() => {
-    if (fields.length === 0) {
-      append({ language: '', level: '' });
-    }
-  }, [fields.length, append]);
 
   const handleAddLanguage = () => {
-    if (fields.length < 5) {
-      append({ language: '', level: '' });
+    if (formData.otherLanguages.length < 5) {
+      setFormData(prev => ({
+        ...prev,
+        otherLanguages: [...prev.otherLanguages, { language: '', level: '' }]
+      }));
     }
+  };
+
+  const handleRemoveLanguage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      otherLanguages: prev.otherLanguages.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleLanguageChange = (index: number, field: 'language' | 'level', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      otherLanguages: prev.otherLanguages.map((lang, i) => 
+        i === index ? { ...lang, [field]: value } : lang
+      )
+    }));
   };
 
   const handleSkillInputKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && skillInput.trim()) {
       e.preventDefault();
       const newSkill = skillInput.trim();
-      if (!watchSkills.includes(newSkill)) {
-        setValue('skills', [...watchSkills, newSkill], {
-          shouldValidate: true,
-        });
+      if (!formData.skills.includes(newSkill)) {
+        setFormData(prev => ({
+          ...prev,
+          skills: [...prev.skills, newSkill]
+        }));
       }
       setSkillInput('');
     }
   };
 
   const handleRemoveSkill = (skillToRemove: string) => {
-    setValue(
-      'skills',
-      watchSkills.filter((skill) => skill !== skillToRemove),
-      { shouldValidate: true },
-    );
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove)
+    }));
   };
 
-  const onSubmit = (_data: SkillsFormData) => {
-    router.push('/signup/expectation');
+  // Form validation
+  const validateForm = (): { isValid: boolean; errors: {[key: string]: string} } => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!formData.englishLevel || formData.englishLevel === '') {
+      newErrors.englishLevel = '英語レベルを選択してください';
+    }
+    
+    if (formData.skills.length < 3) {
+      newErrors.skills = 'スキルは最低3つ以上入力してください';
+    }
+    
+    // Validate other languages
+    formData.otherLanguages.forEach((lang, index) => {
+      if (lang.language && lang.language !== '' && (!lang.level || lang.level === '')) {
+        newErrors[`otherLanguages.${index}.level`] = '言語を選択した場合はレベルも選択してください';
+      }
+    });
+    
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors
+    };
   };
+
+  const handleSubmit = async () => {
+    const validation = validateForm();
+    setErrors(validation.errors);
+    
+    if (validation.isValid) {
+      try {
+        // Filter out empty language entries before saving
+        const filteredLanguages = formData.otherLanguages.filter(
+          lang => lang.language && lang.language !== ''
+        );
+        
+        await saveSkillsData({
+          englishLevel: formData.englishLevel,
+          otherLanguages: filteredLanguages,
+          skills: formData.skills,
+          qualifications: formData.qualifications || undefined,
+        });
+        // Redirect is handled in the server action
+      } catch (error) {
+        console.error('Failed to save skills data:', error);
+        // Optionally show an error message to the user
+      }
+    }
+  };
+
+  const isFormValid = validateForm().isValid;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <>
       {/* PC Version */}
       <div className="hidden lg:block">
         <main
@@ -339,7 +355,8 @@ export default function SignupSkillsPage() {
                   <div className="w-[400px]">
                     <div className="relative">
                       <select
-                        {...register('englishLevel')}
+                        value={formData.englishLevel}
+                        onChange={(e) => setFormData(prev => ({ ...prev, englishLevel: e.target.value }))}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         {ENGLISH_LEVELS.map((level) => (
@@ -365,7 +382,7 @@ export default function SignupSkillsPage() {
                     </div>
                     {errors.englishLevel && (
                       <p className="text-red-500 text-[14px] mt-1">
-                        {errors.englishLevel.message}
+                        {errors.englishLevel}
                       </p>
                     )}
                   </div>
@@ -373,9 +390,9 @@ export default function SignupSkillsPage() {
 
                 {/* Other Languages */}
                 <div className="flex flex-col gap-2 w-full">
-                  {fields.map((field, index) => (
+                  {formData.otherLanguages.map((field, index) => (
                     <div
-                      key={field.id}
+                      key={index}
                       className="flex flex-row gap-4 items-start relative"
                     >
                       <div className="pt-[11px] min-w-[130px] text-right">
@@ -388,9 +405,8 @@ export default function SignupSkillsPage() {
                       <div className="flex flex-col gap-2 w-[400px]">
                         <div className="relative">
                           <select
-                            {...register(
-                              `otherLanguages.${index}.language` as const,
-                            )}
+                            value={field.language}
+                            onChange={(e) => handleLanguageChange(index, 'language', e.target.value)}
                             className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {OTHER_LANGUAGES.map((lang) => (
@@ -416,10 +432,9 @@ export default function SignupSkillsPage() {
                         </div>
                         <div className="relative">
                           <select
-                            {...register(
-                              `otherLanguages.${index}.level` as const,
-                            )}
-                            disabled={!watchOtherLanguages[index]?.language}
+                            value={field.level}
+                            onChange={(e) => handleLanguageChange(index, 'level', e.target.value)}
+                            disabled={!field.language}
                             className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer disabled:opacity-50"
                           >
                             {ENGLISH_LEVELS.map((level) => (
@@ -443,16 +458,16 @@ export default function SignupSkillsPage() {
                             </svg>
                           </div>
                         </div>
-                        {errors.otherLanguages?.[index]?.level && (
+                        {errors[`otherLanguages.${index}.level`] && (
                           <p className="text-red-500 text-[12px] mt-1">
-                            {errors.otherLanguages[index].level?.message}
+                            {errors[`otherLanguages.${index}.level`]}
                           </p>
                         )}
                       </div>
                       {index > 0 && (
                         <button
                           type="button"
-                          onClick={() => remove(index)}
+                          onClick={() => handleRemoveLanguage(index)}
                           className="absolute right-[-30px] top-[15px]"
                         >
                           <svg
@@ -473,7 +488,7 @@ export default function SignupSkillsPage() {
                   ))}
 
                   {/* Add Language Button */}
-                  {fields.length < 5 && (
+                  {formData.otherLanguages.length < 5 && (
                     <div>
                       <div className="min-w-[130px]"></div>
                       <div className="w-fit mx-auto flex justify-center">
@@ -570,9 +585,9 @@ export default function SignupSkillsPage() {
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                       ※最低3つ以上のキーワードを選択/登録してください。
                     </p>
-                    {watchSkills.length > 0 && (
+                    {formData.skills.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {watchSkills.map((skill) => (
+                        {formData.skills.map((skill) => (
                           <div
                             key={skill}
                             className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -605,7 +620,7 @@ export default function SignupSkillsPage() {
                     )}
                     {errors.skills && (
                       <p className="text-red-500 text-[14px]">
-                        {errors.skills.message}
+                        {errors.skills}
                       </p>
                     )}
                   </div>
@@ -620,7 +635,8 @@ export default function SignupSkillsPage() {
                   </div>
                   <div className="flex flex-col gap-2 w-[400px]">
                     <textarea
-                      {...register('qualifications')}
+                      value={formData.qualifications}
+                      onChange={(e) => setFormData(prev => ({ ...prev, qualifications: e.target.value }))}
                       placeholder="例）TOEIC850点、簿記2級、中小企業診断士など"
                       className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                     />
@@ -633,10 +649,11 @@ export default function SignupSkillsPage() {
 
               {/* Submit Button */}
               <button
-                type="submit"
-                disabled={!isValid}
+                type="button"
+                onClick={handleSubmit}
+                disabled={!isFormValid}
                 className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                  isValid
+                  isFormValid
                     ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                     : 'bg-[#dcdcdc] cursor-not-allowed'
                 }`}
@@ -768,7 +785,8 @@ export default function SignupSkillsPage() {
                 </label>
                 <div className="relative">
                   <select
-                    {...register('englishLevel')}
+                    value={formData.englishLevel}
+                    onChange={(e) => setFormData(prev => ({ ...prev, englishLevel: e.target.value }))}
                     className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                   >
                     {ENGLISH_LEVELS.map((level) => (
@@ -794,14 +812,14 @@ export default function SignupSkillsPage() {
                 </div>
                 {errors.englishLevel && (
                   <p className="text-red-500 text-[14px]">
-                    {errors.englishLevel.message}
+                    {errors.englishLevel}
                   </p>
                 )}
               </div>
 
               {/* Other Languages */}
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex flex-col gap-2">
+              {formData.otherLanguages.map((field, index) => (
+                <div key={index} className="flex flex-col gap-2">
                   {index === 0 && (
                     <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                       その他の言語
@@ -810,9 +828,8 @@ export default function SignupSkillsPage() {
                   <div className="flex flex-col gap-2">
                     <div className="relative">
                       <select
-                        {...register(
-                          `otherLanguages.${index}.language` as const,
-                        )}
+                        value={field.language}
+                        onChange={(e) => handleLanguageChange(index, 'language', e.target.value)}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         {OTHER_LANGUAGES.map((lang) => (
@@ -838,8 +855,9 @@ export default function SignupSkillsPage() {
                     </div>
                     <div className="relative">
                       <select
-                        {...register(`otherLanguages.${index}.level` as const)}
-                        disabled={!watchOtherLanguages[index]?.language}
+                        value={field.level}
+                        onChange={(e) => handleLanguageChange(index, 'level', e.target.value)}
+                        disabled={!field.language}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer disabled:opacity-50"
                       >
                         {ENGLISH_LEVELS.map((level) => (
@@ -863,9 +881,9 @@ export default function SignupSkillsPage() {
                         </svg>
                       </div>
                     </div>
-                    {errors.otherLanguages?.[index]?.level && (
+                    {errors[`otherLanguages.${index}.level`] && (
                       <p className="text-red-500 text-[12px] mt-1">
-                        {errors.otherLanguages[index].level?.message}
+                        {errors[`otherLanguages.${index}.level`]}
                       </p>
                     )}
                   </div>
@@ -873,7 +891,7 @@ export default function SignupSkillsPage() {
               ))}
 
               {/* Add Language Button */}
-              {fields.length < 5 && (
+              {formData.otherLanguages.length < 5 && (
                 <div className="flex justify-center">
                   <button
                     type="button"
@@ -958,9 +976,9 @@ export default function SignupSkillsPage() {
                 <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
-                {watchSkills.length > 0 && (
+                {formData.skills.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {watchSkills.map((skill) => (
+                    {formData.skills.map((skill) => (
                       <div
                         key={skill}
                         className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -993,7 +1011,7 @@ export default function SignupSkillsPage() {
                 )}
                 {errors.skills && (
                   <p className="text-red-500 text-[14px]">
-                    {errors.skills.message}
+                    {errors.skills}
                   </p>
                 )}
               </div>
@@ -1004,7 +1022,8 @@ export default function SignupSkillsPage() {
                   保有資格
                 </label>
                 <textarea
-                  {...register('qualifications')}
+                  value={formData.qualifications}
+                  onChange={(e) => setFormData(prev => ({ ...prev, qualifications: e.target.value }))}
                   placeholder="例）TOEIC850点、簿記2級、中小企業診断士など"
                   className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                 />
@@ -1016,10 +1035,11 @@ export default function SignupSkillsPage() {
 
             {/* Submit Button */}
             <button
-              type="submit"
-              disabled={!isValid}
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isFormValid}
               className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                isValid
+                isFormValid
                   ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                   : 'bg-[#dcdcdc] cursor-not-allowed'
               }`}
@@ -1029,6 +1049,6 @@ export default function SignupSkillsPage() {
           </div>
         </main>
       </div>
-    </form>
+    </>
   );
 }

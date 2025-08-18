@@ -30,36 +30,15 @@ export async function saveSummaryData(formData: SummaryFormData) {
     const candidateId = await getOrCreateCandidateId();
     console.log('Using candidate ID for summary data:', candidateId);
 
-    // Save summary data - use insert with manual conflict handling since no unique constraint on candidate_id
-    const { data: existingSummary } = await supabase
-      .from('job_summary')
-      .select('id')
-      .eq('candidate_id', candidateId)
-      .single();
-
-    let summaryError;
-    if (existingSummary) {
-      // Update existing record
-      const { error } = await supabase
-        .from('job_summary')
-        .update({
-          job_summary: formData.jobSummary || null,
-          self_pr: formData.selfPR || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('candidate_id', candidateId);
-      summaryError = error;
-    } else {
-      // Insert new record
-      const { error } = await supabase
-        .from('job_summary')
-        .insert({
-          candidate_id: candidateId,
-          job_summary: formData.jobSummary || null,
-          self_pr: formData.selfPR || null,
-        });
-      summaryError = error;
-    }
+    // Update candidates table with summary data
+    const { error: summaryError } = await supabase
+      .from('candidates')
+      .update({
+        job_summary: formData.jobSummary || null,
+        self_pr: formData.selfPR || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', candidateId);
 
     if (summaryError) {
       throw new Error(`Summary data save failed: ${summaryError.message}`);
