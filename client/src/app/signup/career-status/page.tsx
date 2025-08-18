@@ -12,7 +12,6 @@ import {
 } from '@/constants/career-status';
 import { useRouter } from 'next/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import { type Industry } from '@/constants/industry-data';
 import { Button } from '@/components/ui/button';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { saveCareerStatusAction } from './actions';
@@ -20,7 +19,7 @@ import { saveCareerStatusAction } from './actions';
 type SelectionEntry = {
   id: string;
   isPrivate: boolean;
-  industries: Array<{ id: string; name: string }>;
+  industries: string[];
   companyName: string;
   department: string;
   progressStatus: string;
@@ -36,7 +35,7 @@ export default function SignupCareerStatusPage() {
     targetIndex: number | null;
   }>({ isOpen: false, targetIndex: null });
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
-    [key: number]: Industry[];
+    [key: number]: string[];
   }>({});
 
   const [formData, setFormData] = useState<CareerStatusFormData>({
@@ -79,7 +78,7 @@ export default function SignupCareerStatusPage() {
     }
 
     // Validation
-    if (!formData.hasCareerChange || !formData.jobChangeTiming || !formData.currentActivityStatus) {
+    if (!isFormValid()) {
       alert('すべての必須項目を入力してください');
       return;
     }
@@ -134,7 +133,48 @@ export default function SignupCareerStatusPage() {
     }));
   };
 
-  const isFormValid = formData.hasCareerChange && formData.jobChangeTiming && formData.currentActivityStatus;
+  // 詳細なバリデーション関数
+  const isFormValid = () => {
+    // 基本必須項目
+    if (!formData.hasCareerChange || !formData.jobChangeTiming || !formData.currentActivityStatus) {
+      return false;
+    }
+
+    // 活動状況が'not_started'や'researching'の場合は基本項目のみで完了
+    if (formData.currentActivityStatus === 'not_started' || formData.currentActivityStatus === 'researching') {
+      return true;
+    }
+
+    // 選考状況エントリーの検証
+    for (const entry of formData.selectionEntries) {
+      // 業種が選択されていない
+      if (!entry.industries || entry.industries.length === 0) {
+        return false;
+      }
+      
+      // 企業名が入力されていない
+      if (!entry.companyName || entry.companyName.trim() === '') {
+        return false;
+      }
+      
+      // 部署名・役職名が入力されていない
+      if (!entry.department || entry.department.trim() === '') {
+        return false;
+      }
+      
+      // 進捗状況が選択されていない
+      if (!entry.progressStatus || entry.progressStatus === '') {
+        return false;
+      }
+      
+      // 進捗状況が'declined'の場合、辞退理由が必須
+      if (entry.progressStatus === 'declined' && (!entry.declineReason || entry.declineReason === '')) {
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   return (
     <>
@@ -143,7 +183,7 @@ export default function SignupCareerStatusPage() {
         {/* PC Version */}
         <div className="hidden lg:block">
           <main
-            className="flex relative py-20 flex-col items-center justify-start"
+            className="flex relative py-20 flex-col items-center justify-start min-h-[calc(100vh+1700px)]"
             style={{
               backgroundImage: "url('/background-pc.svg')",
               backgroundPosition: 'center top',
@@ -418,17 +458,19 @@ export default function SignupCareerStatusPage() {
                           </button>
                           <div className="flex flex-wrap gap-2">
                             {selectedIndustriesMap[index]?.map((industry) => (
-                              <div key={industry.id} className="bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2">
+                              <div key={industry} className="bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2">
                                 <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
-                                  {industry.name}
+                                  {industry}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setSelectedIndustriesMap((prev) => ({
                                       ...prev,
-                                      [index]: prev[index].filter((i) => i.id !== industry.id),
+                                      [index]: prev[index]?.filter((j) => j !== industry) || [],
                                     }));
+                                    const newIndustries = selectedIndustriesMap[index]?.filter((j) => j !== industry) || [];
+                                    updateEntry(index, 'industries', newIndustries);
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -544,10 +586,10 @@ export default function SignupCareerStatusPage() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || !isFormValid}
+                disabled={isSubmitting || !isFormValid()}
                 variant="green-gradient"
                 size="figma-default"
-                className="min-w-[160px] text-[16px] tracking-[1.6px]"
+                className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>
@@ -717,16 +759,16 @@ export default function SignupCareerStatusPage() {
                         </button>
                         <div className="flex flex-wrap gap-2">
                           {selectedIndustriesMap[index]?.map((industry) => (
-                            <div key={industry.id} className="bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2">
+                            <div key={industry} className="bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2">
                               <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
-                                {industry.name}
+                                {industry}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => {
                                   setSelectedIndustriesMap((prev) => ({
                                     ...prev,
-                                    [index]: prev[index].filter((i) => i.id !== industry.id),
+                                    [index]: prev[index].filter((j) => j !== industry),
                                   }));
                                 }}
                               >
@@ -831,10 +873,10 @@ export default function SignupCareerStatusPage() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || !isFormValid}
+                disabled={isSubmitting || !isFormValid()}
                 variant="green-gradient"
                 size="figma-default"
-                className="w-full text-[16px] tracking-[1.6px]"
+                className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>

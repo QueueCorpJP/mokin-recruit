@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { INDUSTRY_GROUPS, type Industry } from '@/constants/industry-data';
+import { industryCategories } from '@/app/company/company/job/types';
 import { Modal } from '@/components/ui/mo-dal';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface IndustrySelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (_selectedIndustries: Industry[]) => void;
-  initialSelected?: Industry[];
+  onConfirm: (_selectedIndustries: string[]) => void;
+  initialSelected?: string[];
   maxSelections?: number;
 }
 
@@ -21,30 +21,25 @@ export default function IndustrySelectModal({
   initialSelected = [],
   maxSelections = 3,
 }: IndustrySelectModalProps) {
-  const [selectedIndustries, setSelectedIndustries] = useState<Industry[]>(initialSelected);
-  const [selectedCategory, setSelectedCategory] = useState<string>(INDUSTRY_GROUPS[0]?.id || '');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     setSelectedIndustries(initialSelected);
   }, [initialSelected]);
 
-  const handleIndustryClick = (industry: Industry) => {
-    setSelectedIndustries((prev) => {
-      const isSelected = prev.some((s) => s.id === industry.id);
-      if (isSelected) {
-        return prev.filter((s) => s.id !== industry.id);
-      } else {
-        if (prev.length >= maxSelections) {
-          return prev;
-        }
-        return [...prev, industry];
+  const handleCheckboxChange = (industry: string) => {
+    if (selectedIndustries.includes(industry)) {
+      // 既に選択されている場合は削除
+      const newIndustries = selectedIndustries.filter(i => i !== industry);
+      setSelectedIndustries(newIndustries);
+    } else {
+      // 新規選択の場合は制限をチェック
+      if (selectedIndustries.length < maxSelections) {
+        const newIndustries = [...selectedIndustries, industry];
+        setSelectedIndustries(newIndustries);
       }
-    });
-  };
-
-  const handleGroupClick = (groupId: string) => {
-    setSelectedCategory(groupId);
+    }
   };
 
   const handleConfirm = () => {
@@ -52,9 +47,14 @@ export default function IndustrySelectModal({
     onClose();
   };
 
-  const selectedCategoryData = INDUSTRY_GROUPS.find(
-    group => group.id === selectedCategory
-  )!;
+  // すべての業種を1つの配列にフラット化（カテゴリ情報付きで一意のキーを生成）
+  const allIndustries = industryCategories.flatMap(category => 
+    category.industries.map(industry => ({
+      key: `${category.name}-${industry}`, // 一意のキー
+      value: industry, // 実際の値
+      category: category.name
+    }))
+  );
 
   return (
     <Modal
@@ -68,83 +68,34 @@ export default function IndustrySelectModal({
       selectedCount={selectedIndustries.length}
       totalCount={maxSelections}
     >
-      <div className="w-full">
-        {/* Group titles row - Anchor Links */}
-        <div className="mb-4">
-          <div className="flex flex-wrap items-center">
-            {INDUSTRY_GROUPS.map((group, index) => (
-              <React.Fragment key={group.id}>
-                <button
-                  className={`py-2 px-2 transition-colors ${
-                    selectedCategory === group.id
-                      ? 'text-[#0F9058] font-medium'
-                      : 'text-[var(--3,#999)] hover:text-[#0F9058]'
-                  }`}
-                  style={{
-                    fontFamily: '"Noto Sans JP"',
-                    fontSize: '14px',
-                    fontWeight: selectedCategory === group.id ? 600 : 500,
-                    lineHeight: '160%',
-                    letterSpacing: '1.4px',
-                  }}
-                  onClick={() => handleGroupClick(group.id)}
-                >
-                  {group.name}
-                </button>
-                {index < INDUSTRY_GROUPS.length - 1 && (
-                  <div className="mx-2">
-                    <svg
-                      width="2"
-                      height="24"
-                      viewBox="0 0 2 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 1V23"
-                        stroke="var(--3,#999)"
-                        strokeLinecap="round"
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* Selected category industries */}
+      <div className='space-y-6'>
+        {/* 業種カテゴリーテキスト */}
         <div>
-          <h3 className="w-full font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
-            {selectedCategoryData.name}
+          <h3 className="w-full font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
+            業種カテゴリーテキスト
           </h3>
 
           {/* 制限メッセージ */}
           {selectedIndustries.length >= maxSelections && (
-            <div className="p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4">
+            <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
               <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
-                最大{maxSelections}
-                個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
+                最大{maxSelections}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
               </p>
             </div>
           )}
 
           {/* 業種チェックボックスリスト（2列グリッド） */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-6">
-            {selectedCategoryData.industries.map((industry) => {
-              const isSelected = selectedIndustries.some(
-                (s) => s.id === industry.id,
-              );
-              const isDisabled =
-                !isSelected &&
-                selectedIndustries.length >= maxSelections;
+          <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
+            {allIndustries.map((industryItem) => {
+              const isSelected = selectedIndustries.includes(industryItem.value);
+              const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
+              
               return (
-                <div key={industry.id} className="flex items-center">
-                  <Checkbox
-                    label={industry.name}
-                    checked={isSelected}
-                    onChange={() => handleIndustryClick(industry)}
+                <div key={industryItem.key} className='flex items-center'>
+                  <Checkbox 
+                    label={industryItem.value} 
+                    checked={isSelected} 
+                    onChange={() => handleCheckboxChange(industryItem.value)}
                     disabled={isDisabled}
                   />
                 </div>

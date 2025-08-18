@@ -2,10 +2,10 @@
 
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
+import { Modal } from '@/components/ui/mo-dal';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCompanyAutocomplete } from '@/hooks/useCompanyAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { saveRecentJobAction } from './actions';
@@ -30,7 +30,6 @@ export default function SignupRecentJobPage() {
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [userId, setUserId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [formData, setFormData] = useState<RecentJobFormData>({
     companyName: '',
     departmentPosition: '',
@@ -44,8 +43,6 @@ export default function SignupRecentJobPage() {
     jobDescription: '',
   });
 
-  // Company autocomplete
-  const { suggestions: companySuggestions, loading: companyLoading } = useCompanyAutocomplete(formData.companyName);
 
   // 年の選択肢を生成（1973年から現在の年まで）
   const currentYear = new Date().getFullYear();
@@ -128,12 +125,22 @@ export default function SignupRecentJobPage() {
   };
 
   // モーダルから選択された値を設定
-  const handleIndustryConfirm = (industries: Industry[]) => {
+  const handleIndustryConfirm = (selectedIndustryNames: string[]) => {
+    // Convert selectedIndustries to the expected format
+    const industries = selectedIndustryNames.map((industryName, index) => ({
+      id: `industry_${index}_${industryName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      name: industryName
+    }));
     setFormData(prev => ({ ...prev, industries }));
     setIsIndustryModalOpen(false);
   };
 
-  const handleJobTypeConfirm = (jobTypes: JobType[]) => {
+  const handleJobTypeConfirm = (selectedJobTypeNames: string[]) => {
+    // Convert selectedJobTypes to the expected format
+    const jobTypes = selectedJobTypeNames.map((jobTypeName, index) => ({
+      id: `jobtype_${index}_${jobTypeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      name: jobTypeName
+    }));
     setFormData(prev => ({ ...prev, jobTypes }));
     setIsJobTypeModalOpen(false);
   };
@@ -170,7 +177,7 @@ export default function SignupRecentJobPage() {
       {/* PC Version */}
       <div className="hidden lg:block">
         <main
-          className="flex relative py-20 flex-col items-center justify-start"
+          className="flex relative py-20 flex-col items-center justify-start min-h-[calc(100vh+1700px)]"
           style={{
             backgroundImage: "url('/background-pc.svg')",
             backgroundPosition: 'center top',
@@ -264,16 +271,11 @@ export default function SignupRecentJobPage() {
                   </label>
                 </div>
                 <div className="w-[400px]">
-                  <AutocompleteInput
+                  <CompanyNameInput
                     value={formData.companyName}
                     onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
                     placeholder="企業名を入力"
-                    suggestions={companySuggestions.map(c => ({ 
-                      id: c.id, 
-                      name: c.name, 
-                      category: c.address 
-                    }))}
-                    loading={companyLoading}
+                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
                 </div>
               </div>
@@ -605,12 +607,14 @@ export default function SignupRecentJobPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!isFormValid()}
-              className={`px-10p py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                isFormValid()
-                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white cursor-pointer'
-                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-              }`}
+              disabled={isSubmitting || !isFormValid()}
+              className='flex items-center w-full md:w-auto justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '1.6px',
+              }}
             >
               次へ
             </button>
@@ -693,16 +697,11 @@ export default function SignupRecentJobPage() {
                 <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                   企業名
                 </label>
-                <AutocompleteInput
+                <CompanyNameInput
                   value={formData.companyName}
                   onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
                   placeholder="企業名を入力"
-                  suggestions={companySuggestions.map(c => ({ 
-                    id: c.id, 
-                    name: c.name, 
-                    category: c.address 
-                  }))}
-                  loading={companyLoading}
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
               </div>
 
@@ -992,13 +991,16 @@ export default function SignupRecentJobPage() {
 
             {/* Submit Button */}
             <button
+              type="button"
               onClick={handleSubmit}
-              disabled={!isFormValid()}
-              className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] ${
-                isFormValid()
-                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white cursor-pointer'
-                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-              }`}
+              disabled={isSubmitting || !isFormValid()}
+              className='flex items-center w-full justify-center px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '1.6px',
+              }}
             >
               次へ
             </button>
@@ -1011,7 +1013,7 @@ export default function SignupRecentJobPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustryConfirm}
-        initialSelected={formData.industries}
+        initialSelected={formData.industries.map(industry => industry.name)}
         maxSelections={3}
       />
 
@@ -1019,7 +1021,7 @@ export default function SignupRecentJobPage() {
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={formData.jobTypes}
+        initialSelected={formData.jobTypes.map(jobType => jobType.name)}
         maxSelections={3}
       />
     </>

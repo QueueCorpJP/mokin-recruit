@@ -102,18 +102,18 @@ export default function SignupExpectationPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={(selected) => {
-          setFormData(prev => ({ ...prev, industries: selected }));
+          setFormData(prev => ({ ...prev, industries: selected.map(s => ({ id: s, name: s })) }));
         }}
-        initialSelected={formData.industries as Industry[]}
+        initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}
       />
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={(selected) => {
-          setFormData(prev => ({ ...prev, jobTypes: selected }));
+          setFormData(prev => ({ ...prev, jobTypes: selected.map(s => ({ id: s, name: s })) }));
         }}
-        initialSelected={formData.jobTypes as JobType[]}
+        initialSelected={formData.jobTypes.map(j => j.name)}
         maxSelections={3}
       />
       <WorkLocationSelectModal

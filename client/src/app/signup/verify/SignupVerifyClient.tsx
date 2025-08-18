@@ -17,6 +17,20 @@ export function SignupVerifyClient() {
   const [message, setMessage] = useState('');
   const [codeError, setCodeError] = useState('');
 
+  const maskEmail = (email: string): string => {
+    if (!email) return '~~~~~~~~~~~~~~';
+    
+    const [localPart, domain] = email.split('@');
+    if (!localPart || !domain) return email;
+    
+    if (localPart.length <= 2) {
+      return `${localPart[0]}*******@${domain}`;
+    }
+    
+    const maskedLocal = `${localPart[0]}${'*'.repeat(7)}`;
+    return `${maskedLocal}@${domain}`;
+  };
+
   // ローカルストレージからメールアドレスを取得
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -141,7 +155,7 @@ export function SignupVerifyClient() {
             letterSpacing: '1.4px',
           }}>
             <p className='block mb-0 md:tracking-[1.6px]'>
-              認証コードを{email ? email : '~~~~~~~~~~~~~~'}に送りました。
+              認証コードを{maskEmail(email)}に送りました。
             </p>
             <p className='block md:tracking-[1.6px]'>
               メールアドレスに届いた6桁の半角英数字を入力してください。
@@ -160,30 +174,29 @@ export function SignupVerifyClient() {
           )}
 
           {/* 入力フィールド - レスポンシブ対応 */}
-          <div className='flex justify-center w-full'>
-            <div className='flex flex-col gap-2 w-full max-w-[400px]'>
-              <div className='bg-white border border-[#999999] border-solid rounded-[5px] cursor-pointer relative w-full'>
-                <div className='flex items-center w-full h-full'>
-                  <div className='flex items-center justify-start p-[11px] w-full gap-2.5'>
-                    <input
-                      type='text'
-                      placeholder='6桁の認証コードを入力'
-                      value={verificationCode}
-                      onChange={handleCodeChange}
-                      maxLength={6}
-                      className='grow min-w-0 bg-transparent text-[#999999] font-medium text-[14px] md:text-[16px] outline-none placeholder-[#999999]'
-                      style={{
-                        fontFamily: 'Noto Sans JP, sans-serif',
-                        fontWeight: 500,
-                        lineHeight: '2',
-                        letterSpacing: '1.4px',
-                      }}
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
+          <div className='flex flex-col md:flex-row gap-4 items-start justify-start w-full'>
+            <div className='flex flex-row gap-2.5 items-center justify-center pb-0 pt-[11px] px-0'>
+              <div className='font-bold text-[#323232] text-[16px] text-nowrap tracking-[1.6px]' style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+              }}>
+                <p className='block leading-[2] whitespace-pre'>認証コード</p>
               </div>
+            </div>
+            <div className='flex flex-col gap-2 items-start justify-start w-full md:w-[400px]'>
+              <input
+                type='text'
+                placeholder='6桁の半角英数字'
+                value={verificationCode}
+                onChange={handleCodeChange}
+                maxLength={6}
+                className='bg-white border border-[#999999] border-solid rounded-[5px] cursor-pointer flex flex-row gap-2.5 items-center justify-start overflow-visible p-[11px] w-full font-medium text-[16px] tracking-[1.6px] focus:outline-none focus:border-[#0f9058]'
+                style={{
+                  fontFamily: 'Noto Sans JP, sans-serif',
+                  fontWeight: 500,
+                }}
+                required
+                disabled={isLoading}
+              />
               {codeError && (
                 <div className='mt-1 text-xs text-red-500 flex items-center'>
                   <AlertCircle className='w-3 h-3 mr-1' />
@@ -222,7 +235,7 @@ export function SignupVerifyClient() {
             <button
               type='submit'
               disabled={isLoading || !verificationCode}
-              className='flex items-center justify-center w-full max-w-[280px] sm:max-w-[313px] md:max-w-[170px] px-6 sm:px-10 py-3 md:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[14px] md:text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              className='flex items-center justify-center w-full sm:max-w-[313px] md:max-w-[170px] px-6 sm:px-10 py-3 md:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[14px] md:text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',
                 fontWeight: 700,

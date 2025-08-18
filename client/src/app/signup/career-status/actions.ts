@@ -11,9 +11,9 @@ export interface CareerStatusFormData {
   selectionEntries: Array<{
     id: string;
     isPrivate: boolean;
-    industries: Array<{ id: string; name: string }>;
+    industries: string[];
     companyName: string;
-    department?: string;
+    department: string;
     progressStatus: string;
     declineReason?: string;
   }>;
@@ -33,12 +33,9 @@ const CareerStatusSchema = z.object({
   selectionEntries: z.array(z.object({
     id: z.string(),
     isPrivate: z.boolean(),
-    industries: z.array(z.object({
-      id: z.string(),
-      name: z.string(),
-    })),
+    industries: z.array(z.string()),
     companyName: z.string(),
-    department: z.string().optional(),
+    department: z.string(),
     progressStatus: z.string(),
     declineReason: z.string().optional(),
   })),

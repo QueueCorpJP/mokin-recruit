@@ -116,7 +116,7 @@ export default function AutocompleteInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058] ${className}`}
+        className={className || `w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058]`}
       />
       
       {isOpen && (

@@ -11,7 +11,7 @@ export const selectionEntrySchema = z.object({
   id: z.string(),
   isPrivate: z.boolean().default(false),
   industries: z
-    .array(industrySchema)
+    .array(z.string())
     .min(1, {
       message: '業種を1つ以上選択してください',
     })

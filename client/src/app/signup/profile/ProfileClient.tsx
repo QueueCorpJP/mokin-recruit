@@ -19,6 +19,10 @@ export default function SignupProfilePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState('');
+  const [validationErrors, setValidationErrors] = useState({
+    lastNameKana: '',
+    firstNameKana: '',
+  });
   const [formData, setFormData] = useState<ProfileFormData>({
     gender: 'unspecified',
     lastName: '',
@@ -32,6 +36,21 @@ export default function SignupProfilePage() {
     phoneNumber: '',
     currentIncome: '',
   });
+
+  const validateKatakana = (value: string): string => {
+    if (!value) return '';
+    const katakanaRegex = /^[ァ-ヶー\s]+$/;
+    if (!katakanaRegex.test(value)) {
+      return '全角カタカナで入力してください';
+    }
+    return '';
+  };
+
+  const handleKanaChange = (field: 'lastNameKana' | 'firstNameKana', value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    const error = validateKatakana(value);
+    setValidationErrors(prev => ({ ...prev, [field]: error }));
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -53,6 +72,8 @@ export default function SignupProfilePage() {
     return () => {};
   }, []);
 
+  const currentYear = new Date().getFullYear();
+  const minimumBirthYear = currentYear - 18;
   const yearOptions = generateYearOptions();
   const monthOptions = generateMonthOptions();
   const dayOptions = generateDayOptions(formData.birthYear, formData.birthMonth);
@@ -60,6 +81,19 @@ export default function SignupProfilePage() {
   const handleFormSubmit = async () => {
     console.log('Form submitted with data:', formData);
     console.log('User ID:', userId);
+    
+    // フリガナのバリデーション
+    const lastNameKanaError = validateKatakana(formData.lastNameKana);
+    const firstNameKanaError = validateKatakana(formData.firstNameKana);
+    
+    if (lastNameKanaError || firstNameKanaError) {
+      setValidationErrors({
+        lastNameKana: lastNameKanaError,
+        firstNameKana: firstNameKanaError,
+      });
+      alert('フリガナは全角カタカナで入力してください');
+      return;
+    }
     
     const year = parseInt(formData.birthYear);
     const month = parseInt(formData.birthMonth);
@@ -117,7 +151,7 @@ export default function SignupProfilePage() {
         {/* PC Version */}
         <div className="hidden lg:block">
           <main
-            className="flex relative py-20 flex-col items-center justify-start"
+            className="flex relative py-20 flex-col items-center justify-start min-h-[calc(100vh+1700px)]"
             style={{
               backgroundImage: "url('/background-pc.svg')",
               backgroundPosition: 'center top',
@@ -250,9 +284,14 @@ export default function SignupProfilePage() {
                           placeholder="セイ"
                           autoComplete="off"
                           value={formData.lastNameKana}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lastNameKana: e.target.value }))}
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+                          onChange={(e) => handleKanaChange('lastNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.lastNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
+                        {validationErrors.lastNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.lastNameKana}</p>
+                        )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
@@ -260,9 +299,14 @@ export default function SignupProfilePage() {
                           placeholder="メイ"
                           autoComplete="off"
                           value={formData.firstNameKana}
-                          onChange={(e) => setFormData(prev => ({ ...prev, firstNameKana: e.target.value }))}
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+                          onChange={(e) => handleKanaChange('firstNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.firstNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
+                        {validationErrors.firstNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.firstNameKana}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -440,6 +484,9 @@ export default function SignupProfilePage() {
                         </span>
                       </div>
                     </div>
+                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
+                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
+                    </p>
                   </div>
                 </div>
 
@@ -511,7 +558,7 @@ export default function SignupProfilePage() {
                 disabled={isSubmitting || !isFormValid}
                 variant="green-gradient"
                 size="figma-default"
-                className="min-w-[160px] text-[16px] tracking-[1.6px]"
+                className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>
@@ -632,9 +679,14 @@ export default function SignupProfilePage() {
                           placeholder="セイ"
                           autoComplete="off"
                           value={formData.lastNameKana}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lastNameKana: e.target.value }))}
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+                          onChange={(e) => handleKanaChange('lastNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.lastNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
+                        {validationErrors.lastNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.lastNameKana}</p>
+                        )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
@@ -642,9 +694,14 @@ export default function SignupProfilePage() {
                           placeholder="メイ"
                           autoComplete="off"
                           value={formData.firstNameKana}
-                          onChange={(e) => setFormData(prev => ({ ...prev, firstNameKana: e.target.value }))}
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+                          onChange={(e) => handleKanaChange('firstNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.firstNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
+                        {validationErrors.firstNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.firstNameKana}</p>
+                        )}
                       </div>
                     </div>
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
@@ -821,6 +878,9 @@ export default function SignupProfilePage() {
                         </span>
                       </div>
                     </div>
+                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
+                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
+                    </p>
                   </div>
                 </div>
 
@@ -884,7 +944,7 @@ export default function SignupProfilePage() {
                 disabled={isSubmitting || !isFormValid}
                 variant="green-gradient"
                 size="figma-default"
-                className="w-full text-[16px] tracking-[1.6px]"
+                className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>

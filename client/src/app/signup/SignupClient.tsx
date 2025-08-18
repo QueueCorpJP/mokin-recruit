@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Loading } from '@/components/ui/Loading';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useRouter } from 'next/navigation';
 import { signupRequestAction, SignupResult } from './actions';
 
@@ -21,11 +22,11 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
   const validateEmail = (email: string): boolean => {
     if (!email) {
-      setEmailError('メールアドレスは必須です');
+      setEmailError('メールアドレスを入力してください');
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError('有効なメールアドレスを入力してください');
+      setEmailError('メールアドレスの形式が正しくありません');
       return false;
     }
     setEmailError('');
@@ -35,9 +36,18 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
-    if (emailError) {
+    
+    // リアルタイムバリデーション
+    if (value && !value.includes('@')) {
+      setEmailError('メールアドレスの形式が正しくありません');
+    } else if (value && value.includes('@') && !value.includes('.')) {
+      setEmailError('メールアドレスの形式が正しくありません');
+    } else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError('メールアドレスの形式が正しくありません');
+    } else {
       setEmailError('');
     }
+    
     if (submitStatus !== 'idle') {
       setSubmitStatus('idle');
     }
@@ -81,9 +91,16 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           router.push('/signup/verify');
         } else {
           setSubmitStatus('error');
-          setMessage(
-            result.error || '会員登録要求の送信に失敗しました。'
-          );
+          // エラーメッセージをチェックして適切なメッセージを設定
+          if (result.error && result.error.includes('already registered')) {
+            setMessage('このメールアドレスは既に登録されています');
+          } else if (result.error && result.error.includes('既に登録')) {
+            setMessage('このメールアドレスは既に登録されています');
+          } else {
+            setMessage(
+              result.error || '会員登録要求の送信に失敗しました。'
+            );
+          }
         }
       } catch (error) {
         console.error('Signup request error:', error);
@@ -156,11 +173,9 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
         {/* 同意チェックボックス */}
         <div className='flex flex-row gap-2 items-center justify-center w-full '>
-          <input
-            type='checkbox'
+          <Checkbox
             checked={agreed}
-            onChange={(e) => handleAgreementChange(e.target.checked)}
-            className='mt-0.5 w-4 h-4 accent-[#0f9058] cursor-pointer'
+            onChange={handleAgreementChange}
             disabled={isPending}
           />
           <div className='flex flex-wrap items-center justify-start'>
@@ -204,11 +219,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           <button
             type='submit'
             disabled={isPending || !isFormValid}
-            className={`flex items-center justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] font-bold text-[16px] text-white transition-all duration-200 gap-2.5 ${
-              isFormValid && !isPending
-                ? 'bg-gradient-to-r from-[#0f9058] to-[#229a4e] hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] cursor-pointer'
-                : 'bg-gray-400 cursor-not-allowed opacity-50'
-            }`}
+            className='flex items-center w-full md:w-auto justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
             style={{
               fontFamily: 'Noto Sans JP, sans-serif',
               fontWeight: 700,
