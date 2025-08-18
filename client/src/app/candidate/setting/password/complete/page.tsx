@@ -18,7 +18,7 @@ export default function PasswordCompletePage() {
         icon={<Lock className="w-8 h-8" />}
       />
       
-      <div className="px-20 py-10">
+      <div className="px-4 md:px-20 py-10">
         <div className="bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-10">
           <div className="text-center py-20">
             <h2 className="text-[32px] font-bold text-[#0f9058] tracking-[3.2px] mb-6">

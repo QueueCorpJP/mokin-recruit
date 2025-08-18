@@ -4,92 +4,47 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useState, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { saveEducationData } from './actions';
 
-// フォームスキーマの定義
-const educationSchema = z.object({
-  finalEducation: z.string().min(1, '最終学歴を選択してください。'),
-  schoolName: z.string().min(1, '学校名を入力してください。'),
-  department: z.string().min(1, '学部・学科・専攻を入力してください。'),
-  graduationYear: z.string().min(1, '卒業年月を選択してください。'),
-  graduationMonth: z.string().min(1, '卒業年月を選択してください。'),
-  industries: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        experienceYears: z.string().optional(),
-      }),
-    )
-    .min(1, '業種を1つ以上選択してください。')
-    .max(3)
-    .refine(
-      (items) =>
-        items.every(
-          (item) => item.experienceYears && item.experienceYears !== '',
-        ),
-      '経験年数を選択してください。',
-    ),
-  jobTypes: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        experienceYears: z.string().optional(),
-      }),
-    )
-    .min(1, '職種を1つ以上選択してください。')
-    .max(3)
-    .refine(
-      (items) =>
-        items.every(
-          (item) => item.experienceYears && item.experienceYears !== '',
-        ),
-      '経験年数を選択してください。',
-    ),
-});
-
-type EducationFormData = z.infer<typeof educationSchema>;
+interface EducationFormData {
+  finalEducation: string;
+  schoolName: string;
+  department: string;
+  graduationYear: string;
+  graduationMonth: string;
+  industries: Array<{
+    id: string;
+    name: string;
+    experienceYears?: string;
+  }>;
+  jobTypes: Array<{
+    id: string;
+    name: string;
+    experienceYears?: string;
+  }>;
+}
 
 export default function SignupEducationPage() {
   const router = useRouter();
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-    setValue,
-    watch,
-  } = useForm<EducationFormData>({
-    resolver: zodResolver(educationSchema),
-    mode: 'onChange',
-    defaultValues: {
-      finalEducation: '',
-      schoolName: '',
-      department: '',
-      graduationYear: '',
-      graduationMonth: '',
-      industries: [],
-      jobTypes: [],
-    },
+  const [formData, setFormData] = useState<EducationFormData>({
+    finalEducation: '',
+    schoolName: '',
+    department: '',
+    graduationYear: '',
+    graduationMonth: '',
+    industries: [],
+    jobTypes: [],
   });
 
-  const selectedIndustries = watch('industries');
-  const selectedJobTypes = watch('jobTypes');
-  const finalEducation = watch('finalEducation');
-  const schoolName = watch('schoolName');
-
   // School autocomplete
-  const { suggestions: schoolSuggestions } = useSchoolAutocomplete(schoolName, finalEducation);
+  const { suggestions: schoolSuggestions } = useSchoolAutocomplete(formData.schoolName, formData.finalEducation);
 
   // 最終学歴の選択肢
   const educationOptions = [
@@ -142,20 +97,39 @@ export default function SignupEducationPage() {
     '20年以上',
   ];
 
-  const onSubmit = async (data: EducationFormData) => {
+  const isFormValid = () => {
+    return (
+      formData.finalEducation.trim() !== '' &&
+      formData.schoolName.trim() !== '' &&
+      formData.department.trim() !== '' &&
+      formData.graduationYear.trim() !== '' &&
+      formData.graduationMonth.trim() !== '' &&
+      formData.industries.length > 0 &&
+      formData.industries.length <= 3 &&
+      formData.industries.every(industry => industry.experienceYears && industry.experienceYears !== '') &&
+      formData.jobTypes.length > 0 &&
+      formData.jobTypes.length <= 3 &&
+      formData.jobTypes.every(jobType => jobType.experienceYears && jobType.experienceYears !== '')
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid()) return;
+
     try {
       const formattedData = {
-        finalEducation: data.finalEducation,
-        schoolName: data.schoolName,
-        department: data.department,
-        graduationYear: data.graduationYear ? parseInt(data.graduationYear) : undefined,
-        graduationMonth: data.graduationMonth ? parseInt(data.graduationMonth) : undefined,
-        industries: data.industries.map(industry => ({
+        finalEducation: formData.finalEducation,
+        schoolName: formData.schoolName,
+        department: formData.department,
+        graduationYear: formData.graduationYear ? parseInt(formData.graduationYear) : undefined,
+        graduationMonth: formData.graduationMonth ? parseInt(formData.graduationMonth) : undefined,
+        industries: formData.industries.map(industry => ({
           id: industry.id,
           name: industry.name,
           experienceYears: industry.experienceYears ? parseInt(industry.experienceYears.replace(/[^\d]/g, '')) : 0
         })),
-        jobTypes: data.jobTypes.map(jobType => ({
+        jobTypes: formData.jobTypes.map(jobType => ({
           id: jobType.id,
           name: jobType.name,
           experienceYears: jobType.experienceYears ? parseInt(jobType.experienceYears.replace(/[^\d]/g, '')) : 0
@@ -169,51 +143,41 @@ export default function SignupEducationPage() {
   };
 
   // モーダルから選択された値を設定
-  const handleIndustryConfirm = (industries: Industry[]) => {
+  const handleIndustryConfirm = (industries: string[]) => {
     const industriesWithExperience = industries.map((industry) => {
-      const existing = selectedIndustries.find((i) => i.id === industry.id);
+      const existing = formData.industries.find((i) => i.name === industry);
       return {
-        ...industry,
+        id: industry,
+        name: industry,
         experienceYears: existing?.experienceYears || '',
       };
     });
-    setValue('industries', industriesWithExperience, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    setFormData(prev => ({ ...prev, industries: industriesWithExperience }));
     setIsIndustryModalOpen(false);
   };
 
-  const handleJobTypeConfirm = (jobTypes: JobType[]) => {
+  const handleJobTypeConfirm = (jobTypes: string[]) => {
     const jobTypesWithExperience = jobTypes.map((jobType) => {
-      const existing = selectedJobTypes.find((jt) => jt.id === jobType.id);
+      const existing = formData.jobTypes.find((jt) => jt.name === jobType);
       return {
-        ...jobType,
+        id: jobType,
+        name: jobType,
         experienceYears: existing?.experienceYears || '',
       };
     });
-    setValue('jobTypes', jobTypesWithExperience, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    setFormData(prev => ({ ...prev, jobTypes: jobTypesWithExperience }));
     setIsJobTypeModalOpen(false);
   };
 
   // 業種・職種を削除
   const removeIndustry = (industryId: string) => {
-    const updated = selectedIndustries.filter((i) => i.id !== industryId);
-    setValue('industries', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    const updated = formData.industries.filter((i) => i.id !== industryId);
+    setFormData(prev => ({ ...prev, industries: updated }));
   };
 
   const removeJobType = (jobTypeId: string) => {
-    const updated = selectedJobTypes.filter((jt) => jt.id !== jobTypeId);
-    setValue('jobTypes', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    const updated = formData.jobTypes.filter((jt) => jt.id !== jobTypeId);
+    setFormData(prev => ({ ...prev, jobTypes: updated }));
   };
 
   // 経験年数を更新
@@ -221,26 +185,20 @@ export default function SignupEducationPage() {
     industryId: string,
     experienceYears: string,
   ) => {
-    const updated = selectedIndustries.map((industry) =>
+    const updated = formData.industries.map((industry) =>
       industry.id === industryId ? { ...industry, experienceYears } : industry,
     );
-    setValue('industries', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    setFormData(prev => ({ ...prev, industries: updated }));
   };
 
   const updateJobTypeExperience = (
     jobTypeId: string,
     experienceYears: string,
   ) => {
-    const updated = selectedJobTypes.map((jobType) =>
+    const updated = formData.jobTypes.map((jobType) =>
       jobType.id === jobTypeId ? { ...jobType, experienceYears } : jobType,
     );
-    setValue('jobTypes', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    setFormData(prev => ({ ...prev, jobTypes: updated }));
   };
 
   return (
@@ -260,7 +218,7 @@ export default function SignupEducationPage() {
           }}
         >
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit}>
             {/* Container */}
             <div className="bg-white rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20 w-[1000px] flex flex-col gap-10 items-center">
               {/* Title */}
@@ -434,7 +392,8 @@ export default function SignupEducationPage() {
                   <div className="w-[400px]">
                     <div className="relative">
                       <select
-                        {...register('finalEducation')}
+                        value={formData.finalEducation}
+                        onChange={(e) => setFormData(prev => ({ ...prev, finalEducation: e.target.value }))}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
@@ -459,11 +418,6 @@ export default function SignupEducationPage() {
                         </svg>
                       </div>
                     </div>
-                    {errors.finalEducation && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.finalEducation.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -476,21 +430,15 @@ export default function SignupEducationPage() {
                   </div>
                   <div className="w-[400px]">
                     <AutocompleteInput
-                      value={schoolName}
-                      onChange={(value) => setValue('schoolName', value, { shouldValidate: true })}
+                      value={formData.schoolName}
+                      onChange={(value) => setFormData(prev => ({ ...prev, schoolName: value }))}
                       placeholder="学校名を入力"
                       suggestions={schoolSuggestions.map(s => ({ 
                         id: s.id, 
                         name: s.name, 
                         category: s.category 
                       }))}
-                      className={errors.schoolName ? 'border-red-500' : ''}
                     />
-                    {errors.schoolName && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.schoolName.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -505,14 +453,10 @@ export default function SignupEducationPage() {
                     <input
                       type="text"
                       placeholder="学部学科専攻を入力"
-                      {...register('department')}
+                      value={formData.department}
+                      onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                       className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                     />
-                    {errors.department && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.department.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -527,7 +471,8 @@ export default function SignupEducationPage() {
                     <div className="flex flex-wrap gap-2 items-center">
                       <div className="relative flex-1">
                         <select
-                          {...register('graduationYear')}
+                          value={formData.graduationYear}
+                          onChange={(e) => setFormData(prev => ({ ...prev, graduationYear: e.target.value }))}
                           className="w-full px-[11px] py-[11px] pl-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           <option value="">未選択</option>
@@ -557,7 +502,8 @@ export default function SignupEducationPage() {
                       </span>
                       <div className="relative flex-1">
                         <select
-                          {...register('graduationMonth')}
+                          value={formData.graduationMonth}
+                          onChange={(e) => setFormData(prev => ({ ...prev, graduationMonth: e.target.value }))}
                           className="w-full px-[11px] py-[11px] pl-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           <option value="">未選択</option>
@@ -586,12 +532,6 @@ export default function SignupEducationPage() {
                         月
                       </span>
                     </div>
-                    {(errors.graduationYear || errors.graduationMonth) && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.graduationYear?.message ||
-                          errors.graduationMonth?.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -660,7 +600,7 @@ export default function SignupEducationPage() {
                         業種を選択
                       </button>
                       <div className="flex flex-wrap gap-2">
-                        {selectedIndustries.map((industry) => (
+                        {formData.industries.map((industry) => (
                           <div
                             key={industry.id}
                             className="inline-flex items-center gap-1"
@@ -721,11 +661,6 @@ export default function SignupEducationPage() {
                           </div>
                         ))}
                       </div>
-                      {errors.industries && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.industries.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -747,7 +682,7 @@ export default function SignupEducationPage() {
                         職種を選択
                       </button>
                       <div className="flex flex-wrap gap-2">
-                        {selectedJobTypes.map((jobType) => (
+                        {formData.jobTypes.map((jobType) => (
                           <div
                             key={jobType.id}
                             className="inline-flex items-center gap-1"
@@ -808,11 +743,6 @@ export default function SignupEducationPage() {
                           </div>
                         ))}
                       </div>
-                      {errors.jobTypes && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.jobTypes.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -821,9 +751,9 @@ export default function SignupEducationPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!isValid}
+                disabled={!isFormValid()}
                 className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                  isValid
+                  isFormValid()
                     ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                     : 'bg-[#dcdcdc] cursor-not-allowed'
                 }`}
@@ -848,7 +778,7 @@ export default function SignupEducationPage() {
           }}
         >
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+          <form onSubmit={handleSubmit} className="w-full">
             {/* Container */}
             <div className="bg-white rounded-3xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 py-10 w-full flex flex-col gap-10 items-center">
               {/* Progress Indicator */}
@@ -923,7 +853,8 @@ export default function SignupEducationPage() {
                   </label>
                   <div className="relative">
                     <select
-                      {...register('finalEducation')}
+                      value={formData.finalEducation}
+                      onChange={(e) => setFormData(prev => ({ ...prev, finalEducation: e.target.value }))}
                       className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                     >
                       <option value="">未選択</option>
@@ -948,11 +879,6 @@ export default function SignupEducationPage() {
                       </svg>
                     </div>
                   </div>
-                  {errors.finalEducation && (
-                    <p className="text-red-500 text-sm">
-                      {errors.finalEducation.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* School Name */}
@@ -961,21 +887,15 @@ export default function SignupEducationPage() {
                     学校名
                   </label>
                   <AutocompleteInput
-                    value={schoolName}
-                    onChange={(value) => setValue('schoolName', value, { shouldValidate: true })}
+                    value={formData.schoolName}
+                    onChange={(value) => setFormData(prev => ({ ...prev, schoolName: value }))}
                     placeholder="学校名を入力"
                     suggestions={schoolSuggestions.map(s => ({ 
                       id: s.id, 
                       name: s.name, 
                       category: s.category 
                     }))}
-                    className={errors.schoolName ? 'border-red-500' : ''}
                   />
-                  {errors.schoolName && (
-                    <p className="text-red-500 text-sm">
-                      {errors.schoolName.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* Department/Major */}
@@ -986,14 +906,10 @@ export default function SignupEducationPage() {
                   <input
                     type="text"
                     placeholder="学部学科専攻を入力"
-                    {...register('department')}
+                    value={formData.department}
+                    onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
                     className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
-                  {errors.department && (
-                    <p className="text-red-500 text-sm">
-                      {errors.department.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* Graduation Date */}
@@ -1004,7 +920,8 @@ export default function SignupEducationPage() {
                   <div className="flex gap-2 items-center">
                     <div className="relative flex-1">
                       <select
-                        {...register('graduationYear')}
+                        value={formData.graduationYear}
+                        onChange={(e) => setFormData(prev => ({ ...prev, graduationYear: e.target.value }))}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
@@ -1034,7 +951,8 @@ export default function SignupEducationPage() {
                     </span>
                     <div className="relative flex-1">
                       <select
-                        {...register('graduationMonth')}
+                        value={formData.graduationMonth}
+                        onChange={(e) => setFormData(prev => ({ ...prev, graduationMonth: e.target.value }))}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
@@ -1089,9 +1007,9 @@ export default function SignupEducationPage() {
                   >
                     業種を選択
                   </button>
-                  {selectedIndustries.length > 0 ? (
+                  {formData.industries.length > 0 ? (
                     <div className="flex flex-col gap-0.5">
-                      {selectedIndustries.map((industry) => (
+                      {formData.industries.map((industry) => (
                         <div
                           key={industry.id}
                           className="flex flex-row gap-0.5"
@@ -1155,11 +1073,6 @@ export default function SignupEducationPage() {
                       ))}
                     </div>
                   ) : null}
-                  {errors.industries && (
-                    <p className="text-red-500 text-sm">
-                      {errors.industries.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* Job Type */}
@@ -1174,9 +1087,9 @@ export default function SignupEducationPage() {
                   >
                     職種を選択
                   </button>
-                  {selectedJobTypes.length > 0 ? (
+                  {formData.jobTypes.length > 0 ? (
                     <div className="flex flex-col gap-0.5">
-                      {selectedJobTypes.map((jobType) => (
+                      {formData.jobTypes.map((jobType) => (
                         <div key={jobType.id} className="flex flex-row gap-0.5">
                           <div className="flex-1 flex flex-col gap-0.5">
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
@@ -1237,20 +1150,15 @@ export default function SignupEducationPage() {
                       ))}
                     </div>
                   ) : null}
-                  {errors.jobTypes && (
-                    <p className="text-red-500 text-sm">
-                      {errors.jobTypes.message}
-                    </p>
-                  )}
                 </div>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!isValid}
+                disabled={!isFormValid()}
                 className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                  isValid
+                  isFormValid()
                     ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                     : 'bg-[#dcdcdc] cursor-not-allowed'
                 }`}
@@ -1267,14 +1175,14 @@ export default function SignupEducationPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustryConfirm}
-        initialSelected={selectedIndustries}
+        initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}
       />
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={selectedJobTypes}
+        initialSelected={formData.jobTypes.map(j => j.name)}
         maxSelections={3}
       />
 

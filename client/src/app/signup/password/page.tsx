@@ -1,21 +1,18 @@
 'use client';
 
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { setPasswordAction } from './actions';
 import { Button } from '@/components/ui/button';
+import { PasswordFormField } from '@/components/ui/password-form-field';
 
 interface PasswordFormCardProps {
   password: string;
   confirmPassword: string;
-  showPassword: boolean;
-  showConfirmPassword: boolean;
-  onPasswordChange: (password: string) => void;
-  onConfirmPasswordChange: (password: string) => void;
-  onTogglePasswordVisibility: () => void;
-  onToggleConfirmPasswordVisibility: () => void;
+  onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onConfirmPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: () => void;
   isLoading: boolean;
   error: string;
@@ -24,12 +21,8 @@ interface PasswordFormCardProps {
 function PasswordFormCard({
   password,
   confirmPassword,
-  showPassword,
-  showConfirmPassword,
   onPasswordChange,
   onConfirmPasswordChange,
-  onTogglePasswordVisibility,
-  onToggleConfirmPasswordVisibility,
   onSubmit,
   isLoading,
   error,
@@ -47,7 +40,7 @@ function PasswordFormCard({
         </div>
       </div>
 
-      <div className="box-border content-stretch flex flex-col gap-6 items-end justify-center p-0 relative shrink-0">
+      <div className="box-border content-stretch flex flex-col gap-6 items-end justify-center p-0 relative shrink-0 w-full">
         {error && (
           <div className="flex items-center gap-2 text-red-600 text-sm w-full">
             <AlertCircle className="w-4 h-4" />
@@ -55,61 +48,25 @@ function PasswordFormCard({
           </div>
         )}
         
-        <div className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full">
-          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0 md:w-48">
-            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[14px] md:text-[16px] text-left text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
-              <p className="block leading-[2] whitespace-pre">新規パスワード</p>
-            </div>
-          </div>
-          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative flex-1">
-            <div className="bg-[#ffffff] box-border content-stretch flex flex-row h-[50px] items-center justify-between p-[11px] relative rounded-[5px] shrink-0 w-full border border-[#999999] border-solid">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => onPasswordChange(e.target.value)}
-                placeholder="半角英数字・記号のみ、8文字以上"
-                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[14px] md:text-[16px] text-left tracking-[1.4px] md:tracking-[1.6px] bg-transparent outline-none"
-                disabled={isLoading}
-              />
-              <button
-                onClick={onTogglePasswordVisibility}
-                type="button"
-                className="aspect-[120/120] box-border content-stretch flex flex-row gap-2.5 h-full items-center justify-start p-0 relative shrink-0"
-                disabled={isLoading}
-              >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PasswordFormField
+          value={password}
+          onChange={onPasswordChange}
+          label="新規パスワード"
+          placeholder="半角英数字・記号のみ、8文字以上"
+          className="justify-end"
+          inputWidth="md:w-[350px]"
+        />
 
-        <div className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full">
-          <div className="box-border content-stretch flex flex-row items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0 md:w-48">
-            <div className="font-['Noto_Sans_JP:Bold',_sans-serif] font-bold leading-[0] relative shrink-0 text-[#323232] text-[14px] md:text-[16px] text-left text-nowrap tracking-[1.4px] md:tracking-[1.6px]">
-              <p className="block leading-[2] whitespace-pre">新規パスワード再入力</p>
-            </div>
-          </div>
-          <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative flex-1">
-            <div className="bg-[#ffffff] box-border content-stretch flex flex-row h-[50px] items-center justify-between p-[11px] relative rounded-[5px] shrink-0 w-full border border-[#999999] border-solid">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => onConfirmPasswordChange(e.target.value)}
-                placeholder="確認のためもう一度入力"
-                className="flex-1 font-['Noto_Sans_JP:Medium',_sans-serif] font-medium text-[14px] md:text-[16px] text-left tracking-[1.4px] md:tracking-[1.6px] bg-transparent outline-none"
-                disabled={isLoading}
-              />
-              <button
-                onClick={onToggleConfirmPasswordVisibility}
-                type="button"
-                className="aspect-[120/120] box-border content-stretch flex flex-row gap-2.5 h-full items-center justify-start p-0 relative shrink-0"
-                disabled={isLoading}
-              >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PasswordFormField
+          value={confirmPassword}
+          onChange={onConfirmPasswordChange}
+          label="新規パスワード再入力"
+          placeholder="確認のためもう一度入力"
+          className="justify-end"
+          inputWidth="md:w-[350px]"
+          isConfirmField={true}
+          confirmTarget={password}
+        />
       </div>
 
       <Button
@@ -129,8 +86,6 @@ export default function SignupPasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
@@ -155,6 +110,12 @@ export default function SignupPasswordPage() {
     }
     if (password.length < 8) {
       setError('パスワードは8文字以上で入力してください');
+      return false;
+    }
+    // 半角英数字・記号のみチェック
+    const validCharRegex = /^[\x20-\x7E]*$/;
+    if (!validCharRegex.test(password)) {
+      setError('半角英数字・記号のみで入力してください');
       return false;
     }
     if (password !== confirmPassword) {
@@ -194,13 +155,6 @@ export default function SignupPasswordPage() {
     }
   }, [validatePasswords, userId, router]);
 
-  const handleTogglePasswordVisibility = useCallback(() => {
-    setShowPassword(!showPassword);
-  }, [showPassword]);
-
-  const handleToggleConfirmPasswordVisibility = useCallback(() => {
-    setShowConfirmPassword(!showConfirmPassword);
-  }, [showConfirmPassword]);
 
   return (
     <CandidateAuthBackground>
@@ -208,12 +162,8 @@ export default function SignupPasswordPage() {
         <PasswordFormCard
           password={password}
           confirmPassword={confirmPassword}
-          showPassword={showPassword}
-          showConfirmPassword={showConfirmPassword}
-          onPasswordChange={setPassword}
-          onConfirmPasswordChange={setConfirmPassword}
-          onTogglePasswordVisibility={handleTogglePasswordVisibility}
-          onToggleConfirmPasswordVisibility={handleToggleConfirmPasswordVisibility}
+          onPasswordChange={(e) => setPassword(e.target.value)}
+          onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           error={error}

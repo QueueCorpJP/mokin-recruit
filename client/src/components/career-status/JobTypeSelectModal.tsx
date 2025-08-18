@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { JOB_TYPE_GROUPS, type JobType } from '@/constants/job-type-data';
+import { jobCategories } from '@/app/company/company/job/types';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,8 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface JobTypeSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (_selectedJobTypes: JobType[]) => void;
-  initialSelected?: JobType[];
+  onConfirm: (_selectedJobTypes: string[]) => void;
+  initialSelected?: string[];
   maxSelections?: number;
 }
 
@@ -21,30 +21,29 @@ export default function JobTypeSelectModal({
   initialSelected = [],
   maxSelections = 3,
 }: JobTypeSelectModalProps) {
-  const [selectedJobTypes, setSelectedJobTypes] = useState<JobType[]>(initialSelected);
-  const [selectedCategory, setSelectedCategory] = useState<string>(JOB_TYPE_GROUPS[0]?.id || '');
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(initialSelected);
+  const [selectedCategory, setSelectedCategory] = useState(
+    jobCategories[0].name
+  );
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
     setSelectedJobTypes(initialSelected);
   }, [initialSelected]);
 
-  const handleJobTypeClick = (jobType: JobType) => {
-    setSelectedJobTypes((prev) => {
-      const isSelected = prev.some((s) => s.id === jobType.id);
-      if (isSelected) {
-        return prev.filter((s) => s.id !== jobType.id);
-      } else {
-        if (prev.length >= maxSelections) {
-          return prev;
-        }
-        return [...prev, jobType];
+  const handleCheckboxChange = (job: string) => {
+    if (selectedJobTypes.includes(job)) {
+      // 既に選択されている場合は削除
+      const newJobTypes = selectedJobTypes.filter(j => j !== job);
+      setSelectedJobTypes(newJobTypes);
+    } else {
+      // 新規選択の場合は制限をチェック
+      if (selectedJobTypes.length < maxSelections) {
+        const newJobTypes = [...selectedJobTypes, job];
+        setSelectedJobTypes(newJobTypes);
       }
-    });
-  };
-
-  const handleGroupClick = (groupId: string) => {
-    setSelectedCategory(groupId);
+    }
   };
 
   const handleConfirm = () => {
@@ -52,8 +51,8 @@ export default function JobTypeSelectModal({
     onClose();
   };
 
-  const selectedCategoryData = JOB_TYPE_GROUPS.find(
-    group => group.id === selectedCategory
+  const selectedCategoryData = jobCategories.find(
+    category => category.name === selectedCategory
   )!;
 
   return (
@@ -68,49 +67,165 @@ export default function JobTypeSelectModal({
       selectedCount={selectedJobTypes.length}
       totalCount={maxSelections}
     >
-      <div className="w-full">
-        {/* Group titles row - Anchor Links */}
-        <div className="flex flex-wrap items-center gap-x-0 gap-y-4 mb-10">
-          {JOB_TYPE_GROUPS.map((group, index) => (
-            <React.Fragment key={group.id}>
-              {index > 0 && (
-                <span className="mx-2 text-[#DCDCDC] text-[14px] font-bold">
-                  ｜
-                </span>
-              )}
-              <button
-                onClick={() => handleGroupClick(group.id)}
-                className={`text-[14px] tracking-[1.4px] hover:text-[#0F9058] transition-colors ${
-                  selectedCategory === group.id
-                    ? 'text-[#0F9058] font-bold'
-                    : 'text-[#999999] font-bold'
-                }`}
-              >
-                {group.name}
-              </button>
-            </React.Fragment>
-          ))}
-        </div>
+      <div className='space-y-6'>
+        {/* デスクトップ用カテゴリータグ */}
+        {isDesktop && (
+          <div className='mb-4'>
+            <div className='flex flex-wrap items-center'>
+              {jobCategories.map((category, index) => (
+                <React.Fragment key={category.name}>
+                  <button
+                    className={`py-2 px-2 transition-colors ${
+                      selectedCategory === category.name
+                        ? 'text-[#0F9058] font-medium'
+                        : 'text-[var(--3,#999)] hover:text-[#0F9058]'
+                    }`}
+                    style={{
+                      fontFamily: '"Noto Sans JP"',
+                      fontSize: '14px',
+                      fontWeight: selectedCategory === category.name ? 600 : 500,
+                      lineHeight: '160%',
+                      letterSpacing: '1.4px',
+                    }}
+                    onClick={() => setSelectedCategory(category.name)}
+                  >
+                    {category.name}
+                  </button>
+                  {index < jobCategories.length - 1 && (
+                    <div className='mx-2'>
+                      <svg
+                        width='2'
+                        height='24'
+                        viewBox='0 0 2 24'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M1 1V23'
+                          stroke='var(--3,#999)'
+                          strokeLinecap='round'
+                          strokeWidth='1'
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Selected category job types */}
+        {/* モバイル用カテゴリー表示 */}
+        {!isDesktop && (
+          <div className='mb-4'>
+            <div className='flex flex-wrap items-center'>
+              {jobCategories.slice(0, showAllCategories ? jobCategories.length : 6).map((category, index) => (
+                <React.Fragment key={category.name}>
+                  <button
+                    className={`py-2 px-2 transition-colors ${
+                      selectedCategory === category.name
+                        ? 'text-[#0F9058] font-medium'
+                        : 'text-[var(--3,#999)] hover:text-[#0F9058]'
+                    }`}
+                    style={{
+                      fontFamily: '"Noto Sans JP"',
+                      fontSize: '14px',
+                      fontWeight: selectedCategory === category.name ? 600 : 500,
+                      lineHeight: '160%',
+                      letterSpacing: '1.4px',
+                    }}
+                    onClick={() => setSelectedCategory(category.name)}
+                  >
+                    {category.name}
+                  </button>
+                  {index < (showAllCategories ? jobCategories.length - 1 : 5) && (
+                    <div className='mx-2'>
+                      <svg
+                        width='2'
+                        height='24'
+                        viewBox='0 0 2 24'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M1 1V23'
+                          stroke='var(--3,#999)'
+                          strokeLinecap='round'
+                          strokeWidth='1'
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+              {!showAllCategories && jobCategories.length > 6 && (
+                <>
+                  <div className='mx-2'>
+                    <svg
+                      width='2'
+                      height='24'
+                      viewBox='0 0 2 24'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M1 1V23'
+                        stroke='var(--3,#999)'
+                        strokeLinecap='round'
+                        strokeWidth='1'
+                      />
+                    </svg>
+                  </div>
+                  <div className='w-full flex justify-center mt-2'>
+                    <button
+                      className='text-[#0F9058]'
+                      style={{
+                        fontFamily: '"Noto Sans JP"',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        lineHeight: '160%',
+                        letterSpacing: '1.4px',
+                      }}
+                      onClick={() => setShowAllCategories(true)}
+                    >
+                      +もっと表示
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 選択中のカテゴリー名 */}
         <div>
-          <h3 className="text-[20px] font-bold text-[#323232] tracking-[1.6px] pb-2 mb-4 border-b-2 border-[#DCDCDC]">
+          <h3 className="w-full font-['Noto_Sans_JP'] font-bold text-[20px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
             {selectedCategoryData.name}
           </h3>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-6">
-            {selectedCategoryData.jobTypes.map((jobType) => {
-              const isSelected = selectedJobTypes.some(
-                (s) => s.id === jobType.id,
-              );
+
+          {/* 制限メッセージ */}
+          {selectedJobTypes.length >= maxSelections && (
+            <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
+              <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
+                最大{maxSelections}
+                個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
+              </p>
+            </div>
+          )}
+
+          {/* 職種チェックボックスリスト（2列グリッド） */}
+          <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
+            {selectedCategoryData.jobs.map(job => {
+              const isSelected = selectedJobTypes.includes(job);
               const isDisabled =
-                !isSelected &&
-                selectedJobTypes.length >= maxSelections;
+                !isSelected && selectedJobTypes.length >= maxSelections;
+
               return (
-                <div key={jobType.id} className="flex items-center">
+                <div key={job} className='flex items-center'>
                   <Checkbox
-                    label={jobType.name}
+                    label={job}
                     checked={isSelected}
-                    onChange={() => handleJobTypeClick(jobType)}
+                    onChange={() => handleCheckboxChange(job)}
                     disabled={isDisabled}
                   />
                 </div>

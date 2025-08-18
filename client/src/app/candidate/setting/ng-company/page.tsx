@@ -3,54 +3,66 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Navigation } from '@/components/ui/navigation';
+import { Modal } from '@/components/ui/mo-dal';
+import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import { X } from 'lucide-react';
+import { useServerCompanyAutocomplete } from '@/hooks/useServerCompanyAutocomplete';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { addBlockedCompany, removeBlockedCompany, getBlockedCompanies } from './actions';
+import Image from 'next/image';
 
 const closeIcon = "http://localhost:3845/assets/a0396fedb26c10cbda7f34a7019f04ee792845d6.svg";
 const modalCloseIcon = "http://localhost:3845/assets/ca527250688df149a478765bdeb765225fed4f49.svg";
 const tagCloseIcon = "http://localhost:3845/assets/20c8c5f9f2aa6159959eba646d0e3d86647e8627.svg";
 
 interface BlockedCompany {
-  id: string;
   name: string;
 }
 
 interface CompanyTagProps {
   company: BlockedCompany;
-  onRemove: (id: string) => void;
+  onRemove: (name: string) => void;
 }
 
 interface AddBlockCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddCompany: (companyName: string) => void;
+  onAddCompany: (companyName: string) => Promise<void>;
   existingCompanies: BlockedCompany[];
 }
 
 function AddBlockCompanyModal({ isOpen, onClose, onAddCompany, existingCompanies }: AddBlockCompanyModalProps) {
   const [companyName, setCompanyName] = useState('');
   const [selectedCompanies, setSelectedCompanies] = useState<BlockedCompany[]>([]);
+  
+  // Company autocomplete
+  const { suggestions: companySuggestions, loading: companyLoading } = useServerCompanyAutocomplete(companyName);
 
-  const handleAddToSelected = () => {
-    if (companyName.trim() && !selectedCompanies.find(c => c.name === companyName.trim())) {
+  const handleAddToSelected = (companyNameToAdd: string) => {
+    if (companyNameToAdd.trim() && !selectedCompanies.find(c => c.name === companyNameToAdd.trim())) {
       const newCompany: BlockedCompany = {
-        id: Date.now().toString(),
-        name: companyName.trim()
+        name: companyNameToAdd.trim()
       };
       setSelectedCompanies(prev => [...prev, newCompany]);
       setCompanyName('');
     }
   };
 
-  const handleRemoveFromSelected = (id: string) => {
-    setSelectedCompanies(prev => prev.filter(company => company.id !== id));
+  const handleRemoveFromSelected = (name: string) => {
+    setSelectedCompanies(prev => prev.filter(company => company.name !== name));
   };
 
-  const handleSave = () => {
-    selectedCompanies.forEach(company => {
-      onAddCompany(company.name);
-    });
-    setSelectedCompanies([]);
-    setCompanyName('');
+  const handleSave = async () => {
+    try {
+      for (const company of selectedCompanies) {
+        await onAddCompany(company.name);
+      }
+      setSelectedCompanies([]);
+      setCompanyName('');
+      onClose();
+    } catch (error) {
+      console.error('企業の保存に失敗しました:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -60,127 +72,89 @@ function AddBlockCompanyModal({ isOpen, onClose, onAddCompany, existingCompanies
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleAddToSelected();
+    if (e.key === 'Enter' && companyName.trim()) {
+      handleAddToSelected(companyName.trim());
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="box-border content-stretch flex flex-col items-center justify-center overflow-clip p-0 relative rounded-[10px] bg-white max-w-[680px] w-full mx-4">
-        {/* ヘッダー */}
-        <div className="bg-[#ffffff] box-border content-stretch flex flex-row gap-6 items-center justify-start px-10 py-6 relative shrink-0 w-full border-b border-[#efefef]">
-          <div className="basis-0 font-['Noto_Sans_JP:Bold',_sans-serif] grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[#323232] text-[24px] text-left tracking-[2.4px]">
-            <p className="block leading-[1.6]">ブロック企業追加</p>
+    <Modal
+      title="ブロック企業追加"
+      isOpen={isOpen}
+      onClose={handleCancel}
+      primaryButtonText="保存する"
+      onPrimaryAction={handleSave}
+      secondaryButtonText="保存せず戻る"
+      onSecondaryAction={handleCancel}
+      width="680px"
+      height="400px"
+    >
+      <div className="box-border content-stretch flex flex-col md:flex-row gap-4 items-start justify-center p-0 relative shrink-0 w-full">
+        <div className="box-border content-stretch flex flex-row gap-2.5 items-center justify-start pb-0 pt-0 md:pt-[11px] px-0 relative shrink-0 w-full md:w-auto">
+          <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-bold">
+            <p className="adjustLetterSpacing block leading-[2] whitespace-pre">企業名</p>
           </div>
-          <button 
-            onClick={handleCancel}
-            className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center p-0 relative shrink-0 size-6 cursor-pointer"
-          >
-            <div className="aspect-[135.994/135.999] basis-0 grow min-h-px min-w-px relative shrink-0">
-              <img alt="" className="block max-w-none size-full" src={modalCloseIcon} />
-            </div>
-          </button>
         </div>
-
-        {/* フォーム */}
-        <div className="box-border content-stretch flex flex-col gap-6 items-center justify-center min-h-60 px-10 py-10 relative shrink-0 w-full">
-          <div className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0 w-full">
-            <div className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center pb-0 pt-[11px] px-0 relative shrink-0">
-              <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px] font-medium">
-                <p className="adjustLetterSpacing block leading-[2] whitespace-pre">企業名</p>
-              </div>
+        <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full md:w-[400px]">
+          <div className="flex gap-2 items-center w-full">
+            <div className="flex-1">
+              <AutocompleteInput
+                value={companyName}
+                onChange={setCompanyName}
+                placeholder="企業名を入力"
+                suggestions={companySuggestions.map(c => ({ 
+                  id: c.id, 
+                  name: c.name, 
+                  category: c.address || ''
+                }))}
+                loading={companyLoading}
+                onSuggestionSelect={(suggestion) => {
+                  handleAddToSelected(suggestion.name);
+                }}
+              />
             </div>
-            <div className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-[400px]">
-              <div className="bg-[#ffffff] box-border content-stretch flex flex-row gap-2.5 items-center justify-start p-[11px] relative rounded-[5px] shrink-0 w-full border border-[#999999]">
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="企業名を入力"
-                  className="basis-0 font-['Noto_Sans_JP:Medium',_sans-serif] grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[#323232] text-[16px] text-left tracking-[1.6px] font-medium bg-transparent border-none outline-none placeholder:text-[#999999]"
-                />
-                {companyName.trim() && (
+          </div>
+          
+          {/* 選択された企業のタグ */}
+          {selectedCompanies.length > 0 && (
+            <div className="box-border content-stretch flex flex-col gap-2 items-start justify-center p-0 relative shrink-0 w-full">
+              {selectedCompanies.map((company) => (
+                <div
+                  key={company.name}
+                  className="bg-[#d2f1da] flex items-center justify-between gap-2 px-4 py-2 rounded-[5px] w-full min-w-0"
+                >
+                  <span className="text-[#0f9058] text-[14px] font-medium leading-[1.6] tracking-[1.4px] truncate min-w-0 flex-1">
+                    {company.name}
+                  </span>
                   <button
-                    onClick={handleAddToSelected}
-                    className="px-3 py-1 bg-[#0f9058] text-white rounded text-sm font-medium hover:bg-[#0d7a4a] transition-colors"
+                    onClick={() => handleRemoveFromSelected(company.name)}
+                    className="ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors flex-shrink-0"
+                    aria-label="削除"
                   >
-                    追加
+                    <X size={18} className="text-[#0f9058]" />
                   </button>
-                )}
-              </div>
-              
-              {/* 選択された企業のタグ */}
-              {selectedCompanies.length > 0 && (
-                <div className="box-border content-stretch flex flex-col gap-2 items-start justify-center p-0 relative shrink-0 w-full">
-                  {selectedCompanies.map((company) => (
-                    <div
-                      key={company.id}
-                      className="bg-[#d2f1da] box-border content-stretch flex flex-row h-10 items-center justify-between px-6 py-0 relative rounded-[10px] shrink-0 w-full"
-                    >
-                      <div className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#0f9058] text-[14px] text-center text-nowrap tracking-[1.4px]">
-                        <p className="adjustLetterSpacing block leading-[1.6] whitespace-pre">{company.name}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFromSelected(company.id)}
-                        className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center p-0 relative shrink-0 size-3 cursor-pointer"
-                      >
-                        <div className="aspect-[135.994/135.999] basis-0 grow min-h-px min-w-px relative shrink-0">
-                          <img alt="" className="block max-w-none size-full" src={tagCloseIcon} />
-                        </div>
-                      </button>
-                    </div>
-                  ))}
                 </div>
-              )}
+              ))}
             </div>
-          </div>
-        </div>
-
-        {/* フッター */}
-        <div className="bg-[#ffffff] box-border content-stretch flex flex-row gap-10 h-[104px] items-center justify-center px-10 py-6 relative shrink-0 w-full border-t border-[#efefef]">
-          <div className="box-border content-stretch flex flex-row gap-4 items-center justify-start p-0 relative shrink-0">
-            <Button
-              variant="green-outline"
-              size="figma-outline"
-              className="min-w-40"
-              onClick={handleCancel}
-            >
-              保存せず戻る
-            </Button>
-            <Button
-              variant="green-gradient"
-              size="figma-square"
-              className="min-w-40"
-              onClick={handleSave}
-              disabled={selectedCompanies.length === 0}
-            >
-              保存する
-            </Button>
-          </div>
+          )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
 function CompanyTag({ company, onRemove }: CompanyTagProps) {
   return (
-    <div className="bg-[#d2f1da] box-border content-stretch flex flex-row h-10 items-center justify-between px-6 py-0 relative rounded-[10px] shrink-0 w-full">
-      <div className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#0f9058] text-[14px] text-center text-nowrap tracking-[1.4px]">
-        <p className="adjustLetterSpacing block leading-[1.6] whitespace-pre">{company.name}</p>
-      </div>
+    <div className="bg-[#d2f1da] flex items-center justify-between gap-2 px-4 py-2 rounded-[5px] w-full min-w-0">
+      <span className="text-[#0f9058] text-[14px] font-medium leading-[1.6] tracking-[1.4px] truncate min-w-0 flex-1">
+        {company.name}
+      </span>
       <button
-        onClick={() => onRemove(company.id)}
-        className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center p-0 relative shrink-0 size-3 cursor-pointer"
+        onClick={() => onRemove(company.name)}
+        className="ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors flex-shrink-0"
         aria-label={`${company.name}を削除`}
       >
-        <div className="aspect-[135.994/135.999] basis-0 grow min-h-px min-w-px relative shrink-0">
-          <img alt="" className="block max-w-none size-full" src={closeIcon} />
-        </div>
+        <X size={18} className="text-[#0f9058]" />
       </button>
     </div>
   );
@@ -192,19 +166,13 @@ export default function NgCompanyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // 実際はサーバーAPIから現在の設定を取得
     const fetchBlockedCompanies = async () => {
       try {
-        // const response = await fetch('/api/candidate/blocked-companies');
-        // const data = await response.json();
-        // setBlockedCompanies(data);
-        
-        // デモ用のデータ
-        setBlockedCompanies([
-          { id: '1', name: '企業名テキスト' },
-          { id: '2', name: '企業名テキスト' },
-          { id: '3', name: '企業名テキスト' }
-        ]);
+        const settings = await getBlockedCompanies();
+        if (settings && settings.company_names) {
+          const companies = settings.company_names.map(name => ({ name }));
+          setBlockedCompanies(companies);
+        }
       } catch (error) {
         console.error('設定の取得に失敗しました:', error);
       }
@@ -213,19 +181,10 @@ export default function NgCompanyPage() {
     fetchBlockedCompanies();
   }, []);
 
-  const handleRemoveCompany = async (companyId: string) => {
+  const handleRemoveCompany = async (companyName: string) => {
     try {
-      // 実際はサーバーAPIを呼び出してブロック企業を削除
-      // const response = await fetch(`/api/candidate/blocked-companies/${companyId}`, {
-      //   method: 'DELETE',
-      // });
-      
-      // if (!response.ok) {
-      //   throw new Error('企業の削除に失敗しました');
-      // }
-
-      // 削除処理
-      setBlockedCompanies(prev => prev.filter(company => company.id !== companyId));
+      await removeBlockedCompany(companyName);
+      setBlockedCompanies(prev => prev.filter(company => company.name !== companyName));
     } catch (error) {
       console.error('企業の削除に失敗しました:', error);
       // エラーハンドリング
@@ -240,31 +199,40 @@ export default function NgCompanyPage() {
     setIsModalOpen(true);
   };
 
-  const handleAddCompany = (companyName: string) => {
-    // 新規企業をリストに追加
-    const newCompany: BlockedCompany = {
-      id: Date.now().toString(),
-      name: companyName
-    };
-    setBlockedCompanies(prev => [...prev, newCompany]);
-    setIsModalOpen(false);
+  const handleAddCompany = async (companyName: string) => {
+    try {
+      await addBlockedCompany(companyName);
+      const newCompany: BlockedCompany = {
+        name: companyName
+      };
+      setBlockedCompanies(prev => [...prev, newCompany]);
+    } catch (error) {
+      console.error('企業の追加に失敗しました:', error);
+      // エラーハンドリング
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navigation variant="candidate" isLoggedIn={true} />
-      
+      <SettingsHeader
+        breadcrumbs={[
+          { label: '各種設定', href: '/candidate/setting' },
+          { label: 'NG企業設定' }
+        ]}
+        title="NG企業設定"
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+      />
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >
         <div
-          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-start justify-start p-[40px] relative rounded-[10px] shrink-0 w-full max-w-4xl"
+          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-start justify-start md:p-[40px] p-[24px] relative rounded-[10px] shrink-0 w-full"
         >
           <div
             className="box-border content-stretch flex flex-col gap-6 items-center justify-start p-0 relative shrink-0 w-full"
           >
             <div
-              className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left tracking-[1.6px] font-medium w-full"
+              className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left tracking-[1.6px] font-bold w-full"
             >
               <p className="block leading-[2]">
                 希望しない会社からスカウトを受け取らないよう設定できます。
@@ -274,10 +242,10 @@ export default function NgCompanyPage() {
             </div>
           </div>
           <div
-            className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0 w-full"
+            className="box-border content-stretch flex flex-col md:flex-row gap-4 items-start justify-start p-0 relative shrink-0 w-full"
           >
             <div
-              className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-[400px]"
+              className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full max-w-[400px] md:w-[400px]"
             >
               <div
                 className="box-border content-stretch flex flex-col gap-2 items-start justify-center p-0 relative shrink-0 w-full"
@@ -285,7 +253,7 @@ export default function NgCompanyPage() {
                 {blockedCompanies.length > 0 ? (
                   blockedCompanies.map((company) => (
                     <CompanyTag
-                      key={company.id}
+                      key={company.name}
                       company={company}
                       onRemove={handleRemoveCompany}
                     />
@@ -307,7 +275,7 @@ export default function NgCompanyPage() {
           <Button
             variant="green-outline"
             size="figma-outline"
-            className="min-w-40 w-[202px]"
+            className="min-w-40 w-full md:w-auto font-bold py-[17px]"
             onClick={handleBack}
           >
             戻る
@@ -315,10 +283,10 @@ export default function NgCompanyPage() {
           <Button
             variant="green-gradient"
             size="figma-square"
-            className="min-w-40"
+            className="min-w-40 rounded-full font-bold py-[17px] md:w-auto w-full"
             onClick={handleAddBlockCompany}
           >
-            設定企業追加
+            ブロック企業を追加
           </Button>
         </div>
       </div>

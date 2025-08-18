@@ -2,69 +2,27 @@
 
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
+import { Modal } from '@/components/ui/mo-dal';
 import { useState, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useCompanyAutocomplete } from '@/hooks/useCompanyAutocomplete';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { saveRecentJobAction } from './actions';
 import { useEffect } from 'react';
 
-// フォームスキーマの定義
-const recentJobSchema = z
-  .object({
-    companyName: z.string().min(1, '企業名を入力してください'),
-    departmentPosition: z.string().min(1, '部署名・役職名を入力してください'),
-    startYear: z.string().min(1, '開始年月を選択してください'),
-    startMonth: z.string().min(1, '開始年月を選択してください'),
-    endYear: z.string().optional(),
-    endMonth: z.string().optional(),
-    isCurrentlyWorking: z.boolean(),
-    industries: z
-      .array(
-        z.object({
-          id: z.string(),
-          name: z.string(),
-        }),
-      )
-      .min(1, '業種を1つ以上選択してください')
-      .max(3),
-    jobTypes: z
-      .array(
-        z.object({
-          id: z.string(),
-          name: z.string(),
-        }),
-      )
-      .min(1, '職種を1つ以上選択してください')
-      .max(3),
-    jobDescription: z.string().min(1, '業務内容を入力してください'),
-  })
-  .superRefine((data, ctx) => {
-    // 在職中でない場合は終了年月が必須
-    if (!data.isCurrentlyWorking) {
-      if (!data.endYear || data.endYear === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '終了年月を選択するか、「在職中」にチェックを入れてください',
-          path: ['endYear'],
-        });
-      }
-      if (!data.endMonth || data.endMonth === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '終了年月を選択するか、「在職中」にチェックを入れてください',
-          path: ['endMonth'],
-        });
-      }
-    }
-  });
-
-type RecentJobFormData = z.infer<typeof recentJobSchema>;
+interface RecentJobFormData {
+  companyName: string;
+  departmentPosition: string;
+  startYear: string;
+  startMonth: string;
+  endYear: string;
+  endMonth: string;
+  isCurrentlyWorking: boolean;
+  industries: { id: string; name: string }[];
+  jobTypes: { id: string; name: string }[];
+  jobDescription: string;
+}
 
 export default function SignupRecentJobPage() {
   const router = useRouter();
@@ -72,38 +30,19 @@ export default function SignupRecentJobPage() {
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [userId, setUserId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-    setValue,
-    watch,
-  } = useForm<RecentJobFormData>({
-    resolver: zodResolver(recentJobSchema),
-    mode: 'onChange',
-    defaultValues: {
-      companyName: '',
-      departmentPosition: '',
-      startYear: '',
-      startMonth: '',
-      endYear: '',
-      endMonth: '',
-      isCurrentlyWorking: false,
-      industries: [],
-      jobTypes: [],
-      jobDescription: '',
-    },
+  const [formData, setFormData] = useState<RecentJobFormData>({
+    companyName: '',
+    departmentPosition: '',
+    startYear: '',
+    startMonth: '',
+    endYear: '',
+    endMonth: '',
+    isCurrentlyWorking: false,
+    industries: [],
+    jobTypes: [],
+    jobDescription: '',
   });
 
-  const isCurrentlyWorking = watch('isCurrentlyWorking');
-  const selectedIndustries = watch('industries');
-  const selectedJobTypes = watch('jobTypes');
-  const startYear = watch('startYear');
-  const companyName = watch('companyName');
-
-  // Company autocomplete
-  const { suggestions: companySuggestions, loading: companyLoading } = useCompanyAutocomplete(companyName);
 
   // 年の選択肢を生成（1973年から現在の年まで）
   const currentYear = new Date().getFullYear();
@@ -117,19 +56,33 @@ export default function SignupRecentJobPage() {
 
   // 終了年の選択肢を生成（開始年から現在の年まで）
   const endYearOptions = useMemo(() => {
-    if (!startYear) return [];
+    if (!formData.startYear) return [];
     const years = [];
-    const startYearNum = parseInt(startYear);
+    const startYearNum = parseInt(formData.startYear);
     for (let year = currentYear; year >= startYearNum; year--) {
       years.push(year.toString());
     }
     return years;
-  }, [currentYear, startYear]);
+  }, [currentYear, formData.startYear]);
 
   // 月の選択肢を生成（1〜12月）
   const monthOptions = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, '0'),
   );
+
+  // Form validation
+  const isFormValid = () => {
+    return (
+      formData.companyName.trim() !== '' &&
+      formData.departmentPosition.trim() !== '' &&
+      formData.startYear !== '' &&
+      formData.startMonth !== '' &&
+      formData.industries.length > 0 &&
+      formData.jobTypes.length > 0 &&
+      formData.jobDescription.trim() !== '' &&
+      (formData.isCurrentlyWorking || (formData.endYear !== '' && formData.endMonth !== ''))
+    );
+  };
 
   // Get user ID from cookies
   useEffect(() => {
@@ -148,7 +101,7 @@ export default function SignupRecentJobPage() {
     }
   }, []);
 
-  const onSubmit = async (data: RecentJobFormData) => {
+  const handleSubmit = async () => {
     if (!userId) {
       console.error('User ID not found');
       return;
@@ -156,7 +109,7 @@ export default function SignupRecentJobPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await saveRecentJobAction(data, userId);
+      const result = await saveRecentJobAction(formData, userId);
       
       if (result.success) {
         router.push('/signup/resume');
@@ -172,49 +125,51 @@ export default function SignupRecentJobPage() {
   };
 
   // モーダルから選択された値を設定
-  const handleIndustryConfirm = (industries: Industry[]) => {
-    setValue('industries', industries, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+  const handleIndustryConfirm = (selectedIndustryNames: string[]) => {
+    // Convert selectedIndustries to the expected format
+    const industries = selectedIndustryNames.map((industryName, index) => ({
+      id: `industry_${index}_${industryName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      name: industryName
+    }));
+    setFormData(prev => ({ ...prev, industries }));
     setIsIndustryModalOpen(false);
   };
 
-  const handleJobTypeConfirm = (jobTypes: JobType[]) => {
-    setValue('jobTypes', jobTypes, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+  const handleJobTypeConfirm = (selectedJobTypeNames: string[]) => {
+    // Convert selectedJobTypes to the expected format
+    const jobTypes = selectedJobTypeNames.map((jobTypeName, index) => ({
+      id: `jobtype_${index}_${jobTypeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      name: jobTypeName
+    }));
+    setFormData(prev => ({ ...prev, jobTypes }));
     setIsJobTypeModalOpen(false);
   };
 
   // 在職中チェックボックスの切り替え
   const handleCurrentlyWorkingToggle = () => {
-    const newValue = !isCurrentlyWorking;
-    setValue('isCurrentlyWorking', newValue, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-
-    // 在職中の場合、終了年月をクリア
-    if (newValue) {
-      setValue('endYear', '', { shouldValidate: true });
-      setValue('endMonth', '', { shouldValidate: true });
-    }
+    const newValue = !formData.isCurrentlyWorking;
+    setFormData(prev => ({
+      ...prev,
+      isCurrentlyWorking: newValue,
+      // 在職中の場合、終了年月をクリア
+      endYear: newValue ? '' : prev.endYear,
+      endMonth: newValue ? '' : prev.endMonth,
+    }));
   };
 
   // 業種・職種を削除
   const removeIndustry = (industryId: string) => {
-    const updated = selectedIndustries.filter((i) => i.id !== industryId);
-    setValue('industries', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    setFormData(prev => ({
+      ...prev,
+      industries: prev.industries.filter((i) => i.id !== industryId)
+    }));
   };
 
   const removeJobType = (jobTypeId: string) => {
-    const updated = selectedJobTypes.filter((jt) => jt.id !== jobTypeId);
-    setValue('jobTypes', updated, { shouldValidate: true, shouldDirty: true });
+    setFormData(prev => ({
+      ...prev,
+      jobTypes: prev.jobTypes.filter((jt) => jt.id !== jobTypeId)
+    }));
   };
 
   return (
@@ -222,7 +177,7 @@ export default function SignupRecentJobPage() {
       {/* PC Version */}
       <div className="hidden lg:block">
         <main
-          className="flex relative py-20 flex-col items-center justify-start"
+          className="flex relative py-20 flex-col items-center justify-start min-h-[calc(100vh+1700px)]"
           style={{
             backgroundImage: "url('/background-pc.svg')",
             backgroundPosition: 'center top',
@@ -316,23 +271,12 @@ export default function SignupRecentJobPage() {
                   </label>
                 </div>
                 <div className="w-[400px]">
-                  <AutocompleteInput
-                    value={companyName}
-                    onChange={(value) => setValue('companyName', value, { shouldValidate: true })}
+                  <CompanyNameInput
+                    value={formData.companyName}
+                    onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
                     placeholder="企業名を入力"
-                    suggestions={companySuggestions.map(c => ({ 
-                      id: c.id, 
-                      name: c.name, 
-                      category: c.address 
-                    }))}
-                    loading={companyLoading}
-                    className={errors.companyName ? 'border-red-500' : ''}
+                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
-                  {errors.companyName && (
-                    <p className="mt-1 text-red-500 text-[14px]">
-                      {errors.companyName.message}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -347,14 +291,10 @@ export default function SignupRecentJobPage() {
                   <input
                     type="text"
                     placeholder="部署名・役職名を入力"
-                    {...register('departmentPosition')}
-                    className={`w-full px-[11px] py-[11px] bg-white border ${errors.departmentPosition ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                    value={formData.departmentPosition}
+                    onChange={(e) => setFormData(prev => ({ ...prev, departmentPosition: e.target.value }))}
+                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
-                  {errors.departmentPosition && (
-                    <p className="mt-1 text-red-500 text-[14px]">
-                      {errors.departmentPosition.message}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -369,8 +309,9 @@ export default function SignupRecentJobPage() {
                   <div className="flex flex-wrap gap-2 items-center">
                     <div className="relative">
                       <select
-                        {...register('startYear')}
-                        className={`px-[11px] py-[11px] pr-10 bg-white border ${errors.startYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.startYear}
+                        onChange={(e) => setFormData(prev => ({ ...prev, startYear: e.target.value }))}
+                        className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
                         {yearOptions.map((year) => (
@@ -399,8 +340,9 @@ export default function SignupRecentJobPage() {
                     </span>
                     <div className="relative">
                       <select
-                        {...register('startMonth')}
-                        className={`px-[11px] py-[11px] pr-10 bg-white border ${errors.startMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.startMonth}
+                        onChange={(e) => setFormData(prev => ({ ...prev, startMonth: e.target.value }))}
+                        className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
                         {monthOptions.map((month) => (
@@ -432,7 +374,7 @@ export default function SignupRecentJobPage() {
               </div>
 
               {/* End Date */}
-              {!isCurrentlyWorking && (
+              {!formData.isCurrentlyWorking && (
                 <div className="flex flex-row gap-4 items-start w-full">
                   <div className="pt-[11px] min-w-[130px] text-right">
                     <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
@@ -444,8 +386,9 @@ export default function SignupRecentJobPage() {
                       <div className="flex flex-wrap gap-2 items-center">
                         <div className="relative">
                           <select
-                            {...register('endYear')}
-                            className={`px-[11px] py-[11px] pr-10 bg-white border ${errors.endYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.endYear}
+                            onChange={(e) => setFormData(prev => ({ ...prev, endYear: e.target.value }))}
+                            className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             <option value="">未選択</option>
                             {endYearOptions.map((year) => (
@@ -474,8 +417,9 @@ export default function SignupRecentJobPage() {
                         </span>
                         <div className="relative">
                           <select
-                            {...register('endMonth')}
-                            className={`px-[11px] py-[11px] pr-10 bg-white border ${errors.endMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.endMonth}
+                            onChange={(e) => setFormData(prev => ({ ...prev, endMonth: e.target.value }))}
+                            className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             <option value="">未選択</option>
                             {monthOptions.map((month) => (
@@ -503,11 +447,6 @@ export default function SignupRecentJobPage() {
                           月
                         </span>
                       </div>
-                      {(errors.endYear || errors.endMonth) && (
-                        <p className="text-red-500 text-[14px]">
-                          終了年月を選択するか、「在職中」にチェックを入れてください
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -533,7 +472,7 @@ export default function SignupRecentJobPage() {
                       >
                         <path
                           d="M2.85714 0C1.28125 0 0 1.28125 0 2.85714V17.1429C0 18.7188 1.28125 20 2.85714 20H17.1429C18.7188 20 20 18.7188 20 17.1429V2.85714C20 1.28125 18.7188 0 17.1429 0H2.85714ZM15.0446 7.90179L9.33036 13.6161C8.91071 14.0357 8.23214 14.0357 7.81696 13.6161L4.95982 10.7589C4.54018 10.3393 4.54018 9.66071 4.95982 9.24554C5.37946 8.83036 6.05804 8.82589 6.47321 9.24554L8.57143 11.3438L13.5268 6.38393C13.9464 5.96429 14.625 5.96429 15.0402 6.38393C15.4554 6.80357 15.4598 7.48214 15.0402 7.89732L15.0446 7.90179Z"
-                          fill={isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
+                          fill={formData.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
                         />
                       </svg>
                     </div>
@@ -554,13 +493,14 @@ export default function SignupRecentJobPage() {
                 <div className="w-[400px]">
                   <div className="flex flex-col gap-2">
                     <button
+                      type="button"
                       className="w-[170px] py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
                       onClick={() => setIsIndustryModalOpen(true)}
                     >
                       業種を選択
                     </button>
                     <div className="flex flex-wrap gap-2">
-                      {selectedIndustries.map((industry) => (
+                      {formData.industries.map((industry) => (
                         <div
                           key={industry.id}
                           className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -569,6 +509,7 @@ export default function SignupRecentJobPage() {
                             {industry.name}
                           </span>
                           <button
+                            type="button"
                             className="w-3 h-3"
                             onClick={() => removeIndustry(industry.id)}
                           >
@@ -603,13 +544,14 @@ export default function SignupRecentJobPage() {
                 <div className="w-[400px]">
                   <div className="flex flex-col gap-2">
                     <button
+                      type="button"
                       className="w-[170px] py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
                       onClick={() => setIsJobTypeModalOpen(true)}
                     >
                       職種を選択
                     </button>
                     <div className="flex flex-wrap gap-2">
-                      {selectedJobTypes.map((jobType) => (
+                      {formData.jobTypes.map((jobType) => (
                         <div
                           key={jobType.id}
                           className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -618,6 +560,7 @@ export default function SignupRecentJobPage() {
                             {jobType.name}
                           </span>
                           <button
+                            type="button"
                             className="w-3 h-3"
                             onClick={() => removeJobType(jobType.id)}
                           >
@@ -652,27 +595,26 @@ export default function SignupRecentJobPage() {
                 <div className="w-[400px]">
                   <textarea
                     placeholder="担当していた業務内容や役割を簡単にご記入ください。&#10;例）新規事業の立ち上げに従事。市場調査・事業計画の策定から、立ち上げ後のKPI設計・進捗管理までを担当"
-                    {...register('jobDescription')}
-                    className={`leading-[200%] w-full px-[11px] py-[11px] bg-white border ${errors.jobDescription ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[160px] resize-none`}
+                    value={formData.jobDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                    className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[160px] resize-none"
                   />
-                  {errors.jobDescription && (
-                    <p className="mt-1 text-red-500 text-[14px]">
-                      {errors.jobDescription.message}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit(onSubmit)}
-              disabled={!isValid}
-              className={`px-10p py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                isValid
-                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white cursor-pointer'
-                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-              }`}
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !isFormValid()}
+              className='flex items-center w-full md:w-auto justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '1.6px',
+              }}
             >
               次へ
             </button>
@@ -755,23 +697,12 @@ export default function SignupRecentJobPage() {
                 <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                   企業名
                 </label>
-                <AutocompleteInput
-                  value={companyName}
-                  onChange={(value) => setValue('companyName', value, { shouldValidate: true })}
+                <CompanyNameInput
+                  value={formData.companyName}
+                  onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
                   placeholder="企業名を入力"
-                  suggestions={companySuggestions.map(c => ({ 
-                    id: c.id, 
-                    name: c.name, 
-                    category: c.address 
-                  }))}
-                  loading={companyLoading}
-                  className={errors.companyName ? 'border-red-500' : ''}
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
-                {errors.companyName && (
-                  <p className="text-red-500 text-[14px]">
-                    {errors.companyName.message}
-                  </p>
-                )}
               </div>
 
               {/* Department/Position */}
@@ -782,14 +713,10 @@ export default function SignupRecentJobPage() {
                 <input
                   type="text"
                   placeholder="部署名・役職名を入力"
-                  {...register('departmentPosition')}
-                  className={`w-full px-[11px] py-[11px] bg-white border ${errors.departmentPosition ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                  value={formData.departmentPosition}
+                  onChange={(e) => setFormData(prev => ({ ...prev, departmentPosition: e.target.value }))}
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
-                {errors.departmentPosition && (
-                  <p className="text-red-500 text-[14px]">
-                    {errors.departmentPosition.message}
-                  </p>
-                )}
               </div>
 
               {/* Start Date */}
@@ -800,8 +727,9 @@ export default function SignupRecentJobPage() {
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1">
                     <select
-                      {...register('startYear')}
-                      className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${errors.startYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                      value={formData.startYear}
+                      onChange={(e) => setFormData(prev => ({ ...prev, startYear: e.target.value }))}
+                      className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                     >
                       <option value="">未選択</option>
                       {yearOptions.map((year) => (
@@ -830,8 +758,9 @@ export default function SignupRecentJobPage() {
                   </span>
                   <div className="relative flex-1">
                     <select
-                      {...register('startMonth')}
-                      className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${errors.startMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                      value={formData.startMonth}
+                      onChange={(e) => setFormData(prev => ({ ...prev, startMonth: e.target.value }))}
+                      className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                     >
                       <option value="">未選択</option>
                       {monthOptions.map((month) => (
@@ -859,15 +788,10 @@ export default function SignupRecentJobPage() {
                     月
                   </span>
                 </div>
-                {(errors.startYear || errors.startMonth) && (
-                  <p className="text-red-500 text-[14px]">
-                    開始年月を選択してください
-                  </p>
-                )}
               </div>
 
               {/* End Date */}
-              {!isCurrentlyWorking && (
+              {!formData.isCurrentlyWorking && (
                 <div className="flex flex-col gap-2">
                   <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                     終了年月
@@ -875,8 +799,9 @@ export default function SignupRecentJobPage() {
                   <div className="flex gap-2 items-center">
                     <div className="relative flex-1">
                       <select
-                        {...register('endYear')}
-                        className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${errors.endYear ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.endYear}
+                        onChange={(e) => setFormData(prev => ({ ...prev, endYear: e.target.value }))}
+                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
                         {endYearOptions.map((year) => (
@@ -905,8 +830,9 @@ export default function SignupRecentJobPage() {
                     </span>
                     <div className="relative flex-1">
                       <select
-                        {...register('endMonth')}
-                        className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${errors.endMonth ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.endMonth}
+                        onChange={(e) => setFormData(prev => ({ ...prev, endMonth: e.target.value }))}
+                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
                         {monthOptions.map((month) => (
@@ -934,11 +860,6 @@ export default function SignupRecentJobPage() {
                       月
                     </span>
                   </div>
-                  {(errors.endYear || errors.endMonth) && (
-                    <p className="text-red-500 text-[14px]">
-                      終了年月を選択するか、「在職中」にチェックを入れてください
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -958,7 +879,7 @@ export default function SignupRecentJobPage() {
                     >
                       <path
                         d="M2.85714 0C1.28125 0 0 1.28125 0 2.85714V17.1429C0 18.7188 1.28125 20 2.85714 20H17.1429C18.7188 20 20 18.7188 20 17.1429V2.85714C20 1.28125 18.7188 0 17.1429 0H2.85714ZM15.0446 7.90179L9.33036 13.6161C8.91071 14.0357 8.23214 14.0357 7.81696 13.6161L4.95982 10.7589C4.54018 10.3393 4.54018 9.66071 4.95982 9.24554C5.37946 8.83036 6.05804 8.82589 6.47321 9.24554L8.57143 11.3438L13.5268 6.38393C13.9464 5.96429 14.625 5.96429 15.0402 6.38393C15.4554 6.80357 15.4598 7.48214 15.0402 7.89732L15.0446 7.90179Z"
-                        fill={isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
+                        fill={formData.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
                       />
                     </svg>
                   </div>
@@ -980,7 +901,7 @@ export default function SignupRecentJobPage() {
                   業種を選択
                 </button>
                 <div className="flex flex-wrap gap-2">
-                  {selectedIndustries.map((industry) => (
+                  {formData.industries.map((industry) => (
                     <div
                       key={industry.id}
                       className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1009,11 +930,6 @@ export default function SignupRecentJobPage() {
                     </div>
                   ))}
                 </div>
-                {errors.industries && (
-                  <p className="text-red-500 text-[14px]">
-                    {errors.industries.message}
-                  </p>
-                )}
               </div>
 
               {/* Job Type */}
@@ -1028,7 +944,7 @@ export default function SignupRecentJobPage() {
                   職種を選択
                 </button>
                 <div className="flex flex-wrap gap-2">
-                  {selectedJobTypes.map((jobType) => (
+                  {formData.jobTypes.map((jobType) => (
                     <div
                       key={jobType.id}
                       className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1057,11 +973,6 @@ export default function SignupRecentJobPage() {
                     </div>
                   ))}
                 </div>
-                {errors.jobTypes && (
-                  <p className="text-red-500 text-[14px]">
-                    {errors.jobTypes.message}
-                  </p>
-                )}
               </div>
 
               {/* Job Description */}
@@ -1071,26 +982,25 @@ export default function SignupRecentJobPage() {
                 </label>
                 <textarea
                   placeholder="担当していた業務内容や役割を簡単にご記入ください。例）新規事業の立ち上げに従事。市場調査・事業計画の策定から、立ち上げ後のKPI設計・進捗管理までを担当"
-                  {...register('jobDescription')}
-                  className={`leading-[200%] w-full px-[11px] py-[11px] bg-white border ${errors.jobDescription ? 'border-red-500' : 'border-[#999999]'} rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[192px] resize-none`}
+                  value={formData.jobDescription}
+                  onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                  className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[192px] resize-none"
                 />
-                {errors.jobDescription && (
-                  <p className="text-red-500 text-[14px]">
-                    {errors.jobDescription.message}
-                  </p>
-                )}
               </div>
             </div>
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit(onSubmit)}
-              disabled={!isValid}
-              className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] ${
-                isValid
-                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white cursor-pointer'
-                  : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-              }`}
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !isFormValid()}
+              className='flex items-center w-full justify-center px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '1.6px',
+              }}
             >
               次へ
             </button>
@@ -1103,7 +1013,7 @@ export default function SignupRecentJobPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustryConfirm}
-        initialSelected={selectedIndustries}
+        initialSelected={formData.industries.map(industry => industry.name)}
         maxSelections={3}
       />
 
@@ -1111,7 +1021,7 @@ export default function SignupRecentJobPage() {
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={selectedJobTypes}
+        initialSelected={formData.jobTypes.map(jobType => jobType.name)}
         maxSelections={3}
       />
     </>

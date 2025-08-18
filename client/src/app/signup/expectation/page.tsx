@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
@@ -13,45 +10,25 @@ import { type Industry } from '@/constants/industry-data';
 import { type JobType } from '@/constants/job-type-data';
 import { saveExpectationData } from './actions';
 
-const expectationSchema = z.object({
-  desiredIncome: z.string().min(1, '希望年収を選択してください'),
-  industries: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      }),
-    )
-    .min(1, '業種を選択してください')
-    .max(3, '業種は最大3つまで選択可能です'),
-  jobTypes: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      }),
-    )
-    .min(1, '職種を選択してください')
-    .max(3, '職種は最大3つまで選択可能です'),
-  workLocations: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      }),
-    )
-    .min(1, '勤務地を選択してください'),
-  workStyles: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-      }),
-    )
-    .min(1, '働き方を選択してください'),
-});
-
-type ExpectationFormData = z.infer<typeof expectationSchema>;
+interface ExpectationFormData {
+  desiredIncome: string;
+  industries: Array<{
+    id: string;
+    name: string;
+  }>;
+  jobTypes: Array<{
+    id: string;
+    name: string;
+  }>;
+  workLocations: Array<{
+    id: string;
+    name: string;
+  }>;
+  workStyles: Array<{
+    id: string;
+    name: string;
+  }>;
+}
 
 export default function SignupExpectationPage() {
   const router = useRouter();
@@ -60,64 +37,63 @@ export default function SignupExpectationPage() {
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isValid },
-  } = useForm<ExpectationFormData>({
-    resolver: zodResolver(expectationSchema),
-    defaultValues: {
-      desiredIncome: '',
-      industries: [],
-      jobTypes: [],
-      workLocations: [],
-      workStyles: [],
-    },
-    mode: 'onChange',
+  const [formData, setFormData] = useState<ExpectationFormData>({
+    desiredIncome: '',
+    industries: [],
+    jobTypes: [],
+    workLocations: [],
+    workStyles: [],
   });
 
-  const formData = watch();
+  const isFormValid = () => {
+    return (
+      formData.desiredIncome.trim() !== '' &&
+      formData.industries.length > 0 &&
+      formData.industries.length <= 3 &&
+      formData.jobTypes.length > 0 &&
+      formData.jobTypes.length <= 3 &&
+      formData.workLocations.length > 0 &&
+      formData.workStyles.length > 0
+    );
+  };
 
-  const onSubmit = async (data: ExpectationFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid()) return;
+
     try {
-      await saveExpectationData(data);
+      await saveExpectationData(formData);
     } catch (error) {
       console.error('Expectation data save failed:', error);
     }
   };
 
   const handleRemoveIndustry = (id: string) => {
-    setValue(
-      'industries',
-      formData.industries.filter((i) => i.id !== id),
-      { shouldValidate: true },
-    );
+    setFormData(prev => ({
+      ...prev,
+      industries: prev.industries.filter((i) => i.id !== id)
+    }));
   };
 
   const handleRemoveJobType = (id: string) => {
-    setValue(
-      'jobTypes',
-      formData.jobTypes.filter((j) => j.id !== id),
-      { shouldValidate: true },
-    );
+    setFormData(prev => ({
+      ...prev,
+      jobTypes: prev.jobTypes.filter((j) => j.id !== id)
+    }));
   };
 
   const handleRemoveWorkLocation = (id: string) => {
-    setValue(
-      'workLocations',
-      formData.workLocations.filter((w) => w.id !== id),
-      { shouldValidate: true },
-    );
+    setFormData(prev => ({
+      ...prev,
+      workLocations: prev.workLocations.filter((w) => w.id !== id)
+    }));
   };
 
   const handleRemoveWorkStyle = (id: string) => {
-    setValue(
-      'workStyles',
-      formData.workStyles.filter((w) => w.id !== id),
-      { shouldValidate: true },
-    );
+    setFormData(prev => ({
+      ...prev,
+      workStyles: prev.workStyles.filter((w) => w.id !== id)
+    }));
   };
 
   return (
@@ -126,25 +102,25 @@ export default function SignupExpectationPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={(selected) => {
-          setValue('industries', selected, { shouldValidate: true });
+          setFormData(prev => ({ ...prev, industries: selected.map(s => ({ id: s, name: s })) }));
         }}
-        initialSelected={formData.industries as Industry[]}
+        initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}
       />
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={(selected) => {
-          setValue('jobTypes', selected, { shouldValidate: true });
+          setFormData(prev => ({ ...prev, jobTypes: selected.map(s => ({ id: s, name: s })) }));
         }}
-        initialSelected={formData.jobTypes as JobType[]}
+        initialSelected={formData.jobTypes.map(j => j.name)}
         maxSelections={3}
       />
       <WorkLocationSelectModal
         isOpen={isWorkLocationModalOpen}
         onClose={() => setIsWorkLocationModalOpen(false)}
         onConfirm={(selected) => {
-          setValue('workLocations', selected, { shouldValidate: true });
+          setFormData(prev => ({ ...prev, workLocations: selected }));
         }}
         initialSelected={formData.workLocations}
       />
@@ -152,14 +128,14 @@ export default function SignupExpectationPage() {
         isOpen={isWorkStyleModalOpen}
         onClose={() => setIsWorkStyleModalOpen(false)}
         onConfirm={(selected) => {
-          setValue('workStyles', selected, { shouldValidate: true });
+          setFormData(prev => ({ ...prev, workStyles: selected }));
         }}
         initialSelected={formData.workStyles}
       />
 
       <div className="min-h-screen flex flex-col">
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           {/* PC Version */}
           <div className="hidden lg:block">
             <main
@@ -290,7 +266,8 @@ export default function SignupExpectationPage() {
                     <div className="w-[400px]">
                       <div className="relative">
                         <select
-                          {...register('desiredIncome')}
+                          value={formData.desiredIncome}
+                          onChange={(e) => setFormData(prev => ({ ...prev, desiredIncome: e.target.value }))}
                           className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           <option value="">未選択</option>
@@ -321,11 +298,6 @@ export default function SignupExpectationPage() {
                           </svg>
                         </div>
                       </div>
-                      {errors.desiredIncome && (
-                        <span className="text-red-500 text-[12px] mt-1 block">
-                          {errors.desiredIncome.message}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -379,11 +351,6 @@ export default function SignupExpectationPage() {
                           ))}
                         </div>
                       )}
-                      {errors.industries && (
-                        <span className="text-red-500 text-[12px]">
-                          {errors.industries.message}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -434,11 +401,6 @@ export default function SignupExpectationPage() {
                             </div>
                           ))}
                         </div>
-                      )}
-                      {errors.jobTypes && (
-                        <span className="text-red-500 text-[12px]">
-                          {errors.jobTypes.message}
-                        </span>
                       )}
                     </div>
                   </div>
@@ -493,11 +455,6 @@ export default function SignupExpectationPage() {
                           ))}
                         </div>
                       )}
-                      {errors.workLocations && (
-                        <span className="text-red-500 text-[12px]">
-                          {errors.workLocations.message}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -549,11 +506,6 @@ export default function SignupExpectationPage() {
                           ))}
                         </div>
                       )}
-                      {errors.workStyles && (
-                        <span className="text-red-500 text-[12px]">
-                          {errors.workStyles.message}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -561,9 +513,9 @@ export default function SignupExpectationPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={!isValid}
+                  disabled={!isFormValid()}
                   className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                    isValid
+                    isFormValid()
                       ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                       : 'bg-[#dcdcdc] cursor-not-allowed'
                   }`}
@@ -647,7 +599,8 @@ export default function SignupExpectationPage() {
                     </label>
                     <div className="relative">
                       <select
-                        {...register('desiredIncome')}
+                        value={formData.desiredIncome}
+                        onChange={(e) => setFormData(prev => ({ ...prev, desiredIncome: e.target.value }))}
                         className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         <option value="">未選択</option>
@@ -678,11 +631,6 @@ export default function SignupExpectationPage() {
                         </svg>
                       </div>
                     </div>
-                    {errors.desiredIncome && (
-                      <span className="text-red-500 text-[12px]">
-                        {errors.desiredIncome.message}
-                      </span>
-                    )}
                   </div>
 
                   {/* Desired Industry */}
@@ -730,11 +678,6 @@ export default function SignupExpectationPage() {
                         ))}
                       </div>
                     )}
-                    {errors.industries && (
-                      <span className="text-red-500 text-[12px]">
-                        {errors.industries.message}
-                      </span>
-                    )}
                   </div>
 
                   {/* Desired Job Type */}
@@ -781,11 +724,6 @@ export default function SignupExpectationPage() {
                           </div>
                         ))}
                       </div>
-                    )}
-                    {errors.jobTypes && (
-                      <span className="text-red-500 text-[12px]">
-                        {errors.jobTypes.message}
-                      </span>
                     )}
                   </div>
 
@@ -836,11 +774,6 @@ export default function SignupExpectationPage() {
                         ))}
                       </div>
                     )}
-                    {errors.workLocations && (
-                      <span className="text-red-500 text-[12px]">
-                        {errors.workLocations.message}
-                      </span>
-                    )}
                   </div>
 
                   {/* Interested Work Style */}
@@ -888,20 +821,15 @@ export default function SignupExpectationPage() {
                         ))}
                       </div>
                     )}
-                    {errors.workStyles && (
-                      <span className="text-red-500 text-[12px]">
-                        {errors.workStyles.message}
-                      </span>
-                    )}
                   </div>
                 </div>
 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={!isValid}
+                  disabled={!isFormValid()}
                   className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                    isValid
+                    isFormValid()
                       ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
                       : 'bg-[#dcdcdc] cursor-not-allowed'
                   }`}

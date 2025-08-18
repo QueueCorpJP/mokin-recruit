@@ -193,6 +193,7 @@ export default function SignupSummaryPage() {
 
           {/* Submit Button */}
           <button
+            type="button"
             onClick={handleSubmit}
             className="px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px]"
           >
@@ -300,6 +301,7 @@ export default function SignupSummaryPage() {
 
           {/* Submit Button */}
           <button
+            type="button"
             onClick={handleSubmit}
             className="w-full px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px]"
           >

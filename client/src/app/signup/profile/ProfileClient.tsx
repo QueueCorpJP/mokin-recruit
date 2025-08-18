@@ -8,11 +8,10 @@ import {
   generateMonthOptions,
   generateYearOptions,
 } from '@/constants/profile';
-import { type ProfileFormData, profileSchema } from '@/lib/schema/profile';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { type ProfileFormData } from '@/lib/schema/profile';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import React from 'react';
 import { saveProfileData } from './actions';
 import { Button } from '@/components/ui/button';
 
@@ -20,10 +19,41 @@ export default function SignupProfilePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState('');
+  const [validationErrors, setValidationErrors] = useState({
+    lastNameKana: '',
+    firstNameKana: '',
+  });
+  const [formData, setFormData] = useState<ProfileFormData>({
+    gender: 'unspecified',
+    lastName: '',
+    firstName: '',
+    lastNameKana: '',
+    firstNameKana: '',
+    prefecture: '',
+    birthYear: '',
+    birthMonth: '',
+    birthDay: '',
+    phoneNumber: '',
+    currentIncome: '',
+  });
+
+  const validateKatakana = (value: string): string => {
+    if (!value) return '';
+    const katakanaRegex = /^[ァ-ヶー\s]+$/;
+    if (!katakanaRegex.test(value)) {
+      return '全角カタカナで入力してください';
+    }
+    return '';
+  };
+
+  const handleKanaChange = (field: 'lastNameKana' | 'firstNameKana', value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    const error = validateKatakana(value);
+    setValidationErrors(prev => ({ ...prev, [field]: error }));
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // クッキーからuserIdを取得
       const getCookieValue = (name: string) => {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -37,56 +67,61 @@ export default function SignupProfilePage() {
       if (userIdFromCookie) {
         setUserId(userIdFromCookie);
       }
-      
     }
     
-    // Return a no-op cleanup function for server-side rendering
     return () => {};
   }, []);
 
-  const { register, handleSubmit, formState, watch, setValue } =
-    useForm<ProfileFormData>({
-      resolver: zodResolver(profileSchema),
-      mode: 'onChange',
-      reValidateMode: 'onChange',
-      defaultValues: {
-        gender: undefined,
-        lastName: '',
-        firstName: '',
-        lastNameKana: '',
-        firstNameKana: '',
-        prefecture: '',
-        birthYear: '',
-        birthMonth: '',
-        birthDay: '',
-        phoneNumber: '',
-        currentIncome: '',
-      },
-    });
-
-  const { errors, isValid } = formState;
-  const selectedGender = watch('gender');
-  const selectedYear = watch('birthYear');
-  const selectedMonth = watch('birthMonth');
-
-  // 選択肢の生成
+  const currentYear = new Date().getFullYear();
+  const minimumBirthYear = currentYear - 18;
   const yearOptions = generateYearOptions();
   const monthOptions = generateMonthOptions();
-  const dayOptions = generateDayOptions(selectedYear, selectedMonth);
+  const dayOptions = generateDayOptions(formData.birthYear, formData.birthMonth);
 
-  const onSubmit = async (data: ProfileFormData) => {
-    console.log('Form submitted with data:', data);
+  const handleFormSubmit = async () => {
+    console.log('Form submitted with data:', formData);
     console.log('User ID:', userId);
+    
+    // フリガナのバリデーション
+    const lastNameKanaError = validateKatakana(formData.lastNameKana);
+    const firstNameKanaError = validateKatakana(formData.firstNameKana);
+    
+    if (lastNameKanaError || firstNameKanaError) {
+      setValidationErrors({
+        lastNameKana: lastNameKanaError,
+        firstNameKana: firstNameKanaError,
+      });
+      alert('フリガナは全角カタカナで入力してください');
+      return;
+    }
+    
+    const year = parseInt(formData.birthYear);
+    const month = parseInt(formData.birthMonth);
+    const day = parseInt(formData.birthDay);
+    const date = new Date(year, month - 1, day);
+    
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+      alert('有効な生年月日を選択してください');
+      return;
+    }
+    
+    if (!formData.lastName || !formData.firstName || !formData.lastNameKana || 
+        !formData.firstNameKana || !formData.gender || !formData.prefecture ||
+        !formData.birthYear || !formData.birthMonth || !formData.birthDay ||
+        !formData.phoneNumber || !formData.currentIncome) {
+      alert('すべての項目を入力してください');
+      return;
+    }
     
     setIsSubmitting(true);
 
     try {
       if (userId) {
-        const result = await saveProfileData({ ...data, userId });
+        const result = await saveProfileData({ ...formData, userId });
         console.log('Save result:', result);
         
         if (result.success) {
-          localStorage.setItem('signupProfile', JSON.stringify(data));
+          localStorage.setItem('signupProfile', JSON.stringify(formData));
           router.push('/signup/career-status');
         } else {
           console.error('Profile save error:', result.error);
@@ -94,7 +129,7 @@ export default function SignupProfilePage() {
         }
       } else {
         console.log('No userId, saving to localStorage only');
-        localStorage.setItem('signupProfile', JSON.stringify(data));
+        localStorage.setItem('signupProfile', JSON.stringify(formData));
         router.push('/signup/career-status');
       }
     } catch (error) {
@@ -103,22 +138,20 @@ export default function SignupProfilePage() {
     }
   };
 
-  const onInvalidSubmit = (errors: any) => {
-    console.log('Form validation failed:', errors);
-    console.log('Form errors:', formState.errors);
-    console.log('Form isValid:', isValid);
-  };
+  const isFormValid = formData.lastName && formData.firstName && formData.lastNameKana && 
+                     formData.firstNameKana && formData.gender && formData.prefecture &&
+                     formData.birthYear && formData.birthMonth && formData.birthDay &&
+                     formData.phoneNumber && formData.currentIncome;
 
   return (
     <div className="min-h-screen flex flex-col">
-
-
-      <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}>
+      <div>
+        <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(); }}>
+        
         {/* PC Version */}
         <div className="hidden lg:block">
-          {/* PC Version */}
           <main
-            className="flex relative py-20 flex-col items-center justify-start"
+            className="flex relative py-20 flex-col items-center justify-start min-h-[calc(100vh+1700px)]"
             style={{
               backgroundImage: "url('/background-pc.svg')",
               backgroundPosition: 'center top',
@@ -126,16 +159,13 @@ export default function SignupProfilePage() {
               backgroundSize: 'cover',
             }}
           >
-            {/* Container */}
             <div className="bg-white rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-20 w-[1000px] flex flex-col gap-10 items-center">
-              {/* Title */}
               <div className="flex flex-col gap-6 items-center w-full">
                 <h1 className="text-[#0f9058] text-[32px] font-bold tracking-[3.2px] text-center">
                   会員情報
                 </h1>
               </div>
 
-              {/* Progress Tabs */}
               <div className="flex flex-row w-full h-[45px]">
                 <div className="flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]">
                   <div className="w-6 h-6 flex items-center justify-center">
@@ -196,14 +226,12 @@ export default function SignupProfilePage() {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="text-[#323232] text-[16px] leading-8 tracking-[1.6px] text-center font-bold">
                 <p>あなたの基本情報を教えてください。</p>
                 <p>※氏名はスカウトに返信した場合のみ企業に開示されます</p>
                 <p>※電話番号は企業には公開されません</p>
               </div>
 
-              {/* Form Fields */}
               <div className="flex flex-col gap-6 w-fit items-end mx-auto">
                 {/* Name Fields */}
                 <div className="flex flex-row gap-4 items-start w-full justify-end">
@@ -218,35 +246,21 @@ export default function SignupProfilePage() {
                         <input
                           type="text"
                           placeholder="姓"
-                          {...register('lastName')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.lastName
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                         />
-                        {errors.lastName && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.lastName.message}
-                          </p>
-                        )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
                           type="text"
                           placeholder="名"
-                          {...register('firstName')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.firstName
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                         />
-                        {errors.firstName && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.firstName.message}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
@@ -268,34 +282,30 @@ export default function SignupProfilePage() {
                         <input
                           type="text"
                           placeholder="セイ"
-                          {...register('lastNameKana')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.lastNameKana
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.lastNameKana}
+                          onChange={(e) => handleKanaChange('lastNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.lastNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
-                        {errors.lastNameKana && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.lastNameKana.message}
-                          </p>
+                        {validationErrors.lastNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.lastNameKana}</p>
                         )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
                           type="text"
                           placeholder="メイ"
-                          {...register('firstNameKana')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.firstNameKana
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.firstNameKana}
+                          onChange={(e) => handleKanaChange('firstNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.firstNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
-                        {errors.firstNameKana && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.firstNameKana.message}
-                          </p>
+                        {validationErrors.firstNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.firstNameKana}</p>
                         )}
                       </div>
                     </div>
@@ -310,35 +320,22 @@ export default function SignupProfilePage() {
                     </label>
                   </div>
                   <div className="flex flex-col gap-2 w-[400px]">
-                    <input type="hidden" {...register('gender')} />
                     <div className="flex flex-row gap-2">
                       {GENDER_OPTIONS.map((option) => (
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => {
-                            setValue('gender', option.value, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                          }}
+                          onClick={() => setFormData(prev => ({ ...prev, gender: option.value }))}
                           className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
-                            selectedGender === option.value
+                            formData.gender === option.value
                               ? 'bg-[#0f9058] border-[#0f9058] text-white'
-                              : errors.gender
-                                ? 'bg-white border-red-500 text-[#999999] hover:border-[#0f9058]'
-                                : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
+                              : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
                           }`}
                         >
                           {option.label}
                         </button>
                       ))}
                     </div>
-                    {errors.gender && (
-                      <p className="text-red-500 text-[12px]">
-                        {errors.gender.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -353,12 +350,9 @@ export default function SignupProfilePage() {
                     <div className="flex flex-col gap-1">
                       <div className="relative">
                         <select
-                          {...register('prefecture')}
-                          className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                            errors.prefecture
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          value={formData.prefecture}
+                          onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           {PREFECTURES.map((prefecture) => (
                             <option
@@ -384,11 +378,6 @@ export default function SignupProfilePage() {
                           </svg>
                         </div>
                       </div>
-                      {errors.prefecture && (
-                        <p className="text-red-500 text-[12px]">
-                          {errors.prefecture.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -405,12 +394,9 @@ export default function SignupProfilePage() {
                       <div className="flex flex-wrap gap-2 items-center">
                         <div className="relative flex-1">
                           <select
-                            {...register('birthYear')}
-                            className={`w-full py-3 pl-3 bg-white border ${
-                              errors.birthYear
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.birthYear}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthYear: e.target.value }))}
+                            className="w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {yearOptions.map((year) => (
                               <option key={year.value} value={year.value}>
@@ -438,12 +424,9 @@ export default function SignupProfilePage() {
                         </span>
                         <div className="relative flex-1">
                           <select
-                            {...register('birthMonth')}
-                            className={`w-full py-3 pl-3 bg-white border ${
-                              errors.birthMonth
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.birthMonth}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthMonth: e.target.value }))}
+                            className="w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {monthOptions.map((month) => (
                               <option key={month.value} value={month.value}>
@@ -471,12 +454,9 @@ export default function SignupProfilePage() {
                         </span>
                         <div className="relative flex-1">
                           <select
-                            {...register('birthDay')}
-                            className={`w-full py-3 pl-3 bg-white border ${
-                              errors.birthDay
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.birthDay}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthDay: e.target.value }))}
+                            className="w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {dayOptions.map((day) => (
                               <option key={day.value} value={day.value}>
@@ -503,16 +483,10 @@ export default function SignupProfilePage() {
                           日
                         </span>
                       </div>
-                      {(errors.birthYear ||
-                        errors.birthMonth ||
-                        errors.birthDay) && (
-                        <p className="text-red-500 text-[12px]">
-                          {errors.birthYear?.message ||
-                            errors.birthMonth?.message ||
-                            errors.birthDay?.message}
-                        </p>
-                      )}
                     </div>
+                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
+                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
+                    </p>
                   </div>
                 </div>
 
@@ -527,21 +501,14 @@ export default function SignupProfilePage() {
                     <input
                       type="tel"
                       placeholder="08011112222"
-                      {...register('phoneNumber')}
-                      className={`w-full px-[11px] py-[11px] bg-white border ${
-                        errors.phoneNumber
-                          ? 'border-red-500'
-                          : 'border-[#999999]'
-                      } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                      autoComplete="off"
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                     />
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                       ※「-」なしでご入力ください。
                     </p>
-                    {errors.phoneNumber && (
-                      <p className="text-red-500 text-[12px] -mt-1">
-                        {errors.phoneNumber.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -556,12 +523,9 @@ export default function SignupProfilePage() {
                     <div className="flex flex-col gap-1">
                       <div className="relative">
                         <select
-                          {...register('currentIncome')}
-                          className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                            errors.currentIncome
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          value={formData.currentIncome}
+                          onChange={(e) => setFormData(prev => ({ ...prev, currentIncome: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           {INCOME_RANGES.map((income) => (
                             <option key={income.value} value={income.value}>
@@ -584,23 +548,17 @@ export default function SignupProfilePage() {
                           </svg>
                         </div>
                       </div>
-                      {errors.currentIncome && (
-                        <p className="text-red-500 text-[12px]">
-                          {errors.currentIncome.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting || !isFormValid}
                 variant="green-gradient"
                 size="figma-default"
-                className="min-w-[160px] text-[16px] tracking-[1.6px]"
+                className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>
@@ -610,7 +568,6 @@ export default function SignupProfilePage() {
         
         {/* SP (Mobile) Version */}
         <div className="lg:hidden">
-          {/* SP (Mobile) Version */}
           <main
             className="flex relative pt-6 pb-20 flex-col items-center px-5"
             style={{
@@ -620,9 +577,7 @@ export default function SignupProfilePage() {
               backgroundSize: 'cover',
             }}
           >
-            {/* Container */}
             <div className="bg-white rounded-3xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 py-10 w-full flex flex-col gap-10 items-center">
-              {/* Progress Indicator */}
               <div className="flex flex-row gap-4 items-center w-full pb-4 border-b border-[#efefef]">
                 <div className="relative w-[72px] h-[72px]">
                   <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
@@ -669,7 +624,6 @@ export default function SignupProfilePage() {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="text-[#323232] text-[16px] leading-8 tracking-[1.6px] text-center font-bold">
                 <p>あなたの基本情報を教えてください。</p>
                 <p>※氏名はスカウトに返信した場合のみ</p>
@@ -677,7 +631,6 @@ export default function SignupProfilePage() {
                 <p>※電話番号は企業には公開されません</p>
               </div>
 
-              {/* Form Fields */}
               <div className="flex flex-col gap-6 w-full">
                 {/* Name Fields */}
                 <div className="flex flex-col gap-2">
@@ -690,35 +643,21 @@ export default function SignupProfilePage() {
                         <input
                           type="text"
                           placeholder="姓"
-                          {...register('lastName')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.lastName
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                         />
-                        {errors.lastName && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.lastName.message}
-                          </p>
-                        )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
                           type="text"
                           placeholder="名"
-                          {...register('firstName')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.firstName
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                         />
-                        {errors.firstName && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.firstName.message}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
@@ -738,34 +677,30 @@ export default function SignupProfilePage() {
                         <input
                           type="text"
                           placeholder="セイ"
-                          {...register('lastNameKana')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.lastNameKana
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.lastNameKana}
+                          onChange={(e) => handleKanaChange('lastNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.lastNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
-                        {errors.lastNameKana && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.lastNameKana.message}
-                          </p>
+                        {validationErrors.lastNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.lastNameKana}</p>
                         )}
                       </div>
                       <div className="flex-1 min-w-[120px]">
                         <input
                           type="text"
                           placeholder="メイ"
-                          {...register('firstNameKana')}
-                          className={`w-full px-[11px] py-[11px] bg-white border ${
-                            errors.firstNameKana
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]`}
+                          autoComplete="off"
+                          value={formData.firstNameKana}
+                          onChange={(e) => handleKanaChange('firstNameKana', e.target.value)}
+                          className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] ${
+                            validationErrors.firstNameKana ? 'border-red-500' : 'border-[#999999]'
+                          }`}
                         />
-                        {errors.firstNameKana && (
-                          <p className="text-red-500 text-[12px] mt-1">
-                            {errors.firstNameKana.message}
-                          </p>
+                        {validationErrors.firstNameKana && (
+                          <p className="text-red-600 text-xs mt-1">{validationErrors.firstNameKana}</p>
                         )}
                       </div>
                     </div>
@@ -786,29 +721,17 @@ export default function SignupProfilePage() {
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => {
-                            setValue('gender', option.value, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                          }}
+                          onClick={() => setFormData(prev => ({ ...prev, gender: option.value }))}
                           className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
-                            selectedGender === option.value
+                            formData.gender === option.value
                               ? 'bg-[#0f9058] border-[#0f9058] text-white'
-                              : errors.gender
-                                ? 'bg-white border-red-500 text-[#999999] hover:border-[#0f9058]'
-                                : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
+                              : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
                           }`}
                         >
                           {option.label}
                         </button>
                       ))}
                     </div>
-                    {errors.gender && (
-                      <p className="text-red-500 text-[12px]">
-                        {errors.gender.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -820,12 +743,9 @@ export default function SignupProfilePage() {
                   <div className="flex flex-col gap-1">
                     <div className="relative">
                       <select
-                        {...register('prefecture')}
-                        className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                          errors.prefecture
-                            ? 'border-red-500'
-                            : 'border-[#999999]'
-                        } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.prefecture}
+                        onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
+                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         {PREFECTURES.map((prefecture) => (
                           <option
@@ -851,11 +771,6 @@ export default function SignupProfilePage() {
                         </svg>
                       </div>
                     </div>
-                    {errors.prefecture && (
-                      <p className="text-red-500 text-[12px]">
-                        {errors.prefecture.message}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -868,12 +783,9 @@ export default function SignupProfilePage() {
                     <div className="flex gap-2 items-center">
                       <div className="relative flex-1">
                         <select
-                          {...register('birthYear')}
-                          className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                            errors.birthYear
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          value={formData.birthYear}
+                          onChange={(e) => setFormData(prev => ({ ...prev, birthYear: e.target.value }))}
+                          className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           {yearOptions.map((year) => (
                             <option key={year.value} value={year.value}>
@@ -904,12 +816,9 @@ export default function SignupProfilePage() {
                       <div className="flex gap-2 items-center flex-1">
                         <div className="relative flex-1">
                           <select
-                            {...register('birthMonth')}
-                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                              errors.birthMonth
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.birthMonth}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthMonth: e.target.value }))}
+                            className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {monthOptions.map((month) => (
                               <option key={month.value} value={month.value}>
@@ -939,12 +848,9 @@ export default function SignupProfilePage() {
                       <div className="flex gap-2 items-center flex-1">
                         <div className="relative flex-1">
                           <select
-                            {...register('birthDay')}
-                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                              errors.birthDay
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            value={formData.birthDay}
+                            onChange={(e) => setFormData(prev => ({ ...prev, birthDay: e.target.value }))}
+                            className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {dayOptions.map((day) => (
                               <option key={day.value} value={day.value}>
@@ -972,15 +878,9 @@ export default function SignupProfilePage() {
                         </span>
                       </div>
                     </div>
-                    {(errors.birthYear ||
-                      errors.birthMonth ||
-                      errors.birthDay) && (
-                      <p className="text-red-500 text-[12px]">
-                        {errors.birthYear?.message ||
-                          errors.birthMonth?.message ||
-                          errors.birthDay?.message}
-                      </p>
-                    )}
+                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
+                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
+                    </p>
                   </div>
                 </div>
 
@@ -992,19 +892,14 @@ export default function SignupProfilePage() {
                   <input
                     type="tel"
                     placeholder="08011112222"
-                    {...register('phoneNumber')}
-                    className={`w-full px-[11px] py-[11px] bg-white border ${
-                      errors.phoneNumber ? 'border-red-500' : 'border-[#999999]'
-                    } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                    autoComplete="off"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
                   <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                     ※「-」なしでご入力ください。
                   </p>
-                  {errors.phoneNumber && (
-                    <p className="text-red-500 text-[12px] -mt-1">
-                      {errors.phoneNumber.message}
-                    </p>
-                  )}
                 </div>
 
                 {/* Current Income */}
@@ -1015,12 +910,9 @@ export default function SignupProfilePage() {
                   <div className="flex flex-col gap-1">
                     <div className="relative">
                       <select
-                        {...register('currentIncome')}
-                        className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                          errors.currentIncome
-                            ? 'border-red-500'
-                            : 'border-[#999999]'
-                        } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        value={formData.currentIncome}
+                        onChange={(e) => setFormData(prev => ({ ...prev, currentIncome: e.target.value }))}
+                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                       >
                         {INCOME_RANGES.map((income) => (
                           <option key={income.value} value={income.value}>
@@ -1043,32 +935,24 @@ export default function SignupProfilePage() {
                         </svg>
                       </div>
                     </div>
-                    {errors.currentIncome && (
-                      <p className="text-red-500 text-[12px]">
-                        {errors.currentIncome.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting || !isFormValid}
                 variant="green-gradient"
                 size="figma-default"
-                className="w-full text-[16px] tracking-[1.6px]"
+                className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '送信中...' : '次へ'}
               </Button>
             </div>
           </main>
         </div>
-      </form>
-
-     
-    
+        </form>
+      </div>
     </div>
   );
 }
