@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { uploadResumeFiles } from './actions';
 
 // ファイルアップロード用の定数
@@ -17,6 +18,7 @@ interface ResumeUploadFormData {
 export default function SignupResumePage() {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -85,8 +87,13 @@ export default function SignupResumePage() {
   };
 
   // 「入力を続ける」ボタンクリック
-  const handleContinueInput = () => {
-    router.push('/signup/education');
+  const handleContinueInput = async () => {
+    setIsSubmitting(true);
+    try {
+      router.push('/signup/education');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Form validation
@@ -199,12 +206,15 @@ export default function SignupResumePage() {
                     書類を用意していない方や、自分で整理して入力したい方はこちら
                   </p>
                 </div>
-                <button
+                <Button
                   onClick={handleContinueInput}
-                  className="px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px]"
+                  disabled={isSubmitting}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="px-10 py-[18px] text-[16px] tracking-[1.6px] min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  入力を続ける
-                </button>
+                  {isSubmitting ? '送信中...' : '入力を続ける'}
+                </Button>
               </div>
             </div>
 
@@ -416,17 +426,15 @@ export default function SignupResumePage() {
                 )}
 
                 {/* Submit Button */}
-                <button
+                <Button
                   onClick={handleUploadSubmit}
                   disabled={!isUploadButtonEnabled}
-                  className={`px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                    isUploadButtonEnabled
-                      ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white'
-                      : 'bg-[#dcdcdc] text-[#999999] cursor-not-allowed'
-                  }`}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="px-10 py-3.5 text-[16px] tracking-[1.6px] min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploading ? 'アップロード中...' : 'アップした書類で登録する'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -472,12 +480,15 @@ export default function SignupResumePage() {
                     <p>自分で整理して入力したい方はこちら</p>
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={handleContinueInput}
-                  className="w-full px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px]"
+                  disabled={isSubmitting}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  入力を続ける
-                </button>
+                  {isSubmitting ? '送信中...' : '入力を続ける'}
+                </Button>
               </div>
             </div>
 
@@ -677,17 +688,15 @@ export default function SignupResumePage() {
                 )}
 
                 {/* Submit Button */}
-                <button
+                <Button
                   onClick={handleUploadSubmit}
                   disabled={!isUploadButtonEnabled}
-                  className={`w-full px-0 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-[16px] font-bold tracking-[1.6px] ${
-                    isUploadButtonEnabled
-                      ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] text-white'
-                      : 'bg-[#dcdcdc] text-[#999999]'
-                  }`}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploading ? 'アップロード中...' : 'アップした書類で登録する'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

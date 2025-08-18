@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
@@ -36,6 +37,7 @@ export default function SignupExpectationPage() {
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<ExpectationFormData>({
     desiredIncome: '',
@@ -61,10 +63,13 @@ export default function SignupExpectationPage() {
     e.preventDefault();
     if (!isFormValid()) return;
 
+    setIsSubmitting(true);
     try {
       await saveExpectationData(formData);
     } catch (error) {
       console.error('Expectation data save failed:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -460,7 +465,7 @@ export default function SignupExpectationPage() {
 
                   {/* Interested Work Style */}
                   <div className="flex flex-row gap-4 items-start w-full">
-                    <div className="pt-[11px] min-w-[130px]">
+                    <div className="pt-[11px] min-w-[130px] text-right">
                       <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                         興味のある働き方
                       </label>
@@ -511,17 +516,15 @@ export default function SignupExpectationPage() {
                 </div>
 
                 {/* Submit Button */}
-                <button
+                <Button
                   type="submit"
-                  disabled={!isFormValid()}
-                  className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                    isFormValid()
-                      ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                      : 'bg-[#dcdcdc] cursor-not-allowed'
-                  }`}
+                  disabled={!isFormValid() || isSubmitting}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  次へ
-                </button>
+                  {isSubmitting ? '送信中...' : '次へ'}
+                </Button>
               </div>
             </main>
           </div>
@@ -784,7 +787,7 @@ export default function SignupExpectationPage() {
                     <button
                       type="button"
                       onClick={() => setIsWorkStyleModalOpen(true)}
-                      className="w-full px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                      className="w-full py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
                     >
                       働き方を選択
                     </button>
@@ -825,17 +828,15 @@ export default function SignupExpectationPage() {
                 </div>
 
                 {/* Submit Button */}
-                <button
+                <Button
                   type="submit"
-                  disabled={!isFormValid()}
-                  className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                    isFormValid()
-                      ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                      : 'bg-[#dcdcdc] cursor-not-allowed'
-                  }`}
+                  disabled={!isFormValid() || isSubmitting}
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  次へ
-                </button>
+                  {isSubmitting ? '送信中...' : '次へ'}
+                </Button>
               </div>
             </main>
           </div>

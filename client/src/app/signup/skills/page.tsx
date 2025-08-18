@@ -2,6 +2,7 @@
 
 import { useState, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { saveSkillsData } from './actions';
 
 // 言語レベルの選択肢
@@ -59,6 +60,7 @@ export default function SignupSkillsPage() {
   const router = useRouter();
   const [skillInput, setSkillInput] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<SkillsFormData>({
     englishLevel: '',
@@ -144,6 +146,7 @@ export default function SignupSkillsPage() {
     setErrors(validation.errors);
     
     if (validation.isValid) {
+      setIsSubmitting(true);
       try {
         // Filter out empty language entries before saving
         const filteredLanguages = formData.otherLanguages.filter(
@@ -160,6 +163,8 @@ export default function SignupSkillsPage() {
       } catch (error) {
         console.error('Failed to save skills data:', error);
         // Optionally show an error message to the user
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -648,18 +653,16 @@ export default function SignupSkillsPage() {
               </div>
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!isFormValid}
-                className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                  isFormValid
-                    ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                    : 'bg-[#dcdcdc] cursor-not-allowed'
-                }`}
+                disabled={!isFormValid || isSubmitting}
+                variant="green-gradient"
+                size="figma-default"
+                className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                次へ
-              </button>
+                {isSubmitting ? '送信中...' : '次へ'}
+              </Button>
             </div>
           </main>
         </div>
@@ -1034,18 +1037,16 @@ export default function SignupSkillsPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="button"
               onClick={handleSubmit}
-              disabled={!isFormValid}
-              className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                isFormValid
-                  ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                  : 'bg-[#dcdcdc] cursor-not-allowed'
-              }`}
+              disabled={!isFormValid || isSubmitting}
+              variant="green-gradient"
+              size="figma-default"
+              className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              次へ
-            </button>
+              {isSubmitting ? '送信中...' : '次へ'}
+            </Button>
           </div>
         </main>
       </div>

@@ -3,6 +3,7 @@
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
@@ -32,6 +33,7 @@ export default function SignupEducationPage() {
   const router = useRouter();
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<EducationFormData>({
     finalEducation: '',
@@ -117,6 +119,7 @@ export default function SignupEducationPage() {
     e.preventDefault();
     if (!isFormValid()) return;
 
+    setIsSubmitting(true);
     try {
       const formattedData = {
         finalEducation: formData.finalEducation,
@@ -139,6 +142,8 @@ export default function SignupEducationPage() {
       await saveEducationData(formattedData);
     } catch (error) {
       console.error('Education data save failed:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -749,17 +754,15 @@ export default function SignupEducationPage() {
               </div>
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={!isFormValid()}
-                className={`px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px] ${
-                  isFormValid()
-                    ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                    : 'bg-[#dcdcdc] cursor-not-allowed'
-                }`}
+                disabled={!isFormValid() || isSubmitting}
+                variant="green-gradient"
+                size="figma-default"
+                className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                次へ
-              </button>
+                {isSubmitting ? '送信中...' : '次へ'}
+              </Button>
             </div>
           </form>
         </main>
@@ -1154,17 +1157,15 @@ export default function SignupEducationPage() {
               </div>
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={!isFormValid()}
-                className={`w-full px-10 py-[18px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] ${
-                  isFormValid()
-                    ? 'bg-gradient-to-b from-[#229a4e] to-[#17856f] cursor-pointer'
-                    : 'bg-[#dcdcdc] cursor-not-allowed'
-                }`}
+                disabled={!isFormValid() || isSubmitting}
+                variant="green-gradient"
+                size="figma-default"
+                className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                次へ
-              </button>
+                {isSubmitting ? '送信中...' : '次へ'}
+              </Button>
             </div>
           </form>
         </main>
