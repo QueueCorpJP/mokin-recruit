@@ -36,7 +36,7 @@ export class GbizApiClient {
       });
 
       if (!response.ok) {
-        console.warn('Company search API request failed:', response.status, response.statusText);
+        console.warn('Gbiz API request failed:', response.status, response.statusText);
         return [];
       }
 

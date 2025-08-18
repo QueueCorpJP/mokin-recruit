@@ -56,7 +56,7 @@ export default function AutocompleteInput({
   }, []);
 
   useEffect(() => {
-    if (displayedSuggestions.length > 0 && value.trim()) {
+    if (displayedSuggestions.length > 0 && value.trim().length > 0) {
       setIsOpen(true);
     } else {
       setIsOpen(false);
@@ -125,7 +125,7 @@ export default function AutocompleteInput({
             <div className="p-3 text-[#999999] text-center">
               検索中...
             </div>
-          ) : displayedSuggestions.length > 0 ? (
+          ) : displayedSuggestions.length > 0 && (
             <ul ref={listRef}>
               {displayedSuggestions.map((suggestion, index) => (
                 <li
@@ -146,10 +146,6 @@ export default function AutocompleteInput({
                 </li>
               ))}
             </ul>
-          ) : value.trim() && (
-            <div className="p-3 text-[#999999] text-center">
-              該当する項目が見つかりませんでした
-            </div>
           )}
         </div>
       )}

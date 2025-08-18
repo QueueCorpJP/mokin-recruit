@@ -1,47 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-
-const radioButtonCheckedIcon = "http://localhost:3845/assets/ef86984da22dab6a3dfc16094acebf72af43f90c.svg";
-
-interface RadioButtonProps {
-  id: string;
-  name: string;
-  value: string;
-  checked: boolean;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-}
-
-function RadioButton({ id, name, value, checked, onChange, children }: RadioButtonProps) {
-  return (
-    <div className="box-border content-stretch flex flex-row gap-2 items-center justify-start p-0 relative shrink-0">
-      <div className="relative shrink-0 size-5" onClick={() => onChange(value)}>
-        {checked ? (
-          <div className="absolute inset-[-2.5%]">
-            <img alt="" className="block max-w-none size-full" src={radioButtonCheckedIcon} />
-          </div>
-        ) : (
-          <div className="relative rounded-[10px] shrink-0 size-5">
-            <div
-              aria-hidden="true"
-              className="absolute border border-[#dcdcdc] border-solid inset-[-0.5px] pointer-events-none rounded-[10.5px]"
-            />
-          </div>
-        )}
-      </div>
-      <label
-        htmlFor={id}
-        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px] font-medium cursor-pointer"
-        onClick={() => onChange(value)}
-      >
-        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">{children}</p>
-      </label>
-    </div>
-  );
-}
+import { Radio } from '@/components/ui/radio';
+import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import Image from 'next/image';
+import { saveNotificationSettings, getNotificationSettings } from './actions';
 
 interface NotificationSetting {
   scoutNotification: string;
@@ -51,6 +16,8 @@ interface NotificationSetting {
 
 export default function NotificationSettingPage() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationSetting>({
     scoutNotification: 'receive',
     messageNotification: 'receive',
@@ -66,16 +33,18 @@ export default function NotificationSettingPage() {
   useEffect(() => {
     const fetchCurrentSettings = async () => {
       try {
-     
-        
-        const defaultSettings = {
-          scoutNotification: 'receive',
-          messageNotification: 'receive',
-          recommendationNotification: 'receive'
-        };
-        setOriginalNotifications(defaultSettings);
+        const settings = await getNotificationSettings();
+        if (settings) {
+          const clientSettings = {
+            scoutNotification: settings.scout_notification,
+            messageNotification: settings.message_notification,
+            recommendationNotification: settings.recommendation_notification
+          };
+          setNotifications(clientSettings);
+          setOriginalNotifications(clientSettings);
+        }
       } catch (error) {
-        console.error('-�n֗k1WW~W_:', error);
+        console.error('設定の取得に失敗しました:', error);
       }
     };
 
@@ -89,20 +58,26 @@ export default function NotificationSettingPage() {
     setHasChanges(hasChanged);
   }, [notifications, originalNotifications]);
 
-  const handleNotificationChange = (type: keyof NotificationSetting, value: string) => {
+  const handleNotificationChange = (type: keyof NotificationSetting) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setNotifications(prev => ({
       ...prev,
-      [type]: value
+      [type]: e.target.value
     }));
   };
 
-  const handleSave = async () => {
-    try {
-    
-      router.push('/candidate/setting/notification/complete');
-    } catch (error) {
-      console.error('-�n�Xk1WW~W_:', error);
-    }
+  const handleSave = () => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('scoutNotification', notifications.scoutNotification);
+        formData.append('messageNotification', notifications.messageNotification);
+        formData.append('recommendationNotification', notifications.recommendationNotification);
+        await saveNotificationSettings(formData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '保存に失敗しました');
+      }
+    });
   };
 
   const handleBack = () => {
@@ -111,50 +86,75 @@ export default function NotificationSettingPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
+      <SettingsHeader
+        breadcrumbs={[
+          { label: '各種設定', href: '/candidate/setting' },
+          { label: '通知メール配信設定' }
+        ]}
+        title="通知メール配信設定"
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+      />
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >
         <div
-          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-2 items-start justify-start p-[40px] relative rounded-[10px] shrink-0 w-full max-w-4xl"
+          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-4 md:p-[40px] relative rounded-[10px] shrink-0 w-full max-w-4xl"
         >
+          {error && (
+            <div className="w-full p-4 mb-4 text-red-600 bg-red-50 border border-red-200 rounded">
+              {error}
+            </div>
+          )}
           <div
-            className="box-border content-stretch flex flex-col gap-2 items-end justify-start p-0 relative shrink-0"
+            className="box-border content-stretch flex flex-col gap-6 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full"
           >
             <div
-              className="box-border content-stretch flex flex-col gap-2 items-end justify-start p-0 relative shrink-0"
+              className="box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full"
             >
               <div
-                className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0"
+                className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full"
               >
                 <div
-                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px] font-medium"
+                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px]"
                 >
                   <p className="adjustLetterSpacing block leading-[2] whitespace-pre">スカウト通知</p>
                 </div>
                 <div
-                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0"
+                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full"
                 >
                   <div
-                    className="[flex-flow:wrap] box-border content-center flex gap-4 items-center justify-start p-0 relative shrink-0 w-full"
+                    className="[flex-flow:wrap] box-border content-center flex flex-col md:flex-row gap-4 items-start md:items-center justify-start p-0 relative shrink-0 w-full"
                   >
-                    <RadioButton
-                      id="scout-notification-receive"
-                      name="scoutNotification"
-                      value="receive"
-                      checked={notifications.scoutNotification === 'receive'}
-                      onChange={(value) => handleNotificationChange('scoutNotification', value)}
-                    >
-                      受け取る
-                    </RadioButton>
-                    <RadioButton
-                      id="scout-notification-not-receive"
-                      name="scoutNotification"
-                      value="not-receive"
-                      checked={notifications.scoutNotification === 'not-receive'}
-                      onChange={(value) => handleNotificationChange('scoutNotification', value)}
-                    >
-                      受け取らない
-                    </RadioButton>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="scout-notification-receive"
+                        name="scoutNotification"
+                        value="receive"
+                        checked={notifications.scoutNotification === 'receive'}
+                        onChange={handleNotificationChange('scoutNotification')}
+                      />
+                      <label
+                        htmlFor="scout-notification-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取る</p>
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="scout-notification-not-receive"
+                        name="scoutNotification"
+                        value="not-receive"
+                        checked={notifications.scoutNotification === 'not-receive'}
+                        onChange={handleNotificationChange('scoutNotification')}
+                      />
+                      <label
+                        htmlFor="scout-notification-not-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取らない</p>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -162,40 +162,52 @@ export default function NotificationSettingPage() {
 
             {/* メッセージ通知 */}
             <div
-              className="box-border content-stretch flex flex-col gap-2 items-end justify-start p-0 relative shrink-0"
+              className="box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full"
             >
               <div
-                className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0"
+                className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full"
               >
                 <div
-                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px] font-medium"
+                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px]"
                 >
                   <p className="adjustLetterSpacing block leading-[2] whitespace-pre">メッセージ通知</p>
                 </div>
                 <div
-                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0"
+                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full"
                 >
                   <div
-                    className="[flex-flow:wrap] box-border content-center flex gap-4 items-center justify-start p-0 relative shrink-0 w-full"
+                    className="[flex-flow:wrap] box-border content-center flex flex-col md:flex-row gap-4 items-start md:items-center justify-start p-0 relative shrink-0 w-full"
                   >
-                    <RadioButton
-                      id="message-notification-receive"
-                      name="messageNotification"
-                      value="receive"
-                      checked={notifications.messageNotification === 'receive'}
-                      onChange={(value) => handleNotificationChange('messageNotification', value)}
-                    >
-                      受け取る
-                    </RadioButton>
-                    <RadioButton
-                      id="message-notification-not-receive"
-                      name="messageNotification"
-                      value="not-receive"
-                      checked={notifications.messageNotification === 'not-receive'}
-                      onChange={(value) => handleNotificationChange('messageNotification', value)}
-                    >
-                      受け取らない
-                    </RadioButton>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="message-notification-receive"
+                        name="messageNotification"
+                        value="receive"
+                        checked={notifications.messageNotification === 'receive'}
+                        onChange={handleNotificationChange('messageNotification')}
+                      />
+                      <label
+                        htmlFor="message-notification-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取る</p>
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="message-notification-not-receive"
+                        name="messageNotification"
+                        value="not-receive"
+                        checked={notifications.messageNotification === 'not-receive'}
+                        onChange={handleNotificationChange('messageNotification')}
+                      />
+                      <label
+                        htmlFor="message-notification-not-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取らない</p>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -203,40 +215,52 @@ export default function NotificationSettingPage() {
 
             {/* おすすめ通知 */}
             <div
-              className="box-border content-stretch flex flex-col gap-2 items-end justify-start p-0 relative shrink-0"
+              className="box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full"
             >
               <div
-                className="box-border content-stretch flex flex-row gap-4 items-start justify-start p-0 relative shrink-0"
+                className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full"
               >
                 <div
-                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px] font-medium"
+                  className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px]"
                 >
                   <p className="adjustLetterSpacing block leading-[2] whitespace-pre">おすすめ通知</p>
                 </div>
                 <div
-                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0"
+                  className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full"
                 >
                   <div
-                    className="[flex-flow:wrap] box-border content-center flex gap-4 items-center justify-start p-0 relative shrink-0 w-full"
+                    className="[flex-flow:wrap] box-border content-center flex flex-col md:flex-row gap-4 items-start md:items-center justify-start p-0 relative shrink-0 w-full"
                   >
-                    <RadioButton
-                      id="recommendation-notification-receive"
-                      name="recommendationNotification"
-                      value="receive"
-                      checked={notifications.recommendationNotification === 'receive'}
-                      onChange={(value) => handleNotificationChange('recommendationNotification', value)}
-                    >
-                      受け取る
-                    </RadioButton>
-                    <RadioButton
-                      id="recommendation-notification-not-receive"
-                      name="recommendationNotification"
-                      value="not-receive"
-                      checked={notifications.recommendationNotification === 'not-receive'}
-                      onChange={(value) => handleNotificationChange('recommendationNotification', value)}
-                    >
-                      受け取らない
-                    </RadioButton>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="recommendation-notification-receive"
+                        name="recommendationNotification"
+                        value="receive"
+                        checked={notifications.recommendationNotification === 'receive'}
+                        onChange={handleNotificationChange('recommendationNotification')}
+                      />
+                      <label
+                        htmlFor="recommendation-notification-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取る</p>
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Radio
+                        id="recommendation-notification-not-receive"
+                        name="recommendationNotification"
+                        value="not-receive"
+                        checked={notifications.recommendationNotification === 'not-receive'}
+                        onChange={handleNotificationChange('recommendationNotification')}
+                      />
+                      <label
+                        htmlFor="recommendation-notification-not-receive"
+                        className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      >
+                        <p className="adjustLetterSpacing block leading-[2] whitespace-pre">受け取らない</p>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -244,24 +268,25 @@ export default function NotificationSettingPage() {
           </div>
         </div>
         <div
-          className="[flex-flow:wrap] box-border content-start flex gap-4 items-start justify-center p-0 relative shrink-0"
+          className="[flex-flow:wrap] box-border content-start flex flex-col md:flex-row gap-4 items-stretch md:items-start justify-center p-0 relative shrink-0 w-full md:w-auto"
         >
           <Button
             variant="green-outline"
             size="figma-outline"
-            className="min-w-40"
+            className="min-w-40 w-full md:w-auto"
             onClick={handleBack}
+            disabled={isPending}
           >
             戻る
           </Button>
           <Button
             variant="green-gradient"
             size="figma-square"
-            className="min-w-40"
+            className="min-w-40 w-full md:w-auto rounded-full"
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges || isPending}
           >
-            変更を保存  
+            {isPending ? '保存中...' : '変更を保存'}
           </Button>
         </div>
       </div>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import Image from 'next/image';
 
 export default function EmailSettingPage() {
   const router = useRouter();
@@ -13,9 +15,18 @@ export default function EmailSettingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">メールアドレス変更</h1>
+    <div className="min-h-screen bg-[#f9f9f9]">
+      <SettingsHeader
+        breadcrumbs={[
+          { label: '各種設定', href: '/candidate/setting' },
+          { label: 'メールアドレス変更' }
+        ]}
+        title="メールアドレス変更"
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+      />
+      <div className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full">
+        <div className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-start justify-start p-[40px] relative rounded-[10px] shrink-0 w-full max-w-4xl">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">メールアドレス変更</h1>
         
         <div className="space-y-4">
           <div>
@@ -37,6 +48,7 @@ export default function EmailSettingPage() {
           >
             確認メールを送信
           </button>
+        </div>
         </div>
       </div>
     </div>
