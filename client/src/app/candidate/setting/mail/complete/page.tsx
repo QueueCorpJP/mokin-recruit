@@ -48,9 +48,9 @@ export default function MailCompletePage() {
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
           { label: 'メールアドレス変更', href: '/candidate/setting/mail' },
-          { label: '完了' }
+          { label: 'メールアドレス変更完了' }
         ]}
-        title="メールアドレス変更"
+        title="メールアドレス変更完了"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
@@ -108,7 +108,7 @@ export default function MailCompletePage() {
             }}
             variant="green-gradient"
             size="figma-default"
-            className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
+            className="min-w-[140px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] w-full md:w-auto"
           >
             各種設定ページへ
           </Button>

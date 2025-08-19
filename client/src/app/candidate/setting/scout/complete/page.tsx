@@ -17,10 +17,10 @@ export default function ScoutComplePage() {
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: 'スカウト設定', href: '/candidate/setting/scout' },
-          { label: '完了' }
+          { label: 'スカウトステータス変更', href: '/candidate/setting/scout' },
+          { label: 'スカウトステータス変更完了' }
         ]}
-        title="スカウト設定完了"
+        title="スカウトステータス変更完了"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div 
@@ -47,7 +47,7 @@ export default function ScoutComplePage() {
         <Button
           variant="green-gradient"
           size="figma-square"
-          className="min-w-40 rounded-full py-[17px]"
+          className="min-w-[140px] md:min-w-[160px] rounded-full py-[17px] w-full md:w-auto text-sm md:text-base"
           onClick={handleGoToSettings}
         >
           各種設定ページへ

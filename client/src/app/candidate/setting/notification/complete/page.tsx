@@ -49,7 +49,7 @@ export default function NotificationComplePage() {
         <Button
           variant="green-gradient"
           size="figma-square"
-          className="min-w-[140px] md:min-w-40 rounded-full py-[17px] w-full md:w-auto text-sm md:text-base"
+          className="min-w-[140px] md:min-w-[160px] rounded-full py-[17px] w-full md:w-auto text-sm md:text-base"
           onClick={handleGoToSettings}
         >
           各種設定ページへ
