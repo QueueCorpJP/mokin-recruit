@@ -213,15 +213,19 @@ export default function SignupEducationPage() {
       {/* PC Version */}
       <div className="hidden lg:block">
         {/* PC Version */}
-        <main
-          className="flex relative py-20 flex-col items-center justify-start"
-          style={{
-            backgroundImage: "url('/background-pc.svg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
+        <main 
+          className="flex relative py-20 flex-col items-center justify-start overflow-hidden"
+          style={{ 
+            background: 'linear-gradient(to top, #17856f, #229a4e), url("/back2.svg")',
+            backgroundPosition: 'center center, center top',
+            backgroundRepeat: 'no-repeat, no-repeat',
+            backgroundSize: 'cover, auto 100%',
+            minHeight: 'calc(100vh + 300px)'
           }}
         >
+          
+          {/* コンテンツ */}
+          <div className="relative z-10 w-full flex flex-col items-center">
           {/* Form */}
           <form onSubmit={handleSubmit}>
             {/* Container */}
@@ -765,21 +769,26 @@ export default function SignupEducationPage() {
               </Button>
             </div>
           </form>
+          </div>
         </main>
       </div>
       
       {/* SP (Mobile) Version */}
       <div className="lg:hidden">
         {/* SP (Mobile) Version */}
-        <main
-          className="flex relative pt-6 pb-20 flex-col items-center px-4"
-          style={{
-            backgroundImage: "url('/background-sp.svg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
+        <main 
+          className="flex relative pt-6 pb-20 flex-col items-center px-4 overflow-hidden"
+          style={{ 
+            background: 'linear-gradient(to top, #17856f, #229a4e), url("/back2.svg")',
+            backgroundPosition: 'center center, center top',
+            backgroundRepeat: 'no-repeat, no-repeat',
+            backgroundSize: 'cover, auto',
+            minHeight: 'fit-content'
           }}
         >
+          
+          {/* コンテンツ */}
+          <div className="relative z-10 w-full flex flex-col items-center">
           {/* Form */}
           <form onSubmit={handleSubmit} className="w-full">
             {/* Container */}
@@ -1168,6 +1177,7 @@ export default function SignupEducationPage() {
               </Button>
             </div>
           </form>
+          </div>
         </main>
       </div>
 

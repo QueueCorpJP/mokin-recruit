@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { Mail } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { verifyCode, sendVerificationCode } from '../actions';
+import { Button } from '@/components/ui/button';
 
 export default function MailVerifyPage() {
   const [verificationCode, setVerificationCode] = useState('');
@@ -76,7 +77,7 @@ export default function MailVerifyPage() {
           { label: '認証コードの入力' }
         ]}
         title="メールアドレス変更"
-        icon={<Mail className="w-8 h-8" />}
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-20 py-10">
@@ -135,13 +136,15 @@ export default function MailVerifyPage() {
               </div>
               
               <div className="flex justify-center mt-6">
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="px-10 py-3.5 min-w-[160px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] text-white font-bold text-base tracking-[1.6px] text-center shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="green-gradient"
+                  size="figma-default"
+                  className="min-w-[160px] text-base tracking-[1.6px]"
                 >
                   {isLoading ? '認証中...' : '認証する'}
-                </button>
+                </Button>
               </div>
             </form>
             

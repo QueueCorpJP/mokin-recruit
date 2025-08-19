@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { Mail } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendVerificationCode } from './actions';
+import { Button } from '@/components/ui/button';
 
 export default function MailChangePage() {
   const [email, setEmail] = useState('');
@@ -42,7 +43,7 @@ export default function MailChangePage() {
           { label: 'メールアドレス変更' }
         ]}
         title="メールアドレス変更"
-        icon={<Mail className="w-8 h-8" />}
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">
@@ -80,17 +81,19 @@ export default function MailChangePage() {
           <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center mt-10">
             <Link
               href="/candidate/setting"
-              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] text-center hover:bg-[#0f9058] hover:text-white transition-colors"
+              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] text-center hover:bg-[#0F9058]/20 transition-colors duration-200"
             >
               変更せず戻る
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] text-white font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] text-center shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="green-gradient"
+              size="figma-default"
+              className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
             >
               {isLoading ? '送信中...' : '認証コードを送信'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

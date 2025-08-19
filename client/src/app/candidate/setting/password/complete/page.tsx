@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { Lock } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function PasswordCompletePage() {
   return (
@@ -15,7 +16,7 @@ export default function PasswordCompletePage() {
           { label: '完了' }
         ]}
         title="パスワード変更"
-        icon={<Lock className="w-8 h-8" />}
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">
@@ -31,12 +32,16 @@ export default function PasswordCompletePage() {
         </div>
         
         <div className="flex justify-center mt-10">
-          <Link
-            href="/candidate/setting"
-            className="px-10 py-3.5 min-w-[160px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] text-white font-bold text-base tracking-[1.6px] text-center shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity"
+          <Button
+            asChild
+            variant="green-gradient"
+            size="figma-default"
+            className="min-w-[160px] text-base tracking-[1.6px]"
           >
-            各種設定ページへ
-          </Link>
+            <Link href="/candidate/setting">
+              各種設定ページへ
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

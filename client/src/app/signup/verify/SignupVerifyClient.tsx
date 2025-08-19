@@ -107,7 +107,10 @@ export function SignupVerifyClient() {
     }
   };
 
-  const handleResendCode = async () => {
+  const handleResendCode = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!email) {
       setSubmitStatus('error');
       setMessage('メールアドレスが見つかりません。最初からやり直してください。');
@@ -239,7 +242,7 @@ export function SignupVerifyClient() {
           </div>
           <button
             type='button'
-            onClick={handleResendCode}
+            onClick={(e) => handleResendCode(e)}
             disabled={isLoading || !email}
             className='flex items-center justify-center p-0 w-full md:w-36 text-[#323232] underline font-bold text-[14px] tracking-[1.4px] disabled:opacity-50 hover:text-[#0f9058] transition-colors'
             style={{
