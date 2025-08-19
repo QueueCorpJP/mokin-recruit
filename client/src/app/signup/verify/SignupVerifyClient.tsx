@@ -209,7 +209,28 @@ export function SignupVerifyClient() {
               )}
             </div>
           </div>
-
+          <div className='flex flex-col gap-1 items-center justify-start w-full'>
+          <div className='font-bold text-[#323232] text-[14px] text-center tracking-[1.4px] leading-[1.6] w-full' style={{
+            fontFamily: 'Noto Sans JP, sans-serif',
+          }}>
+            <p className='block leading-[1.6]'>
+              認証コードが受け取れなかった場合は、新規のコードを発行してください。
+            </p>
+          </div>
+          <button
+            type='button'
+            onClick={(e) => handleResendCode(e)}
+            disabled={isLoading || !email}
+            className='flex items-center justify-center p-0 w-full md:w-36 text-[#323232] underline font-bold text-[14px] tracking-[1.4px] disabled:opacity-50 hover:text-[#0f9058] transition-colors'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+            }}
+          >
+            <p className='block leading-[1.6] text-[14px] whitespace-pre'>
+              新しいコードを発行する
+            </p>
+          </button>
+        </div>
           {/* 送信ボタン - レスポンシブ対応 */}
           <div className='flex justify-center w-full'>
             <Button
@@ -232,28 +253,7 @@ export function SignupVerifyClient() {
         </form>
 
         {/* 再送信セクション - フォーム外に移動 */}
-        <div className='flex flex-col gap-1 items-center justify-start w-full'>
-          <div className='font-bold text-[#323232] text-[14px] text-center tracking-[1.4px] leading-[1.6] w-full' style={{
-            fontFamily: 'Noto Sans JP, sans-serif',
-          }}>
-            <p className='block leading-[1.6]'>
-              認証コードが受け取れなかった場合は、新規のコードを発行してください。
-            </p>
-          </div>
-          <button
-            type='button'
-            onClick={(e) => handleResendCode(e)}
-            disabled={isLoading || !email}
-            className='flex items-center justify-center p-0 w-full md:w-36 text-[#323232] underline font-bold text-[14px] tracking-[1.4px] disabled:opacity-50 hover:text-[#0f9058] transition-colors'
-            style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-            }}
-          >
-            <p className='block leading-[1.6] text-[14px] whitespace-pre'>
-              新しいコードを発行する
-            </p>
-          </button>
-        </div>
+        
       </div>
     </div>
   );
