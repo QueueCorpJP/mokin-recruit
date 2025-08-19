@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { MessageLayoutServer, MessageLayoutServerProps } from './MessageLayoutServer';
 
-export function MessageLayoutWrapper(props: MessageLayoutServerProps) {
+export interface MessageLayoutWrapperProps extends MessageLayoutServerProps {
+  initialRoomId?: string;
+}
+
+export function MessageLayoutWrapper(props: MessageLayoutWrapperProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -18,5 +22,5 @@ export function MessageLayoutWrapper(props: MessageLayoutServerProps) {
     );
   }
 
-  return <MessageLayoutServer {...props} />;
+  return <MessageLayoutServer {...props} initialRoomId={props.initialRoomId} />;
 }

@@ -11,6 +11,9 @@ interface PasswordFormFieldProps {
   showValidation?: boolean;
   minLength?: number;
   className?: string;
+  inputWidth?: string;
+  confirmTarget?: string;
+  isConfirmField?: boolean;
 }
 
 export function PasswordFormField({
@@ -22,21 +25,56 @@ export function PasswordFormField({
   showValidation = true,
   minLength = 8,
   className = '',
+  inputWidth = 'md:w-[400px]',
+  confirmTarget = '',
+  isConfirmField = false,
 }: PasswordFormFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const isPasswordValid = value.length >= minLength;
+  
+  const validatePassword = (password: string) => {
+    // 長さチェック
+    if (password.length < minLength) return false;
+    // 半角英数字・記号のみチェック（全角文字を除外）
+    const validCharRegex = /^[\x20-\x7E]*$/;
+    if (!validCharRegex.test(password)) return false;
+    return true;
+  };
+  
+  const isPasswordValid = validatePassword(value);
+  
+  const getValidationMessage = () => {
+    if (!value) return '';
+    
+    // 確認フィールドの場合はパスワード一致チェック
+    if (isConfirmField) {
+      if (value !== confirmTarget) {
+        return 'パスワードが一致しません';
+      }
+      return '';
+    }
+    
+    // 通常のパスワードフィールドの場合
+    if (value.length < minLength) {
+      return `パスワードは${minLength}文字以上で入力してください`;
+    }
+    const validCharRegex = /^[\x20-\x7E]*$/;
+    if (!validCharRegex.test(value)) {
+      return '半角英数字・記号のみで入力してください';
+    }
+    return '';
+  };
 
   return (
-    <div className={`flex flex-col md:flex-row gap-2 md:gap-4 items-start w-full ${className}`}>
-      <div className='flex flex-row items-center justify-start md:justify-end pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
+    <div className={`flex flex-col md:flex-row gap-2 items-start w-full ${className}`}>
+      <div className='flex flex-row items-start justify-start pt-0 md:pt-[11px] pb-0 w-full md:w-auto md:flex-shrink-0 md:mr-4'>
         <label 
           htmlFor={id}
-          className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
+          className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] whitespace-nowrap'
         >
           {label}
         </label>
       </div>
-      <div className='w-full md:w-[400px] flex flex-col gap-2'>
+      <div className={`w-full ${inputWidth} flex flex-col gap-2`}>
         <div className='relative'>
           <div className='bg-white h-[44px] md:h-[50px] relative rounded-[5px] w-full'>
             <div className='absolute border border-[#999999] border-solid inset-0 pointer-events-none rounded-[5px]' />
@@ -75,9 +113,9 @@ export function PasswordFormField({
             </div>
           </div>
         </div>
-        {showValidation && value && !isPasswordValid && (
+        {showValidation && getValidationMessage() && (
           <p className='text-xs md:text-sm text-red-600'>
-            パスワードは{minLength}文字以上で入力してください
+            {getValidationMessage()}
           </p>
         )}
       </div>

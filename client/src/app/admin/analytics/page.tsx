@@ -70,7 +70,7 @@ export default function AnalyticsPage() {
             fontSize: '32px',
             fontWeight: 700,
             lineHeight: 1.6,
-            color: '#000'
+            color: '#323232'
           }}>
             スカウト利用状況
           </h2>
@@ -86,7 +86,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     {/* 期間列 */}
                   </span>
@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     スカウト送信数
                   </span>
@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     開封数（開封率）
                   </span>
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     返信数（返信率）
                   </span>
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     応募数（応募率）
                   </span>
@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
             fontSize: '32px',
             fontWeight: 700,
             lineHeight: 1.6,
-            color: '#000'
+            color: '#323232'
           }}>
             候補者・企業登録数
           </h2>
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     {/* 期間列 */}
                   </span>
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     新規候補者登録数
                   </span>
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     新規企業登録数
                   </span>
@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     lineHeight: 1.6,
-                    color: '#000'
+                    color: '#323232'
                   }}>
                     新規求人作成数
                   </span>

@@ -3,6 +3,7 @@ import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== Article Creation API Started ===');
     const formData = await request.formData();
     const title = formData.get('title') as string;
     const categoryId = formData.get('categoryId') as string;
@@ -10,6 +11,15 @@ export async function POST(request: NextRequest) {
     const content = formData.get('content') as string;
     const status = formData.get('status') as 'DRAFT' | 'PUBLISHED';
     const thumbnail = formData.get('thumbnail') as File;
+
+    console.log('Received data:', {
+      title: title?.substring(0, 50) + '...',
+      categoryId,
+      tags,
+      contentLength: content?.length || 0,
+      status,
+      hasThumbnail: !!thumbnail && thumbnail.size > 0
+    });
 
     if (!title.trim()) {
       return NextResponse.json(
@@ -19,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServerAdminClient();
+    console.log('Supabase client created');
 
     // サムネイルをアップロード（ある場合）
     let thumbnailUrl = '';
@@ -66,7 +77,7 @@ export async function POST(request: NextRequest) {
       .insert({
         title,
         slug,
-        content,
+        content, // HTMLコンテンツをそのまま保存
         status,
         thumbnail_url: thumbnailUrl,
         excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
@@ -76,6 +87,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
+      console.error('記事作成エラーの詳細:', createError);
       return NextResponse.json(
         { error: `記事の作成に失敗しました: ${createError.message}` },
         { status: 500 }

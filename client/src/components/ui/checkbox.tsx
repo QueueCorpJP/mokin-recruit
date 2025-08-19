@@ -39,7 +39,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       {/* 可視化用のボックス  */}
       <div
         className={`w-5 h-5 flex items-center justify-center rounded-[4px] transition-colors duration-200 
-          ${checked ? 'bg-[#0F9058]' : disabled ? 'bg-[#F3F4F6]' : 'bg-[#DCDCDC]'}`}
+          ${checked ? 'bg-[#0F9058]' : 'bg-[#DCDCDC]'}`}
       >
         {/* ✓ マークは常に描画し、色は白固定 */}
         <svg

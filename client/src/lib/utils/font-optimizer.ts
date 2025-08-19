@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export const fontOptimizer = {
   preloadFonts: () => {
     if (typeof window === 'undefined') return;
@@ -84,11 +85,7 @@ export const fontOptimizer = {
   },
 };
 
-declare global {
-  interface Window {
-    FontFaceObserver: any;
-  }
-}
+// Global declaration removed due to ESLint compatibility issues
 
 class FontFaceObserver {
   family: string;

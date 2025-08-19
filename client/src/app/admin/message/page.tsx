@@ -1,262 +1,180 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from "@/components/admin/ui/button";
-import { Input } from "@/components/admin/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/admin/ui/table";
+import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
+import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+import { ActionButton } from '@/components/admin/ui/ActionButton';
+import { SearchBar } from '@/components/admin/ui/SearchBar';
 
 export default function MessagePage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // メッセージデータのサンプル
-  const messageData = Array(20).fill(null).map((_, index) => ({
+  const messageData = Array(25).fill(null).map((_, index) => ({
     id: index + 1,
-    date: 'yyyy/mm/dd',
-    time: 'hh:mm',
-    companyName: '企業IDが入ります。',
-    companyNumber: '企業名が入ります。',
-    companyGroup: '企業グループ名が入ります。',
-    candidateName: '候補者名が入る。',
-    status: '書類提出',
-    messagePage: '求人名が入ります。求人名が入ります。',
-    detailButton: '詳細'
+    date: '2024/01/15',
+    time: '14:30',
+    companyId: `CMP-${String(index + 1).padStart(4, '0')}`,
+    companyName: `株式会社サンプル${index + 1}`,
+    companyGroup: index % 2 === 0 ? 'グループA' : 'グループB',
+    candidateName: `候補者 太郎${index + 1}`,
+    status: index % 3 === 0 ? '書類提出' : index % 3 === 1 ? '面接調整中' : '選考中',
+    jobTitle: `エンジニア職 - ポジション${index + 1}`,
   }));
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    const totalPages = Math.ceil(messageData.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleDetail = (messageId: number) => {
+    console.log('View detail:', messageId);
+  };
+
+  const columns = [
+    { key: 'date', label: '日付', sortable: true, width: 'w-[180px]' },
+    { key: 'companyId', label: '企業ID', sortable: true, width: 'w-[120px]' },
+    { key: 'companyName', label: '企業名', sortable: true, width: 'w-[200px]' },
+    { key: 'companyGroup', label: '企業グループ', sortable: true, width: 'w-[150px]' },
+    { key: 'candidateName', label: '候補者名', sortable: true, width: 'w-[150px]' },
+    { key: 'status', label: '選考状況', sortable: true, width: 'w-[120px]' },
+    { key: 'jobTitle', label: '求人ページ', sortable: false, width: 'w-[250px]' }
+  ];
+
+  // ページネーション
+  const paginatedData = messageData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const totalPages = Math.ceil(messageData.length / itemsPerPage);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case '書類提出':
+        return 'bg-[#0F9058] text-white';
+      case '面接調整中':
+        return 'bg-[#FFA500] text-white';
+      case '選考中':
+        return 'bg-[#3B82F6] text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
   return (
-    <div className="min-h-screen">
-      {/* 検索・フィルター機能 */}
-      <div className="mb-6">
-        <div className="flex gap-4 items-center mb-4">
-          <div className="text-red-500 text-sm">
-            <div>絞り込み</div>
-            <div>企業ID</div>
-            <div>求人ID</div>
-            <div>求人タイトル</div>
-            <div>全制御画面</div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="検索"
-              className="w-60 border border-gray-400"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontWeight: 700,
-                lineHeight: 1.6
-              }}
-            />
-            <Button className="bg-black text-white px-4 py-2 rounded">
-              検索
-            </Button>
-          </div>
-          
-          <div className="text-red-500 text-sm ml-auto">
-            <div>部分一致で検索</div>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* 上部の機能エリア */}
+      <div className="mb-6 flex justify-between items-center">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="企業名・候補者名・求人タイトルで検索"
+          onSearch={() => console.log('Search:', searchTerm)}
+        />
+        <div className="flex gap-3">
+          <AdminButton
+            href="/admin/message/confirm"
+            text="要確認メッセージ"
+          />
+          <AdminButton
+            href="/admin/message/ngword"
+            text="NGワード設定"
+          />
         </div>
       </div>
 
-      {/* メッセージ一覧テーブル */}
-      <div className="bg-white border border-gray-300 rounded">
-        <Table>
-          <TableHeader className="bg-gray-100">
-            <TableRow>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    日付
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    企業ID
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    企業名
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    企業グループ
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    候補者名
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="border-r border-gray-300 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    選考状況
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-              <TableHead className="px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    lineHeight: 1.6,
-                    color: '#000'
-                  }}>
-                    求人ページ
-                  </span>
-                  {/* Sort icon placeholder */}
-                </div>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {messageData.map((message, index) => (
-              <TableRow key={message.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  <div className="flex items-center gap-2">
-                    <Button className="bg-black text-white px-2 py-1 rounded text-xs">
-                      {message.detailButton}
-                    </Button>
-                    <div>
-                      <div>{message.date}</div>
-                      <div>{message.time}</div>
+      {/* テーブルコンテナ */}
+      <div className="bg-white rounded-lg">
+        {/* テーブルヘッダー */}
+        <MediaTableHeader
+          columns={columns}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+
+        {/* メッセージ一覧 */}
+        <div className="mt-2 space-y-2">
+          {paginatedData.map((message) => (
+            <AdminTableRow
+              key={message.id}
+              columns={[
+                {
+                  content: (
+                    <div className="flex items-center gap-3">
+                      <ActionButton 
+                        text="詳細" 
+                        variant="primary" 
+                        size="small"
+                        onClick={() => handleDetail(message.id)} 
+                      />
+                      <div>
+                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {message.date}
+                        </div>
+                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {message.time}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  {message.companyName}
-                </TableCell>
-                <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  {message.companyNumber}
-                </TableCell>
-                <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  {message.companyGroup}
-                </TableCell>
-                <TableCell className="border-r border-gray-200 px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  {message.candidateName}
-                </TableCell>
-                <TableCell className="border-r border-gray-200 px-3 py-4">
-                  <Button 
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm"
-                    style={{
-                      fontFamily: 'Inter',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      lineHeight: 1.6
-                    }}
-                  >
-                    {message.status}
-                  </Button>
-                </TableCell>
-                <TableCell className="px-3 py-4" style={{
-                  fontFamily: 'Inter',
-                  fontSize: '16px',
-                  fontWeight: 700,
-                  lineHeight: 1.6
-                }}>
-                  {message.messagePage}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  ),
+                  width: 'w-[180px]'
+                },
+                { content: message.companyId, width: 'w-[120px]' },
+                { content: message.companyName, width: 'w-[200px]' },
+                { content: message.companyGroup, width: 'w-[150px]' },
+                { content: message.candidateName, width: 'w-[150px]' },
+                {
+                  content: (
+                    <span className={`px-3 py-1 rounded-full text-[14px] font-bold ${getStatusColor(message.status)}`}>
+                      {message.status}
+                    </span>
+                  ),
+                  width: 'w-[120px]'
+                },
+                { content: message.jobTitle, width: 'w-[250px]' }
+              ]}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ページネーション */}
-      <div className="flex justify-center gap-4 mt-6">
-        <Button className="bg-black text-white px-6 py-2 rounded-full">
-          前へ
-        </Button>
-        <Button className="bg-black text-white px-6 py-2 rounded-full">
-          次へ
-        </Button>
+      <div className="flex justify-center mt-8">
+        <PaginationButtons
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          previousDisabled={currentPage === 1}
+          nextDisabled={currentPage === totalPages || totalPages === 0}
+        />
       </div>
     </div>
   );

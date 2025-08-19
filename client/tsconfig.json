@@ -50,6 +50,7 @@
     "**/*.tsx",
     "**/*.js",
     "**/*.mjs",
+    "**/*.json",
     ".next/types/**/*.ts",
     "src/types/**/*.d.ts"
   ],
