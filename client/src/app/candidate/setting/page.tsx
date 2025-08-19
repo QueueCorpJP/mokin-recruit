@@ -53,7 +53,7 @@ export default function SettingsPage() {
       <div className="px-4 md:px-20 py-10">
         <div className="bg-white rounded-[10px] p-4 md:p-10">
           <div className="flex flex-col gap-2">
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row md:gap-6">
               <div className="w-full md:w-[200px] flex-shrink-0 flex">
                 <div className="bg-[#f9f9f9] rounded-[5px] px-4 md:px-6 py-3 flex items-center justify-start w-full">
                   <span className="font-bold text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px]">
@@ -99,7 +99,7 @@ export default function SettingsPage() {
               </div>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row md:gap-6">
               <div className="w-full md:w-[200px] flex-shrink-0 flex">
                 <div className="bg-[#f9f9f9] rounded-[5px] px-4 md:px-6 py-3 flex items-center justify-start w-full">
                   <span className="font-bold text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px]">
@@ -149,7 +149,7 @@ export default function SettingsPage() {
               </div>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row md:gap-6">
               <div className="w-full md:w-[200px] flex-shrink-0 flex">
                 <div className="bg-[#f9f9f9] rounded-[5px] px-4 md:px-6 py-3 flex items-center justify-start w-full">
                   <span className="font-bold text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px]">
@@ -180,7 +180,7 @@ export default function SettingsPage() {
               </div>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row md:gap-6">
               <div className="w-full md:w-[200px] flex-shrink-0 flex">
                 <div className="bg-[#f9f9f9] rounded-[5px] px-4 md:px-6 py-3 flex items-center justify-start relative w-full">
                   <span className="font-bold text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px]">
