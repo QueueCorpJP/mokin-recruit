@@ -610,8 +610,8 @@ export default function SignupEducationPage() {
                             key={industry.id}
                             className="inline-flex items-center gap-1"
                           >
-                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]">
-                              {industry.name}
+                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden">
+                              <span className="line-clamp-2">{industry.name}</span>
                             </span>
                             <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
                               <select
@@ -692,8 +692,8 @@ export default function SignupEducationPage() {
                             key={jobType.id}
                             className="inline-flex items-center gap-1"
                           >
-                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]">
-                              {jobType.name}
+                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden">
+                              <span className="line-clamp-2">{jobType.name}</span>
                             </span>
                             <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
                               <select
@@ -1018,8 +1018,8 @@ export default function SignupEducationPage() {
                           className="flex flex-row gap-0.5"
                         >
                           <div className="flex-1 flex flex-col gap-0.5">
-                            <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                              {industry.name}
+                            <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] overflow-hidden">
+                              <div className="line-clamp-2">{industry.name}</div>
                             </div>
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between">
                               <select
@@ -1095,8 +1095,8 @@ export default function SignupEducationPage() {
                       {formData.jobTypes.map((jobType) => (
                         <div key={jobType.id} className="flex flex-row gap-0.5">
                           <div className="flex-1 flex flex-col gap-0.5">
-                            <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                              {jobType.name}
+                            <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] overflow-hidden">
+                              <div className="line-clamp-2">{jobType.name}</div>
                             </div>
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between">
                               <select

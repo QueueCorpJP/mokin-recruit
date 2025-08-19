@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
 
@@ -66,6 +65,31 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
     { id: '19', name: 'Next.js' },
     { id: '20', name: 'Nuxt.js' }
   ];
+
+  // プレビューからの戻り時にデータを復元
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('previewArticle');
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        setTitle(data.title || '');
+        setSelectedCategoryIds(data.categoryIds || []);
+        setSelectedTags(data.tags || []);
+        setContent(data.content || '');
+        
+        // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
+        if (data.thumbnail && data.thumbnailName) {
+          // URLから復元する場合は表示のみで実際のFileオブジェクトは作成しない
+          // 代わりにプレビュー時と同じ形式でデータを保持
+        }
+        
+        // sessionStorageをクリア（一度復元したらクリア）
+        sessionStorage.removeItem('previewArticle');
+      } catch (error) {
+        console.error('プレビューデータの復元に失敗:', error);
+      }
+    }
+  }, []);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -183,15 +207,26 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('categoryIds', JSON.stringify(selectedCategoryIds));
-      formData.append('tags', JSON.stringify(selectedTags));
+      formData.append('categoryId', selectedCategoryIds[0] || ''); // actions.tsはcategoryIdを期待している
+      formData.append('tags', selectedTags.map(tagId => {
+        const tag = availableTags.find(t => t.id === tagId);
+        return tag?.name || '';
+      }).filter(Boolean).join(', ')); // タグ名のカンマ区切り文字列
       formData.append('content', content || '<p>記事内容がここに表示されます</p>');
       formData.append('status', status);
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
       }
 
-      await saveArticle(formData);
+      const result = await saveArticle(formData);
+      
+      if (status === 'PUBLISHED' && result?.success) {
+        // 公開時は成功後にリダイレクト
+        router.push('/admin/media');
+      } else if (status === 'DRAFT' && result?.success) {
+        // 下書き保存時もリダイレクト
+        router.push('/admin/media');
+      }
     } catch (error) {
       console.error('記事の保存に失敗:', error);
       if (error instanceof Error && error.message.includes('title')) {
@@ -223,18 +258,25 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
       <div className="mb-6">
         <div className="mb-6 flex justify-end gap-4">
           <div style={{ width: '170px' }}>
-            <AdminButton
+            <Button
               onClick={() => handleSubmit('DRAFT')}
-              text={isLoading ? '保存中...' : '下書き保存'}
-              variant="primary"
               disabled={isLoading}
-            />
+              variant="secondary"
+              size="figma-default"
+              className="w-full"
+            >
+              {isLoading ? '保存中...' : '下書き保存'}
+            </Button>
           </div>
           <div style={{ width: '170px' }}>
-            <AdminButton
+            <Button
               onClick={handlePreview}
-              text="記事を確認する"
-            />
+              variant="green-gradient"
+              size="figma-default"
+              className="w-full"
+            >
+              記事を確認する
+            </Button>
           </div>
         </div>
       </div>
@@ -605,17 +647,21 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
         <div style={{ width: '170px' }}>
           <Button
             onClick={handleCancel}
-            variant="green-outline"
-            size="figma-outline"
+            variant="secondary"
+            size="figma-default"
           >
             一覧に戻る
           </Button>
         </div>
         <div style={{ width: '170px' }}>
-          <AdminButton
+          <Button
             onClick={handlePreview}
-            text="記事を確認する"
-          />
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full"
+          >
+            記事を確認する
+          </Button>
         </div>
       </div>
     </div>

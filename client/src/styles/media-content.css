@@ -10,6 +10,9 @@
   font-weight: 700 !important;
   line-height: 160% !important; /* 38.4px */
   letter-spacing: 2.4px !important;
+  border-bottom: 2px solid #0F9058 !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 16px !important;
 }
 
 /* liスタイル */

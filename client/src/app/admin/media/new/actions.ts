@@ -129,7 +129,8 @@ export async function saveArticle(formData: FormData) {
       }
     }
 
-    redirect('/admin/media');
+    // redirect('/admin/media'); // モーダル表示のためリダイレクトを削除
+    return { success: true, article };
   } catch (error) {
     console.error('記事の保存に失敗:', error);
     throw error;

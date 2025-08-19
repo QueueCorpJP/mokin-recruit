@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
 export async function uploadResumeFiles(formData: FormData) {
   console.log('=== Start uploadResumeFiles ===');
@@ -27,11 +28,9 @@ export async function uploadResumeFiles(formData: FormData) {
     
     console.log('Supabase client created successfully');
     
-    // UUIDを生成（candidatesテーブル用）
-    const { data: uuidData, error: uuidError } = await supabase.rpc('gen_random_uuid');
-    const signupSessionId = uuidData || crypto.randomUUID();
-    
-    console.log('Signup file upload session:', signupSessionId);
+    // Get or create candidate ID using the centralized function
+    const candidateId = await getOrCreateCandidateId();
+    console.log('Using candidate ID for resume upload:', candidateId);
 
     const resumeFile = formData.get('resumeFile') as File | null;
     const careerSummaryFile = formData.get('careerSummaryFile') as File | null;
@@ -54,7 +53,7 @@ export async function uploadResumeFiles(formData: FormData) {
     if (resumeFile) {
       console.log('Uploading resume file:', resumeFile.name, resumeFile.size, resumeFile.type);
       const fileExt = resumeFile.name.split('.').pop();
-      const fileName = `${signupSessionId}/resume_${Date.now()}.${fileExt}`;
+      const fileName = `${candidateId}/resume_${Date.now()}.${fileExt}`;
       
       console.log('Target file path:', fileName);
       
@@ -79,7 +78,7 @@ export async function uploadResumeFiles(formData: FormData) {
     // 職務経歴書のアップロード
     if (careerSummaryFile) {
       const fileExt = careerSummaryFile.name.split('.').pop();
-      const fileName = `${signupSessionId}/career_summary_${Date.now()}.${fileExt}`;
+      const fileName = `${candidateId}/career_summary_${Date.now()}.${fileExt}`;
       
       const { data: careerUploadData, error: careerUploadError } = await supabase.storage
         .from('resumes')
@@ -101,18 +100,16 @@ export async function uploadResumeFiles(formData: FormData) {
       uploadResults.push('職務経歴書');
     }
 
-    // candidatesテーブルに保存（signup段階では仮のレコードを作成）
+    // candidatesテーブルの履歴書情報を更新
     const { data: candidateData, error: candidateError } = await supabase
       .from('candidates')
-      .upsert({
-        id: signupSessionId, // 仮のID
-        email: `temp-${signupSessionId}@example.com`, // 仮のemail
+      .update({
         resume_url: resumeUrl,
         resume_filename: resumeFilename,
-        resume_uploaded_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      });
+        resume_uploaded_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', candidateId);
 
     console.log('Candidate data save result:', { data: candidateData, error: candidateError });
 

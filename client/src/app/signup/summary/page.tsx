@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { saveSummaryData } from './actions';
 
 export default function SignupSummaryPage() {
@@ -192,13 +193,15 @@ export default function SignupSummaryPage() {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="button"
             onClick={handleSubmit}
-            className="px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px]"
+            variant="green-gradient"
+            size="figma-default"
+            className="min-w-[160px] text-[16px] tracking-[1.6px]"
           >
             次へ
-          </button>
+          </Button>
         </div>
       </main>
 
@@ -300,13 +303,15 @@ export default function SignupSummaryPage() {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="button"
             onClick={handleSubmit}
-            className="w-full px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px]"
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full text-[16px] tracking-[1.6px]"
           >
             次へ
-          </button>
+          </Button>
         </div>
       </main>
     </>

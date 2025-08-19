@@ -1,12 +1,33 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { autoLoginAction } from '../../complete/actions';
 
 export default function SignupResumeCompletePage() {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  const handleMyPageClick = () => {
-    router.push('/mypage');
+  const handleMyPageClick = async () => {
+    setError(null);
+    
+    startTransition(async () => {
+      try {
+        const result = await autoLoginAction();
+        
+        if (!result.success) {
+          setError(result.error || 'ログインに失敗しました');
+          // エラーの場合は手動でマイページに遷移
+          router.push('/candidate/mypage');
+        }
+        // 成功の場合はautoLoginAction内でリダイレクトされる
+      } catch (error) {
+        console.error('Auto-login error:', error);
+        // エラーの場合は手動でマイページに遷移
+        router.push('/candidate/mypage');
+      }
+    });
   };
 
   return (

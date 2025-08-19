@@ -234,10 +234,10 @@ export default function SignupResumePage() {
               </div>
               <div className="border-[3px] border-[#efefef] rounded-3xl pt-[60px] pb-10 px-10 w-full flex flex-col gap-10 items-center">
                 <div className="bg-[#f9f9f9] p-6 rounded-3xl w-full flex flex-col gap-2.5 items-center">
-                  <p className="text-[#323232] text-[16px] font-bold tracking-[1.6px] text-center leading-8">
+                  <p className="text-[#323232] text-[16px] font-medium tracking-[1.6px] text-center leading-8">
                     アップロードいただいた書類をもとに運営が入力代行します。
                   </p>
-                  <div className="text-[#323232] text-[14px] font-bold tracking-[1.4px] text-left w-fit">
+                  <div className="text-[#323232] text-[14px] font-medium tracking-[1.4px] text-left w-fit">
                     <p>
                       【留意事項】
                       <br />
@@ -441,7 +441,6 @@ export default function SignupResumePage() {
         </main>
       </div>
       <div className="lg:hidden">
-        /* SP (Mobile) Version */
         <main
           className="lg:hidden flex relative pt-6 pb-20 flex-col items-center px-4"
           style={{

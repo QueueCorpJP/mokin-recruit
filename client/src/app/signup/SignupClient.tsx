@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Loading } from '@/components/ui/Loading';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { signupRequestAction, SignupResult } from './actions';
+import { checkRegistrationProgress } from './checkRegistrationProgress';
 
 interface SignupClientProps {
   onSubmit?: (email: string) => void;
@@ -19,6 +21,34 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [isCheckingProgress, setIsCheckingProgress] = useState(false);
+
+  // Check if user has existing progress on component mount
+  useEffect(() => {
+    const checkExistingProgress = async () => {
+      // Check if there's a saved email in localStorage
+      const savedEmail = localStorage.getItem('signup_email');
+      if (savedEmail) {
+        setIsCheckingProgress(true);
+        try {
+          const progress = await checkRegistrationProgress(savedEmail);
+          if (progress.exists && progress.nextStep !== '/signup') {
+            // User has incomplete registration, redirect to next step
+            router.push(progress.nextStep);
+          } else if (progress.exists && progress.completedSteps.expectationCompleted) {
+            // All steps completed, go to summary
+            router.push('/signup/summary');
+          }
+        } catch (error) {
+          console.error('Error checking registration progress:', error);
+        } finally {
+          setIsCheckingProgress(false);
+        }
+      }
+    };
+
+    checkExistingProgress();
+  }, [router]);
 
   const validateEmail = (email: string): boolean => {
     if (!email) {
@@ -72,6 +102,16 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
     startTransition(async () => {
       try {
+        // First check if this email already has progress
+        const progress = await checkRegistrationProgress(email.trim());
+        
+        if (progress.exists && progress.nextStep !== '/signup') {
+          // User already exists with incomplete registration
+          localStorage.setItem('signup_email', email.trim());
+          router.push(progress.nextStep);
+          return;
+        }
+
         const result: SignupResult = await signupRequestAction({
           email: email.trim(),
         });
@@ -113,6 +153,16 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   };
 
   const isFormValid = email && agreed;
+
+  // Show loading state while checking progress
+  if (isCheckingProgress) {
+    return (
+      <div className='flex flex-col gap-6 items-center w-full text-center'>
+        <Loading size="lg" />
+        <p className='text-[#323232] text-[16px]'>登録状況を確認中...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -216,16 +266,12 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
         {/* 送信ボタン */}
         <div className='flex justify-center w-full'>
-          <button
+          <Button
             type='submit'
             disabled={isPending || !isFormValid}
-            className='flex items-center w-full md:w-auto justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
-            style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 700,
-              lineHeight: '1.6',
-              letterSpacing: '1.6px',
-            }}
+            variant='green-gradient'
+            size='figma-default'
+            className='w-full md:w-auto min-w-40 py-[17px] text-[16px]'
           >
             {isPending ? (
               <>
@@ -233,11 +279,9 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
                 送信中...
               </>
             ) : (
-              <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
-                会員登録（無料）
-              </p>
+              '会員登録（無料）'
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </>

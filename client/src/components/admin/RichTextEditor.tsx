@@ -78,6 +78,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       }),
       Table.configure({
         resizable: true,
+        allowTableNodeSelection: true,
         HTMLAttributes: {
           class: 'border-collapse border border-gray-300 w-full mb-4',
           style: 'max-width: 100%; table-layout: fixed; word-wrap: break-word;',
@@ -211,7 +212,10 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         </button>
         <button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={() => {
+            // H2を適用またはトグル
+            editor.chain().focus().toggleHeading({ level: 2 }).run();
+          }}
           className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
             editor.isActive('heading', { level: 2 }) ? 'border-b-2 border-[#323232]' : ''
           }`}
@@ -310,15 +314,16 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
         </button>
         <button
           type="button"
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          onClick={() => editor.chain().focus().deleteTable().run()}
+          disabled={!editor.isActive('table')}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
             borderRight: '1px solid #ddd'
           }}
         >
-          区切り線
+          テーブル削除
         </button>
         <button
           type="button"

@@ -22,6 +22,7 @@ export default function SignupProfilePage() {
   const [validationErrors, setValidationErrors] = useState({
     lastNameKana: '',
     firstNameKana: '',
+    phoneNumber: '',
   });
   const [formData, setFormData] = useState<ProfileFormData>({
     gender: 'unspecified',
@@ -46,10 +47,38 @@ export default function SignupProfilePage() {
     return '';
   };
 
+  const validatePhoneNumber = (value: string): string => {
+    if (!value) return '';
+    
+    // ハイフンが含まれているかチェック
+    if (value.includes('-')) {
+      return '「-」なしで入力してください';
+    }
+    
+    // 数字のみかチェック
+    const numbersOnlyRegex = /^[0-9]+$/;
+    if (!numbersOnlyRegex.test(value)) {
+      return '数字のみで入力してください';
+    }
+    
+    // 桁数チェック（10桁または11桁）
+    if (value.length !== 10 && value.length !== 11) {
+      return '10桁または11桁で入力してください';
+    }
+    
+    return '';
+  };
+
   const handleKanaChange = (field: 'lastNameKana' | 'firstNameKana', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     const error = validateKatakana(value);
     setValidationErrors(prev => ({ ...prev, [field]: error }));
+  };
+
+  const handlePhoneNumberChange = (value: string) => {
+    setFormData(prev => ({ ...prev, phoneNumber: value }));
+    const error = validatePhoneNumber(value);
+    setValidationErrors(prev => ({ ...prev, phoneNumber: error }));
   };
 
   useEffect(() => {
@@ -85,13 +114,20 @@ export default function SignupProfilePage() {
     // フリガナのバリデーション
     const lastNameKanaError = validateKatakana(formData.lastNameKana);
     const firstNameKanaError = validateKatakana(formData.firstNameKana);
+    const phoneNumberError = validatePhoneNumber(formData.phoneNumber);
     
-    if (lastNameKanaError || firstNameKanaError) {
+    if (lastNameKanaError || firstNameKanaError || phoneNumberError) {
       setValidationErrors({
         lastNameKana: lastNameKanaError,
         firstNameKana: firstNameKanaError,
+        phoneNumber: phoneNumberError,
       });
-      alert('フリガナは全角カタカナで入力してください');
+      
+      if (lastNameKanaError || firstNameKanaError) {
+        alert('フリガナは全角カタカナで入力してください');
+      } else if (phoneNumberError) {
+        alert(phoneNumberError);
+      }
       return;
     }
     
@@ -141,7 +177,9 @@ export default function SignupProfilePage() {
   const isFormValid = formData.lastName && formData.firstName && formData.lastNameKana && 
                      formData.firstNameKana && formData.gender && formData.prefecture &&
                      formData.birthYear && formData.birthMonth && formData.birthDay &&
-                     formData.phoneNumber && formData.currentIncome;
+                     formData.phoneNumber && formData.currentIncome &&
+                     !validationErrors.lastNameKana && !validationErrors.firstNameKana && 
+                     !validationErrors.phoneNumber;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -309,6 +347,9 @@ export default function SignupProfilePage() {
                         )}
                       </div>
                     </div>
+                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
+                      ※登録後の変更は不可となっております。
+                    </p>
                   </div>
                 </div>
 
@@ -484,9 +525,6 @@ export default function SignupProfilePage() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
-                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
-                    </p>
                   </div>
                 </div>
 
@@ -503,9 +541,14 @@ export default function SignupProfilePage() {
                       placeholder="08011112222"
                       autoComplete="off"
                       value={formData.phoneNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                      onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                      className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] ${
+                        validationErrors.phoneNumber ? 'border-red-500' : 'border-[#999999]'
+                      }`}
                     />
+                    {validationErrors.phoneNumber && (
+                      <p className="text-red-600 text-xs mt-1">{validationErrors.phoneNumber}</p>
+                    )}
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                       ※「-」なしでご入力ください。
                     </p>
@@ -878,9 +921,6 @@ export default function SignupProfilePage() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
-                      ※18歳以上の方のみご利用いただけます（{minimumBirthYear}年以前生まれ）
-                    </p>
                   </div>
                 </div>
 
@@ -894,9 +934,14 @@ export default function SignupProfilePage() {
                     placeholder="08011112222"
                     autoComplete="off"
                     value={formData.phoneNumber}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                    onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                    className={`w-full px-[11px] py-[11px] bg-white border rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] ${
+                      validationErrors.phoneNumber ? 'border-red-500' : 'border-[#999999]'
+                    }`}
                   />
+                  {validationErrors.phoneNumber && (
+                    <p className="text-red-600 text-xs mt-1">{validationErrors.phoneNumber}</p>
+                  )}
                   <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                     ※「-」なしでご入力ください。
                   </p>
