@@ -24,6 +24,12 @@ export default function SignupResumePage() {
   const resumeInputRef = useRef<HTMLInputElement>(null);
   const careerInputRef = useRef<HTMLInputElement>(null);
 
+  // ファイル名を省略表示する関数
+  const truncateFileName = (fileName: string, maxLength: number = 20): string => {
+    if (fileName.length <= maxLength) return fileName;
+    return fileName.substring(0, maxLength) + '...';
+  };
+
   const [formData, setFormData] = useState<ResumeUploadFormData>({
     resumeFile: null,
     careerSummaryFile: null,
@@ -285,7 +291,7 @@ export default function SignupResumePage() {
                         <div className="flex flex-wrap gap-2">
                           <div className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5">
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                              {formData.resumeFile.name}
+                              {truncateFileName(formData.resumeFile.name)}
                             </span>
                             <button
                               type="button"
@@ -555,7 +561,7 @@ export default function SignupResumePage() {
                       <div className="flex flex-wrap gap-2">
                         <div className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 flex-1 justify-center">
                           <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                            {formData.resumeFile.name}
+                            {truncateFileName(formData.resumeFile.name)}
                           </span>
                           <button
                             type="button"
@@ -613,7 +619,7 @@ export default function SignupResumePage() {
                       <div className="flex flex-wrap gap-2">
                         <div className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 flex-1 justify-center">
                           <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                            {formData.careerSummaryFile.name}
+                            {truncateFileName(formData.careerSummaryFile.name)}
                           </span>
                           <button
                             type="button"

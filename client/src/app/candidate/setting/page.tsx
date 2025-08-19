@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { Settings, HelpCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getBlockedCompanies } from './ng-company/actions';
 import { getUserSettings, UserSettings } from './actions';
@@ -46,7 +47,7 @@ export default function SettingsPage() {
       <SettingsHeader
         breadcrumbs={[{ label: '各種設定' }]}
         title="各種設定"
-        icon={<Settings className="w-8 h-8" />}
+        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">
@@ -73,7 +74,7 @@ export default function SettingsPage() {
                   </div>
                   <Link
                     href="/candidate/setting/mail"
-                    className="px-4 md:px-6 py-2.5 min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
+                    className="px-4 md:px-6 py-[10px] min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
                   >
                     メールアドレス変更
                   </Link>
@@ -90,7 +91,7 @@ export default function SettingsPage() {
                   </div>
                   <Link
                     href="/candidate/setting/password"
-                    className="px-4 md:px-6 py-2.5 min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
+                    className="px-4 md:px-6 py-[10px] min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
                   >
                     パスワード変更
                   </Link>
@@ -140,7 +141,7 @@ export default function SettingsPage() {
                   </div>
                   <Link
                     href="/candidate/setting/notification"
-                    className="px-4 md:px-6 py-2.5 min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
+                    className="px-4 md:px-6 py-[10px] min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
                   >
                     配信設定変更
                   </Link>
@@ -171,7 +172,7 @@ export default function SettingsPage() {
                   </div>
                   <Link
                     href="/candidate/setting/scout"
-                    className="px-4 md:px-6 py-2.5 min-w-[120px] w-full md:w-auto border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
+                    className="px-4 md:px-6 py-[10px] min-w-[120px] w-full md:w-auto border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
                   >
                     スカウトステータス変更
                   </Link>
@@ -190,9 +191,39 @@ export default function SettingsPage() {
                     className="absolute right-4 md:right-6"
                   >
                     <HelpCircle className="w-4 h-4 text-[#999999] hover:text-[#323232] transition-colors" />
-                    {showTooltip && (
+                  </button>
+                  {showTooltip && (
+                    <>
+                      {/* Mobile: Full width card below the button */}
                       <div 
-                        className="absolute right-[-50px] md:right-[-570px] top-[-40px] bg-[#F0F9F3] rounded-[5px] p-4 shadow-[0_0_20px_0_rgba(0,0,0,0.05)] flex flex-col gap-1 z-10 w-64 md:w-[567px]"
+                        className="md:hidden fixed left-4 right-4 top-[50%] transform -translate-y-1/2 bg-[#F0F9F3] rounded-[10px] p-4 shadow-[0_0_20px_0_rgba(0,0,0,0.1)] flex flex-col gap-2 z-50"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="text-[#323232] font-bold text-sm leading-[160%] tracking-[1.4px] font-['Noto_Sans_JP'] text-left">
+                            ブロック企業とは
+                          </div>
+                          <div
+                            onClick={() => setShowTooltip(false)}
+                            className="p-1 cursor-pointer"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M1 1L13 13M1 13L13 1" stroke="#999999" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="text-[#323232] font-medium text-xs leading-[160%] tracking-[1.2px] font-['Noto_Sans_JP'] text-left">
+                          現職や転職活動中の企業など、スカウトを受けたくない企業をブロックできます。
+                          一部の企業は自動で登録されるので、安心してご利用いただけます。
+                        </div>
+                      </div>
+                      {/* Overlay for mobile - much lighter */}
+                      <div 
+                        className="md:hidden fixed inset-0 bg-black/5 z-40"
+                        onClick={() => setShowTooltip(false)}
+                      />
+                      {/* Desktop: Absolute positioned card */}
+                      <div 
+                        className="hidden md:flex absolute right-[-470px] top-[-40px] bg-[#F0F9F3] rounded-[5px] p-4 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] flex-col gap-1 z-10 w-[470px]"
                       >
                         <div className="text-[#323232] font-bold text-sm leading-[160%] tracking-[1.4px] font-['Noto_Sans_JP'] text-left">
                           ブロック企業とは
@@ -202,8 +233,8 @@ export default function SettingsPage() {
                           一部の企業は自動で登録されるので、安心してご利用いただけます。
                         </div>
                       </div>
-                    )}
-                  </button>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -231,7 +262,7 @@ export default function SettingsPage() {
                   </div>
                   <Link
                     href="/candidate/setting/ng-company"
-                    className="px-4 md:px-6 py-2.5 min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
+                    className="px-4 md:px-6 py-[10px] min-w-[120px] w-full md:w-48 border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-xs tracking-[1.2px] text-center transition-colors duration-200 hover:bg-[#0F9058]/20"
                   >
                     ブロック企業変更
                   </Link>

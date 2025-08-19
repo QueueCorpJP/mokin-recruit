@@ -60,7 +60,7 @@ export default function ScoutSettingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#f9f9f9] overflow-x-hidden">
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
@@ -87,9 +87,9 @@ export default function ScoutSettingPage() {
               className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full"
             >
               <div
-                className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[140px]"
+                className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px] md:min-w-[140px]"
               >
-                <p className="adjustLetterSpacing block leading-[2] whitespace-pre font-bold">スカウトステータス</p>
+                <p className="adjustLetterSpacing block leading-[2] font-bold">スカウトステータス</p>
               </div>
               <div
                 className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full"
@@ -107,9 +107,9 @@ export default function ScoutSettingPage() {
                     />
                     <label
                       htmlFor="scout-receive"
-                      className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
                     >
-                      <p className="adjustLetterSpacing block leading-[2] whitespace-pre">スカウトを受け取る</p>
+                      <p className="adjustLetterSpacing block leading-[2]">スカウトを受け取る</p>
                     </label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -122,9 +122,9 @@ export default function ScoutSettingPage() {
                     />
                     <label
                       htmlFor="scout-not-receive"
-                      className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left text-nowrap tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
+                      className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
                     >
-                      <p className="adjustLetterSpacing block leading-[2] whitespace-pre">スカウトを受け取らない</p>
+                      <p className="adjustLetterSpacing block leading-[2]">スカウトを受け取らない</p>
                     </label>
                   </div>
                 </div>
