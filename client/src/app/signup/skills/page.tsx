@@ -591,11 +591,11 @@ export default function SignupSkillsPage() {
                       ※最低3つ以上のキーワードを選択/登録してください。
                     </p>
                     {formData.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
                         {formData.skills.map((skill) => (
                           <div
                             key={skill}
-                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                           >
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                               {skill}
@@ -980,11 +980,11 @@ export default function SignupSkillsPage() {
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
                 {formData.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {formData.skills.map((skill) => (
                       <div
                         key={skill}
-                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                       >
                         <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                           {skill}

@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
     ],
     remotePatterns: [
       {
+        protocol: 'http',
+        hostname: '**',   // すべてのホスト許可
+      },
+      {
+        protocol: 'https',
+        hostname: '**',   // すべてのホスト許可
+      },
+      {
         protocol: 'https',
         hostname: 'mjhqeagxibsklugikyma.supabase.co',
         port: '',
