@@ -279,7 +279,7 @@ export default function PreviewPage() {
 
               {/* サムネイル画像 */}
               {previewData.thumbnail && (
-                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
+                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]" style={{ minWidth: '900px' }}>
                   <img
                     src={previewData.thumbnail}
                     alt="記事のサムネイル"
