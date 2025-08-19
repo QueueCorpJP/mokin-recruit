@@ -64,9 +64,9 @@ export default function ScoutSettingPage() {
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: 'スカウト設定' }
+          { label: 'スカウトステータス変更' }
         ]}
-        title="スカウト設定"
+        title="スカウトステータス変更"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div
@@ -150,7 +150,7 @@ export default function ScoutSettingPage() {
             onClick={handleBack}
             disabled={isPending}
           >
-            戻る
+保存せず戻る
           </Button>
           <Button
             variant="green-gradient"
