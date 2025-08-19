@@ -109,7 +109,7 @@ export default function EditPreviewPage() {
     };
   }, [router]);
 
-  const handleSave = async () => {
+  const handleSave = async (status?: 'DRAFT' | 'PUBLISHED') => {
     if (!previewData) return;
 
     setIsLoading(true);
@@ -121,7 +121,7 @@ export default function EditPreviewPage() {
       formData.append('categoryId', previewData.categoryIds && previewData.categoryIds.length > 0 ? previewData.categoryIds[0] : '');
       formData.append('tags', Array.isArray(previewData.tags) ? previewData.tags.join(', ') : previewData.tags);
       formData.append('content', previewData.content);
-      formData.append('status', currentStatus);
+      formData.append('status', status || currentStatus);
       
       if (previewData.thumbnailName && previewData.thumbnail) {
         try {
@@ -221,8 +221,6 @@ export default function EditPreviewPage() {
 
   return (
     <div className="min-h-screen bg-[#F9F9F9]">
-
-
       {error && (
         <div className="max-w-[800px] mx-auto mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
@@ -230,9 +228,8 @@ export default function EditPreviewPage() {
       )}
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9]">
-        <div className="">
-          
+      <main className="w-full bg-[#F9F9F9] flex items-start">
+        <div className="w-full">
           <div className="flex flex-col">
             {/* ステータス選択エリア */}
             <div className="w-full max-w-[800px] mx-auto mb-16 mt-[50px]">
@@ -315,22 +312,42 @@ export default function EditPreviewPage() {
               />
 
             </article>
-
-
-
-
           </div>
-
         </div>
       </main>
+
+      {/* 下部ボタンエリア - ページ全体で中央配置 */}
+      <div className="w-full flex justify-center gap-4 mt-8 mb-8">
+        <div style={{ width: '170px' }}>
+          <Button
+            onClick={handleBack}
+            variant="green-outline"
+            size="figma-default"
+          >
+            編集に戻る
+          </Button>
+        </div>
+        <div style={{ width: '220px' }}>
+          <Button
+            onClick={handleSave}
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full"
+            disabled={isLoading}
+          >
+            記事を保存/公開する
+          </Button>
+        </div>
+      </div>
+
 
       {/* 成功通知モーダル */}
       <AdminNotificationModal
         isOpen={showSuccessModal}
         onConfirm={handleBackToList}
         onSecondaryAction={handleViewArticle}
-        title="記事追加完了"
-        description="記事の投稿・保存をしました。"
+        title="記事更新完了"
+        description="記事の更新・保存をしました。"
         confirmText="記事一覧に戻る"
         secondaryText="記事を確認する"
       />

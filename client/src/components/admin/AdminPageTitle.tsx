@@ -188,49 +188,6 @@ export function AdminPageTitle() {
     );
   }
 
-  if (pathname === '/admin/media/preview') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          新規記事追加
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('cancel-preview');
-              window.dispatchEvent(event);
-            }}
-            text="戻る"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('save-draft');
-              window.dispatchEvent(event);
-            }}
-            text="記事を下書き保存"
-            variant="green-gradient"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('publish-article');
-              window.dispatchEvent(event);
-            }}
-            text="記事を投稿する"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
   if (pathname.match(/^\/admin\/media\/edit\/preview$/)) {
     return (
       <div className="mb-6 flex justify-between items-center">
@@ -250,7 +207,7 @@ export function AdminPageTitle() {
               const event = new CustomEvent('back-to-edit');
               window.dispatchEvent(event);
             }}
-            text="戻る"
+            text="編集に戻る"
             variant="green-outline"
           />
           <AdminButton
@@ -259,6 +216,49 @@ export function AdminPageTitle() {
               window.dispatchEvent(event);
             }}
             text="記事を保存/公開する"
+            variant="green-gradient"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (pathname === '/admin/media/preview') {
+    return (
+      <div className="mb-6 flex justify-between items-center">
+        <h1 style={{
+          color: '#323232',
+          fontFamily: 'Inter',
+          fontSize: '32px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: 'normal'
+        }}>
+          新規記事追加
+        </h1>
+        <div className="flex gap-4">
+          <AdminButton
+            onClick={() => {
+              const event = new CustomEvent('cancel-preview');
+              window.dispatchEvent(event);
+            }}
+            text="編集に戻る"
+            variant="green-outline"
+          />
+          <AdminButton
+            onClick={() => {
+              const event = new CustomEvent('save-draft');
+              window.dispatchEvent(event);
+            }}
+            text="記事を下書き保存"
+            variant="green-gradient"
+          />
+          <AdminButton
+            onClick={() => {
+              const event = new CustomEvent('publish-article');
+              window.dispatchEvent(event);
+            }}
+            text="記事を投稿する"
             variant="green-gradient"
           />
         </div>
