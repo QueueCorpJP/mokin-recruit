@@ -6,6 +6,7 @@ import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { Modal } from '@/components/ui/mo-dal';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { saveRecentJobAction } from './actions';
@@ -604,20 +605,16 @@ export default function SignupRecentJobPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !isFormValid()}
-              className='flex items-center w-full md:w-auto justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
-              style={{
-                fontFamily: 'Noto Sans JP, sans-serif',
-                fontWeight: 700,
-                lineHeight: '1.6',
-                letterSpacing: '1.6px',
-              }}
+              variant="green-gradient"
+              size="figma-default"
+              className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              次へ
-            </button>
+              {isSubmitting ? '送信中...' : '次へ'}
+            </Button>
           </div>
         </main>
       </div>
@@ -990,20 +987,16 @@ export default function SignupRecentJobPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !isFormValid()}
-              className='flex items-center w-full justify-center px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
-              style={{
-                fontFamily: 'Noto Sans JP, sans-serif',
-                fontWeight: 700,
-                lineHeight: '1.6',
-                letterSpacing: '1.6px',
-              }}
+              variant="green-gradient"
+              size="figma-default"
+              className="w-full text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              次へ
-            </button>
+              {isSubmitting ? '送信中...' : '次へ'}
+            </Button>
           </div>
         </main>
       </div>

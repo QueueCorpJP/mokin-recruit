@@ -20,7 +20,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'delete':
-        return 'bg-[#FF5B5B] hover:bg-[#E54545]';
+        return 'bg-[#ff5b5b] hover:bg-[#af4545]';
       case 'edit':
         return 'bg-[#0F9058] hover:bg-[#0D7A4A]';
       case 'approve':

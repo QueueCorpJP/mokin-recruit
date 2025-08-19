@@ -60,6 +60,23 @@ const TocItem = Node.create({
   },
 })
 
+// カスタム引用ノード
+const Quote = Node.create({
+  name: 'quote',
+  group: 'block',
+  content: 'text*',
+
+  parseHTML() {
+    return [{
+      tag: 'div.quote-container',
+    }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'quote-container' }), 0]
+  },
+})
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -100,6 +117,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       TableOfContents,
       TocTitle,
       TocItem,
+      Quote,
     ],
     content,
     immediatelyRender: false,
@@ -190,6 +208,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('bold') ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -205,6 +224,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('italic') ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -223,6 +243,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('heading', { level: 2 }) ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -238,6 +259,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('heading', { level: 3 }) ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -253,6 +275,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('bulletList') ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -268,6 +291,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('orderedList') ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -280,6 +304,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -292,6 +317,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -307,6 +333,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderBottom: editor.isActive('blockquote') ? '2px solid #323232' : 'none',
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -332,6 +359,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -345,6 +373,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -358,6 +387,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             boxShadow: 'none',
             fontWeight: 'bold',
+            fontFamily: 'Noto Sans JP, sans-serif',
             borderRight: '1px solid #ddd'
           }}
         >
@@ -388,6 +418,28 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           }}
         >
           列削除
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            editor?.chain()
+              .focus()
+              .insertContent([
+                {
+                  type: 'quote',
+                  content: [{ type: 'text', text: '引用テキストがここに入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。' }],
+                },
+              ])
+              .run();
+          }}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
+          style={{
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
+          }}
+        >
+          引用
         </button>
         <button
           type="button"
@@ -437,7 +489,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',
-            lineHeight: 1.6,
+            lineHeight: 1.8,
             wordWrap: 'break-word',
             overflowWrap: 'break-word',
             wordBreak: 'break-word',

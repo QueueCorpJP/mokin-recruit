@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface AdminNotificationModalProps {
   isOpen: boolean;
@@ -52,31 +53,29 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
         </div>
 
         {/* ボタンエリア */}
-        <div className={`flex ${onSecondaryAction && secondaryText ? 'justify-between' : 'justify-center'}`}>
-          <button
-            onClick={onConfirm}
-            className="bg-[#0F9058] text-white font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0A7A46] transition-colors"
-            style={{
-              width: '198px',
-              height: '51px',
-              fontFamily: 'Inter'
-            }}
-          >
-            {confirmText}
-          </button>
+        <div className="flex gap-4 justify-center">
+          <div style={{ width: '198px' }}>
+            <Button
+              onClick={onConfirm}
+              variant="green-gradient"
+              size="figma-default"
+              className="w-full text-[16px] font-bold tracking-[0.1em]"
+            >
+              {confirmText}
+            </Button>
+          </div>
           
           {onSecondaryAction && secondaryText && (
-            <button
-              onClick={onSecondaryAction}
-              className="bg-white text-[#0F9058] border border-[#0F9058] font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0F9058] hover:text-white transition-colors"
-              style={{
-                width: '198px',
-                height: '51px',
-                fontFamily: 'Inter'
-              }}
-            >
-              {secondaryText}
-            </button>
+            <div style={{ width: '198px' }}>
+              <Button
+                onClick={onSecondaryAction}
+                variant="green-outline"
+                size="figma-default"
+                className="w-full text-[16px] font-bold tracking-[0.1em]"
+              >
+                {secondaryText}
+              </Button>
+            </div>
           )}
         </div>
       </div>

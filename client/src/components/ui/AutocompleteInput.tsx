@@ -56,16 +56,21 @@ export default function AutocompleteInput({
   }, []);
 
   useEffect(() => {
-    if (displayedSuggestions.length > 0 && value.trim().length > 0) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
-    }
+    // Only open suggestions when user is actively typing (length > 0) and has results
+    // Don't auto-open when value is set programmatically
     setSelectedIndex(-1);
   }, [displayedSuggestions, value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    onChange(newValue);
+    
+    // Only show suggestions when user is actively typing
+    if (newValue.trim().length > 0 && displayedSuggestions.length > 0) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -114,6 +119,12 @@ export default function AutocompleteInput({
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => {
+          // Show suggestions when input is focused and has content
+          if (value.trim().length > 0 && displayedSuggestions.length > 0) {
+            setIsOpen(true);
+          }
+        }}
         placeholder={placeholder}
         disabled={disabled}
         className={className || `w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058]`}

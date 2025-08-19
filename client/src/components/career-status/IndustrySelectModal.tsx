@@ -47,7 +47,7 @@ export default function IndustrySelectModal({
     onClose();
   };
 
-  // すべての業種を1つの配列にフラット化（カテゴリ情報付きで一意のキーを生成）
+  // カテゴリごとに業種を整理
   const allIndustries = industryCategories.flatMap(category => 
     category.industries.map(industry => ({
       key: `${category.name}-${industry}`, // 一意のキー
@@ -69,40 +69,50 @@ export default function IndustrySelectModal({
       totalCount={maxSelections}
     >
       <div className='space-y-6'>
-        {/* 業種カテゴリーテキスト */}
-        <div>
-          <h3 className="w-full font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
-            業種カテゴリーテキスト
-          </h3>
-
-          {/* 制限メッセージ */}
-          {selectedIndustries.length >= maxSelections && (
-            <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
-              <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
-                最大{maxSelections}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
-              </p>
-            </div>
-          )}
-
-          {/* 業種チェックボックスリスト（2列グリッド） */}
-          <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
-            {allIndustries.map((industryItem) => {
-              const isSelected = selectedIndustries.includes(industryItem.value);
-              const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
-              
-              return (
-                <div key={industryItem.key} className='flex items-center'>
-                  <Checkbox 
-                    label={industryItem.value} 
-                    checked={isSelected} 
-                    onChange={() => handleCheckboxChange(industryItem.value)}
-                    disabled={isDisabled}
-                  />
-                </div>
-              );
-            })}
+        {/* 制限メッセージ */}
+        {selectedIndustries.length >= maxSelections && (
+          <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
+            <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
+              最大{maxSelections}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* カテゴリごとの業種表示 */}
+        {industryCategories.map((category, index) => (
+          <div key={category.name} className='mb-6'>
+            <div className="relative mb-4">
+              <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[0.05em] text-[#323232] pb-4">
+                {category.name}
+              </h3>
+              <div className="absolute bottom-0 left-[3px] -right-32 h-[2px] bg-[#E5E7EB] rounded-full"></div>
+            </div>
+            
+            {/* カテゴリ内の業種チェックボックスリスト（2列グリッド） */}
+            <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
+              {category.industries.map((industry) => {
+                const isSelected = selectedIndustries.includes(industry);
+                const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
+                
+                return (
+                  <div key={`${category.name}-${industry}`} className='flex items-center'>
+                    <Checkbox 
+                      label={industry} 
+                      checked={isSelected} 
+                      onChange={() => handleCheckboxChange(industry)}
+                      disabled={isDisabled}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* カテゴリ間の区切り線 */}
+            {index < industryCategories.length - 1 && (
+              <div className="mt-6 border-b border-[#dcdcdc]"></div>
+            )}
+          </div>
+        ))}
       </div>
     </Modal>
   );
