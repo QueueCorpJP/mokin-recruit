@@ -600,7 +600,7 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
           <RichTextEditor
             content={content}
             onChange={setContent}
-            placeholder="記事の内容を入力してください。目次、テーブル、画像、見出しなどを自由に追加できます。"
+            placeholder="記事の内容を入力してください。"
           />
          
           {contentError && (

@@ -579,21 +579,9 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
           <RichTextEditor
             content={content}
             onChange={setContent}
-            placeholder="記事の内容を入力してください。目次、テーブル、画像、見出しなどを自由に追加できます。"
+            placeholder="記事の内容を入力してください。"
           />
           <div className="text-right mt-2">
-            <span 
-              className="text-red-500 text-sm"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: 400,
-                lineHeight: 1.6
-              }}
-            >
-              WYSIWYGエディタで記事内容を作成<br />
-              目次、テーブル、画像、見出しなどを自由に配置可能
-            </span>
           </div>
           {contentError && (
             <p className="text-red-500 text-sm mt-1">
