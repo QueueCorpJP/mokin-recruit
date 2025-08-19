@@ -22,6 +22,7 @@ import {
   CompanyAccountRepository,
   CompanyUserRepository,
 } from '@/lib/server/infrastructure/database/CompanyUserRepository';
+import { AdminUserRepository } from '@/lib/server/infrastructure/database/AdminUserRepository';
 
 // Services
 import { PasswordService } from '@/lib/server/core/services/PasswordService';
@@ -92,6 +93,10 @@ if (process.env.NEXT_PHASE === 'phase-production-build') {
     container
       .bind<CompanyAccountRepository>(TYPES.CompanyAccountRepository)
       .to(CompanyAccountRepository);
+
+    container
+      .bind<AdminUserRepository>(TYPES.AdminUserRepository)
+      .to(AdminUserRepository);
 
     // === サービスバインディング ===
     container.bind<IPasswordService>(TYPES.PasswordService).to(PasswordService);

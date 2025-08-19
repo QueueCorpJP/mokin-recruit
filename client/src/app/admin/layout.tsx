@@ -11,11 +11,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className='min-h-screen flex flex-col'>
       <AdminHeader />
-      <div className="flex">
+      <div className='flex'>
         <AdminSidebar />
-        <main className="flex-1 p-6 bg-[#F9F9F9]">
+        <main className='flex-1 p-6 bg-[#F9F9F9]'>
           <AdminBreadcrumb />
           <AdminPageTitle />
           {children}

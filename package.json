@@ -60,6 +60,8 @@
     "@tiptap/extension-table-cell": "^3.2.0",
     "@tiptap/extension-table-header": "^3.2.0",
     "@tiptap/extension-table-row": "^3.2.0",
-    "bcrypt": "^6.0.0"
+    "bcrypt": "^6.0.0",
+    "node": "^24.6.0",
+    "npx": "^10.2.2"
   }
 }

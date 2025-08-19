@@ -23,7 +23,6 @@ export async function middleware(request: NextRequest) {
 
   // 認証不要のパス
   const publicPaths = [
-    '/',
     '/auth/login',
     '/auth/register',
     '/auth/forgot-password',
@@ -64,61 +63,31 @@ export async function middleware(request: NextRequest) {
     try {
       // セッションの確認
       const token = request.cookies.get('supabase-auth-token')?.value;
-      const bypassToken = request.cookies.get('auth-bypass-token')?.value;
-
-      // 開発環境での認証バイパスチェック
-      if (process.env.NODE_ENV === 'development' && bypassToken) {
-        try {
-          // バイパストークンの検証
-          if (bypassToken.startsWith('bypass.')) {
-            const payload = JSON.parse(
-              Buffer.from(
-                bypassToken.replace('bypass.', ''),
-                'base64'
-              ).toString()
-            );
-
-            if (payload.bypass && payload.exp > Math.floor(Date.now() / 1000)) {
-              // バイパスユーザー情報をヘッダーに追加
-              const response = NextResponse.next();
-              response.headers.set('x-user-id', payload.userId);
-              response.headers.set('x-user-email', payload.email);
-              response.headers.set('x-user-type', payload.userType);
-              response.headers.set('x-auth-bypass', 'true');
-              response.headers.set('x-auth-validated', 'true');
-
-              return response;
-            }
-          }
-        } catch (error) {
-          // バイパストークンエラーは無視
-        }
-      }
+      // バイパストークンは開発時でも無効化
+      // const bypassToken = request.cookies.get('auth-bypass-token')?.value;
 
       // JWTトークンの簡易検証（Supabase APIコールなし）
       if (token) {
         try {
           // JWTの基本的な検証のみ実行
-          const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
+          const jwtSecret =
+            process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
           const payload = jwt.verify(token, jwtSecret) as any;
-          
           // JWTペイロードのデバッグログ
-          console.log('🔍 middleware - JWT payload:', {
-            sub: payload.sub,
-            email: payload.email,
-            user_metadata: payload.user_metadata,
-            userType: payload.userType,
-            exp: payload.exp,
-            pathname
-          });
-          
+          // console.log('🔍 middleware - JWT payload:', payload);
           // トークンの有効期限チェック
           if (payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
             // JWTペイロードからユーザータイプを取得（ログイン時に設定される）
-            const userType = payload.user_metadata?.user_type || payload.userType || 'candidate';
-            
-            console.log('🔍 middleware - Setting userType:', userType, 'for email:', payload.email);
-            
+            const userType =
+              payload.user_metadata?.user_type ||
+              payload.userType ||
+              'candidate';
+            // ★ admin配下のアクセス制御
+            if (pathname.startsWith('/admin') && userType !== 'admin') {
+              return NextResponse.redirect(
+                new URL('/admin/auth/login', request.url)
+              );
+            }
             // ユーザー情報をヘッダーに追加
             const response = NextResponse.next();
             response.headers.set('x-user-id', payload.sub || '');
@@ -127,35 +96,37 @@ export async function middleware(request: NextRequest) {
             response.headers.set('x-auth-bypass', 'false');
             response.headers.set('x-auth-validated', 'true');
             response.headers.set('x-token-exp', String(payload.exp));
-            
-            // 企業ユーザーの場合、company_account_idも設定
-            if (userType === 'company_user' && payload.user_metadata?.company_account_id) {
-              response.headers.set('x-company-account-id', payload.user_metadata.company_account_id);
+            if (
+              userType === 'company_user' &&
+              payload.user_metadata?.company_account_id
+            ) {
+              response.headers.set(
+                'x-company-account-id',
+                payload.user_metadata.company_account_id
+              );
             }
-
             return response;
           }
         } catch (error) {
           // JWT検証エラーは続行（リダイレクト処理へ）
         }
       }
-
-      // 認証失敗時のリダイレクト先を決定
-      const getLoginRedirect = () => {
-        if (pathname.startsWith('/candidate')) {
-          return new URL('/candidate/auth/login', request.url);
-        } else if (pathname.startsWith('/company')) {
-          return new URL('/company/auth/login', request.url);
-        } else if (pathname.startsWith('/admin')) {
-          return new URL('/admin/auth/login', request.url);
-        } else {
-          return new URL('/auth/login', request.url);
-        }
-      };
-
-      return NextResponse.redirect(getLoginRedirect());
+      // トークンが無い、または検証失敗時は必ずリダイレクト
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/admin/auth/login', request.url));
+      } else if (pathname.startsWith('/candidate')) {
+        return NextResponse.redirect(
+          new URL('/candidate/auth/login', request.url)
+        );
+      } else if (pathname.startsWith('/company')) {
+        return NextResponse.redirect(
+          new URL('/company/auth/login', request.url)
+        );
+      } else {
+        return NextResponse.redirect(new URL('/auth/login', request.url));
+      }
     } catch (error) {
-      console.error('Middleware authentication error:', error);
+      // 例外時も必ずリダイレクト
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
