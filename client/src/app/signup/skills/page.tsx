@@ -595,7 +595,7 @@ export default function SignupSkillsPage() {
                         {formData.skills.map((skill) => (
                           <div
                             key={skill}
-                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                           >
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                               {skill}
@@ -984,7 +984,7 @@ export default function SignupSkillsPage() {
                     {formData.skills.map((skill) => (
                       <div
                         key={skill}
-                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                       >
                         <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                           {skill}

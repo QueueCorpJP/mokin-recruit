@@ -106,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
           )}
           {customHeader && (
-            <div className='w-full -mx-4 md:-mx-6 px-4 md:px-6'>
+            <div className='w-full -mx-4 md:-mx-6 p-4 pr-0 md:px-6'>
               <h3 className="text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-2">
                 {customHeader.title}
               </h3>
