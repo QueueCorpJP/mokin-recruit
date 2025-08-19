@@ -492,7 +492,7 @@ export default function SignupCareerStatusPage() {
                           value={entry.companyName}
                           onChange={(value) => updateEntry(index, 'companyName', value)}
                           placeholder="企業名を入力"
-                          className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                          className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                         />
                       </div>
 
@@ -506,7 +506,7 @@ export default function SignupCareerStatusPage() {
                           placeholder="部署名・役職名を入力"
                           value={entry.department || ''}
                           onChange={(e) => updateEntry(index, 'department', e.target.value)}
-                          className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                          className="w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                         />
                       </div>
 
@@ -578,7 +578,7 @@ export default function SignupCareerStatusPage() {
                       <path d="M8 1.5V14.5M1.5 8H14.5" stroke="#0f9058" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
-                      企業を選択
+                      企業を追加
                     </span>
                   </button>
                 </div>
@@ -786,7 +786,7 @@ export default function SignupCareerStatusPage() {
                       {index > 0 && (
                         <div className="absolute top-4 right-4 w-4 h-4 cursor-pointer" onClick={() => removeEntry(index)}>
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 1L15 15M1 15L15 1" stroke="#0F9058" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M1 1L15 15M1 15L15 1" stroke="#999999" strokeWidth="2" strokeLinecap="round" />
                           </svg>
                         </div>
                       )}
@@ -853,7 +853,7 @@ export default function SignupCareerStatusPage() {
                           value={entry.companyName}
                           onChange={(value) => updateEntry(index, 'companyName', value)}
                           placeholder="企業名を入力"
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                         />
                       </div>
 
@@ -865,7 +865,7 @@ export default function SignupCareerStatusPage() {
                           value={entry.department || ''}
                           onChange={(e) => updateEntry(index, 'department', e.target.value)}
                           placeholder="部署名・役職名を入力"
-                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                          className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                         />
                       </div>
 
@@ -930,7 +930,7 @@ export default function SignupCareerStatusPage() {
                       <path d="M8 1.5V14.5M1.5 8H14.5" stroke="#0f9058" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
-                      企業を選択
+                      企業を追加
                     </span>
                   </button>
                 </div>

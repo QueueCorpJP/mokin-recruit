@@ -13,6 +13,7 @@ interface AdminModalProps {
   onInputChange: (value: string) => void;
   confirmText?: string;
   cancelText?: string;
+  placeholder?: string;
 }
 
 export const AdminModal: React.FC<AdminModalProps> = ({
@@ -24,7 +25,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   inputValue,
   onInputChange,
   confirmText = "確認する",
-  cancelText = "閉じる"
+  cancelText = "閉じる",
+  placeholder = "入力してください"
 }) => {
   const handleConfirm = () => {
     onConfirm(inputValue);
@@ -47,11 +49,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({
           width: '604px',
           height: 'auto',
           borderRadius: '16px',
-          padding: '70px'
+          padding: '40px'
         }}
       >
         {/* タイトル */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 justify-start">
           <h2 className="font-['Inter'] font-bold text-[24px] text-[#323232] leading-[1.6]">
             {title}
           </h2>
@@ -59,7 +61,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
         {/* 説明文 */}
         <div className="text-center mb-6">
-          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6]">
+          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6] font-bold">
             {description}
           </p>
         </div>
@@ -72,40 +74,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             onChange={handleInputChange}
             className="w-[343px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] outline-none"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-            placeholder="カテゴリ名を入力してください"
+            placeholder={placeholder}
           />
         </div>
 
         {/* ボタン */}
         <div className="flex gap-4 justify-center">
-          <button
+          <AdminButton
             onClick={onClose}
-            className="bg-transparent border border-[#0F9058] text-[#0F9058] font-bold text-[16px] leading-[1.6] rounded-[35px] transition-colors"
-            style={{
-              width: '198px',
-              height: '51px',
-              fontFamily: 'Inter'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(15, 144, 88, 0.20)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            {cancelText}
-          </button>
-          <button
+            text={cancelText}
+            variant="green-outline"
+            className="w-[180px]"
+          />
+          <AdminButton
             onClick={handleConfirm}
-            className="bg-[#0F9058] text-white font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0A7A46] transition-colors"
-            style={{
-              width: '198px',
-              height: '51px',
-              fontFamily: 'Inter'
-            }}
-          >
-            {confirmText}
-          </button>
+            text={confirmText}
+            variant="green-gradient"
+            className="w-[180px]"
+          />
         </div>
       </div>
     </div>

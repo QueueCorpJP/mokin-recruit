@@ -295,7 +295,7 @@ export default function MediaPage() {
                         className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] block truncate"
                         title={article.title}
                       >
-                        {article.title.length > 5 ? `${article.title.substring(0, 5)}...` : article.title}
+                        {article.title.length > 10 ? `${article.title.substring(0, 10)}...` : article.title}
                       </span>
                     ),
                     width: 'flex-1'

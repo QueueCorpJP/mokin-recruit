@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
@@ -9,6 +10,7 @@ import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+
 import { articleService, ArticleCategory } from '@/lib/services/articleService';
 
 interface Category extends ArticleCategory {
@@ -16,6 +18,8 @@ interface Category extends ArticleCategory {
 }
 
 export default function CategoryPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +29,8 @@ export default function CategoryPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [deletedCategoryName, setDeletedCategoryName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
@@ -32,7 +38,26 @@ export default function CategoryPage() {
 
   useEffect(() => {
     fetchCategories();
+    
+    // URLパラメーターでモーダル開閉を制御
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'add') {
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handleAddCategoryEvent = () => {
+      handleAddCategory();
+    };
+
+    window.addEventListener('add-category-modal', handleAddCategoryEvent);
+
+    return () => {
+      window.removeEventListener('add-category-modal', handleAddCategoryEvent);
+    };
   }, []);
+
 
   const fetchCategories = async () => {
     try {
@@ -152,6 +177,8 @@ export default function CategoryPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setNewCategoryName('');
+    // URLパラメーターを削除
+    router.replace('/admin/media/category');
   };
 
   const handlePrevious = () => {
@@ -167,17 +194,63 @@ export default function CategoryPage() {
     }
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // ソート時はページを1に戻す
+  };
+
   const columns = [
     { key: 'categoryName', label: 'カテゴリ名', sortable: true, width: 'flex-1' },
     { key: 'actions', label: '', sortable: false, width: 'w-[200px]' }
   ];
 
+  // ソート処理
+  const sortedCategories = [...categories].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+    
+    let aValue: string;
+    let bValue: string;
+    
+    switch (sortColumn) {
+      case 'categoryName':
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      default:
+        return 0;
+    }
+    
+    if (sortDirection === 'asc') {
+      return aValue.localeCompare(bValue, 'ja', {
+        numeric: true,
+        sensitivity: 'base',
+        ignorePunctuation: true
+      });
+    } else {
+      return bValue.localeCompare(aValue, 'ja', {
+        numeric: true,
+        sensitivity: 'base',
+        ignorePunctuation: true
+      });
+    }
+  });
+
   // ページネーション
-  const paginatedCategories = categories.slice(
+  const paginatedCategories = sortedCategories.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedCategories.length / itemsPerPage);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
@@ -189,14 +262,6 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-end">
-        <AdminButton
-          onClick={handleAddCategory}
-          text="新規カテゴリ追加"
-          variant="primary"
-        />
-      </div>
 
       {/* テーブルコンテナ */}
       <div className="bg-white rounded-lg overflow-x-auto">
@@ -205,7 +270,8 @@ export default function CategoryPage() {
           {columns.map((column) => (
             <div
               key={column.key}
-              className={`${column.width || 'flex-1'} px-3`}
+              className={`${column.width || 'flex-1'} px-3 ${column.sortable ? 'cursor-pointer select-none' : ''}`}
+              onClick={() => column.sortable && handleSort(column.key)}
             >
               <div className="flex items-center gap-2">
                 <span className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px]">
@@ -298,6 +364,7 @@ export default function CategoryPage() {
         description="追加したいカテゴリ名を入力してください。"
         inputValue={newCategoryName}
         onInputChange={setNewCategoryName}
+        placeholder="カテゴリ名を入力してください"
       />
 
       {/* 削除確認モーダル */}

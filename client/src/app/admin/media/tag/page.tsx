@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
+import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
@@ -15,11 +17,17 @@ interface Tag extends ArticleTag {
 }
 
 export default function TagPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
   const [deletedTagName, setDeletedTagName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +37,24 @@ export default function TagPage() {
 
   useEffect(() => {
     fetchTags();
+    
+    // URLパラメーターでモーダル開閉を制御
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'add') {
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handleAddTagEvent = () => {
+      handleAddTag();
+    };
+
+    window.addEventListener('add-tag-modal', handleAddTagEvent);
+
+    return () => {
+      window.removeEventListener('add-tag-modal', handleAddTagEvent);
+    };
   }, []);
 
   const fetchTags = async () => {
@@ -127,7 +153,45 @@ export default function TagPage() {
   };
 
   const handleAddTag = () => {
-    window.location.href = '/admin/media/tag/new';
+    setShowModal(true);
+    setNewTagName('');
+  };
+
+  const handleConfirmAdd = async (tagName: string) => {
+    if (tagName.trim()) {
+      try {
+        await articleService.createTag(tagName.trim());
+        setShowModal(false);
+        setNewTagName('');
+        // リストを再取得
+        fetchTags();
+      } catch (err) {
+        console.error('タグの作成に失敗:', err);
+        setError(err instanceof Error ? err.message : 'タグの作成に失敗しました');
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setNewTagName('');
+    // URLパラメーターを削除
+    router.replace('/admin/media/tag');
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // ソート時はページを1に戻す
   };
 
 
@@ -149,12 +213,43 @@ export default function TagPage() {
     { key: 'actions', label: '', sortable: false, width: 'w-[200px]' }
   ];
 
+  // ソート処理
+  const sortedTags = [...tags].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+    
+    let aValue: string;
+    let bValue: string;
+    
+    switch (sortColumn) {
+      case 'tagName':
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      default:
+        return 0;
+    }
+    
+    if (sortDirection === 'asc') {
+      return aValue.localeCompare(bValue, 'ja', {
+        numeric: true,
+        sensitivity: 'base',
+        ignorePunctuation: true
+      });
+    } else {
+      return bValue.localeCompare(aValue, 'ja', {
+        numeric: true,
+        sensitivity: 'base',
+        ignorePunctuation: true
+      });
+    }
+  });
+
   // ページネーション
-  const paginatedTags = tags.slice(
+  const paginatedTags = sortedTags.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(tags.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedTags.length / itemsPerPage);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
@@ -166,14 +261,6 @@ export default function TagPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-end">
-        <AdminButton
-          onClick={handleAddTag}
-          text="新規タグ追加"
-          variant="green-gradient"
-        />
-      </div>
 
       {/* テーブルコンテナ */}
       <div className="bg-white rounded-lg overflow-x-auto">
@@ -182,7 +269,8 @@ export default function TagPage() {
           {columns.map((column) => (
             <div
               key={column.key}
-              className={`${column.width || 'flex-1'} px-3`}
+              className={`${column.width || 'flex-1'} px-3 ${column.sortable ? 'cursor-pointer select-none' : ''}`}
+              onClick={() => column.sortable && handleSort(column.key)}
             >
               <div className="flex items-center gap-2">
                 <span className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px]">
@@ -265,6 +353,18 @@ export default function TagPage() {
           disabled={currentPage === totalPages || totalPages === 0}
         />
       </div>
+
+      {/* 追加モーダル */}
+      <AdminModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmAdd}
+        title="タグ追加"
+        description="追加したいタグ名を入力してください。"
+        inputValue={newTagName}
+        onInputChange={setNewTagName}
+        placeholder="タグ名を入力してください"
+      />
 
       {/* 削除確認モーダル */}
       <AdminConfirmModal

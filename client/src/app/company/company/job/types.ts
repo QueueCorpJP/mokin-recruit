@@ -538,16 +538,14 @@ export const industryCategories = [
       '不動産ファンド',
       'ベンチャーキャピタル',
       'クレジット・信販',
-      '政府系金融機関',
-      'その他'
+      '政府系金融機関'
     ] 
   },
   { 
     name: '保険', 
     industries: [
       '生命保険',
-      '損害保険',
-      'その他'
+      '損害保険'
     ] 
   },
   { 
@@ -555,16 +553,14 @@ export const industryCategories = [
     industries: [
       'コンサルティング',
       'シンクタンク',
-      'リサーチ',
-      'その他'
+      'リサーチ'
     ] 
   },
   { 
     name: '士業', 
     industries: [
       '監査・税理士法人',
-      '法律事務所',
-      'その他'
+      '法律事務所'
     ] 
   },
   { 
@@ -572,8 +568,7 @@ export const industryCategories = [
     industries: [
       'デベロッパー',
       '不動産仲介',
-      '不動産管理',
-      'その他'
+      '不動産管理'
     ] 
   },
   { 
@@ -583,8 +578,7 @@ export const industryCategories = [
       '設備・電気',
       '住宅設備・ハウスメーカー',
       'プラント・エンジニアリング',
-      '内装・リフォーム・インテリア',
-      'その他'
+      '内装・リフォーム・インテリア'
     ] 
   },
   { 
@@ -595,8 +589,7 @@ export const industryCategories = [
       'SIer',
       'ソフトウエア',
       'ハードウエア',
-      '通信・キャリア',
-      'その他'
+      '通信・キャリア'
     ] 
   },
   { 
@@ -613,8 +606,7 @@ export const industryCategories = [
       '食品・飲料',
       '日用品',
       '化粧品',
-      'アパレル・ファッション',
-      'その他'
+      'アパレル・ファッション'
     ] 
   },
   { 
@@ -628,8 +620,7 @@ export const industryCategories = [
     name: '流通・小売', 
     industries: [
       '流通',
-      '小売',
-      'その他'
+      '小売'
     ] 
   },
   { 
@@ -642,8 +633,7 @@ export const industryCategories = [
       'アミューズメント',
       '福祉・介護',
       '外食',
-      'ブライダル',
-      'その他'
+      'ブライダル'
     ] 
   },
   { 
@@ -658,8 +648,7 @@ export const industryCategories = [
       'CRO',
       '臨床検査機器・診断薬',
       'ドラッグストア・調剤薬局',
-      '再生医療・バイオベンチャー',
-      'その他'
+      '再生医療・バイオベンチャー'
     ] 
   },
   { 
@@ -668,8 +657,7 @@ export const industryCategories = [
       '広告・PR',
       'テレビ・放送・映像・音響',
       '新聞・出版',
-      '印刷',
-      'その他'
+      '印刷'
     ] 
   },
   { 
@@ -677,8 +665,7 @@ export const industryCategories = [
     industries: [
       '音楽',
       '映画',
-      'ゲーム',
-      'その他'
+      'ゲーム'
     ] 
   },
   { 
@@ -688,16 +675,14 @@ export const industryCategories = [
       '鉄道',
       '陸運',
       '空輸',
-      '空港',
-      'その他'
+      '空港'
     ] 
   },
   { 
     name: '物流・倉庫', 
     industries: [
       '物流',
-      '倉庫',
-      'その他'
+      '倉庫'
     ] 
   },
   { 
@@ -705,8 +690,7 @@ export const industryCategories = [
     industries: [
       '電力・ガス・水道',
       '石油',
-      'エネルギー',
-      'その他'
+      'エネルギー'
     ] 
   },
   { 

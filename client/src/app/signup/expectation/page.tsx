@@ -464,7 +464,7 @@ export default function SignupExpectationPage() {
                   </div>
 
                   {/* Interested Work Style */}
-                  <div className="flex flex-row gap-3 items-start w-full">
+                  <div className="flex flex-row gap-1 items-start w-full">
                     <div className="pt-[11px] min-w-[130px] text-right">
                       <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                         興味のある働き方

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { AdminButton } from './AdminButton';
 
 interface AdminConfirmModalProps {
   isOpen: boolean;
@@ -46,41 +47,25 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
 
         {/* 説明文 */}
         <div className="text-center mb-8">
-          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6]">
+          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6] font-bold">
             {description}
           </p>
         </div>
 
         {/* ボタン */}
         <div className="flex gap-4 justify-center">
-          <button
+          <AdminButton
             onClick={onClose}
-            className="bg-transparent border border-[#0F9058] text-[#0F9058] font-bold text-[16px] leading-[1.6] rounded-[35px] transition-colors"
-            style={{
-              width: '198px',
-              height: '51px',
-              fontFamily: 'Inter'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(15, 144, 88, 0.20)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            {cancelText}
-          </button>
-          <button
+            text={cancelText}
+            variant="green-outline"
+            className="w-[180px]"
+          />
+          <AdminButton
             onClick={onConfirm}
-            className="bg-[#0F9058] text-white font-bold text-[16px] leading-[1.6] rounded-[35px] hover:bg-[#0A7A46] transition-colors"
-            style={{
-              width: '198px',
-              height: '51px',
-              fontFamily: 'Inter'
-            }}
-          >
-            {confirmText}
-          </button>
+            text={confirmText}
+            variant="destructive"
+            className="w-[180px]"
+          />
         </div>
       </div>
     </div>

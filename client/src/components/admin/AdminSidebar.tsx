@@ -82,9 +82,9 @@ const navigationItems = [
       { title: "記事一覧", href: "/admin/media" },
       { title: "記事作成", href: "/admin/media/new" },
       { title: "カテゴリ一覧", href: "/admin/media/category" },
-      { title: "カテゴリ作成", href: "/admin/media/category/new" },
+      { title: "カテゴリ作成", href: "/admin/media/category?modal=add" },
       { title: "タグ一覧", href: "/admin/media/tag" },
-      { title: "タグ作成", href: "/admin/media/tag/new" },
+      { title: "タグ作成", href: "/admin/media/tag?modal=add" },
     ],
   },
   {
