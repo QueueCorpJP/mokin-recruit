@@ -591,7 +591,7 @@ export default function SignupSkillsPage() {
                       ※最低3つ以上のキーワードを選択/登録してください。
                     </p>
                     {formData.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
                         {formData.skills.map((skill) => (
                           <div
                             key={skill}
@@ -980,7 +980,7 @@ export default function SignupSkillsPage() {
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
                 {formData.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {formData.skills.map((skill) => (
                       <div
                         key={skill}
