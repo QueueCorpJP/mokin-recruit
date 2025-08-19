@@ -229,7 +229,7 @@ export default function PreviewPage() {
       )}
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9]">
+      <main className="w-full bg-[#F9F9F9] flex items-start">
         <div className="">
           
           <div className="flex flex-col">
@@ -277,6 +277,16 @@ export default function PreviewPage() {
                 </div>
               </div>
 
+              {/* サムネイル画像 */}
+              {previewData.thumbnail && (
+                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
+                  <img
+                    src={previewData.thumbnail}
+                    alt="記事のサムネイル"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
 
 
               {/* 記事本文（リッチコンテンツ） */}
