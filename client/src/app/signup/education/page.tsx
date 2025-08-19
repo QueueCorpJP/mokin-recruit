@@ -825,7 +825,7 @@ export default function SignupEducationPage() {
                         1
                       </span>
                       <span className="text-[#999999] text-[17px] font-medium tracking-[1.7px]">
-                        /3
+                        /4
                       </span>
                     </div>
                   </div>
