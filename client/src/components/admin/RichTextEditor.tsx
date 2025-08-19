@@ -310,11 +310,23 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
             borderRight: '1px solid #ddd'
           }}
         >
-          引用
+          監修者
         </button>
         <button
           type="button"
-          onClick={() => editor.chain().focus().deleteTable().run()}
+          onClick={() => {
+            // テーブル内にカーソルがあるかチェック
+            if (editor.isActive('table')) {
+              editor.chain().focus().deleteTable().run();
+            } else {
+              // テーブルが選択されていない場合は、より積極的に削除を試みる
+              const { state } = editor;
+              const { selection } = state;
+              
+              // カーソル位置を調整してテーブル削除を試行
+              editor.chain().focus().selectParentNode().deleteTable().run();
+            }
+          }}
           disabled={!editor.isActive('table')}
           className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
@@ -324,6 +336,58 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
           }}
         >
           テーブル削除
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().addRowAfter().run()}
+          disabled={!editor.isActive('table')}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
+          }}
+        >
+          行追加
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().deleteRow().run()}
+          disabled={!editor.isActive('table')}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
+          }}
+        >
+          行削除
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().addColumnAfter().run()}
+          disabled={!editor.isActive('table')}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
+          }}
+        >
+          列追加
+        </button>
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().deleteColumn().run()}
+          disabled={!editor.isActive('table')}
+          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            boxShadow: 'none',
+            fontWeight: 'bold',
+            borderRight: '1px solid #ddd'
+          }}
+        >
+          列削除
         </button>
         <button
           type="button"

@@ -176,6 +176,7 @@
   align-items: center !important;
   gap: 10px !important;
   margin: 16px 0 !important;
+  border: none !important;
   border-top: 1px solid #0F9058 !important;
   border-bottom: 1px solid #0F9058 !important;
   background: #F0F9F3 !important;

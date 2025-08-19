@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { NewArticleButton } from './ui/NewArticleButton';
 
 interface PageTitleConfig {
   [key: string]: string;
@@ -46,6 +47,25 @@ export function AdminPageTitle() {
   };
 
   const title = getPageTitle();
+
+  // Special case for /admin/media - include the new article button
+  if (pathname === '/admin/media') {
+    return (
+      <div className="mb-6 flex justify-between items-center">
+        <h1 style={{
+          color: '#323232',
+          fontFamily: 'Inter',
+          fontSize: '32px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: 'normal'
+        }}>
+          {title}
+        </h1>
+        <NewArticleButton />
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">

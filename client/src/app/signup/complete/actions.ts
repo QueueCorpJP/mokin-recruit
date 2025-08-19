@@ -59,7 +59,7 @@ export async function autoLoginAction(): Promise<AutoLoginResult> {
     }
 
     // ユーザー用のサインインセッションを作成
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+    const { data: sessionData, error: sessionError } = await (supabaseAdmin.auth.admin as any).createSession({
       user_id: userId
     });
     

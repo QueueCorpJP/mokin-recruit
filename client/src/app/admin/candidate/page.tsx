@@ -125,7 +125,7 @@ export default function CandidatePage() {
             onClick={() => console.log('Export CSV')}
             text="CSVエクスポート"
             variant="secondary"
-            size="medium"
+            size="figma-default"
           />
           <AdminButton
             href="/admin/candidate/new"

@@ -22,10 +22,11 @@ interface ArticleTag {
 
 interface NewMediaFormProps {
   categories: ArticleCategory[];
-  saveArticle: (formData: FormData) => Promise<void>;
+  tags: ArticleTag[];
+  saveArticle: (formData: FormData) => Promise<any>;
 }
 
-export default function NewMediaForm({ categories, saveArticle }: NewMediaFormProps) {
+export default function NewMediaForm({ categories, tags, saveArticle }: NewMediaFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -42,29 +43,6 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   
-  // タグのサンプルデータ（実際にはAPIから取得）
-  const availableTags: ArticleTag[] = [
-    { id: '1', name: 'React' },
-    { id: '2', name: 'TypeScript' },
-    { id: '3', name: 'JavaScript' },
-    { id: '4', name: 'Node.js' },
-    { id: '5', name: 'Vue.js' },
-    { id: '6', name: 'Angular' },
-    { id: '7', name: 'CSS' },
-    { id: '8', name: 'HTML' },
-    { id: '9', name: 'Python' },
-    { id: '10', name: 'Java' },
-    { id: '11', name: 'PHP' },
-    { id: '12', name: 'Ruby' },
-    { id: '13', name: 'Go' },
-    { id: '14', name: 'Rust' },
-    { id: '15', name: 'Swift' },
-    { id: '16', name: 'Kotlin' },
-    { id: '17', name: 'Flutter' },
-    { id: '18', name: 'React Native' },
-    { id: '19', name: 'Next.js' },
-    { id: '20', name: 'Nuxt.js' }
-  ];
 
   // プレビューからの戻り時にデータを復元
   useEffect(() => {
@@ -209,7 +187,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
       formData.append('title', title);
       formData.append('categoryId', selectedCategoryIds[0] || ''); // actions.tsはcategoryIdを期待している
       formData.append('tags', selectedTags.map(tagId => {
-        const tag = availableTags.find(t => t.id === tagId);
+        const tag = tags.find(t => t.id === tagId);
         return tag?.name || '';
       }).filter(Boolean).join(', ')); // タグ名のカンマ区切り文字列
       formData.append('content', content || '<p>記事内容がここに表示されます</p>');
@@ -261,7 +239,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             <Button
               onClick={() => handleSubmit('DRAFT')}
               disabled={isLoading}
-              variant="secondary"
+              variant="green-outline"
               size="figma-default"
               className="w-full"
             >
@@ -448,7 +426,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {selectedTags.map(tagId => {
-                const tag = availableTags.find(t => t.id === tagId);
+                const tag = tags.find(t => t.id === tagId);
                 return (
                   <div
                     key={tagId}
@@ -490,7 +468,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  const matchedTag = availableTags.find(
+                  const matchedTag = tags.find(
                     tag => tag.name.toLowerCase() === tagInput.toLowerCase() && 
                     !selectedTags.includes(tag.id)
                   );
@@ -514,7 +492,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             />
             {showTagSuggestions && tagInput && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto">
-                {availableTags
+                {tags
                   .filter(tag => 
                     tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
                     !selectedTags.includes(tag.id)
@@ -536,7 +514,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
                     </button>
                   ))
                 }
-                {availableTags.filter(tag => 
+                {tags.filter(tag => 
                   tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
                   !selectedTags.includes(tag.id)
                 ).length === 0 && (
@@ -647,7 +625,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
         <div style={{ width: '170px' }}>
           <Button
             onClick={handleCancel}
-            variant="secondary"
+            variant="green-outline"
             size="figma-default"
           >
             一覧に戻る
