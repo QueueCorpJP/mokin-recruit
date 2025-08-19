@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
 import { autoLoginAction } from '../../complete/actions';
 
 export default function SignupResumeCompletePage() {
@@ -491,12 +492,15 @@ export default function SignupResumeCompletePage() {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             onClick={handleMyPageClick}
-            className="px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px] min-w-[160px]"
+            variant="green-gradient"
+            size="figma-default"
+            className="min-w-[160px] tracking-[1.6px] py-[19px]"
+            disabled={isPending}
           >
-            マイページへ
-          </button>
+            {isPending ? '処理中...' : 'マイページへ'}
+          </Button>
         </div>
       </main>
 
@@ -961,12 +965,15 @@ export default function SignupResumeCompletePage() {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             onClick={handleMyPageClick}
-            className="w-full px-10 py-[18px] bg-gradient-to-b from-[#229a4e] to-[#17856f] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] text-white text-[16px] font-bold tracking-[1.6px]"
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full tracking-[1.6px] py-[19px]"
+            disabled={isPending}
           >
-            マイページへ
-          </button>
+            {isPending ? '処理中...' : 'マイページへ'}
+          </Button>
         </div>
       </main>
     </>
