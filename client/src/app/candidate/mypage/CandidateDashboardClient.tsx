@@ -7,7 +7,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
 import { MessageListCard, Message } from '@/components/ui/MessageListCard';
 import { JobPostCard } from '@/components/ui/JobPostCard';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface User {
   id: string;
@@ -27,6 +27,60 @@ export function CandidateDashboardClient({
 }: CandidateDashboardClientProps) {
   const router = useRouter();
   const [showQuestionPopup, setShowQuestionPopup] = useState(false);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/candidate/mypage/tasks');
+        const json = await res.json();
+        setTasks(json.tasks || []);
+      } catch (e) {
+        setTasks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      setMessagesLoading(true);
+      try {
+        const res = await fetch('/api/candidate/mypage/messages');
+        const json = await res.json();
+        setMessages(json.messages || []);
+      } catch (e) {
+        setMessages([]);
+      } finally {
+        setMessagesLoading(false);
+      }
+    };
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setJobsLoading(true);
+      try {
+        const res = await fetch('/api/candidate/mypage/recommended-jobs');
+        const json = await res.json();
+        setJobs(json.jobs || []);
+      } catch (e) {
+        setJobs([]);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -62,76 +116,98 @@ export function CandidateDashboardClient({
                     gap: '8px',
                   }}
                 >
-                  {[1, 2, 3].map(id => (
+                  {loading ? (
                     <div
-                      key={id}
                       style={{
-                        background: '#FFFFFF',
-                        padding: '16px 24px',
-                        boxSizing: 'border-box',
-                        borderRadius: '8px',
-                        boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-                        cursor: 'pointer',
+                        padding: 24,
+                        textAlign: 'center',
+                        color: '#999',
                       }}
                     >
+                      読み込み中...
+                    </div>
+                  ) : tasks.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 24,
+                        textAlign: 'center',
+                        color: '#999',
+                      }}
+                    >
+                      現在やることはありません。
+                    </div>
+                  ) : (
+                    tasks.map(task => (
                       <div
+                        key={task.id}
                         style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '16px',
+                          background: '#FFFFFF',
+                          padding: '16px 24px',
+                          boxSizing: 'border-box',
+                          borderRadius: '8px',
+                          boxShadow: '0 0 20px rgba(0,0,0,0.05)',
+                          cursor: 'pointer',
                         }}
                       >
-                        <img
-                          src={'/images/check.svg'}
-                          alt={'タスクアイコン'}
-                          width={48}
-                          height={48}
-                          style={{ display: 'block' }}
-                        />
                         <div
                           style={{
                             display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px',
-                            minWidth: 0,
-                            flex: 1,
+                            alignItems: 'flex-start',
+                            gap: '16px',
                           }}
                         >
-                          <span
+                          <img
+                            src={'/images/check.svg'}
+                            alt={'タスクアイコン'}
+                            width={48}
+                            height={48}
+                            style={{ display: 'block' }}
+                          />
+                          <div
                             style={{
-                              fontSize: '16px',
-                              fontWeight: 700,
-                              color: '#0F9058',
-                              lineHeight: '200%',
-                              margin: 0,
-                              whiteSpace: 'normal',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
                               display: 'flex',
-                              alignItems: 'center',
-                              gap: '2px',
-                              wordBreak: 'break-word',
+                              flexDirection: 'column',
+                              gap: '4px',
+                              minWidth: 0,
+                              flex: 1,
                             }}
                           >
-                            ダミータスクタイトル{id}
-                          </span>
-                          <p
-                            style={{
-                              fontSize: '10px',
-                              lineHeight: '160%',
-                              color: '#999999',
-                              margin: 0,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            ダミータスクの説明文{id}
-                          </p>
+                            <span
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                color: '#0F9058',
+                                lineHeight: '200%',
+                                margin: 0,
+                                whiteSpace: 'normal',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '2px',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {task.title}
+                            </span>
+                            <p
+                              style={{
+                                fontSize: '10px',
+                                lineHeight: '160%',
+                                color: '#999999',
+                                margin: 0,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {task.description}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                   {/* ページネーション（ダミー） */}
                   <div>
                     <Pagination
@@ -173,28 +249,21 @@ export function CandidateDashboardClient({
                     新着メッセージ
                   </SectionHeading>
                 </div>
-                <MessageListCard
-                  messages={[
-                    {
-                      id: '1',
-                      sender: '株式会社サンプル',
-                      body: 'ご応募ありがとうございます。',
-                      date: '2024-06-01',
-                    },
-                    {
-                      id: '2',
-                      sender: '人事部',
-                      body: '面接日程のご連絡です。',
-                      date: '2024-06-02',
-                    },
-                    {
-                      id: '3',
-                      sender: '採用担当',
-                      body: '書類選考通過のお知らせ。',
-                      date: '2024-06-03',
-                    },
-                  ]}
-                />
+                {messagesLoading ? (
+                  <div
+                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
+                  >
+                    読み込み中...
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div
+                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
+                  >
+                    現在新着メッセージはありません。
+                  </div>
+                ) : (
+                  <MessageListCard messages={messages} />
+                )}
                 <div
                   style={{
                     display: 'flex',
@@ -247,61 +316,93 @@ export function CandidateDashboardClient({
                     </div>
                   </SectionHeading>
                 </div>
-                <div
-                  style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-                >
-                  {/* PC用（md以上） */}
-                  <div className='hidden md:flex flex-col gap-2'>
-                    {[1, 2, 3].map(i => (
-                      <JobPostCard
-                        key={`pc-${i}`}
-                        imageUrl='https://placehold.jp/477x318.png'
-                        imageAlt='サンプル求人画像'
-                        title={`注目のフルスタックエンジニア募集！${i}`}
-                        tags={['リモート可', '急成長', '自社サービス']}
-                        companyName='株式会社イノベーション'
-                        location={['東京都', 'リモート']}
-                        salary='年収800万円〜1200万円'
-                        apell={['新規事業', '裁量大', 'フレックス']}
-                        starred={false}
-                        onStarClick={() => {}}
-                        isFavoriteLoading={false}
-                        jobId={`sample-job-${i}`}
-                        onClick={() => {}}
-                        className='mypage-jobpostcard-custom'
-                        variant='mypage-simple'
-                        rightColumnHeight='101px'
-                        cardHeight='149px'
-                        imageWidth={151.5}
-                        imageHeight={101}
-                        showApell={false}
-                      />
-                    ))}
+                {jobsLoading ? (
+                  <div
+                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
+                  >
+                    読み込み中...
                   </div>
-                  {/* モバイル用（md未満） */}
-                  <div className='flex flex-col gap-4 md:hidden'>
-                    {[1, 2, 3].map(i => (
-                      <JobPostCard
-                        key={`sp-${i}`}
-                        imageUrl='https://placehold.jp/477x318.png'
-                        imageAlt='サンプル求人画像'
-                        title={`注目のフルスタックエンジニア募集！${i}`}
-                        tags={['リモート可', '急成長', '自社サービス']}
-                        companyName='株式会社イノベーション'
-                        location={['東京都', 'リモート']}
-                        salary='年収800万円〜1200万円'
-                        apell={['新規事業', '裁量大', 'フレックス']}
-                        starred={false}
-                        onStarClick={() => {}}
-                        isFavoriteLoading={false}
-                        jobId={`sample-job-${i}`}
-                        onClick={() => {}}
-                        showApell={false}
-                        imageHeight={208}
-                      />
-                    ))}
+                ) : jobs.length === 0 ? (
+                  <div
+                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
+                  >
+                    現在オススメの求人はありません。
                   </div>
-                </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 16,
+                    }}
+                  >
+                    {/* PC用（md以上） */}
+                    <div className='hidden md:flex flex-col gap-2'>
+                      {jobs.map((job, i) => (
+                        <JobPostCard
+                          key={`pc-${job.id}`}
+                          imageUrl={
+                            job.image_urls?.[0] ||
+                            'https://placehold.jp/477x318.png'
+                          }
+                          imageAlt='求人画像'
+                          title={job.title}
+                          tags={job.appeal_points || []}
+                          companyName={job.company_name || ''}
+                          location={job.work_location || []}
+                          salary={
+                            job.salary_min && job.salary_max
+                              ? `年収${job.salary_min}万円〜${job.salary_max}万円`
+                              : ''
+                          }
+                          apell={job.appeal_points || []}
+                          starred={false}
+                          onStarClick={() => {}}
+                          isFavoriteLoading={false}
+                          jobId={job.id}
+                          onClick={() => {}}
+                          className='mypage-jobpostcard-custom'
+                          variant='mypage-simple'
+                          rightColumnHeight='101px'
+                          cardHeight='149px'
+                          imageWidth={151.5}
+                          imageHeight={101}
+                          showApell={false}
+                        />
+                      ))}
+                    </div>
+                    {/* モバイル用（md未満） */}
+                    <div className='flex flex-col gap-4 md:hidden'>
+                      {jobs.map((job, i) => (
+                        <JobPostCard
+                          key={`sp-${job.id}`}
+                          imageUrl={
+                            job.image_urls?.[0] ||
+                            'https://placehold.jp/477x318.png'
+                          }
+                          imageAlt='求人画像'
+                          title={job.title}
+                          tags={job.appeal_points || []}
+                          companyName={job.company_name || ''}
+                          location={job.work_location || []}
+                          salary={
+                            job.salary_min && job.salary_max
+                              ? `年収${job.salary_min}万円〜${job.salary_max}万円`
+                              : ''
+                          }
+                          apell={job.appeal_points || []}
+                          starred={false}
+                          onStarClick={() => {}}
+                          isFavoriteLoading={false}
+                          jobId={job.id}
+                          onClick={() => {}}
+                          showApell={false}
+                          imageHeight={208}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {/* もっと見るボタン（Figma仕様） */}
                 <button
                   style={{
