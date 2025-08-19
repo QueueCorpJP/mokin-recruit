@@ -46,7 +46,7 @@ export default function NewTagPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto">
 
         {/* タグ作成フォーム */}

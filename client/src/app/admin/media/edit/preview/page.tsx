@@ -296,7 +296,16 @@ export default function EditPreviewPage() {
                 </div>
               </div>
 
-
+              {/* サムネイル画像 */}
+              {previewData.thumbnail && (
+                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]" style={{ minWidth: '900px' }}>
+                  <img
+                    src={previewData.thumbnail}
+                    alt="記事のサムネイル"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
 
               {/* 記事本文（リッチコンテンツ） */}
               <div 
