@@ -11,7 +11,7 @@ interface MediaArticle {
   categories: string[];
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl: string | null;
   tags?: string[];
 }
 
@@ -26,19 +26,24 @@ const getArticles = async (): Promise<MediaArticle[]> => {
       return [];
     }
 
-    return articles.map(article => ({
-      id: article.id,
-      date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }),
-      categories: article.categories || ['メディア'],
-      title: article.title,
-      description: article.excerpt || 'No description available',
-      imageUrl: article.thumbnail_url || '/images/media01.jpg',
-      tags: article.tags || []
-    }));
+    return articles.map(article => {
+      // Supabase URLまたは空の場合はnullを使用（フォールバック画像は使わない）
+      const imageUrl = article.thumbnail_url || null;
+      console.log('Article:', article.title, 'Image URL:', imageUrl);
+      return {
+        id: article.id,
+        date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }),
+        categories: article.categories || ['メディア'],
+        title: article.title,
+        description: article.excerpt || 'No description available',
+        imageUrl: imageUrl,
+        tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+      };
+    });
   } catch (err) {
     console.error('記事の取得に失敗:', err);
     return [];

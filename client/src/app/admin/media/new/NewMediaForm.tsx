@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
 
@@ -23,10 +22,11 @@ interface ArticleTag {
 
 interface NewMediaFormProps {
   categories: ArticleCategory[];
-  saveArticle: (formData: FormData) => Promise<void>;
+  tags: ArticleTag[];
+  saveArticle: (formData: FormData) => Promise<any>;
 }
 
-export default function NewMediaForm({ categories, saveArticle }: NewMediaFormProps) {
+export default function NewMediaForm({ categories, tags, saveArticle }: NewMediaFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -43,29 +43,31 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   
-  // タグのサンプルデータ（実際にはAPIから取得）
-  const availableTags: ArticleTag[] = [
-    { id: '1', name: 'React' },
-    { id: '2', name: 'TypeScript' },
-    { id: '3', name: 'JavaScript' },
-    { id: '4', name: 'Node.js' },
-    { id: '5', name: 'Vue.js' },
-    { id: '6', name: 'Angular' },
-    { id: '7', name: 'CSS' },
-    { id: '8', name: 'HTML' },
-    { id: '9', name: 'Python' },
-    { id: '10', name: 'Java' },
-    { id: '11', name: 'PHP' },
-    { id: '12', name: 'Ruby' },
-    { id: '13', name: 'Go' },
-    { id: '14', name: 'Rust' },
-    { id: '15', name: 'Swift' },
-    { id: '16', name: 'Kotlin' },
-    { id: '17', name: 'Flutter' },
-    { id: '18', name: 'React Native' },
-    { id: '19', name: 'Next.js' },
-    { id: '20', name: 'Nuxt.js' }
-  ];
+
+  // プレビューからの戻り時にデータを復元
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('previewArticle');
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        setTitle(data.title || '');
+        setSelectedCategoryIds(data.categoryIds || []);
+        setSelectedTags(data.tags || []);
+        setContent(data.content || '');
+        
+        // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
+        if (data.thumbnail && data.thumbnailName) {
+          // URLから復元する場合は表示のみで実際のFileオブジェクトは作成しない
+          // 代わりにプレビュー時と同じ形式でデータを保持
+        }
+        
+        // sessionStorageをクリア（一度復元したらクリア）
+        sessionStorage.removeItem('previewArticle');
+      } catch (error) {
+        console.error('プレビューデータの復元に失敗:', error);
+      }
+    }
+  }, []);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -183,15 +185,26 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('categoryIds', JSON.stringify(selectedCategoryIds));
-      formData.append('tags', JSON.stringify(selectedTags));
+      formData.append('categoryId', selectedCategoryIds[0] || ''); // actions.tsはcategoryIdを期待している
+      formData.append('tags', selectedTags.map(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        return tag?.name || '';
+      }).filter(Boolean).join(', ')); // タグ名のカンマ区切り文字列
       formData.append('content', content || '<p>記事内容がここに表示されます</p>');
       formData.append('status', status);
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
       }
 
-      await saveArticle(formData);
+      const result = await saveArticle(formData);
+      
+      if (status === 'PUBLISHED' && result?.success) {
+        // 公開時は成功後にリダイレクト
+        router.push('/admin/media');
+      } else if (status === 'DRAFT' && result?.success) {
+        // 下書き保存時もリダイレクト
+        router.push('/admin/media');
+      }
     } catch (error) {
       console.error('記事の保存に失敗:', error);
       if (error instanceof Error && error.message.includes('title')) {
@@ -223,18 +236,25 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
       <div className="mb-6">
         <div className="mb-6 flex justify-end gap-4">
           <div style={{ width: '170px' }}>
-            <AdminButton
+            <Button
               onClick={() => handleSubmit('DRAFT')}
-              text={isLoading ? '保存中...' : '下書き保存'}
-              variant="primary"
               disabled={isLoading}
-            />
+              variant="green-outline"
+              size="figma-default"
+              className="w-full"
+            >
+              {isLoading ? '保存中...' : '下書き保存'}
+            </Button>
           </div>
           <div style={{ width: '170px' }}>
-            <AdminButton
+            <Button
               onClick={handlePreview}
-              text="記事を確認する"
-            />
+              variant="green-gradient"
+              size="figma-default"
+              className="w-full"
+            >
+              記事を確認する
+            </Button>
           </div>
         </div>
       </div>
@@ -406,7 +426,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           {selectedTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {selectedTags.map(tagId => {
-                const tag = availableTags.find(t => t.id === tagId);
+                const tag = tags.find(t => t.id === tagId);
                 return (
                   <div
                     key={tagId}
@@ -448,7 +468,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  const matchedTag = availableTags.find(
+                  const matchedTag = tags.find(
                     tag => tag.name.toLowerCase() === tagInput.toLowerCase() && 
                     !selectedTags.includes(tag.id)
                   );
@@ -472,7 +492,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
             />
             {showTagSuggestions && tagInput && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto">
-                {availableTags
+                {tags
                   .filter(tag => 
                     tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
                     !selectedTags.includes(tag.id)
@@ -494,7 +514,7 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
                     </button>
                   ))
                 }
-                {availableTags.filter(tag => 
+                {tags.filter(tag => 
                   tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
                   !selectedTags.includes(tag.id)
                 ).length === 0 && (
@@ -606,16 +626,20 @@ export default function NewMediaForm({ categories, saveArticle }: NewMediaFormPr
           <Button
             onClick={handleCancel}
             variant="green-outline"
-            size="figma-outline"
+            size="figma-default"
           >
             一覧に戻る
           </Button>
         </div>
         <div style={{ width: '170px' }}>
-          <AdminButton
+          <Button
             onClick={handlePreview}
-            text="記事を確認する"
-          />
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full"
+          >
+            記事を確認する
+          </Button>
         </div>
       </div>
     </div>

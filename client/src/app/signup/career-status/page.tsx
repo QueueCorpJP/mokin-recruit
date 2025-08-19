@@ -474,7 +474,7 @@ export default function SignupCareerStatusPage() {
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                    <path d="M1 1L11 11M1 11L11 1" stroke="#0f9058" strokeWidth="1.5" strokeLinecap="round" />
+                                    <path d="M1 1L11 11M1 11L11 1" stroke="#0F9058" strokeWidth="1.5" strokeLinecap="round" />
                                   </svg>
                                 </button>
                               </div>
@@ -633,6 +633,27 @@ export default function SignupCareerStatusPage() {
               </div>
 
               <div className="flex flex-col gap-6 w-full">
+                {/* Section header: 転職経験 */}
+                <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6">
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+                    転職経験
+                  </span>
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Career Change Experience */}
                 <div className="flex flex-col gap-2">
                   <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">転職経験</label>
@@ -660,6 +681,27 @@ export default function SignupCareerStatusPage() {
                       >
                         なし
                       </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section header: 転職活動状況 */}
+                <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6">
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+                    転職活動状況
+                  </span>
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
                     </div>
                   </div>
                 </div>
@@ -713,6 +755,29 @@ export default function SignupCareerStatusPage() {
                 </div>
               </div>
 
+              {/* Section header: 選考状況 */}
+              {formData.currentActivityStatus !== 'not_started' && formData.currentActivityStatus !== 'researching' && (
+                <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6">
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+                    選考状況
+                  </span>
+                  <div className="flex-1 h-px relative">
+                    <div className="absolute inset-[-1px_-0.3%]">
+                      <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Mobile version of Selection Status Entries */}
               {formData.currentActivityStatus !== 'not_started' && formData.currentActivityStatus !== 'researching' && (
                 <div className="flex flex-col gap-2 items-center w-full">
@@ -721,7 +786,7 @@ export default function SignupCareerStatusPage() {
                       {index > 0 && (
                         <div className="absolute top-4 right-4 w-4 h-4 cursor-pointer" onClick={() => removeEntry(index)}>
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 1L15 15M1 15L15 1" stroke="#999999" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M1 1L15 15M1 15L15 1" stroke="#0F9058" strokeWidth="2" strokeLinecap="round" />
                           </svg>
                         </div>
                       )}
@@ -773,7 +838,7 @@ export default function SignupCareerStatusPage() {
                                 }}
                               >
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path d="M1 1L11 11M1 11L11 1" stroke="#0f9058" strokeWidth="1.5" strokeLinecap="round" />
+                                  <path d="M1 1L11 11M1 11L11 1" stroke="#0F9058" strokeWidth="1.5" strokeLinecap="round" />
                                 </svg>
                               </button>
                             </div>

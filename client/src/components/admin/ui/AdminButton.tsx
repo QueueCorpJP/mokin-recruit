@@ -7,8 +7,8 @@ interface AdminButtonProps {
   href?: string;
   onClick?: () => void;
   text: string;
-  variant?: 'primary' | 'secondary' | 'danger' | 'green-outline';
-  size?: 'small' | 'medium' | 'large';
+  variant?: 'primary' | 'green-gradient' | 'secondary' | 'destructive' | 'green-outline' | 'green-square' | 'blue-gradient' | 'blue-outline' | 'yellow-gradient' | 'yellow-outline' | 'white-outline-square' | 'small-green' | 'small-green-outline' | 'outline' | 'ghost' | 'link' | 'default';
+  size?: 'figma-default' | 'figma-small' | 'figma-square' | 'figma-outline' | 'figma-blue' | 'figma-blue-outline' | 'figma-yellow' | 'figma-yellow-outline' | 'figma-white-square' | 'figma-small-outline' | 'default' | 'sm' | 'lg' | 'icon';
   disabled?: boolean;
 }
 
@@ -16,40 +16,19 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
   href,
   onClick,
   text,
-  variant = 'primary',
-  size = 'medium',
+  variant = 'green-gradient',
+  size = 'figma-default',
   disabled = false
 }) => {
-  const getVariant = () => {
-    switch (variant) {
-      case 'secondary':
-        return 'secondary';
-      case 'danger':
-        return 'destructive';
-      case 'green-outline':
-        return 'green-outline';
-      default:
-        return 'green-gradient';
-    }
-  };
-
-  const getSize = () => {
-    switch (size) {
-      case 'small':
-        return 'figma-small';
-      case 'large':
-        return 'lg';
-      default:
-        return 'figma-default';
-    }
-  };
+  // Map 'primary' to 'green-gradient' for consistency
+  const mappedVariant = variant === 'primary' ? 'green-gradient' : variant;
 
   if (href) {
     return (
       <Button
         asChild
-        variant={getVariant()}
-        size={getSize()}
+        variant={mappedVariant}
+        size={size}
         disabled={disabled}
       >
         <a href={href}>{text}</a>
@@ -60,8 +39,8 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
   return (
     <Button
       onClick={onClick}
-      variant={getVariant()}
-      size={getSize()}
+      variant={mappedVariant}
+      size={size}
       disabled={disabled}
     >
       {text}

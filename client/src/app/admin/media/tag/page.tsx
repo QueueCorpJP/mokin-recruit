@@ -171,7 +171,7 @@ export default function TagPage() {
         <AdminButton
           onClick={handleAddTag}
           text="新規タグ追加"
-          variant="primary"
+          variant="green-gradient"
         />
       </div>
 
@@ -255,13 +255,13 @@ export default function TagPage() {
         <AdminButton
           onClick={handlePrevious}
           text="前へ"
-          variant="primary"
+          variant="green-gradient"
           disabled={currentPage === 1}
         />
         <AdminButton
           onClick={handleNext}
           text="次へ"
-          variant="primary"
+          variant="green-gradient"
           disabled={currentPage === totalPages || totalPages === 0}
         />
       </div>
