@@ -219,6 +219,10 @@ export default function EditPreviewPage() {
     return '記事を保存/公開する';
   };
 
+  const handleSaveClick = () => {
+    handleSave();
+  };
+
   return (
     <div className="min-h-screen bg-[#F9F9F9]">
       {error && (
@@ -329,7 +333,7 @@ export default function EditPreviewPage() {
         </div>
         <div style={{ width: '220px' }}>
           <Button
-            onClick={handleSave}
+            onClick={handleSaveClick}
             variant="green-gradient"
             size="figma-default"
             className="w-full"
