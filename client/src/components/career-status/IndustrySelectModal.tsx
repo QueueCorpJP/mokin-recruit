@@ -67,6 +67,10 @@ export default function IndustrySelectModal({
       height={isDesktop ? "680px" : "90vh"}
       selectedCount={selectedIndustries.length}
       totalCount={maxSelections}
+      customHeader={{
+        title: "業種カテゴリテキスト",
+        description: ""
+      }}
     >
       <div>
         <div className="space-y-6">
