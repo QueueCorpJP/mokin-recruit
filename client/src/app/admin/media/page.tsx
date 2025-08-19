@@ -215,10 +215,6 @@ export default function MediaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* 上部の機能エリア */}
-      <div className="mb-6 flex justify-end items-center">
-        <NewArticleButton />
-      </div>
 
       {/* テーブルコンテナ */}
       <div className="bg-white rounded-lg overflow-hidden">

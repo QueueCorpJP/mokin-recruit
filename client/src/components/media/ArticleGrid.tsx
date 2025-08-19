@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Pagination } from '@/components/ui/Pagination';
 
 interface MediaArticle {
@@ -11,7 +10,7 @@ interface MediaArticle {
   categories: string[];
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl: string | null;
   tags?: string[];
 }
 
@@ -88,16 +87,20 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType =
             >
               {/* 画像エリア - パフォーマンス最適化 */}
               <div className="relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden">
-                <Image
-                  src={article.imageUrl}
-                  alt={article.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  loading="lazy"
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGBkRMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                />
+                {article.imageUrl ? (
+                  // Next.js Imageコンポーネントは設定済み - 必要に応じて以下のように変更可能:
+                  // <Image src={article.imageUrl} alt={article.title} fill sizes="..." className="..." />
+                  <img
+                    src={article.imageUrl}
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-500">No Image</span>
+                  </div>
+                )}
               </div>
 
               {/* コンテンツエリア */}

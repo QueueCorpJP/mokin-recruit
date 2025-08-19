@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { Loading } from '@/components/ui/Loading';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { signupVerifyAction, resendVerificationCodeAction } from './actions';
 
@@ -232,16 +233,12 @@ export function SignupVerifyClient() {
 
           {/* 送信ボタン - レスポンシブ対応 */}
           <div className='flex justify-center w-full'>
-            <button
+            <Button
               type='submit'
               disabled={isLoading || !verificationCode}
-              className='flex items-center justify-center w-full sm:max-w-[313px] md:max-w-[170px] px-6 sm:px-10 py-3 md:py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[14px] md:text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
-              style={{
-                fontFamily: 'Noto Sans JP, sans-serif',
-                fontWeight: 700,
-                lineHeight: '1.6',
-                letterSpacing: '1.4px',
-              }}
+              variant='green-gradient'
+              size='figma-default'
+              className='w-full sm:max-w-[313px] md:max-w-[170px] py-[17px] text-[16px]'
             >
               {isLoading ? (
                 <>
@@ -249,11 +246,9 @@ export function SignupVerifyClient() {
                   認証中
                 </>
               ) : (
-                <p className='block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre md:tracking-[1.6px]'>
-                  認証する
-                </p>
+                '認証する'
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

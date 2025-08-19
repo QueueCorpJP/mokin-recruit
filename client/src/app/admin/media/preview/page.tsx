@@ -82,7 +82,13 @@ export default function PreviewPage() {
       const result = await response.json();
       setSavedArticleId(result.article?.id || null);
       sessionStorage.removeItem('previewArticle');
-      setShowSuccessModal(true);
+      
+      // 公開時のみモーダルを表示、下書きの場合は直接リダイレクト
+      if (status === 'PUBLISHED') {
+        setShowSuccessModal(true);
+      } else {
+        router.push('/admin/media');
+      }
     } catch (error) {
       console.error('記事の保存に失敗:', error);
       setError(error instanceof Error ? error.message : '記事の保存に失敗しました');
@@ -92,6 +98,7 @@ export default function PreviewPage() {
   };
 
   const handleEdit = () => {
+    // プレビューデータをそのまま残して編集画面に戻る
     router.push('/admin/media/new');
   };
 
