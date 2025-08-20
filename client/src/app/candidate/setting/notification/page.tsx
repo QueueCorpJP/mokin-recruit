@@ -85,11 +85,11 @@ export default function NotificationSettingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#f9f9f9] overflow-x-hidden">
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: '通知メール配信設定' }
+          { label: '通知メール配信設定変更' }
         ]}
         title="通知メール配信設定"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
@@ -98,7 +98,7 @@ export default function NotificationSettingPage() {
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"
       >
         <div
-          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-4 md:p-[40px] relative rounded-[10px] shrink-0 w-full max-w-4xl"
+          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-4 md:p-[40px] relative rounded-[10px] shrink-0 w-full"
         >
           {error && (
             <div className="w-full p-4 mb-4 text-red-600 bg-red-50 border border-red-200 rounded">
@@ -273,16 +273,16 @@ export default function NotificationSettingPage() {
           <Button
             variant="green-outline"
             size="figma-outline"
-            className="min-w-40 w-full md:w-auto"
+            className="min-w-40 w-full md:w-auto py-[18px]"
             onClick={handleBack}
             disabled={isPending}
           >
-            戻る
+          保存せず戻る
           </Button>
           <Button
             variant="green-gradient"
             size="figma-square"
-            className="min-w-40 w-full md:w-auto rounded-full"
+            className="min-w-40 w-full md:w-auto rounded-full py-[18px]"
             onClick={handleSave}
             disabled={!hasChanges || isPending}
           >

@@ -217,9 +217,9 @@ export default function NgCompanyPage() {
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: 'NG企業設定' }
+          { label: 'ブロック企業変更' }
         ]}
-        title="NG企業設定"
+        title="ブロック企業変更"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div
@@ -235,10 +235,9 @@ export default function NgCompanyPage() {
               className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-[16px] text-left tracking-[1.6px] font-bold w-full"
             >
               <p className="block leading-[2]">
-                希望しない会社からスカウトを受け取らないよう設定できます。
+              あなたの情報を公開したくない企業を設定することができます。
                 <br aria-hidden="true" />
-                設定した企業からのスカウトは受信トレイに表示されません。
-              </p>
+                現職や転職活動状況に登録した企業は自動で反映されますのでご安心ください。 </p>
             </div>
           </div>
           <div
@@ -286,7 +285,7 @@ export default function NgCompanyPage() {
             className="min-w-40 rounded-full font-bold py-[17px] md:w-auto w-full"
             onClick={handleAddBlockCompany}
           >
-            ブロック企業を追加
+            ブロック企業追加
           </Button>
         </div>
       </div>

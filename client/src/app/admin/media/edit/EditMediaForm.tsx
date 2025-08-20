@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
+import { SelectInput } from '@/components/ui/select-input';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -23,10 +23,11 @@ interface ArticleTag {
 
 interface EditMediaFormProps {
   categories: ArticleCategory[];
+  tags: ArticleTag[];
   saveArticle: (formData: FormData) => Promise<void>;
 }
 
-export default function EditMediaForm({ categories, saveArticle }: EditMediaFormProps) {
+export default function EditMediaForm({ categories, tags, saveArticle }: EditMediaFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -44,30 +45,6 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   
-  // タグのサンプルデータ（実際にはAPIから取得）
-  const availableTags: ArticleTag[] = [
-    { id: '1', name: 'React' },
-    { id: '2', name: 'TypeScript' },
-    { id: '3', name: 'JavaScript' },
-    { id: '4', name: 'Node.js' },
-    { id: '5', name: 'Vue.js' },
-    { id: '6', name: 'Angular' },
-    { id: '7', name: 'CSS' },
-    { id: '8', name: 'HTML' },
-    { id: '9', name: 'Python' },
-    { id: '10', name: 'Java' },
-    { id: '11', name: 'PHP' },
-    { id: '12', name: 'Ruby' },
-    { id: '13', name: 'Go' },
-    { id: '14', name: 'Rust' },
-    { id: '15', name: 'Swift' },
-    { id: '16', name: 'Kotlin' },
-    { id: '17', name: 'Flutter' },
-    { id: '18', name: 'React Native' },
-    { id: '19', name: 'Next.js' },
-    { id: '20', name: 'Nuxt.js' }
-  ];
-
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -139,15 +116,27 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
     const articleData = {
       title,
       categoryIds: selectedCategoryIds,
-      tags: selectedTags,
+      tags: selectedTags.map(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        return tag?.name || '';
+      }).filter(Boolean),
       content: content || '<p>記事内容がここに表示されます</p>',
       thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
-      thumbnailName: thumbnail?.name || null,
-      status
+      thumbnailName: thumbnail?.name || null
     };
 
     sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
     router.push('/admin/media/edit/preview');
+  };
+
+  const handleCancel = () => {
+    if (title || content || thumbnail) {
+      if (confirm('入力内容が失われますが、よろしいですか？')) {
+        router.push('/admin/media');
+      }
+    } else {
+      router.push('/admin/media');
+    }
   };
 
   const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
@@ -185,8 +174,11 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
     try {
       const formData = new FormData();
       formData.append('title', title);
-      formData.append('categoryIds', JSON.stringify(selectedCategoryIds));
-      formData.append('tags', JSON.stringify(selectedTags));
+      formData.append('categoryId', selectedCategoryIds[0] || '');
+      formData.append('tags', selectedTags.map(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        return tag?.name || '';
+      }).filter(Boolean).join(', '));
       formData.append('content', content || '<p>記事内容がここに表示されます</p>');
       formData.append('status', submitStatus);
       if (thumbnail) {
@@ -210,50 +202,27 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
     }
   };
 
-  const handleCancel = () => {
-    if (title || content || thumbnail) {
-      if (confirm('入力内容が失われますが、よろしいですか？')) {
-        router.push('/admin/media');
-      }
-    } else {
-      router.push('/admin/media');
-    }
-  };
+  // AdminPageTitleからのイベントリスナーを追加
+  useEffect(() => {
+    const handleDraftSave = () => {
+      handleSubmit('DRAFT');
+    };
+
+    const handlePreviewClick = () => {
+      handlePreview();
+    };
+
+    window.addEventListener('draft-save', handleDraftSave);
+    window.addEventListener('preview-click', handlePreviewClick);
+
+    return () => {
+      window.removeEventListener('draft-save', handleDraftSave);
+      window.removeEventListener('preview-click', handlePreviewClick);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen">
-      <div className="mb-6">
-        <h1 
-          className="text-2xl font-bold mb-6"
-          style={{
-            fontFamily: 'Inter',
-            fontSize: '24px',
-            fontWeight: 700,
-            lineHeight: 1.6,
-            color: '#323232'
-          }}
-        >
-          記事編集
-        </h1>
-
-
-        <div className="mb-6 flex justify-end gap-4">
-          <div style={{ width: '170px' }}>
-            <AdminButton
-              onClick={() => handleSubmit('DRAFT')}
-              text={isLoading ? '保存中...' : '下書き保存'}
-              variant="primary"
-              disabled={isLoading}
-            />
-          </div>
-          <div style={{ width: '170px' }}>
-            <AdminButton
-              onClick={handlePreview}
-              text="記事を確認する"
-            />
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-6">
         {/* タイトル */}
@@ -294,40 +263,6 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
           <FormFieldHeader>
             カテゴリ
           </FormFieldHeader>
-          {selectedCategoryIds.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {selectedCategoryIds.map(categoryId => {
-                const category = categories.find(cat => cat.id === categoryId);
-                return (
-                  <div
-                    key={categoryId}
-                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
-                    style={{ borderRadius: '10px' }}
-                  >
-                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                      {category?.name || ''}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
-                      }}
-                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M1 1L11 11M1 11L11 1"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
           <div className="relative">
             <input
               type="text"
@@ -398,6 +333,40 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
               </div>
             )}
           </div>
+          {selectedCategoryIds.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedCategoryIds.map(categoryId => {
+                const category = categories.find(cat => cat.id === categoryId);
+                return (
+                  <div
+                    key={categoryId}
+                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
+                    style={{ borderRadius: '10px' }}
+                  >
+                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                      {category?.name || ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
+                      }}
+                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path
+                          d="M1 1L11 11M1 11L11 1"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <div className="flex justify-between items-center mt-1">
             <div>
               {categoryError && (
@@ -419,10 +388,78 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
           <FormFieldHeader>
             タグ
           </FormFieldHeader>
+          <div className="relative">
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => {
+                setTagInput(e.target.value);
+                setShowTagSuggestions(e.target.value.length > 0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const matchedTag = tags.find(
+                    tag => tag.name.toLowerCase() === tagInput.toLowerCase() && 
+                    !selectedTags.includes(tag.id)
+                  );
+                  if (matchedTag && selectedTags.length < 6) {
+                    setSelectedTags(prev => [...prev, matchedTag.id]);
+                    setTagInput('');
+                    setShowTagSuggestions(false);
+                  }
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowTagSuggestions(false), 200);
+              }}
+              onFocus={() => {
+                if (tagInput.length > 0) {
+                  setShowTagSuggestions(true);
+                }
+              }}
+              placeholder="タグ名を入力してください"
+              className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+            />
+            {showTagSuggestions && tagInput && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto">
+                {tags
+                  .filter(tag => 
+                    tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
+                    !selectedTags.includes(tag.id)
+                  )
+                  .map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        if (selectedTags.length < 6) {
+                          setSelectedTags(prev => [...prev, tag.id]);
+                          setTagInput('');
+                          setShowTagSuggestions(false);
+                        }
+                      }}
+                      className="w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0"
+                    >
+                      {tag.name}
+                    </button>
+                  ))
+                }
+                {tags.filter(tag => 
+                  tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
+                  !selectedTags.includes(tag.id)
+                ).length === 0 && (
+                  <div className="px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]">
+                    一致するタグがありません
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mt-3">
               {selectedTags.map(tagId => {
-                const tag = availableTags.find(t => t.id === tagId);
+                const tag = tags.find(t => t.id === tagId);
                 return (
                   <div
                     key={tagId}
@@ -453,74 +490,6 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
               })}
             </div>
           )}
-          <div className="relative">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => {
-                setTagInput(e.target.value);
-                setShowTagSuggestions(e.target.value.length > 0);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const matchedTag = availableTags.find(
-                    tag => tag.name.toLowerCase() === tagInput.toLowerCase() && 
-                    !selectedTags.includes(tag.id)
-                  );
-                  if (matchedTag && selectedTags.length < 6) {
-                    setSelectedTags(prev => [...prev, matchedTag.id]);
-                    setTagInput('');
-                    setShowTagSuggestions(false);
-                  }
-                }
-              }}
-              onBlur={() => {
-                setTimeout(() => setShowTagSuggestions(false), 200);
-              }}
-              onFocus={() => {
-                if (tagInput.length > 0) {
-                  setShowTagSuggestions(true);
-                }
-              }}
-              placeholder="タグ名を入力してください"
-              className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
-            />
-            {showTagSuggestions && tagInput && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto">
-                {availableTags
-                  .filter(tag => 
-                    tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-                    !selectedTags.includes(tag.id)
-                  )
-                  .map((tag) => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => {
-                        if (selectedTags.length < 6) {
-                          setSelectedTags(prev => [...prev, tag.id]);
-                          setTagInput('');
-                          setShowTagSuggestions(false);
-                        }
-                      }}
-                      className="w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0"
-                    >
-                      {tag.name}
-                    </button>
-                  ))
-                }
-                {availableTags.filter(tag => 
-                  tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-                  !selectedTags.includes(tag.id)
-                ).length === 0 && (
-                  <div className="px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]">
-                    一致するタグがありません
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
           <div className="flex justify-between items-center mt-1">
             <div></div>
             <p className={`text-sm ${
@@ -589,18 +558,17 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
           <FormFieldHeader>
             ステータス
           </FormFieldHeader>
-          <Select
-            value={status}
-            onValueChange={(value: 'DRAFT' | 'PUBLISHED') => setStatus(value)}
-          >
-            <SelectTrigger className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]">
-              <SelectValue placeholder="ステータスを選択してください" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="DRAFT">下書き</SelectItem>
-              <SelectItem value="PUBLISHED">公開</SelectItem>
-            </SelectContent>
-          </Select>
+          <div style={{ width: '300px' }}>
+            <SelectInput
+              options={[
+                { value: 'DRAFT', label: '下書き' },
+                { value: 'PUBLISHED', label: '公開' }
+              ]}
+              value={status}
+              onChange={(value: string) => setStatus(value as 'DRAFT' | 'PUBLISHED')}
+              placeholder="ステータスを選択してください"
+            />
+          </div>
         </div>
 
         {/* 内容 */}
@@ -611,21 +579,9 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
           <RichTextEditor
             content={content}
             onChange={setContent}
-            placeholder="記事の内容を入力してください。目次、テーブル、画像、見出しなどを自由に追加できます。"
+            placeholder="記事の内容を入力してください。"
           />
           <div className="text-right mt-2">
-            <span 
-              className="text-red-500 text-sm"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: 400,
-                lineHeight: 1.6
-              }}
-            >
-              WYSIWYGエディタで記事内容を作成<br />
-              目次、テーブル、画像、見出しなどを自由に配置可能
-            </span>
           </div>
           {contentError && (
             <p className="text-red-500 text-sm mt-1">
@@ -641,16 +597,20 @@ export default function EditMediaForm({ categories, saveArticle }: EditMediaForm
           <Button
             onClick={handleCancel}
             variant="green-outline"
-            size="figma-outline"
+            size="figma-default"
           >
             一覧に戻る
           </Button>
         </div>
         <div style={{ width: '170px' }}>
-          <AdminButton
+          <Button
             onClick={handlePreview}
-            text="記事を確認する"
-          />
+            variant="green-gradient"
+            size="figma-default"
+            className="w-full"
+          >
+            記事を確認する
+          </Button>
         </div>
       </div>
     </div>

@@ -169,7 +169,7 @@ export default function SignupSummaryPage() {
                   value={jobSummary}
                   onChange={(e) => setJobSummary(e.target.value)}
                   placeholder="例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。"
-                  className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[214px] resize-none"
+                  className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[214px] resize-none"
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function SignupSummaryPage() {
                   value={selfPR}
                   onChange={(e) => setSelfPR(e.target.value)}
                   placeholder="例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。"
-                  className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
+                  className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                 />
               </div>
             </div>
@@ -245,10 +245,10 @@ export default function SignupSummaryPage() {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <span className="text-[#0f9058] text-[24px] font-medium tracking-[2.4px]">
+                  <span className="text-[#0f9058] text-[24px] font-bold tracking-[2.4px]">
                     4
                   </span>
-                  <span className="text-[#999999] text-[17px] font-medium tracking-[1.7px]">
+                  <span className="text-[#999999] text-[17px] font-bold tracking-[1.7px]">
                     /4
                   </span>
                 </div>
@@ -284,7 +284,7 @@ export default function SignupSummaryPage() {
                 value={jobSummary}
                 onChange={(e) => setJobSummary(e.target.value)}
                 placeholder="例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。"
-                className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[246px] resize-none"
+                className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[246px] resize-none"
               />
             </div>
 
@@ -297,7 +297,7 @@ export default function SignupSummaryPage() {
                 value={selfPR}
                 onChange={(e) => setSelfPR(e.target.value)}
                 placeholder="例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。"
-                className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[148px] resize-none"
+                className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[148px] resize-none"
               />
             </div>
           </div>

@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
     ],
     remotePatterns: [
       {
+        protocol: 'http',
+        hostname: '**',   // すべてのホスト許可
+      },
+      {
+        protocol: 'https',
+        hostname: '**',   // すべてのホスト許可
+      },
+      {
         protocol: 'https',
         hostname: 'mjhqeagxibsklugikyma.supabase.co',
         port: '',
@@ -48,7 +56,6 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

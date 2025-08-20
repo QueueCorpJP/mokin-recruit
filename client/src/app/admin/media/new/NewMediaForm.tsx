@@ -52,7 +52,16 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
         const data = JSON.parse(storedData);
         setTitle(data.title || '');
         setSelectedCategoryIds(data.categoryIds || []);
-        setSelectedTags(data.tags || []);
+        // タグ名からタグIDに変換（プレビューからの復元時）
+        if (Array.isArray(data.tags) && data.tags.length > 0 && typeof data.tags[0] === 'string') {
+          const tagIds = data.tags.map((tagName: string) => {
+            const tag = tags.find(t => t.name === tagName);
+            return tag?.id;
+          }).filter(Boolean);
+          setSelectedTags(tagIds);
+        } else {
+          setSelectedTags(data.tags || []);
+        }
         setContent(data.content || '');
         
         // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
@@ -67,6 +76,23 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
         console.error('プレビューデータの復元に失敗:', error);
       }
     }
+
+    // AdminPageTitleからのイベントリスナーを追加
+    const handleDraftSave = () => {
+      handleSubmit('DRAFT');
+    };
+
+    const handlePreviewClick = () => {
+      handlePreview();
+    };
+
+    window.addEventListener('draft-save', handleDraftSave);
+    window.addEventListener('preview-click', handlePreviewClick);
+
+    return () => {
+      window.removeEventListener('draft-save', handleDraftSave);
+      window.removeEventListener('preview-click', handlePreviewClick);
+    };
   }, []);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +166,10 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
     const articleData = {
       title,
       categoryIds: selectedCategoryIds,
-      tags: selectedTags,
+      tags: selectedTags.map(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        return tag?.name || '';
+      }).filter(Boolean),
       content: content || '<p>記事内容がここに表示されます</p>',
       thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
       thumbnailName: thumbnail?.name || null
@@ -233,31 +262,6 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
 
   return (
     <div className="min-h-screen">
-      <div className="mb-6">
-        <div className="mb-6 flex justify-end gap-4">
-          <div style={{ width: '170px' }}>
-            <Button
-              onClick={() => handleSubmit('DRAFT')}
-              disabled={isLoading}
-              variant="green-outline"
-              size="figma-default"
-              className="w-full"
-            >
-              {isLoading ? '保存中...' : '下書き保存'}
-            </Button>
-          </div>
-          <div style={{ width: '170px' }}>
-            <Button
-              onClick={handlePreview}
-              variant="green-gradient"
-              size="figma-default"
-              className="w-full"
-            >
-              記事を確認する
-            </Button>
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-6">
         {/* タイトル */}
@@ -298,40 +302,6 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
           <FormFieldHeader>
             カテゴリ
           </FormFieldHeader>
-          {selectedCategoryIds.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {selectedCategoryIds.map(categoryId => {
-                const category = categories.find(cat => cat.id === categoryId);
-                return (
-                  <div
-                    key={categoryId}
-                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
-                    style={{ borderRadius: '10px' }}
-                  >
-                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                      {category?.name || ''}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
-                      }}
-                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M1 1L11 11M1 11L11 1"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
           <div className="relative">
             <input
               type="text"
@@ -402,6 +372,40 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
               </div>
             )}
           </div>
+          {selectedCategoryIds.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedCategoryIds.map(categoryId => {
+                const category = categories.find(cat => cat.id === categoryId);
+                return (
+                  <div
+                    key={categoryId}
+                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
+                    style={{ borderRadius: '10px' }}
+                  >
+                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                      {category?.name || ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
+                      }}
+                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path
+                          d="M1 1L11 11M1 11L11 1"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <div className="flex justify-between items-center mt-1">
             <div>
               {categoryError && (
@@ -423,40 +427,6 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
           <FormFieldHeader>
             タグ
           </FormFieldHeader>
-          {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {selectedTags.map(tagId => {
-                const tag = tags.find(t => t.id === tagId);
-                return (
-                  <div
-                    key={tagId}
-                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
-                    style={{ borderRadius: '10px' }}
-                  >
-                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
-                      {tag?.name || ''}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTags(prev => prev.filter(id => id !== tagId));
-                      }}
-                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M1 1L11 11M1 11L11 1"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
           <div className="relative">
             <input
               type="text"
@@ -525,6 +495,40 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
               </div>
             )}
           </div>
+          {selectedTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {selectedTags.map(tagId => {
+                const tag = tags.find(t => t.id === tagId);
+                return (
+                  <div
+                    key={tagId}
+                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
+                    style={{ borderRadius: '10px' }}
+                  >
+                    <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                      {tag?.name || ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTags(prev => prev.filter(id => id !== tagId));
+                      }}
+                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path
+                          d="M1 1L11 11M1 11L11 1"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <div className="flex justify-between items-center mt-1">
             <div></div>
             <p className={`text-sm ${
@@ -554,7 +558,7 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
                 onClick={handleClearThumbnail}
                 className="text-[#323232] text-[16px] font-medium underline hover:text-[#666666] transition-colors"
               >
-                画像を消去
+                アップロードされた画像を削除する
               </button>
             </div>
             <input
@@ -596,22 +600,9 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
           <RichTextEditor
             content={content}
             onChange={setContent}
-            placeholder="記事の内容を入力してください。目次、テーブル、画像、見出しなどを自由に追加できます。"
+            placeholder="記事の内容を入力してください。"
           />
-          <div className="text-right mt-2">
-            <span 
-              className="text-red-500 text-sm"
-              style={{
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: 400,
-                lineHeight: 1.6
-              }}
-            >
-              WYSIWYGエディタで記事内容を作成<br />
-              目次、テーブル、画像、見出しなどを自由に配置可能
-            </span>
-          </div>
+         
           {contentError && (
             <p className="text-red-500 text-sm mt-1">
               {contentError}

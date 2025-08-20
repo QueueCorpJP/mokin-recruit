@@ -47,7 +47,7 @@ export default function IndustrySelectModal({
     onClose();
   };
 
-  // すべての業種を1つの配列にフラット化（カテゴリ情報付きで一意のキーを生成）
+  // カテゴリごとに業種を整理
   const allIndustries = industryCategories.flatMap(category => 
     category.industries.map(industry => ({
       key: `${category.name}-${industry}`, // 一意のキー
@@ -67,17 +67,16 @@ export default function IndustrySelectModal({
       height={isDesktop ? "680px" : "90vh"}
       selectedCount={selectedIndustries.length}
       totalCount={maxSelections}
+      customHeader={{
+        title: "業種カテゴリテキスト",
+        description: ""
+      }}
     >
-      <div className='space-y-6'>
-        {/* 業種カテゴリーテキスト */}
-        <div>
-          <h3 className="w-full font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[0.05em] text-[#323232] border-b-2 border-[#E5E7EB] pb-3">
-            業種カテゴリーテキスト
-          </h3>
-
+      <div>
+        <div className="space-y-6">
           {/* 制限メッセージ */}
           {selectedIndustries.length >= maxSelections && (
-            <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
+            <div className="p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md">
               <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
                 最大{maxSelections}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
               </p>
@@ -85,13 +84,13 @@ export default function IndustrySelectModal({
           )}
 
           {/* 業種チェックボックスリスト（2列グリッド） */}
-          <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {allIndustries.map((industryItem) => {
               const isSelected = selectedIndustries.includes(industryItem.value);
               const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
               
               return (
-                <div key={industryItem.key} className='flex items-center'>
+                <div key={industryItem.key} className="flex items-center">
                   <Checkbox 
                     label={industryItem.value} 
                     checked={isSelected} 

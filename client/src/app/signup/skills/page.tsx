@@ -585,17 +585,17 @@ export default function SignupSkillsPage() {
                       onChange={(e) => setSkillInput(e.target.value)}
                       onKeyDown={handleSkillInputKeyDown}
                       placeholder="業務で活かしたスキル・ツール・得意分野を入力してください"
-                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none"
+                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none"
                     />
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                       ※最低3つ以上のキーワードを選択/登録してください。
                     </p>
                     {formData.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
                         {formData.skills.map((skill) => (
                           <div
                             key={skill}
-                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                           >
                             <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                               {skill}
@@ -643,7 +643,7 @@ export default function SignupSkillsPage() {
                       value={formData.qualifications}
                       onChange={(e) => setFormData(prev => ({ ...prev, qualifications: e.target.value }))}
                       placeholder="例）TOEIC850点、簿記2級、中小企業診断士など"
-                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
+                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                     />
                     <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                       ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
@@ -974,17 +974,17 @@ export default function SignupSkillsPage() {
                   onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={handleSkillInputKeyDown}
                   placeholder="業務で活かしたスキル・ツール・得意分野を入力してください"
-                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[90px] resize-none"
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[90px] resize-none"
                 />
                 <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
                 {formData.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {formData.skills.map((skill) => (
                       <div
                         key={skill}
-                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 w-fit"
                       >
                         <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
                           {skill}
@@ -1028,7 +1028,7 @@ export default function SignupSkillsPage() {
                   value={formData.qualifications}
                   onChange={(e) => setFormData(prev => ({ ...prev, qualifications: e.target.value }))}
                   placeholder="例）TOEIC850点、簿記2級、中小企業診断士など"
-                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                 />
                 <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px]">
                   ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。

@@ -213,15 +213,19 @@ export default function SignupEducationPage() {
       {/* PC Version */}
       <div className="hidden lg:block">
         {/* PC Version */}
-        <main
-          className="flex relative py-20 flex-col items-center justify-start"
-          style={{
-            backgroundImage: "url('/background-pc.svg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
+        <main 
+          className="flex relative py-20 flex-col items-center justify-start overflow-hidden"
+          style={{ 
+            background: 'linear-gradient(to top, #17856f, #229a4e), url("/back2.svg")',
+            backgroundPosition: 'center center, center top',
+            backgroundRepeat: 'no-repeat, no-repeat',
+            backgroundSize: 'cover, auto 100%',
+            minHeight: 'calc(100vh + 300px)'
           }}
         >
+          
+          {/* コンテンツ */}
+          <div className="relative z-10 w-full flex flex-col items-center">
           {/* Form */}
           <form onSubmit={handleSubmit}>
             {/* Container */}
@@ -460,7 +464,7 @@ export default function SignupEducationPage() {
                       placeholder="学部学科専攻を入力"
                       value={formData.department}
                       onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                      className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                     />
                   </div>
                 </div>
@@ -610,8 +614,8 @@ export default function SignupEducationPage() {
                             key={industry.id}
                             className="inline-flex items-center gap-1"
                           >
-                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden">
-                              <span className="line-clamp-2">{industry.name}</span>
+                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]">
+                              <span className="line-clamp-1 break-all">{industry.name}</span>
                             </span>
                             <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
                               <select
@@ -692,8 +696,8 @@ export default function SignupEducationPage() {
                             key={jobType.id}
                             className="inline-flex items-center gap-1"
                           >
-                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden">
-                              <span className="line-clamp-2">{jobType.name}</span>
+                            <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]">
+                              <span className="line-clamp-1 break-all">{jobType.name}</span>
                             </span>
                             <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
                               <select
@@ -765,21 +769,26 @@ export default function SignupEducationPage() {
               </Button>
             </div>
           </form>
+          </div>
         </main>
       </div>
       
       {/* SP (Mobile) Version */}
       <div className="lg:hidden">
         {/* SP (Mobile) Version */}
-        <main
-          className="flex relative pt-6 pb-20 flex-col items-center px-4"
-          style={{
-            backgroundImage: "url('/background-sp.svg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
+        <main 
+          className="flex relative pt-6 pb-20 flex-col items-center px-4 overflow-hidden"
+          style={{ 
+            background: 'linear-gradient(to top, #17856f, #229a4e), url("/back2.svg")',
+            backgroundPosition: 'center center, center top',
+            backgroundRepeat: 'no-repeat, no-repeat',
+            backgroundSize: 'cover, auto',
+            minHeight: 'fit-content'
           }}
         >
+          
+          {/* コンテンツ */}
+          <div className="relative z-10 w-full flex flex-col items-center">
           {/* Form */}
           <form onSubmit={handleSubmit} className="w-full">
             {/* Container */}
@@ -806,7 +815,7 @@ export default function SignupEducationPage() {
                       strokeWidth="7.2"
                       fill="none"
                       strokeLinecap="round"
-                      strokeDasharray="45.24 135.72"
+                      strokeDasharray="60.32 120.64"
                       transform="rotate(-90 36 36)"
                     />
                   </svg>
@@ -911,7 +920,7 @@ export default function SignupEducationPage() {
                     placeholder="学部学科専攻を入力"
                     value={formData.department}
                     onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#999999] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                    className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
                 </div>
 
@@ -1019,7 +1028,7 @@ export default function SignupEducationPage() {
                         >
                           <div className="flex-1 flex flex-col gap-0.5">
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] overflow-hidden">
-                              <div className="line-clamp-2">{industry.name}</div>
+                              <div className="line-clamp-1 break-all">{industry.name}</div>
                             </div>
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between">
                               <select
@@ -1096,7 +1105,7 @@ export default function SignupEducationPage() {
                         <div key={jobType.id} className="flex flex-row gap-0.5">
                           <div className="flex-1 flex flex-col gap-0.5">
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] overflow-hidden">
-                              <div className="line-clamp-2">{jobType.name}</div>
+                              <div className="line-clamp-1 break-all">{jobType.name}</div>
                             </div>
                             <div className="bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between">
                               <select
@@ -1168,6 +1177,7 @@ export default function SignupEducationPage() {
               </Button>
             </div>
           </form>
+          </div>
         </main>
       </div>
 

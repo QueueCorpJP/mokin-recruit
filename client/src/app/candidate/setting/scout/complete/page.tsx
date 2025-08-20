@@ -17,10 +17,10 @@ export default function ScoutComplePage() {
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: 'スカウト設定', href: '/candidate/setting/scout' },
-          { label: '完了' }
+          { label: 'スカウトステータス変更', href: '/candidate/setting/scout' },
+          { label: 'スカウトステータス変更完了' }
         ]}
-        title="スカウト設定完了"
+        title="スカウトステータス変更完了"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div 
@@ -33,21 +33,21 @@ export default function ScoutComplePage() {
             className="box-border content-stretch flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] gap-6 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-center w-full"
           >
             <div 
-              className="relative shrink-0 text-[#0f9058] text-[32px] tracking-[3.2px] w-full"
+              className="relative shrink-0 text-[#0f9058] text-[24px] md:text-[32px] tracking-[3.2px] w-full"
             >
               <p className="leading-[1.6] font-bold">スカウトステータスの変更が完了しました。</p>
             </div>
             <div 
               className="relative shrink-0 text-[#323232] text-[16px] tracking-[1.6px] w-full"
             >
-              <p className="block leading-[2] font-medium">スカウトステータスに関わらず、求人への応募は可能です。</p>
+              <p className="block leading-[2] font-bold">スカウトステータスに関わらず、求人への応募は可能です。</p>
             </div>
           </div>
         </div>
         <Button
           variant="green-gradient"
           size="figma-square"
-          className="min-w-40 rounded-full py-[17px]"
+          className="min-w-[140px] md:min-w-[160px] rounded-full py-[19px] w-full md:w-auto text-sm md:text-base"
           onClick={handleGoToSettings}
         >
           各種設定ページへ
