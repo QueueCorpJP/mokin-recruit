@@ -85,11 +85,6 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder = '' }: RichTextEditorProps) {
-  console.log('=== RichTextEditor DEBUG ===');
-  console.log('Received content:', content);
-  console.log('Content has image variables?', content?.includes('{{image:'));
-  console.log('Content has supabase URLs?', content?.includes('/storage/v1/object/public/blog/'));
-  console.log('=========================');
 
   const editor = useEditor({
     extensions: [
@@ -140,8 +135,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   // Update editor content when content prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      console.log('Updating editor content with:', content);
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content);
     }
   }, [editor, content]);
 

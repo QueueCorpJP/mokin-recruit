@@ -10,7 +10,6 @@ function replaceImageVariables(content: string): string {
   
   // 既にSupabase URLが含まれている場合はそのまま返す
   if (processedContent.includes('/storage/v1/object/public/blog/')) {
-    console.log('Content already has Supabase URLs, returning as-is');
     return processedContent;
   }
   
@@ -20,14 +19,12 @@ function replaceImageVariables(content: string): string {
   // src属性内の{{image:filename}}形式の変数を実際のURLに変換
   processedContent = processedContent.replace(/src=["']?\{\{image:([^}]+)\}\}["']?/g, (match, filename) => {
     const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
-    console.log(`Replacing src attribute: ${match} -> src="${publicUrl}"`);
     return `src="${publicUrl}"`;
   });
   
   // 単体の{{image:filename}} 形式の変数を実際のURLに変換
   processedContent = processedContent.replace(/\{\{image:([^}]+)\}\}/g, (match, filename) => {
     const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
-    console.log(`Replacing standalone variable: ${match} -> ${publicUrl}`);
     return publicUrl;
   });
   
@@ -85,12 +82,6 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
 
       // データを整形
       const processedContent = replaceImageVariables(article.content || '');
-      console.log('=== DEBUG IMAGE REPLACEMENT ===');
-      console.log('Original content:', article.content);
-      console.log('Processed content:', processedContent);
-      console.log('Has image variables?', article.content?.includes('{{image:'));
-      console.log('Has supabase URLs?', article.content?.includes('/storage/v1/object/public/blog/'));
-      console.log('============================');
       
       articleData = {
         ...article,
