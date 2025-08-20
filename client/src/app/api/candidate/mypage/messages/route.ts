@@ -61,8 +61,11 @@ export async function GET(request: NextRequest) {
       .in('id', companyGroupIds);
     if (!groupError && groups) {
       for (const g of groups) {
-        if (g.company_accounts?.company_name) {
-          companyNames[g.id] = g.company_accounts.company_name;
+        const companyAccount = Array.isArray(g.company_accounts) 
+          ? g.company_accounts[0] 
+          : g.company_accounts;
+        if (companyAccount?.company_name) {
+          companyNames[g.id] = companyAccount.company_name;
         }
       }
     }

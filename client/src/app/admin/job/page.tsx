@@ -31,7 +31,7 @@ async function fetchAdminJobList(
   if (error) {
     throw new Error(error.message);
   }
-  return data as AdminJobListItem[];
+  return data as unknown as AdminJobListItem[];
 }
 
 export default async function Job() {
