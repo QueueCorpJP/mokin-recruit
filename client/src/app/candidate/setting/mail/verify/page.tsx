@@ -74,7 +74,7 @@ export default function MailVerifyPage() {
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
           { label: 'メールアドレス変更', href: '/candidate/setting/mail' },
-          { label: '認証コードの入力' }
+          { label: '変更メールアドレス認証' }
         ]}
         title="メールアドレス変更"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
@@ -118,8 +118,8 @@ export default function MailVerifyPage() {
                       {error}
                     </p>
                   )}
+                  </div>
                 </div>
-              </div>
               
               <div className="text-center mt-4 md:mt-6">
                 <p className="text-xs md:text-sm font-bold text-[#323232] tracking-[1.2px] md:tracking-[1.4px] mb-1">

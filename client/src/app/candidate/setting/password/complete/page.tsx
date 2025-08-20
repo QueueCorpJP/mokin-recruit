@@ -19,8 +19,8 @@ export default function PasswordCompletePage() {
       />
       
       <div className="px-4 md:px-20 py-10">
-        <div className="bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-4 md:p-10">
-          <div className="text-center py-10 md:py-20">
+        <div className="bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-4 py-[24px] md:py-[40px]">
+          <div className="text-center">
             <h2 className="text-xl md:text-[32px] font-bold text-[#0f9058] tracking-[1.8px] md:tracking-[3.2px] mb-4 md:mb-6">
               パスワードの変更が完了しました。
             </h2>
@@ -35,7 +35,7 @@ export default function PasswordCompletePage() {
             asChild
             variant="green-gradient"
             size="figma-default"
-            className="min-w-[140px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
+            className="min-w-[140px] py-[19px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] w-full md:w-auto"
           >
             <Link href="/candidate/setting">
               各種設定ページへ
