@@ -35,6 +35,10 @@ export async function POST(request: NextRequest) {
           success: false,
           message: 'Invalid request data',
           errors: validationResult.error.errors,
+          errorDetail:
+            process.env.NODE_ENV === 'development'
+              ? validationResult.error.errors
+              : undefined,
         },
         { status: 400 }
       );
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Next.js Response形式で返却
     const response = NextResponse.json(responseData, { status: statusCode });
-    
+
     // ログイン成功時にクッキーを設定
     if (responseData?.success && responseData?.token) {
       response.cookies.set('supabase-auth-token', responseData.token, {
@@ -83,15 +87,19 @@ export async function POST(request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 // 7日間
+        maxAge: 7 * 24 * 60 * 60, // 7日間
       });
     }
-    
+
     return response;
   } catch (error) {
     logger.error('API Route error - login:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        errorDetail:
+          process.env.NODE_ENV === 'development' ? String(error) : undefined,
+      },
       { status: 500 }
     );
   }

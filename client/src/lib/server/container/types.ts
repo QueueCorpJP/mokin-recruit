@@ -20,6 +20,7 @@ export const TYPES = {
   JobRepository: Symbol.for('JobRepository'),
   MessageRepository: Symbol.for('MessageRepository'),
   ApplicationRepository: Symbol.for('ApplicationRepository'),
+  AdminUserRepository: Symbol.for('AdminUserRepository'),
 
   // === Service Layer ===
   AuthService: Symbol.for('AuthService'),
