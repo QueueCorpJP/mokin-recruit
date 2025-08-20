@@ -5,7 +5,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
-import { MessageListCard, Message } from '@/components/ui/MessageListCard';
+import { MessageListCard } from '@/components/ui/MessageListCard';
 import { JobPostCard } from '@/components/ui/JobPostCard';
 import React, { useEffect, useState } from 'react';
 
@@ -18,12 +18,29 @@ interface User {
   lastSignIn?: string;
 }
 
+// JobPosting型を定義（必要に応じて拡張）
+interface JobPosting {
+  id: string;
+  title: string;
+  image_urls?: string[];
+  appeal_points?: string[];
+  company_name?: string;
+  work_location?: string[];
+  salary_min?: number;
+  salary_max?: number;
+  job_type?: string[];
+  industry?: string[];
+  [key: string]: any;
+}
+
 interface CandidateDashboardClientProps {
   user: User;
+  jobs: JobPosting[];
 }
 
 export function CandidateDashboardClient({
   user,
+  jobs,
 }: CandidateDashboardClientProps) {
   const router = useRouter();
   const [showQuestionPopup, setShowQuestionPopup] = useState(false);
@@ -31,8 +48,7 @@ export function CandidateDashboardClient({
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [jobsLoading, setJobsLoading] = useState(true);
+  // jobs, jobsLoading, fetchJobs関連のstate/useEffectを削除
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -41,7 +57,7 @@ export function CandidateDashboardClient({
         const res = await fetch('/api/candidate/mypage/tasks');
         const json = await res.json();
         setTasks(json.tasks || []);
-      } catch (e) {
+      } catch {
         setTasks([]);
       } finally {
         setLoading(false);
@@ -57,7 +73,7 @@ export function CandidateDashboardClient({
         const res = await fetch('/api/candidate/mypage/messages');
         const json = await res.json();
         setMessages(json.messages || []);
-      } catch (e) {
+      } catch {
         setMessages([]);
       } finally {
         setMessagesLoading(false);
@@ -66,21 +82,7 @@ export function CandidateDashboardClient({
     fetchMessages();
   }, []);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setJobsLoading(true);
-      try {
-        const res = await fetch('/api/candidate/mypage/recommended-jobs');
-        const json = await res.json();
-        setJobs(json.jobs || []);
-      } catch (e) {
-        setJobs([]);
-      } finally {
-        setJobsLoading(false);
-      }
-    };
-    fetchJobs();
-  }, []);
+  // jobsはpropsで受け取るので、jobsLoadingやjobsのuseState/useEffectは不要
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -316,13 +318,7 @@ export function CandidateDashboardClient({
                     </div>
                   </SectionHeading>
                 </div>
-                {jobsLoading ? (
-                  <div
-                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
-                  >
-                    読み込み中...
-                  </div>
-                ) : jobs.length === 0 ? (
+                {jobs.length === 0 ? (
                   <div
                     style={{ padding: 24, textAlign: 'center', color: '#999' }}
                   >
@@ -338,7 +334,7 @@ export function CandidateDashboardClient({
                   >
                     {/* PC用（md以上） */}
                     <div className='hidden md:flex flex-col gap-2'>
-                      {jobs.map((job, i) => (
+                      {jobs.map(job => (
                         <JobPostCard
                           key={`pc-${job.id}`}
                           imageUrl={
@@ -373,7 +369,7 @@ export function CandidateDashboardClient({
                     </div>
                     {/* モバイル用（md未満） */}
                     <div className='flex flex-col gap-4 md:hidden'>
-                      {jobs.map((job, i) => (
+                      {jobs.map(job => (
                         <JobPostCard
                           key={`sp-${job.id}`}
                           imageUrl={
