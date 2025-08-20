@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
+import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import { createClient } from '@/lib/supabase/client';
 import '@/styles/media-content.css';
 
@@ -295,6 +296,28 @@ export default function PreviewPage() {
                 style={{ paddingLeft: '0', paddingRight: '0' }}
                 dangerouslySetInnerHTML={{ __html: previewData.content }}
               />
+
+              {/* 記事下のボタン */}
+              <div className="flex justify-center gap-4 mt-8 mb-8">
+                <AdminButton
+                  onClick={handleCancel}
+                  text="編集に戻る"
+                  variant="green-outline"
+                  disabled={isLoading}
+                />
+                <AdminButton
+                  onClick={() => handleSave('DRAFT')}
+                  text="記事を下書き保存"
+                  variant="green-gradient"
+                  disabled={isLoading}
+                />
+                <AdminButton
+                  onClick={() => handleSave('PUBLISHED')}
+                  text="記事を投稿する"
+                  variant="green-gradient"
+                  disabled={isLoading}
+                />
+              </div>
 
             </article>
 
