@@ -3,12 +3,44 @@
 import { redirect } from 'next/navigation';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
+// Supabase URLを変数形式に変換する関数
+function convertUrlsToVariables(content: string): string {
+  if (!content) return content;
+  
+  // src属性内のSupabase URLを変数形式に変換
+  const supabaseUrlPattern = new RegExp(
+    `src=["']?${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/blog/content/images/([^"'>\\s]+)["']?`,
+    'g'
+  );
+  
+  let processedContent = content.replace(supabaseUrlPattern, (match, filename) => {
+    // ファイル名からタイムスタンプを除去
+    const cleanFilename = filename.replace(/^\d+-/, '');
+    return `src="{{image:${cleanFilename}}}"`;
+  });
+  
+  // 単体のSupabase URLも変数形式に変換
+  const singleUrlPattern = new RegExp(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/blog/content/images/([^"'>\\s]+)`,
+    'g'
+  );
+  
+  processedContent = processedContent.replace(singleUrlPattern, (match, filename) => {
+    // ファイル名からタイムスタンプを除去
+    const cleanFilename = filename.replace(/^\d+-/, '');
+    return `{{image:${cleanFilename}}}`;
+  });
+  
+  return processedContent;
+}
+
 export async function saveArticle(formData: FormData) {
   const articleId = formData.get('id') as string | null;
   const title = formData.get('title') as string;
   const categoryId = formData.get('categoryId') as string;
   const tags = formData.get('tags') as string;
-  const content = formData.get('content') as string;
+  const rawContent = formData.get('content') as string;
+  const content = convertUrlsToVariables(rawContent);
   const status = formData.get('status') as 'DRAFT' | 'PUBLISHED';
   const thumbnail = formData.get('thumbnail') as File;
   const existingThumbnailUrl = formData.get('thumbnail_url') as string | null;

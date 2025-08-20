@@ -42,7 +42,7 @@ export default function NotificationComplePage() {
             <div
               className="relative shrink-0 text-[#323232] text-sm md:text-[16px] tracking-[1.2px] md:tracking-[1.6px] w-full"
             >
-              <p className="block leading-[2] font-medium">設定の反映までは時間がかかる場合があります。</p>
+              <p className="block leading-[2] font-bold">設定の反映までは時間がかかる場合があります。</p>
             </div>
           </div>
         </div>

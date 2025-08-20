@@ -91,7 +91,7 @@ export default function NotificationSettingPage() {
           { label: '各種設定', href: '/candidate/setting' },
           { label: '通知メール配信設定変更' }
         ]}
-        title="通知メール配信設定"
+        title="通知メール配信設定変更"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div
