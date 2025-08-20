@@ -2,6 +2,35 @@ import { createServerAdminClient } from '@/lib/supabase/server-admin';
 import EditMediaForm from './EditMediaForm';
 import { saveArticle } from './actions';
 
+// 画像URL変数を実際のURLに変換する関数
+function replaceImageVariables(content: string): string {
+  if (!content) return content;
+  
+  let processedContent = content;
+  
+  // 既にSupabase URLが含まれている場合はそのまま返す
+  if (processedContent.includes('/storage/v1/object/public/blog/')) {
+    return processedContent;
+  }
+  
+  // ハードコードされたSupabase URL（client.tsと同じ値を使用）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mjhqeagxibsklugikyma.supabase.co';
+  
+  // src属性内の{{image:filename}}形式の変数を実際のURLに変換
+  processedContent = processedContent.replace(/src=["']?\{\{image:([^}]+)\}\}["']?/g, (match, filename) => {
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
+    return `src="${publicUrl}"`;
+  });
+  
+  // 単体の{{image:filename}} 形式の変数を実際のURLに変換
+  processedContent = processedContent.replace(/\{\{image:([^}]+)\}\}/g, (match, filename) => {
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
+    return publicUrl;
+  });
+  
+  return processedContent;
+}
+
 interface EditMediaPageProps {
   searchParams: Promise<{ id?: string }>;
 }
@@ -52,10 +81,14 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
         .eq('article_id', params.id);
 
       // データを整形
+      const processedContent = replaceImageVariables(article.content || '');
+      
       articleData = {
         ...article,
         article_categories: categoryRelations?.map(rel => rel.article_categories).filter(Boolean) || [],
-        article_tags: tagRelations?.map(rel => rel.article_tags).filter(Boolean) || []
+        article_tags: tagRelations?.map(rel => rel.article_tags).filter(Boolean) || [],
+        // コンテンツ内の画像変数を実際のURLに変換
+        content: processedContent
       };
     }
   }

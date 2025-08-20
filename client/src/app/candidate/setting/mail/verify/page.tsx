@@ -141,7 +141,7 @@ export default function MailVerifyPage() {
                   disabled={isLoading}
                   variant="green-gradient"
                   size="figma-default"
-                  className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
+                  className="min-w-[120px] md:min-w-[160px] w-full md:w-auto text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
                 >
                   {isLoading ? '認証中...' : '認証する'}
                 </Button>

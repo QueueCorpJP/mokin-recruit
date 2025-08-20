@@ -299,7 +299,7 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
       window.removeEventListener('draft-save', handleDraftSave);
       window.removeEventListener('preview-click', handlePreviewClick);
     };
-  }, []);
+  }, [title, selectedCategoryIds, content, thumbnail, thumbnailUrl]);
 
   return (
     <div className="min-h-screen">

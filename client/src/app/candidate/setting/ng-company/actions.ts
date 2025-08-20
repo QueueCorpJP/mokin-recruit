@@ -11,8 +11,9 @@ export interface BlockedCompanySettings {
 export async function saveBlockedCompanies(companyNames: string[]) {
   const supabase = getSupabaseAdminClient();
 
-  if (!companyNames || companyNames.length === 0) {
-    throw new Error('少なくとも1つの企業名を入力してください');
+  // Allow empty array for deletion scenarios
+  if (!companyNames) {
+    companyNames = [];
   }
 
   // Use custom auth system instead of Supabase auth
@@ -24,16 +25,33 @@ export async function saveBlockedCompanies(companyNames: string[]) {
 
   console.log('Saving blocked companies for candidate_id:', authResult.data.candidateId);
 
-  const settings = {
-    company_names: companyNames,
-  };
-
   // First, try to update existing settings
   const { data: existingSettings, error: selectError } = await supabase
     .from('blocked_companies')
     .select('id')
     .eq('candidate_id', authResult.data.candidateId)
     .maybeSingle();
+
+  if (companyNames.length === 0) {
+    // If no companies to block, delete the record if it exists
+    if (existingSettings) {
+      const { error: deleteError } = await supabase
+        .from('blocked_companies')
+        .delete()
+        .eq('candidate_id', authResult.data.candidateId);
+
+      if (deleteError) {
+        console.error('ブロック企業設定の削除に失敗しました:', deleteError);
+        throw new Error('ブロック企業設定の削除に失敗しました');
+      }
+    }
+    // If no existing settings and no companies, nothing to do
+    return;
+  }
+
+  const settings = {
+    company_names: companyNames,
+  };
 
   if (existingSettings) {
     // Update existing settings

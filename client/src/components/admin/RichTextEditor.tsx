@@ -1,6 +1,7 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
@@ -84,13 +85,16 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder = '' }: RichTextEditorProps) {
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Image.configure({
+        inline: false,
+        allowBase64: true,
         HTMLAttributes: {
           class: 'max-w-full h-auto',
-          style: 'max-width: 100%; height: auto; display: block;',
+          style: 'max-width: 100%; height: auto; display: block; border-radius: 24px; margin: 24px 0;',
         },
       }),
       Table.configure({
@@ -127,6 +131,13 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
       onChange(html);
     },
   });
+
+  // Update editor content when content prop changes
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   const addImage = () => {
     const input = document.createElement('input');
