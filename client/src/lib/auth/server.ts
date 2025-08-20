@@ -156,6 +156,7 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
 
       // JWTのmetadataからユーザータイプを取得（DBクエリなし）
       const userType = (payload.user_metadata?.user_type ||
+        payload.user_metadata?.userType ||
         'candidate') as UserType;
       const userMetadata = payload.user_metadata || {};
       const userName =

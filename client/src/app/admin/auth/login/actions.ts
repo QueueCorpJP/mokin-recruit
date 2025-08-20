@@ -51,7 +51,7 @@ export async function loginAction(formData: FormData) {
 
   if (responseData.success && responseData.token) {
     // クッキーをセット
-    const cookieStore = nextCookies();
+    const cookieStore = await nextCookies();
     cookieStore.set('supabase-auth-token', responseData.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
