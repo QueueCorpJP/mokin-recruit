@@ -303,18 +303,19 @@ export default function PreviewPage() {
                   onClick={handleCancel}
                   text="編集に戻る"
                   variant="green-outline"
+                  disabled={isLoading}
                 />
                 <AdminButton
                   onClick={() => handleSave('DRAFT')}
                   text="記事を下書き保存"
                   variant="green-gradient"
-                  isLoading={isLoading}
+                  disabled={isLoading}
                 />
                 <AdminButton
                   onClick={() => handleSave('PUBLISHED')}
                   text="記事を投稿する"
                   variant="green-gradient"
-                  isLoading={isLoading}
+                  disabled={isLoading}
                 />
               </div>
 
