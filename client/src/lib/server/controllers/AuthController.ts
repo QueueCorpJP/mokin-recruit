@@ -24,6 +24,7 @@ import {
 import { ValidationService } from '../core/services/ValidationService';
 import { TYPES } from '../container/types';
 import type { ICandidateRepository } from '../core/interfaces/IDomainRepository';
+import { AdminUserRepository } from '../infrastructure/database/AdminUserRepository';
 
 // Express.jsのRequest/Responseインターフェースを模擬
 interface MockRequest {
@@ -48,6 +49,7 @@ export class AuthController {
   private passwordService: PasswordService;
   private validationService: ValidationService;
   private sessionService: ISessionService;
+  private adminUserRepository: AdminUserRepository;
 
   constructor(
     @inject(TYPES.CandidateRepository)
@@ -61,7 +63,9 @@ export class AuthController {
     userRegistrationService: UserRegistrationService,
     @inject(TYPES.PasswordService) passwordService: PasswordService,
     @inject(TYPES.ValidationService) validationService: ValidationService,
-    @inject(TYPES.SessionService) sessionService: ISessionService
+    @inject(TYPES.SessionService) sessionService: ISessionService,
+    @inject(TYPES.AdminUserRepository)
+    adminUserRepository: AdminUserRepository
   ) {
     this.candidateRepository = candidateRepository;
     this.companyUserRepository = companyUserRepository;
@@ -71,6 +75,7 @@ export class AuthController {
     this.passwordService = passwordService;
     this.validationService = validationService;
     this.sessionService = sessionService;
+    this.adminUserRepository = adminUserRepository;
   }
 
   /**
@@ -233,6 +238,11 @@ export class AuthController {
             fieldErrors: validationResult.fieldErrors,
             generalErrors: validationResult.generalErrors,
           },
+          errorStage: 'validation',
+          errorDetail:
+            process.env.NODE_ENV === 'development'
+              ? validationResult
+              : undefined,
         });
         return;
       }
@@ -251,22 +261,27 @@ export class AuthController {
           const candidate = await this.candidateRepository.findByEmail(email);
           if (candidate) {
             // パスワード検証を実行
-            logger.debug(`Attempting password verification for candidate: ${email}`);
+            logger.debug(
+              `Attempting password verification for candidate: ${email}`
+            );
             logger.debug(`Input password: "${password}"`);
             logger.debug(`Stored hash: "${candidate.password_hash}"`);
-            const isValidPassword = await this.passwordService.verifyPassword(password, candidate.password_hash);
-            
+            const isValidPassword = await this.passwordService.verifyPassword(
+              password,
+              candidate.password_hash
+            );
+
             if (isValidPassword) {
               logger.info(`Found candidate user: ${email}, using custom auth`);
               useSupabaseAuth = false;
-              
+
               // 適切なSupabaseユーザーオブジェクトを作成
               const supabaseUser = {
                 id: candidate.id,
                 email: candidate.email,
                 user_metadata: {
                   userType: 'candidate',
-                  name: `${candidate.last_name} ${candidate.first_name}`
+                  name: `${candidate.last_name} ${candidate.first_name}`,
                 },
                 app_metadata: {},
                 aud: 'authenticated',
@@ -292,33 +307,51 @@ export class AuthController {
               // SessionServiceを使用してJWTトークンを生成
               logger.debug('Creating session with SessionService...');
               try {
-                const sessionResult = await this.sessionService.createSession(supabaseUser, mockSupabaseSession);
+                const sessionResult = await this.sessionService.createSession(
+                  supabaseUser,
+                  mockSupabaseSession
+                );
                 logger.debug(`SessionService result: ${sessionResult.success}`);
-                
+
                 if (sessionResult.success && sessionResult.sessionInfo) {
                   authResult = {
                     success: true,
                     user: supabaseUser,
                     session: mockSupabaseSession,
-                    token: sessionResult.sessionInfo.customToken
+                    token: sessionResult.sessionInfo.customToken,
                   };
-                  
-                  logger.info(`JWT token generated successfully for candidate: ${candidate.id}`);
-                  
+
+                  logger.info(
+                    `JWT token generated successfully for candidate: ${candidate.id}`
+                  );
+
                   // データベースのlast_login_at更新
                   try {
-                    await this.candidateRepository.updateLastLogin(candidate.id);
-                    logger.debug(`Updated last_login_at for candidate: ${candidate.id}`);
+                    await this.candidateRepository.updateLastLogin(
+                      candidate.id
+                    );
+                    logger.debug(
+                      `Updated last_login_at for candidate: ${candidate.id}`
+                    );
                   } catch (updateError) {
-                    logger.warn(`Failed to update last_login_at for candidate ${candidate.id}:`, updateError);
+                    logger.warn(
+                      `Failed to update last_login_at for candidate ${candidate.id}:`,
+                      updateError
+                    );
                   }
                 } else {
-                  logger.error('Failed to create session for candidate:', sessionResult.error);
+                  logger.error(
+                    'Failed to create session for candidate:',
+                    sessionResult.error
+                  );
                   // Supabase認証にフォールバック
                   useSupabaseAuth = true;
                 }
               } catch (sessionError) {
-                logger.error('SessionService error for candidate:', sessionError);
+                logger.error(
+                  'SessionService error for candidate:',
+                  sessionError
+                );
                 // Supabase認証にフォールバック
                 useSupabaseAuth = true;
               }
@@ -374,6 +407,11 @@ export class AuthController {
             originalError: authResult.error,
             authMethod: useSupabaseAuth ? 'supabase' : 'custom',
           },
+          errorStage: 'auth',
+          errorDetail:
+            process.env.NODE_ENV === 'development'
+              ? authResult.error
+              : undefined,
         });
         return;
       }
@@ -411,6 +449,11 @@ export class AuthController {
                   message:
                     '候補者アカウントが見つかりません。企業アカウントをお持ちの場合は、企業ログインページをご利用ください。',
                   code: 'CANDIDATE_NOT_FOUND',
+                  errorStage: 'not_found',
+                  errorDetail:
+                    process.env.NODE_ENV === 'development'
+                      ? { email }
+                      : undefined,
                 });
                 return;
               }
@@ -441,23 +484,143 @@ export class AuthController {
                   message:
                     '企業アカウントが見つかりません。候補者アカウントをお持ちの場合は、候補者ログインページをご利用ください。',
                   code: 'COMPANY_USER_NOT_FOUND',
+                  errorStage: 'not_found',
+                  errorDetail:
+                    process.env.NODE_ENV === 'development'
+                      ? { email }
+                      : undefined,
                 });
                 return;
               }
               break;
 
             case 'admin':
-              // 管理者認証は今後実装予定
-              logger.warn(
-                `Admin login attempted but not implemented: ${email}`
-              );
-              res.status(501).json({
-                success: false,
-                error: '管理者ログインは現在実装されていません',
-                message: '管理者機能は準備中です。',
-                code: 'ADMIN_NOT_IMPLEMENTED',
-              });
-              return;
+              // 管理者認証
+              const adminUser =
+                await this.adminUserRepository.findByEmail(email);
+              if (!adminUser) {
+                logger.warn(
+                  `Admin login failed - user not found in admin_users table: ${email}`
+                );
+                res.status(401).json({
+                  success: false,
+                  error: '管理者としてのログインに失敗しました',
+                  message: '管理者アカウントが見つかりません。',
+                  code: 'ADMIN_NOT_FOUND',
+                  errorStage: 'not_found',
+                  errorDetail:
+                    process.env.NODE_ENV === 'development'
+                      ? { email }
+                      : undefined,
+                });
+                return;
+              }
+              // パスワード検証
+              const isValidAdminPassword =
+                await this.passwordService.verifyPassword(
+                  password,
+                  adminUser.password_hash
+                );
+              if (!isValidAdminPassword) {
+                logger.warn(`Invalid password for admin: ${email}`);
+                res.status(401).json({
+                  success: false,
+                  error: 'メールアドレスまたはパスワードが正しくありません',
+                  message: 'メールアドレスまたはパスワードが正しくありません',
+                  code: 'INVALID_CREDENTIALS',
+                  errorStage: 'password_mismatch',
+                  errorDetail:
+                    process.env.NODE_ENV === 'development'
+                      ? { email }
+                      : undefined,
+                });
+                return;
+              }
+              // JWT生成
+              const adminSupabaseUser = {
+                id: adminUser.id,
+                email: adminUser.email,
+                user_metadata: {
+                  userType: 'admin',
+                  name: adminUser.name,
+                },
+                app_metadata: {},
+                aud: 'authenticated',
+                created_at: adminUser.created_at || new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                email_confirmed_at: new Date().toISOString(),
+                phone_confirmed_at: '',
+                confirmed_at: new Date().toISOString(),
+                last_sign_in_at: new Date().toISOString(),
+                role: 'authenticated',
+              };
+              const adminMockSession = {
+                access_token: '',
+                refresh_token: '',
+                expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+                expires_in: 7 * 24 * 60 * 60,
+                token_type: 'bearer',
+                user: adminSupabaseUser,
+              };
+              let adminToken = '';
+              try {
+                const sessionResult = await this.sessionService.createSession(
+                  adminSupabaseUser,
+                  adminMockSession
+                );
+                if (sessionResult.success && sessionResult.sessionInfo) {
+                  adminToken = sessionResult.sessionInfo.customToken;
+                  await this.adminUserRepository.updateLastLogin(adminUser.id);
+                  logger.info(
+                    `JWT token generated successfully for admin: ${adminUser.id}`
+                  );
+                } else {
+                  logger.error(
+                    'Failed to create session for admin:',
+                    sessionResult.error
+                  );
+                  res.status(500).json({
+                    success: false,
+                    error: 'セッション生成に失敗しました',
+                    message: 'セッション生成に失敗しました',
+                    code: 'SESSION_ERROR',
+                    errorStage: 'jwt_error',
+                    errorDetail:
+                      process.env.NODE_ENV === 'development'
+                        ? sessionResult.error
+                        : undefined,
+                  });
+                  return;
+                }
+              } catch (sessionError) {
+                logger.error('SessionService error for admin:', sessionError);
+                res.status(500).json({
+                  success: false,
+                  error: 'セッション生成に失敗しました',
+                  message: 'セッション生成に失敗しました',
+                  code: 'SESSION_ERROR',
+                  errorStage: 'jwt_error',
+                  errorDetail:
+                    process.env.NODE_ENV === 'development'
+                      ? String(sessionError)
+                      : undefined,
+                });
+                return;
+              }
+              userInfo = {
+                id: adminUser.id,
+                email: adminUser.email,
+                userType: 'admin',
+                name: adminUser.name,
+                profile: {},
+              };
+              authResult = {
+                success: true,
+                user: adminSupabaseUser,
+                session: adminMockSession,
+                token: adminToken,
+              };
+              break;
 
             default:
               logger.error(`Unknown userType: ${userType}`);
@@ -466,6 +629,11 @@ export class AuthController {
                 error: '不正なユーザータイプです',
                 message: '有効なユーザータイプを指定してください。',
                 code: 'INVALID_USER_TYPE',
+                errorStage: 'invalid_type',
+                errorDetail:
+                  process.env.NODE_ENV === 'development'
+                    ? { userType }
+                    : undefined,
               });
               return;
           }
@@ -514,6 +682,11 @@ export class AuthController {
           error: 'データベースエラーが発生しました',
           message: 'ユーザー情報の取得に失敗しました',
           code: 'DATABASE_ERROR',
+          errorStage: 'db_error',
+          errorDetail:
+            process.env.NODE_ENV === 'development'
+              ? String(dbError)
+              : undefined,
         });
         return;
       }
@@ -528,6 +701,9 @@ export class AuthController {
           message:
             'アカウント情報が見つかりません。サポートにお問い合わせください',
           code: 'USER_NOT_FOUND',
+          errorStage: 'not_found',
+          errorDetail:
+            process.env.NODE_ENV === 'development' ? { email } : undefined,
         });
         return;
       }
@@ -536,32 +712,43 @@ export class AuthController {
       // データベース直接作成ユーザーの場合、Supabase Authに存在しない可能性があるため、
       // 更新失敗は警告として扱い、ログイン処理は継続する
       try {
-        const { getSupabaseAdminClient } = await import('@/lib/server/database/supabase');
+        const { getSupabaseAdminClient } = await import(
+          '@/lib/server/database/supabase'
+        );
         const supabaseAdmin = getSupabaseAdminClient();
-        
-        const { error: metadataError } = await supabaseAdmin.auth.admin.updateUserById(
-          userInfo.id,
-          {
+
+        const { error: metadataError } =
+          await supabaseAdmin.auth.admin.updateUserById(userInfo.id, {
             user_metadata: {
               userType: userInfo.userType,
               name: userInfo.name,
               last_login_at: new Date().toISOString(),
             },
-          }
-        );
+          });
 
         if (metadataError) {
           // データベース直接作成ユーザーの場合、Supabase Authに存在しないため更新できない
           // これは正常な動作として扱う
-          logger.info(`User metadata update skipped for database-only user: ${userInfo.id} (${userInfo.userType})`);
-          logger.debug(`Metadata update error (expected for DB-only users): ${metadataError.message}`);
+          logger.info(
+            `User metadata update skipped for database-only user: ${userInfo.id} (${userInfo.userType})`
+          );
+          logger.debug(
+            `Metadata update error (expected for DB-only users): ${metadataError.message}`
+          );
         } else {
-          logger.info(`User metadata updated for ${userInfo.id} (userType: ${userInfo.userType})`);
+          logger.info(
+            `User metadata updated for ${userInfo.id} (userType: ${userInfo.userType})`
+          );
         }
       } catch (metadataUpdateError) {
         // メタデータ更新のエラーもデータベース直接ユーザーの場合は想定内
-        logger.info(`User metadata update skipped for database-only user: ${userInfo.id}`);
-        logger.debug('Metadata update error (expected for DB-only users):', metadataUpdateError);
+        logger.info(
+          `User metadata update skipped for database-only user: ${userInfo.id}`
+        );
+        logger.debug(
+          'Metadata update error (expected for DB-only users):',
+          metadataUpdateError
+        );
       }
 
       // データベースのlast_login_at更新（カスタム認証を使わなかった場合）
@@ -571,10 +758,14 @@ export class AuthController {
             await this.candidateRepository.updateLastLogin(userInfo.id);
           } else if (userInfo.userType === 'company_user') {
             await this.companyUserRepository.updateLastLogin(userInfo.id);
+          } else if (userInfo.userType === 'admin') {
+            await this.adminUserRepository.updateLastLogin(userInfo.id);
           }
-          // admin の場合は今後実装予定
         } catch (updateError) {
-          logger.warn(`Failed to update last_login_at for ${userInfo.userType} ${userInfo.id}:`, updateError);
+          logger.warn(
+            `Failed to update last_login_at for ${userInfo.userType} ${userInfo.id}:`,
+            updateError
+          );
         }
       }
 
@@ -611,6 +802,9 @@ export class AuthController {
                 originalError: errorMessage,
               }
             : undefined,
+        errorStage: 'exception',
+        errorDetail:
+          process.env.NODE_ENV === 'development' ? String(error) : undefined,
       });
     }
   }

@@ -47,7 +47,8 @@
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "concurrently": "^8.2.2",
-    "prettier": "^3.1.1"
+    "prettier": "^3.1.1",
+    "supabase": "^2.34.3"
   },
   "engines": {
     "node": ">=20.0.0 <23.0.0",
@@ -58,6 +59,9 @@
     "@tiptap/extension-table": "^3.2.0",
     "@tiptap/extension-table-cell": "^3.2.0",
     "@tiptap/extension-table-header": "^3.2.0",
-    "@tiptap/extension-table-row": "^3.2.0"
+    "@tiptap/extension-table-row": "^3.2.0",
+    "bcrypt": "^6.0.0",
+    "node": "^24.6.0",
+    "npx": "^10.2.2"
   }
 }

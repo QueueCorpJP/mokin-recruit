@@ -245,14 +245,14 @@ export function LoginForm({ userType }: LoginFormProps) {
             <EmailFormField
               id='email'
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
 
             {/* パスワード入力 */}
             <PasswordFormField
               id='password'
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
             />
 
             {/* パスワードを忘れた場合 */}
@@ -277,8 +277,6 @@ export function LoginForm({ userType }: LoginFormProps) {
             </button>
           </div>
         </form>
-
-
       </div>
     </div>
   );

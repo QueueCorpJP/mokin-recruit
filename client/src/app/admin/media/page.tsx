@@ -102,6 +102,11 @@ export default function MediaPage() {
     window.location.href = '/admin/media/new';
   };
 
+  const handleEdit = (article: Article) => {
+    // 記事IDをURLパラメータとして渡してeditページに遷移
+    window.location.href = `/admin/media/edit?id=${article.id}`;
+  };
+
   const handleDelete = (article: Article) => {
     setArticleToDelete(article);
     setShowDeleteModal(true);
@@ -302,6 +307,7 @@ export default function MediaPage() {
                   }
                 ]}
                 actions={[
+                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(article)} />,
                   <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(article)} />
                 ]}
               />

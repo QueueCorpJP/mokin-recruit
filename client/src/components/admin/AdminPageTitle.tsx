@@ -153,7 +153,60 @@ export function AdminPageTitle() {
     );
   }
 
-  if (pathname === '/admin/media/edit' || pathname.match(/^\/admin\/media\/edit\//)) {
+  if (pathname.match(/^\/admin\/media\/edit\/preview$/)) {
+    return (
+      <div className="mb-6 flex justify-between items-center">
+        <h1 style={{
+          color: '#323232',
+          fontFamily: 'Inter',
+          fontSize: '32px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: 'normal'
+        }}>
+          記事プレビュー
+        </h1>
+        <div className="flex gap-4">
+          <AdminButton
+            onClick={() => {
+              // page.tsxのhandleBack関数と同じ処理を直接実行
+              const previewDataString = sessionStorage.getItem('previewArticle');
+              if (previewDataString) {
+                try {
+                  const previewData = JSON.parse(previewDataString);
+                  // ステータスセレクトの現在の値を取得
+                  const statusSelect = document.querySelector('input[name="status"]') as HTMLInputElement;
+                  const currentStatus = statusSelect?.value || 'DRAFT';
+                  
+                  const updatedData = { ...previewData, status: currentStatus };
+                  sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
+                  window.location.href = `/admin/media/edit?id=${previewData.id}`;
+                } catch (error) {
+                  console.error('Preview data parsing error:', error);
+                  window.location.href = '/admin/media/edit';
+                }
+              } else {
+                window.location.href = '/admin/media/edit';
+              }
+            }}
+            text="編集に戻る"
+            variant="green-outline"
+          />
+          <AdminButton
+            onClick={() => {
+              // page.tsxのhandleSaveClick関数と同じ処理を直接実行
+              const event = new CustomEvent('save-article-direct');
+              window.dispatchEvent(event);
+            }}
+            text="記事を保存/公開する"
+            variant="green-gradient"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (pathname === '/admin/media/edit') {
     return (
       <div className="mb-6 flex justify-between items-center">
         <h1 style={{
@@ -181,41 +234,6 @@ export function AdminPageTitle() {
               window.dispatchEvent(event);
             }}
             text="記事を確認する"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (pathname.match(/^\/admin\/media\/edit\/preview$/)) {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          記事プレビュー
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('back-to-edit');
-              window.dispatchEvent(event);
-            }}
-            text="編集に戻る"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('save-article');
-              window.dispatchEvent(event);
-            }}
-            text="記事を保存/公開する"
             variant="green-gradient"
           />
         </div>

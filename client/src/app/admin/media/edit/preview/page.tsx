@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import '@/styles/media-content.css';
 
 interface PreviewData {
+  id?: string;
   title: string;
   categoryIds: string[];
   tags: string[];
@@ -42,10 +43,8 @@ export default function EditPreviewPage() {
       const storedData = sessionStorage.getItem('previewArticle');
       if (storedData) {
         const data = JSON.parse(storedData);
-        console.log('Preview data content:', data.content);
-        console.log('Preview data categoryIds:', data.categoryIds);
         
-        // カテゴリデータを先に取得
+        // カテゴリデータを取得してカテゴリ名の解決用に使用
         try {
           const supabase = createClient();
           const { data: categoriesData } = await supabase
@@ -54,41 +53,27 @@ export default function EditPreviewPage() {
             .order('name');
           
           if (categoriesData) {
-            console.log('Fetched categories:', categoriesData);
             setCategories(categoriesData as unknown as ArticleCategory[]);
-          }
-          
-          // 個別にカテゴリ名を取得
-          if (data.categoryIds && data.categoryIds.length > 0) {
-            const names: {[key: string]: string} = {};
-            for (const categoryId of data.categoryIds) {
-              try {
-                const { data: categoryData } = await supabase
-                  .from('article_categories')
-                  .select('name')
-                  .eq('id', categoryId)
-                  .single();
-                
-                if (categoryData && categoryData.name) {
-                  names[categoryId] = categoryData.name as string;
-                  console.log('Individual category fetch:', { categoryId, name: categoryData.name });
+            
+            // カテゴリIDからカテゴリ名を解決
+            if (data.categoryIds && data.categoryIds.length > 0) {
+              const names: {[key: string]: string} = {};
+              for (const categoryId of data.categoryIds) {
+                const category = categoriesData.find((cat: any) => cat.id === categoryId);
+                if (category && typeof category.name === 'string') {
+                  names[categoryId] = category.name;
                 }
-              } catch (err) {
-                console.error('Individual category fetch failed:', categoryId, err);
               }
+              setCategoryNames(names);
             }
-            setCategoryNames(names);
           }
-          
-          // カテゴリデータ取得後にプレビューデータを設定
-          setPreviewData(data);
-          setCurrentStatus(data.status || 'DRAFT');
         } catch (error) {
           console.error('カテゴリの取得に失敗:', error);
-          // エラーが発生してもプレビューデータは設定
-          setPreviewData(data);
-          setCurrentStatus(data.status || 'DRAFT');
         }
+        
+        // プレビューデータを設定（editフォームのデータをそのまま使用）
+        setPreviewData(data);
+        setCurrentStatus(data.status || 'DRAFT');
       } else {
         router.push('/admin/media/edit');
       }
@@ -99,13 +84,16 @@ export default function EditPreviewPage() {
     // AdminPageTitleからのイベントリスナーを追加
     const handleBackToEdit = () => handleBack();
     const handleSaveArticle = () => handleSave();
+    const handleSaveArticleDirect = () => handleSaveClick();
 
     window.addEventListener('back-to-edit', handleBackToEdit);
     window.addEventListener('save-article', handleSaveArticle);
+    window.addEventListener('save-article-direct', handleSaveArticleDirect);
 
     return () => {
       window.removeEventListener('back-to-edit', handleBackToEdit);
       window.removeEventListener('save-article', handleSaveArticle);
+      window.removeEventListener('save-article-direct', handleSaveArticleDirect);
     };
   }, [router]);
 
@@ -116,46 +104,42 @@ export default function EditPreviewPage() {
     setError('');
 
     try {
+      if (!previewData.id) {
+        throw new Error('記事IDが見つかりません');
+      }
+
       const formData = new FormData();
+      formData.append('id', previewData.id);
       formData.append('title', previewData.title);
       formData.append('categoryId', previewData.categoryIds && previewData.categoryIds.length > 0 ? previewData.categoryIds[0] : '');
       formData.append('tags', Array.isArray(previewData.tags) ? previewData.tags.join(', ') : previewData.tags);
       formData.append('content', previewData.content);
       formData.append('status', status || currentStatus);
       
-      if (previewData.thumbnailName && previewData.thumbnail) {
-        try {
-          const thumbnailFile = await fetch(previewData.thumbnail)
-            .then(res => res.blob())
-            .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
-          formData.append('thumbnail', thumbnailFile);
-        } catch (error) {
-          console.warn('サムネイル画像の処理に失敗しました:', error);
+      // サムネイル処理
+      if (previewData.thumbnail) {
+        if (previewData.thumbnailName) {
+          // 新しいファイルがある場合
+          try {
+            const thumbnailFile = await fetch(previewData.thumbnail)
+              .then(res => res.blob())
+              .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
+            formData.append('thumbnail', thumbnailFile);
+          } catch (error) {
+            console.warn('サムネイル画像の処理に失敗しました:', error);
+          }
+        } else {
+          // 既存の画像URLの場合
+          formData.append('thumbnail_url', previewData.thumbnail);
         }
       }
 
-      const response = await fetch('/api/admin/articles', {
-        method: 'POST',
-        body: formData,
-      });
-
-      console.log('API Response status:', response.status);
-      console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error response:', errorText);
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || `記事の保存に失敗しました (${response.status})`);
-        } catch (parseError) {
-          throw new Error(`記事の保存に失敗しました (${response.status}): ${errorText}`);
-        }
-      }
-
-      const result = await response.json();
-      setSavedArticleId(result.article?.id || null);
+      // actions.tsのsaveArticle関数を使用して更新
+      const { saveArticle } = await import('../actions');
+      await saveArticle(formData);
+      
+      // 成功時の処理
+      setSavedArticleId(previewData.id);
       sessionStorage.removeItem('previewArticle');
       setShowSuccessModal(true);
     } catch (error) {
@@ -172,7 +156,8 @@ export default function EditPreviewPage() {
       const updatedData = { ...previewData, status: currentStatus };
       sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
     }
-    router.push('/admin/media/edit');
+    // 編集ページに記事IDと共に戻る
+    router.push(`/admin/media/edit?id=${previewData?.id}`);
   };
 
   const handleCancel = () => {
