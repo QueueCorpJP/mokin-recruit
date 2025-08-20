@@ -1,6 +1,8 @@
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getServerAuth } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
 import JobTableClient, { AdminJobListItem } from './JobTableClient';
 import React from 'react';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 async function fetchAdminJobList(
   page: number = 1,
@@ -33,6 +35,10 @@ async function fetchAdminJobList(
 }
 
 export default async function Job() {
+  const auth = await getServerAuth();
+  if (!auth.isAuthenticated || auth.userType !== 'admin') {
+    redirect('/admin/auth/login');
+  }
   const jobs = await fetchAdminJobList(1, 10);
   return <JobTableClient jobs={jobs} />;
 }

@@ -17,7 +17,7 @@ export default function AdminLayout({
         <AdminSidebar />
         <main className='flex-1 p-6 bg-[#F9F9F9]'>
           <AdminBreadcrumb />
-          <div className="p-4">
+          <div className='p-4'>
             <AdminPageTitle />
             {children}
           </div>
