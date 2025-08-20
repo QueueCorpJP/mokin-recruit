@@ -25,16 +25,30 @@ interface EditMediaFormProps {
   categories: ArticleCategory[];
   tags: ArticleTag[];
   saveArticle: (formData: FormData) => Promise<void>;
+  initialArticle?: any;
 }
 
-export default function EditMediaForm({ categories, tags, saveArticle }: EditMediaFormProps) {
+export default function EditMediaForm({ categories, tags, saveArticle, initialArticle }: EditMediaFormProps) {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [content, setContent] = useState('');
+  
+  const [title, setTitle] = useState(initialArticle?.title || '');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(() => {
+    if (initialArticle?.article_categories && Array.isArray(initialArticle.article_categories)) {
+      return initialArticle.article_categories.map((cat: any) => cat.id);
+    }
+    return [];
+  });
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+    if (initialArticle?.article_tags && Array.isArray(initialArticle.article_tags)) {
+      return initialArticle.article_tags.map((tag: any) => tag.id);
+    }
+    return [];
+  });
+  const [content, setContent] = useState(initialArticle?.content || '');
   const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>('DRAFT');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>(initialArticle?.status || 'DRAFT');
   const [isLoading, setIsLoading] = useState(false);
   const [titleError, setTitleError] = useState('');
   const [categoryError, setCategoryError] = useState('');
@@ -44,6 +58,62 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [articleId, setArticleId] = useState<string | null>(initialArticle?.id || null);
+  
+  // 初期データのセット
+  useEffect(() => {
+    // まずsessionStorageからプレビューデータをチェック
+    const previewData = sessionStorage.getItem('previewArticle');
+    if (previewData) {
+      try {
+        const data = JSON.parse(previewData);
+        if (data.id === initialArticle?.id) {
+          // プレビューから戻った場合、プレビューのデータを優先
+          setTitle(data.title || '');
+          setContent(data.content || '');
+          setStatus(data.status || 'DRAFT');
+          
+          // カテゴリの設定
+          if (data.categoryIds && Array.isArray(data.categoryIds)) {
+            setSelectedCategoryIds(data.categoryIds);
+          }
+          
+          // タグの設定（名前からIDに変換）
+          if (data.tags && Array.isArray(data.tags)) {
+            const tagIds = data.tags.map((tagName: string) => {
+              const tag = tags.find(t => t.name === tagName);
+              return tag?.id;
+            }).filter(Boolean);
+            setSelectedTags(tagIds);
+          }
+          
+          // サムネイル画像の設定
+          if (data.thumbnail) {
+            setThumbnailPreview(data.thumbnail);
+            if (data.thumbnailName) {
+              // 新しいファイルの場合（Blob URL）
+              setThumbnailUrl('');
+            } else {
+              // 既存のファイルの場合（通常のURL）
+              setThumbnailUrl(data.thumbnail);
+            }
+          }
+          
+          // プレビューデータを使った後は削除
+          sessionStorage.removeItem('previewArticle');
+          return;
+        }
+      } catch (error) {
+        console.error('プレビューデータの解析に失敗:', error);
+      }
+    }
+    
+    // 通常の初期データセット
+    if (initialArticle?.thumbnail_url) {
+      setThumbnailUrl(initialArticle.thumbnail_url);
+      setThumbnailPreview(initialArticle.thumbnail_url);
+    }
+  }, [initialArticle, tags]);
   
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -70,11 +140,15 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
       
       setThumbnailError('');
       setThumbnail(file);
+      // プレビュー用のURLを作成
+      const previewUrl = URL.createObjectURL(file);
+      setThumbnailPreview(previewUrl);
     }
   };
 
   const handleClearThumbnail = () => {
     setThumbnail(null);
+    setThumbnailPreview('');
     setThumbnailError('');
     // ファイル入力をクリア
     const fileInput = document.getElementById('thumbnail-input') as HTMLInputElement;
@@ -114,6 +188,7 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
     }
 
     const articleData = {
+      id: articleId,
       title,
       categoryIds: selectedCategoryIds,
       tags: selectedTags.map(tagId => {
@@ -121,7 +196,7 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
         return tag?.name || '';
       }).filter(Boolean),
       content: content || '<p>記事内容がここに表示されます</p>',
-      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
+      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : (thumbnailUrl || null),
       thumbnailName: thumbnail?.name || null
     };
 
@@ -173,6 +248,9 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
 
     try {
       const formData = new FormData();
+      if (articleId) {
+        formData.append('id', articleId);
+      }
       formData.append('title', title);
       formData.append('categoryId', selectedCategoryIds[0] || '');
       formData.append('tags', selectedTags.map(tagId => {
@@ -183,6 +261,8 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
       formData.append('status', submitStatus);
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
+      } else if (thumbnailUrl) {
+        formData.append('thumbnail_url', thumbnailUrl);
       }
 
       await saveArticle(formData);
@@ -545,10 +625,35 @@ export default function EditMediaForm({ categories, tags, saveArticle }: EditMed
                 {thumbnailError}
               </span>
             )}
-            {thumbnail && !thumbnailError && (
-              <span className="text-green-600 text-xs">
-                選択中: {thumbnail.name}
-              </span>
+            {thumbnailPreview && !thumbnailError && (
+              <div className="mt-3">
+                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden" style={{ minWidth: '300px', maxWidth: '500px' }}>
+                  <img 
+                    src={thumbnailPreview} 
+                    alt={thumbnail ? "選択中の画像" : "現在のサムネイル"} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="mt-2 flex justify-between items-center">
+                  <div>
+                    <span className="text-green-600 text-sm font-medium">
+                      {thumbnail ? "選択中の画像" : "現在のサムネイル画像"}
+                    </span>
+                    {thumbnail && (
+                      <span className="text-gray-600 text-xs block mt-1">
+                        {thumbnail.name}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClearThumbnail}
+                    className="text-red-500 text-sm hover:text-red-700 transition-colors px-3 py-1 border border-red-300 rounded hover:bg-red-50"
+                  >
+                    画像を削除
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
