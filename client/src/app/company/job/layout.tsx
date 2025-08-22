@@ -19,8 +19,8 @@ export default async function CompanyJobLayout({
     userEmail: auth.user?.email
   });
 
-  // 認証済みで企業ユーザーでない場合は候補者ページへリダイレクト
-  if (auth.isAuthenticated && auth.userType !== 'company_user') {
+  // 認証済みで企業ユーザーまたは管理者でない場合は候補者ページへリダイレクト
+  if (auth.isAuthenticated && auth.userType !== 'company_user' && auth.userType !== 'admin') {
     console.log('🔄 Redirecting to candidate - userType is:', auth.userType);
     redirect('/candidate');
   }

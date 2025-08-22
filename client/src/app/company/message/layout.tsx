@@ -24,8 +24,8 @@ export default async function CompanyMessageLayout({
     return <AccessRestricted userType="company" />;
   }
 
-  // 企業ユーザーでない場合は候補者ページへリダイレクト
-  if (auth.userType !== 'company_user') {
+  // 企業ユーザーまたは管理者でない場合は候補者ページへリダイレクト
+  if (auth.userType !== 'company_user' && auth.userType !== 'admin') {
     redirect('/candidate');
   }
 
