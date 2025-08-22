@@ -1,13 +1,20 @@
 'use client';
 import { useState } from 'react';
-import { SearchBar } from '@/components/admin/ui/SearchBar';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
-import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
-import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+import type { FC } from 'react';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
+import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
+import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+import { SearchBar } from '@/components/admin/ui/SearchBar';
+import type { NoticeItem } from './page';
 
-export default function NoticeClient() {
+interface NoticeClientProps {
+  notices: NoticeItem[];
+}
+
+const NoticeClient: FC<NoticeClientProps> = ({ notices: initialNotices }) => {
+  const [notices, setNotices] = useState<NoticeItem[]>(initialNotices);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
@@ -16,23 +23,11 @@ export default function NoticeClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // 運営お知らせデータのサンプル
-  const noticeData = Array(30)
-    .fill(null)
-    .map((_, index) => ({
-      id: index + 1,
-      status: index % 2 === 0 ? '公開中' : '下書き',
-      updateDate: 'yyyy/mm/dd',
-      updateTime: 'hh:mm',
-      title: 'お知らせタイトルが入ります。お知らせタイトルが入ります。',
-    }));
-
   const getStatusBadge = (status: string) => {
     const statusClass =
       status === '公開中'
         ? 'bg-[#0F9058] text-white'
         : 'bg-gray-500 text-white';
-
     return (
       <span
         className={`inline-block px-3 py-1 rounded-[5px] font-['Inter'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] ${statusClass}`}
@@ -63,19 +58,19 @@ export default function NoticeClient() {
   };
 
   const handleNext = () => {
-    const totalPages = Math.ceil(noticeData.length / itemsPerPage);
+    const totalPages = Math.ceil(notices.length / itemsPerPage);
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  const handleEdit = (noticeId: number) => {
-    console.log('Edit notice:', noticeId);
+  const handleEdit = (_: string) => {
+    // 編集処理（今後実装）
   };
 
-  const handleDelete = (noticeId: number) => {
+  const handleDelete = (noticeId: string) => {
     if (confirm('このお知らせを削除しますか？')) {
-      console.log('Delete notice:', noticeId);
+      setNotices(notices.filter(n => n.id !== noticeId));
     }
   };
 
@@ -101,12 +96,44 @@ export default function NoticeClient() {
     },
   ];
 
-  // ページネーション
-  const paginatedData = noticeData.slice(
+  // ソート・検索・ページネーション処理
+  let filtered = notices;
+  if (searchTerm) {
+    filtered = filtered.filter(n => n.title.includes(searchTerm));
+  }
+  let sorted = filtered;
+  if (sortColumn && sortDirection) {
+    sorted = [...filtered].sort((a, b) => {
+      let aValue = '';
+      let bValue = '';
+      switch (sortColumn) {
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case 'datetime':
+          aValue = a.updated_at;
+          bValue = b.updated_at;
+          break;
+        case 'title':
+          aValue = a.title;
+          bValue = b.title;
+          break;
+        default:
+          return 0;
+      }
+      if (sortDirection === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }
+  const paginated = sorted.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(noticeData.length / itemsPerPage);
+  const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
@@ -116,11 +143,10 @@ export default function NoticeClient() {
           value={searchTerm}
           onChange={setSearchTerm}
           placeholder='お知らせタイトルで検索'
-          onSearch={() => console.log('Search:', searchTerm)}
+          onSearch={() => {}}
         />
         <AdminButton href='/admin/notice/new' text='新規お知らせ追加' />
       </div>
-
       {/* テーブルコンテナ */}
       <div className='bg-white rounded-lg'>
         {/* テーブルヘッダー */}
@@ -130,48 +156,62 @@ export default function NoticeClient() {
           sortDirection={sortDirection}
           onSort={handleSort}
         />
-
         {/* お知らせ一覧 */}
         <div className='mt-2 space-y-2'>
-          {paginatedData.map(notice => (
-            <AdminTableRow
-              key={notice.id}
-              columns={[
-                { content: getStatusBadge(notice.status), width: 'w-[120px]' },
-                {
-                  content: (
-                    <div>
-                      <div className="font-['Inter'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {notice.updateDate}
+          {paginated.map(notice => {
+            const date = new Date(notice.updated_at);
+            const dateStr = date.toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            });
+            const timeStr = date.toLocaleTimeString('ja-JP', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            });
+            return (
+              <AdminTableRow
+                key={notice.id}
+                columns={[
+                  {
+                    content: getStatusBadge(notice.status),
+                    width: 'w-[120px]',
+                  },
+                  {
+                    content: (
+                      <div>
+                        <div className="font-['Inter'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {dateStr}
+                        </div>
+                        <div className="font-['Inter'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                          {timeStr}
+                        </div>
                       </div>
-                      <div className="font-['Inter'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {notice.updateTime}
-                      </div>
-                    </div>
-                  ),
-                  width: 'w-[180px]',
-                },
-                { content: notice.title, width: 'flex-1' },
-              ]}
-              actions={[
-                <ActionButton
-                  key='edit'
-                  text='編集'
-                  variant='edit'
-                  onClick={() => handleEdit(notice.id)}
-                />,
-                <ActionButton
-                  key='delete'
-                  text='削除'
-                  variant='delete'
-                  onClick={() => handleDelete(notice.id)}
-                />,
-              ]}
-            />
-          ))}
+                    ),
+                    width: 'w-[180px]',
+                  },
+                  { content: notice.title, width: 'flex-1' },
+                ]}
+                actions={[
+                  <ActionButton
+                    key='edit'
+                    text='編集'
+                    variant='edit'
+                    onClick={() => handleEdit(notice.id)}
+                  />,
+                  <ActionButton
+                    key='delete'
+                    text='削除'
+                    variant='delete'
+                    onClick={() => handleDelete(notice.id)}
+                  />,
+                ]}
+              />
+            );
+          })}
         </div>
       </div>
-
       {/* ページネーション */}
       <div className='flex justify-center mt-8'>
         <PaginationButtons
@@ -183,4 +223,6 @@ export default function NoticeClient() {
       </div>
     </div>
   );
-}
+};
+
+export default NoticeClient;

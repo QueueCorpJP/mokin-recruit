@@ -8,6 +8,7 @@ import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { SearchBar } from '@/components/admin/ui/SearchBar';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { Checkbox } from '@/components/admin/ui/checkbox';
+import { approveJob } from './actions';
 
 export type AdminJobListItem = {
   id: string;
@@ -92,28 +93,18 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     setApproveError(null);
   };
 
-  // 承認処理（API仮実装）
+  // 承認処理（サーバーアクション呼び出し）
   const handleApprove = async () => {
     if (!approveModalJobId) return;
     setIsApproving(true);
     setApproveError(null);
     try {
-      // APIリクエスト: PATCH /api/admin/job/approve
-      const res = await fetch('/api/admin/job/approve', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: approveModalJobId }),
-      });
-      if (!res.ok) {
-        throw new Error('承認に失敗しました');
+      const result = await approveJob(approveModalJobId);
+      if (!result.success) {
+        throw new Error(result.error || '承認に失敗しました');
       }
-      // 成功時はローカルjobs状態を更新
-      setJobs(jobs =>
-        jobs.map(job =>
-          job.id === approveModalJobId ? { ...job, status: 'PUBLISHED' } : job
-        )
-      );
       closeApproveModal();
+      // サーバーアクションでrevalidatePathされるため、ローカルjobs状態の更新は省略可
     } catch (e: any) {
       setApproveError(e.message || '承認に失敗しました');
     } finally {
