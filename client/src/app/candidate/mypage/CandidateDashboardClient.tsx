@@ -292,7 +292,7 @@ export function CandidateDashboardClient({
                       borderRadius: '999px',
                     }}
                   >
-                    メッセージ一覧を見る
+                    メッセージ一覧
                   </Button>
                 </div>
               </div>

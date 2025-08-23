@@ -816,7 +816,8 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
               >
                 <IndustryModal
                   selectedIndustries={industries}
-                  setSelectedIndustries={setIndustries}
+                  onIndustriesChange={setIndustries}
+                  onClose={() => setIndustryModalOpen(false)}
                 />
               </Modal>
             )}

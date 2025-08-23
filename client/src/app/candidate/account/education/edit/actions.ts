@@ -5,6 +5,12 @@ import { getEducationData as getEducationFromDB, getCandidateData } from '@/lib/
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 interface EducationFormData {
+  final_education?: string;
+  school_name?: string;
+  department?: string;
+  graduation_year?: string;
+  graduation_month?: string;
+  
   university_name?: string;
   university_department?: string;
   university_graduation_year?: string;

@@ -615,12 +615,12 @@ export default function CandidateEducationEditPage() {
                                 className="inline-flex items-center gap-[2px]"
                               >
                                 <div className="flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]">
-                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none truncate">
+                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap">
                                   {industry.name}
                                 </span>
                                 <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full">
                                   <select
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
+                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none cursor-pointer focus:outline-none w-full"
                                     value={industry.experienceYears || ''}
                                     onChange={(e) =>
                                       updateIndustryExperience(
@@ -709,7 +709,7 @@ export default function CandidateEducationEditPage() {
                                 className="inline-flex items-center gap-[2px]"
                               >
                                 <div className="flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]">
-                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none truncate">
+                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap">
                                   {jobType.name}
                                 </span>
                                 <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full">
