@@ -389,7 +389,8 @@ export default function SearchForm({
         >
           <IndustryModal
             selectedIndustries={selectedIndustries}
-            setSelectedIndustries={setSelectedIndustries}
+            onIndustriesChange={setSelectedIndustries}
+            onClose={() => setIndustryModalOpen(false)}
           />
         </Modal>
       )}
