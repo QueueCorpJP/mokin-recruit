@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
 
 /* Scrollbar hide utility class */
 .scrollbar-hide::-webkit-scrollbar {

@@ -1,19 +1,14 @@
-import { injectable, inject } from 'inversify';
 import { User, Session } from '@supabase/supabase-js';
-import { getSupabaseClient } from '@/lib/server/database/supabase';
+import { getSupabaseClient, getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { logger } from '@/lib/server/utils/logger';
-import jwt from 'jsonwebtoken';
-import { TYPES } from '@/lib/server/container/types';
 
 /**
- * セッション情報の型定義
+ * セッション情報の型定義 - Supabase専用
  */
 export interface SessionInfo {
   user: User;
   session: Session;
-  customToken: string;
   expiresAt: Date;
-  refreshToken: string;
 }
 
 /**
@@ -27,21 +22,13 @@ export interface SessionResult {
 }
 
 /**
- * セッション管理サービス
- * JWTとSupabaseセッションの統合管理を行う
+ * Supabase専用セッション管理サービス
  */
-@injectable()
 export class SessionService {
-  private readonly JWT_SECRET: string;
-  private readonly JWT_EXPIRES_IN = '7d';
-  private readonly REFRESH_THRESHOLD = 5 * 60 * 1000; // 5分前にリフレッシュ
+  private readonly REFRESH_THRESHOLD = 15 * 60 * 1000; // 15分前にリフレッシュ
 
   constructor() {
-    this.JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
-
-    if (!process.env.JWT_SECRET) {
-      console.warn('JWT_SECRET not found in environment variables, using default secret for development');
-    }
+    // Supabaseのセッション管理のみを使用
   }
 
   /**
@@ -52,16 +39,11 @@ export class SessionService {
     supabaseSession: Session
   ): Promise<SessionResult> {
     try {
-      // カスタムJWTトークンを生成
-      const customToken = this.generateCustomJWT(user);
-
-      // セッション情報を構築
+      // セッション情報を構築（Supabase JWTのみ使用）
       const sessionInfo: SessionInfo = {
         user,
         session: supabaseSession,
-        customToken,
         expiresAt: new Date(supabaseSession.expires_at! * 1000),
-        refreshToken: supabaseSession.refresh_token,
       };
 
       logger.info(`Session created for user: ${user.id}`);
@@ -80,57 +62,43 @@ export class SessionService {
   }
 
   /**
-   * セッションを検証する
+   * セッションを検証する（Supabase JWTトークンを使用）
    */
   async validateSession(token: string): Promise<SessionResult> {
     try {
-      // カスタムJWTトークンを検証
-      const jwtPayload = this.verifyCustomJWT(token);
-      if (!jwtPayload) {
+      const supabase = getSupabaseClient();
+
+      // Supabase JWTトークンを検証
+      const { data, error } = await supabase.auth.getUser(token);
+
+      if (error || !data.user) {
+        logger.warn('Supabase token validation failed:', error?.message);
         return {
           success: false,
-          error: 'Invalid JWT token',
+          error: 'Invalid or expired token',
         };
       }
 
-      // JWTペイロードからユーザー情報を構築
-      const user: User = {
-        id: jwtPayload.sub,
-        email: jwtPayload.email,
-        user_metadata: jwtPayload.user_metadata || {},
-        app_metadata: jwtPayload.app_metadata || {},
-        aud: jwtPayload.aud,
-        created_at: '',
-        updated_at: '',
-        email_confirmed_at: '',
-        phone_confirmed_at: '',
-        confirmed_at: '',
-        last_sign_in_at: '',
-        role: '',
-      };
+      // 現在のセッションを取得
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        return {
+          success: false,
+          error: 'No active session',
+        };
+      }
 
       // セッション期限をチェック
       const now = new Date();
-      const expiresAt = new Date(jwtPayload.exp * 1000);
+      const expiresAt = new Date(sessionData.session.expires_at! * 1000);
       const needsRefresh =
         expiresAt.getTime() - now.getTime() < this.REFRESH_THRESHOLD;
 
-      // セッション情報を構築（JWTベース）
-      const mockSession: Session = {
-        access_token: token,
-        refresh_token: '',
-        expires_at: jwtPayload.exp,
-        expires_in: Math.floor((expiresAt.getTime() - now.getTime()) / 1000),
-        token_type: 'bearer',
-        user,
-      };
-
       const sessionInfo: SessionInfo = {
-        user,
-        session: mockSession,
-        customToken: token,
+        user: data.user,
+        session: sessionData.session,
         expiresAt,
-        refreshToken: '',
       };
 
       return {
@@ -181,7 +149,7 @@ export class SessionService {
   /**
    * セッションを無効化する
    */
-  async invalidateSession(token: string): Promise<boolean> {
+  async invalidateSession(): Promise<boolean> {
     try {
       const supabase = getSupabaseClient();
 
@@ -224,36 +192,6 @@ export class SessionService {
   }
 
   /**
-   * カスタムJWTトークンを生成する
-   */
-  private generateCustomJWT(user: User): string {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      user_metadata: user.user_metadata,
-      app_metadata: user.app_metadata,
-      aud: 'authenticated',
-      iss: 'mokin-recruit',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7日間
-    };
-
-    return jwt.sign(payload, this.JWT_SECRET, { algorithm: 'HS256' });
-  }
-
-  /**
-   * カスタムJWTトークンを検証する
-   */
-  private verifyCustomJWT(token: string): any {
-    try {
-      return jwt.verify(token, this.JWT_SECRET, { algorithms: ['HS256'] });
-    } catch (error) {
-      logger.warn('JWT verification failed:', error);
-      return null;
-    }
-  }
-
-  /**
    * セッション情報をクッキーに設定するためのオプションを生成する
    */
   generateCookieOptions(sessionInfo: SessionInfo) {
@@ -274,7 +212,7 @@ export interface ISessionService {
   createSession(user: User, supabaseSession: Session): Promise<SessionResult>;
   validateSession(token: string): Promise<SessionResult>;
   refreshSession(refreshToken: string): Promise<SessionResult>;
-  invalidateSession(token: string): Promise<boolean>;
+  invalidateSession(): Promise<boolean>;
   getUserFromSession(token: string): Promise<User | null>;
   shouldRefreshSession(sessionInfo: SessionInfo): boolean;
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { getCareerStatusData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
@@ -11,7 +12,7 @@ import {
   PROGRESS_STATUS_OPTIONS,
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
-import { Industry } from '@/constants/industry-data';
+import { Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 
 // フォームスキーマ定義
 const careerStatusSchema = z.object({
@@ -55,20 +56,13 @@ const CURRENT_ACTIVITY_STATUS_OPTIONS = [
 export default function CandidateCareerStatusEditPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(
     null,
   );
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
     [key: number]: Industry[];
   }>({});
-
-  // 初期データからselectedIndustriesMapを設定
-  useEffect(() => {
-    // 将来的にAPIから取得したデータで初期化
-    // ここでは空のマップで初期化
-    const initialMap: { [key: number]: Industry[] } = {};
-    setSelectedIndustriesMap(initialMap);
-  }, []);
 
   const {
     register,
@@ -77,6 +71,7 @@ export default function CandidateCareerStatusEditPage() {
     watch,
     setValue,
     getValues,
+    reset,
   } = useForm<CareerStatusFormData>({
     resolver: zodResolver(careerStatusSchema),
     defaultValues: {
@@ -96,18 +91,67 @@ export default function CandidateCareerStatusEditPage() {
     },
   });
 
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getCareerStatusData();
+        if (data) {
+          // フォームの値を設定
+          reset({
+            transferDesiredTime: data.transferDesiredTime || '',
+            currentActivityStatus: data.currentActivityStatus || '',
+            selectionCompanies: data.selectionCompanies && data.selectionCompanies.length > 0 
+              ? data.selectionCompanies 
+              : [
+                  {
+                    privacyScope: '',
+                    isPrivate: false,
+                    industries: [],
+                    companyName: '',
+                    department: '',
+                    progressStatus: '',
+                    declineReason: '',
+                  },
+                ],
+          });
+
+          // selectedIndustriesMapを設定
+          if (data.selectionCompanies) {
+            const industryMap: { [key: number]: Industry[] } = {};
+            data.selectionCompanies.forEach((company, index) => {
+              if (company.industries && company.industries.length > 0) {
+                const industries: Industry[] = company.industries.map(id => 
+                  INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+                ).filter(Boolean) as Industry[];
+                industryMap[index] = industries;
+              }
+            });
+            setSelectedIndustriesMap(industryMap);
+          }
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
   const onSubmit = async () => {
     setIsSubmitting(true);
     // TODO: API呼び出し
     // Form data: data
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push('/account/career-status');
+      router.push('/candidate/account/career-status');
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push('/account/career-status');
+    router.push('/candidate/account/career-status');
   };
 
   const addCompany = () => {
@@ -142,7 +186,11 @@ export default function CandidateCareerStatusEditPage() {
     setCurrentModalIndex(null);
   };
 
-  const handleIndustriesConfirm = (industries: Industry[]) => {
+  const handleIndustriesConfirm = (industryIds: string[]) => {
+    // IDからIndustryオブジェクトに変換
+    const industries: Industry[] = industryIds.map(id => 
+      INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+    ).filter(Boolean) as Industry[];
     if (currentModalIndex !== null) {
       // selectedIndustriesMapを更新
       setSelectedIndustriesMap((prev) => ({
@@ -179,9 +227,9 @@ export default function CandidateCareerStatusEditPage() {
     });
   };
 
-  const getSelectedIndustries = (index: number): Industry[] => {
-    // selectedIndustriesMapからデータを取得（存在しない場合は空配列）
-    return selectedIndustriesMap[index] || [];
+  const getSelectedIndustries = (index: number): string[] => {
+    // selectedIndustriesMapからIDの配列を取得（存在しない場合は空配列）
+    return (selectedIndustriesMap[index] || []).map(industry => industry.id);
   };
 
   const selectionCompanies = watch('selectionCompanies');
@@ -405,7 +453,7 @@ export default function CandidateCareerStatusEditPage() {
                 <div className="border-b border-[#dcdcdc] mb-6"></div>
 
                 <div className="space-y-4">
-                  {selectionCompanies.map((company, index) => (
+                  {(selectionCompanies || []).map((company, index) => (
                     <div
                       key={index}
                       className="relative border border-[#dcdcdc] rounded-[10px] p-4 lg:p-6"

@@ -2,9 +2,6 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { container } from '@/lib/server/container';
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { TYPES } from '@/lib/server/container/types';
 import { logger } from '@/lib/server/utils/logger';
 
 export interface AutoLoginResult {

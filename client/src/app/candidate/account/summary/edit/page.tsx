@@ -36,12 +36,12 @@ export default function CandidateSummaryEditPage() {
     // Form data: data
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push('/account/summary');
+      router.push('/candidate/account/summary');
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push('/account/summary');
+    router.push('/candidate/account/summary');
   };
 
   return (

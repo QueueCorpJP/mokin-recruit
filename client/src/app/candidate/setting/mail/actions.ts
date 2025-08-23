@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { requireCandidateAuth } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import nodemailer from 'nodemailer';
-import jwt from 'jsonwebtoken';
 
 // メールアドレス変更完了後の認証状態リフレッシュ用
 export async function refreshAuthState() {
@@ -330,28 +329,8 @@ export async function verifyCode(code: string) {
         }
       });
       
-      // 新しいメールアドレスでJWTトークンを生成
-      console.log('新しいセッションを作成中...');
-      const JWT_SECRET = process.env.JWT_SECRET || 'mokin-recruit-super-secret-jwt-key-2024-production-change-me';
-      const newToken = jwt.sign(
-        {
-          userId: user.id,
-          email: verification.email,
-          userType: 'candidate',
-          emailConfirmed: true,
-          iat: Math.floor(Date.now() / 1000), // 現在時刻でトークンを発行
-        },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      cookieStore.set('supabase-auth-token', newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7 // 7日間
-      });
+      // Supabaseが新しいメールアドレスでセッションを再作成する
+      console.log('Supabaseセッションが自動的に更新されます');
       
       console.log('✅ セッション再生成完了!');
     } catch (sessionError) {

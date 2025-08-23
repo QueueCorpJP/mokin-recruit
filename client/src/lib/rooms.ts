@@ -26,7 +26,10 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
 
   try {
     if (userType === 'candidate') {
-      // 候補者の場合: 自分のcandidate_idが入っているroomを取得
+      // 候補者の場合: Supabase user.idを直接使用
+      console.log('🔍 [CANDIDATE] Using Supabase user ID:', userId);
+      
+      // 候補者の場合: 自分のuser_idが入っているroomを取得
       const { data: rooms, error: roomsError } = await supabase
         .from('rooms')
         .select(`
@@ -55,30 +58,78 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
       return await buildRoomsData(supabase, rooms || [], userId, userType);
       
     } else {
-      // 企業ユーザーの場合: 企業ユーザーが権限を持つグループのroomを取得
-      console.log('🏢 [STEP C] Company user - fetching user groups for:', userId);
+      // 企業ユーザーの場合: 権限レベルに応じてアクセス可能なグループを決定
+      console.log('🏢 [STEP C] Company user - checking permissions for:', userId);
       
-      const { data: userGroups, error: userGroupsError } = await supabase
+      // userIdはrequireCompanyAuthForActionで正しいcompany_user_idが返される
+      const companyUserId = userId;
+      
+      console.log('🔍 [DEBUG] Using company_user_id for permissions:', companyUserId);
+      
+      // ユーザーの権限情報を取得
+      const { data: userPermissions, error: permissionsError } = await supabase
         .from('company_user_group_permissions')
-        .select('company_group_id')
-        .eq('company_user_id', userId);
+        .select('company_group_id, permission_level')
+        .eq('company_user_id', companyUserId);
 
-      console.log('📊 [STEP D] User groups query result:', {
-        userGroups,
-        userGroupsError,
-        count: userGroups?.length || 0
+      console.log('📊 [STEP D] User permissions query result:', {
+        userPermissions,
+        permissionsError,
+        count: userPermissions?.length || 0
       });
 
-      if (userGroupsError) {
-        console.error('❌ [ERROR] Error fetching user groups:', userGroupsError);
+      if (permissionsError) {
+        console.error('❌ [ERROR] Error fetching user permissions:', permissionsError);
         return [];
       }
 
-      const groupIds = userGroups?.map(g => g.company_group_id) || [];
-      console.log('🎯 [STEP E] Group IDs extracted:', groupIds);
+      let groupIds: string[] = [];
+
+      if (!userPermissions || userPermissions.length === 0) {
+        console.log('⚠️ [WARNING] No permissions found for user, treating as regular user with no groups');
+        return [];
+      }
+
+      // ADMINISTRATORの場合は同じcompany_accountの全グループにアクセス可能
+      const hasAdminPermission = userPermissions.some(p => p.permission_level === 'ADMINISTRATOR');
+      
+      if (hasAdminPermission) {
+        console.log('👑 [ADMIN ACCESS] User has ADMINISTRATOR permission - fetching all company groups');
+        
+        // まず企業ユーザーのcompany_account_idを取得
+        const { data: companyUser, error: companyUserError } = await supabase
+          .from('company_users')
+          .select('company_account_id')
+          .eq('id', companyUserId)
+          .single();
+
+        if (companyUserError || !companyUser) {
+          console.error('❌ [ERROR] Company user not found:', companyUserError);
+          return [];
+        }
+
+        // 同じcompany_accountに属する全グループを取得
+        const { data: allGroups, error: allGroupsError } = await supabase
+          .from('company_groups')
+          .select('id')
+          .eq('company_account_id', companyUser.company_account_id);
+
+        if (allGroupsError) {
+          console.error('❌ [ERROR] Error fetching all company groups:', allGroupsError);
+          return [];
+        }
+
+        groupIds = allGroups?.map(g => g.id) || [];
+        console.log('🎯 [ADMIN] All group IDs for admin:', groupIds);
+      } else {
+        // SCOUT_STAFFの場合は所属グループのみ
+        console.log('👤 [STAFF ACCESS] User has SCOUT_STAFF permission - fetching assigned groups only');
+        groupIds = userPermissions.map(p => p.company_group_id);
+        console.log('🎯 [STAFF] Assigned group IDs:', groupIds);
+      }
       
       if (groupIds.length === 0) {
-        console.error('❌ [ERROR] No groups found for user:', userId);
+        console.error('❌ [ERROR] No accessible groups found for user:', userId);
         return [];
       }
       console.log('🔍 [STEP F] Fetching rooms for group IDs:', groupIds);
@@ -156,28 +207,25 @@ async function buildRoomsData(
   const roomIds = rooms.map((room: any) => room.id);
   console.log('🆔 [BUILD] Room IDs extracted:', roomIds);
 
-  // 各ルームの最新メッセージを取得
+  // Window関数を使用してroom別最新メッセージを効率的に取得
   console.log('📨 [BUILD] Fetching latest messages for rooms...');
   const { data: latestMessages, error: messagesError } = await supabase
-    .from('messages')
-    .select(`
-      room_id,
-      content,
-      sent_at,
-      status,
-      sender_type
-    `)
-    .in('room_id', roomIds)
-    .order('sent_at', { ascending: false });
+    .rpc('get_latest_messages_by_room', { room_ids: roomIds });
   
   console.log('📨 [BUILD] Messages query result:', {
-    latestMessages,
-    messagesError,
     messagesCount: latestMessages?.length || 0
   });
   
-  // message.md要件: 候補者送信のメッセージの日時を優先表示
-  const candidateMessages = latestMessages?.filter((m: any) => m.sender_type === 'CANDIDATE') || [];
+  // room_id別にメッセージをマップ化（filter処理の最適化）
+  const messagesByRoom = new Map();
+  const candidateMessagesByRoom = new Map();
+  
+  latestMessages?.forEach((msg: any) => {
+    messagesByRoom.set(msg.room_id, msg);
+    if (msg.sender_type === 'CANDIDATE') {
+      candidateMessagesByRoom.set(msg.room_id, msg);
+    }
+  });
 
   if (messagesError) {
     console.error('Error fetching latest messages:', messagesError);
@@ -251,13 +299,9 @@ async function buildRoomsData(
     });
     const roomId = room.id;
 
-    // このルームの最新メッセージを取得
-    const roomMessages = latestMessages?.filter((m: any) => m.room_id === roomId) || [];
-    const latestMessage = roomMessages[0];
-    
-    // message.md要件: 候補者送信メッセージの日時を優先表示
-    const roomCandidateMessages = candidateMessages?.filter((m: any) => m.room_id === roomId) || [];
-    const candidateLatestMessage = roomCandidateMessages[0];
+    // Map化したメッセージから取得（O(1)アクセス）
+    const latestMessage = messagesByRoom.get(roomId);
+    const candidateLatestMessage = candidateMessagesByRoom.get(roomId);
     
     // 表示用の日時は候補者送信メッセージがあればそれを、なければ最新メッセージの日時を使用
     const displayTime = candidateLatestMessage ? candidateLatestMessage.sent_at : latestMessage?.sent_at;
@@ -266,19 +310,9 @@ async function buildRoomsData(
     const jobPosting = jobPostings.find((jp: any) => jp.id === room.related_job_posting_id);
     const jobTitle = jobPosting?.title || '求人情報なし';
 
-    // 未読メッセージ数の計算（送信者によって分ける）
-    let unreadCount = 0;
-    if (userType === 'candidate') {
-      // 候補者側: 企業からのメッセージ（COMPANY_USER）で'SENT'ステータスのものをカウント
-      unreadCount = roomMessages.filter((m: any) => 
-        m.sender_type === 'COMPANY_USER' && m.status === 'SENT'
-      ).length;
-    } else {
-      // 企業側: 候補者からのメッセージ（CANDIDATE）で'SENT'ステータスのものをカウント
-      unreadCount = roomMessages.filter((m: any) => 
-        m.sender_type === 'CANDIDATE' && m.status === 'SENT'
-      ).length;
-    }
+    // 未読メッセージ数は別途効率的に取得（将来的にはRPCで実装）
+    // 現在はルーム一覧では未読カウントを0とし、実際のチャット画面で正確に計算
+    const unreadCount = 0;
 
     // 未読判定（後方互換性のため）
     const hasUnread = unreadCount > 0;

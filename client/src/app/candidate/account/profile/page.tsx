@@ -1,15 +1,97 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { requireCandidateAuth } from '@/lib/auth/server';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import EditButton from './EditButton';
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+// 候補者データの型定義
+interface CandidateData {
+  id: string;
+  email: string;
+  last_name?: string;
+  first_name?: string;
+  last_name_kana?: string;
+  first_name_kana?: string;
+  phone_number?: string;
+  current_residence?: string;
+  prefecture?: string;
+  gender?: string;
+  birth_date?: string;
+  current_income?: string;
+}
 
-// 基本情報確認ペ
-export default function CandidateBasicInfoPage() {
-  const router = useRouter();
+// 候補者データを取得する関数
+async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    const { data, error } = await supabase
+      .from('candidates')
+      .select(`
+        id,
+        email,
+        last_name,
+        first_name,
+        last_name_kana,
+        first_name_kana,
+        phone_number,
+        current_residence,
+        prefecture,
+        gender,
+        birth_date,
+        current_income
+      `)
+      .eq('id', candidateId)
+      .single();
 
-  const handleEdit = () => {
-    router.push('/candidate/account/profile/edit');
+    if (error) {
+      console.error('候補者データの取得に失敗しました:', error);
+      return null;
+    }
+
+    return data as CandidateData;
+  } catch (error) {
+    console.error('データベースエラー:', error);
+    return null;
+  }
+}
+
+// 基本情報確認ページ
+export default async function CandidateBasicInfoPage() {
+  // 認証チェック
+  const user = await requireCandidateAuth();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
+
+  // 候補者データを取得
+  const candidateData = await getCandidateData(user.id);
+  if (!candidateData) {
+    redirect('/candidate/auth/login');
+  }
+
+  // 生年月日をフォーマット
+  const formatBirthDate = (birthDate?: string) => {
+    if (!birthDate) return { year: 'yyyy', month: 'mm', day: 'dd' };
+    
+    const date = new Date(birthDate);
+    return {
+      year: date.getFullYear().toString(),
+      month: (date.getMonth() + 1).toString().padStart(2, '0'),
+      day: date.getDate().toString().padStart(2, '0')
+    };
   };
+
+  // 性別の表示名を取得
+  const getGenderDisplay = (gender?: string) => {
+    switch (gender) {
+      case 'male': return '男性';
+      case 'female': return '女性';
+      case 'unspecified': return '未指定';
+      default: return '未設定';
+    }
+  };
+
+  const birthDate = formatBirthDate(candidateData.birth_date);
 
   return (
     <div className="flex flex-col min-h-screen isolate">
@@ -101,8 +183,8 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="flex gap-2 text-[16px] text-[#323232] tracking-[1.6px] font-medium">
-                    <span>姓</span>
-                    <span>名</span>
+                    <span>{candidateData.last_name || '未設定'}</span>
+                    <span>{candidateData.first_name || '未設定'}</span>
                   </div>
                 </div>
               </div>
@@ -116,8 +198,8 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="flex gap-2 text-[16px] font-medium text-[#323232] tracking-[1.6px]">
-                    <span>セイ</span>
-                    <span>メイ</span>
+                    <span>{candidateData.last_name_kana || '未設定'}</span>
+                    <span>{candidateData.first_name_kana || '未設定'}</span>
                   </div>
                 </div>
               </div>
@@ -131,7 +213,7 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="text-[16px] font-medium text-[#323232] tracking-[1.6px]">
-                    男性
+                    {getGenderDisplay(candidateData.gender)}
                   </div>
                 </div>
               </div>
@@ -145,7 +227,7 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="text-[16px] font-medium text-[#323232] tracking-[1.6px]">
-                    テキストが入ります。
+                    {candidateData.prefecture || candidateData.current_residence || '未設定'}
                   </div>
                 </div>
               </div>
@@ -159,11 +241,11 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="flex font-medium flex-wrap gap-2 items-center text-[16px] text-[#323232] tracking-[1.6px]">
-                    <span>yyyy</span>
+                    <span>{birthDate.year}</span>
                     <span className="font-bold">年</span>
-                    <span>mm</span>
+                    <span>{birthDate.month}</span>
                     <span className="font-bold">月</span>
-                    <span>dd</span>
+                    <span>{birthDate.day}</span>
                     <span className="font-bold">日</span>
                   </div>
                 </div>
@@ -178,7 +260,7 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="text-[16px] font-medium text-[#323232] tracking-[1.6px]">
-                    テキストが入ります。
+                    {candidateData.phone_number || '未設定'}
                   </div>
                 </div>
               </div>
@@ -192,7 +274,7 @@ export default function CandidateBasicInfoPage() {
                 </div>
                 <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                   <div className="text-[16px] font-medium text-[#323232] tracking-[1.6px]">
-                    テキストが入ります。
+                    {candidateData.current_income || '未設定'}
                   </div>
                 </div>
               </div>
@@ -200,16 +282,7 @@ export default function CandidateBasicInfoPage() {
           </div>
 
           {/* 編集ボタン */}
-          <div className="flex justify-center mt-6 lg:mt-10">
-            <Button
-              variant="green-gradient"
-              size="figma-default"
-              className="min-w-[160px] w-full lg:w-auto text-[16px] tracking-[1.6px]"
-              onClick={handleEdit}
-            >
-              編集する
-            </Button>
-          </div>
+          <EditButton />
         </div>
       </main>
 

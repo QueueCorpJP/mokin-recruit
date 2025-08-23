@@ -1,10 +1,9 @@
 'use server'
 
 import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { container } from '@/lib/server/container';
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { TYPES } from '@/lib/server/container/types';
 
 export interface CandidateLoginFormData {
   email: string;
@@ -15,6 +14,32 @@ export interface CandidateLoginResult {
   success: boolean;
   message?: string;
   error?: string;
+}
+
+async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Server component context where cookies cannot be set
+            console.warn('Cookie setting error:', error);
+          }
+        },
+      },
+    }
+  );
 }
 
 export async function candidateLoginAction(formData: CandidateLoginFormData): Promise<CandidateLoginResult> {
@@ -41,65 +66,45 @@ export async function candidateLoginAction(formData: CandidateLoginFormData): Pr
       };
     }
 
-    // AuthController を使用してログイン処理
-    const authController = container.get<AuthController>(TYPES.AuthController);
-    
-    // リクエストオブジェクトの模擬
-    const mockReq = {
-      body: {
-        email: formData.email.trim(),
-        password: formData.password,
-        userType: 'candidate'
-      }
-    } as any;
+    // Supabase認証
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email.trim(),
+      password: formData.password,
+    });
 
-    // レスポンスオブジェクトの模擬
-    let responseData: any = null;
-    const mockRes = {
-      status: (code: number) => mockRes,
-      json: (data: any) => {
-        responseData = data;
-        return mockRes;
-      }
-    } as any;
+    if (error) {
+      console.error('Supabase login error:', error);
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが正しくありません'
+      };
+    }
 
-    await authController.login(mockReq, mockRes);
-
-    // レスポンスデータをチェック
-    if (!responseData) {
+    if (!data.user) {
       return {
         success: false,
         error: 'ログインに失敗しました'
       };
     }
 
-    if (!responseData.success) {
+    // ユーザータイプをチェック
+    const userType = data.user.user_metadata?.user_type || 'candidate';
+    if (userType !== 'candidate') {
       return {
         success: false,
-        error: responseData.message || 'ログインに失敗しました'
+        error: '候補者アカウントでログインしてください'
       };
     }
 
-    // 成功した場合、クッキーにトークンを設定
-    if (responseData.token) {
-      const cookieStore = await cookies();
-      cookieStore.set('supabase-auth-token', responseData.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7 // 7日間
-      });
+    console.log('✅ [CANDIDATE LOGIN] Success:', {
+      userId: data.user.id,
+      email: data.user.email,
+      userType
+    });
 
-      // 候補者ダッシュボードにリダイレクト（これは例外を投げるので、この後のコードは実行されない）
-      redirect('/candidate/dashboard');
-    }
-
-    // redirect()が呼ばれなかった場合のフォールバック
-    return {
-      success: true,
-      message: 'ログインに成功しました'
-    };
+    // 候補者ダッシュボードにリダイレクト
+    redirect('/candidate');
 
   } catch (error) {
     console.error('Candidate login error:', error);

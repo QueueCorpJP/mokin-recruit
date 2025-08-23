@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__supabase__list_projects",
+      "WebSearch"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase",
@@ -16,15 +22,9 @@
         "sbp_acffe46818d78a5691b3c64a805cd8b4b1ec2b44"
       ]
     },
-    
     "Figma": {
       "type": "sse",
       "url": "http://127.0.0.1:3845/sse"
     }
-  },
-  "permissions": {
-    "allow": [
-      "mcp__supabase__list_projects"
-    ]
   }
 }

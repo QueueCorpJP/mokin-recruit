@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { requireCompanyAuthWithSession } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { ChatMessage } from '@/types/message';
 import { revalidatePath } from 'next/cache';
 
@@ -139,7 +139,7 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
     console.log('🚀 [sendCompanyMessage] Starting send process:', data);
 
     // 企業ユーザー認証
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       console.error('❌ [sendCompanyMessage] Auth failed:', authResult.error);
       return { error: 'Unauthorized' };
@@ -221,7 +221,7 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
 // 企業側のファイルアップロード用のサーバーアクション
 export async function uploadCompanyMessageFile(formData: FormData) {
   try {
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { error: 'ユーザーが認証されていません' };
     }

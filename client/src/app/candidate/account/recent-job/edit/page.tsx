@@ -3,13 +3,14 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getRecentJobData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import type { Industry } from '@/constants/industry-data';
-import type { JobType } from '@/constants/job-type-data';
+import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 
 // フォームスキーマ定義
 const recentJobSchema = z.object({
@@ -48,6 +49,7 @@ const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => ({
 export default function CandidateRecentJobEditPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndustryModalIndex, setCurrentIndustryModalIndex] = useState<
     number | null
   >(null);
@@ -68,6 +70,7 @@ export default function CandidateRecentJobEditPage() {
     watch,
     setValue,
     getValues,
+    reset,
   } = useForm<RecentJobFormData>({
     resolver: zodResolver(recentJobSchema),
     defaultValues: {
@@ -88,18 +91,74 @@ export default function CandidateRecentJobEditPage() {
     },
   });
 
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getRecentJobData();
+        if (data && data.jobHistories) {
+          reset({
+            jobHistories: data.jobHistories.length > 0 ? data.jobHistories : [
+              {
+                companyName: '',
+                departmentPosition: '',
+                startYear: '',
+                startMonth: '',
+                endYear: '',
+                endMonth: '',
+                isCurrentlyWorking: false,
+                industries: [],
+                jobTypes: [],
+                jobDescription: '',
+              },
+            ],
+          });
+
+          // selectedMapsを設定
+          const industryMap: { [key: number]: Industry[] } = {};
+          const jobTypeMap: { [key: number]: JobType[] } = {};
+          
+          data.jobHistories.forEach((job, index) => {
+            if (job.industries && job.industries.length > 0) {
+              const industries: Industry[] = job.industries.map(id => 
+                INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+              ).filter(Boolean) as Industry[];
+              industryMap[index] = industries;
+            }
+            
+            if (job.jobTypes && job.jobTypes.length > 0) {
+              const jobTypes: JobType[] = job.jobTypes.map(id => 
+                JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
+              ).filter(Boolean) as JobType[];
+              jobTypeMap[index] = jobTypes;
+            }
+          });
+          
+          setSelectedIndustriesMap(industryMap);
+          setSelectedJobTypesMap(jobTypeMap);
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
   const onSubmit = async () => {
     setIsSubmitting(true);
     // TODO: API呼び出し
     // Form data: data
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push('/account/recent-job');
+      router.push('/candidate/account/recent-job');
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push('/account/recent-job');
+    router.push('/candidate/account/recent-job');
   };
 
   const addJobHistory = () => {
@@ -138,8 +197,13 @@ export default function CandidateRecentJobEditPage() {
     setCurrentIndustryModalIndex(null);
   };
 
-  const handleIndustriesConfirm = (industries: Industry[]) => {
+  const handleIndustriesConfirm = (industryIds: string[]) => {
     if (currentIndustryModalIndex !== null) {
+      // IDからIndustryオブジェクトに変換
+      const industries: Industry[] = industryIds.map(id => 
+        INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+      ).filter(Boolean) as Industry[];
+      
       // selectedIndustriesMapを更新
       setSelectedIndustriesMap((prev) => ({
         ...prev,
@@ -186,8 +250,13 @@ export default function CandidateRecentJobEditPage() {
     setCurrentJobTypeModalIndex(null);
   };
 
-  const handleJobTypesConfirm = (jobTypes: JobType[]) => {
+  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
     if (currentJobTypeModalIndex !== null) {
+      // IDからJobTypeオブジェクトに変換
+      const jobTypes: JobType[] = jobTypeIds.map(id => 
+        JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
+      ).filter(Boolean) as JobType[];
+      
       // selectedJobTypesMapを更新
       setSelectedJobTypesMap((prev) => ({
         ...prev,
@@ -340,13 +409,13 @@ export default function CandidateRecentJobEditPage() {
 
               {/* 職務経歴リスト */}
               <div className="space-y-4">
-                {jobHistories.map((_, index) => (
+                {(jobHistories || []).map((_, index) => (
                   <div
                     key={index}
                     className="relative border border-[#dcdcdc] rounded-[10px] p-6"
                   >
                     {/* 削除ボタン */}
-                    {jobHistories.length > 1 && index > 0 && (
+                    {(jobHistories || []).length > 1 && index > 0 && (
                       <button
                         type="button"
                         onClick={() => removeJobHistory(index)}
@@ -806,7 +875,7 @@ export default function CandidateRecentJobEditPage() {
           isOpen={true}
           onClose={closeIndustryModal}
           onConfirm={handleIndustriesConfirm}
-          initialSelected={getSelectedIndustries(currentIndustryModalIndex)}
+          initialSelected={getSelectedIndustries(currentIndustryModalIndex).map(i => i.id)}
           maxSelections={3}
         />
       )}
@@ -817,7 +886,7 @@ export default function CandidateRecentJobEditPage() {
           isOpen={true}
           onClose={closeJobTypeModal}
           onConfirm={handleJobTypesConfirm}
-          initialSelected={getSelectedJobTypes(currentJobTypeModalIndex)}
+          initialSelected={getSelectedJobTypes(currentJobTypeModalIndex).map(jt => jt.id)}
           maxSelections={3}
         />
       )}

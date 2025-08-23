@@ -3,15 +3,16 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getExpectationData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
-import { type Industry } from '@/constants/industry-data';
-import { type JobType } from '@/constants/job-type-data';
+import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 
 // フォームスキーマ定義
 const expectationSchema = z.object({
@@ -73,12 +74,13 @@ const SALARY_OPTIONS = [
 export default function CandidateExpectationEditPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
 
-  const { register, handleSubmit, watch, setValue } =
+  const { register, handleSubmit, watch, setValue, reset } =
     useForm<ExpectationFormData>({
       resolver: zodResolver(expectationSchema),
       defaultValues: {
@@ -91,22 +93,50 @@ export default function CandidateExpectationEditPage() {
       mode: 'onChange',
     });
 
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getExpectationData();
+        if (data) {
+          reset({
+            desiredIncome: data.desiredIncome || '',
+            industries: data.industries || [],
+            jobTypes: data.jobTypes || [],
+            workLocations: data.workLocations || [],
+            workStyles: data.workStyles || [],
+          });
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
   const onSubmit = async () => {
     setIsSubmitting(true);
     // TODO: API呼び出し
 
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push('/account/expectation');
+      router.push('/candidate/account/expectation');
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push('/account/expectation');
+    router.push('/candidate/account/expectation');
   };
 
   // 業種モーダル
-  const handleIndustriesConfirm = (industries: Industry[]) => {
+  const handleIndustriesConfirm = (industryIds: string[]) => {
+    // IDからIndustryオブジェクトに変換
+    const industries: Industry[] = industryIds.map(id => 
+      INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+    ).filter(Boolean) as Industry[];
     setValue('industries', industries, {
       shouldValidate: true,
       shouldDirty: true,
@@ -127,7 +157,11 @@ export default function CandidateExpectationEditPage() {
   };
 
   // 職種モーダル
-  const handleJobTypesConfirm = (jobTypes: JobType[]) => {
+  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
+    // IDからJobTypeオブジェクトに変換
+    const jobTypes: JobType[] = jobTypeIds.map(id => 
+      JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
+    ).filter(Boolean) as JobType[];
     setValue('jobTypes', jobTypes, {
       shouldValidate: true,
       shouldDirty: true,
@@ -367,7 +401,7 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {industries && industries.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {industries.map((industry) => (
+                          {(industries || []).map((industry) => (
                             <div
                               key={industry.id}
                               className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2"
@@ -418,7 +452,7 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {jobTypes && jobTypes.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {jobTypes.map((jobType) => (
+                          {(jobTypes || []).map((jobType) => (
                             <div
                               key={jobType.id}
                               className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2"
@@ -469,7 +503,7 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {workLocations && workLocations.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {workLocations.map((location) => (
+                          {(workLocations || []).map((location) => (
                             <div
                               key={location.id}
                               className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2"
@@ -520,7 +554,7 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {workStyles && workStyles.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {workStyles.map((workStyle) => (
+                          {(workStyles || []).map((workStyle) => (
                             <div
                               key={workStyle.id}
                               className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2"
@@ -586,7 +620,7 @@ export default function CandidateExpectationEditPage() {
           isOpen={true}
           onClose={() => setIsIndustryModalOpen(false)}
           onConfirm={handleIndustriesConfirm}
-          initialSelected={industries as Industry[]}
+          initialSelected={industries?.map(i => i.id) || []}
           maxSelections={3}
         />
       )}
@@ -597,7 +631,7 @@ export default function CandidateExpectationEditPage() {
           isOpen={true}
           onClose={() => setIsJobTypeModalOpen(false)}
           onConfirm={handleJobTypesConfirm}
-          initialSelected={jobTypes as JobType[]}
+          initialSelected={jobTypes?.map(jt => jt.id) || []}
           maxSelections={3}
         />
       )}

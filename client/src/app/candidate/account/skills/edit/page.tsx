@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getSkillsData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -65,9 +66,10 @@ const LANGUAGE_OPTIONS = [
 export default function CandidateSkillsEditPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [skillInput, setSkillInput] = useState('');
 
-  const { register, handleSubmit, watch, setValue, getValues } =
+  const { register, handleSubmit, watch, setValue, getValues, reset } =
     useForm<SkillsFormData>({
       resolver: zodResolver(skillsSchema),
       defaultValues: {
@@ -78,18 +80,43 @@ export default function CandidateSkillsEditPage() {
       },
     });
 
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getSkillsData();
+        if (data) {
+          reset({
+            englishLevel: data.englishLevel || '',
+            otherLanguages: data.otherLanguages && data.otherLanguages.length > 0 
+              ? data.otherLanguages 
+              : [{ language: '', level: '' }],
+            skills: data.skills || [],
+            qualifications: data.qualifications || '',
+          });
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
   const onSubmit = async () => {
     setIsSubmitting(true);
     // TODO: API呼び出し
     // Form data: data
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push('/account/skills');
+      router.push('/candidate/account/skills');
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push('/account/skills');
+    router.push('/candidate/account/skills');
   };
 
   // その他の言語を追加
@@ -300,7 +327,7 @@ export default function CandidateSkillsEditPage() {
                     </div>
                     <div className="flex-1 lg:py-6">
                       <div className="space-y-4">
-                        {otherLanguages.map((_, index) => (
+                        {(otherLanguages || []).map((_, index) => (
                           <div key={index} className="space-y-2 relative">
                             <div className="flex flex-col gap-2">
                               <div className="relative">
@@ -451,9 +478,9 @@ export default function CandidateSkillsEditPage() {
                           ※最低3つ以上のキーワードを選択/登録してください。
                         </p>
                         {/* 選択されたスキル */}
-                        {selectedSkills.length > 0 && (
+                        {(selectedSkills || []).length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {selectedSkills.map((skill) => (
+                            {(selectedSkills || []).map((skill) => (
                               <div
                                 key={skill}
                                 className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] flex items-center gap-2"

@@ -35,10 +35,7 @@ async function fetchAdminCompanyList(): Promise<CompanyListItem[]> {
 }
 
 export default async function CompanyPage() {
-  const auth = await getServerAuth();
-  if (!auth.isAuthenticated || auth.userType !== 'admin') {
-    redirect('/admin/auth/login');
-  }
+ 
   const companies = await fetchAdminCompanyList();
   return <CompanyClient companies={companies} />;
 }

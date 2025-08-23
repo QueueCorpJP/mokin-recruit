@@ -18,21 +18,22 @@ interface ArticleGridProps {
   articles: MediaArticle[];
   filterType?: 'all' | 'category' | 'tag';
   filterValue?: string;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 const ITEMS_PER_PAGE = 9;
 
-export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType = 'all', filterValue }) => {
+export const ArticleGrid: React.FC<ArticleGridProps> = ({ 
+  articles, 
+  filterType = 'all', 
+  filterValue,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore
+}) => {
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  const totalPages = useMemo(() => Math.ceil(articles.length / ITEMS_PER_PAGE), [articles.length]);
-  
-  const currentArticles = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return articles.slice(startIndex, endIndex);
-  }, [articles, currentPage]);
   
   const handleArticleClick = useCallback((articleId: string) => {
     router.prefetch(`/candidate/media/${articleId}`);
@@ -79,7 +80,7 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType =
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
-          {currentArticles.map((article) => (
+          {articles.map((article) => (
             <article
               key={article.id}
               onClick={() => handleArticleClick(article.id)}
@@ -156,13 +157,22 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({ articles, filterType =
         </div>
       )}
 
-      {/* ページネーション */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        className="mt-10"
-      />
+      {/* Load More ボタン */}
+      {hasMore && onLoadMore && (
+        <div className="flex justify-center mt-[60px]">
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="bg-[#0F9058] text-white px-[40px] py-[16px] rounded-full hover:bg-[#0D7A4A] transition-colors disabled:opacity-50"
+            style={{ 
+              fontWeight: 700,
+              fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}
+          >
+            {loadingMore ? '読み込み中...' : 'もっと見る'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 'use server'
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { requireCompanyAuthWithSession } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 
 // 求人データの型定義
 interface JobPosting {
@@ -32,7 +32,7 @@ export async function getCompanyJobs(params: {
 }) {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     console.log('🔍 getCompanyJobs - Auth result:', authResult);
     if (!authResult.success) {
       console.log('❌ getCompanyJobs - Auth failed:', authResult.error);
@@ -42,7 +42,7 @@ export async function getCompanyJobs(params: {
     const { companyAccountId: userCompanyAccountId } = authResult.data;
     const supabase = getSupabaseAdminClient();
 
-    // 基本クエリ：同じ会社アカウントの求人のみ
+    // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
     let query = supabase
       .from('job_postings')
       .select(
@@ -79,7 +79,11 @@ export async function getCompanyJobs(params: {
         internal_memo,
         publication_type,
         image_urls,
-        company_group_id
+        company_group_id,
+        company_groups (
+          id,
+          group_name
+        )
       `
       )
       .eq('company_account_id', userCompanyAccountId)
@@ -130,34 +134,18 @@ export async function getCompanyJobs(params: {
     const { data: jobs, error: jobsError } = await query;
 
     if (jobsError) {
-      console.error('Failed to fetch jobs:', jobsError);
-      return { success: false, error: '求人情報の取得に失敗しました' };
+      console.error('Failed to fetch jobs:', {
+        error: jobsError,
+        message: jobsError.message,
+        details: jobsError.details,
+        hint: jobsError.hint,
+        code: jobsError.code,
+        userCompanyAccountId
+      });
+      return { success: false, error: `求人情報の取得に失敗しました: ${jobsError.message}` };
     }
 
-    // グループ名を取得
-    const groupIds = [
-      ...new Set(jobs?.map(job => job.company_group_id).filter(Boolean)),
-    ];
-    let groupNames: Record<string, string> = {};
-
-    if (groupIds.length > 0) {
-      const { data: users, error: usersError } = await supabase
-        .from('company_users')
-        .select('id, full_name')
-        .in('id', groupIds);
-
-      if (!usersError && users) {
-        groupNames = users.reduce(
-          (acc, user) => {
-            acc[user.id] = user.full_name || 'ユーザー';
-            return acc;
-          },
-          {} as Record<string, string>
-        );
-      }
-    }
-
-    // レスポンス用にデータを整形
+    // レスポンス用にデータを整形（JOINされたグループ情報を使用）
     const formattedJobs = (jobs || []).map(job => ({
       id: job.id,
       title: job.title,
@@ -188,7 +176,7 @@ export async function getCompanyJobs(params: {
       internalMemo: job.internal_memo,
       publicationType: job.publication_type,
       imageUrls: job.image_urls || [],
-      groupName: groupNames[job.company_group_id] || 'ユーザー',
+      groupName: job.company_groups?.group_name || 'グループ',
       groupId: job.company_group_id,
       createdAt: job.created_at,
       updatedAt: job.updated_at,
@@ -206,7 +194,7 @@ export async function getCompanyJobs(params: {
 export async function createJob(data: any) {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { success: false, error: authResult.error };
     }
@@ -357,7 +345,7 @@ export async function createJob(data: any) {
 export async function getJobForEdit(jobId: string) {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { success: false, error: authResult.error };
     }
@@ -388,7 +376,7 @@ export async function getJobForEdit(jobId: string) {
 export async function updateJob(jobId: string, updateData: any) {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { success: false, error: authResult.error };
     }
@@ -444,7 +432,7 @@ export async function deleteJob(jobId: string) {
 export async function getCompanyGroups() {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCompanyAuthWithSession();
+    const authResult = await requireCompanyAuthForAction();
     console.log('🔍 getCompanyGroups - Auth result:', authResult);
     if (!authResult.success) {
       console.log('❌ getCompanyGroups - Auth failed:', authResult.error);

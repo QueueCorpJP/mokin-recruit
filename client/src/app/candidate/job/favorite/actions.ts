@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { requireCandidateAuthWithSession } from '@/lib/auth/server';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
 export interface FavoriteListParams {
   page?: number;
@@ -34,7 +34,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
   try {
     console.log('[DEBUG] Favorite page - starting auth check');
     // 統一的な認証チェック
-    const authResult = await requireCandidateAuthWithSession();
+    const authResult = await requireCandidateAuthForAction();
     console.log('[DEBUG] Favorite page - auth result:', { 
       success: authResult.success, 
       error: authResult.success ? undefined : authResult.error,
@@ -56,7 +56,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
 
     const supabase = getSupabaseAdminClient();
 
-    // データクエリのみを実行し、カウントも取得する最適化
+    // データクエリ（企業情報もJOINで一緒に取得）
     const favoritesDataQuery = supabase
       .from('favorites')
       .select(`
@@ -81,7 +81,12 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
           status,
           company_account_id,
           appeal_points,
-          image_urls
+          image_urls,
+          company_accounts (
+            id,
+            company_name,
+            industry
+          )
         )
       `, { count: 'exact' })
       .eq('candidate_id', candidateId)
@@ -89,7 +94,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // 単一クエリ実行
+    // 単一クエリ実行（企業情報も含む）
     const { data: favorites, count, error: favoritesError } = await favoritesDataQuery;
 
     if (favoritesError) {
@@ -100,32 +105,12 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
       };
     }
 
-    // company_account_idを使って企業名を取得（必要な場合のみ）
-    const companyAccountIds = Array.from(new Set(
-      favorites?.map((fav: any) => fav.job_postings?.company_account_id).filter(Boolean)
-    ));
-    
-    let companyNamesMap: Record<string, any> = {};
-    if (companyAccountIds.length > 0) {
-      const { data: companies, error: companiesError } = await supabase
-        .from('company_accounts')
-        .select('id, company_name, industry')
-        .in('id', companyAccountIds);
-
-      if (!companiesError && companies) {
-        companyNamesMap = companies.reduce((acc, company) => {
-          acc[company.id] = company;
-          return acc;
-        }, {} as Record<string, any>);
-      }
-    }
-
-    // 企業名を追加した結果を作成
+    // JOINされた企業情報を使用した結果を作成
     const favoritesWithCompanyNames = favorites?.map((favorite: any) => ({
       ...favorite,
       job_postings: {
         ...favorite.job_postings,
-        company_users: companyNamesMap[favorite.job_postings?.company_account_id] || {
+        company_users: favorite.job_postings?.company_accounts || {
           company_name: '企業名未設定',
           industry: '未設定'
         }
@@ -136,7 +121,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const totalPages = Math.ceil(totalCount / limit);
 
     const endTime = performance.now();
-    console.log(`[OPTIMIZED] Favorites list completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Companies: ${companyAccountIds.length}, Total: ${totalCount}`);
+    console.log(`[OPTIMIZED] Favorites list with JOIN completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Total: ${totalCount}`);
 
     return {
       success: true,
@@ -163,7 +148,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
 export async function addFavorite(jobPostingId: string): Promise<FavoriteActionResult> {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCandidateAuthWithSession();
+    const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
       return {
         success: false,
@@ -246,7 +231,7 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
 export async function removeFavorite(jobPostingId: string): Promise<FavoriteActionResult> {
   try {
     // 統一的な認証チェック
-    const authResult = await requireCandidateAuthWithSession();
+    const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
       return {
         success: false,

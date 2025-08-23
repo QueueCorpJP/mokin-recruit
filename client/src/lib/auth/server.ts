@@ -1,15 +1,7 @@
 import { cookies, headers } from 'next/headers';
-import { NextRequest } from 'next/server';
 import { cache } from 'react';
-import jwt from 'jsonwebtoken';
-import {
-  getSupabaseClient,
-  getSupabaseAdminClient,
-} from '@/lib/server/database/supabase';
-
-// JWT検証用の設定
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'default-jwt-secret-for-development-only';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createServerClient } from '@supabase/ssr';
 
 export type UserType = 'candidate' | 'company_user' | 'admin';
 
@@ -23,6 +15,7 @@ interface User {
   user_metadata?: {
     user_type?: string;
     company_account_id?: string;
+    company_user_id?: string;
     [key: string]: any;
   };
 }
@@ -34,106 +27,66 @@ interface BasicAuthResult {
 }
 
 /**
- * データベースからユーザータイプを判定
+ * Supabase サーバークライアントを作成 (読み取り専用 - サーバーコンポーネント用)
  */
-async function determineUserType(email: string): Promise<UserType> {
-  if (!email) {
-    return 'candidate';
-  }
-
-  try {
-    const supabase = getSupabaseAdminClient();
-
-    // company_usersテーブルでユーザーを検索
-    const { data: companyUsers, error } = await supabase
-      .from('company_users')
-      .select('id, email')
-      .eq('email', email);
-
-    console.log('🔍 determineUserType - Database query result:', {
-      email,
-      companyUsers,
-      count: companyUsers?.length || 0,
-      error: error?.message,
-    });
-
-    if (!error && companyUsers && companyUsers.length > 0) {
-      console.log('✅ determineUserType - User is company_user:', email);
-      return 'company_user';
+async function createSupabaseServerClientReadOnly() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // サーバーコンポーネントではクッキーを設定しない（読み取り専用）
+        },
+      },
     }
-
-    console.log(
-      '👤 determineUserType - User is candidate (not in company_users):',
-      email
-    );
-    return 'candidate';
-  } catch (error) {
-    console.error('❌ Error determining user type:', error);
-    return 'candidate';
-  }
+  );
 }
 
 /**
- * サーバーサイドで認証状態を確認（最適化版）
- * - Middlewareで事前検証されたヘッダーを優先的に使用
- * - ヘッダーがない場合のみJWT検証を実行
- * - SessionServiceとDIコンテナを完全に削除
+ * Supabase サーバークライアントを作成 (書き込み可能 - Server Actions用)
+ */
+async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            console.warn('Cookie setting error:', error);
+          }
+        },
+      },
+    }
+  );
+}
+
+/**
+ * Supabase認証を使用したサーバー認証チェック
  */
 export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
   try {
-    // まずMiddlewareが設定したヘッダーをチェック
-    const headerStore = await headers();
-    const isValidated = headerStore.get('x-auth-validated') === 'true';
-
-    if (isValidated) {
-      // Middlewareで既に検証済み
-      const userId = headerStore.get('x-user-id');
-      const email = headerStore.get('x-user-email');
-      const middlewareUserType = headerStore.get(
-        'x-user-type'
-      ) as UserType | null;
-
-      if (userId && email) {
-        // Middlewareで既に検証済みのユーザータイプを使用（DB クエリなし）
-        const userType = (middlewareUserType || 'candidate') as UserType;
-
-        // デバッグ用ログ
-        console.log('🔍 getServerAuth - Header result:', {
-          email,
-          middlewareUserType,
-          finalUserType: userType,
-          userId,
-        });
-
-        const user: User = {
-          id: userId,
-          email: email,
-          userType: userType,
-          name: email.split('@')[0],
-          emailConfirmed: true,
-          lastSignIn: new Date().toISOString(),
-          user_metadata: {
-            user_type: userType,
-            company_account_id:
-              userType === 'company_user'
-                ? headerStore.get('x-company-account-id') || undefined
-                : undefined,
-          },
-        };
-
-        return {
-          isAuthenticated: true,
-          user,
-          userType: userType,
-        };
-      }
-    }
-
-    // ヘッダーがない場合のみトークンを検証
-    const cookieStore = await cookies();
-    const token = cookieStore.get('supabase-auth-token')?.value;
-
-    if (!token) {
+    const supabase = await createSupabaseServerClientReadOnly();
+    
+    // Supabase セッションを取得
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
       return {
         isAuthenticated: false,
         user: null,
@@ -141,55 +94,26 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
       };
     }
 
-    // JWT直接検証（SessionService不使用）
-    try {
-      const payload = jwt.verify(token, JWT_SECRET) as any;
+    // user_metadataからユーザータイプを取得
+    const userType = (user.user_metadata?.user_type || 'candidate') as UserType;
+    
+    const authUser: User = {
+      id: user.id,
+      email: user.email || '',
+      userType,
+      name: user.user_metadata?.full_name || user.user_metadata?.name,
+      emailConfirmed: user.email_confirmed_at != null,
+      lastSignIn: user.last_sign_in_at || undefined,
+      user_metadata: user.user_metadata,
+    };
 
-      // トークンの有効期限チェック
-      if (!payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) {
-        return {
-          isAuthenticated: false,
-          user: null,
-          userType: null,
-        };
-      }
-
-      // JWTのmetadataからユーザータイプを取得（DBクエリなし）
-      const userType = (payload.user_metadata?.user_type ||
-        payload.user_metadata?.userType ||
-        'candidate') as UserType;
-      const userMetadata = payload.user_metadata || {};
-      const userName =
-        userMetadata.name ||
-        userMetadata.full_name ||
-        payload.email?.split('@')[0] ||
-        'User';
-
-      const user: User = {
-        id: payload.sub,
-        email: payload.email || '',
-        userType: userType,
-        name: userName,
-        emailConfirmed: true,
-        lastSignIn: new Date().toISOString(),
-        user_metadata: payload.user_metadata || {},
-      };
-
-      return {
-        isAuthenticated: true,
-        user,
-        userType: userType,
-      };
-    } catch (jwtError) {
-      console.error('JWT verification failed:', jwtError);
-      return {
-        isAuthenticated: false,
-        user: null,
-        userType: null,
-      };
-    }
+    return {
+      isAuthenticated: true,
+      user: authUser,
+      userType,
+    };
   } catch (error) {
-    console.error('Server auth error:', error);
+    console.error('❌ [AUTH] Server auth error:', error);
     return {
       isAuthenticated: false,
       user: null,
@@ -199,7 +123,7 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
 });
 
 /**
- * 候補者用認証チェック
+ * 候補者認証チェック
  */
 export async function requireCandidateAuth(): Promise<User | null> {
   const auth = await getServerAuth();
@@ -209,7 +133,7 @@ export async function requireCandidateAuth(): Promise<User | null> {
 }
 
 /**
- * 企業ユーザー用認証チェック
+ * 企業ユーザー認証チェック
  */
 export async function requireCompanyAuth(): Promise<User | null> {
   const auth = await getServerAuth();
@@ -219,7 +143,7 @@ export async function requireCompanyAuth(): Promise<User | null> {
 }
 
 /**
- * 管理者用認証チェック
+ * 管理者認証チェック
  */
 export async function requireAdminAuth(): Promise<User | null> {
   const auth = await getServerAuth();
@@ -243,7 +167,6 @@ export type AuthResult<T = any> = AuthErrorResult | AuthSuccessResult<T>;
 
 /**
  * 候補者認証を要求するヘルパー関数 (Server Actions用)
- * 最適化: validateJWTを使わず、getServerAuth()の結果を再利用
  */
 export async function requireCandidateAuthForAction(): Promise<
   AuthResult<{ candidateId: string }>
@@ -253,7 +176,7 @@ export async function requireCandidateAuthForAction(): Promise<
   if (!auth.isAuthenticated) {
     return {
       success: false,
-      error: '認証トークンが見つかりません',
+      error: '認証が必要です',
     };
   }
 
@@ -266,23 +189,24 @@ export async function requireCandidateAuthForAction(): Promise<
 
   return {
     success: true,
-    data: { candidateId: auth.user!.id },
+    data: {
+      candidateId: auth.user!.id,
+    },
   };
 }
 
 /**
- * 企業ユーザー認証を要求するヘルパー関数 (Server Actions用)
- * 最適化: validateJWTを使わず、getServerAuth()の結果を再利用
+ * 企業認証を要求するヘルパー関数 (Server Actions用)
  */
 export async function requireCompanyAuthForAction(): Promise<
-  AuthResult<{ companyUserId: string }>
+  AuthResult<{ companyUserId: string; companyAccountId: string }>
 > {
   const auth = await getServerAuth();
 
   if (!auth.isAuthenticated) {
     return {
       success: false,
-      error: '認証トークンがありません',
+      error: '認証が必要です',
     };
   }
 
@@ -293,150 +217,94 @@ export async function requireCompanyAuthForAction(): Promise<
     };
   }
 
+  const user = auth.user!;
+  const companyAccountId = user.user_metadata?.company_account_id;
+  const companyUserId = user.user_metadata?.company_user_id || user.id;
+
+  if (!companyAccountId) {
+    return {
+      success: false,
+      error: '企業アカウント情報が見つかりません。再ログインしてください。',
+    };
+  }
+
   return {
     success: true,
-    data: { companyUserId: auth.user!.id },
+    data: {
+      companyUserId,
+      companyAccountId,
+    },
   };
 }
 
 /**
- * 候補者認証（最適化版）
- * getServerAuth()の結果を再利用してパフォーマンス向上
+ * Supabaseユーザー認証を要求するヘルパー関数 (API用)
  */
-export const requireCandidateAuthWithSession = cache(
-  async (): Promise<
-    AuthResult<{
-      candidateId: string;
-      email: string;
-      fullName: string;
-    }>
-  > => {
-    const auth = await getServerAuth();
+export async function requireCandidateAuthForAPI(request?: Request): Promise<
+  AuthResult<{ candidateId: string }>
+> {
+  const auth = await getServerAuth();
 
-    if (!auth.isAuthenticated) {
-      return {
-        success: false,
-        error: '認証トークンがありません',
-      };
-    }
-
-    if (auth.userType !== 'candidate') {
-      return {
-        success: false,
-        error: '候補者としての認証が必要です',
-      };
-    }
-
-    const user = auth.user!;
-    return {
-      success: true,
-      data: {
-        candidateId: user.id,
-        email: user.email,
-        fullName: user.name || user.email.split('@')[0],
-      },
-    };
-  }
-);
-
-/**
- * 企業ユーザー認証（最適化版）
- * getServerAuth()の結果を再利用してパフォーマンス向上
- */
-export const requireCompanyAuthWithSession = cache(
-  async (): Promise<
-    AuthResult<{
-      companyUserId: string;
-      companyAccountId: string;
-      email: string;
-      fullName: string;
-    }>
-  > => {
-    const auth = await getServerAuth();
-
-    if (!auth.isAuthenticated) {
-      return {
-        success: false,
-        error: '認証トークンがありません',
-      };
-    }
-
-    if (auth.userType !== 'company_user') {
-      return {
-        success: false,
-        error: '企業ユーザーとしての認証が必要です',
-      };
-    }
-
-    const user = auth.user!;
-
-    // JWTのmetadataからcompany_account_idを取得（高速化）
-    const companyAccountId = user.user_metadata?.company_account_id;
-    if (!companyAccountId) {
-      return {
-        success: false,
-        error: '企業アカウント情報が見つかりません。再ログインしてください。',
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        companyUserId: user.id, // JWTのsubには正しいcompany_users.idが入っている
-        companyAccountId: companyAccountId,
-        email: user.email,
-        fullName: user.name || user.email.split('@')[0],
-      },
-    };
-  }
-);
-
-/**
- * API Routes用: 候補者認証を要求するヘルパー関数（最適化版）
- * - validateJWTを使用（既に最適化済み）
- * - Middlewareでの事前検証を活用
- */
-export async function requireCandidateAuthForAPI(
-  request: NextRequest
-): Promise<AuthResult<{ candidateId: string }>> {
-  // validateJWTは既に最適化されており、Middlewareのヘッダーを活用する
-  const { validateJWT } = await import('@/lib/server/auth/supabaseAuth');
-  const authResult = await validateJWT(request);
-
-  if (!authResult.isValid || !authResult.candidateId) {
+  if (!auth.isAuthenticated) {
     return {
       success: false,
-      error: authResult.error || '認証トークンが無効です',
+      error: '認証が必要です',
+    };
+  }
+
+  if (auth.userType !== 'candidate') {
+    return {
+      success: false,
+      error: '候補者としての認証が必要です',
     };
   }
 
   return {
     success: true,
-    data: { candidateId: authResult.candidateId },
+    data: {
+      candidateId: auth.user!.id,
+    },
   };
 }
 
 /**
- * API Routes用: 企業ユーザー認証を要求するヘルパー関数（最適化版）
- * - validateJWTを使用（既に最適化済み）
- * - Middlewareでの事前検証を活用
+ * 企業認証を要求するヘルパー関数 (API用)
  */
-export async function requireCompanyAuthForAPI(
-  request: NextRequest
-): Promise<AuthResult<{ companyUserId: string }>> {
-  // validateJWTは既に最適化されており、Middlewareのヘッダーを活用する
-  const { validateJWT } = await import('@/lib/server/auth/supabaseAuth');
-  const authResult = await validateJWT(request);
+export async function requireCompanyAuthForAPI(request?: Request): Promise<
+  AuthResult<{ companyUserId: string; companyAccountId: string }>
+> {
+  const auth = await getServerAuth();
 
-  if (!authResult.isValid || !authResult.companyUserId) {
+  if (!auth.isAuthenticated) {
     return {
       success: false,
-      error: authResult.error || '認証トークンが無効です',
+      error: '認証が必要です',
+    };
+  }
+
+  if (auth.userType !== 'company_user') {
+    return {
+      success: false,
+      error: '企業ユーザーとしての認証が必要です',
+    };
+  }
+
+  const user = auth.user!;
+  const companyAccountId = user.user_metadata?.company_account_id;
+  const companyUserId = user.user_metadata?.company_user_id || user.id;
+
+  if (!companyAccountId) {
+    return {
+      success: false,
+      error: '企業アカウント情報が見つかりません。再ログインしてください。',
     };
   }
 
   return {
     success: true,
-    data: { companyUserId: authResult.companyUserId },
+    data: {
+      companyUserId,
+      companyAccountId,
+    },
   };
 }

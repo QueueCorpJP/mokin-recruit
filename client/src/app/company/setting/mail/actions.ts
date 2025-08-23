@@ -1,10 +1,9 @@
 'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import nodemailer from 'nodemailer';
-import jwt from 'jsonwebtoken';
 
 // メールアドレス変更完了後の認証状態リフレッシュ用
 export async function refreshAuthState() {
@@ -46,19 +45,20 @@ export async function sendVerificationCode(email: string) {
     console.log('=== sendVerificationCode開始 ===');
     console.log('入力されたメールアドレス:', email);
     
-    const user = await requireCandidateAuth();
-    if (!user) {
-      console.log('認証エラー: ユーザーが見つかりません');
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      console.log('認証エラー:', authResult.error);
       return { error: 'Unauthorized' };
     }
-    console.log('認証成功 - ユーザーID:', user.id);
+    console.log('認証成功 - ユーザーID:', authResult.data.companyUserId);
+    const user = { id: authResult.data.companyUserId };
 
     const supabase = getSupabaseAdminClient();
 
     // 現在のメールアドレスを取得
     console.log('現在のメールアドレスを取得中...');
     const { data: currentUser, error: userError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .select('email')
       .eq('id', user.id)
       .single();
@@ -79,7 +79,7 @@ export async function sendVerificationCode(email: string) {
     // メールアドレス重複チェック（自分以外で同じメールアドレスが使用されていないか）
     console.log('他ユーザーの重複チェック中...');
     const { data: existingUser, error: checkError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .select('id, email')
       .eq('email', email)
       .neq('id', user.id)
@@ -104,14 +104,14 @@ export async function sendVerificationCode(email: string) {
     const { error: saveError } = await supabase
       .from('email_verification_codes')
       .upsert({
-        candidate_id: user.id,
+        company_user_id: user.id,
         email: email,
         code: verificationCode,
         created_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10分後に期限切れ
         used: false
       }, {
-        onConflict: 'candidate_id',
+        onConflict: 'company_user_id',
         ignoreDuplicates: false
       });
 
@@ -187,12 +187,13 @@ export async function verifyCode(code: string) {
     console.log('=== verifyCode開始 ===');
     console.log('入力された認証コード:', code);
     
-    const user = await requireCandidateAuth();
-    if (!user) {
-      console.log('認証エラー: ユーザーが見つかりません');
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      console.log('認証エラー:', authResult.error);
       return { error: 'Unauthorized' };
     }
-    console.log('認証成功 - ユーザーID:', user.id);
+    console.log('認証成功 - ユーザーID:', authResult.data.companyUserId);
+    const user = { id: authResult.data.companyUserId };
 
     const supabase = getSupabaseAdminClient();
     
@@ -200,7 +201,7 @@ export async function verifyCode(code: string) {
     const { data: verification, error: fetchError } = await supabase
       .from('email_verification_codes')
       .select('*')
-      .eq('candidate_id', user.id)
+      .eq('company_user_id', user.id)
       .eq('code', code.toUpperCase())
       .eq('used', false)
       .single();
@@ -220,7 +221,7 @@ export async function verifyCode(code: string) {
     // メールアドレス更新前に再度重複チェック（認証コード送信後に他の人が同じメールを使った可能性）
     console.log('最終重複チェックを実行中...');
     const { data: existingUser, error: finalCheckError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .select('id, email')
       .eq('email', verification.email)
       .neq('id', user.id)
@@ -251,7 +252,7 @@ export async function verifyCode(code: string) {
 
     // 更新前の現在のメールアドレスを取得
     const { data: beforeUpdate, error: beforeError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .select('email')
       .eq('id', user.id)
       .single();
@@ -261,7 +262,7 @@ export async function verifyCode(code: string) {
     console.log('更新予定のメールアドレス:', verification.email);
     
     const { data: updateResult, error: updateEmailError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .update({ 
         email: verification.email,
         updated_at: new Date().toISOString()
@@ -274,7 +275,7 @@ export async function verifyCode(code: string) {
       return { error: 'メールアドレスの更新に失敗しました' };
     }
 
-    console.log('✅ candidatesテーブルのメールアドレス更新成功!');
+    console.log('✅ company_usersテーブルのメールアドレス更新成功!');
     console.log('更新結果:', updateResult);
     
     // Supabase Authのメールアドレスも更新
@@ -287,20 +288,20 @@ export async function verifyCode(code: string) {
 
       if (authUpdateError) {
         console.error('Supabase Auth メールアドレス更新エラー:', authUpdateError);
-        // candidatesテーブルは更新されているので、警告として扱う
-        console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+        // company_usersテーブルは更新されているので、警告として扱う
+        console.warn('company_usersテーブルは更新済みですが、Supabase Authの更新に失敗しました');
       } else {
         console.log('✅ Supabase Authのメールアドレス更新成功!');
         console.log('Auth更新結果:', authUpdateResult);
       }
     } catch (authError) {
       console.error('Supabase Auth更新エラー:', authError);
-      console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+      console.warn('company_usersテーブルは更新済みですが、Supabase Authの更新に失敗しました');
     }
     
     // 更新後の確認
     const { data: afterUpdate, error: afterError } = await supabase
-      .from('candidates')
+      .from('company_users')
       .select('email')
       .eq('id', user.id)
       .single();
@@ -330,28 +331,8 @@ export async function verifyCode(code: string) {
         }
       });
       
-      // 新しいメールアドレスでJWTトークンを生成
-      console.log('新しいセッションを作成中...');
-      const JWT_SECRET = process.env.JWT_SECRET || 'mokin-recruit-super-secret-jwt-key-2024-production-change-me';
-      const newToken = jwt.sign(
-        {
-          userId: user.id,
-          email: verification.email,
-          userType: 'candidate',
-          emailConfirmed: true,
-          iat: Math.floor(Date.now() / 1000), // 現在時刻でトークンを発行
-        },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      cookieStore.set('supabase-auth-token', newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7 // 7日間
-      });
+      // Supabaseが新しいメールアドレスでセッションを再作成する
+      console.log('Supabaseセッションが自動的に更新されます');
       
       console.log('✅ セッション再生成完了!');
     } catch (sessionError) {
