@@ -1,44 +1,37 @@
-import { redirect } from 'next/navigation';
-import { getServerAuth } from '@/lib/auth/server';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 
-export default async function CandidateLayout({
+// 認証が必要なコンポーネントを遅延読み込み
+const CandidateLayoutServer = dynamic(
+  () => import('./CandidateLayoutServer'),
+  {
+    loading: () => (
+      <div className="min-h-screen bg-white">
+        <div className="h-[80px] bg-white border-b border-gray-200" />
+        <div className="animate-pulse bg-gray-100 h-4 w-full" />
+        <div className="min-h-[200px] bg-[#323232]" />
+      </div>
+    ),
+    ssr: true,
+  }
+);
+
+export default function CandidateLayout({
   children,
 }: {
-  
   children: React.ReactNode;
 }) {
-  // サーバーサイドで認証状態を確認（最適化済み: React cacheとMiddleware検証を活用）
-  const auth = await getServerAuth();
-
-  // 認証済みで候補者タイプでない場合は企業ページへリダイレクト
-  if (auth.isAuthenticated && auth.userType !== 'candidate') {
-    redirect('/company');
-  }
-
-  // 認証情報を整理
-  const userInfo = auth.isAuthenticated && auth.user ? {
-    name: auth.user.name || auth.user.email,
-    email: auth.user.email,
-    userType: auth.userType
-  } : undefined;
-
-  // すべての候補者ページは認証なしでもアクセス可能
-  // 個別のページで必要に応じて認証チェックを行う
   return (
-    <>
-      <AuthAwareNavigationServer 
-        variant="candidate" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-      {children}
-      <AuthAwareFooterServer 
-        variant="candidate" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-    </>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white">
+          <div className="h-[80px] bg-white border-b border-gray-200" />
+          <div className="animate-pulse bg-gray-100 h-4 w-full" />
+          <div className="min-h-[200px] bg-[#323232]" />
+        </div>
+      }
+    >
+      <CandidateLayoutServer>{children}</CandidateLayoutServer>
+    </Suspense>
   );
 }

@@ -125,7 +125,7 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
       .in('publication_type', ['public', 'members']);
     countQuery = applyFilters(countQuery, params);
 
-    // データ取得クエリ（独立したクエリを作成）
+    // データ取得クエリ（企業情報をJOINで一緒に取得）
     let dataQuery = supabase
       .from('job_postings')
       .select(`
@@ -140,7 +140,11 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
         appeal_points,
         created_at,
         image_urls,
-        company_account_id
+        company_account_id,
+        company_accounts (
+          id,
+          company_name
+        )
       `)
       .eq('status', 'PUBLISHED')
       .in('publication_type', ['public', 'members']);
@@ -149,14 +153,14 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    // 最初の並列実行 - カウントとデータを同時に取得
+    // 並列実行 - カウントとデータを同時に取得（JOINで企業情報も含まれる）
     const dbStartTime = performance.now();
     const [countResult, dataResult] = await Promise.all([
       countQuery,
       dataQuery
     ]);
     const dbEndTime = performance.now();
-    console.log(`[OPTIMIZED] Job queries completed in ${(dbEndTime - dbStartTime).toFixed(2)}ms`);
+    console.log(`[OPTIMIZED] Job queries with JOIN completed in ${(dbEndTime - dbStartTime).toFixed(2)}ms`);
 
     const { count, error: countError } = countResult;
     const { data: jobs, error: dataError } = dataResult;
@@ -173,30 +177,9 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
       };
     }
 
-    // 企業IDを抽出（重複を除去）
-    const companyIds = Array.from(new Set(jobs.map(job => job.company_account_id).filter(Boolean)));
-    
-    // 二次並列実行 - 企業情報を取得（必要な場合のみ）
-    let companyMap = new Map();
-    if (companyIds.length > 0) {
-      const companyStartTime = performance.now();
-      const { data: companies, error: companyError } = await supabase
-        .from('company_accounts')
-        .select('id, company_name')
-        .in('id', companyIds);
-      const companyEndTime = performance.now();
-      console.log(`[OPTIMIZED] Company queries completed in ${(companyEndTime - companyStartTime).toFixed(2)}ms for ${companyIds.length} unique companies`);
-      
-      if (!companyError && companies) {
-        companies.forEach(company => {
-          companyMap.set(company.id, company.company_name);
-        });
-      }
-    }
-
-    // データ変換
+    // データ変換（JOINされた企業情報を使用）
     const transformedJobs = jobs.map((job: any, index: number) => {
-      const companyName = companyMap.get(job.company_account_id) || `企業名未設定 #${index + 1}`;
+      const companyName = job.company_accounts?.company_name || `企業名未設定 #${index + 1}`;
       
       return {
         id: job.id,
@@ -229,7 +212,7 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
     const totalPages = Math.ceil(total / limit);
 
     const endTime = performance.now();
-    console.log(`[OPTIMIZED] Search completed in ${(endTime - startTime).toFixed(2)}ms - Jobs: ${transformedJobs.length}, Companies: ${companyIds.length}`);
+    console.log(`[OPTIMIZED] Search completed in ${(endTime - startTime).toFixed(2)}ms - Jobs: ${transformedJobs.length}`);
 
     return {
       success: true,

@@ -123,6 +123,7 @@ export function JobPostCard({
             )}
           </button>
         )}
+        <div className='relative aspect-[2/3] w-full md:w-[477px] overflow-hidden rounded-[5px]'>
         <img
           src={imageUrl}
           alt={imageAlt}
@@ -133,6 +134,7 @@ export function JobPostCard({
           }}
           className={imgClass}
         />
+        </div>
         <div
           className='w-full md:w-[731px] flex flex-col items-start relative md:h-[318px]'
           style={{

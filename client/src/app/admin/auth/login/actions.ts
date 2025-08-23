@@ -2,20 +2,32 @@
 
 import { cookies as nextCookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { container } from '@/lib/server/container';
-import { TYPES } from '@/lib/server/container/types';
-import { AuthController } from '@/lib/server/controllers/AuthController';
+import { createServerClient } from '@supabase/ssr';
 
-// AuthControllerのMockRequest/MockResponse型をローカルで再定義
-interface MockRequest {
-  body?: Record<string, unknown>;
-  headers?: Record<string, unknown>;
-  params?: Record<string, unknown>;
-  query?: Record<string, unknown>;
-}
-interface MockResponse {
-  status: (code: number) => MockResponse;
-  json: (data: unknown) => void;
+async function createSupabaseServerClient() {
+  const cookieStore = await nextCookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Server component context where cookies cannot be set
+            console.warn('Cookie setting error:', error);
+          }
+        },
+      },
+    }
+  );
 }
 
 function encodeQuery(obj: Record<string, string | null | undefined>): string {
@@ -30,45 +42,63 @@ export async function loginAction(formData: FormData) {
   const password = formData.get('password') as string;
   const userType = formData.get('userType') as string;
 
-  // AuthControllerの取得
-  const authController = container.get<AuthController>(TYPES.AuthController);
-
-  // Express.jsのReq/Resオブジェクトを模擬
-  let responseData: { [key: string]: any } = {};
-  let statusCode = 200;
-  const mockReq: MockRequest = { body: { email, password, userType } };
-  const mockRes: MockResponse = {
-    status: (code: number) => {
-      statusCode = code;
-      return mockRes;
-    },
-    json: (data: unknown) => {
-      responseData = data as { [key: string]: any };
-    },
-  };
-
-  await authController.login(mockReq, mockRes);
-
-  if (responseData.success && responseData.token) {
-    // クッキーをセット
-    const cookieStore = await nextCookies();
-    cookieStore.set('supabase-auth-token', responseData.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60, // 7日間
+  try {
+    // Supabase認証
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
+
+    if (error) {
+      console.error('Admin Supabase login error:', error);
+      const query = encodeQuery({
+        error: 'メールアドレスまたはパスワードが正しくありません',
+        email,
+      });
+      redirect(`/admin/auth/login?${query}`);
+    }
+
+    if (!data.user) {
+      const query = encodeQuery({
+        error: 'ログインに失敗しました',
+        email,
+      });
+      redirect(`/admin/auth/login?${query}`);
+    }
+
+    // ユーザータイプの検証
+    const actualUserType = data.user.user_metadata?.user_type || 'candidate';
+    if (actualUserType !== 'admin') {
+      const query = encodeQuery({
+        error: '管理者アカウントでログインしてください',
+        email,
+      });
+      redirect(`/admin/auth/login?${query}`);
+    }
+
+    console.log('✅ [ADMIN LOGIN] Success:', {
+      userId: data.user.id,
+      email: data.user.email,
+      userType: actualUserType
+    });
+
     // ログイン成功時は /admin へリダイレクト
     redirect('/admin');
-  }
 
-  // 失敗時はエラー内容をURLパラメータに載せてリダイレクト
-  const query = encodeQuery({
-    error: responseData.message || 'ログインに失敗しました',
-    errorDetail: responseData.errorDetail || '',
-    errorStage: responseData.errorStage || '',
-    email,
-  });
-  redirect(`/admin/auth/login?${query}`);
+  } catch (error) {
+    console.error('Admin login action error:', error);
+    
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      // Next.jsのredirectは内部的にエラーを投げるため、これは正常な動作
+      throw error;
+    }
+
+    // 失敗時はエラー内容をURLパラメータに載せてリダイレクト
+    const query = encodeQuery({
+      error: 'システムエラーが発生しました',
+      email,
+    });
+    redirect(`/admin/auth/login?${query}`);
+  }
 }

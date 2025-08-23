@@ -159,41 +159,55 @@ export async function saveArticle(formData: FormData) {
       }
     }
 
-    // タグを処理
+    // タグを処理（N+1問題を解決）
     if (tags.trim()) {
       const tagNames = tags.split(',').map(tag => tag.trim()).filter(Boolean);
-      for (const tagName of tagNames) {
-        // 既存のタグを検索
-        const { data: existingTag } = await supabase
+      
+      if (tagNames.length > 0) {
+        // 既存のタグを一括取得
+        const { data: existingTags, error: existingTagsError } = await supabase
           .from('article_tags')
-          .select('*')
-          .eq('name', tagName)
-          .single();
+          .select('id, name')
+          .in('name', tagNames);
 
-        let tagId;
-        if (existingTag) {
-          tagId = existingTag.id;
-        } else {
-          // 新しいタグを作成
-          const { data: newTag, error: tagError } = await supabase
-            .from('article_tags')
-            .insert({ name: tagName })
-            .select()
-            .single();
-
-          if (tagError) {
-            throw new Error(`タグの作成に失敗しました: ${tagError.message}`);
-          }
-          tagId = newTag.id;
+        if (existingTagsError) {
+          throw new Error(`既存タグの取得に失敗しました: ${existingTagsError.message}`);
         }
 
-        // タグを関連付け
-        const { error: tagRelationError } = await supabase
-          .from('article_tag_relations')
-          .upsert({ article_id: article.id, tag_id: tagId });
+        const existingTagMap = new Map(existingTags?.map(tag => [tag.name, tag.id]) || []);
+        const newTagNames = tagNames.filter(name => !existingTagMap.has(name));
 
-        if (tagRelationError) {
-          throw new Error(`タグの関連付けに失敗しました: ${tagRelationError.message}`);
+        // 新しいタグを一括作成
+        if (newTagNames.length > 0) {
+          const { data: newTags, error: newTagsError } = await supabase
+            .from('article_tags')
+            .insert(newTagNames.map(name => ({ name })))
+            .select('id, name');
+
+          if (newTagsError) {
+            throw new Error(`新規タグの作成に失敗しました: ${newTagsError.message}`);
+          }
+
+          // 新しいタグをマップに追加
+          newTags?.forEach(tag => {
+            existingTagMap.set(tag.name, tag.id);
+          });
+        }
+
+        // タグ関連付けを一括実行
+        const tagRelations = tagNames.map(tagName => ({
+          article_id: article.id,
+          tag_id: existingTagMap.get(tagName)
+        })).filter(relation => relation.tag_id);
+
+        if (tagRelations.length > 0) {
+          const { error: tagRelationError } = await supabase
+            .from('article_tag_relations')
+            .upsert(tagRelations);
+
+          if (tagRelationError) {
+            throw new Error(`タグの関連付けに失敗しました: ${tagRelationError.message}`);
+          }
         }
       }
     }

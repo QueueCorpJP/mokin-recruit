@@ -1,13 +1,9 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
 import { MessageListCard } from '@/components/ui/MessageListCard';
-import { JobPostCard } from '@/components/ui/JobPostCard';
-import React, { useEffect, useState } from 'react';
+import { NewJobPostCard } from '@/components/ui/NewJobPostCard';
 
 interface User {
   id: string;
@@ -33,56 +29,32 @@ interface JobPosting {
   [key: string]: any;
 }
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+}
+
+interface Message {
+  id: string;
+  sender: string;
+  body: string;
+  date: string;
+}
+
 interface CandidateDashboardClientProps {
   user: User;
+  tasks: Task[];
+  messages: Message[];
   jobs: JobPosting[];
 }
 
 export function CandidateDashboardClient({
   user,
+  tasks,
+  messages,
   jobs,
 }: CandidateDashboardClientProps) {
-  const router = useRouter();
-  const [showQuestionPopup, setShowQuestionPopup] = useState(false);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [messagesLoading, setMessagesLoading] = useState(true);
-  // jobs, jobsLoading, fetchJobs関連のstate/useEffectを削除
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/candidate/mypage/tasks');
-        const json = await res.json();
-        setTasks(json.tasks || []);
-      } catch {
-        setTasks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTasks();
-  }, []);
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      setMessagesLoading(true);
-      try {
-        const res = await fetch('/api/candidate/mypage/messages');
-        const json = await res.json();
-        setMessages(json.messages || []);
-      } catch {
-        setMessages([]);
-      } finally {
-        setMessagesLoading(false);
-      }
-    };
-    fetchMessages();
-  }, []);
-
-  // jobsはpropsで受け取るので、jobsLoadingやjobsのuseState/useEffectは不要
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -118,17 +90,7 @@ export function CandidateDashboardClient({
                     gap: '8px',
                   }}
                 >
-                  {loading ? (
-                    <div
-                      style={{
-                        padding: 24,
-                        textAlign: 'center',
-                        color: '#999',
-                      }}
-                    >
-                      読み込み中...
-                    </div>
-                  ) : tasks.length === 0 ? (
+                  {tasks.length === 0 ? (
                     <div
                       style={{
                         padding: 24,
@@ -211,13 +173,15 @@ export function CandidateDashboardClient({
                     ))
                   )}
                   {/* ページネーション（ダミー） */}
-                  <div>
-                    <Pagination
-                      currentPage={1}
-                      totalPages={1}
-                      onPageChange={() => {}}
-                    />
-                  </div>
+                  {tasks.length > 0 && (
+                    <div>
+                      <div className="flex justify-center items-center py-4">
+                        <span className="text-sm text-gray-500">
+                          {tasks.length}件のタスクがあります
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {/* やることリスト一覧ボタン（緑アウトライン・ピル型） */}
                 <div
@@ -251,13 +215,7 @@ export function CandidateDashboardClient({
                     新着メッセージ
                   </SectionHeading>
                 </div>
-                {messagesLoading ? (
-                  <div
-                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
-                  >
-                    読み込み中...
-                  </div>
-                ) : messages.length === 0 ? (
+                {messages.length === 0 ? (
                   <div
                     style={{ padding: 24, textAlign: 'center', color: '#999' }}
                   >
@@ -332,68 +290,21 @@ export function CandidateDashboardClient({
                       gap: 16,
                     }}
                   >
-                    {/* PC用（md以上） */}
-                    <div className='hidden md:flex flex-col gap-2'>
+                    {/* 新しいデザインの求人カード */}
+                    <div className='flex flex-col gap-4'>
                       {jobs.map(job => (
-                        <JobPostCard
-                          key={`pc-${job.id}`}
+                        <NewJobPostCard
+                          key={job.id}
                           imageUrl={
                             job.image_urls?.[0] ||
-                            'https://placehold.jp/477x318.png'
+                            'https://placehold.jp/300x200.png'
                           }
                           imageAlt='求人画像'
                           title={job.title}
                           tags={job.appeal_points || []}
                           companyName={job.company_name || ''}
-                          location={job.work_location || []}
-                          salary={
-                            job.salary_min && job.salary_max
-                              ? `年収${job.salary_min}万円〜${job.salary_max}万円`
-                              : ''
-                          }
-                          apell={job.appeal_points || []}
                           starred={false}
-                          onStarClick={() => {}}
-                          isFavoriteLoading={false}
-                          jobId={job.id}
-                          onClick={() => {}}
-                          className='mypage-jobpostcard-custom'
-                          variant='mypage-simple'
-                          rightColumnHeight='101px'
-                          cardHeight='149px'
-                          imageWidth={151.5}
-                          imageHeight={101}
-                          showApell={false}
-                        />
-                      ))}
-                    </div>
-                    {/* モバイル用（md未満） */}
-                    <div className='flex flex-col gap-4 md:hidden'>
-                      {jobs.map(job => (
-                        <JobPostCard
-                          key={`sp-${job.id}`}
-                          imageUrl={
-                            job.image_urls?.[0] ||
-                            'https://placehold.jp/477x318.png'
-                          }
-                          imageAlt='求人画像'
-                          title={job.title}
-                          tags={job.appeal_points || []}
-                          companyName={job.company_name || ''}
-                          location={job.work_location || []}
-                          salary={
-                            job.salary_min && job.salary_max
-                              ? `年収${job.salary_min}万円〜${job.salary_max}万円`
-                              : ''
-                          }
-                          apell={job.appeal_points || []}
-                          starred={false}
-                          onStarClick={() => {}}
-                          isFavoriteLoading={false}
-                          jobId={job.id}
-                          onClick={() => {}}
-                          showApell={false}
-                          imageHeight={208}
+                          showStar={false}
                         />
                       ))}
                     </div>

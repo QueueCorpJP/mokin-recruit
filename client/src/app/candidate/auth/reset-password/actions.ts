@@ -1,8 +1,32 @@
 'use server'
 
-import { container } from '@/lib/server/container';
-import { AuthController } from '@/lib/server/controllers/AuthController';
-import { TYPES } from '@/lib/server/container/types';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            console.warn('Cookie setting error:', error);
+          }
+        },
+      },
+    }
+  );
+}
 
 export interface CandidateResetPasswordFormData {
   email: string;
@@ -31,63 +55,31 @@ export async function candidateResetPasswordRequestAction(formData: CandidateRes
       };
     }
 
-    // AuthController を使用してパスワードリセット要求処理
-    const authController = container.get<AuthController>(TYPES.AuthController);
-    
-    // リクエストオブジェクトの模擬
-    const mockReq = {
-      body: {
-        email: formData.email.trim(),
-        userType: 'candidate'
+    // Supabase パスワードリセット
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      formData.email.trim(),
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/candidate/auth/reset-password/confirm`,
       }
-    } as any;
+    );
 
-    // レスポンスオブジェクトの模擬
-    let responseData: any = null;
-    let statusCode: number = 200;
-    const mockRes = {
-      status: (code: number) => {
-        statusCode = code;
-        return mockRes;
-      },
-      json: (data: any) => {
-        responseData = data;
-        return mockRes;
-      }
-    } as any;
-
-    await authController.forgotPassword(mockReq, mockRes);
-
-    // レスポンスデータをチェック
-    if (!responseData) {
+    if (error) {
+      console.error('Supabase reset password error:', error);
       return {
         success: false,
-        error: 'パスワードリセット要求の送信に失敗しました。'
-      };
-    }
-
-    if (statusCode !== 200 || !responseData.success) {
-      return {
-        success: false,
-        error: responseData.error || 'パスワードリセット要求の送信に失敗しました。'
+        error: 'パスワードリセット要求の送信に失敗しました'
       };
     }
 
     return {
       success: true,
-      message: responseData.message || 'パスワード再設定のご案内のメールをお送りいたします。'
+      message: 'パスワード再設定のご案内のメールをお送りいたします。'
     };
 
   } catch (error) {
     console.error('Candidate reset password request error:', error);
     
-    if (error instanceof Error) {
-      return {
-        success: false,
-        error: error.message || 'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
-      };
-    }
-
     return {
       success: false,
       error: 'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'

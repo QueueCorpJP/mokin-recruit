@@ -4,11 +4,22 @@ const config: Config = {
   content: [
     './src/app/**/*.{ts,tsx,js,jsx,mdx}',
     './src/components/**/*.{ts,tsx,js,jsx}',
-    './src/styles/**/*.{css,ts,tsx}',
     './src/lib/**/*.{ts,tsx,js,jsx}',
-    // shadcn/uiや他の外部UIコンポーネント
-    './node_modules/@shadcn/ui/dist/**/*.{js,ts,jsx,tsx}',
-    // 必要に応じて追加
+  ],
+  safelist: [
+    // 動的に生成されるクラス名を保護
+    'bg-[#0F9058]',
+    'bg-[#F9F9F9]',
+    'text-[#323232]',
+    'border-[#DCDCDC]',
+    'bg-[linear-gradient(0deg,_#17856F_0%,_#229A4E_100%)]',
+    // グリッド関連
+    'grid-cols-1',
+    'grid-cols-2',
+    'grid-cols-3',
+    // アニメーション
+    'animate-pulse',
+    'animate-spin',
   ],
   darkMode: ['class', '.dark'],
   theme: {
@@ -58,7 +69,6 @@ const config: Config = {
     },
   },
   plugins: [
-    require('tw-animate-css'),
     require('@tailwindcss/typography'),
     require('@tailwindcss/forms'),
     // shadcn/uiのプラグインや他の必要なプラグイン

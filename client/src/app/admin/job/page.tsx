@@ -35,10 +35,7 @@ async function fetchAdminJobList(
 }
 
 export default async function Job() {
-  const auth = await getServerAuth();
-  if (!auth.isAuthenticated || auth.userType !== 'admin') {
-    redirect('/admin/auth/login');
-  }
+ 
   const jobs = await fetchAdminJobList(1, 10);
   return <JobTableClient jobs={jobs} />;
 }

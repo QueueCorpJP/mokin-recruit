@@ -8,10 +8,8 @@ import './globals.css';
 // NOTE: DI Container initialization moved to API routes for better performance
 // Previously: import '@/lib/server/container/bindings';
 
-// Providers
-import { QueryProvider } from '@/providers/QueryProvider';
-import { AuthProvider } from '@/providers/AuthProvider';
-import { ToastProvider } from '@/components/ui/toast';
+// Providers - 並列読み込み用に最適化
+import { CombinedProviders } from '@/providers/CombinedProviders';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
@@ -30,22 +28,18 @@ const AuthAwareFooter = dynamic(
   }
 );
 
-// フォント最適化
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  preload: true,
-  variable: '--font-inter',
-});
-
+// フォント最適化 - 遅延読み込み戦略
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
   display: 'swap',
-  preload: true,
+  preload: false, // 初回読み込み高速化
   variable: '--font-noto-sans-jp',
-  weight: ['400', '500', '700'],
+  weight: ['400', '700'], // 重要な重みのみ
   adjustFontFallback: true,
+  fallback: ['system-ui', 'arial', 'sans-serif'],
 });
+
+// Interは削除（システムフォントで代用）
 
 export const metadata: Metadata = {
   title: 'Mokin Recruit - 転職プラットフォーム',
@@ -74,15 +68,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='ja' className={`${inter.variable} ${notoSansJP.variable}`}>
+    <html lang='ja' className={`${notoSansJP.variable}`}>
       <head>
-        {/* DNS Prefetch */}
+        {/* DNS Prefetch - 遅延で必要時のみ */}
         <link rel='dns-prefetch' href='//fonts.googleapis.com' />
         <link rel='dns-prefetch' href='//fonts.gstatic.com' />
-
-        {/* Preconnect - 最適化 */}
-        <link rel='preconnect' href='https://fonts.googleapis.com' crossOrigin='' />
-        <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='' />
         
 
         {/* Critical CSS - レスポンシブ対応のちらつき防止 */}
@@ -99,11 +89,11 @@ export default function RootLayout({
             }
             
             html { 
-              font-family: var(--font-noto-sans-jp), 'Noto Sans JP Fallback', system-ui, sans-serif; 
+              font-family: var(--font-noto-sans-jp), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
             }
             
             .font-noto-sans-jp { 
-              font-family: var(--font-noto-sans-jp), 'Noto Sans JP Fallback', sans-serif; 
+              font-family: var(--font-noto-sans-jp), system-ui, sans-serif; 
             }
             
             /* フォント読み込み中のレイアウトシフト防止 */
@@ -118,14 +108,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`antialiased`}>
-        <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              {children}
-              {/* <StagewiseToolbarClient /> */}
-            </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <CombinedProviders>
+          {children}
+          {/* <StagewiseToolbarClient /> */}
+        </CombinedProviders>
       </body>
     </html>
   );
