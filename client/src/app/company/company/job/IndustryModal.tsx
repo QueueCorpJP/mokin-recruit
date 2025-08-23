@@ -4,20 +4,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface IndustryModalProps {
   selectedIndustries: string[];
-  setSelectedIndustries: (industries: string[]) => void;
+  onIndustriesChange: (industries: string[]) => void;
+  onClose: () => void;
 }
 
-export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries, setSelectedIndustries }) => {
+export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries, onIndustriesChange }) => {
   const MAX_SELECTION = 3;
 
   const handleCheckboxChange = (industry: string) => {
     if (selectedIndustries.includes(industry)) {
       // 既に選択されている場合は削除
-      setSelectedIndustries(selectedIndustries.filter((i) => i !== industry));
+      onIndustriesChange(selectedIndustries.filter((i) => i !== industry));
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedIndustries.length < MAX_SELECTION) {
-        setSelectedIndustries([...selectedIndustries, industry]);
+        onIndustriesChange([...selectedIndustries, industry]);
       }
     }
   };
@@ -32,14 +33,7 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
   );
 
   return (
-   
-      
-   <div>
-  
     <div className="space-y-6">
-      {/* 業種カテゴリーテキスト */}
-      
-
       {/* 制限メッセージ */}
       {selectedIndustries.length >= MAX_SELECTION && (
         <div className="p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md">
@@ -49,25 +43,31 @@ export const IndustryModal: React.FC<IndustryModalProps> = ({ selectedIndustries
         </div>
       )}
 
-      {/* 業種チェックボックスリスト（2列グリッド） */}
-      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-        {allIndustries.map((industryItem) => {
-          const isSelected = selectedIndustries.includes(industryItem.value);
-          const isDisabled = !isSelected && selectedIndustries.length >= MAX_SELECTION;
-          
-          return (
-            <div key={industryItem.key} className="flex items-center">
-              <Checkbox 
-                label={industryItem.value} 
-                checked={isSelected} 
-                onChange={() => handleCheckboxChange(industryItem.value)}
-                disabled={isDisabled}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      {/* 業種カテゴリーごとに表示 */}
+      {industryCategories.map(category => (
+        <div key={category.name} className="space-y-4">
+          <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-[#323232]">
+            {category.name}
+          </h3>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            {category.industries.map((industry) => {
+              const isSelected = selectedIndustries.includes(industry);
+              const isDisabled = !isSelected && selectedIndustries.length >= MAX_SELECTION;
+              
+              return (
+                <div key={industry} className="flex items-center">
+                  <Checkbox 
+                    label={industry} 
+                    checked={isSelected} 
+                    onChange={() => handleCheckboxChange(industry)}
+                    disabled={isDisabled}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }; 

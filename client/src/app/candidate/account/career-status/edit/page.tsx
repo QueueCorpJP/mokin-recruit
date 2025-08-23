@@ -35,22 +35,22 @@ type CareerStatusFormData = z.infer<typeof careerStatusSchema>;
 
 // 転職希望時期の選択肢
 const TRANSFER_DESIRED_TIME_OPTIONS = [
-  { value: '', label: '未選択' },
-  { value: 'immediately', label: 'すぐにでも' },
-  { value: '1-3months', label: '1〜3ヶ月以内' },
-  { value: '3-6months', label: '3〜6ヶ月以内' },
-  { value: '6months-1year', label: '6ヶ月〜1年以内' },
-  { value: 'over-1year', label: '1年以降' },
-  { value: 'undecided', label: '時期未定' },
+  { value: '未選択', label: '未選択' },
+  { value: 'すぐにでも', label: 'すぐにでも' },
+  { value: '1〜3ヶ月以内', label: '1〜3ヶ月以内' },
+  { value: '3〜6ヶ月以内', label: '3〜6ヶ月以内' },
+  { value: '6ヶ月〜1年以内', label: '6ヶ月〜1年以内' },
+  { value: '1年以降', label: '1年以降' },
+  { value: '時期未定', label: '時期未定' },
 ];
 
 // 現在の活動状況の選択肢
 const CURRENT_ACTIVITY_STATUS_OPTIONS = [
-  { value: '', label: '未選択' },
-  { value: 'active', label: '積極的に転職活動中' },
-  { value: 'casual', label: 'よい求人があれば検討' },
-  { value: 'research', label: '情報収集中' },
-  { value: 'inactive', label: '活動していない' },
+  { value: '未選択', label: '未選択' },
+  { value: '積極的に転職活動中', label: '積極的に転職活動中' },
+  { value: 'よい求人があれば検討', label: 'よい求人があれば検討' },
+  { value: '情報収集中', label: '情報収集中' },
+  { value: '活動していない', label: '活動していない' },
 ];
 
 // 候補者_転職活動状況編集ページ
