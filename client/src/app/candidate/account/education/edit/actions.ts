@@ -85,6 +85,13 @@ export async function updateEducationData(formData: FormData) {
 
     // フォームデータをパース
     const data: EducationFormData = {
+      // 基本学歴情報
+      final_education: formData.get('finalEducation')?.toString() || '',
+      school_name: formData.get('schoolName')?.toString() || '',
+      department: formData.get('department')?.toString() || '',
+      graduation_year: formData.get('graduationYear')?.toString() || '',
+      graduation_month: formData.get('graduationMonth')?.toString() || '',
+      
       university_name: formData.get('university_name')?.toString() || '',
       university_department: formData.get('university_department')?.toString() || '',
       university_graduation_year: formData.get('university_graduation_year')?.toString() || '',
@@ -129,16 +136,11 @@ export async function updateEducationData(formData: FormData) {
     const { data: updateData, error: updateError } = await supabase
       .from('education')
       .update({
-        university_name: data.university_name || null,
-        university_department: data.university_department || null,
-        university_graduation_year: data.university_graduation_year || null,
-        university_graduation_month: data.university_graduation_month || null,
-        university_graduation_status: data.university_graduation_status || null,
-        vocational_school_name: data.vocational_school_name || null,
-        vocational_school_department: data.vocational_school_department || null,
-        vocational_school_graduation_year: data.vocational_school_graduation_year || null,
-        vocational_school_graduation_month: data.vocational_school_graduation_month || null,
-        vocational_school_graduation_status: data.vocational_school_graduation_status || null,
+        final_education: data.final_education || null,
+        school_name: data.school_name || null,
+        department: data.department || null,
+        graduation_year: data.graduation_year ? parseInt(data.graduation_year) : null,
+        graduation_month: data.graduation_month ? parseInt(data.graduation_month) : null,
       })
       .eq('candidate_id', candidateId)
       .select();
@@ -153,16 +155,11 @@ export async function updateEducationData(formData: FormData) {
         .from('education')
         .insert({
           candidate_id: candidateId,
-          university_name: data.university_name || null,
-          university_department: data.university_department || null,
-          university_graduation_year: data.university_graduation_year || null,
-          university_graduation_month: data.university_graduation_month || null,
-          university_graduation_status: data.university_graduation_status || null,
-          vocational_school_name: data.vocational_school_name || null,
-          vocational_school_department: data.vocational_school_department || null,
-          vocational_school_graduation_year: data.vocational_school_graduation_year || null,
-          vocational_school_graduation_month: data.vocational_school_graduation_month || null,
-          vocational_school_graduation_status: data.vocational_school_graduation_status || null,
+          final_education: data.final_education || null,
+          school_name: data.school_name || null,
+          department: data.department || null,
+          graduation_year: data.graduation_year ? parseInt(data.graduation_year) : null,
+          graduation_month: data.graduation_month ? parseInt(data.graduation_month) : null,
         });
       
       if (insertError) {
@@ -175,7 +172,7 @@ export async function updateEducationData(formData: FormData) {
       throw new Error('学歴情報の更新に失敗しました');
     }
 
-    // candidatesテーブルのupdated_atも更新
+    // candidatesテーブルのupdated_atのみ更新
     const { error: candidateError } = await supabase
       .from('candidates')
       .update({
@@ -193,7 +190,7 @@ export async function updateEducationData(formData: FormData) {
     if (data.industries && data.industries.length > 0) {
       // 既存の業種データを削除
       await supabase
-        .from('candidate_industries')
+        .from('work_experience')
         .delete()
         .eq('candidate_id', candidateId);
 
@@ -201,15 +198,17 @@ export async function updateEducationData(formData: FormData) {
       const industriesData = data.industries.map(industry => ({
         candidate_id: candidateId,
         industry_id: industry.id,
-        experience_years: industry.experienceYears || null,
+        industry_name: industry.name,
+        experience_years: parseInt(industry.experienceYears?.replace('年', '') || '0'),
       }));
 
       const { error: industriesError } = await supabase
-        .from('candidate_industries')
+        .from('work_experience')
         .insert(industriesData);
 
       if (industriesError) {
         console.error('Industries update error:', industriesError);
+        console.error('Industries data that failed to insert:', industriesData);
       }
     }
 
@@ -217,7 +216,7 @@ export async function updateEducationData(formData: FormData) {
     if (data.jobTypes && data.jobTypes.length > 0) {
       // 既存の職種データを削除
       await supabase
-        .from('candidate_job_types')
+        .from('job_type_experience')
         .delete()
         .eq('candidate_id', candidateId);
 
@@ -225,11 +224,12 @@ export async function updateEducationData(formData: FormData) {
       const jobTypesData = data.jobTypes.map(jobType => ({
         candidate_id: candidateId,
         job_type_id: jobType.id,
-        experience_years: jobType.experienceYears || null,
+        job_type_name: jobType.name,
+        experience_years: parseInt(jobType.experienceYears?.replace('年', '') || '0'),
       }));
 
       const { error: jobTypesError } = await supabase
-        .from('candidate_job_types')
+        .from('job_type_experience')
         .insert(jobTypesData);
 
       if (jobTypesError) {

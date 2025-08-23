@@ -37,7 +37,7 @@ import dynamic from 'next/dynamic';
 // );
 
 // React Query Devtools（開発環境のみ）
-export const ReactQueryDevtools = dynamic(
+export const ReactQueryDevtools: React.ComponentType<any> = dynamic(
   () => import('@tanstack/react-query-devtools').then(mod => ({ default: mod.ReactQueryDevtools })),
   { 
     ssr: false,

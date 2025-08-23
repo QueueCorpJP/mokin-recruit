@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect, useMemo } from 'react';
-import { getEducationData } from './actions';
+import { getEducationData, updateEducationData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
@@ -166,10 +166,35 @@ export default function CandidateEducationEditPage() {
   const onSubmit = async (data: EducationFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: APIを通じてデータを保存
-      console.log('Saving education data:', data);
-      router.push('/candidate/account/education');
-    } catch {
+      const formData = new FormData();
+      
+      // 基本的な学歴情報
+      formData.append('finalEducation', data.finalEducation);
+      formData.append('schoolName', data.schoolName);
+      formData.append('department', data.department);
+      formData.append('graduationYear', data.graduationYear);
+      formData.append('graduationMonth', data.graduationMonth);
+      
+      // 業種・職種情報をJSON形式で追加
+      if (data.industries && data.industries.length > 0) {
+        formData.append('industries', JSON.stringify(data.industries));
+      }
+      if (data.jobTypes && data.jobTypes.length > 0) {
+        formData.append('jobTypes', JSON.stringify(data.jobTypes));
+      }
+
+      const result = await updateEducationData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/education');
+      } else {
+        console.error('保存エラー:', result.error);
+        alert('保存に失敗しました。もう一度お試しください。');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('保存処理でエラーが発生しました:', error);
+      alert('保存に失敗しました。もう一度お試しください。');
       setIsSubmitting(false);
     }
   };
@@ -567,8 +592,8 @@ export default function CandidateEducationEditPage() {
                 <div className="space-y-6 lg:space-y-2">
                   {/* 業種 */}
                   <div className="flex flex-col lg:flex-row lg:gap-6">
-                    <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-start lg:items-center mb-2 lg:mb-0">
-                      <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px] py-2 lg:py-0">
+                    <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] md:w-[200px] flex items-center mb-2 lg:mb-0">
+                      <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
                         業種
                       </div>
                     </div>
@@ -577,24 +602,25 @@ export default function CandidateEducationEditPage() {
                         <button
                           type="button"
                           onClick={() => setIsIndustryModalOpen(true)}
-                          className="border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2"
+                          className="border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 w-full md:w-auto rounded-[32px] flex text-center justify-center items-center gap-2"
                         >
                           業種を選択
                         </button>
                         {/* 選択された業種 */}
                         {(selectedIndustries || []).length > 0 && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1">
                             {(selectedIndustries || []).map((industry) => (
                               <div
                                 key={industry.id}
-                                className="inline-flex items-center gap-1"
+                                className="inline-flex items-center gap-[2px]"
                               >
-                                <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]">
+                                <div className="flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]">
+                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none truncate">
                                   {industry.name}
                                 </span>
-                                <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative">
+                                <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full">
                                   <select
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none"
+                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     value={industry.experienceYears || ''}
                                     onChange={(e) =>
                                       updateIndustryExperience(
@@ -624,12 +650,13 @@ export default function CandidateEducationEditPage() {
                                     />
                                   </svg>
                                 </div>
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() =>
                                     removeIndustry(industry.id)
                                   }
-                                  className="bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]"
+                                  className="bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]"
                                 >
                                   <svg
                                     width="13"
@@ -659,8 +686,8 @@ export default function CandidateEducationEditPage() {
 
                   {/* 職種 */}
                   <div className="flex flex-col lg:flex-row lg:gap-6">
-                    <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-start lg:items-center mb-2 lg:mb-0">
-                      <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px] py-2 lg:py-0">
+                    <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                      <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
                         職種
                       </div>
                     </div>
@@ -669,24 +696,25 @@ export default function CandidateEducationEditPage() {
                         <button
                           type="button"
                           onClick={() => setIsJobTypeModalOpen(true)}
-                          className="border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2"
+                          className="border border-[#999999] text-[#323232] text-[16px] w-full md:w-auto text-center justify-center items-center font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2"
                         >
                           職種を選択
                         </button>
                         {/* 選択された職種 */}
                         {(selectedJobTypes || []).length > 0 && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1">
                             {(selectedJobTypes || []).map((jobType) => (
                               <div
                                 key={jobType.id}
-                                className="inline-flex items-center gap-1"
+                                className="inline-flex items-center gap-[2px]"
                               >
-                                <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]">
+                                <div className="flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]">
+                                <span className="bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none truncate">
                                   {jobType.name}
                                 </span>
-                                <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative">
+                                <div className="bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full">
                                   <select
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none"
+                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     value={jobType.experienceYears || ''}
                                     onChange={(e) =>
                                       updateJobTypeExperience(
@@ -716,12 +744,13 @@ export default function CandidateEducationEditPage() {
                                     />
                                   </svg>
                                 </div>
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() =>
                                     removeJobType(jobType.id)
                                   }
-                                  className="bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]"
+                                  className="bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]"
                                 >
                                   <svg
                                     width="13"

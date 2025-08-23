@@ -108,7 +108,30 @@ export async function getCandidateData(candidateId: string): Promise<CandidateDa
       return null;
     }
 
-    return data as CandidateData;
+    // 業種データを取得
+    const { data: industriesData } = await supabase
+      .from('work_experience')
+      .select(`
+        industry_name,
+        experience_years
+      `)
+      .eq('candidate_id', candidateId);
+
+    // 職種データを取得
+    const { data: jobTypesData } = await supabase
+      .from('job_type_experience')
+      .select(`
+        job_type_name,
+        experience_years
+      `)
+      .eq('candidate_id', candidateId);
+
+    // 業種・職種の名前を配列として格納
+    const candidateData = data as CandidateData;
+    candidateData.desired_industries = industriesData?.map(item => item.industry_name).filter(Boolean) || [];
+    candidateData.desired_job_types = jobTypesData?.map(item => item.job_type_name).filter(Boolean) || [];
+
+    return candidateData;
   } catch (error) {
     console.error('データベースエラー:', error);
     return null;

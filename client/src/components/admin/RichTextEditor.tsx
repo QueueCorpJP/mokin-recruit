@@ -208,288 +208,233 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   return (
     <div className="border border-gray-300 rounded-none">
       {/* ツールバー */}
-      <div className="border-b border-gray-300 p-2 flex flex-wrap gap-1">
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('bold') ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('bold') ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          B
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('italic') ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('italic') ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          I
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            // H2を適用またはトグル
-            editor.chain().focus().toggleHeading({ level: 2 }).run();
-          }}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('heading', { level: 2 }) ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('heading', { level: 2 }) ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          H2
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('heading', { level: 3 }) ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('heading', { level: 3 }) ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          H3
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('bulletList') ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('bulletList') ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          箇条書き
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('orderedList') ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('orderedList') ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          番号付き
-        </button>
-        <button
-          type="button"
-          onClick={addImage}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          画像
-        </button>
-        <button
-          type="button"
-          onClick={insertTable}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          テーブル
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors ${
-            editor.isActive('blockquote') ? 'border-b-2 border-[#323232]' : ''
-          }`}
-          style={{
-            borderBottom: editor.isActive('blockquote') ? '2px solid #323232' : 'none',
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          監修者
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            // テーブル内にカーソルがあるかチェック
-            if (editor.isActive('table')) {
-              editor.chain().focus().deleteTable().run();
-            } else {
-              // テーブルが選択されていない場合は、より積極的に削除を試みる
-              const { state } = editor;
-              const { selection } = state;
-              
-              // カーソル位置を調整してテーブル削除を試行
-              editor.chain().focus().selectParentNode().deleteTable().run();
-            }
-          }}
-          disabled={!editor.isActive('table')}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          テーブル削除
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().addRowAfter().run()}
-          disabled={!editor.isActive('table')}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          行追加
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().deleteRow().run()}
-          disabled={!editor.isActive('table')}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            fontFamily: 'Noto Sans JP, sans-serif',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          行削除
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().addColumnAfter().run()}
-          disabled={!editor.isActive('table')}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          列追加
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().deleteColumn().run()}
-          disabled={!editor.isActive('table')}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          列削除
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            editor?.chain()
-              .focus()
-              .insertContent([
-                {
-                  type: 'quote',
-                  content: [{ type: 'text', text: '引用テキストがここに入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。' }],
-                },
-              ])
-              .run();
-          }}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold',
-            borderRight: '1px solid #ddd'
-          }}
-        >
-          引用
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            editor?.chain()
-              .focus()
-              .insertContent([
-                {
-                  type: 'tableOfContents',
-                  content: [
-                    {
-                      type: 'tocTitle',
-                      content: [{ type: 'text', text: '目次' }],
-                    },
-                    {
-                      type: 'tocItem',
-                      content: [{ type: 'text', text: '項目1' }],
-                    },
-                    {
-                      type: 'tocItem',
-                      content: [{ type: 'text', text: '項目2' }],
-                    },
-                    {
-                      type: 'tocItem',
-                      content: [{ type: 'text', text: '項目3' }],
-                    },
-                  ],
-                },
-              ])
-              .run();
-          }}
-          className="h-8 px-3 bg-transparent border-0 text-[#323232] hover:text-[#000] transition-colors"
-          style={{
-            boxShadow: 'none',
-            fontWeight: 'bold'
-          }}
-        >
-          目次
-        </button>
+      <div className="bg-gray-100 border-b border-gray-300 p-2">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`inline-flex items-center justify-center w-8 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm font-medium ${
+              editor.isActive('bold') ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="太字"
+          >
+            <strong>B</strong>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`inline-flex items-center justify-center w-8 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm font-medium italic ${
+              editor.isActive('italic') ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="斜体"
+          >
+            I
+          </button>
+
+          <div className="w-px h-6 bg-gray-400 mx-1"></div>
+
+          <button
+            type="button"
+            onClick={() => {
+              // H2を適用またはトグル
+              editor.chain().focus().toggleHeading({ level: 2 }).run();
+            }}
+            className={`inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm font-medium ${
+              editor.isActive('heading', { level: 2 }) ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="見出し2"
+          >
+            H2
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={`inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm font-medium ${
+              editor.isActive('heading', { level: 3 }) ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="見出し3"
+          >
+            H3
+          </button>
+
+          <div className="w-px h-6 bg-gray-400 mx-1"></div>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm ${
+              editor.isActive('bulletList') ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="箇条書き"
+          >
+            リスト
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm ${
+              editor.isActive('orderedList') ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="番号付きリスト"
+          >
+            番号リスト
+          </button>
+
+          <div className="w-px h-6 bg-gray-400 mx-1"></div>
+
+          <button
+            type="button"
+            onClick={addImage}
+            className="inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm"
+            title="画像を追加"
+          >
+            画像
+          </button>
+
+          <button
+            type="button"
+            onClick={insertTable}
+            className="inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm"
+            title="テーブルを挿入"
+          >
+            テーブル
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm ${
+              editor.isActive('blockquote') ? 'bg-gray-200 border-gray-500' : ''
+            }`}
+            title="監修者"
+          >
+            監修者
+          </button>
+
+          <div className="w-px h-6 bg-gray-400 mx-1"></div>
+
+          <button
+            type="button"
+            onClick={() => {
+              // テーブル内にカーソルがあるかチェック
+              if (editor.isActive('table')) {
+                editor.chain().focus().deleteTable().run();
+              } else {
+                // テーブルが選択されていない場合は、より積極的に削除を試みる
+                const { state } = editor;
+                const { selection } = state;
+                
+                // カーソル位置を調整してテーブル削除を試行
+                editor.chain().focus().selectParentNode().deleteTable().run();
+              }
+            }}
+            disabled={!editor.isActive('table')}
+            className="inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title="テーブル削除"
+          >
+            削除
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            disabled={!editor.isActive('table')}
+            className="inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title="行追加"
+          >
+            +行
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            disabled={!editor.isActive('table')}
+            className="inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title="行削除"
+          >
+            -行
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            disabled={!editor.isActive('table')}
+            className="inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title="列追加"
+          >
+            +列
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            disabled={!editor.isActive('table')}
+            className="inline-flex items-center justify-center px-2 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title="列削除"
+          >
+            -列
+          </button>
+
+          <div className="w-px h-6 bg-gray-400 mx-1"></div>
+
+          <button
+            type="button"
+            onClick={() => {
+              editor?.chain()
+                .focus()
+                .insertContent([
+                  {
+                    type: 'quote',
+                    content: [{ type: 'text', text: '引用テキストがここに入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。' }],
+                  },
+                ])
+                .run();
+            }}
+            className="inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm"
+            title="引用を挿入"
+          >
+            引用
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              editor?.chain()
+                .focus()
+                .insertContent([
+                  {
+                    type: 'tableOfContents',
+                    content: [
+                      {
+                        type: 'tocTitle',
+                        content: [{ type: 'text', text: '目次' }],
+                      },
+                      {
+                        type: 'tocItem',
+                        content: [{ type: 'text', text: '項目1' }],
+                      },
+                      {
+                        type: 'tocItem',
+                        content: [{ type: 'text', text: '項目2' }],
+                      },
+                      {
+                        type: 'tocItem',
+                        content: [{ type: 'text', text: '項目3' }],
+                      },
+                    ],
+                  },
+                ])
+                .run();
+            }}
+            className="inline-flex items-center justify-center px-3 h-8 border border-gray-400 bg-white hover:bg-gray-50 rounded text-sm"
+            title="目次を挿入"
+          >
+            目次
+          </button>
+        </div>
       </div>
 
       {/* エディタエリア */}
