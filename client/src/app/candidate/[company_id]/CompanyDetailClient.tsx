@@ -305,9 +305,6 @@ export default function CompanyDetailClient({
               {/* スマホ時は掲載求人の上に配置、PC時は右側サイドバー */}
               <div className='order-2 lg:order-2 w-full lg:w-[320px] bg-white rounded-[10px] p-6 max-w-full overflow-hidden'>
                 <div className='flex flex-col gap-6 items-start justify-start max-w-full overflow-hidden'>
-                  <h2 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                    {companyData.companyName}
-                  </h2>
 
                   {/* 代表者 */}
                   <div className='flex flex-col gap-2 items-start justify-start w-full'>
@@ -414,11 +411,24 @@ export default function CompanyDetailClient({
                         業種
                       </div>
                     </div>
-                    <div className='min-w-0 max-w-full overflow-hidden'>
-                      <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto">
-                        {companyData.industry.split('、').slice(0, 2).join('、')}
-                        {companyData.industry.split('、').length > 2 && '...'}
-                      </div>
+                    <div className='flex flex-wrap gap-2 items-start justify-start w-full'>
+                      {companyData.industry.split('、').slice(0, 3).map((industry, index) => (
+                        <div
+                          key={index}
+                          className='bg-[#d2f1da] flex gap-2.5 items-center justify-center px-4 py-0 rounded-[5px] shrink-0'
+                        >
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[#0f9058] text-[14px] text-center whitespace-nowrap tracking-[1.4px] leading-[2]">
+                            {industry.trim()}
+                          </span>
+                        </div>
+                      ))}
+                      {companyData.industry.split('、').length > 3 && (
+                        <div className='bg-[#d2f1da] flex gap-2.5 items-center justify-center px-4 py-0 rounded-[5px] shrink-0'>
+                          <span className="font-['Noto_Sans_JP'] font-medium text-[#0f9058] text-[14px] text-center whitespace-nowrap tracking-[1.4px] leading-[2]">
+                            ...
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -602,16 +612,11 @@ export default function CompanyDetailClient({
                           </h3>
                         </div>
 
-                        {/* PC画面時：タイトルが先 */}
+                        {/* PC画面時：タグが先 */}
                         <div className='hidden md:block'>
-                          {/* PC：タイトル */}
-                          <h3 className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.6] tracking-[1.6px] text-[#0f9058] break-words overflow-wrap-break-word">
-                            {job?.title || '求人テキストが入ります | 求人テキストが入ります'}
-                          </h3>
-                          
                           {/* PC：タグ */}
                           <div className='flex flex-col gap-1'>
-                            <div className='flex flex-row gap-2 items-start flex-wrap mt-1'>
+                            <div className='flex flex-row gap-2 items-start flex-wrap'>
                               {(job ? [
                                 getEmploymentTypeInJapanese(job.employment_type),
                                 ...(job.work_location?.slice(0, 2) || [])
@@ -625,6 +630,11 @@ export default function CompanyDetailClient({
                               ))}
                             </div>
                           </div>
+                          
+                          {/* PC：タイトル */}
+                          <h3 className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.6] tracking-[1.6px] text-[#0f9058] break-words overflow-wrap-break-word mt-1">
+                            {job?.title || '求人テキストが入ります | 求人テキストが入ります'}
+                          </h3>
                         </div>
                       </div>
                       

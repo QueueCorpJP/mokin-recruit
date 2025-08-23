@@ -26,12 +26,12 @@ export default async function CandidateRecentJobPage() {
     const items = Array.isArray(data) ? data : [];
     return (
       <div className="flex flex-wrap gap-2">
-        {items.map((item: string, idx: number) => (
+        {items.map((item: any, idx: number) => (
           <span
             key={idx}
             className="bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
           >
-            {item}
+            {typeof item === 'string' ? item : item.name || item}
           </span>
         ))}
       </div>
@@ -163,7 +163,7 @@ export default async function CandidateRecentJobPage() {
                     <div className="flex flex-col lg:flex-row lg:gap-6">
                       <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
                         <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          会社名
+                          企業名
                         </div>
                       </div>
                       <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">

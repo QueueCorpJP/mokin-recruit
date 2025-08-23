@@ -64,10 +64,10 @@ export async function updateCandidateProfile(formData: FormData) {
       .from('candidates')
       .update({
         gender: gender as 'male' | 'female' | 'unspecified',
-        prefecture,
+        current_residence: prefecture,
         birth_date: birthDate,
         phone_number: phoneNumber || null,
-        current_income: currentIncome || null,
+        current_salary: currentIncome || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', candidateId);

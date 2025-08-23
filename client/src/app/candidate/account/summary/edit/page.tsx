@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { getSummaryData, updateSummaryData } from './actions';
 
 // フォームスキーマ定義
 const summarySchema = z.object({
@@ -21,8 +22,9 @@ export default function CandidateSummaryEditPage() {
   const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { register, handleSubmit } = useForm<SummaryFormData>({
+  const { register, handleSubmit, reset } = useForm<SummaryFormData>({
     resolver: zodResolver(summarySchema),
     defaultValues: {
       jobSummary: '',
@@ -30,14 +32,49 @@ export default function CandidateSummaryEditPage() {
     },
   });
 
-  const onSubmit = async () => {
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getSummaryData();
+        if (data) {
+          reset({
+            jobSummary: data.jobSummary || '',
+            selfPR: data.selfPr || '',
+          });
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
+  const onSubmit = async (data: SummaryFormData) => {
     setIsSubmitting(true);
-    // TODO: API呼び出し
-    // Form data: data
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData();
+      formData.append('jobSummary', data.jobSummary || '');
+      formData.append('selfPr', data.selfPR || '');
+
+      const result = await updateSummaryData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/summary');
+      } else {
+        console.error('更新エラー:', result.error);
+        alert('更新に失敗しました。もう一度お試しください。');
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
       setIsSubmitting(false);
-      router.push('/candidate/account/summary');
-    }, 1000);
+    }
   };
 
   const handleCancel = () => {

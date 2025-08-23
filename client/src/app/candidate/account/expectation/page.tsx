@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireCandidateAuth } from '@/lib/auth/server';
-import { getCandidateData } from '@/lib/server/candidate/candidateData';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import DataRow from '@/components/candidate/account/DataRow';
@@ -15,12 +15,12 @@ const renderTags = (data: any) => {
   const items = Array.isArray(data) ? data : [];
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item: string, idx: number) => (
+      {items.map((item: any, idx: number) => (
         <span
           key={idx}
           className="bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
         >
-          {item}
+          {typeof item === 'string' ? item : item.name || item}
         </span>
       ))}
     </div>
@@ -35,11 +35,36 @@ export default async function CandidateExpectationPage() {
     redirect('/candidate/auth/login');
   }
 
-  // 候補者データを取得
-  const candidateData = await getCandidateData(user.id);
-  if (!candidateData) {
-    redirect('/candidate/auth/login');
-  }
+  // expectationsテーブルからデータを取得
+  const supabase = getSupabaseAdminClient();
+  const { data: expectationData } = await supabase
+    .from('expectations')
+    .select(`
+      desired_income,
+      desired_industries,
+      desired_job_types,
+      desired_work_locations,
+      desired_work_styles
+    `)
+    .eq('candidate_id', user.id)
+    .single();
+
+  // JSONデータをパース
+  const parseJsonSafely = (jsonStr: string) => {
+    try {
+      return JSON.parse(jsonStr || '[]');
+    } catch {
+      return [];
+    }
+  };
+
+  const expectationDisplay = {
+    desiredIncome: expectationData?.desired_income || '',
+    industries: parseJsonSafely(expectationData?.desired_industries || '[]'),
+    jobTypes: parseJsonSafely(expectationData?.desired_job_types || '[]'),
+    workLocations: parseJsonSafely(expectationData?.desired_work_locations || '[]'),
+    workStyles: parseJsonSafely(expectationData?.desired_work_styles || '[]'),
+  };
 
   return (
     <PageLayout 
@@ -52,28 +77,28 @@ export default async function CandidateExpectationPage() {
           {/* 希望年収 */}
           <DataRow label="希望年収">
             <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
-              {candidateData.desired_salary || candidateData.current_income || '未設定'}
+              {expectationDisplay.desiredIncome || '未設定'}
             </div>
           </DataRow>
 
           {/* 希望業種 */}
           <DataRow label="希望業種">
-            {renderTags(candidateData.desired_industries)}
+            {renderTags(expectationDisplay.industries)}
           </DataRow>
 
           {/* 希望職種 */}
           <DataRow label="希望職種">
-            {renderTags(candidateData.desired_job_types)}
+            {renderTags(expectationDisplay.jobTypes)}
           </DataRow>
 
           {/* 希望勤務地 */}
           <DataRow label="希望勤務地">
-            {renderTags(candidateData.desired_locations)}
+            {renderTags(expectationDisplay.workLocations)}
           </DataRow>
 
           {/* 興味のある働き方 */}
           <DataRow label="興味のある働き方">
-            {renderTags(candidateData.interested_work_styles)}
+            {renderTags(expectationDisplay.workStyles)}
           </DataRow>
         </div>
       </ContentCard>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { industryCategories } from '@/app/company/company/job/types';
+import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,11 +48,12 @@ export default function IndustrySelectModal({
   };
 
   // カテゴリごとに業種を整理
-  const allIndustries = industryCategories.flatMap(category => 
-    category.industries.map(industry => ({
-      key: `${category.name}-${industry}`, // 一意のキー
-      value: industry, // 実際の値
-      category: category.name
+  const allIndustries = INDUSTRY_GROUPS.flatMap(group => 
+    group.industries.map(industry => ({
+      key: `${group.name}-${industry.name}`, // 一意のキー
+      value: industry.name, // 実際の日本語名
+      name: industry.name, // 表示用の名前
+      category: group.name
     }))
   );
 
@@ -92,7 +93,7 @@ export default function IndustrySelectModal({
               return (
                 <div key={industryItem.key} className="flex items-center">
                   <Checkbox 
-                    label={industryItem.value} 
+                    label={industryItem.name} 
                     checked={isSelected} 
                     onChange={() => handleCheckboxChange(industryItem.value)}
                     disabled={isDisabled}

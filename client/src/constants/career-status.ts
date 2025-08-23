@@ -15,24 +15,24 @@ export const CURRENT_ACTIVITY_STATUS_OPTIONS = [
 ] as const;
 
 export const PROGRESS_STATUS_OPTIONS = [
-  { value: 'application', label: '応募済み' },
-  { value: 'document_screening', label: '書類選考中' },
-  { value: 'first_interview', label: '一次面接' },
-  { value: 'second_interview', label: '二次面接' },
-  { value: 'final_interview', label: '最終面接' },
-  { value: 'offer', label: '内定' },
-  { value: 'declined', label: '辞退' },
-  { value: 'rejected', label: '不合格' },
+  { value: '応募済み', label: '応募済み' },
+  { value: '書類選考中', label: '書類選考中' },
+  { value: '一次面接', label: '一次面接' },
+  { value: '二次面接', label: '二次面接' },
+  { value: '最終面接', label: '最終面接' },
+  { value: '内定', label: '内定' },
+  { value: '辞退', label: '辞退' },
+  { value: '不合格', label: '不合格' },
 ] as const;
 
 export const DECLINE_REASON_OPTIONS = [
-  { value: 'salary', label: '給与・待遇' },
-  { value: 'job_content', label: '仕事内容' },
-  { value: 'work_location', label: '勤務地' },
-  { value: 'company_culture', label: '社風・文化' },
-  { value: 'career_path', label: 'キャリアパス' },
-  { value: 'work_life_balance', label: 'ワークライフバランス' },
-  { value: 'other', label: 'その他' },
+  { value: '給与・待遇', label: '給与・待遇' },
+  { value: '仕事内容', label: '仕事内容' },
+  { value: '勤務地', label: '勤務地' },
+  { value: '社風・文化', label: '社風・文化' },
+  { value: 'キャリアパス', label: 'キャリアパス' },
+  { value: 'ワークライフバランス', label: 'ワークライフバランス' },
+  { value: 'その他', label: 'その他' },
 ] as const;
 
 // 業種の選択肢（Step1のprofileから流用してカスタマイズ）

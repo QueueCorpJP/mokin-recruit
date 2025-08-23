@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { getRecentJobData } from './actions';
+import { getRecentJobData, updateRecentJobData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
@@ -147,14 +147,39 @@ export default function CandidateRecentJobEditPage() {
     fetchInitialData();
   }, [reset]);
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: RecentJobFormData) => {
     setIsSubmitting(true);
-    // TODO: API呼び出し
-    // Form data: data
-    setTimeout(() => {
+    
+    try {
+      // 最初の職歴のみを送信（現状は1つのみサポート）
+      const jobHistory = data.jobHistories[0];
+      
+      const formData = new FormData();
+      formData.append('companyName', jobHistory.companyName || '');
+      formData.append('departmentPosition', jobHistory.departmentPosition || '');
+      formData.append('startYear', jobHistory.startYear || '');
+      formData.append('startMonth', jobHistory.startMonth || '');
+      formData.append('endYear', jobHistory.endYear || '');
+      formData.append('endMonth', jobHistory.endMonth || '');
+      formData.append('isCurrentlyWorking', jobHistory.isCurrentlyWorking.toString());
+      formData.append('jobDescription', jobHistory.jobDescription || '');
+      formData.append('industries', JSON.stringify(jobHistory.industries || []));
+      formData.append('jobTypes', JSON.stringify(jobHistory.jobTypes || []));
+
+      const result = await updateRecentJobData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/recent-job');
+      } else {
+        console.error('更新エラー:', result.error);
+        alert('更新に失敗しました。もう一度お試しください。');
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
       setIsSubmitting(false);
-      router.push('/candidate/account/recent-job');
-    }, 1000);
+    }
   };
 
   const handleCancel = () => {
@@ -838,7 +863,7 @@ export default function CandidateRecentJobEditPage() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    職務経歴を追加
+                    企業を追加
                   </button>
                 </div>
               </div>

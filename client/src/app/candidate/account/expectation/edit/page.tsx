@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { getExpectationData } from './actions';
+import { getExpectationData, updateExpectationData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
@@ -117,14 +117,31 @@ export default function CandidateExpectationEditPage() {
     fetchInitialData();
   }, [reset]);
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: ExpectationFormData) => {
     setIsSubmitting(true);
-    // TODO: API呼び出し
+    
+    try {
+      const formData = new FormData();
+      formData.append('desiredIncome', data.desiredIncome || '');
+      formData.append('industries', JSON.stringify(data.industries || []));
+      formData.append('jobTypes', JSON.stringify(data.jobTypes || []));
+      formData.append('workLocations', JSON.stringify(data.workLocations || []));
+      formData.append('workStyles', JSON.stringify(data.workStyles || []));
 
-    setTimeout(() => {
+      const result = await updateExpectationData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/expectation');
+      } else {
+        console.error('更新エラー:', result.error);
+        alert('更新に失敗しました。もう一度お試しください。');
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
       setIsSubmitting(false);
-      router.push('/candidate/account/expectation');
-    }, 1000);
+    }
   };
 
   const handleCancel = () => {
@@ -503,9 +520,9 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {workLocations && workLocations.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {(workLocations || []).map((location) => (
+                          {(workLocations || []).map((location, index) => (
                             <div
-                              key={location.id}
+                              key={`location-${location.id || index}`}
                               className="bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2"
                             >
                               {location.name}

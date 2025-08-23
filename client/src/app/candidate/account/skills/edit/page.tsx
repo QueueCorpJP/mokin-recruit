@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { getSkillsData } from './actions';
+import { getSkillsData, updateSkillsData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -105,14 +105,30 @@ export default function CandidateSkillsEditPage() {
     fetchInitialData();
   }, [reset]);
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: SkillsFormData) => {
     setIsSubmitting(true);
-    // TODO: API呼び出し
-    // Form data: data
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData();
+      formData.append('englishLevel', data.englishLevel || '');
+      formData.append('qualifications', data.qualifications || '');
+      formData.append('skills', JSON.stringify(data.skills || []));
+      formData.append('otherLanguages', JSON.stringify(data.otherLanguages || []));
+
+      const result = await updateSkillsData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/skills');
+      } else {
+        console.error('更新エラー:', result.error);
+        alert('更新に失敗しました。もう一度お試しください。');
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
       setIsSubmitting(false);
-      router.push('/candidate/account/skills');
-    }, 1000);
+    }
   };
 
   const handleCancel = () => {
@@ -270,7 +286,7 @@ export default function CandidateSkillsEditPage() {
               <div className="mb-6">
                 <p className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-8 text-left">
                   語学・スキル情報を編集できます。
-                  <br className="lg:hidden" />
+                  <br className="hidden md:block" />
                   内容は履歴書・職務経歴書にも反映されます。
                 </p>
               </div>
@@ -412,7 +428,7 @@ export default function CandidateSkillsEditPage() {
                           </div>
                         ))}
                         {/* 言語を追加ボタン */}
-                        <div className="flex justify-center lg:justify-start mt-4">
+                        <div className="flex justify-center justify-center mt-4">
                           <button
                             type="button"
                             onClick={addOtherLanguage}
