@@ -148,10 +148,25 @@ export async function saveRecentJobAction(
     });
 
     try {
+      // 単一職歴を配列形式に変換（複数職歴対応準備）
+      const jobHistoryEntry = {
+        companyName,
+        departmentPosition,
+        startYear,
+        startMonth,
+        endYear: endYear || '',
+        endMonth: endMonth || '',
+        isCurrentlyWorking,
+        industries,
+        jobTypes,
+        jobDescription,
+      };
+
       // Update candidates table with recent job info
       const { error: candidateUpdateError } = await supabaseAdmin
         .from('candidates')
         .update({
+          // 既存フィールドに保存（互換性維持）
           recent_job_company_name: companyName,
           recent_job_department_position: departmentPosition,
           recent_job_start_year: startYear,
@@ -159,7 +174,8 @@ export async function saveRecentJobAction(
           recent_job_end_year: endYear || null,
           recent_job_end_month: endMonth || null,
           recent_job_is_currently_working: isCurrentlyWorking,
-          recent_job_industries: industries,
+          // 複数職歴対応：単一職歴でも配列として保存
+          recent_job_industries: [jobHistoryEntry],
           recent_job_types: jobTypes,
           recent_job_description: jobDescription,
           recent_job_updated_at: new Date().toISOString(),

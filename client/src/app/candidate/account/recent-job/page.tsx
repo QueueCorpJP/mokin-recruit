@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireCandidateAuth } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
+import { getRecentJobData } from './edit/actions';
 import EditButton from '@/components/candidate/account/EditButton';
 
 // 候補者_職務経歴確認ページ
@@ -16,6 +17,10 @@ export default async function CandidateRecentJobPage() {
   if (!candidateData) {
     redirect('/candidate/auth/login');
   }
+
+  // 職歴データを取得
+  const jobData = await getRecentJobData();
+  const jobHistories = jobData?.jobHistories || [];
 
   // 配列データを安全に処理する関数
   const renderTags = (data: any) => {
@@ -39,12 +44,12 @@ export default async function CandidateRecentJobPage() {
   };
 
   // 職歴期間の表示
-  const renderPeriod = () => {
-    const startYear = candidateData.recent_job_start_year;
-    const startMonth = candidateData.recent_job_start_month;
-    const endYear = candidateData.recent_job_end_year;
-    const endMonth = candidateData.recent_job_end_month;
-    const isCurrentlyWorking = candidateData.recent_job_is_currently_working;
+  const renderPeriod = (jobHistory: any) => {
+    const startYear = jobHistory.startYear;
+    const startMonth = jobHistory.startMonth;
+    const endYear = jobHistory.endYear;
+    const endMonth = jobHistory.endMonth;
+    const isCurrentlyWorking = jobHistory.isCurrentlyWorking;
 
     if (!startYear || !startMonth) {
       return <span className="text-[#323232] text-[16px] font-medium tracking-[1.6px]">未設定</span>;
@@ -156,88 +161,100 @@ export default async function CandidateRecentJobPage() {
             {/* 職務経歴カード */}
             <div className="bg-white rounded-3xl lg:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 pb-6 pt-10 lg:p-10 w-full max-w-[728px]">
               {/* 職務経歴データ */}
-              <div className="space-y-5 lg:space-y-2">
-                <div className="border border-[#dcdcdc] rounded-[10px] p-4">
-                  <div className="space-y-5 lg:space-y-2">
-                    {/* 会社名 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          企業名
+              <div className="space-y-5 lg:space-y-6">
+                {jobHistories.length > 0 ? (
+                  jobHistories.map((jobHistory, index) => (
+                    <div key={index} className="border border-[#dcdcdc] rounded-[10px] p-4">
+                      <div className="space-y-5 lg:space-y-2">
+                        {/* 会社名 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
+                              企業名
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
+                              {jobHistory.companyName || '未設定'}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
-                          {candidateData.recent_job_company_name || '未設定'}
+
+                        {/* 部署名・役職名 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
+                              部署名・役職名
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
+                              {jobHistory.departmentPosition || '未設定'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 在籍期間 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
+                              在籍期間
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            {renderPeriod(jobHistory)}
+                          </div>
+                        </div>
+
+                        {/* 業種 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
+                              業種
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            {renderTags(jobHistory.industries)}
+                          </div>
+                        </div>
+
+                        {/* 職種 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
+                              職種
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            {renderTags(jobHistory.jobTypes)}
+                          </div>
+                        </div>
+
+                        {/* 業務内容 */}
+                        <div className="flex flex-col lg:flex-row lg:gap-6">
+                          <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-start lg:items-center mb-2 lg:mb-0">
+                            <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px] py-2 lg:py-0">
+                              業務内容
+                            </div>
+                          </div>
+                          <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
+                            <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-relaxed">
+                              {jobHistory.jobDescription || '未設定'}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-
-                    {/* 部署名・役職名 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          部署名・役職名
-                        </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
-                          {candidateData.recent_job_department_position || '未設定'}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 在籍期間 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          在籍期間
-                        </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        {renderPeriod()}
-                      </div>
-                    </div>
-
-                    {/* 業種 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          業種
-                        </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        {renderTags(candidateData.recent_job_industries)}
-                      </div>
-                    </div>
-
-                    {/* 職種 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">
-                          職種
-                        </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        {renderTags(candidateData.recent_job_types)}
-                      </div>
-                    </div>
-
-                    {/* 業務内容 */}
-                    <div className="flex flex-col lg:flex-row lg:gap-6">
-                      <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-start lg:items-center mb-2 lg:mb-0">
-                        <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px] py-2 lg:py-0">
-                          業務内容
-                        </div>
-                      </div>
-                      <div className="px-2 lg:px-0 lg:py-6 lg:flex-1">
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-relaxed">
-                          {candidateData.recent_job_description || '未設定'}
-                        </div>
+                  ))
+                ) : (
+                  <div className="border border-[#dcdcdc] rounded-[10px] p-4">
+                    <div className="text-center py-10">
+                      <div className="text-[16px] text-[#999999] font-medium tracking-[1.6px]">
+                        職務経歴が登録されていません
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 

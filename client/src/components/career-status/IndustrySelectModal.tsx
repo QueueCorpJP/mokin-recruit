@@ -28,15 +28,15 @@ export default function IndustrySelectModal({
     setSelectedIndustries(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (industry: string) => {
-    if (selectedIndustries.includes(industry)) {
+  const handleCheckboxChange = (industryId: string) => {
+    if (selectedIndustries.includes(industryId)) {
       // 既に選択されている場合は削除
-      const newIndustries = selectedIndustries.filter(i => i !== industry);
+      const newIndustries = selectedIndustries.filter(i => i !== industryId);
       setSelectedIndustries(newIndustries);
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedIndustries.length < maxSelections) {
-        const newIndustries = [...selectedIndustries, industry];
+        const newIndustries = [...selectedIndustries, industryId];
         setSelectedIndustries(newIndustries);
       }
     }
@@ -50,8 +50,8 @@ export default function IndustrySelectModal({
   // カテゴリごとに業種を整理
   const allIndustries = INDUSTRY_GROUPS.flatMap(group => 
     group.industries.map(industry => ({
-      key: `${group.name}-${industry.name}`, // 一意のキー
-      value: industry.name, // 実際の日本語名
+      key: `${group.name}-${industry.id}`, // 一意のキー
+      id: industry.id, // 業種ID
       name: industry.name, // 表示用の名前
       category: group.name
     }))
@@ -87,7 +87,7 @@ export default function IndustrySelectModal({
           {/* 業種チェックボックスリスト（2列グリッド） */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {allIndustries.map((industryItem) => {
-              const isSelected = selectedIndustries.includes(industryItem.value);
+              const isSelected = selectedIndustries.includes(industryItem.id);
               const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
               
               return (
@@ -95,7 +95,7 @@ export default function IndustrySelectModal({
                   <Checkbox 
                     label={industryItem.name} 
                     checked={isSelected} 
-                    onChange={() => handleCheckboxChange(industryItem.value)}
+                    onChange={() => handleCheckboxChange(industryItem.id)}
                     disabled={isDisabled}
                   />
                 </div>
