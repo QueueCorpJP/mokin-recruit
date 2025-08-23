@@ -771,7 +771,8 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
               >
                 <IndustryModal
                   selectedIndustries={industries}
-                  setSelectedIndustries={setIndustries}
+                  onIndustriesChange={setIndustries}
+                  onClose={() => setIndustryModalOpen(false)}
                 />
               </Modal>
             )}
