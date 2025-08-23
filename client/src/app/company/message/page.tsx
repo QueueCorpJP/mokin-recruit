@@ -16,7 +16,8 @@ export default async function CompanyMessagePage() {
     );
   }
 
-  const { companyUserId, fullName } = authResult.data;
+  const { companyUserId } = authResult.data;
+  const fullName = (authResult.data as any).fullName;
   console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,

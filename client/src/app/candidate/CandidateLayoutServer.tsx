@@ -12,8 +12,8 @@ export default async function CandidateLayoutServer({
 
   // 認証情報を整理
   const userInfo = auth.isAuthenticated && auth.user ? {
-    name: auth.user.name || auth.user.email,
-    email: auth.user.email,
+    name: auth.user.name || auth.user.email || '',
+    email: auth.user.email || '',
     userType: auth.userType
   } : undefined;
 

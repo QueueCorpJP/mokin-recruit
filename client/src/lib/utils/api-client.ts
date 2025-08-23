@@ -178,7 +178,7 @@ export const getCurrentUserId = async (): Promise<string | null> => {
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.id || null;
+  return (authInfo as any).userInfo?.id || authInfo.user?.id || null;
 };
 
 /**
@@ -194,7 +194,7 @@ export const getCurrentUserType = async (): Promise<string | null> => {
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.userType || authInfo.userInfo?.type || null;
+  return (authInfo as any).userInfo?.userType || (authInfo as any).userInfo?.type || null;
 };
 
 /**
@@ -210,7 +210,7 @@ export const getCompanyAccountId = async (): Promise<string | null> => {
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.profile?.companyAccountId || null;
+  return (authInfo as any).userInfo?.profile?.companyAccountId || null;
 };
 
 /**
@@ -429,9 +429,10 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
 
     // ユーザータイプに応じてAPIエンドポイントを決定
     let endpoint: string;
-    if (userType === 'candidate') {
+    const resolvedUserType = await userType;
+    if (resolvedUserType === 'candidate') {
       endpoint = '/api/candidate/favorite';
-    } else if (userType === 'company_user') {
+    } else if (resolvedUserType === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {
@@ -488,9 +489,10 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
 
     // ユーザータイプに応じてAPIエンドポイントを決定
     let endpoint: string;
-    if (userType === 'candidate') {
+    const resolvedUserType2 = await userType;
+    if (resolvedUserType2 === 'candidate') {
       endpoint = `/api/candidate/favorite?job_posting_id=${jobPostingId}`;
-    } else if (userType === 'company_user') {
+    } else if (resolvedUserType2 === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {

@@ -1,9 +1,14 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
 import { MessageListCard } from '@/components/ui/MessageListCard';
-import { NewJobPostCard } from '@/components/ui/NewJobPostCard';
+import { JobPostCard } from '@/components/ui/JobPostCard';
+import { useState, useTransition } from 'react';
+import { addToFavoritesServer, removeFromFavoritesServer } from '../search/setting/actions';
 
 interface User {
   id: string;
@@ -26,6 +31,7 @@ interface JobPosting {
   salary_max?: number;
   job_type?: string[];
   industry?: string[];
+  starred?: boolean;
   [key: string]: any;
 }
 
@@ -55,6 +61,51 @@ export function CandidateDashboardClient({
   messages,
   jobs,
 }: CandidateDashboardClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [jobList, setJobList] = useState<JobPosting[]>(jobs);
+  const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
+
+  // スター切り替え（サーバーアクション使用）
+  const handleStarClick = async (jobId: string) => {
+    const job = jobList.find(j => j.id === jobId);
+    if (!job) return;
+    
+    const isCurrentlyStarred = job.starred || false;
+
+    // ローディング状態を設定
+    setFavoriteLoading(prev => ({ ...prev, [jobId]: true }));
+
+    try {
+      startTransition(async () => {
+        let response;
+        if (isCurrentlyStarred) {
+          response = await removeFromFavoritesServer(jobId);
+        } else {
+          response = await addToFavoritesServer(jobId);
+        }
+
+        if (response.success) {
+          // 表示データを更新
+          setJobList(jobs =>
+            jobs.map((job) =>
+              job.id === jobId ? { ...job, starred: !isCurrentlyStarred } : job
+            )
+          );
+        } else {
+          console.error('お気に入り操作エラー:', response.error);
+          alert(response.error || 'お気に入り操作に失敗しました');
+        }
+        
+        // ローディング状態を解除
+        setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
+      });
+    } catch (error) {
+      console.error('お気に入り操作エラー:', error);
+      alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
+      setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
+    }
+  };
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -290,10 +341,10 @@ export function CandidateDashboardClient({
                       gap: 16,
                     }}
                   >
-                    {/* 新しいデザインの求人カード */}
+                    {/* 求人カード */}
                     <div className='flex flex-col gap-4'>
-                      {jobs.map(job => (
-                        <NewJobPostCard
+                      {jobList.map(job => (
+                        <JobPostCard
                           key={job.id}
                           imageUrl={
                             job.image_urls?.[0] ||
@@ -303,8 +354,20 @@ export function CandidateDashboardClient({
                           title={job.title}
                           tags={job.appeal_points || []}
                           companyName={job.company_name || ''}
-                          starred={false}
-                          showStar={false}
+                          location={Array.isArray(job.work_location) ? job.work_location.join('、') : job.work_location || ''}
+                          salary={job.salary_min && job.salary_max ? `${job.salary_min}万円〜${job.salary_max}万円` : '給与応相談'}
+                          starred={job.starred || false}
+                          apell={[]}
+                          variant="mypage-simple"
+                          showStar={true}
+                          showCompanyName={true}
+                          showLocation={false}
+                          showSalary={false}
+                          showApell={false}
+                          imageWidth={103.5}
+                          imageHeight={69}
+                          isFavoriteLoading={favoriteLoading[job.id]}
+                          onStarClick={() => handleStarClick(job.id)}
                         />
                       ))}
                     </div>
@@ -312,6 +375,7 @@ export function CandidateDashboardClient({
                 )}
                 {/* もっと見るボタン（Figma仕様） */}
                 <button
+                  onClick={() => router.push('/candidate/search/setting')}
                   style={{
                     width: '100%',
                     display: 'flex',

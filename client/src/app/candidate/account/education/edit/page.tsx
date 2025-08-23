@@ -178,11 +178,12 @@ export default function CandidateEducationEditPage() {
     router.push('/candidate/account/education');
   };
 
-  const handleIndustryConfirm = (industries: Industry[]) => {
-    const industriesWithExperience = industries.map((industry) => {
-      const existing = selectedIndustries.find((i) => i.id === industry.id);
+  const handleIndustryConfirm = (industries: string[]) => {
+    const industriesWithExperience = industries.map((industryId) => {
+      const existing = selectedIndustries.find((i) => i.id === industryId);
       return {
-        ...industry,
+        id: industryId,
+        name: industryId,
         experienceYears: existing?.experienceYears || '',
       };
     });
@@ -214,11 +215,12 @@ export default function CandidateEducationEditPage() {
     });
   };
 
-  const handleJobTypeConfirm = (jobTypes: JobType[]) => {
-    const jobTypesWithExperience = jobTypes.map((jobType) => {
-      const existing = selectedJobTypes.find((jt) => jt.id === jobType.id);
+  const handleJobTypeConfirm = (jobTypes: string[]) => {
+    const jobTypesWithExperience = jobTypes.map((jobTypeId) => {
+      const existing = selectedJobTypes.find((jt) => jt.id === jobTypeId);
       return {
-        ...jobType,
+        id: jobTypeId,
+        name: jobTypeId,
         experienceYears: existing?.experienceYears || '',
       };
     });
@@ -780,7 +782,7 @@ export default function CandidateEducationEditPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustryConfirm}
-        initialSelected={selectedIndustries}
+        initialSelected={selectedIndustries.map(i => i.id)}
         maxSelections={3}
       />
 
@@ -788,7 +790,7 @@ export default function CandidateEducationEditPage() {
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={selectedJobTypes}
+        initialSelected={selectedJobTypes.map(jt => jt.id)}
         maxSelections={3}
       />
     </>

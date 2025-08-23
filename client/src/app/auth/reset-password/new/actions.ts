@@ -204,7 +204,7 @@ export async function resetNewPasswordAction(formData: NewPasswordFormData, user
 
       logger.info('Authentication successful, updating password for user:', {
         userId: sessionData.user.id,
-        email: sessionData.user.email,
+        email: sessionData.user.email || '',
         authMethod: accessToken
           ? 'access_token'
           : tokenHash

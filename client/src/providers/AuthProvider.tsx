@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (mounted) {
               const cleanup = () => subscription.unsubscribe();
               // コンポーネントがアンマウントされたときにクリーンアップ
-              return cleanup;
+              // cleanup関数をここで何かする必要があれば処理
             }
             resolve();
           })
