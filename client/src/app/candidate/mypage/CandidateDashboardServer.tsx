@@ -88,7 +88,7 @@ export function CandidateDashboardServer({
               <MessageListCard
                 messages={messages.slice(0, 5).map((message: any) => ({
                   id: message.id || 'msg-' + Math.random(),
-                  sender: message.rooms?.company_groups?.company_account?.company_name || '企業名未設定',
+                  sender: (message.rooms as any)?.company_groups?.company_account?.company_name || '企業名未設定',
                   body: message.content || '',
                   date: message.sent_at ? new Date(message.sent_at).toLocaleString() : ''
                 }))}

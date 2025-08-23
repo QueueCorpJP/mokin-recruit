@@ -16,6 +16,7 @@ interface UserInfo {
   id: string;
   email: string;
   userType: 'candidate' | 'company';
+  name?: string;
   fullName?: string;
   companyName?: string;
 }
@@ -59,7 +60,7 @@ export default function AuthBypassPage() {
       if (session?.user) {
         setCurrentUser({
           id: session.user.id,
-          email: session.user.email,
+          email: session.user.email || '',
           userType: session.user.user_metadata?.user_type || 'candidate',
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
         });

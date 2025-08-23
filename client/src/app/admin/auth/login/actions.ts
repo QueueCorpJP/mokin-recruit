@@ -79,7 +79,7 @@ export async function loginAction(formData: FormData) {
 
     console.log('✅ [ADMIN LOGIN] Success:', {
       userId: data.user.id,
-      email: data.user.email,
+      email: data.user.email || '',
       userType: actualUserType
     });
 

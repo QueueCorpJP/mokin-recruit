@@ -76,7 +76,19 @@ export default function MediaPage() {
             imageUrl: article.thumbnail_url || null,
             tags: article.tags && article.tags.length > 0 ? article.tags : undefined
           })));
-          setFilteredArticles(paginationResult.articles);
+          setFilteredArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
           setHasMore(paginationResult.hasMore);
         } else {
           // キャッシュがある場合は記事データのみ取得
@@ -95,7 +107,19 @@ export default function MediaPage() {
             imageUrl: article.thumbnail_url || null,
             tags: article.tags && article.tags.length > 0 ? article.tags : undefined
           })));
-          setFilteredArticles(paginationResult.articles);
+          setFilteredArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
           setHasMore(paginationResult.hasMore);
         }
         
@@ -135,7 +159,7 @@ export default function MediaPage() {
       }));
       
       setArticles(prev => [...prev, ...newArticles]);
-      setFilteredArticles(prev => [...prev, ...paginationResult.articles]);
+      setFilteredArticles(prev => [...prev, ...newArticles]);
       setHasMore(paginationResult.hasMore);
     } catch (error) {
       console.error('追加記事の取得に失敗:', error);

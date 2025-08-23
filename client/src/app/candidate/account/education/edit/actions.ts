@@ -50,19 +50,19 @@ export async function getEducationData() {
       graduationYear: educationData?.graduation_year?.toString() || '',
       graduationMonth: educationData?.graduation_month?.toString() || '',
       
-      // 候補者データから大学情報を取得
-      universityName: candidateData?.university_name || '',
-      universityDepartment: candidateData?.university_department || '',
-      universityGraduationYear: candidateData?.university_graduation_year || '',
-      universityGraduationMonth: candidateData?.university_graduation_month || '',
-      universityGraduationStatus: candidateData?.university_graduation_status || '',
+      // 候補者データから大学情報を取得（型安全性のためasを使用）
+      universityName: (candidateData as any)?.university_name || '',
+      universityDepartment: (candidateData as any)?.university_department || '',
+      universityGraduationYear: (candidateData as any)?.university_graduation_year || '',
+      universityGraduationMonth: (candidateData as any)?.university_graduation_month || '',
+      universityGraduationStatus: (candidateData as any)?.university_graduation_status || '',
       
-      // 専門学校情報を取得
-      vocationalSchoolName: candidateData?.vocational_school_name || '',
-      vocationalSchoolDepartment: candidateData?.vocational_school_department || '',
-      vocationalSchoolGraduationYear: candidateData?.vocational_school_graduation_year || '',
-      vocationalSchoolGraduationMonth: candidateData?.vocational_school_graduation_month || '',
-      vocationalSchoolGraduationStatus: candidateData?.vocational_school_graduation_status || '',
+      // 専門学校情報を取得（型安全性のためasを使用）
+      vocationalSchoolName: (candidateData as any)?.vocational_school_name || '',
+      vocationalSchoolDepartment: (candidateData as any)?.vocational_school_department || '',
+      vocationalSchoolGraduationYear: (candidateData as any)?.vocational_school_graduation_year || '',
+      vocationalSchoolGraduationMonth: (candidateData as any)?.vocational_school_graduation_month || '',
+      vocationalSchoolGraduationStatus: (candidateData as any)?.vocational_school_graduation_status || '',
       
       industries: [],
       jobTypes: [],

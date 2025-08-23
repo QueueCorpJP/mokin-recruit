@@ -176,7 +176,7 @@ export async function getCompanyJobs(params: {
       internalMemo: job.internal_memo,
       publicationType: job.publication_type,
       imageUrls: job.image_urls || [],
-      groupName: job.company_groups?.group_name || 'グループ',
+      groupName: (job.company_groups as any)?.group_name || 'グループ',
       groupId: job.company_group_id,
       createdAt: job.created_at,
       updatedAt: job.updated_at,

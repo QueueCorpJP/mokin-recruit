@@ -99,7 +99,7 @@ export async function candidateLoginAction(formData: CandidateLoginFormData): Pr
 
     console.log('✅ [CANDIDATE LOGIN] Success:', {
       userId: data.user.id,
-      email: data.user.email,
+      email: data.user.email || '',
       userType
     });
 

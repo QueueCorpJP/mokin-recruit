@@ -11,7 +11,7 @@ export default async function CompanyLayoutServer({
   // 企業認証チェック（並列処理で最適化）
   const auth = await getServerAuth();
   
-  if (!auth.isAuthenticated || auth.userType !== 'company') {
+  if (!auth.isAuthenticated || auth.userType !== 'company_user') {
     redirect('/company/auth/login');
   }
 

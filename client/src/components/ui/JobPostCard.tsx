@@ -57,22 +57,15 @@ export function JobPostCard({
   // simple判定: variantがsimpleまたは画像サイズが小さい場合
   const isSimple =
     variant === 'simple' || (imageWidth === 103.5 && imageHeight === 69);
-  const cardClass = `bg-white h-auto ${!isSimple ? 'md:h-[366px]' : 'md:max-h-[117px]'} ${className} rounded-[10px] overflow-hidden transition-all duration-200 hover:bg-[#E9E9E9] hover:shadow-[0_0_20px_0_rgba(0,0,0,0.05)] cursor-pointer`;
+  const cardClass = `bg-white h-auto ${className} rounded-[10px] overflow-hidden transition-all duration-200 hover:bg-[#E9E9E9] hover:shadow-[0_0_20px_0_rgba(0,0,0,0.05)] cursor-pointer`;
 
   // 画像サイズをレスポンシブで切り替え
   let imgWidth = imageWidth;
   let imgHeight = imageHeight;
   let imgClass = 'object-cover rounded-[5px]';
   if (isSimple) {
-    imgClass += ' w-full h-[208px] md:w-[103.5px] md:h-[69px]';
-    // width/height属性もレスポンシブで切り替え
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      imgWidth = 313;
-      imgHeight = 208;
-    } else {
-      imgWidth = 103.5;
-      imgHeight = 69;
-    }
+    // スマホ: w-full + aspect-[3/2], デスクトップ: 150x100px
+    imgClass += ' w-full aspect-[3/2] md:w-[150px] md:h-[100px] md:aspect-auto';
   } else {
     imgClass += ' md:w-[477px] md:h-[318px]';
   }
@@ -88,7 +81,8 @@ export function JobPostCard({
       onClick={onClick}
     >
       <div
-        className={`flex flex-col md:flex-row w-full h-full gap-8 p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
+        className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
+        style={{ minWidth: 0, maxWidth: '100%' }}
       >
         {/* デスクトップ画面のみ右上のスターアイコン */}
         {showStar && (
@@ -123,7 +117,6 @@ export function JobPostCard({
             )}
           </button>
         )}
-        <div className='relative aspect-[2/3] w-full md:w-[477px] overflow-hidden rounded-[5px]'>
         <img
           src={imageUrl}
           alt={imageAlt}
@@ -134,18 +127,19 @@ export function JobPostCard({
           }}
           className={imgClass}
         />
-        </div>
         <div
-          className='w-full md:w-[731px] flex flex-col items-start relative md:h-[318px]'
+          className='flex-1 flex flex-col items-start relative'
           style={{
             background: 'transparent',
             height: rightColumnHeight ?? undefined,
+            minWidth: 0,
+            width: 'calc(100% - 2rem)',
           }}
         >
           {variant === 'mypage-simple' ? (
-            <div className='flex flex-col gap-2 w-full'>
+            <div className='flex flex-col gap-2 w-full' style={{ minWidth: 0 }}>
               {/* タグ */}
-              <div className='flex flex-row gap-2 items-start flex-wrap flex-1'>
+              <div className='flex flex-row gap-2 items-start flex-wrap' style={{ minWidth: 0, maxWidth: '100%', width: '100%' }}>
                 {tags.map((tag, idx) => (
                   <span
                     key={tag + idx}
@@ -157,16 +151,16 @@ export function JobPostCard({
               </div>
               {/* 見出し（タイトル） */}
               <div
-                className='mt-0 text-[18px] font-bold line-clamp-2'
+                className='mt-0 text-[16px] font-bold'
                 style={{
                   color: '#0f9058',
-                  lineHeight: '1.5',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
+                  lineHeight: '2',
+                  letterSpacing: '1.6px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: 'calc(100% - 2em)',
+                  whiteSpace: 'nowrap',
+                  width: '100%',
+                  maxWidth: '100%',
                 }}
               >
                 {title}
@@ -176,19 +170,17 @@ export function JobPostCard({
                 <div className='pt-0 w-full'>
                   <div className='flex flex-row items-center'>
                     <div
+                      className='w-6 h-6 rounded-full bg-center bg-cover bg-no-repeat'
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: '#0f9058',
+                        backgroundImage: 'url(http://localhost:3845/assets/18d36d60a6d56d6384c41f71d988f041713974ff.png)',
                       }}
                     />
                     <span
-                      className='ml-2 text-[14px] md:text-[16px] font-bold'
+                      className='ml-2 text-[14px] font-bold'
                       style={{
                         color: '#323232',
-                        lineHeight: '2',
-                        letterSpacing: '1.6px',
+                        lineHeight: '1.6',
+                        letterSpacing: '1.4px',
                       }}
                     >
                       {companyName}
@@ -199,8 +191,8 @@ export function JobPostCard({
             </div>
           ) : (
             <>
-              <div className='flex flex-row gap-2 items-start justify-between w-full'>
-                <div className='flex flex-row gap-2 items-start flex-wrap flex-1'>
+              <div className='flex flex-row gap-2 items-start justify-between w-full' style={{ minWidth: 0 }}>
+                <div className='flex flex-row gap-2 items-start flex-wrap flex-1' style={{ minWidth: 0, maxWidth: '100%' }}>
                   {tags.map((tag, idx) => (
                     <span
                       key={tag + idx}
@@ -246,16 +238,16 @@ export function JobPostCard({
               </div>
               {/* 見出し（タイトル） */}
               <div
-                className='mt-4 md:mt-2 text-[18px] font-bold line-clamp-2'
+                className='mt-4 md:mt-2 text-[16px] font-bold'
                 style={{
                   color: '#0f9058',
-                  lineHeight: '1.5',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
+                  lineHeight: '2',
+                  letterSpacing: '1.6px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: 'calc(100% - 2em)',
+                  whiteSpace: 'nowrap',
+                  width: '100%',
+                  maxWidth: '100%',
                 }}
               >
                 {title}
@@ -305,7 +297,8 @@ export function JobPostCard({
                   </svg>
                   <span
                     className='ml-1 text-[16px] font-medium'
-                    style={{ color: '#323232', lineHeight: '2' }}
+                    style={
+                      { color: '#323232', lineHeight: '2' }}
                   >
                     {salary}
                   </span>
