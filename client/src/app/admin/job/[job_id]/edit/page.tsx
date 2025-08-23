@@ -306,8 +306,7 @@ export default function JobEditPage({ params }: JobEditPageProps) {
         >
           <JobTypeModal
             selectedJobTypes={jobTypes}
-            onJobTypesChange={setJobTypes}
-            onClose={() => setJobTypeModalOpen(false)}
+            setSelectedJobTypes={setJobTypes}
           />
         </Modal>
 
