@@ -120,16 +120,20 @@ export default function CandidateRecentJobEditPage() {
           
           data.jobHistories.forEach((job, index) => {
             if (job.industries && job.industries.length > 0) {
-              const industries: Industry[] = job.industries.map(id => 
-                INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
-              ).filter(Boolean) as Industry[];
+              const industries: Industry[] = job.industries.map((item: string) => {
+                // 文字列が日本語名の場合はnameで検索、IDの場合はidで検索
+                const allIndustries = INDUSTRY_GROUPS.flatMap(g => g.industries);
+                return allIndustries.find(i => i.id === item || i.name === item);
+              }).filter(Boolean) as Industry[];
               industryMap[index] = industries;
             }
             
             if (job.jobTypes && job.jobTypes.length > 0) {
-              const jobTypes: JobType[] = job.jobTypes.map(id => 
-                JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
-              ).filter(Boolean) as JobType[];
+              const jobTypes: JobType[] = job.jobTypes.map((item: string) => {
+                // 文字列が日本語名の場合はnameで検索、IDの場合はidで検索
+                const allJobTypes = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes);
+                return allJobTypes.find(jt => jt.id === item || jt.name === item);
+              }).filter(Boolean) as JobType[];
               jobTypeMap[index] = jobTypes;
             }
           });
@@ -151,20 +155,9 @@ export default function CandidateRecentJobEditPage() {
     setIsSubmitting(true);
     
     try {
-      // 最初の職歴のみを送信（現状は1つのみサポート）
-      const jobHistory = data.jobHistories[0];
-      
+      // 全ての職歴を送信
       const formData = new FormData();
-      formData.append('companyName', jobHistory.companyName || '');
-      formData.append('departmentPosition', jobHistory.departmentPosition || '');
-      formData.append('startYear', jobHistory.startYear || '');
-      formData.append('startMonth', jobHistory.startMonth || '');
-      formData.append('endYear', jobHistory.endYear || '');
-      formData.append('endMonth', jobHistory.endMonth || '');
-      formData.append('isCurrentlyWorking', jobHistory.isCurrentlyWorking.toString());
-      formData.append('jobDescription', jobHistory.jobDescription || '');
-      formData.append('industries', JSON.stringify(jobHistory.industries || []));
-      formData.append('jobTypes', JSON.stringify(jobHistory.jobTypes || []));
+      formData.append('jobHistories', JSON.stringify(data.jobHistories));
 
       const result = await updateRecentJobData(formData);
       
@@ -212,6 +205,7 @@ export default function CandidateRecentJobEditPage() {
       currentHistories.filter((_, i) => i !== index),
     );
   };
+
 
   // 業種モーダル
   const openIndustryModal = (index: number) => {
