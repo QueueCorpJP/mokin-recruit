@@ -1,17 +1,17 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
-import { SearchBar } from '@/components/admin/ui/SearchBar';
 import { SelectInput } from '@/components/ui/select-input';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
+import { JobApprovalModal } from '@/components/admin/ui/JobApprovalModal';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 
-export type AdminJobListItem = {
+export type PendingJobListItem = {
   id: string;
   updated_at: string;
   status: string;
@@ -24,8 +24,8 @@ export type AdminJobListItem = {
 };
 
 const statusMap: Record<string, string> = {
-  DRAFT: '下書き',
   PENDING_APPROVAL: '承認待ち',
+  DRAFT: '下書き',
   PUBLISHED: '掲載済',
   CLOSED: '公開停止',
 };
@@ -34,7 +34,6 @@ const publicationTypeMap: Record<string, string> = {
   public: '一般公開',
   members: '登録会員限定',
   scout: 'スカウト限定',
-  CLOSED: '公開停止',
 };
 
 function formatDateTime(iso: string): { date: string; time: string } {
@@ -60,23 +59,23 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 type Props = {
-  jobs: AdminJobListItem[];
+  jobs: PendingJobListItem[];
 };
 
-export default function JobTableClient({ jobs: initialJobs }: Props) {
+export default function PendingTableClient({ jobs: initialJobs }: Props) {
   const router = useRouter();
-  const [jobs, setJobs] = useState<AdminJobListItem[]>(initialJobs);
+  const [jobs, setJobs] = useState<PendingJobListItem[]>(initialJobs);
+  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string>('すべて');
+  const [publicationFilter, setPublicationFilter] = useState<string>('');
   const [searchCategory, setSearchCategory] = useState<string>('企業名');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [deleteModalJobId, setDeleteModalJobId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [approveModalJobIds, setApproveModalJobIds] = useState<string[] | null>(null);
+  const [rejectModalJobId, setRejectModalJobId] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
-
-  // 削除対象の求人を取得
-  const deleteTargetJob = deleteModalJobId 
-    ? jobs.find(job => job.id === deleteModalJobId)
-    : null;
 
 
   const searchCategoryOptions = [
@@ -87,6 +86,75 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     { value: '求人ID', label: '求人ID' }
   ];
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedJobs(new Set(jobs.map(job => job.id)));
+    } else {
+      setSelectedJobs(new Set());
+    }
+  };
+
+  const handleSelectJob = (jobId: string, checked: boolean) => {
+    const newSelected = new Set(selectedJobs);
+    if (checked) {
+      newSelected.add(jobId);
+    } else {
+      newSelected.delete(jobId);
+    }
+    setSelectedJobs(newSelected);
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedJobs.size > 0) {
+      setApproveModalJobIds(Array.from(selectedJobs));
+    }
+  };
+
+  const handleApprove = async (reason: string, comment: string) => {
+    if (!approveModalJobIds) return;
+    setIsApproving(true);
+    try {
+      const { bulkApproveJobs } = await import('./actions');
+      const result = await bulkApproveJobs(approveModalJobIds, reason, comment);
+      
+      if (!result.success) {
+        throw new Error(result.error || '承認に失敗しました');
+      }
+      
+      setJobs(jobs =>
+        jobs.map(job =>
+          approveModalJobIds.includes(job.id) ? { ...job, status: 'PUBLISHED' } : job
+        )
+      );
+      setSelectedJobs(new Set());
+      setApproveModalJobIds(null);
+    } catch (e: any) {
+      alert(e.message || '承認に失敗しました');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async (reason: string, comment: string) => {
+    if (!approveModalJobIds) return;
+    setIsApproving(true);
+    try {
+      const { bulkRejectJobs } = await import('./actions');
+      const result = await bulkRejectJobs(approveModalJobIds, reason, comment);
+      
+      if (!result.success) {
+        throw new Error(result.error || '却下に失敗しました');
+      }
+      
+      setJobs(jobs => jobs.filter(job => !approveModalJobIds.includes(job.id)));
+      setSelectedJobs(new Set());
+      setApproveModalJobIds(null);
+    } catch (e: any) {
+      alert(e.message || '却下に失敗しました');
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -102,36 +170,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     }
   };
 
-  // 編集ページに遷移
-  const handleEditJob = (jobId: string) => {
-    router.push(`/admin/job/${jobId}/edit`);
-  };
-
-  // 削除処理
-  const handleDeleteJob = async (jobId: string) => {
-    setIsDeleting(true);
-    try {
-      const { deleteJob } = await import('./pending/actions');
-      const result = await deleteJob(jobId);
-      
-      if (!result.success) {
-        throw new Error(result.error || '削除に失敗しました');
-      }
-      
-      // 成功時はローカルjobs状態からも削除
-      setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-      setDeleteModalJobId(null);
-    } catch (error) {
-      console.error('Delete error:', error);
-      alert('削除に失敗しました');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // CSVダウンロード処理
   const handleCSVDownload = () => {
-    // CSVヘッダー
     const headers = [
       '求人ID',
       '求人タイトル',
@@ -142,12 +181,11 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       '更新日時'
     ];
 
-    // CSVデータを作成
-    const csvData = jobs.map(job => {
+    const csvData = sortedJobs.map(job => {
       const { date, time } = formatDateTime(job.updated_at);
       return [
         job.id,
-        `"${job.title.replace(/"/g, '""')}"`, // ダブルクォートをエスケープ
+        `"${job.title.replace(/"/g, '""')}"`,
         `"${(job.company_accounts?.company_name || '不明').replace(/"/g, '""')}"`,
         statusMap[job.status] || job.status,
         publicationTypeMap[job.publication_type] || job.publication_type,
@@ -156,25 +194,21 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       ];
     });
 
-    // CSVファイルを生成
     const csvContent = [headers, ...csvData]
       .map(row => row.join(','))
       .join('\n');
 
-    // BOM付きCSVを作成（Excel対応）
     const bom = '\uFEFF';
     const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
     
-    // ダウンロード実行
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     
-    // ファイル名に現在日時を含める
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const timeStr = now.toTimeString().slice(0, 5).replace(/:/g, '');
-    link.setAttribute('download', `求人一覧_${dateStr}_${timeStr}.csv`);
+    link.setAttribute('download', `承認待ち求人一覧_${dateStr}_${timeStr}.csv`);
     
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
@@ -182,6 +216,27 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     document.body.removeChild(link);
   };
 
+  // AdminPageTitleからのイベントリスナー
+  useEffect(() => {
+    console.log('PendingTableClient: Setting up event listeners');
+    const handlePendingCsvDownload = () => {
+      console.log('PendingTableClient: Received pending-csv-download event');
+      handleCSVDownload();
+    };
+
+    const handlePendingBulkApprove = () => {
+      console.log('PendingTableClient: Received pending-bulk-approve event');
+      handleBulkApprove();
+    };
+
+    window.addEventListener('pending-csv-download', handlePendingCsvDownload);
+    window.addEventListener('pending-bulk-approve', handlePendingBulkApprove);
+
+    return () => {
+      window.removeEventListener('pending-csv-download', handlePendingCsvDownload);
+      window.removeEventListener('pending-bulk-approve', handlePendingBulkApprove);
+    };
+  }, [handleCSVDownload, handleBulkApprove]);
 
   const filteredJobs = jobs.filter(job => {
     if (searchTerm) {
@@ -210,33 +265,17 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     let bValue: string;
     
     switch (sortColumn) {
-      case 'updateDate':
-        aValue = a.updated_at;
-        bValue = b.updated_at;
-        break;
       case 'status':
         aValue = statusMap[a.status] || a.status;
         bValue = statusMap[b.status] || b.status;
         break;
       case 'publicPeriod':
-        aValue = publicationTypeMap[a.publication_type] || a.publication_type;
-        bValue = publicationTypeMap[b.publication_type] || b.publication_type;
+        aValue = a.updated_at;
+        bValue = b.updated_at;
         break;
       case 'company':
         aValue = a.company_accounts?.company_name || '';
         bValue = b.company_accounts?.company_name || '';
-        break;
-      case 'title':
-        aValue = a.title;
-        bValue = b.title;
-        break;
-      case 'position':
-        aValue = a.job_type && a.job_type.length > 0 ? a.job_type.join(', ') : '';
-        bValue = b.job_type && b.job_type.length > 0 ? b.job_type.join(', ') : '';
-        break;
-      case 'jobId':
-        aValue = a.id;
-        bValue = b.id;
         break;
       case 'publicStatus':
         aValue = publicationTypeMap[a.publication_type] || a.publication_type;
@@ -255,32 +294,60 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
 
   const columns = [
     {
-      key: 'updateDate',
-      label: '更新日時',
-      sortable: true,
-      width: 'w-[140px]',
+      key: 'checkbox',
+      label: '',
+      sortable: false,
+      width: 'w-[40px]',
     },
-    { key: 'status', label: 'ステータス', sortable: true, width: 'w-[120px]' },
     {
-      key: 'publicPeriod',
-      label: '公開期間',
+      key: 'status',
+      label: '確認状況',
       sortable: true,
       width: 'w-[120px]',
     },
-    { key: 'company', label: '企業名', sortable: true, width: 'w-[110px]' },
-    { key: 'position', label: '職種', sortable: true, width: 'w-[100px]' },
-    { key: 'jobId', label: '求人ID', sortable: true, width: 'w-[140px]' },
-    { key: 'title', label: '求人タイトル', sortable: true, width: 'flex-1' },
+    {
+      key: 'publicPeriod',
+      label: '掲載申請日時',
+      sortable: true,
+      width: 'w-[140px]',
+    },
+    {
+      key: 'jobId',
+      label: '求人確認',
+      sortable: false,
+      width: 'w-[120px]',
+    },
+    {
+      key: 'company',
+      label: '企業名・お仕事タイトル',
+      sortable: true,
+      width: 'flex-1',
+    },
+    {
+      key: 'publicStatus',
+      label: '公開範囲',
+      sortable: false,
+      width: 'w-[120px]',
+    },
     {
       key: 'actions',
-      label: 'アクション',
+      label: '操作',
       sortable: false,
-      width: 'w-[200px]',
+      width: 'w-[180px]',
     },
   ];
 
+  const approveTargetJobs = approveModalJobIds
+    ? jobs.filter(job => approveModalJobIds.includes(job.id))
+    : [];
+
+  const rejectTargetJob = rejectModalJobId
+    ? jobs.find(job => job.id === rejectModalJobId)
+    : null;
+
   return (
     <div className='bg-gray-50 flex flex-col overflow-x-hidden'>
+
       <div className='mb-6 flex flex-wrap items-center gap-4 max-w-full'>
         <div className='flex gap-2 items-center flex-shrink-0'>
           <SelectInput
@@ -327,20 +394,19 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
             </button>
           </div>
         </div>
-        <AdminButton text='CSVダウンロード' onClick={handleCSVDownload} />
       </div>
-      {/* 求人一覧テーブル */}
+
       <div className='bg-white rounded-lg w-[900px] overflow-x-auto'>
-        <div className='w-[1800px]'>
+        <div className='w-[1600px]'>
           {/* 統計情報ヘッダー */}
           <div className="flex items-center px-5 py-3 bg-[#F0F8FF] border-b border-[#E5E5E5]">
-            <div className="w-[140px]"></div> {/* 更新日時 */}
-            <div className="w-[120px]"></div> {/* ステータス */}
-            <div className="w-[120px]"></div> {/* 公開期間 */}
-            <div className="w-[110px]"></div> {/* 企業名 */}
-            <div className="w-[100px]"></div> {/* 職種 */}
-            <div className="w-[140px]"></div> {/* 求人ID */}
-            <div className="flex-1"></div> {/* 求人タイトル */}
+            <div className="w-[40px]"></div> {/* checkbox */}
+            <div className="w-[120px]"></div> {/* 確認状況 */}
+            <div className="w-[140px]"></div> {/* 掲載申請日時 */}
+            <div className="w-[120px]"></div> {/* 求人確認 */}
+            <div className="flex-1"></div> {/* 企業名・お仕事タイトル */}
+            <div className="w-[120px]"></div> {/* 公開範囲 */}
+            <div className="w-[180px]"></div> {/* 操作 */}
             <div className="w-[120px] text-center">
               <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
                 スカウト送信数
@@ -366,13 +432,13 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
           {/* 統計データ行 */}
           <div className="px-5 py-2 bg-[#FAFAFA] border-b border-[#E5E5E5]">
             <div className="flex items-center mb-1">
+              <div className="w-[40px]"></div>
+              <div className="w-[120px]"></div>
               <div className="w-[140px]"></div>
               <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
               <div className="flex-1"></div>
+              <div className="w-[120px]"></div>
+              <div className="w-[180px]"></div>
               <div className="w-[120px] text-center">
                 <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">過去7日合計</span>
               </div>
@@ -388,13 +454,13 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
             </div>
             
             <div className="flex items-center mb-1">
+              <div className="w-[40px]"></div>
+              <div className="w-[120px]"></div>
               <div className="w-[140px]"></div>
               <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
               <div className="flex-1"></div>
+              <div className="w-[120px]"></div>
+              <div className="w-[180px]"></div>
               <div className="w-[120px] text-center">
                 <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">過去30日合計</span>
               </div>
@@ -410,13 +476,13 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
             </div>
             
             <div className="flex items-center">
+              <div className="w-[40px]"></div>
+              <div className="w-[120px]"></div>
               <div className="w-[140px]"></div>
               <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
               <div className="flex-1"></div>
+              <div className="w-[120px]"></div>
+              <div className="w-[180px]"></div>
               <div className="w-[120px] text-center">
                 <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">累計</span>
               </div>
@@ -431,7 +497,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
               </div>
             </div>
           </div>
-          
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
@@ -440,130 +505,131 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
           />
           <div className='p-2'>
             <div className='space-y-2'>
-          {sortedJobs.map(job => {
-            const { date, time } = formatDateTime(job.updated_at);
-            return (
-              <AdminTableRow
-                key={job.id}
-                columns={[
-                  {
-                    content: (
-                      <div>
-                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                          {date}
-                        </div>
-                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                          {time}
-                        </div>
-                      </div>
-                    ),
-                    width: 'w-[140px]',
-                  },
-                  {
-                    content: (
-                      <span className="inline-block px-3 py-1 rounded-[5px] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] bg-gray-500 text-white">
-                        {statusMap[job.status] || job.status}
-                      </span>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: (
-                      <span className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px]">
-                        {publicationTypeMap[job.publication_type] ||
-                          job.publication_type}
-                      </span>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: truncateText(job.company_accounts?.company_name || '不明', 10),
-                    width: 'w-[110px]',
-                  },
-                  {
-                    content: truncateText(
-                      job.job_type && job.job_type.length > 0
-                        ? job.job_type.join(', ')
-                        : '未設定',
-                      8
-                    ),
-                    width: 'w-[100px]',
-                  },
-                  {
-                    content: (
-                      <div>
-                        <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                          {truncateText(job.id, 14)}
-                        </div>
-                      </div>
-                    ),
-                    width: 'w-[140px]',
-                  },
-                  {
-                    content: truncateText(job.title, 20),
-                    width: 'flex-1',
-                  },
-                  {
-                    content: (
-                      <div className="flex gap-2">
-                        <ActionButton
-                          text='編集'
-                          variant='edit'
-                          onClick={() => handleEditJob(job.id)}
-                          size='small'
-                        />
-                        <ActionButton
-                          text='削除'
-                          variant='delete'
-                          onClick={() => setDeleteModalJobId(job.id)}
-                          size='small'
-                        />
-                      </div>
-                    ),
-                    width: 'w-[200px]',
-                  },
-                  // 統計情報カラムを追加
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
-                      </div>
-                    ),
-                    width: 'w-[100px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                ]}
-              />
-            );
-          })}
+              {sortedJobs.map(job => {
+                const { date, time } = formatDateTime(job.updated_at);
+                return (
+                  <AdminTableRow
+                    key={job.id}
+                    columns={[
+                      {
+                        content: (
+                          <input
+                            type="checkbox"
+                            checked={selectedJobs.has(job.id)}
+                            onChange={(e) => handleSelectJob(job.id, e.target.checked)}
+                            className="w-4 h-4 accent-[#0F9058] cursor-pointer"
+                          />
+                        ),
+                        width: 'w-[40px]',
+                      },
+                      {
+                        content: (
+                          <span className="inline-block px-3 py-1 rounded-full font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] bg-yellow-500 text-white">
+                            承認待ち
+                          </span>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                      {
+                        content: (
+                          <div>
+                            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                              {date}
+                            </div>
+                            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                              {time}
+                            </div>
+                          </div>
+                        ),
+                        width: 'w-[140px]',
+                      },
+                      {
+                        content: (
+                          <button
+                            onClick={() => router.push(`/admin/job/pending/${job.id}`)}
+                            className="inline-block px-3 py-1 rounded-full bg-[#E8F5E8] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] hover:bg-[#D2F1DA] transition-colors cursor-pointer"
+                          >
+                            求人詳細
+                          </button>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                      {
+                        content: (
+                          <div>
+                            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                              {truncateText(job.company_accounts?.company_name || '不明', 20)}
+                            </div>
+                            <div className="font-['Noto_Sans_JP'] text-[12px] text-gray-600">
+                              {truncateText(job.title, 30)}
+                            </div>
+                          </div>
+                        ),
+                        width: 'flex-1',
+                      },
+                      {
+                        content: (
+                          <span className="inline-block px-3 py-1 rounded-full bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px]">
+                            {publicationTypeMap[job.publication_type] || job.publication_type}
+                          </span>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                      {
+                        content: (
+                          <div className="flex gap-2">
+                            <ActionButton
+                              text='承認'
+                              variant='approve'
+                              onClick={() => setApproveModalJobIds([job.id])}
+                              size='small'
+                            />
+                          </div>
+                        ),
+                        width: 'w-[180px]',
+                      },
+                      // 統計情報カラムを追加
+                      {
+                        content: (
+                          <div className="text-center">
+                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
+                          </div>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                      {
+                        content: (
+                          <div className="text-center">
+                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
+                          </div>
+                        ),
+                        width: 'w-[100px]',
+                      },
+                      {
+                        content: (
+                          <div className="text-center">
+                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
+                          </div>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                      {
+                        content: (
+                          <div className="text-center">
+                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
+                          </div>
+                        ),
+                        width: 'w-[120px]',
+                      },
+                    ]}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
-      {/* ページネーション（現状はダミー） */}
+
       <div className='flex justify-center mt-8'>
         <PaginationButtons
           onPrevious={() => {}}
@@ -573,19 +639,17 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
         />
       </div>
 
-
-      {/* 削除確認モーダル */}
-      <AdminConfirmModal
-        isOpen={deleteModalJobId !== null}
-        onClose={() => setDeleteModalJobId(null)}
-        onConfirm={() => deleteTargetJob && handleDeleteJob(deleteTargetJob.id)}
-        title="求人削除"
-        description={deleteTargetJob 
-          ? deleteTargetJob.title
-          : '求人'
+      <JobApprovalModal
+        isOpen={approveModalJobIds !== null}
+        onClose={() => setApproveModalJobIds(null)}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        isProcessing={isApproving}
+        jobTitle={
+          approveTargetJobs.length > 1 
+            ? `${approveTargetJobs.length}件の求人`
+            : approveTargetJobs[0]?.title || '求人'
         }
-        confirmText={isDeleting ? "削除中..." : "削除する"}
-        cancelText="キャンセル"
       />
     </div>
   );

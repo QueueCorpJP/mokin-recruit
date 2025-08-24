@@ -20,21 +20,19 @@ export default function JobNewCompletePage() {
           <div className="flex justify-center gap-6">
             <Link href="/admin/job/new">
               <AdminButton
+                text="求人一覧"
                 variant="green-outline"
                 size="figma-outline"
                 className="px-12 py-4 rounded-[32px] min-w-[160px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10 text-base font-bold"
-              >
-                求人一覧
-              </AdminButton>
+              />
             </Link>
             <Link href="/admin/job">
               <AdminButton
+                text="管理画面トップ"
                 variant="green-gradient"
                 size="figma-default"
                 className="px-12 py-4 rounded-[32px] bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] text-base font-bold"
-              >
-                管理画面トップ
-              </AdminButton>
+              />
             </Link>
           </div>
         </div>

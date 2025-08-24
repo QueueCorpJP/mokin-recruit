@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { approveJob } from './actions';
+import { approveJob } from './pending/actions';
 
 interface ApproveJobFormProps {
   jobId: string;
