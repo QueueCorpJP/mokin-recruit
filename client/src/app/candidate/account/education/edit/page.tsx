@@ -11,6 +11,8 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
+import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
 
 const educationSchema = z.object({
   finalEducation: z.string(),
@@ -124,6 +126,11 @@ export default function CandidateEducationEditPage() {
 
   const selectedIndustries = watch('industries');
   const selectedJobTypes = watch('jobTypes');
+  const watchedSchoolName = watch('schoolName');
+  const watchedFinalEducation = watch('finalEducation');
+
+  // School suggestion hook
+  const { suggestions: schoolSuggestions } = useSchoolAutocomplete(watchedSchoolName, watchedFinalEducation);
 
   // 年の選択肢を生成（1970年から2025年まで）
   const yearOptions = useMemo(() => {
@@ -456,10 +463,15 @@ export default function CandidateEducationEditPage() {
                       </div>
                     </div>
                     <div className="flex-1 lg:py-6">
-                      <input
-                        type="text"
-                        {...register('schoolName')}
+                      <AutocompleteInput
+                        value={watchedSchoolName}
+                        onChange={(value) => setValue('schoolName', value, { shouldValidate: true, shouldDirty: true })}
                         placeholder="学校名を入力"
+                        suggestions={schoolSuggestions.map(s => ({ 
+                          id: s.id, 
+                          name: s.name, 
+                          category: s.category 
+                        }))}
                         className={`w-full bg-white border ${
                           errors.schoolName
                             ? 'border-red-500'
