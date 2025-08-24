@@ -12,7 +12,7 @@ import { IndustryModal } from '@/app/company/company/job/IndustryModal';
 import { FormFields } from '@/app/company/company/job/FormFields';
 import { ConfirmView } from '@/app/company/company/job/ConfirmView';
 // Note: Auth is now handled server-side, user info passed as props
-import { createJob } from '../../../company/job/actions';
+import { createJob } from '../pending/actions';
 
 interface JobNewClientProps {
   initialCompanyGroups: CompanyGroup[];
@@ -231,6 +231,7 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
   useEffect(() => {
     validateSalary(salaryMin, salaryMax);
   }, [salaryMin, salaryMax]);
+
 
   // 必須項目が全て入力されているかチェックする関数
   const isFormValid = () => {
@@ -514,57 +515,117 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
     try {
       const result = await createJob(data);
 
-      if (result.success) {
-        // 完了ページにリダイレクト（管理画面の場合）
-        router.push('/admin/job/new/complete');
-      } else {
+      if (result && !result.success) {
         console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
       }
+      // Server Actionが成功するとリダイレクトが自動的に行われる
     } catch (error) {
       console.error('Request Error:', error);
       alert('通信エラーが発生しました');
     }
   };
 
+  // AdminPageTitleからのイベントリスナー
+  useEffect(() => {
+    console.log('JobNewClient: Setting up event listeners');
+    const handleJobNewBack = () => {
+      console.log('JobNewClient: Received job-new-back event, isConfirmMode:', isConfirmMode);
+      if (isConfirmMode) {
+        console.log('JobNewClient: Calling handleBack()');
+        handleBack();
+      } else {
+        console.log('JobNewClient: Not in confirm mode, switching to confirm mode');
+        // 確認モードでない場合は確認モードに切り替える
+        if (isFormValid()) {
+          setIsConfirmMode(true);
+        } else {
+          setShowErrors(true);
+          console.log('JobNewClient: Form validation failed');
+        }
+      }
+    };
+
+    const handleJobNewCreate = () => {
+      console.log('JobNewClient: Received job-new-create event');
+      handleSubmit();
+    };
+
+    window.addEventListener('job-new-back', handleJobNewBack);
+    window.addEventListener('job-new-create', handleJobNewCreate);
+
+    return () => {
+      window.removeEventListener('job-new-back', handleJobNewBack);
+      window.removeEventListener('job-new-create', handleJobNewCreate);
+    };
+  }, [isConfirmMode, handleBack, handleSubmit]);
+
   return (
     <>
       {/* <NewJobHeader /> */}
       <div className='flex justify-start'>
-        <div className='ml-[76px] mr-0 max-w-5xl'>
-          {/* ヘッダーセクション */}
-          <div className='flex justify-between items-center my-[37px]'>
-            <h1 className='text-2xl font-bold text-gray-900'>求人作成</h1>
-            <button
-              type='button'
-              disabled={showErrors && !isFormValid()}
-              className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
-                !showErrors || isFormValid()
-                  ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              onClick={handleConfirm}
-            >
-              確認する
-            </button>
-          </div>
+        <div className='mr-0'>
+
+          {/* 選考メモテーブル - 独立して中央配置（確認ページでは非表示） */}
+          {!isConfirmMode && (
+            <div className="mb-6 flex justify-center w-full">
+              <table className="border-collapse border border-gray-400">
+                <tbody>
+                  <tr>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]"></td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">スカウト送信数</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">開封数</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">返信数(返信率)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">応募数(応募率)</td>
+                  </tr>
+                  <tr>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去7日合計</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                  </tr>
+                  <tr>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去30日合計</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                  </tr>
+                  <tr>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">累計</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* 選考メモセクション */}
           <div className='w-full mb-[37px]'>
             <div className='flex items-start gap-8'>
               <div className='w-[200px] flex-shrink-0'>
-                <label className='block text-sm font-medium text-gray-900'>
+                <label className='block text-[16px] font-bold text-gray-900'>
                   選考メモ
                 </label>
               </div>
               <div className='flex-1'>
-                <textarea
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-                  rows={4}
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                  placeholder='選考に関するメモを入力してください'
-                />
+                {isConfirmMode ? (
+                  <div className='w-full px-4 py-3 min-h-[100px] text-gray-900 whitespace-pre-wrap'>
+                    {memo || 'メモが入力されていません'}
+                  </div>
+                ) : (
+                  <textarea
+                    value={memo}
+                    onChange={(e) => setMemo(e.target.value)}
+                    rows={4}
+                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
+                    placeholder='選考に関するメモを入力してください'
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -716,17 +777,17 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
                     type='button'
                     variant='green-outline'
                     size='lg'
-                    className="rounded-[32px] min-w-[260px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
                     onClick={handleBack}
                   >
-                    修正する
+                    戻る
                   </Button>
                   <button
                     type='button'
                     className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
                     onClick={handleSubmit}
                   >
-                    この内容で掲載申請をする
+                      保存する
                   </button>
                 </>
               ) : (

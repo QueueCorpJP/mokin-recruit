@@ -1,12 +1,32 @@
 import React from 'react';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import AdminJobNewClient from './JobNewClient';
+import { CompanyGroup } from '@/app/company/company/job/types';
 
-export default function AdminJobNewPage() {
-  // モックの企業グループデータ
-  const companyGroups = [
-    { id: '1', group_name: '株式会社ドクターズプライム' },
-    { id: '2', group_name: '株式会社ドクターズプライム（子会社）' }
-  ];
+async function fetchCompanyGroups(): Promise<CompanyGroup[]> {
+  const supabase = getSupabaseAdminClient();
+  
+  const { data, error } = await supabase
+    .from('company_groups')
+    .select(`
+      id,
+      group_name,
+      company_accounts (
+        company_name
+      )
+    `)
+    .order('group_name');
+
+  if (error) {
+    console.error('Error fetching company groups:', error);
+    return [];
+  }
+
+  return data as CompanyGroup[];
+}
+
+export default async function AdminJobNewPage() {
+  const companyGroups = await fetchCompanyGroups();
 
   return (
     <AdminJobNewClient 

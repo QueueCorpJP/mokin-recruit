@@ -10,8 +10,9 @@ import {
   TableRow,
 } from '@/components/admin/ui/table';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { PendingJobDetailActions } from './PendingJobDetailActions';
 
-interface JobDetailPageProps {
+interface PendingJobDetailPageProps {
   params: {
     job_id: string;
   };
@@ -71,7 +72,7 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   return data as JobDetail;
 }
 
-export default async function JobDetailPage({ params }: JobDetailPageProps) {
+export default async function PendingJobDetailPage({ params }: PendingJobDetailPageProps) {
   const { job_id } = await params;
   const jobDetail = await fetchJobDetail(job_id);
 
@@ -81,8 +82,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mt-20">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">求人が見つかりません</h1>
-            <Link href="/admin/job">
-              <Button variant="green-gradient">求人一覧に戻る</Button>
+            <Link href="/admin/job/pending">
+              <Button variant="green-gradient">承認待ち一覧に戻る</Button>
             </Link>
           </div>
         </div>
@@ -154,7 +155,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         <nav className="mb-8 text-sm text-gray-600">
           <span>管理画面トップ</span>
           <span className="mx-2">&gt;</span>
-          <span>求人一覧</span>
+          <span>承認待ち一覧</span>
           <span className="mx-2">&gt;</span>
           <span className="text-gray-900 font-medium">求人詳細</span>
         </nav>
@@ -166,30 +167,20 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
                   {jobDetail.title}
                 </h1>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}>
+                    {statusMap[jobDetail.status] || jobDetail.status}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    申請日時: {new Date(jobDetail.updated_at).toLocaleString('ja-JP')}
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <Link href={`/admin/job/${job_id}/edit`}>
-                  <Button
-                    variant="green-outline"
-                    size="figma-outline"
-                    className="px-6 py-2 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
-                  >
-                    編集
-                  </Button>
-                </Link>
-                <Button
-                  variant="destructive"
-                  size="figma-outline"
-                  className="px-6 py-2 rounded-[32px] bg-red-500 text-white hover:bg-red-600"
-                >
-                  削除
-                </Button>
-              </div>
+              <PendingJobDetailActions jobId={job_id} />
             </div>
           </div>
 
           <div className="p-6">
-            {/* 求人情報テーブル */}
             <div className="mb-8">
               <Table>
                 <TableBody>
@@ -252,11 +243,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               </Table>
             </div>
 
-            {/* 求人詳細セクション（company/job/newの確認ページと同じデザイン） */}
             <div className="border-t pt-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">求人詳細</h2>
               
-              {/* ポジション概要（業務内容＋魅力） */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -264,7 +253,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   </div>
                 </div>
                 <div className='flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6'>
-                  {/* 業務内容 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       業務内容
@@ -274,7 +262,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                       className='whitespace-pre-wrap'
                     />
                   </div>
-                  {/* 当ポジションの魅力 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       当ポジションの魅力
@@ -287,7 +274,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
-              {/* 求める人物像 */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -295,14 +281,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   </div>
                 </div>
                 <div className='flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6'>
-                  {/* スキル・経験 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       スキル・経験
                     </label>
                     <DisplayValue value={jobDetail.required_skills || ''} className='whitespace-pre-wrap' />
                   </div>
-                  {/* その他・求める人物像など */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       その他・求める人物像など
@@ -315,7 +299,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
-              {/* 条件・待遇 */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -323,7 +306,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   </div>
                 </div>
                 <div className='flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6'>
-                  {/* 想定年収 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       想定年収
@@ -339,7 +321,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                     className='w-full my-2'
                     style={{ height: '1px', background: '#EFEFEF' }}
                   />
-                  {/* 就業時間 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       就業時間
@@ -349,7 +330,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                       className='whitespace-pre-wrap'
                     />
                   </div>
-                  {/* 休日・休暇 */}
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       休日・休暇
@@ -359,7 +339,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
-              {/* 選考フロー */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -376,7 +355,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
-              {/* アピールポイント */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -392,24 +370,16 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             </div>
 
             <div className="mt-8 pt-8 border-t flex justify-center gap-4">
-              <Link href="/admin/job">
+              <Link href="/admin/job/pending">
                 <Button
                   variant="green-outline"
                   size="figma-outline"
                   className="px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
                 >
-                  求人一覧に戻る
+                  承認待ち一覧に戻る
                 </Button>
               </Link>
-              <Link href={`/admin/job/${job_id}/edit`}>
-                <Button
-                  variant="green-gradient"
-                  size="figma-default"
-                  className="px-10 py-3 rounded-[32px] bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
-                >
-                  求人を編集
-                </Button>
-              </Link>
+              <PendingJobDetailActions jobId={job_id} showLabels />
             </div>
           </div>
         </div>

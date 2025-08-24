@@ -11,6 +11,7 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
+import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 
 // フォームスキーマ定義
 const recentJobSchema = z.object({
@@ -467,9 +468,9 @@ export default function CandidateRecentJobEditPage() {
                           </div>
                         </div>
                         <div className="flex-1 lg:py-6">
-                          <input
-                            type="text"
-                            {...register(`jobHistories.${index}.companyName`)}
+                          <CompanyNameInput
+                            value={watch(`jobHistories.${index}.companyName`) || ''}
+                            onChange={(value) => setValue(`jobHistories.${index}.companyName`, value, { shouldValidate: true, shouldDirty: true })}
                             placeholder="企業名を入力"
                             className="w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]"
                           />

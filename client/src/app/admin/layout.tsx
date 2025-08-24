@@ -66,11 +66,11 @@ export default async function AdminLayout({
         <Suspense fallback={<div className="w-64 bg-gray-100" />}>
           <AdminSidebar />
         </Suspense>
-        <main className='flex-1 p-6 bg-[#F9F9F9]'>
+        <main className='flex-1 p-6 bg-[#F9F9F9] overflow-x-hidden min-w-0'>
           <Suspense fallback={<div className="h-8 bg-gray-50" />}>
             <AdminBreadcrumb />
           </Suspense>
-          <div className='p-4'>
+          <div className='p-4 overflow-x-hidden min-w-0'>
             <Suspense fallback={<div className="h-12 bg-white" />}>
               <AdminPageTitle />
             </Suspense>

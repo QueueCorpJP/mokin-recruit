@@ -67,7 +67,7 @@ export function JobPostCard({
     // スマホ: w-full + aspect-[3/2], デスクトップ: 150x100px
     imgClass += ' w-full aspect-[3/2] md:w-[150px] md:h-[100px] md:aspect-auto';
   } else {
-    imgClass += ' md:w-[477px] md:h-[318px]';
+    imgClass += ' w-full aspect-[3/2] max-h-[200px] md:w-[477px] md:h-[318px] md:aspect-auto md:max-h-none';
   }
   return (
     <div
