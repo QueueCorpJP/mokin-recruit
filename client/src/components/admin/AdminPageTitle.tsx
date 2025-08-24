@@ -211,7 +211,7 @@ export function AdminPageTitle() {
     
     if (pathname.match(/^\/admin\/job\/[^\/]+\/edit$/)) {
       return { 
-        title: '求人編集',
+        title: '求人詳細',
         buttons: [{
           text: '更新する',
           variant: 'green-gradient',
@@ -228,7 +228,7 @@ export function AdminPageTitle() {
       return {
         title: '求人詳細', 
         buttons: [{
-          text: '編集',
+          text: '編集する',
           variant: 'green-gradient',  
           onClick: () => {
             const pathParts = pathname.split('/');
@@ -236,14 +236,7 @@ export function AdminPageTitle() {
             window.location.href = `/admin/job/${jobId}/edit`;
           }
         },
-        {
-          text: '削除',
-          variant: 'green-outline',
-          onClick: () => {
-            // Delete functionality would be implemented here
-            alert('削除機能は未実装です');
-          }
-        }]
+       ]
       };
     }
     

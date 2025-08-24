@@ -1,14 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/admin/ui/table';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 interface JobDetailPageProps {
@@ -46,6 +38,21 @@ interface JobDetail {
   updated_at: string;
 }
 
+interface ScoutStats {
+  scout_sent_7d: number;
+  scout_opened_7d: number;
+  scout_replied_7d: number;
+  scout_applied_7d: number;
+  scout_sent_30d: number;
+  scout_opened_30d: number;
+  scout_replied_30d: number;
+  scout_applied_30d: number;
+  scout_sent_total: number;
+  scout_opened_total: number;
+  scout_replied_total: number;
+  scout_applied_total: number;
+}
+
 async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   const supabase = getSupabaseAdminClient();
   
@@ -71,9 +78,64 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   return data as JobDetail;
 }
 
+async function fetchScoutStats(jobId: string): Promise<ScoutStats> {
+  const supabase = getSupabaseAdminClient();
+  
+  const now = new Date();
+  const date7DaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const date30DaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // スカウト送信数（メッセージテーブルから）
+  const { data: scoutMessages, error: scoutError } = await supabase
+    .from('messages')
+    .select('sent_at, read_at, status')
+    .eq('message_type', 'SCOUT')
+    .in('room_id', (await supabase.from('rooms').select('id').eq('related_job_posting_id', jobId)).data?.map(room => room.id) || []);
+
+  if (scoutError) {
+    console.error('Error fetching scout messages:', scoutError);
+  }
+
+  // 応募数（applicationテーブルから）
+  const { data: applications, error: appError } = await supabase
+    .from('application')
+    .select('created_at, status')
+    .eq('job_posting_id', jobId);
+
+  if (appError) {
+    console.error('Error fetching applications:', appError);
+  }
+
+  const scoutMessagesData = scoutMessages || [];
+  const applicationsData = applications || [];
+
+  // 統計を計算
+  const stats = {
+    scout_sent_7d: scoutMessagesData.filter(m => new Date(m.sent_at) >= date7DaysAgo).length,
+    scout_opened_7d: scoutMessagesData.filter(m => m.read_at && new Date(m.read_at) >= date7DaysAgo).length,
+    scout_replied_7d: scoutMessagesData.filter(m => m.status === 'REPLIED' && new Date(m.sent_at) >= date7DaysAgo).length,
+    scout_applied_7d: applicationsData.filter(a => new Date(a.created_at) >= date7DaysAgo).length,
+    
+    scout_sent_30d: scoutMessagesData.filter(m => new Date(m.sent_at) >= date30DaysAgo).length,
+    scout_opened_30d: scoutMessagesData.filter(m => m.read_at && new Date(m.read_at) >= date30DaysAgo).length,
+    scout_replied_30d: scoutMessagesData.filter(m => m.status === 'REPLIED' && new Date(m.sent_at) >= date30DaysAgo).length,
+    scout_applied_30d: applicationsData.filter(a => new Date(a.created_at) >= date30DaysAgo).length,
+    
+    scout_sent_total: scoutMessagesData.length,
+    scout_opened_total: scoutMessagesData.filter(m => m.read_at).length,
+    scout_replied_total: scoutMessagesData.filter(m => m.status === 'REPLIED').length,
+    scout_applied_total: applicationsData.length,
+  };
+
+  return stats;
+}
+
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { job_id } = await params;
-  const jobDetail = await fetchJobDetail(job_id);
+  const [jobDetail, scoutStats] = await Promise.all([
+    fetchJobDetail(job_id),
+    fetchScoutStats(job_id)
+  ]);
 
   if (!jobDetail) {
     return (
@@ -122,6 +184,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     return `${min}万円 〜 ${max}万円`;
   };
 
+  const calculateRate = (numerator: number, denominator: number) => {
+    if (denominator === 0) return '0%';
+    return `${Math.round((numerator / denominator) * 100)}%`;
+  };
+
   const DisplayValue: React.FC<{ value: string; className?: string }> = ({
     value,
     className = '',
@@ -149,112 +216,131 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <nav className="mb-8 text-sm text-gray-600">
-          <span>管理画面トップ</span>
-          <span className="mx-2">&gt;</span>
-          <span>求人一覧</span>
-          <span className="mx-2">&gt;</span>
-          <span className="text-gray-900 font-medium">求人詳細</span>
-        </nav>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="mx-auto">
+        
+        {/* 上部テーブル */}
+        <div className="mb-6 flex-col justify-center w-full">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">求人分析</h2>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {jobDetail.title}
-                </h1>
-              </div>
-              <div className="flex gap-3">
-                <Link href={`/admin/job/${job_id}/edit`}>
-                  <Button
-                    variant="green-outline"
-                    size="figma-outline"
-                    className="px-6 py-2 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
-                  >
-                    編集
-                  </Button>
-                </Link>
-                <Button
-                  variant="destructive"
-                  size="figma-outline"
-                  className="px-6 py-2 rounded-[32px] bg-red-500 text-white hover:bg-red-600"
-                >
-                  削除
-                </Button>
+          <table className="border-collapse border border-gray-400">
+            <tbody>
+              <tr>
+                <td className="w-[176px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]"></td>
+                <td className="w-[176px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">スカウト送信数</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">開封数</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">返信数(返信率)</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">応募数(応募率)</td>
+              </tr>
+              <tr>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去7日合計</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_sent_7d}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_opened_7d}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_replied_7d} ({calculateRate(scoutStats.scout_replied_7d, scoutStats.scout_sent_7d)})</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_applied_7d} ({calculateRate(scoutStats.scout_applied_7d, scoutStats.scout_sent_7d)})</td>
+              </tr>
+              <tr>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去30日合計</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_sent_30d}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_opened_30d}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_replied_30d} ({calculateRate(scoutStats.scout_replied_30d, scoutStats.scout_sent_30d)})</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_applied_30d} ({calculateRate(scoutStats.scout_applied_30d, scoutStats.scout_sent_30d)})</td>
+              </tr>
+              <tr>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">累計</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_sent_total}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_opened_total}</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_replied_total} ({calculateRate(scoutStats.scout_replied_total, scoutStats.scout_sent_total)})</td>
+                <td className="w-[176px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">{scoutStats.scout_applied_total} ({calculateRate(scoutStats.scout_applied_total, scoutStats.scout_sent_total)})</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* 選考メモセクション */}
+        <div className='w-full mb-[37px]'>
+          <div className='flex items-start gap-8'>
+            <div className='w-[200px] flex-shrink-0'>
+              <label className='block text-[16px] font-bold text-gray-900'>
+                選考メモ
+              </label>
+            </div>
+            <div className='flex-1'>
+              <div className='w-full px-4 py-3 min-h-[100px] text-gray-900 whitespace-pre-wrap'>
+                メモが入力されていません
               </div>
             </div>
           </div>
+        </div>
+        
+        <div className="bg-[#f9f9f9] w-[900px]">
+          
+            <div className="flex items-start justify-between">
+      
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {jobDetail.title}
+                </h1>
+          </div>
 
           <div className="p-6">
-            {/* 求人情報テーブル */}
-            <div className="mb-8">
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableHead className="w-32">会社名</TableHead>
-                    <TableCell>{jobDetail.company_accounts?.company_name || '不明'}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>ステータス</TableHead>
-                    <TableCell>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}>
-                        {statusMap[jobDetail.status] || jobDetail.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>公開タイプ</TableHead>
-                    <TableCell>{publicationTypeMap[jobDetail.publication_type] || jobDetail.publication_type}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>職種</TableHead>
-                    <TableCell>
-                      <TagDisplay items={jobDetail.job_type || []} />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>業種</TableHead>
-                    <TableCell>
-                      <TagDisplay items={jobDetail.industry || []} />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>想定年収</TableHead>
-                    <TableCell>
-                      {jobDetail.salary_min && jobDetail.salary_max 
-                        ? formatSalary(jobDetail.salary_min, jobDetail.salary_max)
-                        : '未設定'
-                      }
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>勤務地</TableHead>
-                    <TableCell>
-                      <TagDisplay items={jobDetail.work_location || []} />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>雇用形態</TableHead>
-                    <TableCell>{jobDetail.employment_type}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>作成日</TableHead>
-                    <TableCell>{new Date(jobDetail.created_at).toLocaleDateString('ja-JP')}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>更新日</TableHead>
-                    <TableCell>{new Date(jobDetail.updated_at).toLocaleDateString('ja-JP')}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
             {/* 求人詳細セクション（company/job/newの確認ページと同じデザイン） */}
-            <div className="border-t pt-8">
+            <div className="">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">求人詳細</h2>
+              
+              {/* 会社名 */}
+              <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
+                <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                  <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    会社名
+                  </div>
+                </div>
+                <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                  <DisplayValue value={jobDetail.company_accounts?.company_name || '不明'} />
+                </div>
+              </div>
+
+              {/* ステータス・公開タイプ */}
+              <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
+                <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                  <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    ステータス
+                  </div>
+                </div>
+                <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                  <div className='flex gap-4'>
+                    <DisplayValue value={statusMap[jobDetail.status] || jobDetail.status} />
+                    <DisplayValue value={`(${publicationTypeMap[jobDetail.publication_type] || jobDetail.publication_type})`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 職種 */}
+              {jobDetail.job_type && jobDetail.job_type.length > 0 && (
+                <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
+                  <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      職種
+                    </div>
+                  </div>
+                  <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                    <TagDisplay items={jobDetail.job_type} />
+                  </div>
+                </div>
+              )}
+
+              {/* 業種 */}
+              {jobDetail.industry && jobDetail.industry.length > 0 && (
+                <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
+                  <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                    <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                      業種
+                    </div>
+                  </div>
+                  <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                    <TagDisplay items={jobDetail.industry} />
+                  </div>
+                </div>
+              )}
               
               {/* ポジション概要（業務内容＋魅力） */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
@@ -359,7 +445,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </div>
 
-              {/* 選考フロー */}
+              {/* 選考情報 */}
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -391,6 +477,54 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               </div>
             </div>
 
+              {/* 基本情報 */}
+              <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
+                <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                  <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                    基本情報
+                  </div>
+                </div>
+                <div className='flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6'>
+                  {/* 作成日時 */}
+                  <div className='w-full'>
+                    <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
+                      作成日時
+                    </label>
+                    <DisplayValue 
+                      value={new Date(jobDetail.created_at).toLocaleString('ja-JP')} 
+                    />
+                  </div>
+                  {/* 更新日時 */}
+                  <div className='w-full'>
+                    <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
+                      更新日時
+                    </label>
+                    <DisplayValue 
+                      value={new Date(jobDetail.updated_at).toLocaleString('ja-JP')} 
+                    />
+                  </div>
+                  {/* 雇用形態 */}
+                  <div className='w-full'>
+                    <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
+                      雇用形態
+                    </label>
+                    <DisplayValue value={jobDetail.employment_type} />
+                  </div>
+                  {/* 勤務地 */}
+                  <div className='w-full'>
+                    <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
+                      勤務地
+                    </label>
+                    <DisplayValue 
+                      value={jobDetail.work_location && jobDetail.work_location.length > 0 
+                        ? jobDetail.work_location.join('、') 
+                        : '未設定'
+                      } 
+                    />
+                  </div>
+                </div>
+              </div>
+
             <div className="mt-8 pt-8 border-t flex justify-center gap-4">
               <Link href="/admin/job">
                 <Button
@@ -398,7 +532,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   size="figma-outline"
                   className="px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
                 >
-                  求人一覧に戻る
+                  編集する
                 </Button>
               </Link>
               <Link href={`/admin/job/${job_id}/edit`}>
@@ -407,7 +541,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                   size="figma-default"
                   className="px-10 py-3 rounded-[32px] bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white"
                 >
-                  求人を編集
+                 求人承認/非承認
                 </Button>
               </Link>
             </div>
