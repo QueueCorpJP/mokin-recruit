@@ -1,47 +1,36 @@
-import { redirect } from 'next/navigation';
-import { getServerAuth } from '@/lib/auth/server';
-import { AccessRestricted } from '@/components/AccessRestricted';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 
-export default async function CompanyDashboardLayout({
+const CompanyDashboardLayoutServer = dynamic(
+  () => import('./CompanyDashboardLayoutServer'),
+  {
+    loading: () => (
+      <div className="min-h-screen bg-white">
+        <div className="h-[80px] bg-white border-b border-gray-200" />
+        <div className="animate-pulse bg-gray-100 h-4 w-full" />
+        <div className="min-h-[200px] bg-[#323232]" />
+      </div>
+    ),
+    ssr: true,
+  }
+);
+
+export default function CompanyDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // サーバーサイドで認証状態を確認（最適化済み: React cacheとMiddleware検証を活用）
-  const auth = await getServerAuth();
-
-  // 認証情報を整理
-  const userInfo = auth.isAuthenticated && auth.user ? {
-    name: auth.user.name || auth.user.email,
-    email: auth.user.email,
-    userType: auth.userType
-  } : undefined;
-
-  // 認証されていない場合
-  if (!auth.isAuthenticated) {
-    return <AccessRestricted userType="company" />;
-  }
-
-  // 企業ユーザーまたは管理者でない場合は候補者ページへリダイレクト
-  if (auth.userType !== 'company_user' && auth.userType !== 'admin') {
-    redirect('/candidate');
-  }
-
   return (
-    <>
-      <AuthAwareNavigationServer 
-        variant="company" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-      {children}
-      <AuthAwareFooterServer 
-        variant="company" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-    </>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white">
+          <div className="h-[80px] bg-white border-b border-gray-200" />
+          <div className="animate-pulse bg-gray-100 h-4 w-full" />
+          <div className="min-h-[200px] bg-[#323232]" />
+        </div>
+      }
+    >
+      <CompanyDashboardLayoutServer>{children}</CompanyDashboardLayoutServer>
+    </Suspense>
   );
 }

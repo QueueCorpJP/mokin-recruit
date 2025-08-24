@@ -1,36 +1,36 @@
-import { getServerAuth } from '@/lib/auth/server';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 
-export default async function CompanyAuthLayout({
+const CompanyAuthLayoutServer = dynamic(
+  () => import('./CompanyAuthLayoutServer'),
+  {
+    loading: () => (
+      <div className="min-h-screen bg-white">
+        <div className="h-[80px] bg-white border-b border-gray-200" />
+        <div className="animate-pulse bg-gray-100 h-4 w-full" />
+        <div className="min-h-[200px] bg-[#323232]" />
+      </div>
+    ),
+    ssr: true,
+  }
+);
+
+export default function CompanyAuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // サーバーサイドで認証状態を確認（1回のみ）
-  const auth = await getServerAuth();
-
-  // 認証情報を整理
-  const userInfo = auth.isAuthenticated && auth.user ? {
-    name: auth.user.name || auth.user.email,
-    email: auth.user.email,
-    userType: auth.userType
-  } : undefined;
-
-  // 認証ページは誰でもアクセス可能
   return (
-    <>
-      <AuthAwareNavigationServer 
-        variant="company" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-      {children}
-      <AuthAwareFooterServer 
-        variant="company" 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
-    </>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white">
+          <div className="h-[80px] bg-white border-b border-gray-200" />
+          <div className="animate-pulse bg-gray-100 h-4 w-full" />
+          <div className="min-h-[200px] bg-[#323232]" />
+        </div>
+      }
+    >
+      <CompanyAuthLayoutServer>{children}</CompanyAuthLayoutServer>
+    </Suspense>
   );
 }

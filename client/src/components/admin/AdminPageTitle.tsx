@@ -4,325 +4,307 @@ import { usePathname } from 'next/navigation';
 import { NewArticleButton } from './ui/NewArticleButton';
 import { AdminButton } from './ui/AdminButton';
 
+interface ButtonConfig {
+  text: string;
+  variant: 'green-gradient' | 'green-outline';
+  onClick: () => void;
+}
+
+interface PageConfig {
+  title: string;
+  buttons?: ButtonConfig[];
+}
+
 interface PageTitleConfig {
-  [key: string]: string;
+  [key: string]: PageConfig;
 }
 
 const pageTitleConfig: PageTitleConfig = {
-  '/admin': '管理者トップ',
-  '/admin/job': '求人管理',
-  '/admin/member': 'メンバー管理',
-  '/admin/login': 'ログイン',
-  '/admin/message': 'メッセージ管理',
-  '/admin/company': '企業アカウント管理',
-  '/admin/candidate': '候補者管理',
-  '/admin/media': 'メディア記事一覧',
-  '/admin/media/new': '新規記事追加',
-  '/admin/media/edit': '記事編集',
-  '/admin/media/preview': 'プレビュー',
-  '/admin/media/edit/preview': '記事プレビュー',
-  '/admin/media/category': 'カテゴリ一覧',
-  '/admin/media/tag': 'タグ一覧',
-  '/admin/media/tag/new': 'タグ作成',
-  '/admin/notice': '運営からのお知らせ管理',
-  '/admin/analytics': '分析',
+  '/admin': { title: '管理者トップ' },
+  '/admin/job': { 
+    title: '求人管理',
+    buttons: [{ 
+      text: '求人作成', 
+      variant: 'green-gradient', 
+      onClick: () => window.location.href = '/admin/job/new'
+    }]
+  },
+  '/admin/job/new': { 
+    title: '求人作成',
+    buttons: [
+      { 
+        text: '確認する', 
+        variant: 'green-outline', 
+        onClick: () => {
+          console.log('AdminPageTitle: Dispatching job-new-back event');
+          const event = new CustomEvent('job-new-back');
+          window.dispatchEvent(event);
+        }
+      },
+      { 
+        text: '保存', 
+        variant: 'green-gradient', 
+        onClick: () => {
+          console.log('AdminPageTitle: Dispatching job-new-create event');
+          const event = new CustomEvent('job-new-create');
+          window.dispatchEvent(event);
+        }
+      }
+    ]
+  },
+  '/admin/job/new/complete': { title: '求人作成完了' },
+  '/admin/job/pending': { 
+    title: '承認待ち求人',
+    buttons: [
+      { 
+        text: 'CSVダウンロード', 
+        variant: 'green-outline', 
+        onClick: () => {
+          console.log('AdminPageTitle: Dispatching pending-csv-download event');
+          const event = new CustomEvent('pending-csv-download');
+          window.dispatchEvent(event);
+        }
+      },
+      { 
+        text: '一括承認', 
+        variant: 'green-gradient', 
+        onClick: () => {
+          console.log('AdminPageTitle: Dispatching pending-bulk-approve event');
+          const event = new CustomEvent('pending-bulk-approve');
+          window.dispatchEvent(event);
+        }
+      }
+    ]
+  },
+  '/admin/member': { title: 'メンバー管理' },
+  '/admin/login': { title: 'ログイン' },
+  '/admin/message': { title: 'メッセージ管理' },
+  '/admin/company': { title: '企業アカウント管理' },
+  '/admin/candidate': { title: '候補者管理' },
+  '/admin/media': { 
+    title: 'メディア記事一覧',
+    buttons: [{ 
+      text: '新規記事追加', 
+      variant: 'green-gradient', 
+      onClick: () => window.location.href = '/admin/media/new'
+    }]
+  },
+  '/admin/media/new': {
+    title: '新規記事追加',
+    buttons: [
+      { 
+        text: '下書き保存', 
+        variant: 'green-outline', 
+        onClick: () => window.dispatchEvent(new CustomEvent('draft-save'))
+      },
+      { 
+        text: '記事を確認する', 
+        variant: 'green-gradient', 
+        onClick: () => window.dispatchEvent(new CustomEvent('preview-click'))
+      }
+    ]
+  },
+  '/admin/media/edit': {
+    title: '記事編集',
+    buttons: [
+      { 
+        text: '下書き保存', 
+        variant: 'green-outline', 
+        onClick: () => window.dispatchEvent(new CustomEvent('draft-save'))
+      },
+      { 
+        text: '記事を確認する', 
+        variant: 'green-gradient', 
+        onClick: () => window.dispatchEvent(new CustomEvent('preview-click'))
+      }
+    ]
+  },
+  '/admin/media/preview': {
+    title: 'プレビュー',
+    buttons: [
+      { 
+        text: '編集に戻る', 
+        variant: 'green-outline', 
+        onClick: () => window.dispatchEvent(new CustomEvent('cancel-preview'))
+      },
+      { 
+        text: '記事を下書き保存', 
+        variant: 'green-gradient', 
+        onClick: () => window.dispatchEvent(new CustomEvent('save-draft'))
+      },
+      { 
+        text: '記事を投稿する', 
+        variant: 'green-gradient', 
+        onClick: () => window.dispatchEvent(new CustomEvent('publish-article'))
+      }
+    ]
+  },
+  '/admin/media/edit/preview': {
+    title: '記事プレビュー',
+    buttons: [
+      { 
+        text: '編集に戻る', 
+        variant: 'green-outline', 
+        onClick: () => {
+          const previewDataString = sessionStorage.getItem('previewArticle');
+          if (previewDataString) {
+            try {
+              const previewData = JSON.parse(previewDataString);
+              const statusSelect = document.querySelector('input[name="status"]') as HTMLInputElement;
+              const currentStatus = statusSelect?.value || 'DRAFT';
+              const updatedData = { ...previewData, status: currentStatus };
+              sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
+              window.location.href = `/admin/media/edit?id=${previewData.id}`;
+            } catch (error) {
+              console.error('Preview data parsing error:', error);
+              window.location.href = '/admin/media/edit';
+            }
+          } else {
+            window.location.href = '/admin/media/edit';
+          }
+        }
+      },
+      { 
+        text: '記事を保存/公開する', 
+        variant: 'green-gradient', 
+        onClick: () => window.dispatchEvent(new CustomEvent('save-article-direct'))
+      }
+    ]
+  },
+  '/admin/media/category': {
+    title: 'カテゴリ一覧',
+    buttons: [{ 
+      text: '新規カテゴリ追加', 
+      variant: 'green-gradient', 
+      onClick: () => window.dispatchEvent(new CustomEvent('add-category-modal'))
+    }]
+  },
+  '/admin/media/tag': {
+    title: 'タグ一覧',
+    buttons: [{ 
+      text: '新規タグ追加', 
+      variant: 'green-gradient', 
+      onClick: () => window.dispatchEvent(new CustomEvent('add-tag-modal'))
+    }]
+  },
+  '/admin/media/tag/new': { title: 'タグ作成' },
+  '/admin/notice': { title: '運営からのお知らせ管理' },
+  '/admin/analytics': { title: '分析' },
 };
 
 export function AdminPageTitle() {
   const pathname = usePathname();
   
-  // 現在のパスに対応するタイトルを取得
-  const getPageTitle = () => {
+  // console.log('AdminPageTitle: Current pathname:', pathname);
+  
+  // 現在のパスに対応する設定を取得
+  const getPageConfig = (): PageConfig => {
     // 完全一致を先にチェック
     if (pageTitleConfig[pathname]) {
       return pageTitleConfig[pathname];
     }
     
     // 動的ルートのチェック
-    if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
-      return '記事詳細';
+    if (pathname.match(/^\/admin\/job\/[^\/]+\/edit\/confirm$/)) {
+      return { title: '求人編集完了' };
     }
     
-    // デフォルトタイトル
-    return 'ページ';
+    if (pathname.match(/^\/admin\/job\/[^\/]+\/edit$/)) {
+      return { 
+        title: '求人編集',
+        buttons: [{
+          text: '更新する',
+          variant: 'green-gradient',
+          onClick: () => {
+            console.log('AdminPageTitle: Dispatching job-edit-update event');
+            const event = new CustomEvent('job-edit-update');
+            window.dispatchEvent(event);
+          }
+        }]
+      };
+    }
+    
+    if (pathname.match(/^\/admin\/job\/[^\/]+$/) && !pathname.includes('/edit')) {
+      return {
+        title: '求人詳細', 
+        buttons: [{
+          text: '編集',
+          variant: 'green-gradient',  
+          onClick: () => {
+            const pathParts = pathname.split('/');
+            const jobId = pathParts[pathParts.length - 1];
+            window.location.href = `/admin/job/${jobId}/edit`;
+          }
+        },
+        {
+          text: '削除',
+          variant: 'green-outline',
+          onClick: () => {
+            // Delete functionality would be implemented here
+            alert('削除機能は未実装です');
+          }
+        }]
+      };
+    }
+    
+    if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
+      return {
+        title: '記事詳細',
+        buttons: [{
+          text: '編集',
+          variant: 'green-gradient',
+          onClick: () => {
+            const pathParts = pathname.split('/');
+            const mediaId = pathParts[pathParts.length - 1];
+            window.location.href = `/admin/media/edit?id=${mediaId}`;
+          }
+        }]
+      };
+    }
+    
+    // デフォルト
+    return { title: 'ページ' };
   };
 
-  const title = getPageTitle();
+  const config = getPageConfig();
+  // console.log('AdminPageTitle: Matched config:', config);
 
-  // Special cases with buttons - include buttons alongside title
-  if (pathname === '/admin/media') {
+  // タイトルのスタイル
+  const titleStyle = {
+    color: '#323232',
+    fontFamily: 'Inter',
+    fontSize: '32px',
+    fontStyle: 'normal' as const,
+    fontWeight: 700,
+    lineHeight: 'normal'
+  };
+
+  // ボタンがある場合は横並びレイアウト
+  if (config.buttons && config.buttons.length > 0) {
     return (
       <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
-        </h1>
-        <NewArticleButton />
-      </div>
-    );
-  }
-
-  if (pathname === '/admin/media/category') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
-        </h1>
-        <AdminButton
-          onClick={() => {
-            const event = new CustomEvent('add-category-modal');
-            window.dispatchEvent(event);
-          }}
-          text="新規カテゴリ追加"
-          variant="green-gradient"
-        />
-      </div>
-    );
-  }
-
-  if (pathname === '/admin/media/tag') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
-        </h1>
-        <AdminButton
-          onClick={() => {
-            const event = new CustomEvent('add-tag-modal');
-            window.dispatchEvent(event);
-          }}
-          text="新規タグ追加"
-          variant="green-gradient"
-        />
-      </div>
-    );
-  }
-
-  if (pathname === '/admin/media/new') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
+        <h1 style={titleStyle}>
+          {config.title}
         </h1>
         <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('draft-save');
-              window.dispatchEvent(event);
-            }}
-            text="下書き保存"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('preview-click');
-              window.dispatchEvent(event);
-            }}
-            text="記事を確認する"
-            variant="green-gradient"
-          />
+          {config.buttons.map((button, index) => (
+            <AdminButton
+              key={index}
+              onClick={button.onClick}
+              text={button.text}
+              variant={button.variant}
+            />
+          ))}
         </div>
       </div>
     );
   }
 
-  if (pathname.match(/^\/admin\/media\/edit\/preview$/)) {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          記事プレビュー
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              // page.tsxのhandleBack関数と同じ処理を直接実行
-              const previewDataString = sessionStorage.getItem('previewArticle');
-              if (previewDataString) {
-                try {
-                  const previewData = JSON.parse(previewDataString);
-                  // ステータスセレクトの現在の値を取得
-                  const statusSelect = document.querySelector('input[name="status"]') as HTMLInputElement;
-                  const currentStatus = statusSelect?.value || 'DRAFT';
-                  
-                  const updatedData = { ...previewData, status: currentStatus };
-                  sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
-                  window.location.href = `/admin/media/edit?id=${previewData.id}`;
-                } catch (error) {
-                  console.error('Preview data parsing error:', error);
-                  window.location.href = '/admin/media/edit';
-                }
-              } else {
-                window.location.href = '/admin/media/edit';
-              }
-            }}
-            text="編集に戻る"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              // page.tsxのhandleSaveClick関数と同じ処理を直接実行
-              const event = new CustomEvent('save-article-direct');
-              window.dispatchEvent(event);
-            }}
-            text="記事を保存/公開する"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (pathname === '/admin/media/edit') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('draft-save');
-              window.dispatchEvent(event);
-            }}
-            text="下書き保存"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('preview-click');
-              window.dispatchEvent(event);
-            }}
-            text="記事を確認する"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (pathname === '/admin/media/preview') {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          新規記事追加
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('cancel-preview');
-              window.dispatchEvent(event);
-            }}
-            text="編集に戻る"
-            variant="green-outline"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('save-draft');
-              window.dispatchEvent(event);
-            }}
-            text="記事を下書き保存"
-            variant="green-gradient"
-          />
-          <AdminButton
-            onClick={() => {
-              const event = new CustomEvent('publish-article');
-              window.dispatchEvent(event);
-            }}
-            text="記事を投稿する"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
-    return (
-      <div className="mb-6 flex justify-between items-center">
-        <h1 style={{
-          color: '#323232',
-          fontFamily: 'Inter',
-          fontSize: '32px',
-          fontStyle: 'normal',
-          fontWeight: 700,
-          lineHeight: 'normal'
-        }}>
-          {title}
-        </h1>
-        <div className="flex gap-4">
-          <AdminButton
-            onClick={() => {
-              const pathParts = pathname.split('/');
-              const mediaId = pathParts[pathParts.length - 1];
-              window.location.href = `/admin/media/edit?id=${mediaId}`;
-            }}
-            text="編集"
-            variant="green-gradient"
-          />
-        </div>
-      </div>
-    );
-  }
-
+  // ボタンがない場合は通常のタイトルのみ
   return (
     <div className="mb-6">
-      <h1 style={{
-        color: '#323232',
-        fontFamily: 'Inter',
-        fontSize: '32px',
-        fontStyle: 'normal',
-        fontWeight: 700,
-        lineHeight: 'normal'
-      }}>
-        {title}
+      <h1 style={titleStyle}>
+        {config.title}
       </h1>
     </div>
   );

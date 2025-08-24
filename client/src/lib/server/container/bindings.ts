@@ -30,8 +30,6 @@ import { SessionService } from '@/lib/server/core/services/SessionService';
 import { UserRegistrationService } from '@/lib/server/core/services/UserRegistrationService';
 import { ValidationService } from '@/lib/server/core/services/ValidationService';
 
-// Controllers
-import { AuthController } from '@/lib/server/controllers/AuthController';
 
 // Interfaces
 import {
@@ -111,8 +109,6 @@ if (process.env.NEXT_PHASE === 'phase-production-build') {
       .bind<ValidationService>(TYPES.ValidationService)
       .to(ValidationService);
 
-    // === コントローラーバインディング ===
-    container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 
     logger.info('✅ DI Container initialized successfully');
     logger.debug('📦 Registered bindings:', {
@@ -127,7 +123,7 @@ if (process.env.NEXT_PHASE === 'phase-production-build') {
         'UserRegistrationService',
         'ValidationService',
       ],
-      controllers: ['AuthController'],
+      controllers: [],
     });
   } catch (error) {
     logger.error('❌ Failed to initialize DI Container:', error);

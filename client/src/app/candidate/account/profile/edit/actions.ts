@@ -1,70 +1,90 @@
 'use server';
 
-import { profileSchema } from '@/lib/schema/profile';
-import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
-export async function updateCandidateProfile(
-  prevState: any,
-  formData: FormData
-) {
-  // 受信データの全内容をログ出力
-  console.log('=== FormData.entries() ===');
-  for (const [key, value] of formData.entries()) {
-    console.log(key, value);
-  }
-  // 1. 認証
-  const auth = await requireCandidateAuth();
-  if (!auth) {
-    return { success: false, message: '認証が必要です' };
-  }
+// フォームデータの型定義
+export interface ProfileUpdateData {
+  gender: 'male' | 'female' | 'unspecified';
+  prefecture: string;
+  birthYear: string;
+  birthMonth: string;
+  birthDay: string;
+  phoneNumber: string;
+  currentIncome: string;
+}
 
-  // 1.5. DB現状値取得（編集不可フィールド維持用）
-  const repo = new CandidateRepository();
-  const currentCandidate = await repo.findById(auth.id);
-  if (!currentCandidate) {
-    return { success: false, message: '候補者情報が見つかりません' };
-  }
-
-  // 2. バリデーション
-  const parsed = profileSchema.safeParse({
-    lastName: currentCandidate.last_name, // 編集不可
-    firstName: currentCandidate.first_name, // 編集不可
-    lastNameKana: currentCandidate.last_name_kana, // 編集不可
-    firstNameKana: currentCandidate.first_name_kana, // 編集不可
-    gender: formData.get('gender'),
-    prefecture: formData.get('prefecture'),
-    birthYear: formData.get('birthYear'),
-    birthMonth: formData.get('birthMonth'),
-    birthDay: formData.get('birthDay'),
-    phoneNumber: formData.get('phoneNumber'),
-    currentIncome: formData.get('currentIncome'),
-  });
-  if (!parsed.success) {
-    return {
-      success: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: '入力内容に誤りがあります',
-    };
-  }
-
-  // 3. DB更新
+// プロフィール更新のサーバーアクション
+export async function updateCandidateProfile(formData: FormData) {
   try {
-    // birth_dateを組み立て
-    const birth_date = `${parsed.data.birthYear}-${parsed.data.birthMonth.padStart(2, '0')}-${parsed.data.birthDay.padStart(2, '0')}`;
-    await repo.update(auth.id, {
-      last_name: currentCandidate.last_name,
-      first_name: currentCandidate.first_name,
-      last_name_kana: currentCandidate.last_name_kana,
-      first_name_kana: currentCandidate.first_name_kana,
-      gender: parsed.data.gender,
-      prefecture: parsed.data.prefecture,
-      birth_date,
-      phone_number: parsed.data.phoneNumber,
-      current_income: parsed.data.currentIncome,
-    });
-    return { success: true, message: 'プロフィールを更新しました' };
-  } catch (e) {
-    return { success: false, message: 'サーバーエラーが発生しました' };
+    // 認証チェック
+    const authResult = await requireCandidateAuthForAction();
+    if (!authResult.success) {
+      throw new Error(authResult.error);
+    }
+
+    const { candidateId } = authResult.data;
+
+    // フォームデータを取得
+    const gender = formData.get('gender') as string;
+    const prefecture = formData.get('prefecture') as string;
+    const birthYear = formData.get('birthYear') as string;
+    const birthMonth = formData.get('birthMonth') as string;
+    const birthDay = formData.get('birthDay') as string;
+    const phoneNumber = formData.get('phoneNumber') as string;
+    const currentIncome = formData.get('currentIncome') as string;
+
+    // バリデーション
+    if (!gender || !prefecture || !birthYear || !birthMonth || !birthDay) {
+      throw new Error('必須項目が入力されていません');
+    }
+
+    // 生年月日をDate型に変換
+    let birthDate: string | null = null;
+    if (birthYear && birthMonth && birthDay) {
+      const year = parseInt(birthYear);
+      const month = parseInt(birthMonth);
+      const day = parseInt(birthDay);
+      
+      // 日付の妥当性チェック
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() === year && 
+          date.getMonth() === month - 1 && 
+          date.getDate() === day) {
+        birthDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      } else {
+        throw new Error('無効な生年月日です');
+      }
+    }
+
+    // データベースを更新
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from('candidates')
+      .update({
+        gender: gender as 'male' | 'female' | 'unspecified',
+        current_residence: prefecture,
+        birth_date: birthDate,
+        phone_number: phoneNumber || null,
+        current_salary: currentIncome || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', candidateId);
+
+    if (error) {
+      console.error('プロフィール更新エラー:', error);
+      throw new Error('プロフィールの更新に失敗しました');
+    }
+
+    console.log('プロフィール更新成功:', { candidateId });
+
+  } catch (error) {
+    console.error('プロフィール更新エラー:', error);
+    // エラーをセッションに保存したり、エラーページにリダイレクトすることも可能
+    throw error;
   }
+
+  // 成功時はプロフィール確認ページにリダイレクト
+  redirect('/candidate/account/profile');
 }

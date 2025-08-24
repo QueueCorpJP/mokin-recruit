@@ -1,10 +1,10 @@
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
-import { requireCompanyAuthWithSession } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 
 export default async function CompanyMessagePage() {
   // 統一的な認証チェック
-  const authResult = await requireCompanyAuthWithSession();
+  const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
     return (
       <div className='w-full flex flex-col items-center justify-center p-8'>
@@ -16,7 +16,8 @@ export default async function CompanyMessagePage() {
     );
   }
 
-  const { companyUserId, fullName } = authResult.data;
+  const { companyUserId } = authResult.data;
+  const fullName = (authResult.data as any).fullName;
   console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,

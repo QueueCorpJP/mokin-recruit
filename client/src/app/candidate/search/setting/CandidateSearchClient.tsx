@@ -548,7 +548,8 @@ export default function CandidateSearchClient({
                     >
                       <IndustryModal
                         selectedIndustries={selectedIndustries}
-                        setSelectedIndustries={setSelectedIndustries}
+                        onIndustriesChange={setSelectedIndustries}
+                        onClose={() => setIndustryModalOpen(false)}
                       />
                     </Modal>
                   )}

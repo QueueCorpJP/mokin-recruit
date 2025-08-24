@@ -1,59 +1,74 @@
-import { getServerAuth } from '@/lib/auth/server';
-import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
-import { initializeSupabase } from '@/lib/server/database/supabase';
 import { redirect } from 'next/navigation';
-import ProfileEditClientWrapper from './ProfileEditClientWrapper';
+import { requireCandidateAuth } from '@/lib/auth/server';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import ProfileEditForm from './ProfileEditForm';
+
+// 候補者データの型定義
+interface CandidateData {
+  id: string;
+  email: string;
+  last_name?: string;
+  first_name?: string;
+  last_name_kana?: string;
+  first_name_kana?: string;
+  phone_number?: string;
+  current_residence?: string;
+  prefecture?: string;
+  gender?: string;
+  birth_date?: string;
+  current_income?: string;
+}
+
+// 候補者データを取得する関数
+async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    const { data, error } = await supabase
+      .from('candidates')
+      .select(`
+        id,
+        email,
+        last_name,
+        first_name,
+        last_name_kana,
+        first_name_kana,
+        phone_number,
+        current_residence,
+        prefecture,
+        gender,
+        birth_date,
+        current_income
+      `)
+      .eq('id', candidateId)
+      .single();
+
+    if (error) {
+      console.error('候補者データの取得に失敗しました:', error);
+      return null;
+    }
+
+    return data as CandidateData;
+  } catch (error) {
+    console.error('データベースエラー:', error);
+    return null;
+  }
+}
 
 export default async function ProfileEditPage() {
-  // サーバーサイド認証
-  const auth = await getServerAuth();
-  if (!auth.isAuthenticated || auth.userType !== 'candidate' || !auth.user) {
-    redirect('/login');
+  // 認証チェック
+  const user = await requireCandidateAuth();
+  if (!user) {
+    redirect('/candidate/auth/login');
   }
 
-  // Supabase初期化 & Repository生成
-  initializeSupabase();
-  const repo = new CandidateRepository();
-  const candidate = await repo.findById(auth.user.id);
-
-  if (!candidate) {
-    return <div>プロフィール情報が見つかりません。</div>;
+  // 候補者データを取得
+  const candidateData = await getCandidateData(user.id);
+  if (!candidateData) {
+    redirect('/candidate/auth/login');
   }
 
-  // birth_dateの分解
-  let birthYear = '';
-  let birthMonth = '';
-  let birthDay = '';
-  if (candidate.birth_date) {
-    const d = new Date(candidate.birth_date);
-    birthYear = d.getFullYear().toString();
-    birthMonth = (d.getMonth() + 1).toString();
-    birthDay = d.getDate().toString();
-  }
-
-  // 必要なDTOのみ渡す
-  let gender: 'male' | 'female' | 'unspecified' = 'unspecified';
-  if (
-    candidate.gender === 'male' ||
-    candidate.gender === 'female' ||
-    candidate.gender === 'unspecified'
-  ) {
-    gender = candidate.gender;
-  }
-  const profile = {
-    lastName: candidate.last_name || '',
-    firstName: candidate.first_name || '',
-    lastNameKana: candidate.last_name_kana || '',
-    firstNameKana: candidate.first_name_kana || '',
-    gender,
-    prefecture: candidate.prefecture || '',
-    birthYear,
-    birthMonth,
-    birthDay,
-    birth_date: candidate.birth_date || '',
-    phoneNumber: candidate.phone_number || '',
-    currentIncome: candidate.current_income || '',
-  };
-
-  return <ProfileEditClientWrapper profile={profile} />;
+  return (
+    <ProfileEditForm candidateData={candidateData} />
+  );
 }

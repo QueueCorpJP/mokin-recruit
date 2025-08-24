@@ -47,21 +47,7 @@ const envSchema = z.object({
     .transform(url => url || process.env.SUPABASE_URL),
 
   // ===== セキュリティ設定 =====
-  JWT_SECRET: z
-    .string()
-    .min(32, 'JWT_SECRET must be at least 32 characters for security')
-    .refine(
-      secret =>
-        !/^(test|dev|default|secret|password|123)/.test(secret.toLowerCase()),
-      'JWT_SECRET must not use common/weak patterns'
-    ),
-  JWT_EXPIRES_IN: z
-    .string()
-    .regex(
-      /^\d+[smhd]$/,
-      'JWT_EXPIRES_IN must be in format like "24h", "7d", "3600s"'
-    )
-    .default('24h'),
+  // JWT設定削除 - Supabase JWTを使用
 
   // ===== URL・CORS設定 =====
   CORS_ORIGIN: z
@@ -168,7 +154,6 @@ export function getValidatedEnv(): EnvVars {
           key =>
             key.startsWith('SUPABASE_') ||
             key.startsWith('NEXT_PUBLIC_') ||
-            key.startsWith('JWT_') ||
             key.startsWith('NODE_') ||
             key.startsWith('CORS_')
         ),
@@ -189,7 +174,6 @@ export function getValidatedEnv(): EnvVars {
       hasSupabaseKeys: !!(
         validatedEnv.SUPABASE_ANON_KEY && validatedEnv.SUPABASE_SERVICE_ROLE_KEY
       ),
-      hasJwtSecret: !!validatedEnv.JWT_SECRET,
       CORS_ORIGIN: validatedEnv.CORS_ORIGIN,
       LOG_LEVEL: validatedEnv.LOG_LEVEL,
     });
@@ -259,12 +243,9 @@ export function generateEnvAuditReport(): {
       baseUrl: urls.baseUrl,
     },
     security: {
-      hasStrongJwtSecret: env.JWT_SECRET.length >= 64,
-      jwtSecretLength: env.JWT_SECRET.length,
-      isUsingDefaultJwt:
-        env.JWT_SECRET.includes('default') || env.JWT_SECRET.includes('secret'),
       corsOrigin: urls.corsOrigin,
       isCorsSafe: urls.corsOrigin !== '*',
+      supabaseAuth: true, // Supabase JWTを使用
     },
     missing: [] as string[],
     recommendations: [] as string[],
@@ -272,11 +253,6 @@ export function generateEnvAuditReport(): {
 
   // セキュリティ推奨事項
   if (env.NODE_ENV === 'production') {
-    if (env.JWT_SECRET.length < 64) {
-      report.recommendations.push(
-        'JWT_SECRET should be at least 64 characters in production'
-      );
-    }
     if (!env.SENTRY_DSN) {
       report.missing.push('SENTRY_DSN');
       report.recommendations.push(
@@ -316,8 +292,6 @@ export function getSafeEnvDisplay(env: EnvVars) {
     SUPABASE_URL: env.SUPABASE_URL,
     SUPABASE_ANON_KEY: maskSecret(env.SUPABASE_ANON_KEY),
     SUPABASE_SERVICE_ROLE_KEY: maskSecret(env.SUPABASE_SERVICE_ROLE_KEY),
-    JWT_SECRET: maskSecret(env.JWT_SECRET),
-    JWT_EXPIRES_IN: env.JWT_EXPIRES_IN,
     CORS_ORIGIN: env.CORS_ORIGIN,
     NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
     LOG_LEVEL: env.LOG_LEVEL,

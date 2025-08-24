@@ -22,15 +22,15 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
         onClick={onPrevious}
         disabled={previousDisabled}
         aria-label="前のページ"
-        className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+        className={`px-6 py-3 rounded-full border-2 flex items-center gap-2 transition-all font-['Noto_Sans_JP'] text-[14px] font-medium ${
           previousDisabled
-            ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md'
+            ? 'border-gray-300 bg-gray-50 cursor-not-allowed text-gray-400'
+            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md text-[#0F9058]'
         }`}
       >
         <svg
-          width="24"
-          height="24"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           className={previousDisabled ? 'opacity-30' : ''}
@@ -43,6 +43,7 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
             strokeLinejoin="round"
           />
         </svg>
+        前へ
       </button>
 
       {/* Next Button */}
@@ -50,15 +51,16 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
         onClick={onNext}
         disabled={nextDisabled}
         aria-label="次のページ"
-        className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+        className={`px-6 py-3 rounded-full border-2 flex items-center gap-2 transition-all font-['Noto_Sans_JP'] text-[14px] font-medium ${
           nextDisabled
-            ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md'
+            ? 'border-gray-300 bg-gray-50 cursor-not-allowed text-gray-400'
+            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md text-[#0F9058]'
         }`}
       >
+        次へ
         <svg
-          width="24"
-          height="24"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           className={nextDisabled ? 'opacity-30' : ''}

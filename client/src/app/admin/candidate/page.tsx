@@ -1,6 +1,6 @@
 import { getServerAuth } from '@/lib/auth/server';
 import { redirect } from 'next/navigation';
-import CandidateClient, { CandidateListItem } from './CandidateClient';
+import CandidateClient from './CandidateClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
@@ -45,10 +45,7 @@ async function fetchAdminCandidateList(): Promise<CandidateListItem[]> {
 }
 
 export default async function CandidatePage() {
-  const auth = await getServerAuth();
-  if (!auth.isAuthenticated || auth.userType !== 'admin') {
-    redirect('/admin/auth/login');
-  }
+  
   const candidates = await fetchAdminCandidateList();
   return <CandidateClient candidates={candidates} />;
 }

@@ -124,27 +124,29 @@ class ApiClient {
 }
 
 /**
- * ローカルストレージから認証情報を取得（クッキーベース認証では使用しない）
+ * Supabaseセッションから認証情報を取得
  */
-export const getAuthInfo = () => {
+export const getAuthInfo = async () => {
   if (typeof window === 'undefined') return null;
   
-  const token = localStorage.getItem('auth_token') ||
-                localStorage.getItem('auth-token') ||
-                localStorage.getItem('supabase-auth-token');
-  
-  const userInfoStr = localStorage.getItem('user_info');
-  let userInfo = null;
-  
-  if (userInfoStr) {
-    try {
-      userInfo = JSON.parse(userInfoStr);
-    } catch (error) {
-      console.warn('Failed to parse user info from localStorage:', error);
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      return null;
     }
+    
+    return {
+      token: session.access_token,
+      user: session.user
+    };
+  } catch (error) {
+    console.warn('Failed to get Supabase session:', error);
+    return null;
   }
-  
-  return { token, userInfo };
 };
 
 /**
@@ -166,7 +168,7 @@ export const getCookieToken = (): string | null => {
 /**
  * 現在のユーザーIDを取得
  */
-export const getCurrentUserId = (): string | null => {
+export const getCurrentUserId = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
@@ -174,15 +176,15 @@ export const getCurrentUserId = (): string | null => {
   // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
-  const authInfo = getAuthInfo();
+  const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.id || null;
+  return (authInfo as any).userInfo?.id || authInfo.user?.id || null;
 };
 
 /**
  * 現在のユーザータイプを取得
  */
-export const getCurrentUserType = (): string | null => {
+export const getCurrentUserType = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
@@ -190,15 +192,15 @@ export const getCurrentUserType = (): string | null => {
   // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
-  const authInfo = getAuthInfo();
+  const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.userType || authInfo.userInfo?.type || null;
+  return (authInfo as any).userInfo?.userType || (authInfo as any).userInfo?.type || null;
 };
 
 /**
  * 企業ユーザーの場合、company_account_idを取得
  */
-export const getCompanyAccountId = (): string | null => {
+export const getCompanyAccountId = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
   
@@ -206,9 +208,9 @@ export const getCompanyAccountId = (): string | null => {
   // Note: authStore access removed to avoid ESLint issues
   
   // フォールバック: localStorage から取得（後方互換性のため）
-  const authInfo = getAuthInfo();
+  const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return authInfo.userInfo?.profile?.companyAccountId || null;
+  return (authInfo as any).userInfo?.profile?.companyAccountId || null;
 };
 
 /**
@@ -221,19 +223,8 @@ export const getAuthHeaders = () => {
     'Content-Type': 'application/json',
   };
   
-  // 現在はクッキーベース認証を使用しているため、Authorizationヘッダーは通常不要
-  // credentials: 'include' をfetchオプションに設定することで認証される
-  
-  // 後方互換性のためのフォールバック：localStorageから取得
-  const authInfo = getAuthInfo();
-  if (authInfo?.token) {
-    headers['Authorization'] = `Bearer ${authInfo.token}`;
-    
-    // company_users.idがある場合はヘッダーに追加（localStorageベースの場合のみ）
-    if (authInfo.userInfo?.id) {
-      headers['X-User-Id'] = authInfo.userInfo.id;
-    }
-  }
+  // Supabaseはクッキーベース認証を使用するため、通常Authorizationヘッダーは不要
+  // credentials: 'include' を設定することで認証される
   
   return headers;
 };
@@ -438,9 +429,10 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
 
     // ユーザータイプに応じてAPIエンドポイントを決定
     let endpoint: string;
-    if (userType === 'candidate') {
+    const resolvedUserType = await userType;
+    if (resolvedUserType === 'candidate') {
       endpoint = '/api/candidate/favorite';
-    } else if (userType === 'company_user') {
+    } else if (resolvedUserType === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {
@@ -497,9 +489,10 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
 
     // ユーザータイプに応じてAPIエンドポイントを決定
     let endpoint: string;
-    if (userType === 'candidate') {
+    const resolvedUserType2 = await userType;
+    if (resolvedUserType2 === 'candidate') {
       endpoint = `/api/candidate/favorite?job_posting_id=${jobPostingId}`;
-    } else if (userType === 'company_user') {
+    } else if (resolvedUserType2 === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {

@@ -1,18 +1,14 @@
 'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
-// TODO: 本番では認証からcandidate IDを取得
 async function getCandidateId(): Promise<string | null> {
-  const email = 'sekiguchishunya0619@gmail.com';
-  const supabase = await getSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('candidates')
-    .select('id')
-    .eq('email', email)
-    .single();
-  if (error || !data) return null;
-  return data.id;
+  const authResult = await requireCandidateAuthForAction();
+  if (!authResult.success) {
+    return null;
+  }
+  return authResult.data.candidateId;
 }
 
 export async function getCandidateTasks() {
@@ -46,24 +42,7 @@ export async function getCandidateMessages() {
 
   const supabase = await getSupabaseServerClient();
   
-  // まず候補者のroom_id一覧を取得
-  const { data: rooms, error: roomError } = await supabase
-    .from('rooms')
-    .select('id, company_group_id')
-    .eq('candidate_id', candidateId);
-
-  if (roomError || !rooms) {
-    console.error('Error fetching rooms:', roomError);
-    return { messages: [] };
-  }
-
-  const roomIds = rooms.map(room => room.id);
-  
-  if (roomIds.length === 0) {
-    return { messages: [] };
-  }
-
-  // 各ルームの最新メッセージを取得
+  // 候補者のメッセージを一度のクエリで取得（roomとの関連も含む）
   const { data: messages, error: messageError } = await supabase
     .from('messages')
     .select(`
@@ -73,7 +52,9 @@ export async function getCandidateMessages() {
       sender_type,
       status,
       room_id,
-      rooms:room_id(
+      rooms!inner (
+        id,
+        candidate_id,
         company_group_id,
         company_groups:company_group_id(
           group_name,
@@ -83,7 +64,7 @@ export async function getCandidateMessages() {
         )
       )
     `)
-    .in('room_id', roomIds)
+    .eq('rooms.candidate_id', candidateId)
     .order('sent_at', { ascending: false });
 
   if (messageError) {

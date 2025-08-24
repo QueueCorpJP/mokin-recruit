@@ -1,14 +1,104 @@
-'use client';
-
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCandidateData, getSkillsData } from '@/lib/server/candidate/candidateData';
+import EditButton from '@/components/candidate/account/EditButton';
 
 // 候補者_資格・語学・スキル確認ページ
-export default function CandidateSkillsPage() {
-  const router = useRouter();
+export default async function CandidateSkillsPage() {
+  // 認証チェック
+  const user = await requireCandidateAuth();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
-  const handleEdit = () => {
-    router.push('/account/skills/edit');
+  // 候補者データを取得
+  const candidateData = await getCandidateData(user.id);
+  const skillsData = await getSkillsData(user.id);
+  
+  if (!candidateData) {
+    redirect('/candidate/auth/login');
+  }
+
+  // 配列データを安全に処理する関数
+  const renderTags = (data: any) => {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      return <span className="text-[#323232] text-[16px] font-medium tracking-[1.6px]">未設定</span>;
+    }
+    
+    const items = Array.isArray(data) ? data : [];
+    return (
+      <div className="flex flex-wrap gap-2">
+        {items.map((item: any, idx: number) => (
+          <span
+            key={idx}
+            className="bg-[#d2f1da] px-3 py-1.5 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+          >
+            {typeof item === 'string' ? item : item.name || item}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  // 言語コードと日本語名のマッピング
+  const LANGUAGE_MAPPING: Record<string, string> = {
+    'indonesian': 'インドネシア語',
+    'italian': 'イタリア語',
+    'spanish': 'スペイン語',
+    'thai': 'タイ語',
+    'german': 'ドイツ語',
+    'french': 'フランス語',
+    'portuguese': 'ポルトガル語',
+    'malaysian': 'マレー語',
+    'russian': 'ロシア語',
+    'korean': '韓国語',
+    'chinese-simplified': '中国語（簡体字）',
+    'chinese-traditional': '中国語（繁体字）',
+    'vietnamese': 'ベトナム語',
+    'arabic': 'アラビア語',
+    'hindi': 'ヒンディー語',
+    'dutch': 'オランダ語',
+    'swedish': 'スウェーデン語',
+    'polish': 'ポーランド語',
+    'turkish': 'トルコ語',
+    'japanese': '日本語',
+    'bengali': 'ベンガル語',
+    'tagalog': 'タガログ語',
+    'tamil': 'タミル語',
+    'burmese': 'ミャンマー語',
+  };
+
+  // 英語レベルと日本語名のマッピング
+  const LEVEL_MAPPING: Record<string, string> = {
+    'native': 'ネイティブ',
+    'business': 'ビジネスレベル',
+    'conversation': '日常会話',
+    'basic': '基礎会話',
+    'none': 'なし',
+  };
+
+  // その他の言語を表示する関数
+  const renderOtherLanguages = (otherLanguages: any) => {
+    if (!otherLanguages || (Array.isArray(otherLanguages) && otherLanguages.length === 0)) {
+      return <span className="text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2]">未設定</span>;
+    }
+
+    const languages = Array.isArray(otherLanguages) ? otherLanguages : [];
+    
+    return (
+      <div className="space-y-2">
+        {languages.map((lang: any, idx: number) => (
+          <div key={idx} className="space-y-2">
+            <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
+              {LANGUAGE_MAPPING[lang.language] || lang.language || '言語名未設定'}
+            </div>
+            <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
+              {LEVEL_MAPPING[lang.level] || lang.level || 'レベル未設定'}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -109,7 +199,7 @@ export default function CandidateSkillsPage() {
                     </div>
                     <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                       <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
-                        レベルテキストが入ります。
+                        {skillsData?.english_level ? (LEVEL_MAPPING[skillsData.english_level] || skillsData.english_level) : '未設定'}
                       </div>
                     </div>
                   </div>
@@ -122,22 +212,7 @@ export default function CandidateSkillsPage() {
                       </div>
                     </div>
                     <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
-                      <div className="space-y-2">
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
-                          言語テキストが入ります。
-                        </div>
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
-                          レベルテキストが入ります。
-                        </div>
-                      </div>
-                      <div className="space-y-2 mt-2 lg:mt-6">
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
-                          言語テキストが入ります。
-                        </div>
-                        <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]">
-                          レベルテキストが入ります。
-                        </div>
-                      </div>
+                      {renderOtherLanguages(skillsData?.other_languages)}
                     </div>
                   </div>
                 </div>
@@ -161,17 +236,7 @@ export default function CandidateSkillsPage() {
                       </div>
                     </div>
                     <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
-                      <div className="flex flex-wrap gap-2">
-                        <span className="bg-[#d2f1da] px-3 py-1.5 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                          プロジェクトマネジメント
-                        </span>
-                        <span className="bg-[#d2f1da] px-3 py-1.5 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                          ロジカルシンキング
-                        </span>
-                        <span className="bg-[#d2f1da] px-3 py-1.5 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
-                          チームビルディング
-                        </span>
-                      </div>
+                      {renderTags(skillsData?.skills_list || candidateData.skills)}
                     </div>
                   </div>
 
@@ -184,8 +249,7 @@ export default function CandidateSkillsPage() {
                     </div>
                     <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                       <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2] whitespace-pre-wrap">
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
+                        {skillsData?.qualifications || '未設定'}
                       </div>
                     </div>
                   </div>
@@ -194,14 +258,7 @@ export default function CandidateSkillsPage() {
             </div>
 
             {/* 編集ボタン */}
-            <Button
-              variant="green-gradient"
-              size="figma-default"
-              onClick={handleEdit}
-              className="min-w-[160px] w-full lg:w-auto text-[16px] tracking-[1.6px]"
-            >
-              編集する
-            </Button>
+            <EditButton editPath="/candidate/account/skills/edit" />
           </div>
         </div>
       </main>

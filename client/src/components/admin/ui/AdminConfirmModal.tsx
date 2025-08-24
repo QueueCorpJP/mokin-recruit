@@ -11,6 +11,8 @@ interface AdminConfirmModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
+  message?: string;
+  variant?: 'delete' | 'approve';
 }
 
 export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
@@ -20,7 +22,9 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
   title,
   description,
   confirmText = "削除する",
-  cancelText = "閉じる"
+  cancelText = "閉じる",
+  message,
+  variant = 'delete'
 }) => {
   if (!isOpen) return null;
 
@@ -35,20 +39,27 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
           width: '604px',
           height: 'auto',
           borderRadius: '16px',
-          padding: '80px'
+          padding: '40px'
         }}
       >
         {/* タイトル */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h2 className="font-['Inter'] font-bold text-[24px] text-[#323232] leading-[1.6]">
             {title}
           </h2>
         </div>
 
-        {/* 説明文 */}
-        <div className="text-center mb-8">
+        {/* 求人名 */}
+        <div className="text-center mb-4">
           <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6] font-bold">
             {description}
+          </p>
+        </div>
+
+        {/* 説明文 */}
+        <div className="text-center mb-8">
+          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6]">
+            {message || (variant === 'approve' ? '求人を承認してもよいですか？' : '求人を削除してもよいですか？')}
           </p>
         </div>
 
@@ -60,12 +71,21 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
             variant="green-outline"
             className="w-[180px]"
           />
-          <AdminButton
-            onClick={onConfirm}
-            text={confirmText}
-            variant="destructive"
-            className="w-[180px]"
-          />
+          {variant === 'approve' ? (
+            <button
+              onClick={onConfirm}
+              className="w-[180px] bg-[#FFA500] hover:bg-[#FF8C00] text-white font-bold py-3 px-6 rounded-[32px] transition-colors"
+            >
+              {confirmText}
+            </button>
+          ) : (
+            <AdminButton
+              onClick={onConfirm}
+              text={confirmText}
+              variant="destructive"
+              className="w-[180px]"
+            />
+          )}
         </div>
       </div>
     </div>

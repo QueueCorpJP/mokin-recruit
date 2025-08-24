@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
+import { 
+  getFavoriteListAction, 
+  getFavoriteStatusAction, 
+  addFavoriteAction, 
+  removeFavoriteAction,
+  type FavoriteActionResult,
+  type FavoriteListResult,
+  type FavoriteStatusResult
+} from '../lib/actions/favoriteActions';
 
 // 型定義
 interface Favorite {
@@ -17,27 +25,6 @@ interface Favorite {
     salary_max?: number;
     description: string;
   };
-}
-
-interface FavoriteListResponse {
-  success: boolean;
-  data?: {
-    favorites: Favorite[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
-  error?: string;
-}
-
-interface FavoriteActionResponse {
-  success: boolean;
-  favorite?: Favorite;
-  message?: string;
-  error?: string;
 }
 
 interface FavoriteParams {
@@ -59,16 +46,8 @@ export const useFavoritesQuery = (params: FavoriteParams = {}) => {
 
   return useQuery({
     queryKey: favoriteKeys.list({ page, limit }),
-    queryFn: async (): Promise<FavoriteListResponse> => {
-      const searchParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      });
-
-      const response = await apiClient.get<FavoriteListResponse>(
-        `/candidate/favorite?${searchParams.toString()}`
-      );
-      return response;
+    queryFn: async (): Promise<FavoriteListResult> => {
+      return await getFavoriteListAction({ page, limit });
     },
     staleTime: 30 * 1000, // 30秒間は新鮮とみなす
     gcTime: 5 * 60 * 1000, // 5分間キャッシュを保持
@@ -81,12 +60,8 @@ export const useAddFavoriteMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResponse> => {
-      const response = await apiClient.post<FavoriteActionResponse>(
-        '/candidate/favorite',
-        { job_posting_id: jobPostingId }
-      );
-      return response;
+    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResult> => {
+      return await addFavoriteAction(jobPostingId);
     },
     onSuccess: (data, jobPostingId) => {
       // お気に入り一覧のキャッシュを無効化
@@ -109,11 +84,8 @@ export const useRemoveFavoriteMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResponse> => {
-      const response = await apiClient.delete<FavoriteActionResponse>(
-        `/candidate/favorite?job_posting_id=${jobPostingId}`
-      );
-      return response;
+    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResult> => {
+      return await removeFavoriteAction(jobPostingId);
     },
     onSuccess: (data, jobPostingId) => {
       // お気に入り一覧のキャッシュを無効化
@@ -140,25 +112,13 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
         return {};
       }
 
-      // お気に入り一覧を取得してIDリストを作成
-      const favorites = await apiClient.get<FavoriteListResponse>(
-        '/candidate/favorite?limit=100'
-      );
+      const result = await getFavoriteStatusAction(jobPostingIds);
       
-      if (!favorites.success || !favorites.data) {
+      if (!result.success || !result.data) {
         return {};
       }
 
-      const favoriteJobIds = new Set(
-        favorites.data.favorites.map(fav => fav.job_posting_id)
-      );
-
-      const result: Record<string, boolean> = {};
-      jobPostingIds.forEach(id => {
-        result[id] = favoriteJobIds.has(id);
-      });
-
-      return result;
+      return result.data;
     },
     enabled: jobPostingIds.length > 0,
     staleTime: 1 * 60 * 1000, // 1分間は新鮮とみなす

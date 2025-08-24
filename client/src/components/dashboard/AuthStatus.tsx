@@ -1,49 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function AuthStatus() {
-  const [tokenStatus, setTokenStatus] = useState<
-    'loading' | 'present' | 'missing'
-  >('loading');
+  const { user, accessToken, loading } = useAuth();
   const [loginTime, setLoginTime] = useState<string>('');
 
   useEffect(() => {
-    // クライアントサイドでのみ実行
-    try {
-      const token = localStorage.getItem('auth_token');
-      setTokenStatus(token ? 'present' : 'missing');
-
-      // ログイン時刻を現在時刻として設定（実際の実装では、トークンから取得またはセッションストレージを使用）
+    if (user && user.last_sign_in_at) {
+      setLoginTime(new Date(user.last_sign_in_at).toLocaleString('ja-JP'));
+    } else if (user) {
       setLoginTime(new Date().toLocaleString('ja-JP'));
-    } catch (error) {
-      console.error('❌ 認証状態の確認でエラーが発生しました:', error);
-      setTokenStatus('missing');
     }
-  }, []);
+  }, [user]);
 
   const getTokenStatusDisplay = () => {
-    switch (tokenStatus) {
-      case 'loading':
-        return '🔄 確認中...';
-      case 'present':
-        return '✅ 保存済み';
-      case 'missing':
-        return '❌ 未保存';
-      default:
-        return '❓ 不明';
+    if (loading) {
+      return '🔄 確認中...';
     }
+    return accessToken ? '✅ 保存済み' : '❌ 未保存';
   };
 
   const getTokenStatusColor = () => {
-    switch (tokenStatus) {
-      case 'present':
-        return 'text-green-600';
-      case 'missing':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
+    if (loading) {
+      return 'text-gray-600';
     }
+    return accessToken ? 'text-green-600' : 'text-red-600';
   };
 
   return (
@@ -58,9 +41,9 @@ export function AuthStatus() {
         </p>
         <p>
           <span className='font-medium'>ログイン時刻:</span>{' '}
-          {tokenStatus === 'loading' ? '確認中...' : loginTime}
+          {loading ? '確認中...' : loginTime}
         </p>
-        {tokenStatus === 'missing' && (
+        {!loading && !accessToken && (
           <p className='mt-2 text-xs text-red-600'>
             ⚠️
             認証トークンが見つかりません。再ログインが必要な可能性があります。

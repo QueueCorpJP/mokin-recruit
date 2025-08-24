@@ -5,9 +5,10 @@ import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper'
 export default async function MessagePage({
   searchParams
 }: {
-  searchParams: { room?: string }
+  searchParams: Promise<{ room?: string }>
 }) {
   const user = await requireCandidateAuth();
+  const params = await searchParams;
 
   if (!user) {
     return (
@@ -46,7 +47,7 @@ export default async function MessagePage({
           rooms={rooms}
           userId={user.id}
           userType="candidate"
-          initialRoomId={searchParams.room}
+          initialRoomId={params.room}
         />
       </div>
     </div>

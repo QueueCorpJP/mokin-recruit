@@ -1,6 +1,6 @@
-'use client';
-
-import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
+import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCandidateData } from '@/lib/server/candidate/candidateData';
 
 // 区切り線のSVGコンポーネント
 const DividerLine = () => (
@@ -126,78 +126,89 @@ const Section = ({ title, content }: SectionProps) => (
   </div>
 );
 
-export default function ShokumuPreviewPage() {
-  useEffect(() => {
-    // 印刷用のスタイルを追加
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @media print {
-        body {
-          margin: 0;
-          padding: 0;
-        }
-        .no-print {
-          display: none !important;
-        }
-        .print-container {
-          padding: 0 !important;
-          width: 100% !important;
-          max-width: none !important;
-        }
-      }
-      @page {
-        size: A4;
-        margin: 20mm;
-      }
-    `;
-    document.head.appendChild(style);
+// 印刷用のスタイル
+const printStyles = `
+  @media print {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .no-print {
+      display: none !important;
+    }
+    .print-container {
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+  }
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+`;
 
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+export default async function ShokumuPreviewPage() {
+  // 認証チェック
+  const user = await requireCandidateAuth();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
-  // サンプルデータ（実際はpropsやAPIから取得）
+  // 候補者データを取得
+  const candidateData = await getCandidateData(user.id);
+  if (!candidateData) {
+    redirect('/candidate/auth/login');
+  }
+
+  // 職歴データを取得・整形
+  const getJobHistories = () => {
+    // recent_job_industriesフィールドからジョブ履歴を取得
+    if (candidateData.recent_job_industries && Array.isArray(candidateData.recent_job_industries)) {
+      // 複数職歴の場合
+      return candidateData.recent_job_industries.map((job: any) => ({
+        companyName: job.companyName || '企業名未設定',
+        period: `${job.startYear || 'yyyy'}/${job.startMonth?.padStart(2, '0') || 'mm'}〜${job.isCurrentlyWorking ? '現在' : `${job.endYear || 'yyyy'}/${job.endMonth?.padStart(2, '0') || 'mm'}`}`,
+        department: job.departmentPosition || '部署名・役職名未設定',
+        industry: Array.isArray(job.industries) ? job.industries.join('、') : (job.industries || '業種未設定'),
+        jobType: Array.isArray(job.jobTypes) ? job.jobTypes.map((jt: any) => jt.name || jt).join('、') : (job.jobTypes || '職種未設定'),
+        workContent: job.jobDescription || '業務内容未設定',
+      }));
+    }
+    
+    // 単一職歴の場合（後方互換性）
+    if (candidateData.recent_job_company_name) {
+      return [{
+        companyName: candidateData.recent_job_company_name,
+        period: `${candidateData.recent_job_start_year || 'yyyy'}/${candidateData.recent_job_start_month?.padStart(2, '0') || 'mm'}〜${candidateData.recent_job_is_currently_working ? '現在' : `${candidateData.recent_job_end_year || 'yyyy'}/${candidateData.recent_job_end_month?.padStart(2, '0') || 'mm'}`}`,
+        department: candidateData.recent_job_department_position || '部署名・役職名未設定',
+        industry: Array.isArray(candidateData.recent_job_types) ? candidateData.recent_job_types.map((industry: any) => industry.name || industry).join('、') : '業種未設定',
+        jobType: Array.isArray(candidateData.recent_job_types) ? candidateData.recent_job_types.map((jobType: any) => jobType.name || jobType).join('、') : '職種未設定',
+        workContent: candidateData.recent_job_description || '業務内容未設定',
+      }];
+    }
+
+    // データがない場合のデフォルト
+    return [{
+      companyName: '企業名未設定',
+      period: 'yyyy/mm〜yyyy/mm',
+      department: '部署名・役職名未設定',
+      industry: '業種未設定',
+      jobType: '職種未設定',
+      workContent: '業務内容未設定',
+    }];
+  };
+
   const userData = {
-    jobSummary: `テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。`,
-
-    careers: [
-      {
-        companyName: '企業名テキスト',
-        period: 'yyyy/mm〜yyyy/mm',
-        department: 'テキストが入ります。',
-        industry: '業種テキスト、業種テキスト、業種テキスト',
-        jobType: '職種テキスト、職種テキスト、職種テキスト',
-        workContent: `テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。`,
-      },
-      {
-        companyName: '企業名テキスト',
-        period: 'yyyy/mm〜yyyy/mm',
-        department: 'テキストが入ります。',
-        industry: '業種テキスト、業種テキスト、業種テキスト',
-        jobType: '職種テキスト、職種テキスト、職種テキスト',
-        workContent: `テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。`,
-      },
-      {
-        companyName: '企業名テキスト',
-        period: 'yyyy/mm〜yyyy/mm',
-        department: 'テキストが入ります。',
-        industry: '業種テキスト、業種テキスト、業種テキスト',
-        jobType: '職種テキスト、職種テキスト、職種テキスト',
-        workContent: `テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。`,
-      },
-    ],
-
-    selfPR: `テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。`,
+    jobSummary: candidateData.job_summary || '職務要約が未設定です。',
+    careers: getJobHistories(),
+    selfPR: candidateData.self_pr || '自己PR・その他が未設定です。',
   };
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 印刷スタイル */}
+      <style dangerouslySetInnerHTML={{ __html: printStyles }} />
       {/* メインコンテンツ（印刷対象） */}
       <div className="print-container bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start px-0 lg:px-[400px] py-6 lg:py-[120px] relative w-full">
         <div className="w-[640px] mx-auto">

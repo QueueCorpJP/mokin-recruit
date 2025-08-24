@@ -1,6 +1,6 @@
 'use server';
 
-import { requireCandidateAuthWithSession, getServerAuth } from '@/lib/auth/server';
+import { requireCandidateAuthForAction, getServerAuth } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import bcrypt from 'bcryptjs';
 
@@ -8,23 +8,23 @@ export async function changePassword(currentPassword: string, newPassword: strin
   try {
     console.log('=== changePassword開始 ===');
     
-    const authResult = await requireCandidateAuthWithSession();
+    const authResult = await requireCandidateAuthForAction();
     
     if (!authResult.success) {
       console.log('認証エラー:', authResult.error);
       return { error: 'Unauthorized' };
     }
     
-    const { email } = authResult.data;
-    console.log('認証成功 - Email:', email);
+    const { candidateId } = authResult.data;
+    console.log('認証成功 - CandidateId:', candidateId);
 
     const supabase = getSupabaseAdminClient();
     
-    // emailからcandidatesテーブルの正しいIDを取得
+    // candidateIdから候補者のメールアドレスを取得
     const { data: candidate, error: candidateError } = await supabase
       .from('candidates')
-      .select('id')
-      .eq('email', email)
+      .select('email')
+      .eq('id', candidateId)
       .single();
       
     if (candidateError || !candidate) {
@@ -32,8 +32,8 @@ export async function changePassword(currentPassword: string, newPassword: strin
       return { error: '候補者情報が見つかりません' };
     }
     
-    const candidateId = candidate.id;
-    console.log('取得したcandidateId:', candidateId);
+    const email = candidate.email;
+    console.log('取得したemail:', email);
     
     // 現在のパスワード検証でSupabase AuthのユーザーIDを取得
     let supabaseAuthId: string | null = null;

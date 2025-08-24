@@ -7,8 +7,8 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
-import { type Industry } from '@/constants/industry-data';
-import { type JobType } from '@/constants/job-type-data';
+import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { saveExpectationData } from './actions';
 
 interface ExpectationFormData {
@@ -73,11 +73,29 @@ export default function SignupExpectationPage() {
     }
   };
 
+  // 業種モーダル
+  const handleIndustriesConfirm = (industryIds: string[]) => {
+    // IDからIndustryオブジェクトに変換
+    const industries: Industry[] = industryIds.map(id => 
+      INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+    ).filter(Boolean) as Industry[];
+    setFormData(prev => ({ ...prev, industries }));
+  };
+
   const handleRemoveIndustry = (id: string) => {
     setFormData(prev => ({
       ...prev,
       industries: prev.industries.filter((i) => i.id !== id)
     }));
+  };
+
+  // 職種モーダル
+  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
+    // IDからJobTypeオブジェクトに変換
+    const jobTypes: JobType[] = jobTypeIds.map(id => 
+      JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
+    ).filter(Boolean) as JobType[];
+    setFormData(prev => ({ ...prev, jobTypes }));
   };
 
   const handleRemoveJobType = (id: string) => {
@@ -106,19 +124,15 @@ export default function SignupExpectationPage() {
       <IndustrySelectModal
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
-        onConfirm={(selected) => {
-          setFormData(prev => ({ ...prev, industries: selected.map(s => ({ id: s, name: s })) }));
-        }}
-        initialSelected={formData.industries.map(i => i.name)}
+        onConfirm={handleIndustriesConfirm}
+        initialSelected={formData.industries.map(i => i.id)}
         maxSelections={3}
       />
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
-        onConfirm={(selected) => {
-          setFormData(prev => ({ ...prev, jobTypes: selected.map(s => ({ id: s, name: s })) }));
-        }}
-        initialSelected={formData.jobTypes.map(j => j.name)}
+        onConfirm={handleJobTypesConfirm}
+        initialSelected={formData.jobTypes.map(j => j.id)}
         maxSelections={3}
       />
       <WorkLocationSelectModal

@@ -4,6 +4,7 @@ import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { MediaHeader } from '@/components/media/MediaHeader';
 import { mediaService, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/mediaService.client';
+import { useMediaCache } from '@/contexts/MediaCacheContext';
 
 interface MediaArticle {
   id: string;
@@ -17,38 +18,6 @@ interface MediaArticle {
 
 
 
-// 記事データ取得関数
-const getArticles = async (): Promise<MediaArticle[]> => {
-  try {
-    const articles = await mediaService.getArticles(20);
-    
-    if (!articles || articles.length === 0) {
-      return [];
-    }
-
-    return articles.map(article => {
-      // Supabase URLまたは空の場合はnullを使用（フォールバック画像は使わない）
-      const imageUrl = article.thumbnail_url || null;
-      console.log('Article:', article.title, 'Image URL:', imageUrl);
-      return {
-        id: article.id,
-        date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }),
-        categories: article.categories || ['メディア'],
-        title: article.title,
-        description: article.excerpt || 'No description available',
-        imageUrl: imageUrl,
-        tags: article.tags && article.tags.length > 0 ? article.tags : undefined
-      };
-    });
-  } catch (err) {
-    console.error('記事の取得に失敗:', err);
-    return [];
-  }
-};
 
 interface FilterState {
   type: 'all' | 'category' | 'tag';
@@ -57,6 +26,7 @@ interface FilterState {
 }
 
 export default function MediaPage() {
+  const { sidebarData: cachedSidebarData, setSidebarData: setCachedSidebarData } = useMediaCache();
   const [articles, setArticles] = useState<MediaArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<MediaArticle[]>([]);
   const [sidebarData, setSidebarData] = useState<{
@@ -69,6 +39,8 @@ export default function MediaPage() {
     tags: []
   });
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [filter, setFilter] = useState<FilterState>({
     type: 'all',
     value: '',
@@ -78,21 +50,82 @@ export default function MediaPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [articlesData, popularArticles, categories, tags] = await Promise.all([
-          getArticles(),
-          mediaService.getPopularArticles(5),
-          mediaService.getCategories(),
-          mediaService.getTags()
-        ]);
-        console.log('取得したカテゴリー:', categories);
-        console.log('取得したタグ:', tags);
-        console.log('取得した記事:', articlesData);
-        setArticles(articlesData);
-        setFilteredArticles(articlesData);
-        setSidebarData({ popularArticles, categories, tags });
+        // キャッシュがあるかチェック
+        let sidebarDataResult = cachedSidebarData;
+        
+        if (!sidebarDataResult) {
+          // キャッシュがない場合のみサイドバーデータを取得
+          const [paginationResult, freshSidebarData] = await Promise.all([
+            mediaService.getArticlesWithPagination(20, 0),
+            mediaService.getSidebarData()
+          ]);
+          
+          sidebarDataResult = freshSidebarData;
+          setCachedSidebarData(freshSidebarData);
+          
+          setArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
+          setFilteredArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
+          setHasMore(paginationResult.hasMore);
+        } else {
+          // キャッシュがある場合は記事データのみ取得
+          const paginationResult = await mediaService.getArticlesWithPagination(20, 0);
+          
+          setArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
+          setFilteredArticles(paginationResult.articles.map(article => ({
+            id: article.id,
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }),
+            categories: article.categories || ['メディア'],
+            title: article.title,
+            description: article.excerpt || 'No description available',
+            imageUrl: article.thumbnail_url || null,
+            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+          })));
+          setHasMore(paginationResult.hasMore);
+        }
+        
+        setSidebarData(sidebarDataResult);
       } catch (error) {
         console.error('データの取得に失敗:', error);
-        // モックデータは使わない - 空配列をセット
         setArticles([]);
         setFilteredArticles([]);
         setSidebarData({ popularArticles: [], categories: [], tags: [] });
@@ -102,7 +135,38 @@ export default function MediaPage() {
     };
 
     fetchData();
-  }, []);
+  }, [cachedSidebarData, setCachedSidebarData]);
+
+  const loadMoreArticles = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    try {
+      setLoadingMore(true);
+      const paginationResult = await mediaService.getArticlesWithPagination(20, articles.length);
+      
+      const newArticles = paginationResult.articles.map(article => ({
+        id: article.id,
+        date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }),
+        categories: article.categories || ['メディア'],
+        title: article.title,
+        description: article.excerpt || 'No description available',
+        imageUrl: article.thumbnail_url || null,
+        tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+      }));
+      
+      setArticles(prev => [...prev, ...newArticles]);
+      setFilteredArticles(prev => [...prev, ...newArticles]);
+      setHasMore(paginationResult.hasMore);
+    } catch (error) {
+      console.error('追加記事の取得に失敗:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     if (filter.type === 'all') {
@@ -177,6 +241,9 @@ export default function MediaPage() {
                 articles={filteredArticles} 
                 filterType={filter.type}
                 filterValue={filter.value}
+                hasMore={hasMore}
+                loadingMore={loadingMore}
+                onLoadMore={loadMoreArticles}
               />
             </div>
 

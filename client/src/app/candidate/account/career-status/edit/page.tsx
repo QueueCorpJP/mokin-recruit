@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { getCareerStatusData, updateCareerStatusData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
@@ -11,7 +12,7 @@ import {
   PROGRESS_STATUS_OPTIONS,
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
-import { Industry } from '@/constants/industry-data';
+import { Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 
 // フォームスキーマ定義
 const careerStatusSchema = z.object({
@@ -34,41 +35,32 @@ type CareerStatusFormData = z.infer<typeof careerStatusSchema>;
 
 // 転職希望時期の選択肢
 const TRANSFER_DESIRED_TIME_OPTIONS = [
-  { value: '', label: '未選択' },
-  { value: 'immediately', label: 'すぐにでも' },
-  { value: 'within-3months', label: '3ヶ月以内' },
-  { value: 'within-6months', label: '6ヶ月以内' },
-  { value: 'within-1year', label: '1年以内' },
-  { value: 'not-considering', label: '今は考えていない' },
+  { value: '未選択', label: '未選択' },
+  { value: 'すぐにでも', label: 'すぐにでも' },
+  { value: '1〜3ヶ月以内', label: '1〜3ヶ月以内' },
+  { value: '3〜6ヶ月以内', label: '3〜6ヶ月以内' },
+  { value: '6ヶ月〜1年以内', label: '6ヶ月〜1年以内' },
+  { value: '1年以降', label: '1年以降' },
+  { value: '時期未定', label: '時期未定' },
 ];
 
 // 現在の活動状況の選択肢
 const CURRENT_ACTIVITY_STATUS_OPTIONS = [
-  { value: '', label: '未選択' },
-  { value: 'actively-searching', label: '積極的に活動中' },
-  { value: 'considering', label: '良い案件があれば検討' },
-  { value: 'information-gathering', label: '情報収集中' },
-  { value: 'not-searching', label: '転職活動はしていない' },
+  { value: '未選択', label: '未選択' },
+  { value: '積極的に転職活動中', label: '積極的に転職活動中' },
+  { value: 'よい求人があれば検討', label: 'よい求人があれば検討' },
+  { value: '情報収集中', label: '情報収集中' },
+  { value: '活動していない', label: '活動していない' },
 ];
 
 // 候補者_転職活動状況編集ページ
 export default function CandidateCareerStatusEditPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(
     null,
   );
-  const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
-    [key: number]: Industry[];
-  }>({});
-
-  // 初期データからselectedIndustriesMapを設定
-  useEffect(() => {
-    // 将来的にAPIから取得したデータで初期化
-    // ここでは空のマップで初期化
-    const initialMap: { [key: number]: Industry[] } = {};
-    setSelectedIndustriesMap(initialMap);
-  }, []);
 
   const {
     register,
@@ -77,6 +69,7 @@ export default function CandidateCareerStatusEditPage() {
     watch,
     setValue,
     getValues,
+    reset,
   } = useForm<CareerStatusFormData>({
     resolver: zodResolver(careerStatusSchema),
     defaultValues: {
@@ -96,18 +89,69 @@ export default function CandidateCareerStatusEditPage() {
     },
   });
 
-  const onSubmit = async () => {
+  // 初期データを取得してフォームに設定
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const data = await getCareerStatusData();
+        if (data) {
+          // フォームの値を設定
+          reset({
+            transferDesiredTime: data.transferDesiredTime || '',
+            currentActivityStatus: data.currentActivityStatus || '',
+            selectionCompanies: data.selectionCompanies && data.selectionCompanies.length > 0 
+              ? data.selectionCompanies 
+              : [
+                  {
+                    privacyScope: '',
+                    isPrivate: false,
+                    industries: [],
+                    companyName: '',
+                    department: '',
+                    progressStatus: '',
+                    declineReason: '',
+                  },
+                ],
+          });
+
+        }
+      } catch (error) {
+        console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [reset]);
+
+  const onSubmit = async (data: CareerStatusFormData) => {
     setIsSubmitting(true);
-    // TODO: API呼び出し
-    // Form data: data
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData();
+      formData.append('transferDesiredTime', data.transferDesiredTime);
+      formData.append('currentActivityStatus', data.currentActivityStatus);
+      formData.append('selectionCompanies', JSON.stringify(data.selectionCompanies));
+
+      const result = await updateCareerStatusData(formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/career-status');
+      } else {
+        console.error('更新エラー:', result.error);
+        alert('更新に失敗しました。もう一度お試しください。');
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('更新に失敗しました。もう一度お試しください。');
+    } finally {
       setIsSubmitting(false);
-      router.push('/account/career-status');
-    }, 1000);
+    }
   };
 
   const handleCancel = () => {
-    router.push('/account/career-status');
+    router.push('/candidate/account/career-status');
   };
 
   const addCompany = () => {
@@ -142,36 +186,25 @@ export default function CandidateCareerStatusEditPage() {
     setCurrentModalIndex(null);
   };
 
-  const handleIndustriesConfirm = (industries: Industry[]) => {
+  const handleIndustriesConfirm = (industryNames: string[]) => {
+    // 日本語名をそのまま使用
     if (currentModalIndex !== null) {
-      // selectedIndustriesMapを更新
-      setSelectedIndustriesMap((prev) => ({
-        ...prev,
-        [currentModalIndex]: industries,
-      }));
-
-      // フォームフィールドの値も更新（IDの配列として保存）
+      // フォームフィールドの値を更新（日本語名の配列として保存）
       setValue(
         `selectionCompanies.${currentModalIndex}.industries`,
-        industries.map((ind) => ind.id),
+        industryNames,
         { shouldValidate: true, shouldDirty: true },
       );
       closeIndustryModal();
     }
   };
 
-  const removeIndustry = (index: number, industryId: string) => {
-    // selectedIndustriesMapから削除
-    setSelectedIndustriesMap((prev) => ({
-      ...prev,
-      [index]: prev[index]?.filter((ind) => ind.id !== industryId) || [],
-    }));
-
-    // フォームフィールドからも削除
+  const removeIndustry = (index: number, industryName: string) => {
+    // フォームフィールドから削除
     const currentIndustries =
       watch(`selectionCompanies.${index}.industries`) || [];
     const updatedIndustries = currentIndustries.filter(
-      (id: string) => id !== industryId,
+      (name: string) => name !== industryName,
     );
     setValue(`selectionCompanies.${index}.industries`, updatedIndustries, {
       shouldValidate: true,
@@ -179,9 +212,9 @@ export default function CandidateCareerStatusEditPage() {
     });
   };
 
-  const getSelectedIndustries = (index: number): Industry[] => {
-    // selectedIndustriesMapからデータを取得（存在しない場合は空配列）
-    return selectedIndustriesMap[index] || [];
+  const getSelectedIndustries = (index: number): string[] => {
+    // フォームから日本語名の配列を取得
+    return watch(`selectionCompanies.${index}.industries`) || [];
   };
 
   const selectionCompanies = watch('selectionCompanies');
@@ -405,7 +438,7 @@ export default function CandidateCareerStatusEditPage() {
                 <div className="border-b border-[#dcdcdc] mb-6"></div>
 
                 <div className="space-y-4">
-                  {selectionCompanies.map((company, index) => (
+                  {(selectionCompanies || []).map((company, index) => (
                     <div
                       key={index}
                       className="relative border border-[#dcdcdc] rounded-[10px] p-4 lg:p-6"
@@ -513,19 +546,19 @@ export default function CandidateCareerStatusEditPage() {
                                 業種を選択
                               </button>
                               <div className="flex flex-wrap gap-2">
-                                {selectedIndustriesMap[index]?.map(
-                                  (industry) => (
+                                {getSelectedIndustries(index)?.map(
+                                  (industryName) => (
                                     <div
-                                      key={industry.id}
+                                      key={industryName}
                                       className="bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2"
                                     >
                                       <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
-                                        {industry.name}
+                                        {industryName}
                                       </span>
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          removeIndustry(index, industry.id)
+                                          removeIndustry(index, industryName)
                                         }
                                       >
                                         <svg
@@ -632,8 +665,7 @@ export default function CandidateCareerStatusEditPage() {
                         </div>
 
                         {/* 辞退理由 - 辞退選択時のみ表示 */}
-                        {watch(`selectionCompanies.${index}.progressStatus`) ===
-                          'declined' && (
+                        {(watch(`selectionCompanies.${index}.progressStatus`) === '辞退' || watch(`selectionCompanies.${index}.progressStatus`) === '不合格') && (
                           <div className="flex flex-col lg:flex-row lg:gap-6">
                             <div className="bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center">
                               <div className="font-bold text-[16px] text-[#323232] tracking-[1.6px]">

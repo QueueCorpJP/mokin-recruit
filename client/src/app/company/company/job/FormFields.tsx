@@ -602,7 +602,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
                   onChange={e => setEmploymentType(e.target.value)}
                   style={{ width: `${selectWidth}px` }}
                 >
-                  <option value='正社員'>正社員</option>
+                  <option value='FULL_TIME'>正社員</option>
                   {employmentTypeOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}

@@ -1,15 +1,21 @@
-'use client';
-
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCandidateData } from '@/lib/server/candidate/candidateData';
+import EditButton from '@/components/candidate/account/EditButton';
 
 // 候補者_職務要約確認ページ
-export default function CandidateSummaryPage() {
-  const router = useRouter();
+export default async function CandidateSummaryPage() {
+  // 認証チェック
+  const user = await requireCandidateAuth();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
-  const handleEdit = () => {
-    router.push('/account/summary/edit');
-  };
+  // 候補者データを取得
+  const candidateData = await getCandidateData(user.id);
+  if (!candidateData) {
+    redirect('/candidate/auth/login');
+  }
 
   return (
     <>
@@ -101,7 +107,7 @@ export default function CandidateSummaryPage() {
                   </div>
                   <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                     <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-8 whitespace-pre-wrap">
-                      {`職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。職務要約のテキストが入ります。`}
+                      {candidateData.job_summary || '未設定'}
                     </div>
                   </div>
                 </div>
@@ -115,7 +121,7 @@ export default function CandidateSummaryPage() {
                   </div>
                   <div className="px-4 lg:px-0 lg:py-6 lg:flex-1">
                     <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-8 whitespace-pre-wrap">
-                      {`自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。自己PR・その他のテキストが入ります。`}
+                      {candidateData.self_pr || '未設定'}
                     </div>
                   </div>
                 </div>
@@ -123,14 +129,7 @@ export default function CandidateSummaryPage() {
             </div>
 
             {/* 編集ボタン */}
-            <Button
-              variant="green-gradient"
-              size="figma-default"
-              onClick={handleEdit}
-              className="min-w-[160px] w-full lg:w-auto text-[16px] tracking-[1.6px]"
-            >
-              編集する
-            </Button>
+            <EditButton editPath="/candidate/account/summary/edit" />
           </div>
         </div>
       </main>

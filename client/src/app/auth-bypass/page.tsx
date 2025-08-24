@@ -16,6 +16,7 @@ interface UserInfo {
   id: string;
   email: string;
   userType: 'candidate' | 'company';
+  name?: string;
   fullName?: string;
   companyName?: string;
 }
@@ -51,12 +52,18 @@ export default function AuthBypassPage() {
 
   const checkCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/session');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-        }
+      // Supabaseクライアントから直接セッションを取得
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          userType: session.user.user_metadata?.user_type || 'candidate',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+        });
       }
     } catch (error) {
       console.error('セッション確認エラー:', error);
@@ -120,8 +127,6 @@ export default function AuthBypassPage() {
       if (result.success) {
         setCurrentUser(null);
         setMessage('✅ ログアウトしました');
-        localStorage.removeItem('dev-auth-token');
-        localStorage.removeItem('dev-user-info');
       } else {
         setError(result.error || 'ログアウトに失敗しました');
       }

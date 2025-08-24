@@ -1,20 +1,7 @@
 'use client';
 
-export type CandidateListItem = {
-  id: string;
-  last_login_at: string | null;
-  last_name: string;
-  first_name: string;
-  current_position: string | null;
-  gender: 'male' | 'female' | 'unspecified' | null;
-  birth_date: string | null;
-  desired_salary: string | null;
-  phone_number: string | null;
-  email: string;
-  current_residence: string | null;
-};
-
 import React, { useState } from 'react';
+import { CandidateListItem } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';

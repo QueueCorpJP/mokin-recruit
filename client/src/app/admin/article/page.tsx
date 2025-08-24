@@ -1,16 +1,9 @@
-import { getServerAuth } from '@/lib/auth/server';
-import { redirect } from 'next/navigation';
+
 import ArticleClient, { ArticleListItem } from './ArticleClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
-export type ArticleListItem = {
-  id: string;
-  title: string;
-  status: string;
-  updated_at: string;
-  category_names: string[];
-};
+// ArticleListItemはArticleClientから既にimportされているため削除
 
 async function fetchAdminArticleList(): Promise<ArticleListItem[]> {
   const supabase = getSupabaseAdminClient();
@@ -57,10 +50,7 @@ async function fetchAdminArticleList(): Promise<ArticleListItem[]> {
 }
 
 export default async function ArticlePage() {
-  const auth = await getServerAuth();
-  if (!auth.isAuthenticated || auth.userType !== 'admin') {
-    redirect('/admin/auth/login');
-  }
+
   const articles = await fetchAdminArticleList();
   return <ArticleClient articles={articles} />;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { approveJob } from './actions';
+import { approveJob } from './pending/actions';
 
 interface ApproveJobFormProps {
   jobId: string;
@@ -36,7 +36,7 @@ export function ApproveJobForm({ jobId, onClose, onSuccess }: ApproveJobFormProp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+      <div className="bg-white rounded-lg max-w-md w-full mx-4">
         <h2 className="text-lg font-semibold mb-4">求人を承認しますか？</h2>
         <p className="text-gray-600 mb-6">
           この求人を承認すると公開状態になります。

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { industryCategories } from '@/app/company/company/job/types';
+import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,15 +28,15 @@ export default function IndustrySelectModal({
     setSelectedIndustries(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (industry: string) => {
-    if (selectedIndustries.includes(industry)) {
+  const handleCheckboxChange = (industryId: string) => {
+    if (selectedIndustries.includes(industryId)) {
       // 既に選択されている場合は削除
-      const newIndustries = selectedIndustries.filter(i => i !== industry);
+      const newIndustries = selectedIndustries.filter(i => i !== industryId);
       setSelectedIndustries(newIndustries);
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedIndustries.length < maxSelections) {
-        const newIndustries = [...selectedIndustries, industry];
+        const newIndustries = [...selectedIndustries, industryId];
         setSelectedIndustries(newIndustries);
       }
     }
@@ -48,11 +48,12 @@ export default function IndustrySelectModal({
   };
 
   // カテゴリごとに業種を整理
-  const allIndustries = industryCategories.flatMap(category => 
-    category.industries.map(industry => ({
-      key: `${category.name}-${industry}`, // 一意のキー
-      value: industry, // 実際の値
-      category: category.name
+  const allIndustries = INDUSTRY_GROUPS.flatMap(group => 
+    group.industries.map(industry => ({
+      key: `${group.name}-${industry.id}`, // 一意のキー
+      id: industry.id, // 業種ID
+      name: industry.name, // 表示用の名前
+      category: group.name
     }))
   );
 
@@ -86,15 +87,15 @@ export default function IndustrySelectModal({
           {/* 業種チェックボックスリスト（2列グリッド） */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {allIndustries.map((industryItem) => {
-              const isSelected = selectedIndustries.includes(industryItem.value);
+              const isSelected = selectedIndustries.includes(industryItem.id);
               const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
               
               return (
                 <div key={industryItem.key} className="flex items-center">
                   <Checkbox 
-                    label={industryItem.value} 
+                    label={industryItem.name} 
                     checked={isSelected} 
-                    onChange={() => handleCheckboxChange(industryItem.value)}
+                    onChange={() => handleCheckboxChange(industryItem.id)}
                     disabled={isDisabled}
                   />
                 </div>
