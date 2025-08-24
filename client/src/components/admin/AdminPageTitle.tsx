@@ -11,6 +11,8 @@ interface PageTitleConfig {
 const pageTitleConfig: PageTitleConfig = {
   '/admin': '管理者トップ',
   '/admin/job': '求人管理',
+  '/admin/job/new': '求人作成',
+  '/admin/job/new/complete': '求人作成完了',
   '/admin/member': 'メンバー管理',
   '/admin/login': 'ログイン',
   '/admin/message': 'メッセージ管理',
@@ -39,6 +41,10 @@ export function AdminPageTitle() {
     }
     
     // 動的ルートのチェック
+    if (pathname.match(/^\/admin\/job\/[^\/]+\/edit$/)) {
+      return '求人編集';
+    }
+    
     if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
       return '記事詳細';
     }

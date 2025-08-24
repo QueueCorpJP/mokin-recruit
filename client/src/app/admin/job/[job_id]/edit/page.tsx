@@ -168,6 +168,42 @@ export default function JobEditPage({ params }: JobEditPageProps) {
           </Link>
         </div>
 
+        {/* 選考メモテーブル - 独立して中央配置 */}
+        <div className="mb-6 flex justify-center w-full">
+          <table className="border-collapse border border-gray-400">
+            <tbody>
+              <tr>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300"></td>
+              </tr>
+              <tr>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+              </tr>
+              <tr>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+              </tr>
+              <tr>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+                <td className="w-[220px] h-[36px] border border-gray-400"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         {/* 選考メモセクション */}
         <div className='w-full mb-[37px]'>
           <div className='flex items-start gap-8'>
@@ -182,29 +218,6 @@ export default function JobEditPage({ params }: JobEditPageProps) {
                 className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
                 placeholder='選考に関するメモを入力してください'
               />
-              
-              {/* 選考メモテーブル */}
-              <div className="mt-4 w-full">
-                <div className="grid grid-cols-5 gap-0">
-                  {/* Row 1 */}
-                  <div className="w-[192px] h-[36px] border border-gray-400 bg-gray-100"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400 bg-gray-100"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400 bg-gray-100"></div>
-                  
-                  {/* Row 2 */}
-                  <div className="w-[192px] h-[36px] border border-gray-400 bg-gray-100"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400 bg-gray-100"></div>
-                  
-                  {/* Row 3 */}
-                  <div className="w-[192px] h-[36px] border border-gray-400"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400"></div>
-                  
-                  {/* Row 4 */}
-                  <div className="w-[192px] h-[36px] border border-gray-400"></div>
-                  <div className="w-[192px] h-[36px] border border-gray-400"></div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -322,6 +335,18 @@ export default function JobEditPage({ params }: JobEditPageProps) {
             onClose={() => setIndustryModalOpen(false)}
           />
         </Modal>
+
+        {/* 下部の確認ボタン */}
+        <div className='flex justify-center mt-8 mb-8'>
+          <Link href={`/admin/job/${job_id}/edit/confirm`}>
+            <button
+              type='button'
+              className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
+            >
+              確認する
+            </button>
+          </Link>
+        </div>
       </div>
      
     </div>
