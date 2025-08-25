@@ -26,6 +26,7 @@ interface MessageDetail {
     company_accounts: {
       id: string;
       company_name: string;
+      logo_url?: string;
     } | null;
   } | null;
   rooms: {
@@ -51,6 +52,7 @@ interface RoomMessage {
     company_accounts: {
       id: string;
       company_name: string;
+      logo_url?: string;
     } | null;
   } | null;
 }
@@ -75,7 +77,6 @@ interface CareerStatusEntry {
   updated_at: string;
 }
 
-// DisplayValueコンポーネント定義
 const DisplayValue: React.FC<{ value: string; className?: string }> = ({
   value,
   className = '',
@@ -87,30 +88,69 @@ const DisplayValue: React.FC<{ value: string; className?: string }> = ({
   </div>
 );
 
+const NG_KEYWORDS = [
+  '死ね', '殺す', 'バカ', 'アホ', 'クソ', 'ゴミ', 'ブス', 'デブ',
+  'キモい', 'ウザい', 'ムカつく', '消えろ', 'しね', 'きもい',
+  '詐欺', 'ブラック企業', 'ヤバい', 'クズ', 'カス', '最悪',
+  '無能', 'ダメ', 'マジで', 'ヤバ', 'ウザ', 'きも', 'むかつく'
+];
+
+function containsNGWord(text: string): { hasNG: boolean; ngWords: string[] } {
+  if (!text) return { hasNG: false, ngWords: [] };
+  
+  const foundWords: string[] = [];
+  const lowerText = text.toLowerCase();
+  
+  for (const keyword of NG_KEYWORDS) {
+    if (lowerText.includes(keyword.toLowerCase())) {
+      foundWords.push(keyword);
+    }
+  }
+  
+  return { hasNG: foundWords.length > 0, ngWords: foundWords };
+}
+
+function highlightNGWords(text: string, ngWords: string[]): React.ReactNode {
+  if (!text || ngWords.length === 0) return text;
+  
+  let result = text;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  
+  ngWords.forEach(word => {
+    const regex = new RegExp(`(${word})`, 'gi');
+    const matches = [...text.matchAll(regex)];
+    
+    matches.forEach(match => {
+      if (match.index !== undefined) {
+        parts.push(text.slice(lastIndex, match.index));
+        parts.push(<strong key={match.index}>{match[0]}</strong>);
+        lastIndex = match.index + match[0].length;
+      }
+    });
+  });
+  
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+}
+
 async function fetchMessageDetail(messageId: string): Promise<MessageDetail | null> {
   const supabase = getSupabaseAdminClient();
   
-  console.log('Fetching message with ID:', messageId);
-  
-  // まず基本的なメッセージ情報を取得
   const { data: messageData, error: messageError } = await supabase
     .from('messages')
     .select('*')
     .eq('id', messageId)
     .single();
 
-  if (messageError) {
-    console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
+  if (messageError || !messageData) {
     return null;
   }
 
-  if (!messageData) {
-    console.error('No message data found');
-    return null;
-  }
-
-  // 関連するルーム情報を取得
-  const { data: roomData, error: roomError } = await supabase
+  const { data: roomData } = await supabase
     .from('rooms')
     .select(`
       candidate_id,
@@ -123,27 +163,19 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     .eq('id', messageData.room_id)
     .single();
 
-  if (roomError) {
-    console.warn('Warning: Could not fetch room data:', roomError);
-  }
-
-  // 企業グループ情報を取得
-  const { data: companyGroupData, error: companyGroupError } = await supabase
+  const { data: companyGroupData } = await supabase
     .from('company_groups')
     .select(`
       group_name,
       company_account_id,
       company_accounts:company_account_id (
         id,
-        company_name
+        company_name,
+        logo_url
       )
     `)
     .eq('id', messageData.company_group_id)
     .single();
-
-  if (companyGroupError) {
-    console.warn('Warning: Could not fetch company group data:', companyGroupError);
-  }
 
   const processedRoomData = roomData ? {
     candidate_id: roomData.candidate_id,
@@ -168,28 +200,44 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
   } as MessageDetail;
 }
 
-async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<RoomMessage[]> {
+async function fetchRoomMessagesAroundNG(roomId: string): Promise<{ messages: RoomMessage[], ngMessageIndex: number }> {
   const supabase = getSupabaseAdminClient();
   
-  const { data: messages, error } = await supabase
+  const { data: allMessages, error } = await supabase
     .from('messages')
     .select('*')
     .eq('room_id', roomId)
-    .order('sent_at', { ascending: true })
-    .limit(limit);
+    .order('sent_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching room messages:', error);
-    return [];
+  if (error || !allMessages) {
+    return { messages: [], ngMessageIndex: -1 };
   }
 
-  if (!messages) {
-    return [];
+  let ngMessageIndex = -1;
+  let ngMessageFound = false;
+
+  for (let i = 0; i < allMessages.length; i++) {
+    const message = allMessages[i];
+    const contentCheck = containsNGWord(message.content);
+    const subjectCheck = containsNGWord(message.subject);
+    
+    if (contentCheck.hasNG || subjectCheck.hasNG) {
+      ngMessageIndex = i;
+      ngMessageFound = true;
+      break;
+    }
   }
 
-  // 各メッセージに対して企業グループ情報を取得
+  if (!ngMessageFound) {
+    return { messages: [], ngMessageIndex: -1 };
+  }
+
+  const startIndex = Math.max(0, ngMessageIndex - 4);
+  const endIndex = ngMessageIndex + 1;
+  const relevantMessages = allMessages.slice(startIndex, endIndex);
+
   const messagesWithGroups = await Promise.all(
-    messages.map(async (message) => {
+    relevantMessages.map(async (message) => {
       const { data: companyGroupData } = await supabase
         .from('company_groups')
         .select(`
@@ -197,7 +245,8 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
           company_account_id,
           company_accounts:company_account_id (
             id,
-            company_name
+            company_name,
+            logo_url
           )
         `)
         .eq('id', message.company_group_id)
@@ -218,7 +267,10 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
     })
   );
 
-  return messagesWithGroups;
+  return { 
+    messages: messagesWithGroups.reverse(), 
+    ngMessageIndex: messagesWithGroups.length - 1 - (ngMessageIndex - startIndex)
+  };
 }
 
 async function fetchApplicationDetail(candidateId: string, jobPostingId: string | null): Promise<ApplicationDetail | null> {
@@ -235,12 +287,7 @@ async function fetchApplicationDetail(candidateId: string, jobPostingId: string 
     .eq('job_posting_id', jobPostingId)
     .maybeSingle();
 
-  if (error) {
-    console.error('Error fetching application detail:', error);
-    return null;
-  }
-
-  if (!data) {
+  if (error || !data) {
     return null;
   }
 
@@ -257,28 +304,55 @@ async function fetchCareerStatusEntry(candidateId: string): Promise<CareerStatus
     .order('created_at', { ascending: false })
     .limit(1);
 
-  if (error) {
-    console.error('Error fetching career status entry:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
+  if (error || !data || data.length === 0) {
     return null;
   }
 
   return data[0] as CareerStatusEntry;
 }
 
+interface NGMessageBubbleProps {
+  children: React.ReactNode;
+  direction: 'left' | 'right';
+  className?: string;
+  isNGMessage?: boolean;
+}
+
+const NGMessageBubble: React.FC<NGMessageBubbleProps> = ({ 
+  children, 
+  direction, 
+  className = '', 
+  isNGMessage = false 
+}) => {
+  const baseClasses = `relative inline-block max-w-[80%] px-6 py-4 rounded-lg ${className}`;
+  
+  if (isNGMessage) {
+    return (
+      <div className={`${baseClasses} bg-gray-600 text-white`}>
+        <div
+          className={`absolute top-4 ${
+            direction === 'left' ? '-left-2' : '-right-2'
+          } w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent ${
+            direction === 'left'
+              ? 'border-r-[10px] border-r-gray-600'
+              : 'border-l-[10px] border-l-gray-600'
+          }`}
+        />
+        {children}
+      </div>
+    );
+  }
+  
+  return (
+    <MessageBubble direction={direction} className={className}>
+      {children}
+    </MessageBubble>
+  );
+};
+
 export default async function MessageDetailPage({ params }: MessageDetailPageProps) {
   const resolvedParams = await params;
   const { message_id } = resolvedParams;
-  console.log('Page params:', resolvedParams);
-  console.log('Message ID from params:', message_id);
-  
-  // pendingの場合はリダイレクト
-  if (message_id === 'pending') {
-    redirect('/admin/message-moderation/ng-keywords');
-  }
   
   const messageDetail = await fetchMessageDetail(message_id);
 
@@ -288,8 +362,8 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
         <div className="max-w-6xl mx-auto">
           <div className="text-center mt-20">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">メッセージが見つかりません</h1>
-            <Link href="/admin/message">
-              <AdminButton text="メッセージ一覧に戻る" />
+            <Link href="/admin/message/pending">
+              <AdminButton text="NGメッセージ一覧に戻る" />
             </Link>
           </div>
         </div>
@@ -297,7 +371,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
     );
   }
 
-  const roomMessages = await fetchRoomMessages(messageDetail.room_id, 10);
+  const { messages: roomMessages, ngMessageIndex } = await fetchRoomMessagesAroundNG(messageDetail.room_id);
 
   const applicationDetail = messageDetail.rooms?.candidate_id && messageDetail.rooms?.related_job_posting_id
     ? await fetchApplicationDetail(messageDetail.rooms.candidate_id, messageDetail.rooms.related_job_posting_id)
@@ -307,21 +381,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
     ? await fetchCareerStatusEntry(messageDetail.rooms.candidate_id)
     : null;
 
-  const statusMap: Record<string, string> = {
-    SENT: '書類提出',
-    read: '書類確認済み',
-    RESPONDED: '面接調整中',
-    REJECTED: '不採用',
-  };
-
-  const messageTypeMap: Record<string, string> = {
-    SCOUT: 'スカウト',
-    APPLICATION: '応募',
-    GENERAL: '一般',
-  };
-
-  // フィルタリングロジックを追加
-  const validMessages = roomMessages.reverse().filter((message) => {
+  const validMessages = roomMessages.filter((message) => {
     const hasContent = message.content && message.content.trim().length > 0;
     const hasSubject = message.subject && message.subject.trim().length > 0;
     return hasContent || hasSubject;
@@ -331,9 +391,8 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
     <div className="bg-gray-50 min-h-screen">
       <div className="mx-auto max-w-6xl">
         
-        {/* メッセージ詳細情報 */}
         <div className="bg-white rounded-lg mb-6">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ情報</h2>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">NGワード検出メッセージ詳細</h2>
           <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
             <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
               <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -344,7 +403,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
               <DisplayValue value={messageDetail.company_groups?.company_accounts?.company_name || '不明'} />
             </div>
           </div>
-          {/* 候補者名 */}
+          
           <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
             <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
               <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -358,7 +417,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           </div>
 
-          {/* 求人タイトル */}
           {messageDetail.rooms?.job_postings && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -372,7 +430,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           )}
 
-          {/* 求人ID */}
           {messageDetail.rooms?.job_postings && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -386,7 +443,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           )}
 
-          {/* 転職活動状況 */}
           {careerStatusEntry && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -400,7 +456,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           )}
 
-          {/* 会社名（転職先） */}
           {careerStatusEntry && careerStatusEntry.company_name && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -414,7 +469,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           )}
 
-          {/* 部署 */}
           {careerStatusEntry && careerStatusEntry.department && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -428,7 +482,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             </div>
           )}
 
-          {/* 選考状況変更 */}
           {applicationDetail && messageDetail.rooms && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -447,16 +500,15 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
           )}
         </div>
 
-        {/* メッセージ履歴 */}
         <div className="bg-white rounded-lg">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ履歴</h2>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">NGワード検出箇所と前後のメッセージ</h2>
           <div className="space-y-6">
             {validMessages.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">メッセージが見つかりません</p>
+                <p className="text-gray-500">NGワードを含むメッセージが見つかりません</p>
               </div>
             ) : (
-              validMessages.map((message) => {
+              validMessages.map((message, index) => {
                 const hasContent = message.content && message.content.trim().length > 0;
                 const hasSubject = message.subject && message.subject.trim().length > 0;
                 
@@ -464,14 +516,18 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                   return null;
                 }
 
+                const contentCheck = containsNGWord(message.content || '');
+                const subjectCheck = containsNGWord(message.subject || '');
+                const isNGMessage = contentCheck.hasNG || subjectCheck.hasNG;
+                const allNGWords = [...contentCheck.ngWords, ...subjectCheck.ngWords];
+
                 const isCompany = message.sender_type === 'COMPANY';
                 const companyName = message.company_groups?.company_accounts?.company_name || '企業';
-                const companyLogo = (message.company_groups?.company_accounts as any)?.logo_url;
+                const companyLogo = message.company_groups?.company_accounts?.logo_url;
                 const candidateName = '候補者';
 
                 return (
                   <div key={message.id} className={`flex gap-4 ${isCompany ? 'flex-row' : 'flex-row-reverse'} items-start`}>
-                    {/* アイコンと名前 */}
                     <div className="flex-shrink-0 flex flex-col items-center mt-2">
                       {isCompany && companyLogo ? (
                         <img 
@@ -493,33 +549,38 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                       </span>
                     </div>
                     
-                    {/* メッセージ */}
                     <div className={`flex-1 ${isCompany ? 'text-left' : 'text-right'}`}>
                       <div className="mb-1">
                         <span className="text-xs text-gray-500">
                           {new Date(message.sent_at).toLocaleString('ja-JP')}
                         </span>
+                       
                       </div>
-                      <MessageBubble 
+                      <NGMessageBubble 
                         className={isCompany ? '' : 'ml-auto'} 
                         direction={isCompany ? 'left' : 'right'}
+                        isNGMessage={isNGMessage}
                       >
                         {hasSubject && (
                           <div className="mb-4">
-                            <h4 className="font-bold text-lg text-gray-900 mb-2">件名</h4>
-                            <p className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[1.8] text-[#323232]">
-                              {message.subject?.trim()}
+                            <h4 className={`font-bold text-lg mb-2 ${isNGMessage ? 'text-white' : 'text-gray-900'}`}>件名</h4>
+                            <p className={`font-['Noto_Sans_JP'] font-medium text-[16px] leading-[1.8] ${isNGMessage ? 'text-white' : 'text-[#323232]'}`}>
+                              {subjectCheck.hasNG 
+                                ? highlightNGWords(message.subject?.trim() || '', subjectCheck.ngWords)
+                                : message.subject?.trim() || ''}
                             </p>
                           </div>
                         )}
                         {hasContent && (
                           <div>
-                            <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[1.8] text-[#323232] whitespace-pre-wrap">
-                              {message.content.trim()}
+                            <div className={`font-['Noto_Sans_JP'] font-medium text-[16px] leading-[1.8] whitespace-pre-wrap ${isNGMessage ? 'text-white' : 'text-[#323232]'}`}>
+                              {contentCheck.hasNG 
+                                ? highlightNGWords(message.content.trim(), contentCheck.ngWords)
+                                : message.content.trim()}
                             </div>
                           </div>
                         )}
-                      </MessageBubble>
+                      </NGMessageBubble>
                     </div>
                   </div>
                 );

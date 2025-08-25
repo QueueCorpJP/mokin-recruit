@@ -8,6 +8,7 @@ import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
 interface Props {
   messages: RoomListItem[];
+  isPending?: boolean;
 }
 
 const statusMap: Record<string, string> = {
@@ -17,7 +18,7 @@ const statusMap: Record<string, string> = {
   REJECTED: '不採用',
 };
 
-export default function MessageListClient({ messages }: Props) {
+export default function MessageListClient({ messages, isPending = false }: Props) {
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
@@ -46,21 +47,13 @@ export default function MessageListClient({ messages }: Props) {
     let bValue: string;
     
     switch (sortColumn) {
-      case 'updated_at':
-        aValue = a.updated_at || '';
-        bValue = b.updated_at || '';
-        break;
-      case 'company_id':
-        aValue = a.company_groups?.company_accounts?.id || '';
-        bValue = b.company_groups?.company_accounts?.id || '';
+      case 'confirmation_requested_at':
+        aValue = (a as any).confirmation_requested_at || '';
+        bValue = (b as any).confirmation_requested_at || '';
         break;
       case 'company_accounts':
         aValue = a.company_groups?.company_accounts?.company_name || '';
         bValue = b.company_groups?.company_accounts?.company_name || '';
-        break;
-      case 'company_groups':
-        aValue = a.company_groups?.group_name || '';
-        bValue = b.company_groups?.group_name || '';
         break;
       case 'candidates':
         aValue = a.candidates 
@@ -74,9 +67,9 @@ export default function MessageListClient({ messages }: Props) {
         aValue = statusMap[a.application?.status ?? ''] || '';
         bValue = statusMap[b.application?.status ?? ''] || '';
         break;
-      case 'job_postings':
-        aValue = a.job_postings?.title || '';
-        bValue = b.job_postings?.title || '';
+      case 'message':
+        aValue = a.latest_messages?.[0]?.content || '';
+        bValue = b.latest_messages?.[0]?.content || '';
         break;
       default:
         return 0;
@@ -97,17 +90,10 @@ export default function MessageListClient({ messages }: Props) {
   const totalPages = Math.ceil(sortedMessages.length / itemsPerPage);
 
   const columns = [
-    { key: 'updated_at', label: '更新日時', sortable: true, width: 'w-[180px]' },
-    { key: 'company_id', label: '企業ID', sortable: true, width: 'w-[150px]' },
+    { key: 'confirmation_requested_at', label: '対応確認依頼日時', sortable: true, width: 'w-[180px]' },
     {
       key: 'company_accounts',
       label: '企業名',
-      sortable: true,
-      width: 'w-[200px]',
-    },
-    {
-      key: 'company_groups',
-      label: '企業グループ',
       sortable: true,
       width: 'w-[200px]',
     },
@@ -119,17 +105,17 @@ export default function MessageListClient({ messages }: Props) {
     },
     { key: 'status', label: '選考状況', sortable: true, width: 'w-[120px]' },
     {
-      key: 'job_postings',
-      label: '求人ページ',
+      key: 'message',
+      label: 'メッセージ',
       sortable: false,
-      width: 'w-[200px]',
+      width: 'w-[300px]',
     },
   ];
 
   return (
     <div className='bg-white rounded-lg overflow-hidden'>
       <div className='overflow-x-auto'>
-        <div className='min-w-[1200px]'>
+        <div className='min-w-[1050px]'>
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
@@ -140,19 +126,23 @@ export default function MessageListClient({ messages }: Props) {
             {paginatedMessages.map(room => (
               <AdminTableRow
                 key={room.id}
-                onClick={() => router.push(`/admin/message/${room.latest_messages[0]?.id || room.id}`)}
+               onClick={() => {
+                  const messageId = room.latest_messages[0]?.id || room.id;
+                  const path = isPending ? `/admin/message/pending/${messageId}` : `/admin/message/${messageId}`;
+                  router.push(path);
+                }}
                 columns={[
                   {
                     content: (
                       <div>
                         <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                          {room.updated_at
-                            ? new Date(room.updated_at).toLocaleDateString('ja-JP')
+                          {(room as any).confirmation_requested_at
+                            ? new Date((room as any).confirmation_requested_at).toLocaleDateString('ja-JP')
                             : ''}
                         </div>
                         <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                          {room.updated_at
-                            ? new Date(room.updated_at).toLocaleTimeString('ja-JP', {
+                          {(room as any).confirmation_requested_at
+                            ? new Date((room as any).confirmation_requested_at).toLocaleTimeString('ja-JP', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: false
@@ -164,15 +154,7 @@ export default function MessageListClient({ messages }: Props) {
                     width: 'w-[180px]',
                   },
                   {
-                    content: room.company_groups?.company_accounts?.id || '不明',
-                    width: 'w-[150px]',
-                  },
-                  {
                     content: room.company_groups?.company_accounts?.company_name || '不明',
-                    width: 'w-[200px]',
-                  },
-                  {
-                    content: room.company_groups?.group_name || '不明',
                     width: 'w-[200px]',
                   },
                   {
@@ -192,8 +174,12 @@ export default function MessageListClient({ messages }: Props) {
                     width: 'w-[120px]',
                   },
                   {
-                    content: room.job_postings?.title || '不明',
-                    width: 'w-[200px]',
+                    content: (
+                      <div className="truncate max-w-[280px]">
+                        {room.latest_messages?.[0]?.content || '不明'}
+                      </div>
+                    ),
+                    width: 'w-[300px]',
                   },
                 ]}
               />
