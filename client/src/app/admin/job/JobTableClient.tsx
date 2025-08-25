@@ -39,18 +39,14 @@ const publicationTypeMap: Record<string, string> = {
 
 function formatDateTime(iso: string): { date: string; time: string } {
   const d = new Date(iso);
-  const date = d
-    .toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-    .replace(/\//g, '/');
-  const time = d.toLocaleTimeString('ja-JP', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  
+  const date = `${year}/${month}/${day}`;
+  const time = `${hours}:${minutes}`;
   return { date, time };
 }
 
@@ -133,26 +129,29 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
   const handleCSVDownload = () => {
     // CSVヘッダー
     const headers = [
+      '更新日時',
+      'ステータス',
+      '公開範囲',
+      '企業名',
+      '職種',
       '求人ID',
       '求人タイトル',
-      '企業名',
-      'ステータス',
-      '公開タイプ',
-      '職種',
-      '更新日時'
+      '求人URL'
     ];
 
     // CSVデータを作成
     const csvData = jobs.map(job => {
       const { date, time } = formatDateTime(job.updated_at);
+      const jobUrl = `${window.location.origin}/admin/job/${job.id}`;
       return [
-        job.id,
-        `"${job.title.replace(/"/g, '""')}"`, // ダブルクォートをエスケープ
-        `"${(job.company_accounts?.company_name || '不明').replace(/"/g, '""')}"`,
+        `${date} ${time}`,
         statusMap[job.status] || job.status,
         publicationTypeMap[job.publication_type] || job.publication_type,
+        `"${(job.company_accounts?.company_name || '不明').replace(/"/g, '""')}"`,
         `"${job.job_type && job.job_type.length > 0 ? job.job_type.join(', ').replace(/"/g, '""') : '未設定'}"`,
-        `${date} ${time}`
+        job.id,
+        `"${job.title.replace(/"/g, '""')}"`, // ダブルクォートをエスケープ
+        jobUrl
       ];
     });
 
@@ -267,8 +266,8 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       sortable: true,
       width: 'w-[120px]',
     },
-    { key: 'company', label: '企業名', sortable: true, width: 'w-[110px]' },
-    { key: 'position', label: '職種', sortable: true, width: 'w-[100px]' },
+    { key: 'company', label: '企業名', sortable: true, width: 'w-[100px]' },
+    { key: 'position', label: '職種', sortable: true, width: 'w-[150px]' },
     { key: 'jobId', label: '求人ID', sortable: true, width: 'w-[140px]' },
     { key: 'title', label: '求人タイトル', sortable: true, width: 'flex-1' },
     {
@@ -331,107 +330,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       </div>
       {/* 求人一覧テーブル */}
       <div className='bg-white rounded-lg w-[900px] overflow-x-auto'>
-        <div className='w-[1800px]'>
-          {/* 統計情報ヘッダー */}
-          <div className="flex items-center px-5 py-3 bg-[#F0F8FF] border-b border-[#E5E5E5]">
-            <div className="w-[140px]"></div> {/* 更新日時 */}
-            <div className="w-[120px]"></div> {/* ステータス */}
-            <div className="w-[120px]"></div> {/* 公開期間 */}
-            <div className="w-[110px]"></div> {/* 企業名 */}
-            <div className="w-[100px]"></div> {/* 職種 */}
-            <div className="w-[140px]"></div> {/* 求人ID */}
-            <div className="flex-1"></div> {/* 求人タイトル */}
-            <div className="w-[120px] text-center">
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                スカウト送信数
-              </span>
-            </div>
-            <div className="w-[100px] text-center">
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                開封数
-              </span>
-            </div>
-            <div className="w-[120px] text-center">
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                返信数(返信率)
-              </span>
-            </div>
-            <div className="w-[120px] text-center">
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                応募数(応募率)
-              </span>
-            </div>
-          </div>
-          
-          {/* 統計データ行 */}
-          <div className="px-5 py-2 bg-[#FAFAFA] border-b border-[#E5E5E5]">
-            <div className="flex items-center mb-1">
-              <div className="w-[140px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
-              <div className="flex-1"></div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">過去7日合計</span>
-              </div>
-              <div className="w-[100px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center mb-1">
-              <div className="w-[140px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
-              <div className="flex-1"></div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">過去30日合計</span>
-              </div>
-              <div className="w-[100px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center">
-              <div className="w-[140px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[120px]"></div>
-              <div className="w-[110px]"></div>
-              <div className="w-[100px]"></div>
-              <div className="w-[140px]"></div>
-              <div className="flex-1"></div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">累計</span>
-              </div>
-              <div className="w-[100px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-              <div className="w-[120px] text-center">
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">0 (0%)</span>
-              </div>
-            </div>
-          </div>
-          
+        <div className='w-[1200px]'>
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
@@ -477,17 +376,34 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
                     width: 'w-[120px]',
                   },
                   {
-                    content: truncateText(job.company_accounts?.company_name || '不明', 10),
-                    width: 'w-[110px]',
+                    content: truncateText(job.company_accounts?.company_name || '不明', 3),
+                    width: 'w-[100px]',
                   },
                   {
-                    content: truncateText(
-                      job.job_type && job.job_type.length > 0
-                        ? job.job_type.join(', ')
-                        : '未設定',
-                      8
+                    content: (
+                      <div className="flex flex-wrap gap-1">
+                        {job.job_type && job.job_type.length > 0 ? (
+                          job.job_type.slice(0, 2).map((type, index) => (
+                            <span
+                              key={index}
+                              className="inline-block px-2 py-0.5 rounded-full bg-[#E5E5E5] text-[#323232] font-['Noto_Sans_JP'] text-[12px] font-medium leading-[1.4] tracking-[1.2px] whitespace-nowrap"
+                            >
+                              {truncateText(type, 6)}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-[#E5E5E5] text-[#999999] font-['Noto_Sans_JP'] text-[12px] font-medium leading-[1.4] tracking-[1.2px]">
+                            未設定
+                          </span>
+                        )}
+                        {job.job_type && job.job_type.length > 2 && (
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-[#E5E5E5] text-[#323232] font-['Noto_Sans_JP'] text-[12px] font-medium leading-[1.4] tracking-[1.2px]">
+                            +{job.job_type.length - 2}
+                          </span>
+                        )}
+                      </div>
                     ),
-                    width: 'w-[100px]',
+                    width: 'w-[150px]',
                   },
                   {
                     content: (
@@ -522,40 +438,8 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
                     ),
                     width: 'w-[200px]',
                   },
-                  // 統計情報カラムを追加
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</span>
-                      </div>
-                    ),
-                    width: 'w-[100px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
-                  {
-                    content: (
-                      <div className="text-center">
-                        <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</span>
-                      </div>
-                    ),
-                    width: 'w-[120px]',
-                  },
                 ]}
+                onClick={() => router.push(`/admin/job/${job.id}`)}
               />
             );
           })}
