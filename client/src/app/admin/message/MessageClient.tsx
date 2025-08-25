@@ -1,14 +1,12 @@
 'use client';
 import React, { useState } from 'react';
-import { MessageListItem } from './page';
+import { RoomListItem } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
-import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
-import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
-import { SearchBar } from '@/components/admin/ui/SearchBar';
+import { SelectInput } from '@/components/ui/select-input';
+import MessageListClient from './MessageListClient';
 
 interface Props {
-  messages: MessageListItem[];
+  messages: RoomListItem[];
 }
 
 const statusMap: Record<string, string> = {
@@ -19,139 +17,92 @@ const statusMap: Record<string, string> = {
 };
 
 export default function MessageClient({ messages }: Props) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [searchCategory, setSearchCategory] = useState<string>('候補者名');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  // 検索・ソート・ページネーションロジック
-  const filtered = messages.filter(
-    m =>
-      (m.company_groups?.company_accounts?.company_name || '').includes(
-        searchTerm
-      ) ||
-      (m.rooms?.candidates
-        ? m.rooms.candidates.last_name + m.rooms.candidates.first_name
-        : ''
-      ).includes(searchTerm) ||
-      (m.rooms?.job_postings?.title || '').includes(searchTerm)
-  );
-  // ソートロジック（sortDirectionは未使用のため省略）
-  const paginated = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-  const columns = [
-    { key: 'sent_at', label: '日付', sortable: true, width: 'w-[180px]' },
-    {
-      key: 'company_accounts',
-      label: '企業名',
-      sortable: true,
-      width: 'w-[200px]',
-    },
-    {
-      key: 'company_groups',
-      label: '企業グループ',
-      sortable: true,
-      width: 'w-[150px]',
-    },
-    {
-      key: 'candidates',
-      label: '候補者名',
-      sortable: true,
-      width: 'w-[150px]',
-    },
-    { key: 'status', label: '選考状況', sortable: true, width: 'w-[120px]' },
-    {
-      key: 'job_postings',
-      label: '求人ページ',
-      sortable: false,
-      width: 'w-[250px]',
-    },
+  const searchCategoryOptions = [
+    { value: '候補者名', label: '候補者名' },
+    { value: '企業ID', label: '企業ID' },
+    { value: '企業名', label: '企業名' },
+    { value: '選考状況', label: '選考状況' }
   ];
+
+  // 検索フィルタリング
+  const filteredMessages = messages.filter(room => {
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      switch (searchCategory) {
+        case '候補者名':
+          const candidateName = room.candidates
+            ? `${room.candidates.last_name}${room.candidates.first_name}`
+            : '';
+          return candidateName.toLowerCase().includes(searchLower);
+        case '企業ID':
+          return (room.company_groups?.company_accounts?.id || '').toLowerCase().includes(searchLower);
+        case '企業名':
+          return (room.company_groups?.company_accounts?.company_name || '').toLowerCase().includes(searchLower);
+        case '選考状況':
+          const statusText = statusMap[room.application?.status ?? ''] || '';
+          return statusText.toLowerCase().includes(searchLower);
+        default:
+          return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
-      <div className='mb-6 flex justify-between items-center'>
-        <SearchBar
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder='企業名・候補者名・求人タイトルで検索'
-          onSearch={() => {}}
-        />
-        <div className='flex gap-3'>
-          <AdminButton href='/admin/message/confirm' text='要確認メッセージ' />
-          <AdminButton href='/admin/message/ngword' text='NGワード設定' />
-        </div>
-      </div>
-      <div className='bg-white rounded-lg'>
-        <MediaTableHeader
-          columns={columns}
-          sortColumn={sortColumn}
-          sortDirection={null}
-          onSort={setSortColumn}
-        />
-        <div className='mt-2 space-y-2'>
-          {paginated.map(m => (
-            <AdminTableRow
-              key={m.id}
-              columns={[
-                {
-                  content: (
-                    <div>
-                      <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {m.sent_at
-                          ? new Date(m.sent_at).toLocaleDateString('ja-JP')
-                          : ''}
-                      </div>
-                    </div>
-                  ),
-                  width: 'w-[180px]',
-                },
-                {
-                  content:
-                    m.company_groups?.company_accounts?.company_name || '不明',
-                  width: 'w-[200px]',
-                },
-                {
-                  content: m.company_groups?.group_name || '不明',
-                  width: 'w-[150px]',
-                },
-                {
-                  content: m.rooms?.candidates
-                    ? `${m.rooms.candidates.last_name}${m.rooms.candidates.first_name}`
-                    : '不明',
-                  width: 'w-[150px]',
-                },
-                {
-                  content: (
-                    <span
-                      className={`px-3 py-1 rounded-full text-[14px] font-bold bg-gray-500 text-white`}
-                    >
-                      {statusMap[m.application?.status ?? ''] ?? '不明'}
-                    </span>
-                  ),
-                  width: 'w-[120px]',
-                },
-                {
-                  content: m.rooms?.job_postings?.title || '不明',
-                  width: 'w-[250px]',
-                },
-              ]}
+      <div className='mb-6 flex flex-wrap items-center gap-4 max-w-full'>
+        <div className='flex gap-2 items-center flex-shrink-0'>
+          <SelectInput
+            options={searchCategoryOptions}
+            value={searchCategory}
+            onChange={setSearchCategory}
+            className="h-10 w-[150px]"
+            style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '16px',
+              fontWeight: 500,
+              lineHeight: 2,
+              letterSpacing: '1.6px'
+            }}
+          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder='候補者名・企業ID・企業名・選考状況で検索'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[#ffffff] box-border flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 rounded-[5px] border border-[#999999] border-solid h-10 w-[300px]"
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '16px',
+                fontWeight: 500,
+                lineHeight: 2,
+                letterSpacing: '1.6px',
+                color: '#999999'
+              }}
             />
-          ))}
+            <button 
+              className="bg-[#0F9058] hover:bg-[#0D7A4A] transition-colors box-border flex flex-row gap-2 items-center justify-center px-4 py-2 rounded-[32px] whitespace-nowrap"
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '14px',
+                fontWeight: 700,
+                lineHeight: 1.6,
+                letterSpacing: '1.4px',
+                color: '#ffffff'
+              }}
+            >
+              検索
+            </button>
+          </div>
         </div>
+       
       </div>
-      <div className='flex justify-center mt-8'>
-        <PaginationButtons
-          onPrevious={() => setCurrentPage(p => Math.max(1, p - 1))}
-          onNext={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          previousDisabled={currentPage === 1}
-          nextDisabled={currentPage === totalPages || totalPages === 0}
-        />
-      </div>
+      
+      <MessageListClient messages={filteredMessages} />
     </div>
   );
 }
