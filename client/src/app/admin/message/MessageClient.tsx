@@ -7,7 +7,6 @@ import MessageListClient from './MessageListClient';
 
 interface Props {
   messages: RoomListItem[];
-  isPending?: boolean;
 }
 
 const statusMap: Record<string, string> = {
@@ -17,7 +16,7 @@ const statusMap: Record<string, string> = {
   REJECTED: '不採用',
 };
 
-export default function MessageClient({ messages, isPending = false }: Props) {
+export default function MessageClient({ messages }: Props) {
   const [searchCategory, setSearchCategory] = useState<string>('候補者名');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -103,7 +102,7 @@ export default function MessageClient({ messages, isPending = false }: Props) {
        
       </div>
       
-      <MessageListClient messages={filteredMessages} isPending={isPending} />
+      <MessageListClient messages={filteredMessages} />
     </div>
   );
 }

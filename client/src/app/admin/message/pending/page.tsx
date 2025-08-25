@@ -1,4 +1,4 @@
-import MessageClient from '../MessageClient';
+import PendingMessageClient from './PendingMessageClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import type { RoomListItem } from '../page';
@@ -50,5 +50,5 @@ async function fetchPendingMessages(
 
 export default async function PendingMessagePage() {
   const messages = await fetchPendingMessages(1, 50);
-  return <MessageClient messages={messages} isPending={true} />;
+  return <PendingMessageClient messages={messages} />;
 }
