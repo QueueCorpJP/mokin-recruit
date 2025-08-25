@@ -1,156 +1,70 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/admin/ui/card';
+import { Badge } from '@/components/admin/ui/badge';
+import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboardClient() {
   const [memo, setMemo] = useState('');
+  
+  const todoItems = [
+    { label: '求人', href: '/admin/job', count: 21 },
+    { label: 'メッセージ', href: '/admin/message', count: 33 },
+    { label: 'レジュメ', href: '/admin/candidate', count: 5 },
+  ];
+
   return (
     <div className='min-h-screen'>
       {/* 要対応リストセクション */}
-      <div className='mb-8'>
-        <h2
-          style={{
-            color: '#323232',
-            fontFamily: 'Inter',
-            fontSize: '32px',
-            fontStyle: 'normal',
-            fontWeight: 700,
-            lineHeight: 'normal',
-            marginBottom: '24px',
-          }}
-        >
-          要対応リスト
-        </h2>
-
-        <div className='flex gap-4'>
-          <Link
-            href='/admin/job'
-            className='bg-[#0c0c0c] hover:bg-[#333] transition-colors rounded-md px-3 py-2'
-          >
-            <span
-              style={{
-                color: '#ffffff',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-              }}
-            >
-              求人
-            </span>
-            <span
-              style={{
-                color: '#323232',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-                marginLeft: '8px',
-              }}
-            >
-              (21)
-            </span>
-          </Link>
-
-          <Link
-            href='/admin/message'
-            className='bg-[#0c0c0c] hover:bg-[#333] transition-colors rounded-md px-3 py-2'
-          >
-            <span
-              style={{
-                color: '#ffffff',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-              }}
-            >
-              メッセージ
-            </span>
-            <span
-              style={{
-                color: '#323232',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-                marginLeft: '8px',
-              }}
-            >
-              (33)
-            </span>
-          </Link>
-
-          <Link
-            href='/admin/candidate'
-            className='bg-[#0c0c0c] hover:bg-[#333] transition-colors rounded-md px-3 py-2'
-          >
-            <span
-              style={{
-                color: '#ffffff',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-              }}
-            >
-              レジュメ
-            </span>
-            <span
-              style={{
-                color: '#323232',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 1.6,
-                marginLeft: '8px',
-              }}
-            >
-              (5)
-            </span>
-          </Link>
-        </div>
-      </div>
+      <Card className='mb-8 border-none shadow-none bg-transparent'>
+        <CardHeader className='px-0'>
+          <CardTitle className='text-[32px] font-bold text-[#323232]'>
+            要対応リスト
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='px-0'>
+          <div className='flex gap-4'>
+            {todoItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant="default"
+                  className='bg-[#0c0c0c] hover:bg-[#333] text-white px-4 py-2'
+                >
+                  <div className='flex items-center gap-2'>
+                    <span>{item.label}</span>
+                    <Badge variant='secondary' className='bg-white text-[#323232] font-bold'>
+                      {item.count}
+                    </Badge>
+                  </div>
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 運営メモセクション */}
-      <div>
-        <h2
-          style={{
-            color: '#323232',
-            fontFamily: 'Inter',
-            fontSize: '32px',
-            fontStyle: 'normal',
-            fontWeight: 700,
-            lineHeight: 'normal',
-            marginBottom: '24px',
-          }}
-        >
-          運営メモ
-        </h2>
-
-        <div className='bg-white border border-black p-4 h-32'>
-          <textarea
-            value={memo}
-            onChange={e => setMemo(e.target.value)}
-            placeholder='運営に関するメモを自由に入力できます。'
-            className='w-full h-full border-none outline-none resize-none bg-transparent'
-            style={{
-              color: memo ? '#323232' : '#bababa',
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: 1.6,
-            }}
-          />
-        </div>
-      </div>
+      <Card className='border-none shadow-none bg-transparent'>
+        <CardHeader className='px-0'>
+          <CardTitle className='text-[32px] font-bold text-[#323232]'>
+            運営メモ
+          </CardTitle>
+        </CardHeader>
+        <CardContent className='px-0'>
+          <Card className='bg-white border border-black'>
+            <CardContent className='p-4'>
+              <AdminTextarea
+                value={memo}
+                onChange={setMemo}
+                placeholder='運営に関するメモを自由に入力できます。'
+                className='min-h-[120px] border-none resize-none font-bold text-[16px]'
+              />
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
     </div>
   );
 }
