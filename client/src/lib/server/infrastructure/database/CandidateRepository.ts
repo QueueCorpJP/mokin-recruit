@@ -11,7 +11,7 @@ export interface CandidateEntity {
   last_name: string;
   first_name: string;
   phone_number?: string;
-  current_residence?: string;
+  prefecture?: string;
   current_salary?: string;
   desired_salary?: string;
   skills: string[];
@@ -24,6 +24,12 @@ export interface CandidateEntity {
   created_at: string;
   updated_at: string;
   last_login_at?: string;
+  // 追加: DBスキーマに合わせる
+  birth_date?: string;
+  last_name_kana?: string;
+  first_name_kana?: string;
+  gender?: string;
+  current_income?: string;
 }
 
 // MVPスキーマ対応の候補者作成データ
@@ -34,6 +40,7 @@ export interface CreateCandidateData {
   first_name: string;
   phone_number?: string;
   current_residence?: string;
+  prefecture?: string;
   current_salary?: string;
   desired_salary?: string;
   skills?: string[];

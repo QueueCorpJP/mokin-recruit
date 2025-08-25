@@ -1,6 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+export type AdminUserEntity = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+};
 
 const userIcon =
   'http://localhost:3845/assets/4ac1f1371e0fe963f2fed64d4c41acd59fa8b23c.svg';
@@ -173,7 +181,14 @@ function TabNavigation({ tabs }: { tabs: TabItem[] }) {
   );
 }
 
-export default function MemberClient() {
+interface MemberClientProps {
+  members: AdminUserEntity[];
+}
+
+export default function MemberClient({
+  members: initialMembers,
+}: MemberClientProps) {
+  const [members, setMembers] = useState<AdminUserEntity[]>(initialMembers);
   const [selectedTab, setSelectedTab] = useState('basic');
 
   const tabs: TabItem[] = [

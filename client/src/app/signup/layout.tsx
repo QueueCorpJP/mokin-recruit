@@ -9,8 +9,12 @@ export default function SignupLayout({
 }) {
   return (
     <SignupProvider>
-      <div className="md:min-h-screen flex flex-col">
-        <Navigation variant="candidate" isLoggedIn={false} userInfo={undefined} />
+      <div className='md:min-h-screen flex flex-col'>
+        <Navigation
+          variant='candidate'
+          isLoggedIn={false}
+          userInfo={undefined}
+        />
         {children}
         <AuthAwareFooter />
       </div>

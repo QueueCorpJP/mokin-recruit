@@ -4,21 +4,20 @@ import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 // DTO型定義
-export type MessageListItem = {
+export type RoomListItem = {
   id: string;
-  sent_at: string;
-  rooms: {
-    candidate_id: string;
-    candidates: {
-      first_name: string;
-      last_name: string;
-    } | null;
-    related_job_posting_id: string;
-    job_postings: {
-      title: string;
-    } | null;
+  created_at: string;
+  updated_at: string;
+  candidate_id: string;
+  candidates: {
+    first_name: string;
+    last_name: string;
   } | null;
-  sender_company_group_id: string;
+  related_job_posting_id: string;
+  job_postings: {
+    title: string;
+  } | null;
+  company_group_id: string;
   company_groups: {
     group_name: string;
     company_account_id: string;
@@ -30,60 +29,119 @@ export type MessageListItem = {
   application: {
     status: string;
   } | null;
+  latest_messages: {
+    id: string;
+    content: string;
+    sent_at: string;
+    sender_type: string;
+  }[];
 };
 
-async function fetchAdminMessageList(
+async function fetchAdminRoomList(
   page: number = 1,
   pageSize: number = 10
-): Promise<MessageListItem[]> {
+): Promise<RoomListItem[]> {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from('messages')
+  
+  // ルーム一覧を取得
+  const { data: rooms, error } = await supabase
+    .from('rooms')
     .select(
       `
       id,
-      sent_at,
-      rooms:room_id (
-        candidate_id,
-        candidates:candidate_id (
-          first_name,
-          last_name
-        ),
-        related_job_posting_id,
-        job_postings:related_job_posting_id (
-          title
-        )
+      created_at,
+      updated_at,
+      candidate_id,
+      related_job_posting_id,
+      company_group_id,
+      candidates:candidate_id (
+        first_name,
+        last_name
       ),
-      sender_company_group_id,
-      company_groups:sender_company_group_id (
+      job_postings:related_job_posting_id (
+        title
+      ),
+      company_groups:company_group_id (
         group_name,
         company_account_id,
         company_accounts:company_account_id (
           id,
           company_name
         )
-      ),
-      application:room_id (
-        applications:candidate_id (
-          status
-        )
       )
     `
     )
-    .order('sent_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .range(from, to);
+    
   if (error) {
     throw new Error(error.message);
   }
-  // DTO整形（必要に応じて）
-  // ここではSupabaseの型に合わせて返す
-  return data as unknown as MessageListItem[];
+
+  if (!rooms || rooms.length === 0) {
+    return [];
+  }
+
+  // 各ルームの最新メッセージ10件とアプリケーション状況を取得
+  const roomsWithMessages = await Promise.all(
+    rooms.map(async (room) => {
+      // 最新のメッセージ10件を取得
+      const { data: messages } = await supabase
+        .from('messages')
+        .select('id, content, sent_at, sender_type')
+        .eq('room_id', room.id)
+        .order('sent_at', { ascending: false })
+        .limit(10);
+
+      // アプリケーション状況を取得
+      let applicationStatus = null;
+      if (room.candidate_id && room.related_job_posting_id) {
+        try {
+          const { data: appData } = await supabase
+            .from('application')
+            .select('status')
+            .eq('candidate_id', room.candidate_id)
+            .eq('job_posting_id', room.related_job_posting_id)
+            .maybeSingle();
+          
+          applicationStatus = appData?.status || null;
+        } catch (appError) {
+          console.warn('Application lookup failed:', appError);
+          applicationStatus = null;
+        }
+      }
+
+      return {
+        id: room.id,
+        created_at: room.created_at,
+        updated_at: room.updated_at,
+        candidate_id: room.candidate_id,
+        candidates: Array.isArray(room.candidates) ? room.candidates[0] || null : room.candidates,
+        related_job_posting_id: room.related_job_posting_id,
+        job_postings: Array.isArray(room.job_postings) ? room.job_postings[0] || null : room.job_postings,
+        company_group_id: room.company_group_id,
+        company_groups: Array.isArray(room.company_groups) 
+          ? (room.company_groups[0] 
+              ? {
+                  ...room.company_groups[0],
+                  company_accounts: Array.isArray(room.company_groups[0].company_accounts)
+                    ? room.company_groups[0].company_accounts[0] || null
+                    : room.company_groups[0].company_accounts
+                }
+              : null)
+          : room.company_groups,
+        latest_messages: messages || [],
+        application: { status: applicationStatus }
+      } as RoomListItem;
+    })
+  );
+
+  return roomsWithMessages;
 }
 
 export default async function MessagePage() {
-
-  const messages = await fetchAdminMessageList(1, 10);
-  return <MessageClient messages={messages} />;
+  const rooms = await fetchAdminRoomList(1, 10);
+  return <MessageClient messages={rooms} />;
 }
