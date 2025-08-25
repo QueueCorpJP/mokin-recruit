@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { SelectInput } from '@/components/ui/select-input';
 
 interface ApplicationStatusSelectProps {
-  initialStatus: string;
-  candidateId?: string;
-  jobPostingId?: string;
-  currentStatus?: string;
+  candidateId?: string | null;
+  jobPostingId?: string | null;
+  currentStatus: string;
 }
 
 const statusOptions = [
@@ -17,12 +16,11 @@ const statusOptions = [
 ];
 
 export const ApplicationStatusSelect: React.FC<ApplicationStatusSelectProps> = ({
-  initialStatus,
   candidateId,
   jobPostingId,
   currentStatus
 }) => {
-  const [status, setStatus] = useState(currentStatus || initialStatus);
+  const [status, setStatus] = useState(currentStatus);
 
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);

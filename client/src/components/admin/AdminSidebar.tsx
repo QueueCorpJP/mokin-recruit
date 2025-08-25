@@ -51,7 +51,7 @@ const navigationItems = [
     href: "/admin/message",
     subItems: [
       { title: "メッセージ一覧", href: "/admin/message" },
-      { title: "要確認メッセージ", href: "/admin/message/confirm" },
+      { title: "要確認メッセージ", href: "/admin/message/pending" },
       { title: "NGワード設定", href: "/admin/message/ngword" },
     ],
   },

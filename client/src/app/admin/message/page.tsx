@@ -35,6 +35,7 @@ export type RoomListItem = {
     sent_at: string;
     sender_type: string;
   }[];
+  confirmation_requested_at?: string;
 };
 
 async function fetchAdminRoomList(

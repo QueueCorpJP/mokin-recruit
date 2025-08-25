@@ -74,12 +74,12 @@ export const NewsTabsAndList: React.FC<NewsTabsAndListProps> = ({
       </div>
 
       {/* ニュース一覧 */}
-      <div className="flex flex-col gap-2 items-start justify-start relative w-full">
+      <div className="flex flex-col gap-6 md:gap-2 items-start justify-start relative w-full">
         {filteredArticles.map((article) => (
           <div 
             key={article.id}
             onClick={() => handleArticleClick(article.id)}
-            className="md:flex-row flex-col grow items-start justify-start min-w-60 overflow-hidden relative rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] cursor-pointer hover:opacity-80 transition-opacity w-full"
+            className="flex flex-col md:flex-row grow items-start justify-start min-w-60 overflow-hidden relative rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] cursor-pointer hover:opacity-80 transition-opacity w-full"
           >
             <div 
               className="aspect-[300/200] bg-center bg-cover bg-no-repeat flex-shrink-0 w-full md:w-[230px]"
