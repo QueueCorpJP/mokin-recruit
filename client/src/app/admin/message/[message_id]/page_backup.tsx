@@ -403,7 +403,12 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <ApplicationStatusSelect initialStatus={applicationDetail.status} />
+                <ApplicationStatusSelect 
+                  initialStatus={applicationDetail.status}
+                  candidateId={messageDetail.rooms.candidate_id}
+                  jobPostingId={messageDetail.rooms.related_job_posting_id}
+                  currentStatus={applicationDetail.status}
+                />
               </div>
             </div>
           )}
