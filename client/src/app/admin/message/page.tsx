@@ -114,14 +114,31 @@ async function fetchAdminRoomList(
       }
 
       return {
-        ...room,
+        id: room.id,
+        created_at: room.created_at,
+        updated_at: room.updated_at,
+        candidate_id: room.candidate_id,
+        candidates: Array.isArray(room.candidates) ? room.candidates[0] || null : room.candidates,
+        related_job_posting_id: room.related_job_posting_id,
+        job_postings: Array.isArray(room.job_postings) ? room.job_postings[0] || null : room.job_postings,
+        company_group_id: room.company_group_id,
+        company_groups: Array.isArray(room.company_groups) 
+          ? (room.company_groups[0] 
+              ? {
+                  ...room.company_groups[0],
+                  company_accounts: Array.isArray(room.company_groups[0].company_accounts)
+                    ? room.company_groups[0].company_accounts[0] || null
+                    : room.company_groups[0].company_accounts
+                }
+              : null)
+          : room.company_groups,
         latest_messages: messages || [],
         application: { status: applicationStatus }
-      };
+      } as RoomListItem;
     })
   );
 
-  return roomsWithMessages as RoomListItem[];
+  return roomsWithMessages;
 }
 
 export default async function MessagePage() {

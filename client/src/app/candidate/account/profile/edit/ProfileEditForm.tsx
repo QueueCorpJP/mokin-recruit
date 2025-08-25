@@ -63,7 +63,15 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
     setIsSubmitting(true);
     
     try {
-      await updateCandidateProfile(formData);
+      const initialState = { success: false, message: '', errors: undefined };
+      const result = await updateCandidateProfile(initialState, formData);
+      
+      if (result.success) {
+        router.push('/candidate/account/profile');
+      } else {
+        console.error('プロフィール更新エラー:', result.message);
+        setIsSubmitting(false);
+      }
     } catch (error) {
       console.error('フォーム送信エラー:', error);
       setIsSubmitting(false);

@@ -7,7 +7,15 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { SearchBar } from '@/components/admin/ui/SearchBar';
-import type { NoticeItem } from './page';
+export type NoticeItem = {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  status: 'PUBLISHED' | 'DRAFT';
+  created_at: string;
+  updated_at: string;
+};
 
 interface NoticeClientProps {
   notices: NoticeItem[];

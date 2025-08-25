@@ -15,13 +15,26 @@ export interface ProfileUpdateData {
   currentIncome: string;
 }
 
+// アクション結果の型定義
+export interface ActionState {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[]>;
+}
+
 // プロフィール更新のサーバーアクション
-export async function updateCandidateProfile(formData: FormData) {
+export async function updateCandidateProfile(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   try {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      throw new Error(authResult.error);
+      return {
+        success: false,
+        message: authResult.error,
+      };
     }
 
     const { candidateId } = authResult.data;
@@ -37,7 +50,10 @@ export async function updateCandidateProfile(formData: FormData) {
 
     // バリデーション
     if (!gender || !prefecture || !birthYear || !birthMonth || !birthDay) {
-      throw new Error('必須項目が入力されていません');
+      return {
+        success: false,
+        message: '必須項目が入力されていません',
+      };
     }
 
     // 生年月日をDate型に変換
@@ -54,7 +70,10 @@ export async function updateCandidateProfile(formData: FormData) {
           date.getDate() === day) {
         birthDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       } else {
-        throw new Error('無効な生年月日です');
+        return {
+          success: false,
+          message: '無効な生年月日です',
+        };
       }
     }
 
@@ -74,17 +93,24 @@ export async function updateCandidateProfile(formData: FormData) {
 
     if (error) {
       console.error('プロフィール更新エラー:', error);
-      throw new Error('プロフィールの更新に失敗しました');
+      return {
+        success: false,
+        message: 'プロフィールの更新に失敗しました',
+      };
     }
 
     console.log('プロフィール更新成功:', { candidateId });
+    
+    return {
+      success: true,
+      message: 'プロフィールが更新されました',
+    };
 
   } catch (error) {
     console.error('プロフィール更新エラー:', error);
-    // エラーをセッションに保存したり、エラーページにリダイレクトすることも可能
-    throw error;
+    return {
+      success: false,
+      message: 'プロフィールの更新中にエラーが発生しました',
+    };
   }
-
-  // 成功時はプロフィール確認ページにリダイレクト
-  redirect('/candidate/account/profile');
 }

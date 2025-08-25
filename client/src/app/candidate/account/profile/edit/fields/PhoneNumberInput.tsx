@@ -36,8 +36,8 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
             type='tel'
             placeholder='08011112222'
             value={phoneNumber}
-            onChange={e => onChange && onChange(e.target.value)}
             {...(register ? register('phoneNumber') : {})}
+            onChange={e => onChange && onChange(e.target.value)}
             className={`w-full px-[11px] py-[11px] bg-white border ${
               errors?.phoneNumber ? 'border-red-500' : 'border-[#999999]'
             } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}

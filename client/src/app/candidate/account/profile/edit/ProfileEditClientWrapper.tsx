@@ -9,14 +9,14 @@ import {
   generateMonthOptions,
   generateDayOptions,
 } from '@/constants/profile';
-import { updateCandidateProfile } from './actions';
+import { updateCandidateProfile, type ActionState } from './actions';
 import { useRef, useEffect } from 'react';
 import { useActionState } from 'react';
 import ProfileEditDesktop from './ProfileEditDesktop';
 import ProfileEditMobile from './ProfileEditMobile';
 import { useRouter } from 'next/navigation';
 
-const initialState = { success: false, message: '', errors: undefined };
+const initialState: ActionState = { success: false, message: '', errors: undefined };
 
 function ProfileEditClientWrapper({ profile }: { profile: ProfileFormData }) {
   const isDesktop = useMediaQuery('(min-width: 1024px)');

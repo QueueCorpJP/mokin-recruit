@@ -1,39 +1,12 @@
 import MessageClient from '../MessageClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-
-export type MessageListItem = {
-  id: string;
-  sent_at: string;
-  rooms: {
-    candidate_id: string;
-    candidates: {
-      first_name: string;
-      last_name: string;
-    } | null;
-    related_job_posting_id: string;
-    job_postings: {
-      title: string;
-    } | null;
-  } | null;
-  sender_company_group_id: string;
-  company_groups: {
-    group_name: string;
-    company_account_id: string;
-    company_accounts: {
-      id: string;
-      company_name: string;
-    } | null;
-  } | null;
-  application: {
-    status: string;
-  } | null;
-};
+import type { RoomListItem } from '../page';
 
 async function fetchPendingMessages(
   page: number = 1,
   pageSize: number = 50
-): Promise<MessageListItem[]> {
+): Promise<RoomListItem[]> {
   const supabase = getSupabaseAdminClient();
   
   // まずアクティブなNGキーワードを取得
@@ -50,28 +23,44 @@ async function fetchPendingMessages(
     return [];
   }
 
-  // NGキーワードを含むメッセージを検索するためのクエリを構築
-  let query = supabase
+  // NGキーワードを含むメッセージを持つルームIDを取得
+  const keywords = ngKeywords.map(k => k.keyword);
+  const orConditions = keywords.flatMap(keyword => [
+    `content.ilike.%${keyword}%`,
+    `subject.ilike.%${keyword}%`
+  ]);
+  
+  const { data: messagesWithNg } = await supabase
     .from('messages')
+    .select('room_id')
+    .or(orConditions.join(','));
+
+  if (!messagesWithNg || messagesWithNg.length === 0) {
+    return [];
+  }
+
+  // ユニークなルームIDを取得
+  const roomIds = [...new Set(messagesWithNg.map(m => m.room_id))];
+  
+  // 該当するルームの情報を取得
+  const { data: rooms, error } = await supabase
+    .from('rooms')
     .select(
       `
       id,
-      sent_at,
-      content,
-      subject,
-      rooms:room_id (
-        candidate_id,
-        candidates:candidate_id (
-          first_name,
-          last_name
-        ),
-        related_job_posting_id,
-        job_postings:related_job_posting_id (
-          title
-        )
+      created_at,
+      updated_at,
+      candidate_id,
+      related_job_posting_id,
+      company_group_id,
+      candidates:candidate_id (
+        first_name,
+        last_name
       ),
-      sender_company_group_id,
-      company_groups:sender_company_group_id (
+      job_postings:related_job_posting_id (
+        title
+      ),
+      company_groups:company_group_id (
         group_name,
         company_account_id,
         company_accounts:company_account_id (
@@ -80,41 +69,39 @@ async function fetchPendingMessages(
         )
       )
     `
-    );
-
-  // NGキーワードを含むメッセージをフィルタリング
-  const keywords = ngKeywords.map(k => k.keyword);
-  const orConditions = keywords.flatMap(keyword => [
-    `content.ilike.%${keyword}%`,
-    `subject.ilike.%${keyword}%`
-  ]);
-  
-  query = query.or(orConditions.join(','));
-  
-  const { data, error } = await query
-    .order('sent_at', { ascending: false })
+    )
+    .in('id', roomIds)
+    .order('updated_at', { ascending: false })
     .limit(pageSize);
-    
+
   if (error) {
     throw new Error(error.message);
   }
 
-  if (!data || data.length === 0) {
+  if (!rooms || rooms.length === 0) {
     return [];
   }
 
-  // アプリケーションステータスを取得
-  const messagesWithApplication = await Promise.all(
-    data.map(async (message) => {
+  // 各ルームの最新メッセージ10件とアプリケーション状況を取得
+  const roomsWithMessages = await Promise.all(
+    rooms.map(async (room) => {
+      // 最新のメッセージ10件を取得
+      const { data: messages } = await supabase
+        .from('messages')
+        .select('id, content, sent_at, sender_type')
+        .eq('room_id', room.id)
+        .order('sent_at', { ascending: false })
+        .limit(10);
+
+      // アプリケーション状況を取得
       let applicationStatus = null;
-      
-      if (message.rooms?.candidate_id && message.rooms?.related_job_posting_id) {
+      if (room.candidate_id && room.related_job_posting_id) {
         try {
           const { data: appData } = await supabase
             .from('application')
             .select('status')
-            .eq('candidate_id', message.rooms.candidate_id)
-            .eq('job_posting_id', message.rooms.related_job_posting_id)
+            .eq('candidate_id', room.candidate_id)
+            .eq('job_posting_id', room.related_job_posting_id)
             .maybeSingle();
           
           applicationStatus = appData?.status || null;
@@ -125,13 +112,31 @@ async function fetchPendingMessages(
       }
 
       return {
-        ...message,
+        id: room.id,
+        created_at: room.created_at,
+        updated_at: room.updated_at,
+        candidate_id: room.candidate_id,
+        candidates: Array.isArray(room.candidates) ? room.candidates[0] || null : room.candidates,
+        related_job_posting_id: room.related_job_posting_id,
+        job_postings: Array.isArray(room.job_postings) ? room.job_postings[0] || null : room.job_postings,
+        company_group_id: room.company_group_id,
+        company_groups: Array.isArray(room.company_groups) 
+          ? (room.company_groups[0] 
+              ? {
+                  ...room.company_groups[0],
+                  company_accounts: Array.isArray(room.company_groups[0].company_accounts)
+                    ? room.company_groups[0].company_accounts[0] || null
+                    : room.company_groups[0].company_accounts
+                }
+              : null)
+          : room.company_groups,
+        latest_messages: messages || [],
         application: { status: applicationStatus }
-      };
+      } as RoomListItem;
     })
   );
 
-  return messagesWithApplication as MessageListItem[];
+  return roomsWithMessages;
 }
 
 export default async function PendingMessagePage() {

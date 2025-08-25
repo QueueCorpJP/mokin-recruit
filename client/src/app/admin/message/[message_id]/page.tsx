@@ -30,6 +30,7 @@ interface MessageDetail {
     } | null;
     related_job_posting_id: string | null;
     job_postings: {
+      id: string;
       title: string;
     } | null;
   } | null;
@@ -175,9 +176,13 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
     return [];
   }
 
-  // 各メッセージのcompany group情報を個別に取得
+  // 各メッセージのcompany group情報を個別に取得し、新しい配列を作成
+  const messagesWithGroups: RoomMessage[] = [];
+  
   if (data && data.length > 0) {
     for (const message of data) {
+      let companyGroups = null;
+      
       if (message.sender_company_group_id) {
         const { data: groupData } = await supabase
           .from('company_groups')
@@ -192,13 +197,18 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
           .single();
         
         if (groupData) {
-          message.company_groups = groupData;
+          companyGroups = groupData;
         }
       }
+      
+      messagesWithGroups.push({
+        ...message,
+        company_groups: companyGroups
+      } as RoomMessage);
     }
   }
 
-  return (data || []) as RoomMessage[];
+  return messagesWithGroups;
 }
 
 async function fetchApplicationDetail(candidateId: string, jobPostingId: string | null): Promise<ApplicationDetail | null> {

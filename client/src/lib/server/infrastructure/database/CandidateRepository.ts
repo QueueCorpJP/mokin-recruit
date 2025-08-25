@@ -39,6 +39,7 @@ export interface CreateCandidateData {
   last_name: string;
   first_name: string;
   phone_number?: string;
+  current_residence?: string;
   prefecture?: string;
   current_salary?: string;
   desired_salary?: string;

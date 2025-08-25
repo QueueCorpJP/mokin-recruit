@@ -54,7 +54,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ new
   }
 
   // 関連ニュースをサーバーサイドで取得
-  const relatedArticles = await newsService.getRelatedNews(article.id, article.categories, 6);
+  const relatedArticles = await newsService.getRelatedNews(article.id, 6);
 
   // 日付フォーマット
   const date = new Date(article.published_at || article.created_at!);
