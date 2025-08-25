@@ -17,7 +17,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div className={`relative ${isLeft ? '' : 'flex justify-end'} ${className}`}>
       {/* Speech bubble arrow - positioned to seamlessly connect */}
-      <div className={`absolute top-6 ${isLeft ? '-left-[15px]' : '-right-[15px]'}`}>
+      <div className={`absolute top-6 z-10 ${isLeft ? '-left-[15px]' : '-right-[15px]'}`}>
         <svg 
           width="16" 
           height="16" 
@@ -75,7 +75,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 stroke="black"
                 strokeWidth="1"
               />
-              {/* White border on left edge */}
+              {/* White border on left edge (接触部分) */}
               <path 
                 d="M0 0v16"
                 fill="none"

@@ -106,6 +106,12 @@ export default function MessageListClient({ messages }: Props) {
       width: 'w-[200px]',
     },
     {
+      key: 'company_groups',
+      label: '企業グループ',
+      sortable: true,
+      width: 'w-[200px]',
+    },
+    {
       key: 'candidates',
       label: '候補者名',
       sortable: true,
@@ -118,18 +124,12 @@ export default function MessageListClient({ messages }: Props) {
       sortable: false,
       width: 'w-[200px]',
     },
-    {
-      key: 'latest_messages',
-      label: '最新メッセージ',
-      sortable: false,
-      width: 'w-[300px]',
-    },
   ];
 
   return (
     <div className='bg-white rounded-lg overflow-hidden'>
       <div className='overflow-x-auto'>
-        <div className='min-w-[1500px]'>
+        <div className='min-w-[1200px]'>
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
@@ -172,6 +172,10 @@ export default function MessageListClient({ messages }: Props) {
                     width: 'w-[200px]',
                   },
                   {
+                    content: room.company_groups?.group_name || '不明',
+                    width: 'w-[200px]',
+                  },
+                  {
                     content: room.candidates
                       ? `${room.candidates.last_name}${room.candidates.first_name}`
                       : '不明',
@@ -190,38 +194,6 @@ export default function MessageListClient({ messages }: Props) {
                   {
                     content: room.job_postings?.title || '不明',
                     width: 'w-[200px]',
-                  },
-                  {
-                    content: (
-                      <div className="max-h-20 overflow-y-auto">
-                        {room.latest_messages.slice(0, 3).map((message, index) => (
-                          <div key={message.id} className="text-xs text-gray-600 mb-1">
-                            <span className="font-semibold text-gray-800">
-                              {message.sender_type === 'COMPANY' ? '企業' : '候補者'}:
-                            </span>
-                            <span className="ml-1">
-                              {message.content.length > 30 
-                                ? `${message.content.substring(0, 30)}...` 
-                                : message.content}
-                            </span>
-                            <div className="text-[10px] text-gray-400">
-                              {new Date(message.sent_at).toLocaleDateString('ja-JP', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                        {room.latest_messages.length > 3 && (
-                          <div className="text-[10px] text-gray-400">
-                            他{room.latest_messages.length - 3}件のメッセージ
-                          </div>
-                        )}
-                      </div>
-                    ),
-                    width: 'w-[300px]',
                   },
                 ]}
               />
