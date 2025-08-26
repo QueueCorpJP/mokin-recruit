@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import React, { useState } from 'react';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import { BaseInput } from '@/components/ui/base-input';
+import Link from 'next/link';
 
 // グループサインアップページ
 export default function GroupSignupPage() {
@@ -253,9 +254,58 @@ export default function GroupSignupPage() {
                 </div>
               </div>
             </div>
+            {/* 利用規約・個人情報同意チェック（中央寄せ・上マージン削除） */}
+            <div className='flex items-center gap-2 justify-center w-full'>
+              <img
+                src='/images/checkbox.svg'
+                alt='同意する'
+                width={21}
+                height={20}
+              />
+              <span
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '200%',
+                  color: '#333',
+                  fontWeight: 'bold',
+                  letterSpacing: '0.1em',
+                }}
+              >
+                <Link href='/terms' passHref legacyBehavior>
+                  <a
+                    style={{
+                      color: '#333',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      marginRight: 2,
+                    }}
+                  >
+                    利用規約
+                  </a>
+                </Link>
+                ・
+                <Link href='/privacy' passHref legacyBehavior>
+                  <a
+                    style={{
+                      color: '#333',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '3px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      marginLeft: 2,
+                    }}
+                  >
+                    個人情報
+                  </a>
+                </Link>
+                に同意する
+              </span>
+            </div>
           </div>
           {/* 送信ボタン */}
-          <div className='flex w-full justify-center mt-10'>
+          <div className='flex w-full justify-center'>
             <Button
               variant='green-gradient'
               style={{
