@@ -1,10 +1,16 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { SelectInput } from '@/components/ui/select-input';
-import React from 'react';
+import React, { useState } from 'react';
+import { PasswordFormField } from '@/components/ui/password-form-field';
+import { BaseInput } from '@/components/ui/base-input';
 
 // グループサインアップページ
 export default function GroupSignupPage() {
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
   return (
     <div
       style={{
@@ -28,7 +34,7 @@ export default function GroupSignupPage() {
         xmlns='http://www.w3.org/2000/svg'
         style={{
           position: 'absolute',
-          top: '535px', // TOPから535px離す
+          top: '535px',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 0,
@@ -64,7 +70,6 @@ export default function GroupSignupPage() {
             padding: '80px 87px',
           }}
         >
-          {/* h1とpを1つのdivでラップし、24pxの間隔・中央揃え・太字にする */}
           <div className='flex flex-col items-center gap-6 w-full'>
             <h1
               className='w-full font-bold text-center'
@@ -76,7 +81,7 @@ export default function GroupSignupPage() {
                 textAlign: 'center',
               }}
             >
-              お問い合わせ／申請
+              グループへの参加
             </h1>
             <p
               className='w-full font-bold text-center'
@@ -94,11 +99,11 @@ export default function GroupSignupPage() {
               サービスに登録されているメールアドレス宛に担当者よりご返信いたします。
             </p>
           </div>
-          {/* 企業名・お名前行をまとめて24px間隔で縦並び */}
+          {/* 入力項目エリア */}
           <div className='flex flex-col gap-6 w-full'>
+            {/* 企業名 */}
             <div className='flex w-full justify-end'>
-              <div className='flex flex-row items-center gap-4'>
-                {/* ラベル: 可変幅, bold, 16px */}
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
                 <span
                   className='font-bold text-right'
                   style={{
@@ -106,18 +111,20 @@ export default function GroupSignupPage() {
                     lineHeight: '200%',
                     letterSpacing: '0.1em',
                     display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
                   }}
                 >
                   企業名
                 </span>
-                {/* 値: 400px幅, left寄せ, normal */}
                 <span
                   className='font-normal'
                   style={{
                     fontSize: '16px',
                     lineHeight: '200%',
                     letterSpacing: '0.1em',
-                    width: '400px',
+                    maxWidth: '400px',
+                    width: '100%',
                     textAlign: 'left',
                     display: 'block',
                   }}
@@ -126,9 +133,9 @@ export default function GroupSignupPage() {
                 </span>
               </div>
             </div>
+            {/* グループ名 */}
             <div className='flex w-full justify-end'>
-              <div className='flex flex-row items-center gap-4'>
-                {/* ラベル: 可変幅, bold, 16px */}
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
                 <span
                   className='font-bold text-right'
                   style={{
@@ -136,142 +143,31 @@ export default function GroupSignupPage() {
                     lineHeight: '200%',
                     letterSpacing: '0.1em',
                     display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
                   }}
                 >
-                  お名前
+                  グループ名
                 </span>
-                {/* 値: 400px幅, left寄せ, normal */}
                 <span
                   className='font-normal'
                   style={{
                     fontSize: '16px',
                     lineHeight: '200%',
                     letterSpacing: '0.1em',
-                    width: '400px',
+                    maxWidth: '400px',
+                    width: '100%',
                     textAlign: 'left',
                     display: 'block',
                   }}
                 >
-                  山田 太郎
+                  グループサンプル
                 </span>
               </div>
             </div>
-            {/* グループ・お問い合わせ種別・追加購入するチケット枚数行をまとめて24px間隔で縦並び */}
-            <div className='flex flex-col gap-6 w-full'>
-              <div className='flex w-full justify-end'>
-                <div className='flex flex-row items-center gap-4'>
-                  {/* ラベル: 可変幅, bold, 16px */}
-                  <span
-                    className='font-bold text-right'
-                    style={{
-                      fontSize: '16px',
-                      lineHeight: '200%',
-                      letterSpacing: '0.1em',
-                      display: 'block',
-                    }}
-                  >
-                    グループ
-                  </span>
-                  {/* 値: 400px幅, SelectInput, 高さ54px */}
-                  <SelectInput
-                    options={[
-                      { value: '', label: '選択してください' },
-                      { value: 'group1', label: 'グループ1' },
-                      { value: 'group2', label: 'グループ2' },
-                      { value: 'group3', label: 'グループ3' },
-                    ]}
-                    placeholder='選択してください'
-                    className='w-[400px] h-[54px]'
-                    style={{ width: '400px', height: '54px' }}
-                  />
-                </div>
-              </div>
-              <div className='flex w-full justify-end'>
-                <div className='flex flex-row items-center gap-4'>
-                  {/* ラベル: 可変幅, bold, 16px */}
-                  <span
-                    className='font-bold text-right'
-                    style={{
-                      fontSize: '16px',
-                      lineHeight: '200%',
-                      letterSpacing: '0.1em',
-                      display: 'block',
-                    }}
-                  >
-                    お問い合わせ種別
-                  </span>
-                  {/* 値: 400px幅, SelectInput, 高さ54px */}
-                  <SelectInput
-                    options={[
-                      { value: '', label: '選択してください' },
-                      { value: 'general', label: '一般問い合わせ' },
-                      { value: 'support', label: 'サポート' },
-                      { value: 'feedback', label: 'ご意見・ご要望' },
-                    ]}
-                    placeholder='選択してください'
-                    className='w-[400px] h-[54px]'
-                    style={{ width: '400px', height: '54px' }}
-                  />
-                </div>
-              </div>
-              <div className='flex w-full justify-end'>
-                <div className='flex flex-row items-center gap-4'>
-                  {/* ラベル: 可変幅, bold, 16px, letterSpacing: 0.09em */}
-                  <span
-                    className='font-bold text-right'
-                    style={{
-                      fontSize: '16px',
-                      lineHeight: '200%',
-                      letterSpacing: '0.09em',
-                      display: 'block',
-                    }}
-                  >
-                    追加購入するチケット枚数
-                  </span>
-                  {/* 値: 400px幅, input(376px/54px) + 8px + 枚 */}
-                  <div
-                    className='flex flex-row items-center'
-                    style={{ width: '400px', height: '54px' }}
-                  >
-                    <Input
-                      type='number'
-                      min={1}
-                      className='font-normal'
-                      style={{
-                        width: '376px',
-                        height: '54px',
-                        fontSize: '16px',
-                        lineHeight: '200%',
-                        letterSpacing: '0.09em',
-                        fontWeight: 'normal',
-                        color: '#323232',
-                        border: '1px solid #999999',
-                        outline: 'none',
-                        background: 'none',
-                        boxShadow: 'none',
-                      }}
-                    />
-                    <span
-                      className='flex items-center justify-center font-bold'
-                      style={{
-                        width: '16px',
-                        height: '54px',
-                        marginLeft: '8px',
-                        fontSize: '16px',
-                        lineHeight: '54px',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      枚
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* お名前 input */}
             <div className='flex w-full justify-end'>
-              <div className='flex flex-row items-start gap-4'>
-                {/* ラベル: 可変幅, bold, 16px */}
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
                 <span
                   className='font-bold text-right'
                   style={{
@@ -279,34 +175,86 @@ export default function GroupSignupPage() {
                     lineHeight: '200%',
                     letterSpacing: '0.1em',
                     display: 'block',
-                    marginTop: '11px',
+                    width: '160px',
+                    minWidth: '160px',
                   }}
                 >
-                  お問い合わせ内容
+                  お名前
                 </span>
-                {/* 値: 400px幅, テキストエリア, 高さ147px, 上揃え, 角丸5px */}
-                <textarea
-                  style={{
-                    width: '400px',
-                    height: '147px',
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    fontWeight: 'normal',
-                    color: '#323232',
-                    border: '1px solid #999999',
-                    outline: 'none',
-                    background: 'none',
-                    boxShadow: 'none',
-                    resize: 'none',
-                    padding: '11px',
-                    borderRadius: '5px',
-                  }}
+                <BaseInput
+                  id='name'
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder='お名前を入力してください'
+                  className='w-full'
+                  style={{ maxWidth: '400px' }}
                 />
               </div>
             </div>
+            {/* パスワード欄 */}
+            <div className='flex w-full justify-end'>
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
+                <span
+                  className='font-bold text-right'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
+                  }}
+                >
+                  パスワード
+                </span>
+                <div style={{ maxWidth: '400px', width: '100%' }}>
+                  <PasswordFormField
+                    id='password'
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    label=''
+                    placeholder='半角英数字・記号のみ、8文字以上'
+                    showValidation={true}
+                    className='w-full'
+                    hideLabel={true}
+                  />
+                </div>
+              </div>
+            </div>
+            {/* パスワード再入力欄 */}
+            <div className='flex w-full justify-end'>
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
+                <span
+                  className='font-bold text-right'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
+                  }}
+                >
+                  パスワード再入力
+                </span>
+                <div style={{ maxWidth: '400px', width: '100%' }}>
+                  <PasswordFormField
+                    id='passwordConfirm'
+                    value={passwordConfirm}
+                    onChange={e => setPasswordConfirm(e.target.value)}
+                    label=''
+                    placeholder='もう一度パスワードを入力してください'
+                    showValidation={true}
+                    isConfirmField={true}
+                    confirmTarget={password}
+                    className='w-full'
+                    hideLabel={true}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          {/* 送信ボタン: メインカラー, 幅160px, 高さ60px, 中央配置, 丸い角丸 */}
+          {/* 送信ボタン */}
           <div className='flex w-full justify-center mt-10'>
             <Button
               variant='green-gradient'

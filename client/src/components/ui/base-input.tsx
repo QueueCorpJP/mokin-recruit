@@ -32,7 +32,7 @@ export const BaseInput = forwardRef<HTMLInputElement, BaseInputProps>(
           padding: style?.padding || '11px',
           alignItems: style?.alignItems || 'center',
           gap: style?.gap,
-          ...style
+          ...style,
         }}
         {...props}
       />
