@@ -7,16 +7,16 @@ import { CheckCircle } from 'lucide-react';
 
 export default function EmailCompletePage() {
   const breadcrumbs = [
-    { label: 'Ûüà', href: '/candidate' },
-    { label: '-š', href: '/candidate/setting' },
-    { label: 'áüë¢Éì¹	ô', href: '/candidate/setting/email' },
-    { label: '	ôŒ†' }
+    { label: 'ãƒ›ãƒ¼ãƒ ', href: '/candidate' },
+    { label: 'è¨­å®š', href: '/candidate/setting' },
+    { label: 'ãƒ¡ãƒ¼ãƒ«è¨­å®š', href: '/candidate/setting/email' },
+    { label: 'å®Œäº†' }
   ];
 
   return (
     <SettingsLayout
       breadcrumbs={breadcrumbs}
-      title="áüë¢Éì¹	ô"
+      title="ãƒ¡ãƒ¼ãƒ«è¨­å®š"
     >
       <div className="max-w-2xl mx-auto">
         <Card>
@@ -26,26 +26,26 @@ export default function EmailCompletePage() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
             </div>
-            <CardTitle className="text-2xl">áüë¢Éì¹n	ôLŒ†W~W_</CardTitle>
+            <CardTitle className="text-2xl">ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã®å¤‰æ›´ãŒå®Œäº†ã—ã¾ã—ãŸ</CardTitle>
             <CardDescription className="mt-2">
-              °WDáüë¢Éì¹gí°¤ógM‹ˆFkjŠ~W_
+              æ–°ã—ã„ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã§ã®ãƒ­ã‚°ã‚¤ãƒ³ãŒå¯èƒ½ã«ãªã‚Šã¾ã—ãŸ
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <div className="text-sm text-gray-600 mb-1">°WDáüë¢Éì¹</div>
+              <div className="text-sm text-gray-600 mb-1">æ–°ã—ã„ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹</div>
               <div className="font-medium text-gray-900">new-email@example.com</div>
             </div>
 
             <div className="space-y-3">
               <Link href="/candidate/setting" className="block">
                 <Button variant="green-gradient" size="figma-default" className="w-full">
-                  -š;bk;‹
+                  è¨­å®šç”»é¢ã«æˆ»ã‚‹
                 </Button>
               </Link>
               <Link href="/candidate" className="block">
                 <Button variant="outline" className="w-full">
-                  Ûüàx;‹
+                  ãƒ›ãƒ¼ãƒ ã«æˆ»ã‚‹
                 </Button>
               </Link>
             </div>

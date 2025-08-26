@@ -1,19 +1,44 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { mockNewsArticles } from '@/lib/data/mockNewsData';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { newsService } from '@/lib/services/newsService.server';
-import '@/styles/media-content.css';
+import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
-// モックデータからニュース記事を取得
+// 実際のnoticesテーブルからニュース記事を取得
 async function getNewsData(newsId: string) {
-  const article = mockNewsArticles.find(article => article.id === newsId);
+  const supabase = createServerAdminClient();
   
-  if (!article) {
+  try {
+    const { data, error } = await supabase
+      .from('notices')
+      .select(`
+        id, title, excerpt, content, thumbnail_url, published_at, created_at,
+        notice_category_relations(
+          notice_categories(name)
+        )
+      `)
+      .eq('id', newsId)
+      .eq('status', 'PUBLISHED')
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      excerpt: data.excerpt || '',
+      content: data.content,
+      thumbnail_url: data.thumbnail_url,
+      published_at: data.published_at,
+      created_at: data.created_at,
+      categories: data.notice_category_relations?.map(rel => (rel.notice_categories as any)?.name) || []
+    };
+  } catch (error) {
+    console.error('ニュース記事取得エラー:', error);
     return null;
   }
-
-  return article;
 }
 
 // メタデータ生成

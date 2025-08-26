@@ -318,7 +318,7 @@ export class AuthController {
                     success: true,
                     user: supabaseUser,
                     session: mockSupabaseSession,
-                    token: sessionResult.sessionInfo.customToken,
+                    token: sessionResult.sessionInfo.session.access_token,
                   };
 
                   logger.info(
@@ -569,7 +569,7 @@ export class AuthController {
                   adminMockSession
                 );
                 if (sessionResult.success && sessionResult.sessionInfo) {
-                  adminToken = sessionResult.sessionInfo.customToken;
+                  adminToken = sessionResult.sessionInfo.session.access_token;
                   await this.adminUserRepository.updateLastLogin(adminUser.id);
                   logger.info(
                     `JWT token generated successfully for admin: ${adminUser.id}`

@@ -16,10 +16,10 @@ export default function EmailVerifyPage() {
   const [error, setError] = useState('');
 
   const breadcrumbs = [
-    { label: '���', href: '/candidate' },
-    { label: '-�', href: '/candidate/setting' },
-    { label: '�����	�', href: '/candidate/setting/email' },
-    { label: '�����e�' }
+    { label: 'ホーム', href: '/candidate' },
+    { label: '設定', href: '/candidate/setting' },
+    { label: 'メール設定', href: '/candidate/setting/email' },
+    { label: '認証コード入力' }
   ];
 
   const handleCodeChange = (index: number, value: string) => {
@@ -47,7 +47,7 @@ export default function EmailVerifyPage() {
     const code = verificationCode.join('');
     
     if (code.length !== 6) {
-      setError('6An����ɒe�WfO`UD');
+      setError('6桁の認証コードを入力してください');
       return;
     }
 
@@ -59,7 +59,7 @@ export default function EmailVerifyPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       router.push('/candidate/setting/email/complete');
     } catch (error) {
-      setError('�����LcWOB�~[�');
+      setError('認証に失敗しました。再度お試しください。');
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +70,7 @@ export default function EmailVerifyPage() {
     try {
       // TODO: API call to resend verification email
       await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('����뒍�W~W_');
+      alert('認証コードを再送信しました');
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -81,20 +81,20 @@ export default function EmailVerifyPage() {
   return (
     <SettingsLayout
       breadcrumbs={breadcrumbs}
-      title="�����	�"
+      title="メール設定"
     >
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>����ɒe�</CardTitle>
+            <CardTitle>認証コード入力</CardTitle>
             <CardDescription>
-              �WD�����k�U�_6An����ɒe�WfO`UD
+              新しいメールアドレスに送信された6桁の認証コードを入力してください
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label>�����</Label>
+                <Label>認証コード</Label>
                 <div className="flex space-x-2">
                   {verificationCode.map((digit, index) => (
                     <Input
@@ -122,14 +122,14 @@ export default function EmailVerifyPage() {
               )}
 
               <div className="text-sm text-gray-600">
-                �����LJKjD4o
+                認証コードが届かない場合は
                 <button
                   type="button"
                   onClick={handleResend}
                   className="text-blue-600 hover:underline ml-1"
                   disabled={isLoading}
                 >
-                  ��
+                  再送信
                 </button>
               </div>
 
@@ -140,7 +140,7 @@ export default function EmailVerifyPage() {
                   onClick={() => router.push('/candidate/setting/email')}
                   disabled={isLoading}
                 >
-                  ;�
+                  戻る
                 </Button>
                 <Button
                   type="submit"
@@ -148,7 +148,7 @@ export default function EmailVerifyPage() {
                   size="figma-default"
                   disabled={isLoading || verificationCode.some(d => !d)}
                 >
-                  {isLoading ? '��-...' : '��'}
+                  {isLoading ? '確認中...' : '確認'}
                 </Button>
               </div>
             </form>

@@ -144,7 +144,7 @@ const NoticeClient: FC<NoticeClientProps> = ({ notices: initialNotices }) => {
   const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
   return (
-    <div className='min-h-screen bg-gray-50 p-6'>
+    <div className='min-h-screen bg-gray-50'>
       {/* 上部の機能エリア */}
       <div className='mb-6 flex justify-between items-center'>
         <SearchBar
@@ -156,7 +156,7 @@ const NoticeClient: FC<NoticeClientProps> = ({ notices: initialNotices }) => {
         <AdminButton href='/admin/notice/new' text='新規お知らせ追加' />
       </div>
       {/* テーブルコンテナ */}
-      <div className='bg-white rounded-lg'>
+      <div className=''>
         {/* テーブルヘッダー */}
         <MediaTableHeader
           columns={columns}

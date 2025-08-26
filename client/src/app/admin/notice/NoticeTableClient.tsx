@@ -1,21 +1,46 @@
 'use client';
 import { useState } from 'react';
-import { Article } from '@/lib/services/articleService';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
-import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
+import { deleteNotice } from './actions';
 
-interface MediaPageClientProps {
-  articles: Article[];
+interface Notice {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  created_at?: string;
+  updated_at?: string;
+  category?: {
+    name: string;
+  };
+  categories?: {
+    name: string;
+  }[];
 }
 
-export default function MediaPageClient({
-  articles: initialArticles,
-}: MediaPageClientProps) {
-  const [articles, setArticles] = useState<Article[]>(initialArticles);
+export interface AdminNoticeListItem {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+  views_count: number;
+}
+
+interface NoticePageClientProps {
+  notices: Notice[];
+}
+
+export default function NoticePageClient({
+  notices: initialNotices,
+}: NoticePageClientProps) {
+  const [notices, setNotices] = useState<Notice[]>(initialNotices);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
     null
@@ -23,11 +48,11 @@ export default function MediaPageClient({
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
-  const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
-  const [deletedArticleTitle, setDeletedArticleTitle] = useState('');
+  const [noticeToDelete, setNoticeToDelete] = useState<Notice | null>(null);
+  const [deletedNoticeTitle, setDeletedNoticeTitle] = useState('');
   const itemsPerPage = 10;
 
-  const getStatusBadge = (status: Article['status']) => {
+  const getStatusBadge = (status: Notice['status']) => {
     const statusText = getStatusText(status);
     const statusClass =
       status === 'PUBLISHED'
@@ -42,7 +67,7 @@ export default function MediaPageClient({
     );
   };
 
-  const getStatusText = (status: Article['status']) => {
+  const getStatusText = (status: Notice['status']) => {
     switch (status) {
       case 'PUBLISHED':
         return '公開中';
@@ -87,43 +112,52 @@ export default function MediaPageClient({
     }
   };
 
-  const handleNewArticle = () => {
-    window.location.href = '/admin/media/new';
+  const handleNewNotice = () => {
+    window.location.href = '/admin/notice/new';
   };
 
-  const handleEdit = (article: Article) => {
-    window.location.href = `/admin/media/edit?id=${article.id}`;
+  const handleEdit = (notice: Notice) => {
+    window.location.href = `/admin/notice/edit?id=${notice.id}`;
   };
 
-  const handleRowClick = (article: Article) => {
-    window.location.href = `/admin/media/${article.id}`;
+  const handleRowClick = (notice: Notice) => {
+    window.location.href = `/admin/notice/${notice.id}`;
   };
 
-  const handleDelete = (article: Article) => {
-    setArticleToDelete(article);
+  const handleDelete = (notice: Notice) => {
+    setNoticeToDelete(notice);
     setShowDeleteModal(true);
   };
 
-  // TODO: サーバーアクションで削除処理を実装し、revalidatePathで再取得する形にリファクタリングする
   const handleConfirmDelete = async () => {
-    // 仮実装: ローカル状態のみ更新
-    if (articleToDelete) {
-      setDeletedArticleTitle(articleToDelete.title);
-      setShowDeleteModal(false);
-      setArticleToDelete(null);
-      setShowDeletedModal(true);
-      setArticles(articles.filter(a => a.id !== articleToDelete.id));
+    if (noticeToDelete) {
+      try {
+        const result = await deleteNotice(noticeToDelete.id);
+        if (result.success) {
+          setDeletedNoticeTitle(noticeToDelete.title);
+          setShowDeleteModal(false);
+          setNoticeToDelete(null);
+          setShowDeletedModal(true);
+          setNotices(notices.filter(a => a.id !== noticeToDelete.id));
+        } else {
+          console.error('削除に失敗しました:', result.error);
+          alert(`削除に失敗しました: ${result.error}`);
+        }
+      } catch (error) {
+        console.error('削除エラー:', error);
+        alert('削除中にエラーが発生しました');
+      }
     }
   };
 
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
-    setArticleToDelete(null);
+    setNoticeToDelete(null);
   };
 
   const handleCloseDeletedModal = () => {
     setShowDeletedModal(false);
-    setDeletedArticleTitle('');
+    setDeletedNoticeTitle('');
   };
 
   const handlePrevious = () => {
@@ -133,7 +167,7 @@ export default function MediaPageClient({
   };
 
   const handleNext = () => {
-    const totalPages = Math.ceil(articles.length / itemsPerPage);
+    const totalPages = Math.ceil(notices.length / itemsPerPage);
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
@@ -148,7 +182,7 @@ export default function MediaPageClient({
       width: 'w-[180px]',
     },
     { key: 'category', label: 'カテゴリ', sortable: true, width: 'w-[150px]' },
-    { key: 'title', label: '記事タイトル', sortable: true, width: 'flex-1' },
+    { key: 'title', label: 'お知らせタイトル', sortable: true, width: 'flex-1' },
     {
       key: 'actions',
       label: 'アクション',
@@ -158,7 +192,7 @@ export default function MediaPageClient({
   ];
 
   // ソート処理
-  const sortedArticles = [...articles].sort((a, b) => {
+  const sortedNotices = [...notices].sort((a, b) => {
     if (!sortColumn || !sortDirection) return 0;
     let aValue: string;
     let bValue: string;
@@ -202,11 +236,11 @@ export default function MediaPageClient({
   });
 
   // ページネーション
-  const paginatedArticles = sortedArticles.slice(
+  const paginatedNotices = sortedNotices.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  const totalPages = Math.ceil(sortedArticles.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedNotices.length / itemsPerPage);
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -234,21 +268,21 @@ export default function MediaPageClient({
             </div>
           ))}
         </div>
-        {/* メディア記事一覧 */}
+        {/* お知らせ一覧 */}
         <div className='mt-2 space-y-2'>
-          {paginatedArticles.map(article => {
+          {paginatedNotices.map(notice => {
             const dateTime = formatDate(
-              article.updated_at || article.created_at
+              notice.updated_at || notice.created_at
             );
             return (
               <AdminTableRow
                 key={
-                  article.id || `article-${paginatedArticles.indexOf(article)}`
+                  notice.id || `notice-${paginatedNotices.indexOf(notice)}`
                 }
-                onClick={() => handleRowClick(article)}
+                onClick={() => handleRowClick(notice)}
                 columns={[
                   {
-                    content: getStatusBadge(article.status),
+                    content: getStatusBadge(notice.status),
                     width: 'w-[120px]',
                   },
                   {
@@ -267,12 +301,12 @@ export default function MediaPageClient({
                   {
                     content: (
                       <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {article.categories && article.categories.length > 0
-                          ? article.categories
+                        {notice.categories && notice.categories.length > 0
+                          ? notice.categories
                               .map(cat => cat.name)
                               .sort((a, b) => a.localeCompare(b, 'ja'))
                               .join('、')
-                          : article.category?.name || '-'}
+                          : notice.category?.name || '-'}
                       </span>
                     ),
                     width: 'w-[150px]',
@@ -281,11 +315,11 @@ export default function MediaPageClient({
                     content: (
                       <span
                         className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] block truncate"
-                        title={article.title}
+                        title={notice.title}
                       >
-                        {article.title.length > 10
-                          ? `${article.title.substring(0, 10)}...`
-                          : article.title}
+                        {notice.title.length > 10
+                          ? `${notice.title.substring(0, 10)}...`
+                          : notice.title}
                       </span>
                     ),
                     width: 'flex-1',
@@ -296,13 +330,13 @@ export default function MediaPageClient({
                     key='edit'
                     text='編集'
                     variant='edit'
-                    onClick={() => handleEdit(article)}
+                    onClick={() => handleEdit(notice)}
                   />,
                   <ActionButton
                     key='delete'
                     text='削除'
                     variant='delete'
-                    onClick={() => handleDelete(article)}
+                    onClick={() => handleDelete(notice)}
                   />,
                 ]}
               />
@@ -348,8 +382,8 @@ export default function MediaPageClient({
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
-        title='メディア削除'
-        description={`このメディアを削除してよいですか？`}
+        title='お知らせ削除'
+        description={`このお知らせを削除してよいですか？`}
         confirmText='削除する'
         cancelText='閉じる'
       />
@@ -357,9 +391,9 @@ export default function MediaPageClient({
       <AdminNotificationModal
         isOpen={showDeletedModal}
         onConfirm={handleCloseDeletedModal}
-        title='メディア削除完了'
-        description={`メディアの削除が完了しました。`}
-        confirmText='メディア一覧に戻る'
+        title='お知らせ削除完了'
+        description={`お知らせの削除が完了しました。`}
+        confirmText='お知らせ一覧に戻る'
       />
     </div>
   );

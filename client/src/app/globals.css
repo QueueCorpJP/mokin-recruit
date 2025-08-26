@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Import media content styles globally */
+@import '../styles/media-content.css';
+
 /* Scrollbar hide utility class */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

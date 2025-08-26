@@ -7,7 +7,6 @@ import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSideba
 import { ArticleViewTracker } from '@/components/media/ArticleViewTracker';
 import type { Article } from '@/lib/services/articleService';
 import type { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/mediaService.client';
-import '@/styles/media-content.css';
 
 interface MediaDetailClientProps {
   article: Article;

@@ -1,13 +1,13 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageListItem } from '../../message/page';
+import { MessageListItem } from './page';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
 interface Props {
-  messages: (MessageListItem & { detected_ng_keywords?: string[] })[];
+  messages: MessageListItem[];
 }
 
 const statusMap: Record<string, string> = {

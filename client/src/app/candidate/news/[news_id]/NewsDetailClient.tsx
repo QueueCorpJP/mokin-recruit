@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { newsService, type Article } from '@/lib/services/newsService.client';
-import '@/styles/media-content.css';
 
 interface NewsDetailClientProps {
   article: Article;
