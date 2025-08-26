@@ -439,7 +439,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
       <div className="mx-auto max-w-6xl">
         
         <div className="bg-white rounded-lg mb-6">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">NGワード検出メッセージ詳細</h2>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ情報</h2>
           <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
             <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
               <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -548,7 +548,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
         </div>
 
         <div className="bg-white rounded-lg">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">NGワード検出箇所と前後のメッセージ</h2>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ詳細</h2>
           <div className="space-y-6">
             {validMessages.length === 0 ? (
               <div className="text-center py-8">

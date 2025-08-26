@@ -462,7 +462,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
 
         {/* メッセージ履歴 */}
         <div>
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ履歴</h2>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ詳細</h2>
           <div className="space-y-6">
             {validMessages.length === 0 ? (
               <div className="text-center py-8">

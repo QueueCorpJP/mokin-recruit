@@ -41,17 +41,24 @@ export default function MessageApprovalModal({
   const [comment, setComment] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completionStatus, setCompletionStatus] = useState<'承認' | '非承認' | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   if (!isOpen) return null;
 
   const handleApprove = () => {
+    if (!selectedReason) {
+      setError('承認理由を選択してください');
+      return;
+    }
+    setError(null);
     onStatusChange('承認', selectedReason, comment);
     setCompletionStatus('承認');
     setShowCompletionModal(true);
   };
 
   const handleReject = () => {
-    onStatusChange('非承認', selectedReason, comment);
+    setError(null);
+    onStatusChange('非承認', '', ''); // 理由・コメントは空でOK
     setCompletionStatus('非承認');
     setShowCompletionModal(true);
   };
@@ -130,6 +137,9 @@ export default function MessageApprovalModal({
                   className="w-[300px]"
                   disabled={isProcessing}
                 />
+                {error && (
+                  <div className="text-red-500 text-sm mt-2">{error}</div>
+                )}
               </div>
 
               {/* コメント入力 */}
@@ -149,7 +159,7 @@ export default function MessageApprovalModal({
             <div className="flex gap-4 justify-center mt-8">
               <Button   
                 onClick={handleReject}
-                disabled={!selectedReason || isProcessing || currentStatus === '非承認'}
+                disabled={isProcessing || currentStatus === '非承認'}
                 variant="green-outline"
                 size="figma-default"
                 className="w-[180px] font-bold"
@@ -158,7 +168,7 @@ export default function MessageApprovalModal({
               </Button>
               <Button
                 onClick={handleApprove}
-                disabled={!selectedReason || isProcessing || currentStatus === '承認'}
+                disabled={isProcessing || currentStatus === '承認'}
                 variant="green-gradient"
                 size="figma-default"
                 className="w-[180px] font-bold"
