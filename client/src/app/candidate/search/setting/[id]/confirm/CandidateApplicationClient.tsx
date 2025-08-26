@@ -3,26 +3,16 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-// import { useAuthUser } from '@/stores/authStore'; // Removed: Using server-side auth now
 import { submitApplication } from './actions';
 import { AlignJustify } from 'lucide-react';
 import Image from 'next/image';
-
-interface User {
-  id: string;
-  email: string;
-  userType: 'candidate' | 'company_user' | 'admin';
-  name?: string;
-  emailConfirmed: boolean;
-  lastSignIn?: string;
-}
+import { useRequireAuth } from '@/contexts/UserContext';
 
 interface CandidateApplicationClientProps {
   jobId: string;
   jobTitle: string;
   companyName: string;
   requiredDocuments: string[];
-  user: User | null;
 }
 
 // useMediaQuery: メディアクエリ判定用カスタムフック
@@ -46,10 +36,10 @@ export default function CandidateApplicationClient({
   jobId,
   jobTitle,
   companyName,
-  requiredDocuments,
-  user
+  requiredDocuments
 }: CandidateApplicationClientProps) {
   const router = useRouter();
+  const user = useRequireAuth(); // UserContextから認証済みユーザー取得
   
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resumeFiles, setResumeFiles] = useState<File[]>([]);

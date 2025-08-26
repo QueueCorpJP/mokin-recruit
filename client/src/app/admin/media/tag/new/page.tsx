@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
-import { articleService } from '@/lib/services/articleService';
+import { createTag } from '@/app/admin/media/actions';
 
 export default function NewTagPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function NewTagPage() {
     try {
       setLoading(true);
       setError(null);
-      await articleService.createTag(tagName.trim());
+      await createTag(tagName.trim());
       setCreatedTagName(tagName.trim());
       setShowSuccessModal(true);
     } catch (err) {

@@ -1,5 +1,3 @@
-import { getServerAuth } from '@/lib/auth/server';
-import { redirect } from 'next/navigation';
 import PendingTableClient, { PendingJobListItem } from './PendingTableClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';

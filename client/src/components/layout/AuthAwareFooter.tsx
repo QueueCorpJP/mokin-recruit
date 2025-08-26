@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Footer } from '@/components/ui/footer';
 
-export function AuthAwareFooter() {
+export const AuthAwareFooter = memo(function AuthAwareFooter() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -40,4 +40,4 @@ export function AuthAwareFooter() {
       userInfo={undefined}
     />
   );
-}
+});

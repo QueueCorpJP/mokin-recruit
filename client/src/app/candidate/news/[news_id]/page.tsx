@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { NewsHeader } from '@/components/news/NewsHeader';
-import { newsService } from '@/lib/services/newsService.server';
+import { getRelatedNews } from '@/app/candidate/news/actions';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
 // 実際のnoticesテーブルからニュース記事を取得
@@ -79,7 +79,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ new
   }
 
   // 関連ニュースをサーバーサイドで取得
-  const relatedArticles = await newsService.getRelatedNews(article.id, 6);
+  const relatedArticles = await getRelatedNews(article.id, 6);
 
   // 日付フォーマット
   const date = new Date(article.published_at || article.created_at!);

@@ -1,4 +1,4 @@
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { CandidateMessageLayout } from './CandidateMessageLayout';
 import { CandidateRoom } from '@/types/candidate-message';
@@ -69,7 +69,8 @@ async function getRoomsForCandidate(candidateId: string): Promise<CandidateRoom[
 }
 
 export default async function CandidateMessageLayoutServer() {
-  const user = await requireCandidateAuth();
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCandidateUser();
 
   if (!user) {
     return (

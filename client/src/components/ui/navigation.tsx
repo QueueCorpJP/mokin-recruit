@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useReducer } from 'react';
+import { useState, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { X, ChevronDown, User } from 'lucide-react';
@@ -12,7 +12,7 @@ import { logoutAction } from '@/lib/auth/actions';
 
 // Custom Icon Components
 
-function DownIcon({ className }: { className?: string }) {
+const DownIcon = memo(({ className }: { className?: string }) => {
   return (
     <div className={cn('relative w-[10px] h-[10px]', className)}>
       <Image
@@ -24,9 +24,10 @@ function DownIcon({ className }: { className?: string }) {
       />
     </div>
   );
-}
+});
+DownIcon.displayName = 'DownIcon';
 
-function HomeIcon({ className }: { className?: string }) {
+const HomeIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -42,9 +43,10 @@ function HomeIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+HomeIcon.displayName = 'HomeIcon';
 
-function MessageIcon({ className }: { className?: string }) {
+const MessageIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -60,9 +62,10 @@ function MessageIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+MessageIcon.displayName = 'MessageIcon';
 
-function SearchIcon({ className }: { className?: string }) {
+const SearchIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -78,9 +81,10 @@ function SearchIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+SearchIcon.displayName = 'SearchIcon';
 
-function JobListIcon({ className }: { className?: string }) {
+const JobListIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -96,9 +100,10 @@ function JobListIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+JobListIcon.displayName = 'JobListIcon';
 
-function ResponseListIcon({ className }: { className?: string }) {
+const ResponseListIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -114,9 +119,10 @@ function ResponseListIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+ResponseListIcon.displayName = 'ResponseListIcon';
 
-function HelpIcon({ className }: { className?: string }) {
+const HelpIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -132,9 +138,10 @@ function HelpIcon({ className }: { className?: string }) {
       />
     </svg>
   );
-}
+});
+HelpIcon.displayName = 'HelpIcon';
 
-function HamburgerIcon({ className }: { className?: string }) {
+const HamburgerIcon = memo(({ className }: { className?: string }) => {
   return (
     <svg
       width='48'
@@ -150,7 +157,8 @@ function HamburgerIcon({ className }: { className?: string }) {
       <rect y='26' width='48' height='2' rx='1' fill='#0F9058' />
     </svg>
   );
-}
+});
+HamburgerIcon.displayName = 'HamburgerIcon';
 
 interface NavigationProps {
   className?: string;
@@ -162,38 +170,6 @@ interface NavigationProps {
   };
 }
 
-interface NavigationState {
-  isMenuOpen: boolean;
-  openDropdown: string | null;
-}
-
-type NavigationAction = 
-  | { type: 'TOGGLE_MENU' }
-  | { type: 'CLOSE_MENU' }
-  | { type: 'TOGGLE_DROPDOWN'; dropdown: string }
-  | { type: 'CLOSE_DROPDOWN' }
-  | { type: 'CLOSE_ALL' };
-
-function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
-  switch (action.type) {
-    case 'TOGGLE_MENU':
-      return { ...state, isMenuOpen: !state.isMenuOpen, openDropdown: null };
-    case 'CLOSE_MENU':
-      return { ...state, isMenuOpen: false };
-    case 'TOGGLE_DROPDOWN':
-      return { 
-        ...state, 
-        openDropdown: state.openDropdown === action.dropdown ? null : action.dropdown,
-        isMenuOpen: false 
-      };
-    case 'CLOSE_DROPDOWN':
-      return { ...state, openDropdown: null };
-    case 'CLOSE_ALL':
-      return { isMenuOpen: false, openDropdown: null };
-    default:
-      return state;
-  }
-}
 
 export function Navigation({
   className,
@@ -201,37 +177,27 @@ export function Navigation({
   isLoggedIn = false,
   userInfo,
 }: NavigationProps) {
-  const [state, dispatch] = useReducer(navigationReducer, {
-    isMenuOpen: false,
-    openDropdown: null
-  });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  // デバッグ用ログ（最適化）
-  useEffect(() => {
-    console.log('🔍 Navigation - State:', {
-      isMenuOpen: state.isMenuOpen,
-      variant,
-      isLoggedIn,
-      userInfo,
-      pathname
-    });
-  }, [state.isMenuOpen, variant, isLoggedIn, userInfo, pathname]);
 
   // ドロップダウンメニューの切り替え
-  const toggleDropdown = (dropdown: string) => {
-    dispatch({ type: 'TOGGLE_DROPDOWN', dropdown });
-  };
+  const toggleDropdown = useCallback((dropdown: string) => {
+    setOpenDropdown(prev => prev === dropdown ? null : dropdown);
+    setIsMenuOpen(false);
+  }, []);
 
   // ログアウト処理
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const result = await logoutAction();
       
       if (result.success) {
         // すべてのUIを閉じる
-        dispatch({ type: 'CLOSE_ALL' });
+        setIsMenuOpen(false);
+        setOpenDropdown(null);
         // 適切なログイン画面にリダイレクト
         if (variant === 'company') {
           router.push('/company/auth/login');
@@ -245,9 +211,121 @@ export function Navigation({
       }
     } catch (error) {
       console.error('❌ ログアウト処理でエラーが発生しました:', error);
-      dispatch({ type: 'CLOSE_DROPDOWN' });
+      setOpenDropdown(null);
     }
-  };
+  }, [variant, router]);
+
+  // メモ化されたnavigationItems
+  const candidateNavigationItems = useCallback(() => [
+    {
+      label: 'マイページ',
+      href: '/candidate/mypage',
+      icon: HomeIcon,
+      hasDropdown: false,
+      isActive: pathname === '/candidate/mypage',
+    },
+    {
+      label: 'メッセージ',
+      href: '/candidate/message',
+      icon: MessageIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/candidate/message'),
+      dropdownItems: [
+        { label: '受信メッセージ', href: '/candidate/message/inbox' },
+        { label: '送信メッセージ', href: '/candidate/message/sent' },
+      ],
+    },
+    {
+      label: '求人を探す',
+      href: '/candidate/search/setting',
+      icon: SearchIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/search/setting'),
+    },
+    {
+      label: 'やることリスト',
+      href: '/candidate/task',
+      icon: ResponseListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/task'),
+    },
+    {
+      label: 'プロフィール確認・編集',
+      href: '/candidate/account',
+      icon: User,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/account'),
+    },
+  ], [pathname]);
+
+  const companyNavigationItems = useCallback(() => [
+    {
+      label: 'マイページ',
+      href: '/company/mypage',
+      icon: HomeIcon,
+      hasDropdown: false,
+      isActive: pathname === '/company/mypage',
+    },
+    {
+      label: 'メッセージ',
+      href: '/company/message',
+      icon: MessageIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/message'),
+      dropdownItems: [
+        { label: '受信メッセージ', href: '/company/message/inbox' },
+        { label: '送信メッセージ', href: '/company/message/sent' },
+      ],
+    },
+    {
+      label: '候補者を探す',
+      href: '/company/candidates',
+      icon: SearchIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/candidates'),
+      dropdownItems: [
+        { label: '候補者検索', href: '/company/candidates/search' },
+        { label: 'スカウト履歴', href: '/company/candidates/scout-history' },
+      ],
+    },
+    {
+      label: '求人一覧',
+      href: '/company/job',
+      icon: JobListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/company/job'),
+    },
+    {
+      label: '対応リスト',
+      href: '/company/task',
+      icon: ResponseListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/company/task'),
+    },
+    {
+      label: 'ヘルプ',
+      href: '/company/help',
+      icon: HelpIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/help'),
+      dropdownItems: [
+        { label: 'よくある質問', href: '/company/help/faq' },
+        { label: 'お問い合わせ', href: '/company/help/contact' },
+      ],
+    },
+  ], [pathname]);
+
+  const toggleMenuCallback = useCallback(() => {
+    setIsMenuOpen(!isMenuOpen);
+  }, [isMenuOpen]);
+
+  const closeMenuCallback = useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
+
+  const closeDropdownCallback = useCallback(() => {
+    setOpenDropdown(null);
+  }, []);
 
   // variant に応じたCTAボタンの設定
   // --- ここから拡張 ---
@@ -310,19 +388,16 @@ export function Navigation({
               <Button
                 variant='ghost'
                 className='p-2'
-                onClick={() => {
-                  console.log('Hamburger clicked, current state:', state.isMenuOpen);
-                  dispatch({ type: 'TOGGLE_MENU' });
-                }}
+                onClick={toggleMenuCallback}
                 aria-label='メニューを開く'
               >
-                {state.isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
               </Button>
             </div>
           </div>
 
           {/* Mobile Navigation */}
-          {state.isMenuOpen && (
+          {isMenuOpen && (
             <div className='lg:hidden bg-white shadow-lg border-t border-gray-100'>
               <div className='px-6 py-6 space-y-3'>
                 {/* 会員登録ボタン（グラデーション） */}
@@ -334,7 +409,7 @@ export function Navigation({
                 >
                   <Link
                     href='/candidate/auth/register'
-                    onClick={() => dispatch({ type: 'CLOSE_MENU' })}
+                    onClick={closeMenuCallback}
                   >
                     会員登録
                   </Link>
@@ -349,7 +424,7 @@ export function Navigation({
                 >
                   <Link
                     href='/candidate/auth/login'
-                    onClick={() => dispatch({ type: 'CLOSE_MENU' })}
+                    onClick={closeMenuCallback}
                   >
                     ログイン
                   </Link>
@@ -364,62 +439,7 @@ export function Navigation({
 
   // Company variant でログイン後のヘッダー
   if (variant === 'company' && isLoggedIn) {
-    const navigationItems = [
-      {
-        label: 'マイページ',
-        href: '/company',
-        icon: HomeIcon,
-        hasDropdown: false,
-        isActive: pathname === '/company',
-      },
-      {
-        label: 'メッセージ',
-        href: '/company/messages',
-        icon: MessageIcon,
-        hasDropdown: true,
-        isActive: pathname.startsWith('/company/messages'),
-        dropdownItems: [
-          { label: '受信メッセージ', href: '/company/messages/inbox' },
-          { label: '送信メッセージ', href: '/company/messages/sent' },
-        ],
-      },
-      {
-        label: '候補者を探す',
-        href: '/company/candidates',
-        icon: SearchIcon,
-        hasDropdown: true,
-        isActive: pathname.startsWith('/company/candidates'),
-        dropdownItems: [
-          { label: '候補者検索', href: '/company/candidates/search' },
-          { label: 'スカウト履歴', href: '/company/candidates/scout-history' },
-        ],
-      },
-      {
-        label: '求人一覧',
-        href: '/company/job',
-        icon: JobListIcon,
-        hasDropdown: false,
-        isActive: pathname.startsWith('/company/job'),
-      },
-      {
-        label: '対応リスト',
-        href: '/company/task',
-        icon: ResponseListIcon,
-        hasDropdown: false,
-        isActive: pathname.startsWith('/company/task'),
-      },
-      {
-        label: 'ヘルプ',
-        href: '/company/help',
-        icon: HelpIcon,
-        hasDropdown: true,
-        isActive: pathname.startsWith('/company/help'),
-        dropdownItems: [
-          { label: 'よくある質問', href: '/company/help/faq' },
-          { label: 'お問い合わせ', href: '/company/help/contact' },
-        ],
-      },
-    ];
+    const navigationItems = companyNavigationItems();
 
     return (
       <header
@@ -444,7 +464,7 @@ export function Navigation({
                           onClick={() => toggleDropdown(item.label)}
                           className={cn(
                             'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
-                            state.openDropdown === item.label || item.isActive
+                            openDropdown === item.label || item.isActive
                               ? 'text-[#0F9058]'
                               : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]',
                             item.isActive &&
@@ -456,7 +476,7 @@ export function Navigation({
                           <DownIcon className='ml-1' />
                         </button>
                         {/* ドロップダウンメニュー */}
-                        {state.openDropdown === item.label && (
+                        {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                             {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
@@ -468,7 +488,7 @@ export function Navigation({
                                     ? 'text-[#0F9058] bg-[#F3FBF7]'
                                     : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                                 )}
-                                onClick={() => dispatch({ type: 'CLOSE_DROPDOWN' })}
+                                onClick={closeDropdownCallback}
                               >
                                 {dropdownItem.label}
                               </Link>
@@ -499,7 +519,7 @@ export function Navigation({
                     onClick={() => toggleDropdown('account')}
                     className={cn(
                       'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px]',
-                      state.openDropdown === 'account'
+                      openDropdown === 'account'
                         ? 'text-[#0F9058]'
                         : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]'
                     )}
@@ -511,7 +531,7 @@ export function Navigation({
                     <DownIcon className='ml-1' />
                   </button>
                   {/* アカウントドロップダウン */}
-                  {state.openDropdown === 'account' && (
+                  {openDropdown === 'account' && (
                     <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                       <Link
                         href='/company/settings'
@@ -521,7 +541,7 @@ export function Navigation({
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}
-                        onClick={() => dispatch({ type: 'CLOSE_DROPDOWN' })}
+                        onClick={closeDropdownCallback}
                       >
                         アカウント設定
                       </Link>
@@ -542,16 +562,16 @@ export function Navigation({
               <Button
                 variant='ghost'
                 className='p-2'
-                onClick={() => dispatch({ type: 'TOGGLE_MENU' })}
+                onClick={toggleMenuCallback}
                 aria-label='メニューを開く'
               >
-                {state.isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
               </Button>
             </div>
           </div>
 
           {/* モバイル用ナビゲーション */}
-          {state.isMenuOpen && (
+          {isMenuOpen && (
             <div className='lg:hidden border-t border-gray-200 bg-white'>
               <div className='px-4 py-2 space-y-1'>
                 {navigationItems.map((item, index) => (
@@ -566,9 +586,9 @@ export function Navigation({
                             <item.icon className='w-5 h-5' />
                             <span>{item.label}</span>
                           </div>
-                          <DownIcon className={cn('transform transition-transform', state.openDropdown === item.label && 'rotate-180')} />
+                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
                         </button>
-                        {state.openDropdown === item.label && (
+                        {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
                             {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
@@ -576,8 +596,8 @@ export function Navigation({
                                 href={dropdownItem.href}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {
-                                  dispatch({ type: 'CLOSE_MENU' });
-                                  dispatch({ type: 'CLOSE_DROPDOWN' });
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
                                 }}
                               >
                                 {dropdownItem.label}
@@ -590,7 +610,7 @@ export function Navigation({
                       <Link
                         href={item.href}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
-                        onClick={() => dispatch({ type: 'CLOSE_MENU' })}
+                        onClick={closeMenuCallback}
                       >
                         <item.icon className='w-5 h-5' />
                         <span>{item.label}</span>
@@ -611,16 +631,16 @@ export function Navigation({
                         {userInfo?.companyName || 'ユーザー名'}
                       </span>
                     </div>
-                    <DownIcon className={cn('transform transition-transform', state.openDropdown === 'account' && 'rotate-180')} />
+                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
                   </button>
-                  {state.openDropdown === 'account' && (
+                  {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
                       <Link
                         href='/company/settings'
                         className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={() => {
-                          dispatch({ type: 'CLOSE_MENU' });
-                          dispatch({ type: 'CLOSE_DROPDOWN' });
+                          setIsMenuOpen(false);
+                          setOpenDropdown(null);
                         }}
                       >
                         アカウント設定
@@ -628,7 +648,7 @@ export function Navigation({
                       <button
                         onClick={() => {
                           handleLogout();
-                          dispatch({ type: 'CLOSE_MENU' });
+                          setIsMenuOpen(false);
                         }}
                         className='w-full text-left px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                       >
@@ -647,47 +667,7 @@ export function Navigation({
 
   // 候補者ログイン後ナビゲーションを企業用と同等構成で新規追加し、違いとして指摘された点を厳密に反映する。
   if ((variant as string) === 'candidate' && isLoggedIn) {
-    const navigationItems = [
-      {
-        label: 'マイページ',
-        href: '/candidate',
-        icon: HomeIcon,
-        hasDropdown: false,
-        isActive: pathname === '/candidate',
-      },
-      {
-        label: 'メッセージ',
-        href: '/candidate/messages',
-        icon: MessageIcon,
-        hasDropdown: true,
-        isActive: pathname.startsWith('/candidate/messages'),
-        dropdownItems: [
-          { label: '受信メッセージ', href: '/candidate/messages/inbox' },
-          { label: '送信メッセージ', href: '/candidate/messages/sent' },
-        ],
-      },
-      {
-        label: '求人を探す',
-        href: '/candidate/search/setting',
-        icon: SearchIcon,
-        hasDropdown: false,
-        isActive: pathname.startsWith('/candidate/search/setting'),
-      },
-      {
-        label: 'やることリスト',
-        href: '/candidate/task',
-        icon: ResponseListIcon,
-        hasDropdown: false,
-        isActive: pathname.startsWith('/candidate/task'),
-      },
-      {
-        label: 'プロフィール確認・編集',
-        href: '/candidate/profile',
-        icon: User,
-        hasDropdown: false,
-        isActive: pathname.startsWith('/candidate/profile'),
-      },
-    ];
+    const navigationItems = candidateNavigationItems();
 
     return (
       <header
@@ -711,7 +691,7 @@ export function Navigation({
                           onClick={() => toggleDropdown(item.label)}
                           className={cn(
                             'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
-                            state.openDropdown === item.label || item.isActive
+                            openDropdown === item.label || item.isActive
                               ? 'text-[#0F9058]'
                               : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]',
                             item.isActive &&
@@ -722,7 +702,7 @@ export function Navigation({
                           <span>{item.label}</span>
                           <DownIcon className='ml-1' />
                         </button>
-                        {state.openDropdown === item.label && (
+                        {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                             {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
@@ -734,7 +714,7 @@ export function Navigation({
                                     ? 'text-[#0F9058] bg-[#F3FBF7]'
                                     : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                                 )}
-                                onClick={() => dispatch({ type: 'CLOSE_DROPDOWN' })}
+                                onClick={closeDropdownCallback}
                               >
                                 {dropdownItem.label}
                               </Link>
@@ -764,7 +744,7 @@ export function Navigation({
                     onClick={() => toggleDropdown('account')}
                     className={cn(
                       'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px]',
-                      state.openDropdown === 'account'
+                      openDropdown === 'account'
                         ? 'text-[#0F9058]'
                         : 'text-[var(--text-primary,#323232)] hover:text-[#0F9058]'
                     )}
@@ -775,7 +755,7 @@ export function Navigation({
                     </span>
                     <DownIcon className='ml-1' />
                   </button>
-                  {state.openDropdown === 'account' && (
+                  {openDropdown === 'account' && (
                     <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                       <Link
                         href='/candidate/settings'
@@ -785,7 +765,7 @@ export function Navigation({
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}
-                        onClick={() => dispatch({ type: 'CLOSE_DROPDOWN' })}
+                        onClick={closeDropdownCallback}
                       >
                         アカウント設定
                       </Link>
@@ -806,16 +786,16 @@ export function Navigation({
               <Button
                 variant='ghost'
                 className='p-2'
-                onClick={() => dispatch({ type: 'TOGGLE_MENU' })}
+                onClick={toggleMenuCallback}
                 aria-label='メニューを開く'
               >
-                {state.isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
               </Button>
             </div>
           </div>
 
           {/* モバイル用ナビゲーション */}
-          {state.isMenuOpen && (
+          {isMenuOpen && (
             <div className='lg:hidden border-t border-gray-200 bg-white'>
               <div className='px-4 py-2 space-y-1'>
                 {navigationItems.map((item, index) => (
@@ -830,9 +810,9 @@ export function Navigation({
                             <item.icon className='w-5 h-5' />
                             <span>{item.label}</span>
                           </div>
-                          <DownIcon className={cn('transform transition-transform', state.openDropdown === item.label && 'rotate-180')} />
+                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
                         </button>
-                        {state.openDropdown === item.label && (
+                        {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
                             {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
                               <Link
@@ -840,8 +820,8 @@ export function Navigation({
                                 href={dropdownItem.href}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {
-                                  dispatch({ type: 'CLOSE_MENU' });
-                                  dispatch({ type: 'CLOSE_DROPDOWN' });
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
                                 }}
                               >
                                 {dropdownItem.label}
@@ -854,7 +834,7 @@ export function Navigation({
                       <Link
                         href={item.href}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
-                        onClick={() => dispatch({ type: 'CLOSE_MENU' })}
+                        onClick={closeMenuCallback}
                       >
                         <item.icon className='w-5 h-5' />
                         <span>{item.label}</span>
@@ -875,16 +855,16 @@ export function Navigation({
                         {userInfo?.userName || 'ユーザー名'}
                       </span>
                     </div>
-                    <DownIcon className={cn('transform transition-transform', state.openDropdown === 'account' && 'rotate-180')} />
+                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
                   </button>
-                  {state.openDropdown === 'account' && (
+                  {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
                       <Link
                         href='/candidate/settings'
                         className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={() => {
-                          dispatch({ type: 'CLOSE_MENU' });
-                          dispatch({ type: 'CLOSE_DROPDOWN' });
+                          setIsMenuOpen(false);
+                          setOpenDropdown(null);
                         }}
                       >
                         アカウント設定
@@ -892,7 +872,7 @@ export function Navigation({
                       <button
                         onClick={() => {
                           handleLogout();
-                          dispatch({ type: 'CLOSE_MENU' });
+                          setIsMenuOpen(false);
                         }}
                         className='w-full text-left px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                       >
@@ -969,16 +949,16 @@ export function Navigation({
             <Button
               variant='ghost'
               className='p-2'
-              onClick={() => dispatch({ type: 'TOGGLE_MENU' })}
+              onClick={toggleMenuCallback}
               aria-label='メニューを開く'
             >
-              {state.isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+              {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {state.isMenuOpen && (
+        {isMenuOpen && (
           <div className='lg:hidden border-t border-gray-200'>
             <div className='px-3 pt-2 pb-3'>
               <Button
@@ -989,7 +969,7 @@ export function Navigation({
               >
                 <Link
                   href={ctaButton.href}
-                  onClick={() => dispatch({ type: 'CLOSE_MENU' })}
+                  onClick={closeMenuCallback}
                 >
                   {ctaButton.label}
                 </Link>

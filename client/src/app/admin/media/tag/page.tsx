@@ -10,7 +10,7 @@ import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
-import { articleService, ArticleTag } from '@/lib/services/articleService';
+import { getTags, createTag, updateTag, deleteTag, getTagArticleCount, ArticleTag } from '@/app/admin/media/actions';
 
 interface Tag extends ArticleTag {
   articleCount: number;
@@ -60,11 +60,11 @@ export default function TagPage() {
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const tagData = await articleService.getTags();
+      const tagData = await getTags();
       
       const tagsWithCount = await Promise.all(
         tagData.map(async (tag) => {
-          const articleCount = await articleService.getTagArticleCount(tag.id!);
+          const articleCount = await getTagArticleCount(tag.id!);
           return {
             ...tag,
             articleCount
@@ -92,7 +92,7 @@ export default function TagPage() {
   const handleSaveEdit = async () => {
     if (editingTagId && editingTagName.trim()) {
       try {
-        await articleService.updateTag(editingTagId, editingTagName.trim());
+        await updateTag(editingTagId, editingTagName.trim());
         setEditingTagId(null);
         setEditingTagName('');
         // リストを再取得
@@ -128,7 +128,7 @@ export default function TagPage() {
   const handleConfirmDelete = async () => {
     if (tagToDelete) {
       try {
-        await articleService.deleteTag(tagToDelete.id!);
+        await deleteTag(tagToDelete.id!);
         setDeletedTagName(tagToDelete.name);
         setShowDeleteModal(false);
         setTagToDelete(null);
@@ -160,7 +160,7 @@ export default function TagPage() {
   const handleConfirmAdd = async (tagName: string) => {
     if (tagName.trim()) {
       try {
-        await articleService.createTag(tagName.trim());
+        await createTag(tagName.trim());
         setShowModal(false);
         setNewTagName('');
         // リストを再取得

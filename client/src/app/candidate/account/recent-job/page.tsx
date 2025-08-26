@@ -1,15 +1,14 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getRecentJobData } from './edit/actions';
 import EditButton from '@/components/candidate/account/EditButton';
 
 // 候補者_職務経歴確認ページ
 export default async function CandidateRecentJobPage() {
-  // 認証チェック
-  const user = await requireCandidateAuth();
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCandidateUser();
   if (!user) {
-    redirect('/candidate/auth/login');
+    throw new Error('Authentication required');
   }
 
   // 候補者データを取得

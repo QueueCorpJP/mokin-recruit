@@ -209,18 +209,29 @@ export async function submitApplication(formData: FormData): Promise<Application
 
     const supabase = getSupabaseAdminClient();
 
-    // 求人情報を取得
-    const { data: jobPosting, error: jobError } = await supabase
-      .from('job_postings')
-      .select(`
-        id,
-        title,
-        company_account_id,
-        company_group_id,
-        status
-      `)
-      .eq('id', jobId)
-      .maybeSingle();
+    // 求人情報取得と応募済みチェックを並列実行
+    const [
+      { data: jobPosting, error: jobError },
+      { data: existingApplication, error: checkError }
+    ] = await Promise.all([
+      supabase
+        .from('job_postings')
+        .select(`
+          id,
+          title,
+          company_account_id,
+          company_group_id,
+          status
+        `)
+        .eq('id', jobId)
+        .maybeSingle(),
+      supabase
+        .from('application')
+        .select('id')
+        .eq('candidate_id', candidateId)
+        .eq('job_posting_id', jobId)
+        .maybeSingle()
+    ]);
 
     if (jobError || !jobPosting) {
       logger.error('Failed to fetch job posting:', jobError);
@@ -230,28 +241,20 @@ export async function submitApplication(formData: FormData): Promise<Application
       };
     }
 
+    if (checkError) {
+      logger.error('Failed to check existing application:', checkError);
+      return {
+        success: false,
+        error: String('サーバーエラーが発生しました')
+      };
+    }
+
     // 求人がアクティブかどうかチェック
     if (jobPosting.status !== 'PUBLISHED') {
       logger.error('Job not published:', { jobId, status: jobPosting.status });
       return {
         success: false,
         error: String('この求人は現在応募できません')
-      };
-    }
-
-    // 既に応募済みかどうかチェック
-    const { data: existingApplication, error: checkError } = await supabase
-      .from('application')
-      .select('id')
-      .eq('candidate_id', candidateId)
-      .eq('job_posting_id', jobId)
-      .maybeSingle();
-
-    if (checkError) {
-      logger.error('Failed to check existing application:', checkError);
-      return {
-        success: false,
-        error: String('サーバーエラーが発生しました')
       };
     }
 

@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MediaHeader } from '@/components/media/MediaHeader';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { ArticleViewTracker } from '@/components/media/ArticleViewTracker';
-import type { Article } from '@/lib/services/articleService';
-import type { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/mediaService.client';
+import type { Article, PopularArticle, ArticleCategory, ArticleTag } from '@/app/candidate/media/actions';
 
 interface MediaDetailClientProps {
   article: Article;

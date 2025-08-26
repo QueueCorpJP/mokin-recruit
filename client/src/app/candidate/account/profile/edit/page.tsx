@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import ProfileEditForm from './ProfileEditForm';
 
@@ -57,7 +56,10 @@ async function getCandidateData(candidateId: string): Promise<CandidateData | nu
 
 export default async function ProfileEditPage() {
   // 認証チェック
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   if (!user) {
     redirect('/candidate/auth/login');
   }

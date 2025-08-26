@@ -48,6 +48,8 @@ export function HeroSection() {
               src='/top.png'
               alt='hero'
               className='w-full h-auto object-cover'
+              loading="eager"
+              fetchpriority="high"
             />
           </picture>
         </div>

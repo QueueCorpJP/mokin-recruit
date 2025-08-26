@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/mediaService.client';
+import { PopularArticle, ArticleCategory, ArticleTag } from '@/app/candidate/media/actions';
 
 interface SidebarData {
   popularArticles: PopularArticle[];

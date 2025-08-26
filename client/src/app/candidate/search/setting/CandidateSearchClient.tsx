@@ -4,7 +4,10 @@ import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
 import { useState, useEffect, useTransition } from 'react';
-import { addToFavoritesServer, removeFromFavoritesServer } from './actions';
+import { addFavoriteAction, removeFavoriteAction } from '@/lib/actions/favoriteActions';
+import { useFavoriteStatusQuery } from '@/hooks/useFavoriteApi';
+import { useQueryClient } from '@tanstack/react-query';
+import { favoriteKeys } from '@/hooks/useFavoriteApi';
 
 import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/company/job/LocationModal';
@@ -51,6 +54,7 @@ export default function CandidateSearchClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
   
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -67,6 +71,10 @@ export default function CandidateSearchClient({
   const [loading, setLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
   const [pagination, setPagination] = useState(initialPagination);
+
+  // お気に入り状態を取得
+  const jobIds = jobCards.map(job => job.id);
+  const { data: favoriteStatus } = useFavoriteStatusQuery(jobIds);
 
   // propsが変更されたら状態を更新
   useEffect(() => {
@@ -130,38 +138,32 @@ export default function CandidateSearchClient({
   const handleStarClick = async (idx: number) => {
     const job = jobCards[idx];
     const jobId = job.id;
-    const isCurrentlyStarred = job.starred;
+    const isCurrentlyStarred = favoriteStatus?.[jobId] || false;
 
     // ローディング状態を設定
     setFavoriteLoading(prev => ({ ...prev, [jobId]: true }));
 
     try {
-      startTransition(async () => {
-        let response;
-        if (isCurrentlyStarred) {
-          response = await removeFromFavoritesServer(jobId);
-        } else {
-          response = await addToFavoritesServer(jobId);
-        }
+      let response;
+      if (isCurrentlyStarred) {
+        response = await removeFavoriteAction(jobId);
+      } else {
+        response = await addFavoriteAction(jobId);
+      }
 
-        if (response.success) {
-          // 表示データを更新
-          setJobCards(cards =>
-            cards.map((card, i) =>
-              i === idx ? { ...card, starred: !isCurrentlyStarred } : card
-            )
-          );
-        } else {
-          console.error('お気に入り操作エラー:', response.error);
-          alert(response.error || 'お気に入り操作に失敗しました');
-        }
-        
-        // ローディング状態を解除
-        setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
-      });
+      if (response.success) {
+        // React Queryキャッシュを無効化して最新データを取得
+        queryClient.invalidateQueries({ queryKey: favoriteKeys.status(jobIds) });
+        queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
+      } else {
+        console.error('お気に入り操作エラー:', response.error);
+        alert(response.error || 'お気に入り操作に失敗しました');
+      }
     } catch (error) {
       console.error('お気に入り操作エラー:', error);
       alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
+    } finally {
+      // ローディング状態を解除
       setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
     }
   };
@@ -691,7 +693,7 @@ export default function CandidateSearchClient({
                     location={card.location}
                     salary={card.salary}
                     apell={card.apell}
-                    starred={card.starred || false}
+                    starred={favoriteStatus?.[card.id] || false}
                     onStarClick={() => handleStarClick(idx)}
                     isFavoriteLoading={favoriteLoading[card.id]}
                     jobId={card.id}

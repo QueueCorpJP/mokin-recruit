@@ -60,8 +60,10 @@ export default async function CandidateSearchServerComponent({
       if (jobs.length > 0) {
         const jobIds = jobs.map(job => job.id);
         
-        // お気に入り状態を非同期で取得（既に求人データは取得済みなので並列処理の必要なし）
-        const favoriteResponse = await getFavoriteStatusServer(jobIds);
+        // Promise.allで並列処理（すでにjobsは取得済みだが、他の関連データがあれば並列化可能）
+        const [favoriteResponse] = await Promise.all([
+          getFavoriteStatusServer(jobIds)
+        ]);
         
         jobsWithFavorites = jobs.map(job => ({
           ...job,

@@ -77,7 +77,7 @@ async function createSupabaseServerClient() {
 }
 
 /**
- * Supabase認証を使用したサーバー認証チェック
+ * Supabase認証を使用したサーバー認証チェック (キャッシュ済み)
  */
 export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
   try {
@@ -133,6 +133,39 @@ export async function requireCandidateAuth(): Promise<User | null> {
 }
 
 /**
+ * 軽量版: すでにキャッシュされた認証結果を再利用
+ * レイアウトで認証済みの場合に使用（リダイレクトなし）
+ */
+export async function getCachedCandidateUser(): Promise<User | null> {
+  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  return auth.isAuthenticated && auth.userType === 'candidate'
+    ? auth.user
+    : null;
+}
+
+/**
+ * 軽量版: すでにキャッシュされた認証結果を再利用（企業ユーザー版）
+ * レイアウトで認証済みの場合に使用（リダイレクトなし）
+ */
+export async function getCachedCompanyUser(): Promise<User | null> {
+  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  return auth.isAuthenticated && auth.userType === 'company_user'
+    ? auth.user
+    : null;
+}
+
+/**
+ * 軽量版: すでにキャッシュされた認証結果を再利用（管理者版）
+ * レイアウトで認証済みの場合に使用（リダイレクトなし）
+ */
+export async function getCachedAdminUser(): Promise<User | null> {
+  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  return auth.isAuthenticated && auth.userType === 'admin'
+    ? auth.user
+    : null;
+}
+
+/**
  * 企業ユーザー認証チェック
  */
 export async function requireCompanyAuth(): Promise<User | null> {
@@ -149,6 +182,7 @@ export async function requireAdminAuth(): Promise<User | null> {
   const auth = await getServerAuth();
   return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
+
 
 /**
  * 統一的な認証エラーレスポンス

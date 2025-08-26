@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { Article } from '@/lib/services/articleService';
+import { Article } from '@/app/admin/media/actions';
 import MediaPageClient from './MediaPageClient';
 
 async function fetchMediaArticles(): Promise<Article[]> {

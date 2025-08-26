@@ -1,6 +1,6 @@
 'use server';
 
-import { requireCandidateAuthForAction, getServerAuth } from '@/lib/auth/server';
+import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import bcrypt from 'bcryptjs';
 

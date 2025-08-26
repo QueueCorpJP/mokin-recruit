@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface AccessRestrictedProps {
-  userType: 'candidate' | 'company';
+  userType: 'candidate' | 'company' | 'admin';
   message?: string;
 }
 
@@ -17,11 +17,15 @@ export function AccessRestricted({ userType, message }: AccessRestrictedProps) {
 
   const loginPath = userType === 'candidate' 
     ? '/candidate/auth/login' 
-    : '/company/auth/login';
+    : userType === 'company'
+    ? '/company/auth/login'
+    : '/admin/auth/login';
 
   const defaultMessage = userType === 'candidate'
     ? 'このページにアクセスするには候補者としてログインが必要です。'
-    : 'このページにアクセスするには企業ユーザーとしてログインが必要です。';
+    : userType === 'company'
+    ? 'このページにアクセスするには企業ユーザーとしてログインが必要です。'
+    : 'このページにアクセスするには管理者としてログインが必要です。';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">

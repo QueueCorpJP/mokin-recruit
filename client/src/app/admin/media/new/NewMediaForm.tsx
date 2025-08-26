@@ -4,7 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
-import { RichTextEditor } from '@/components/admin/RichTextEditor';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(
+  () => import('@/components/admin/RichTextEditor').then(mod => ({ default: mod.RichTextEditor })),
+  {
+    loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-md flex items-center justify-center">
+      <span className="text-gray-500">エディターを読み込み中...</span>
+    </div>,
+    ssr: false
+  }
+);
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';

@@ -85,6 +85,7 @@ export function CTASection() {
               alt='circle01'
               width={80}
               height={80}
+              sizes="80px"
               className='absolute z-10'
               style={{ top: 30, left: -40 }}
             />
@@ -94,6 +95,7 @@ export function CTASection() {
               alt='circle02'
               width={80}
               height={80}
+              sizes="80px"
               className='absolute z-10'
               style={{ top: 32, right: -30 }}
             />

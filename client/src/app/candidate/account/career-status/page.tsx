@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import PageLayout from '@/components/candidate/account/PageLayout';
@@ -36,7 +35,10 @@ async function getCareerStatusEntries(candidateId: string) {
 // 候補者_転職活動状況確認ページ
 export default async function CandidateCareerStatusPage() {
   // 認証チェック
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   if (!user) {
     redirect('/candidate/auth/login');
   }

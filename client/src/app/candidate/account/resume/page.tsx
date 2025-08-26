@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
@@ -8,10 +7,10 @@ import DataRow from '@/components/candidate/account/DataRow';
 import ResumeUploadSection from './ResumeUploadSection';
 
 export default async function CandidateResumePage() {
-  // 認証チェック
-  const user = await requireCandidateAuth();
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCandidateUser();
   if (!user) {
-    redirect('/candidate/auth/login');
+    throw new Error('Authentication required');
   }
 
   // 候補者データを取得

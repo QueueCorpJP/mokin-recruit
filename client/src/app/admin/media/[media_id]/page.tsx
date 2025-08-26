@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { articleService, type Article } from '@/lib/services/articleService';
+import { getArticle, type Article } from '@/app/admin/media/actions';
 
 
 export default function AdminMediaDetailPage() {
@@ -23,7 +23,7 @@ export default function AdminMediaDetailPage() {
           return;
         }
 
-        const fetchedArticle = await articleService.getArticle(mediaId);
+        const fetchedArticle = await getArticle(mediaId);
         
         if (!fetchedArticle) {
           setError('記事が見つかりませんでした');

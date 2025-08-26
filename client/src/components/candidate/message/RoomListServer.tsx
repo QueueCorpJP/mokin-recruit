@@ -1,4 +1,4 @@
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { RoomListClient } from './RoomListClient';
 
@@ -97,8 +97,8 @@ async function getRoomsForCandidate(candidateId: string) {
 }
 
 export async function RoomListServer() {
-  // 認証確認
-  const user = await requireCandidateAuth();
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCandidateUser();
 
   if (!user) {
     return (

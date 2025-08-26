@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import EditButton from './EditButton';
 
@@ -57,13 +57,14 @@ async function getCandidateData(candidateId: string): Promise<CandidateData | nu
 
 // 基本情報確認ページ
 export default async function CandidateBasicInfoPage() {
-  // 認証チェック
-  const user = await requireCandidateAuth();
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCandidateUser();
+  
   if (!user) {
-    redirect('/candidate/auth/login');
+    throw new Error('Authentication required');
   }
 
-  // 候補者データを取得
+  // ユーザーIDが確定してからデータ取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
     redirect('/candidate/auth/login');

@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { mediaService } from '@/lib/services/mediaService.server';
+import { getSidebarData, getRelatedArticles } from '@/app/candidate/media/actions';
 import MediaDetailClient from './MediaDetailClient';
 import type { Metadata } from 'next';
 
@@ -80,8 +80,8 @@ export default async function MediaDetailPage({ params }: { params: Promise<{ me
   // 並列でデータ取得
   const [article, sidebarData, relatedArticles] = await Promise.all([
     getArticleData(mediaId),
-    mediaService.getSidebarData(),
-    mediaService.getRelatedArticles(mediaId, 6)
+    getSidebarData(),
+    getRelatedArticles(mediaId, 6)
   ]);
 
   if (!article) {

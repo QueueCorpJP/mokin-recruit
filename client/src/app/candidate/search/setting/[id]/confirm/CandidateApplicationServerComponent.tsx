@@ -1,6 +1,5 @@
 import { getJobDetails } from './actions';
 import CandidateApplicationClient from './CandidateApplicationClient';
-import { requireCandidateAuth } from '@/lib/auth/server';
 
 interface CandidateApplicationServerComponentProps {
   params: { id: string };
@@ -11,10 +10,7 @@ export default async function CandidateApplicationServerComponent({
 }: CandidateApplicationServerComponentProps) {
   const jobId = params.id;
 
-  // 認証確認
-  const user = await requireCandidateAuth();
-
-  // 求人情報を取得
+  // 認証はLayoutで実行済み、求人情報のみ取得
   const jobResponse = await getJobDetails(jobId);
 
   if (!jobResponse.success || !jobResponse.data) {
@@ -53,7 +49,6 @@ export default async function CandidateApplicationServerComponent({
       jobTitle={jobTitle}
       companyName={companyName}
       requiredDocuments={requiredDocuments}
-      user={user}
     />
   );
 }

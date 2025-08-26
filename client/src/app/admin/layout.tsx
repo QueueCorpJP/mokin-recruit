@@ -1,7 +1,9 @@
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { getServerAuth } from '@/lib/auth/server';
 import { redirect } from 'next/navigation';
+import { getServerAuth } from '@/lib/auth/server';
+import { UserProvider } from '@/contexts/UserContext';
+import { AccessRestricted } from '@/components/AccessRestricted';
 
 // Admin コンポーネントを遅延読み込み
 const AdminHeader = dynamic(
@@ -49,15 +51,29 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 認証チェックが必要かどうかを判定するフラグ
-  // Next.jsのlayoutではパスを直接取得できないため、
-  // 認証ページには別のlayoutを使うか、middlewareを使用する必要がある
-  
-  // const auth = await getServerAuth();
-  // if (!auth.isAuthenticated || auth.userType !== 'admin') {
-  //   redirect('/admin/auth/login');
-  // }
+  // サーバーサイドで認証状態を確認
+  const auth = await getServerAuth();
+
+  // 認証されていない場合
+  if (!auth.isAuthenticated) {
+    return <AccessRestricted userType="admin" />;
+  }
+
+  // 管理者でない場合は候補者ページへリダイレクト
+  if (auth.userType !== 'admin') {
+    redirect('/candidate');
+  }
+
+  // UserContext用のユーザー情報
+  const contextUser = {
+    id: auth.user!.id,
+    email: auth.user!.email || '',
+    role: 'admin' as const,
+    profile: auth.user!
+  };
+
   return (
+    <UserProvider user={contextUser}>
     <div className='min-h-screen flex flex-col'>
       <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200" />}>
         <AdminHeader />
@@ -82,5 +98,6 @@ export default async function AdminLayout({
         <AdminFooter />
       </Suspense>
     </div>
+    </UserProvider>
   );
 }

@@ -1,5 +1,3 @@
-import { getServerAuth } from '@/lib/auth/server';
-import { redirect } from 'next/navigation';
 import CompanyClient from './CompanyClient';
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
@@ -35,7 +33,6 @@ async function fetchAdminCompanyList(): Promise<CompanyListItem[]> {
 }
 
 export default async function CompanyPage() {
- 
   const companies = await fetchAdminCompanyList();
   return <CompanyClient companies={companies} />;
 }
