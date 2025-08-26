@@ -24,7 +24,8 @@ export default function MessageClient({ messages }: Props) {
     { value: '候補者名', label: '候補者名' },
     { value: '企業ID', label: '企業ID' },
     { value: '企業名', label: '企業名' },
-    { value: '選考状況', label: '選考状況' }
+    { value: '選考状況', label: '選考状況' },
+    { value: '求人タイトル', label: '求人タイトル' }
   ];
 
   // 検索フィルタリング
@@ -44,6 +45,8 @@ export default function MessageClient({ messages }: Props) {
         case '選考状況':
           const statusText = statusMap[room.application?.status ?? ''] || '';
           return statusText.toLowerCase().includes(searchLower);
+        case '求人タイトル':
+          return (room.job_postings?.title || '').toLowerCase().includes(searchLower);
         default:
           return false;
       }

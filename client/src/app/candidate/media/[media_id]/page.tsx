@@ -47,8 +47,9 @@ function formatArticles(articles: any[]) {
 }
 
 // メタデータ生成
-export async function generateMetadata({ params }: { params: { media_id: string } }): Promise<Metadata> {
-  const article = await getArticleData(params.media_id);
+export async function generateMetadata({ params }: { params: Promise<{ media_id: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const article = await getArticleData(resolvedParams.media_id);
   
   if (!article) {
     return {
@@ -68,8 +69,9 @@ export async function generateMetadata({ params }: { params: { media_id: string 
   };
 }
 
-export default async function MediaDetailPage({ params }: { params: { media_id: string } }) {
-  const mediaId = params.media_id;
+export default async function MediaDetailPage({ params }: { params: Promise<{ media_id: string }> }) {
+  const resolvedParams = await params;
+  const mediaId = resolvedParams.media_id;
   
   if (!mediaId) {
     notFound();

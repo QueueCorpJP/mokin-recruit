@@ -24,11 +24,11 @@ CREATE TABLE public.application (
   resume_url text,
   career_history_url text,
   CONSTRAINT application_pkey PRIMARY KEY (id),
-  CONSTRAINT application_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
   CONSTRAINT application_company_account_id_fkey FOREIGN KEY (company_account_id) REFERENCES public.company_accounts(id),
   CONSTRAINT application_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
-  CONSTRAINT application_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id),
-  CONSTRAINT application_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id)
+  CONSTRAINT application_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
+  CONSTRAINT application_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
+  CONSTRAINT application_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id)
 );
 CREATE TABLE public.article_categories (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -53,8 +53,8 @@ CREATE TABLE public.article_tag_relations (
   tag_id uuid NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT article_tag_relations_pkey PRIMARY KEY (id),
-  CONSTRAINT article_tag_relations_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.article_tags(id),
-  CONSTRAINT article_tag_relations_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
+  CONSTRAINT article_tag_relations_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT article_tag_relations_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.article_tags(id)
 );
 CREATE TABLE public.article_tags (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -228,10 +228,10 @@ CREATE TABLE public.decline_reasons (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT decline_reasons_pkey PRIMARY KEY (id),
-  CONSTRAINT decline_reasons_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
-  CONSTRAINT decline_reasons_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id),
   CONSTRAINT decline_reasons_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
-  CONSTRAINT decline_reasons_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id)
+  CONSTRAINT decline_reasons_job_posting_id_fkey FOREIGN KEY (job_posting_id) REFERENCES public.job_postings(id),
+  CONSTRAINT decline_reasons_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id),
+  CONSTRAINT decline_reasons_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id)
 );
 CREATE TABLE public.education (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -316,9 +316,15 @@ CREATE TABLE public.job_postings (
   job_type ARRAY,
   industry ARRAY,
   overtime text CHECK ((overtime = ANY (ARRAY['あり'::text, 'なし'::text])) OR overtime IS NULL),
+  approval_reason text,
+  approval_comment text,
+  approved_at timestamp with time zone,
+  rejection_reason text,
+  rejection_comment text,
+  rejected_at timestamp with time zone,
   CONSTRAINT job_postings_pkey PRIMARY KEY (id),
-  CONSTRAINT job_postings_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
-  CONSTRAINT fk_job_postings_company_accounts FOREIGN KEY (company_account_id) REFERENCES public.company_accounts(id)
+  CONSTRAINT fk_job_postings_company_accounts FOREIGN KEY (company_account_id) REFERENCES public.company_accounts(id),
+  CONSTRAINT job_postings_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id)
 );
 CREATE TABLE public.job_summary (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -358,9 +364,9 @@ CREATE TABLE public.messages (
   sender_company_group_id uuid,
   file_urls jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT messages_pkey PRIMARY KEY (id),
-  CONSTRAINT messages_sender_company_group_id_fkey FOREIGN KEY (sender_company_group_id) REFERENCES public.company_groups(id),
+  CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
   CONSTRAINT messages_sender_candidate_id_fkey FOREIGN KEY (sender_candidate_id) REFERENCES public.candidates(id),
-  CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+  CONSTRAINT messages_sender_company_group_id_fkey FOREIGN KEY (sender_company_group_id) REFERENCES public.company_groups(id)
 );
 CREATE TABLE public.messages_backup (
   id uuid,
@@ -381,6 +387,18 @@ CREATE TABLE public.messages_backup (
   replied_at timestamp with time zone,
   created_at timestamp with time zone,
   updated_at timestamp with time zone
+);
+CREATE TABLE public.ng_keywords (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  keyword text NOT NULL UNIQUE,
+  category text DEFAULT 'general'::text,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  created_by uuid,
+  description text,
+  CONSTRAINT ng_keywords_pkey PRIMARY KEY (id),
+  CONSTRAINT ng_keywords_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.notification_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -413,8 +431,8 @@ CREATE TABLE public.rooms (
   updated_at timestamp with time zone DEFAULT now(),
   candidate_id uuid,
   CONSTRAINT rooms_pkey PRIMARY KEY (id),
-  CONSTRAINT rooms_related_job_posting_id_fkey FOREIGN KEY (related_job_posting_id) REFERENCES public.job_postings(id),
   CONSTRAINT rooms_company_group_id_fkey FOREIGN KEY (company_group_id) REFERENCES public.company_groups(id),
+  CONSTRAINT rooms_related_job_posting_id_fkey FOREIGN KEY (related_job_posting_id) REFERENCES public.job_postings(id),
   CONSTRAINT rooms_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id)
 );
 CREATE TABLE public.scout_settings (

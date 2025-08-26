@@ -228,10 +228,13 @@ export function MessageLayoutServer({
     console.log('🔍 [MESSAGE SEND] Starting send process:', {
       selectedRoomId,
       userType,
+      isCandidatePage,
       contentLength: content.length,
       fileUrlsLength: fileUrls?.length || 0,
       hasContent: content.trim().length > 0,
-      hasFiles: (fileUrls?.length || 0) > 0
+      hasFiles: (fileUrls?.length || 0) > 0,
+      userTypeCheck: userType === 'candidate',
+      companyCheck: userType === 'company'
     });
 
     if (!selectedRoomId) {
@@ -269,8 +272,11 @@ export function MessageLayoutServer({
           content,
           message_type: 'GENERAL',
           file_urls: fileUrls || [],
-          fileCount: (fileUrls || []).length
+          fileCount: (fileUrls || []).length,
+          userType,
+          userId
         });
+        console.log('🔍 [MESSAGE SEND] Calling sendCompanyMessage from company interface');
         // 企業用の送信関数を使用
         result = await sendCompanyMessage({
           room_id: selectedRoomId,
@@ -278,6 +284,7 @@ export function MessageLayoutServer({
           message_type: 'GENERAL',
           file_urls: fileUrls || []
         });
+        console.log('🔍 [MESSAGE SEND] sendCompanyMessage result:', result);
       }
 
       console.log('🔍 [MESSAGE SEND] Send result:', result);

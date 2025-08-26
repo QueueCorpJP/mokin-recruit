@@ -1,22 +1,49 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RoomListItem } from '../page';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { SearchBar } from '@/components/admin/ui/SearchBar';
+import MessageApprovalModal from './MessageApprovalModal';
+
+// RoomListItemの型定義（page.tsxと同じ）
+interface RoomListItem {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  candidate_id: string;
+  candidates: {
+    first_name: string;
+    last_name: string;
+  } | null;
+  related_job_posting_id: string;
+  job_postings: {
+    title: string;
+  } | null;
+  company_group_id: string;
+  company_groups: {
+    group_name: string;
+    company_account_id: string;
+    company_accounts: {
+      id: string;
+      company_name: string;
+    } | null;
+  } | null;
+  application: null;
+  latest_messages: Array<{
+    id: string;
+    content: string;
+    subject: string;
+    sent_at: string;
+    sender_type: string;
+  }>;
+  confirmation_requested_at: string;
+}
 
 interface Props {
   messages: RoomListItem[];
 }
-
-const statusMap: Record<string, string> = {
-  SENT: '書類提出',
-  READ: '書類確認済み',
-  RESPONDED: '面接調整中',
-  REJECTED: '不採用',
-};
 
 export default function PendingMessageClient({ messages }: Props) {
   const router = useRouter();
@@ -24,6 +51,9 @@ export default function PendingMessageClient({ messages }: Props) {
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<RoomListItem | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const itemsPerPage = 10;
 
   const handleSort = (column: string) => {
@@ -37,6 +67,32 @@ export default function PendingMessageClient({ messages }: Props) {
     } else {
       setSortColumn(column);
       setSortDirection('asc');
+    }
+  };
+
+  const handleApproveClick = (room: RoomListItem) => {
+    setSelectedRoom(room);
+    setApprovalModalOpen(true);
+  };
+
+  const handleStatusChange = async (status: '承認' | '非承認', reason: string, comment: string): Promise<void> => {
+    if (!selectedRoom) return;
+    
+    setIsProcessing(true);
+    try {
+      // TODO: メッセージステータス変更のAPI呼び出しを実装
+      console.log('Changing message status:', selectedRoom.id, status, reason, comment);
+      
+      // 成功時の処理
+      setApprovalModalOpen(false);
+      setSelectedRoom(null);
+      // ページをリフレッシュ
+      router.refresh();
+    } catch (error) {
+      console.error('Status change failed:', error);
+      alert('ステータス変更に失敗しました');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -82,8 +138,8 @@ export default function PendingMessageClient({ messages }: Props) {
           : '';
         break;
       case 'status':
-        aValue = statusMap[a.application?.status ?? ''] || '';
-        bValue = statusMap[b.application?.status ?? ''] || '';
+        aValue = '要確認';
+        bValue = '要確認';
         break;
       case 'message':
         aValue = a.latest_messages?.[0]?.content || '';
@@ -126,21 +182,15 @@ export default function PendingMessageClient({ messages }: Props) {
       key: 'message',
       label: 'メッセージ',
       sortable: false,
-      width: 'w-[300px]',
+      width: 'w-[400px]',
     },
   ];
 
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
       {/* ヘッダーと検索 */}
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900 mb-4'>要確認メッセージ</h1>
-        <SearchBar
-          placeholder="企業名・候補者名・メッセージで検索"
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-      </div>
+      
+    
 
       {/* テーブル */}
       <div className='bg-white rounded-lg overflow-hidden'>
@@ -157,8 +207,12 @@ export default function PendingMessageClient({ messages }: Props) {
                 <AdminTableRow
                   key={room.id}
                   onClick={() => {
-                    const messageId = room.latest_messages[0]?.id || room.id;
-                    router.push(`/admin/message/pending/${messageId}`);
+                    const messageId = room.latest_messages?.[0]?.id;
+                    if (messageId && typeof messageId === 'string' && messageId.length > 0) {
+                      router.push(`/admin/message/pending/${messageId}`);
+                    } else {
+                      console.error('Invalid message ID found for room:', room.id);
+                    }
                   }}
                   columns={[
                     {
@@ -197,18 +251,18 @@ export default function PendingMessageClient({ messages }: Props) {
                         <span
                           className={`px-3 py-1 rounded-full text-[14px] font-bold bg-gray-500 text-white`}
                         >
-                          {statusMap[room.application?.status ?? ''] ?? '不明'}
+                          {'要確認'}
                         </span>
                       ),
                       width: 'w-[120px]',
                     },
                     {
                       content: (
-                        <div className="truncate max-w-[280px]">
+                        <div className="truncate max-w-[380px]">
                           {room.latest_messages?.[0]?.content || '不明'}
                         </div>
                       ),
-                      width: 'w-[300px]',
+                      width: 'w-[400px]',
                     },
                   ]}
                 />
@@ -227,6 +281,18 @@ export default function PendingMessageClient({ messages }: Props) {
           />
         </div>
       </div>
+
+      {/* 承認/非承認モーダル */}
+      <MessageApprovalModal
+        isOpen={approvalModalOpen}
+        onClose={(): void => {
+          setApprovalModalOpen(false);
+          setSelectedRoom(null);
+        }}
+        onStatusChange={handleStatusChange}
+        isProcessing={isProcessing}
+        messageContent={selectedRoom?.latest_messages?.[0]?.content || ''}
+      />
     </div>
   );
 }

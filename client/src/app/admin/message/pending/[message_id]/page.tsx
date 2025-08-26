@@ -5,6 +5,8 @@ import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { MessageBubble } from '@/components/admin/ui/MessageBubble';
 import { ApplicationStatusSelect } from '@/components/admin/message/ApplicationStatusSelect';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { Button } from '@/components/ui/button';
+import ApproveButton from './ApproveButton';
 
 interface MessageDetailPageProps {
   params: {
@@ -88,20 +90,29 @@ const DisplayValue: React.FC<{ value: string; className?: string }> = ({
   </div>
 );
 
-const NG_KEYWORDS = [
-  '死ね', '殺す', 'バカ', 'アホ', 'クソ', 'ゴミ', 'ブス', 'デブ',
-  'キモい', 'ウザい', 'ムカつく', '消えろ', 'しね', 'きもい',
-  '詐欺', 'ブラック企業', 'ヤバい', 'クズ', 'カス', '最悪',
-  '無能', 'ダメ', 'マジで', 'ヤバ', 'ウザ', 'きも', 'むかつく'
-];
+async function fetchNGKeywords(): Promise<string[]> {
+  const supabase = getSupabaseAdminClient();
+  
+  const { data, error } = await supabase
+    .from('ng_keywords')
+    .select('keyword')
+    .eq('is_active', true);
+    
+  if (error) {
+    console.error('Error fetching NG keywords:', error);
+    return [];
+  }
+  
+  return data?.map(item => item.keyword) || [];
+}
 
-function containsNGWord(text: string): { hasNG: boolean; ngWords: string[] } {
-  if (!text) return { hasNG: false, ngWords: [] };
+function containsNGWord(text: string, ngKeywords: string[]): { hasNG: boolean; ngWords: string[] } {
+  if (!text || !ngKeywords.length) return { hasNG: false, ngWords: [] };
   
   const foundWords: string[] = [];
   const lowerText = text.toLowerCase();
   
-  for (const keyword of NG_KEYWORDS) {
+  for (const keyword of ngKeywords) {
     if (lowerText.includes(keyword.toLowerCase())) {
       foundWords.push(keyword);
     }
@@ -138,70 +149,98 @@ function highlightNGWords(text: string, ngWords: string[]): React.ReactNode {
 }
 
 async function fetchMessageDetail(messageId: string): Promise<MessageDetail | null> {
-  const supabase = getSupabaseAdminClient();
-  
-  const { data: messageData, error: messageError } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('id', messageId)
-    .single();
-
-  if (messageError || !messageData) {
+  // UUIDの形式をチェック
+  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  if (!uuidRegex.test(messageId)) {
+    console.error('Invalid UUID format for message ID:', messageId);
     return null;
   }
 
-  const { data: roomData } = await supabase
-    .from('rooms')
-    .select(`
-      candidate_id,
-      related_job_posting_id,
-      job_postings:related_job_posting_id (
-        id,
-        title
-      )
-    `)
-    .eq('id', messageData.room_id)
-    .single();
+  const supabase = getSupabaseAdminClient();
+  
+  try {
+    const { data: messageData, error: messageError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('id', messageId)
+      .single();
 
-  const { data: companyGroupData } = await supabase
-    .from('company_groups')
-    .select(`
-      group_name,
-      company_account_id,
-      company_accounts:company_account_id (
-        id,
-        company_name,
-        logo_url
-      )
-    `)
-    .eq('id', messageData.company_group_id)
-    .single();
+    if (messageError) {
+      console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
+      return null;
+    }
 
-  const processedRoomData = roomData ? {
-    candidate_id: roomData.candidate_id,
-    related_job_posting_id: roomData.related_job_posting_id,
-    job_postings: Array.isArray(roomData.job_postings) 
-      ? roomData.job_postings[0] || null 
-      : roomData.job_postings
-  } : null;
+    if (!messageData) {
+      console.error('No message data found for ID:', messageId);
+      return null;
+    }
 
-  const processedCompanyGroupData = companyGroupData ? {
-    group_name: companyGroupData.group_name,
-    company_account_id: companyGroupData.company_account_id,
-    company_accounts: Array.isArray(companyGroupData.company_accounts)
-      ? companyGroupData.company_accounts[0] || null
-      : companyGroupData.company_accounts
-  } : null;
+    const { data: roomData } = await supabase
+      .from('rooms')
+      .select(`
+        candidate_id,
+        related_job_posting_id,
+        job_postings:related_job_posting_id (
+          id,
+          title
+        )
+      `)
+      .eq('id', messageData.room_id)
+      .single();
 
-  return {
-    ...messageData,
-    rooms: processedRoomData,
-    company_groups: processedCompanyGroupData
-  } as MessageDetail;
+    // 企業グループ情報を取得（企業からのメッセージの場合のみ）
+    let companyGroupData = null;
+    if (messageData.sender_type === 'COMPANY_USER' && messageData.sender_company_group_id) {
+      const result = await supabase
+        .from('company_groups')
+        .select(`
+          group_name,
+          company_account_id,
+          company_accounts:company_account_id (
+            id,
+            company_name,
+            logo_url
+          )
+        `)
+        .eq('id', messageData.sender_company_group_id)
+        .single();
+      
+      companyGroupData = result.data;
+    }
+
+    const processedRoomData = roomData ? {
+      candidate_id: roomData.candidate_id,
+      related_job_posting_id: roomData.related_job_posting_id,
+      job_postings: Array.isArray(roomData.job_postings) 
+        ? roomData.job_postings[0] || null 
+        : roomData.job_postings
+    } : null;
+
+    const processedCompanyGroupData = companyGroupData ? {
+      group_name: companyGroupData.group_name,
+      company_account_id: companyGroupData.company_account_id,
+      company_accounts: Array.isArray(companyGroupData.company_accounts)
+        ? companyGroupData.company_accounts[0] || null
+        : companyGroupData.company_accounts
+    } : null;
+
+    return {
+      ...messageData,
+      rooms: processedRoomData,
+      company_groups: processedCompanyGroupData
+    } as MessageDetail;
+
+  } catch (error) {
+    console.error('Exception in fetchMessageDetail:', error);
+    return null;
+  }
 }
 
 async function fetchRoomMessagesAroundNG(roomId: string): Promise<{ messages: RoomMessage[], ngMessageIndex: number }> {
   const supabase = getSupabaseAdminClient();
+  
+  // NGキーワードを取得
+  const ngKeywords = await fetchNGKeywords();
   
   const { data: allMessages, error } = await supabase
     .from('messages')
@@ -218,8 +257,8 @@ async function fetchRoomMessagesAroundNG(roomId: string): Promise<{ messages: Ro
 
   for (let i = 0; i < allMessages.length; i++) {
     const message = allMessages[i];
-    const contentCheck = containsNGWord(message.content);
-    const subjectCheck = containsNGWord(message.subject);
+    const contentCheck = containsNGWord(message.content, ngKeywords);
+    const subjectCheck = containsNGWord(message.subject, ngKeywords);
     
     if (contentCheck.hasNG || subjectCheck.hasNG) {
       ngMessageIndex = i;
@@ -238,27 +277,32 @@ async function fetchRoomMessagesAroundNG(roomId: string): Promise<{ messages: Ro
 
   const messagesWithGroups = await Promise.all(
     relevantMessages.map(async (message) => {
-      const { data: companyGroupData } = await supabase
-        .from('company_groups')
-        .select(`
-          group_name,
-          company_account_id,
-          company_accounts:company_account_id (
-            id,
-            company_name,
-            logo_url
-          )
-        `)
-        .eq('id', message.company_group_id)
-        .single();
+      let processedCompanyGroupData = null;
+      
+      // 企業からのメッセージの場合のみ企業グループ情報を取得
+      if (message.sender_type === 'COMPANY_USER' && message.sender_company_group_id) {
+        const { data: companyGroupData } = await supabase
+          .from('company_groups')
+          .select(`
+            group_name,
+            company_account_id,
+            company_accounts:company_account_id (
+              id,
+              company_name,
+              logo_url
+            )
+          `)
+          .eq('id', message.sender_company_group_id)
+          .single();
 
-      const processedCompanyGroupData = companyGroupData ? {
-        group_name: companyGroupData.group_name,
-        company_account_id: companyGroupData.company_account_id,
-        company_accounts: Array.isArray(companyGroupData.company_accounts)
-          ? companyGroupData.company_accounts[0] || null
-          : companyGroupData.company_accounts
-      } : null;
+        processedCompanyGroupData = companyGroupData ? {
+          group_name: companyGroupData.group_name,
+          company_account_id: companyGroupData.company_account_id,
+          company_accounts: Array.isArray(companyGroupData.company_accounts)
+            ? companyGroupData.company_accounts[0] || null
+            : companyGroupData.company_accounts
+        } : null;
+      }
 
       return {
         ...message,
@@ -353,6 +397,9 @@ const NGMessageBubble: React.FC<NGMessageBubbleProps> = ({
 export default async function MessageDetailPage({ params }: MessageDetailPageProps) {
   const resolvedParams = await params;
   const { message_id } = resolvedParams;
+  
+  // NGキーワードを取得
+  const ngKeywords = await fetchNGKeywords();
   
   const messageDetail = await fetchMessageDetail(message_id);
 
@@ -516,12 +563,12 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                   return null;
                 }
 
-                const contentCheck = containsNGWord(message.content || '');
-                const subjectCheck = containsNGWord(message.subject || '');
+                const contentCheck = containsNGWord(message.content || '', ngKeywords);
+                const subjectCheck = containsNGWord(message.subject || '', ngKeywords);
                 const isNGMessage = contentCheck.hasNG || subjectCheck.hasNG;
                 const allNGWords = [...contentCheck.ngWords, ...subjectCheck.ngWords];
 
-                const isCompany = message.sender_type === 'COMPANY';
+                const isCompany = message.sender_type === 'COMPANY_USER';
                 const companyName = message.company_groups?.company_accounts?.company_name || '企業';
                 const companyLogo = message.company_groups?.company_accounts?.logo_url;
                 const candidateName = '候補者';
@@ -588,7 +635,9 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             )}
           </div>
         </div>
-       
+       <div className="flex justify-center mt-8">
+         <ApproveButton messageId={message_id} />
+       </div>
       </div>
     </div>
   );

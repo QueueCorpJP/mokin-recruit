@@ -60,80 +60,100 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 各ルームの最新メッセージと参加者情報を取得
-    const roomsWithDetails = await Promise.all(
-      (participantRooms || []).map(async (participant) => {
-        const room = (participant.rooms as any);
-        
-        // 最新メッセージを取得
-        const { data: latestMessage } = await supabase
-          .from('messages')
-          .select('id, content, sent_at, sender_type, status')
-          .eq('room_id', room.id)
-          .order('sent_at', { ascending: false })
-          .limit(1)
-          .single();
+    // 各ルームのIDリストを作成
+    const roomIds = (participantRooms || []).map((p) => p.room_id);
 
-        // 参加者一覧を取得
-        const { data: participants } = await supabase
-          .from('room_participants')
-          .select(`
-            participant_type,
-            candidate_id,
-            company_user_id,
-            candidates (
-              id,
-              first_name,
-              last_name
-            ),
-            company_users (
-              id,
-              full_name
-            )
-          `)
-          .eq('room_id', room.id);
+    // 最新メッセージを一括取得
+    const { data: latestMessages } = await supabase
+      .from('messages')
+      .select('id, content, sent_at, sender_type, status, room_id')
+      .in('room_id', roomIds)
+      .order('sent_at', { ascending: false });
+    // room_idごとに最新メッセージをMap化
+    const latestMessageMap = new Map();
+    latestMessages?.forEach((msg) => {
+      if (!latestMessageMap.has(msg.room_id)) {
+        latestMessageMap.set(msg.room_id, msg);
+      }
+    });
 
-        // 未読メッセージ数を取得
-        const { count: unreadCount } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('room_id', room.id)
-          .neq('status', 'READ')
-          .neq(
-            authResult.userType === 'CANDIDATE' ? 'sender_candidate_id' : 'sender_company_user_id',
-            authResult.userId
-          );
+    // 参加者一覧を一括取得
+    const { data: allParticipants } = await supabase
+      .from('room_participants')
+      .select(`
+        room_id,
+        participant_type,
+        candidate_id,
+        company_user_id,
+        candidates (
+          id,
+          first_name,
+          last_name
+        ),
+        company_users (
+          id,
+          full_name
+        )
+      `)
+      .in('room_id', roomIds);
+    // room_idごとにグループ化
+    const participantsMap = new Map();
+    allParticipants?.forEach((p) => {
+      if (!participantsMap.has(p.room_id)) participantsMap.set(p.room_id, []);
+      participantsMap.get(p.room_id).push(p);
+    });
 
-        return {
-          id: room.id,
-          type: room.type,
-          relatedJobPostingId: room.related_job_posting_id,
-          companyGroupId: room.company_group_id,
-          createdAt: room.created_at,
-          updatedAt: room.updated_at,
-          jobPosting: room.job_postings ? {
-            id: room.job_postings.id,
-            title: room.job_postings.title,
-            companyName: room.job_postings.company_accounts?.company_name
-          } : null,
-          latestMessage: latestMessage ? {
-            id: latestMessage.id,
-            content: latestMessage.content,
-            sentAt: latestMessage.sent_at,
-            senderType: latestMessage.sender_type,
-            status: latestMessage.status
-          } : null,
-          participants: (participants || []).map(p => ({
-            type: p.participant_type,
-            id: p.participant_type === 'CANDIDATE' ? p.candidate_id : p.company_user_id,
-            name: p.participant_type === 'CANDIDATE'
-              ? `${(p.candidates as any)?.last_name || ''} ${(p.candidates as any)?.first_name || ''}`.trim()
-              : (p.company_users as any)?.full_name
-          })),
-          unreadCount: unreadCount || 0
-        };
-      })
-    );
+    // 未読数を一括取得
+    const { data: unreadCounts } = await supabase
+      .from('messages')
+      .select('room_id, count:id', { groupBy: 'room_id' })
+      .in('room_id', roomIds)
+      .neq('status', 'READ')
+      .neq(
+        authResult.userType === 'CANDIDATE' ? 'sender_candidate_id' : 'sender_company_user_id',
+        authResult.userId
+      );
+    // room_idごとに未読数をMap化
+    const unreadCountMap = new Map();
+    unreadCounts?.forEach((row) => {
+      unreadCountMap.set(row.room_id, row.count);
+    });
+
+    // roomsWithDetailsを組み立て
+    const roomsWithDetails = (participantRooms || []).map((participant) => {
+      const room = participant.rooms;
+      const latestMessage = latestMessageMap.get(room.id);
+      const participants = participantsMap.get(room.id) || [];
+      const unreadCount = unreadCountMap.get(room.id) || 0;
+      return {
+        id: room.id,
+        type: room.type,
+        relatedJobPostingId: room.related_job_posting_id,
+        companyGroupId: room.company_group_id,
+        createdAt: room.created_at,
+        updatedAt: room.updated_at,
+        jobPosting: room.job_postings ? {
+          id: room.job_postings.id,
+          title: room.job_postings.title,
+          companyName: room.job_postings.company_accounts?.company_name
+        } : null,
+        latestMessage: latestMessage ? {
+          id: latestMessage.id,
+          content: latestMessage.content,
+          sentAt: latestMessage.sent_at,
+          senderType: latestMessage.sender_type,
+          status: latestMessage.status
+        } : null,
+        participants: participants.map(p => ({
+          type: p.participant_type,
+          id: p.participant_type === 'CANDIDATE' ? p.candidate_id : p.company_user_id,
+          name: p.participant_type === 'CANDIDATE'
+            ? `${p.candidates?.last_name || ''} ${p.candidates?.first_name || ''}`.trim()
+            : p.company_users?.full_name
+        })),
+        unreadCount
+      };
+    });
 
     return NextResponse.json({
       success: true,

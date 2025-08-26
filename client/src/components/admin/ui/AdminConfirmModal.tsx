@@ -71,21 +71,12 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
             variant="green-outline"
             className="w-[180px]"
           />
-          {variant === 'approve' ? (
-            <button
-              onClick={onConfirm}
-              className="w-[180px] bg-[#FFA500] hover:bg-[#FF8C00] text-white font-bold py-3 px-6 rounded-[32px] transition-colors"
-            >
-              {confirmText}
-            </button>
-          ) : (
-            <AdminButton
-              onClick={onConfirm}
-              text={confirmText}
-              variant="destructive"
-              className="w-[180px]"
-            />
-          )}
+          <AdminButton
+            onClick={onConfirm}
+            text={confirmText}
+            variant={variant === 'approve' ? "green-square" : "destructive"}
+            className="w-[180px]"
+          />
         </div>
       </div>
     </div>
