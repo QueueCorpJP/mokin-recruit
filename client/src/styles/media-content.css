@@ -30,6 +30,13 @@
 }
 
 /* 箇条書きリスト（ul）のliスタイル */
+.prose ul,
+.media-content-editor ul,
+.prose ol,
+.media-content-editor ol {
+  padding-left: 24px !important;
+}
+
 .prose ul li,
 .media-content-editor ul li {
   list-style-type: disc !important;

@@ -79,13 +79,29 @@ export const NewsTabsAndList: React.FC<NewsTabsAndListProps> = ({
           <div 
             key={article.id}
             onClick={() => handleArticleClick(article.id)}
-            className="flex flex-col md:flex-row grow items-start justify-start min-w-60 overflow-hidden relative rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] cursor-pointer hover:opacity-80 transition-opacity w-full"
+            className="flex flex-col md:flex-row grow items-start justify-start min-w-60 overflow-hidden relative rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] cursor-pointer w-full"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#E9E9E9';
+              // 内側のdivの背景色も変更
+              const innerDiv = e.currentTarget.querySelector('.news-card-inner') as HTMLElement;
+              if (innerDiv) {
+                innerDiv.style.backgroundColor = '#E9E9E9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              // 内側のdivの背景色も戻す
+              const innerDiv = e.currentTarget.querySelector('.news-card-inner') as HTMLElement;
+              if (innerDiv) {
+                innerDiv.style.backgroundColor = '#ffffff';
+              }
+            }}
           >
             <div 
               className="aspect-[300/200] bg-center bg-cover bg-no-repeat flex-shrink-0 w-full md:w-[230px]"
               style={{ backgroundImage: `url('${article.imageUrl || '/images/placeholder.jpg'}')` }} 
             />
-            <div className="bg-[#ffffff] flex flex-col gap-4 flex-grow items-start justify-start p-[24px] relative">
+            <div className="news-card-inner bg-[#ffffff] flex flex-col gap-4 flex-grow items-start justify-start p-[24px] relative">
               <div className="flex items-start justify-between relative w-full">
                 <div className="flex flex-wrap gap-2 flex-grow items-start justify-start relative">
                   {article.categories && article.categories.length > 0 && (

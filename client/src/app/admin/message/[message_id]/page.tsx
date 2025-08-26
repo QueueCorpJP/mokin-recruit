@@ -127,22 +127,30 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     console.warn('Warning: Could not fetch room data:', roomError);
   }
 
-  // 企業グループ情報を取得
-  const { data: companyGroupData, error: companyGroupError } = await supabase
-    .from('company_groups')
-    .select(`
-      group_name,
-      company_account_id,
-      company_accounts:company_account_id (
-        id,
-        company_name
-      )
-    `)
-    .eq('id', messageData.company_group_id)
-    .single();
-
-  if (companyGroupError) {
-    console.warn('Warning: Could not fetch company group data:', companyGroupError);
+  // 企業グループ情報を取得（企業からのメッセージの場合のみ）
+  let companyGroupData = null;
+  let companyGroupError = null;
+  
+  if (messageData.sender_type === 'COMPANY_USER' && messageData.sender_company_group_id) {
+    const result = await supabase
+      .from('company_groups')
+      .select(`
+        group_name,
+        company_account_id,
+        company_accounts:company_account_id (
+          id,
+          company_name
+        )
+      `)
+      .eq('id', messageData.sender_company_group_id)
+      .single();
+    
+    companyGroupData = result.data;
+    companyGroupError = result.error;
+    
+    if (companyGroupError) {
+      console.warn('Warning: Could not fetch company group data:', companyGroupError);
+    }
   }
 
   const processedRoomData = roomData ? {
@@ -187,29 +195,34 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
     return [];
   }
 
-  // 各メッセージに対して企業グループ情報を取得
+  // 各メッセージに対して企業グループ情報を取得（企業からのメッセージのみ）
   const messagesWithGroups = await Promise.all(
     messages.map(async (message) => {
-      const { data: companyGroupData } = await supabase
-        .from('company_groups')
-        .select(`
-          group_name,
-          company_account_id,
-          company_accounts:company_account_id (
-            id,
-            company_name
-          )
-        `)
-        .eq('id', message.company_group_id)
-        .single();
+      let processedCompanyGroupData = null;
+      
+      // 企業からのメッセージで company_group_id がある場合のみ企業グループ情報を取得
+      if (message.sender_type === 'COMPANY_USER' && message.sender_company_group_id) {
+        const { data: companyGroupData } = await supabase
+          .from('company_groups')
+          .select(`
+            group_name,
+            company_account_id,
+            company_accounts:company_account_id (
+              id,
+              company_name
+            )
+          `)
+          .eq('id', message.sender_company_group_id)
+          .single();
 
-      const processedCompanyGroupData = companyGroupData ? {
-        group_name: companyGroupData.group_name,
-        company_account_id: companyGroupData.company_account_id,
-        company_accounts: Array.isArray(companyGroupData.company_accounts)
-          ? companyGroupData.company_accounts[0] || null
-          : companyGroupData.company_accounts
-      } : null;
+        processedCompanyGroupData = companyGroupData ? {
+          group_name: companyGroupData.group_name,
+          company_account_id: companyGroupData.company_account_id,
+          company_accounts: Array.isArray(companyGroupData.company_accounts)
+            ? companyGroupData.company_accounts[0] || null
+            : companyGroupData.company_accounts
+        } : null;
+      }
 
       return {
         ...message,
@@ -328,11 +341,11 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
   });
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-6xl">
         
         {/* メッセージ詳細情報 */}
-        <div className="bg-white rounded-lg mb-6">
+        <div className="mb-6">
           <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ情報</h2>
           <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
             <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -448,8 +461,8 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
         </div>
 
         {/* メッセージ履歴 */}
-        <div className="bg-white rounded-lg">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ履歴</h2>
+        <div>
+          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ詳細</h2>
           <div className="space-y-6">
             {validMessages.length === 0 ? (
               <div className="text-center py-8">
@@ -464,7 +477,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                   return null;
                 }
 
-                const isCompany = message.sender_type === 'COMPANY';
+                const isCompany = message.sender_type === 'COMPANY_USER';
                 const companyName = message.company_groups?.company_accounts?.company_name || '企業';
                 const companyLogo = (message.company_groups?.company_accounts as any)?.logo_url;
                 const candidateName = '候補者';

@@ -95,6 +95,10 @@ export default function MediaPageClient({
     window.location.href = `/admin/media/edit?id=${article.id}`;
   };
 
+  const handleRowClick = (article: Article) => {
+    window.location.href = `/admin/media/${article.id}`;
+  };
+
   const handleDelete = (article: Article) => {
     setArticleToDelete(article);
     setShowDeleteModal(true);
@@ -241,6 +245,7 @@ export default function MediaPageClient({
                 key={
                   article.id || `article-${paginatedArticles.indexOf(article)}`
                 }
+                onClick={() => handleRowClick(article)}
                 columns={[
                   {
                     content: getStatusBadge(article.status),

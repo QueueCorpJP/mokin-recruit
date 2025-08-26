@@ -10,7 +10,6 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { Button } from '@/components/admin/ui/button';
-import '@/styles/media-content.css';
 
 // カスタム目次ノード
 const TableOfContents = Node.create({

@@ -8,7 +8,6 @@ import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationM
 import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
-import '@/styles/media-content.css';
 
 interface PreviewData {
   id?: string;

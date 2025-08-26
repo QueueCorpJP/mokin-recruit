@@ -78,7 +78,20 @@ const pageTitleConfig: PageTitleConfig = {
   },
   '/admin/member': { title: 'メンバー管理' },
   '/admin/login': { title: 'ログイン' },
-  '/admin/message': { title: 'メッセージ管理' },
+  '/admin/message': { title: 'メッセージ一覧' },
+  '/admin/message/pending': { title: '確認が必要なメッセージ' },
+  '/admin/message/ngword': {
+    title: 'NGキーワード一覧',
+    buttons: [
+      {
+        text: 'NGキーワード追加',
+        variant: 'green-gradient',
+        onClick: () => {
+          window.dispatchEvent(new CustomEvent('add-ngkeyword-modal'));
+        },
+      },
+    ],
+  },
   '/admin/company': { title: '企業アカウント管理' },
   '/admin/candidate': { title: '候補者管理' },
   '/admin/media': { 
@@ -205,6 +218,13 @@ export function AdminPageTitle() {
     }
     
     // 動的ルートのチェック
+    if (pathname.match(/^\/admin\/message\/pending\/[\w-]+$/)) {
+      return { title: 'メッセージ詳細' };
+    }
+    if (pathname.match(/^\/admin\/message\/[\w-]+$/)) {
+      return { title: 'メッセージ詳細' };
+    }
+    
     if (pathname.match(/^\/admin\/job\/[^\/]+\/edit\/confirm$/)) {
       return { title: '求人編集完了' };
     }

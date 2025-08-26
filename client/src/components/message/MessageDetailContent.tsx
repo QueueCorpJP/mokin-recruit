@@ -111,7 +111,10 @@ export function MessageDetailContent({
             >
               <div className='flex flex-row items-center w-full mb-2'>
                 <span className='font-["Noto_Sans_JP"] font-bold text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] flex-1'>
-                  {isMyMessage ? messageCandidateName : messageCompanyName}
+                  {isMyMessage 
+                    ? (isCandidatePage ? messageCandidateName : messageCompanyName)
+                    : (isCandidatePage ? messageCompanyName : messageCandidateName)
+                  }
                 </span>
                 <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
                   {messageTime}

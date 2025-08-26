@@ -13,6 +13,7 @@ interface AdminConfirmModalProps {
   cancelText?: string;
   message?: string;
   variant?: 'delete' | 'approve';
+  confirmClassName?: string; // 追加
 }
 
 export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
@@ -24,7 +25,8 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
   confirmText = "削除する",
   cancelText = "閉じる",
   message,
-  variant = 'delete'
+  variant = 'delete',
+  confirmClassName = '', // 追加
 }) => {
   if (!isOpen) return null;
 
@@ -65,27 +67,20 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
 
         {/* ボタン */}
         <div className="flex gap-4 justify-center">
-          <AdminButton
-            onClick={onClose}
-            text={cancelText}
-            variant="green-outline"
-            className="w-[180px]"
-          />
-          {variant === 'approve' ? (
-            <button
-              onClick={onConfirm}
-              className="w-[180px] bg-[#FFA500] hover:bg-[#FF8C00] text-white font-bold py-3 px-6 rounded-[32px] transition-colors"
-            >
-              {confirmText}
-            </button>
-          ) : (
+          {cancelText && (
             <AdminButton
-              onClick={onConfirm}
-              text={confirmText}
-              variant="destructive"
+              onClick={onClose}
+              text={cancelText}
+              variant="green-outline"
               className="w-[180px]"
             />
           )}
+          <AdminButton
+            onClick={onConfirm}
+            text={confirmText}
+            variant={variant === 'approve' ? "green-square" : "destructive"}
+            className={confirmClassName || "w-[180px]"}
+          />
         </div>
       </div>
     </div>

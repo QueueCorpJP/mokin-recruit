@@ -7,7 +7,6 @@ import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import { createClient } from '@/lib/supabase/client';
-import '@/styles/media-content.css';
 
 interface PreviewData {
   title: string;

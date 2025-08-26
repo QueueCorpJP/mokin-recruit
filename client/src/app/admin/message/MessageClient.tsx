@@ -7,7 +7,6 @@ import MessageListClient from './MessageListClient';
 
 interface Props {
   messages: RoomListItem[];
-  isPending?: boolean;
 }
 
 const statusMap: Record<string, string> = {
@@ -17,7 +16,7 @@ const statusMap: Record<string, string> = {
   REJECTED: '不採用',
 };
 
-export default function MessageClient({ messages, isPending = false }: Props) {
+export default function MessageClient({ messages }: Props) {
   const [searchCategory, setSearchCategory] = useState<string>('候補者名');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -25,7 +24,8 @@ export default function MessageClient({ messages, isPending = false }: Props) {
     { value: '候補者名', label: '候補者名' },
     { value: '企業ID', label: '企業ID' },
     { value: '企業名', label: '企業名' },
-    { value: '選考状況', label: '選考状況' }
+    { value: '選考状況', label: '選考状況' },
+    { value: '求人タイトル', label: '求人タイトル' }
   ];
 
   // 検索フィルタリング
@@ -45,6 +45,8 @@ export default function MessageClient({ messages, isPending = false }: Props) {
         case '選考状況':
           const statusText = statusMap[room.application?.status ?? ''] || '';
           return statusText.toLowerCase().includes(searchLower);
+        case '求人タイトル':
+          return (room.job_postings?.title || '').toLowerCase().includes(searchLower);
         default:
           return false;
       }
@@ -103,7 +105,7 @@ export default function MessageClient({ messages, isPending = false }: Props) {
        
       </div>
       
-      <MessageListClient messages={filteredMessages} isPending={isPending} />
+      <MessageListClient messages={filteredMessages} />
     </div>
   );
 }
