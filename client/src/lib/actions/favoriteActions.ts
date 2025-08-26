@@ -51,7 +51,7 @@ export async function getFavoriteListAction(params: {
 
     // 総数を取得
     const { count, error: countError } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .select('*', { count: 'exact', head: true })
       .eq('candidate_id', auth.data.candidateId);
 
@@ -65,7 +65,7 @@ export async function getFavoriteListAction(params: {
 
     // お気に入りリストを取得
     const { data: favorites, error } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .select(`
         id,
         job_posting_id,
@@ -74,10 +74,10 @@ export async function getFavoriteListAction(params: {
         job_postings (
           id,
           title,
-          description,
+          job_description,
           salary_min,
           salary_max,
-          location,
+          work_location,
           company_accounts (
             company_name
           )
@@ -138,7 +138,7 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
 
     // お気に入りに登録されている求人IDを取得
     const { data: favorites, error } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .select('job_posting_id')
       .eq('candidate_id', auth.data.candidateId)
       .in('job_posting_id', jobPostingIds);
@@ -188,7 +188,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
 
     // 既にお気に入りに追加されていないかチェック
     const { data: existing, error: checkError } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .select('id')
       .eq('candidate_id', auth.data.candidateId)
       .eq('job_posting_id', jobPostingId)
@@ -211,7 +211,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
 
     // お気に入りに追加
     const { data: favorite, error } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .insert({
         candidate_id: auth.data.candidateId,
         job_posting_id: jobPostingId
@@ -257,7 +257,7 @@ export async function removeFavoriteAction(jobPostingId: string): Promise<Favori
     const supabase = getSupabaseAdminClient();
 
     const { error } = await supabase
-      .from('candidate_favorites')
+      .from('favorites')
       .delete()
       .eq('candidate_id', auth.data.candidateId)
       .eq('job_posting_id', jobPostingId);

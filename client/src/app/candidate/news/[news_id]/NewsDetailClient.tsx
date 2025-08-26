@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { NewsHeader } from '@/components/news/NewsHeader';
-import { newsService, type Article } from '@/lib/services/newsService.client';
+import { getRelatedNews, getNews, type Article } from '@/app/candidate/news/actions';
 
 interface NewsDetailClientProps {
   article: Article;
@@ -26,11 +26,11 @@ export default function NewsDetailClient({
     const fetchRelatedData = async () => {
       try {
         // 関連ニュースを取得
-        const related = await newsService.getRelatedNews(article.id, 6);
+        const related = await getRelatedNews(article.id, 6);
         setRelatedArticles(related);
 
         // 新着ニュースを取得（最新6件）
-        const latest = await newsService.getNews(6);
+        const latest = await getNews(6);
         setNewArticles(latest.filter(item => item.id !== article.id));
       } catch (error) {
         console.error('関連データ取得エラー:', error);

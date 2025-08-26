@@ -64,10 +64,12 @@ export default async function CandidateSearchFullServerComponent({
       const jobs = jobSearchResponse.data.jobs;
       pagination = jobSearchResponse.data.pagination;
       
-      // 求人データが存在する場合、お気に入り状態を取得
+      // 求人データが存在する場合、お気に入り状態を並列で取得
       if (jobs.length > 0) {
         const jobIds = jobs.map(job => job.id);
-        const favoriteResponse = await getFavoriteStatusServer(jobIds);
+        const [favoriteResponse] = await Promise.all([
+          getFavoriteStatusServer(jobIds)
+        ]);
         
         jobsWithFavorites = jobs.map(job => ({
           ...job,
@@ -204,6 +206,7 @@ export default async function CandidateSearchFullServerComponent({
                             src={job.imageUrl || '/company.jpg'} 
                             alt={job.companyName}
                             fill
+                            sizes="(max-width: 768px) 100vw, 128px"
                             className='object-cover'
                           />
                         </div>

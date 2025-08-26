@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import type { PopularArticle, ArticleCategory, ArticleTag } from '@/lib/services/newsService.client';
+import type { PopularArticle, ArticleCategory, ArticleTag } from '@/app/candidate/news/actions';
 
 interface PopularNewsSidebarProps {
   articles?: PopularArticle[];

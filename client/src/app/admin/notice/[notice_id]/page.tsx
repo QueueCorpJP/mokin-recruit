@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { noticeService, type Notice } from '@/lib/services/noticeService';
+import { getNotice, type Notice } from '@/app/admin/notice/[notice_id]/actions';
 
 
 export default function AdminNoticeDetailPage() {
@@ -23,7 +23,7 @@ export default function AdminNoticeDetailPage() {
           return;
         }
 
-        const fetchedNotice = await noticeService.getNotice(noticeId);
+        const fetchedNotice = await getNotice(noticeId);
         
         if (!fetchedNotice) {
           setError('お知らせが見つかりませんでした');

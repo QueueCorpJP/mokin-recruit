@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { NewsTabsAndList } from '@/components/news/NewsTabsAndList';
 import { NewsHeader } from '@/components/news/NewsHeader';
-import { newsService, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/newsService.client';
+import { getNews, getNewsWithPagination, getNewsCategories, getSidebarData, type Article, type PopularArticle, type ArticleCategory } from './actions';
 
 interface NewsArticle {
   id: string;
@@ -30,10 +30,10 @@ export default function NewsPage() {
         
         // ページネーション用のニュース取得
         const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-        const paginationResult = await newsService.getNewsWithPagination(ITEMS_PER_PAGE, offset);
+        const paginationResult = await getNewsWithPagination(ITEMS_PER_PAGE, offset);
         
         // カテゴリー取得
-        const categoriesResult = await newsService.getCategories();
+        const categoriesResult = await getNewsCategories();
         
         setArticles(paginationResult.articles.map(article => ({
           id: article.id,

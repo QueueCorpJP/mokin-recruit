@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Navigation } from '@/components/ui/navigation';
 
-export function AuthAwareNavigation() {
+export const AuthAwareNavigation = memo(function AuthAwareNavigation() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -40,4 +40,4 @@ export function AuthAwareNavigation() {
       userInfo={undefined}
     />
   );
-}
+});

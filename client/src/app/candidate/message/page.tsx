@@ -1,4 +1,4 @@
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 
@@ -7,7 +7,10 @@ export default async function MessagePage({
 }: {
   searchParams: Promise<{ room?: string }>
 }) {
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   const params = await searchParams;
 
   if (!user) {

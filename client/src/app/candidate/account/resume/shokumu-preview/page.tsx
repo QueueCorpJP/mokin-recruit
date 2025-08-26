@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 
 // 区切り線のSVGコンポーネント
@@ -150,7 +149,10 @@ const printStyles = `
 
 export default async function ShokumuPreviewPage() {
   // 認証チェック
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   if (!user) {
     redirect('/candidate/auth/login');
   }

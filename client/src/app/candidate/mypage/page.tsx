@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { CandidateDashboardClient } from './CandidateDashboardClient';
 // 追加: サーバーサイドで求人を取得するためのリポジトリとSupabaseクライアント
 import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
@@ -150,10 +149,11 @@ async function getRecommendedJobs(candidateId: string) {
 }
 
 export default async function CandidateDashboard() {
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
 
   if (!user) {
-    redirect('/candidate/auth/login');
+    // レイアウトで既に認証済みのはずなので、ここに到達することは基本的にない
+    throw new Error('Authentication required');
   }
 
   // サーバーサイドで全データを取得

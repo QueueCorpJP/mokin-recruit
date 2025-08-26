@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { MediaHeader } from '@/components/media/MediaHeader';
-import { mediaService, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from '@/lib/services/mediaService.client';
+import { getArticles, getArticlesWithPagination, getSidebarData, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from './actions';
 import { useMediaCache } from '@/contexts/MediaCacheContext';
 
 interface MediaArticle {
@@ -56,8 +56,8 @@ export default function MediaPage() {
         if (!sidebarDataResult) {
           // キャッシュがない場合のみサイドバーデータを取得
           const [paginationResult, freshSidebarData] = await Promise.all([
-            mediaService.getArticlesWithPagination(20, 0),
-            mediaService.getSidebarData()
+            getArticlesWithPagination(20, 0),
+            getSidebarData()
           ]);
           
           sidebarDataResult = freshSidebarData;
@@ -92,7 +92,7 @@ export default function MediaPage() {
           setHasMore(paginationResult.hasMore);
         } else {
           // キャッシュがある場合は記事データのみ取得
-          const paginationResult = await mediaService.getArticlesWithPagination(20, 0);
+          const paginationResult = await getArticlesWithPagination(20, 0);
           
           setArticles(paginationResult.articles.map(article => ({
             id: article.id,
@@ -142,7 +142,7 @@ export default function MediaPage() {
     
     try {
       setLoadingMore(true);
-      const paginationResult = await mediaService.getArticlesWithPagination(20, articles.length);
+      const paginationResult = await getArticlesWithPagination(20, articles.length);
       
       const newArticles = paginationResult.articles.map(article => ({
         id: article.id,

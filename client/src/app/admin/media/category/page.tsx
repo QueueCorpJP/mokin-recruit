@@ -11,7 +11,7 @@ import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
-import { articleService, ArticleCategory } from '@/lib/services/articleService';
+import { getCategories, createCategory, updateCategory, deleteCategory, getCategoryArticleCount, ArticleCategory } from '@/app/admin/media/actions';
 
 interface Category extends ArticleCategory {
   articleCount: number;
@@ -62,11 +62,11 @@ export default function CategoryPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const categoryData = await articleService.getCategories();
+      const categoryData = await getCategories();
       
       const categoriesWithCount = await Promise.all(
         categoryData.map(async (category) => {
-          const articleCount = await articleService.getCategoryArticleCount(category.id!);
+          const articleCount = await getCategoryArticleCount(category.id!);
           return {
             ...category,
             articleCount
@@ -94,7 +94,7 @@ export default function CategoryPage() {
   const handleSaveEdit = async () => {
     if (editingCategoryId && editingCategoryName.trim()) {
       try {
-        await articleService.updateCategory(editingCategoryId, editingCategoryName.trim());
+        await updateCategory(editingCategoryId, editingCategoryName.trim());
         setEditingCategoryId(null);
         setEditingCategoryName('');
         // リストを再取得
@@ -130,7 +130,7 @@ export default function CategoryPage() {
   const handleConfirmDelete = async () => {
     if (categoryToDelete) {
       try {
-        await articleService.deleteCategory(categoryToDelete.id!);
+        await deleteCategory(categoryToDelete.id!);
         setDeletedCategoryName(categoryToDelete.name);
         setShowDeleteModal(false);
         setCategoryToDelete(null);
@@ -162,7 +162,7 @@ export default function CategoryPage() {
   const handleConfirmAdd = async (categoryName: string) => {
     if (categoryName.trim()) {
       try {
-        await articleService.createCategory(categoryName.trim());
+        await createCategory(categoryName.trim());
         setShowModal(false);
         setNewCategoryName('');
         // リストを再取得

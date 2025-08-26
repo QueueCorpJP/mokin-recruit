@@ -1,12 +1,12 @@
 'use server';
 
-import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
+import { getCachedCandidateUser, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 export async function getSummaryData() {
   try {
-    const user = await requireCandidateAuth();
+    const user = await getCachedCandidateUser();
     if (!user) {
       throw new Error('認証が必要です');
     }

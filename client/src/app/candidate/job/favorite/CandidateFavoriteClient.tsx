@@ -52,10 +52,10 @@ export default function CandidateFavoriteClient({
       id: job.id,
       favoriteId: favorite.id,
       imageUrl: job.image_urls?.[0] || '/company.jpg',
-      imageAlt: job.company_users?.company_name || 'company',
+      imageAlt: job.company_accounts?.company_name || 'company',
       title: job.title,
       tags: Array.isArray(job.job_type) ? job.job_type.slice(0, 3) : [job.job_type].filter(Boolean),
-      companyName: job.company_users?.company_name || '企業名',
+      companyName: job.company_accounts?.company_name || '企業名',
       location: Array.isArray(job.work_location) ? job.work_location : [job.work_location || '勤務地未設定'],
       salary: job.salary_min && job.salary_max && job.salary_min > 0 && job.salary_max > 0
         ? `${job.salary_min}万〜${job.salary_max}万`
@@ -104,7 +104,7 @@ export default function CandidateFavoriteClient({
       startTransition(() => {
         const newSearchParams = new URLSearchParams(searchParams.toString());
         newSearchParams.set('page', newPage.toString());
-        router.push(`/candidate/job/favorite?${newSearchParams.toString()}`);
+        router.replace(`/candidate/job/favorite?${newSearchParams.toString()}`, { scroll: false });
       });
     }
   };
@@ -121,7 +121,7 @@ export default function CandidateFavoriteClient({
                   お気に入り求人
                 </span>
               </div>
-              <Link href='/candidate/search/setting'>
+              <Link href='/candidate/search/setting' prefetch={false}>
                 <button
                   className='box-border flex items-center justify-center rounded-[32px] border-2 border-white bg-transparent text-white font-bold text-[16px] tracking-[0.1em] whitespace-nowrap transition-colors duration-150 hover:bg-white/10'
                   style={{ width: 206, padding: '14px 40px', lineHeight: 2 }}
@@ -168,7 +168,7 @@ export default function CandidateFavoriteClient({
                   <div className='flex flex-col items-center gap-4'>
                     <Star size={48} className='text-gray-300' />
                     <span className='text-gray-500 text-lg'>まだお気に入りに追加した求人がありません</span>
-                    <Link href='/candidate/search/setting'>
+                    <Link href='/candidate/search/setting' prefetch={false}>
                       <button className='bg-[#0F9058] text-white px-6 py-3 rounded-lg hover:bg-[#0D7A4C] transition-colors'>
                         求人を探す
                       </button>

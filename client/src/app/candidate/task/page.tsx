@@ -3,8 +3,7 @@ import { FaqBox } from '@/components/ui/FaqBox';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { getRooms } from '@/lib/rooms';
-import { requireCandidateAuthForAction } from '@/lib/auth/server';
-import { redirect } from 'next/navigation';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import TaskList from './TaskList';
 
 interface Room {
@@ -30,13 +29,13 @@ interface TaskData {
 }
 
 async function getTaskData(): Promise<TaskData> {
-  const authResult = await requireCandidateAuthForAction();
+  const user = await getCachedCandidateUser();
   
-  if (!authResult.success) {
-    redirect('/candidate/login');
+  if (!user) {
+    throw new Error('Authentication required');
   }
 
-  const { candidateId } = authResult.data;
+  const candidateId = user.id;
   
   try {
     const rooms = await getRooms(candidateId, 'candidate');

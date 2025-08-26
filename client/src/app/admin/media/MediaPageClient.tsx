@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Article } from '@/lib/services/articleService';
+import { Article } from '@/app/admin/media/actions';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';

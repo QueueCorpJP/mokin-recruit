@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData, getEducationData, getSkillsData } from '@/lib/server/candidate/candidateData';
 
 // 区切り線のSVGコンポーネント
@@ -145,7 +144,10 @@ function getFinalEducationDisplay(finalEducation?: string) {
 
 export default async function RirekisyoPreviewPage() {
   // 認証チェック
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   if (!user) {
     redirect('/candidate/auth/login');
   }

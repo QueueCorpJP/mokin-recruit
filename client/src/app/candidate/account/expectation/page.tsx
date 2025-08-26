@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth } from '@/lib/auth/server';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
@@ -30,7 +29,10 @@ const renderTags = (data: any) => {
 // 候補者_希望条件確認ページ
 export default async function CandidateExpectationPage() {
   // 認証チェック
-  const user = await requireCandidateAuth();
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
   if (!user) {
     redirect('/candidate/auth/login');
   }

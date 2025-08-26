@@ -1,23 +1,16 @@
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
-import { requireCompanyAuthForAction } from '@/lib/auth/server';
+import { getCachedCompanyUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 
 export default async function CompanyMessagePage() {
-  // 統一的な認証チェック
-  const authResult = await requireCompanyAuthForAction();
-  if (!authResult.success) {
-    return (
-      <div className='w-full flex flex-col items-center justify-center p-8'>
-        <div className='text-red-600 text-center'>
-          <h2 className='text-xl font-bold mb-2'>エラーが発生しました</h2>
-          <p>{authResult.error}</p>
-        </div>
-      </div>
-    );
+  // レイアウトで認証済みのため、キャッシュされた結果を使用
+  const user = await getCachedCompanyUser();
+  if (!user) {
+    throw new Error('Authentication required');
   }
 
-  const { companyUserId } = authResult.data;
-  const fullName = (authResult.data as any).fullName;
+  const companyUserId = user.id;
+  const fullName = user.name || '';
   console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,
