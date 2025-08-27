@@ -100,3 +100,5 @@ export default function MailChangePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -302,3 +302,5 @@ export default function NgCompanyPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

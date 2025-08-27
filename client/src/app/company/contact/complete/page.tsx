@@ -1,27 +1,10 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import CtaGuideSection from '@/components/cta/CtaGuideSection';
 import React from 'react';
-import dynamic from 'next/dynamic';
-
-// ナビゲーションとフッターを遅延読み込み（dynamic import）
-const AuthAwareNavigation = dynamic(
-  () =>
-    import('@/components/layout/AuthAwareNavigation').then(mod => ({
-      default: mod.AuthAwareNavigation,
-    })),
-  {
-    loading: () => (
-      <div className='h-[80px] bg-white border-b border-gray-200' />
-    ),
-  }
-);
-const AuthAwareFooter = dynamic(
-  () =>
-    import('@/components/layout/AuthAwareFooter').then(mod => ({
-      default: mod.AuthAwareFooter,
-    })),
-  { loading: () => <div className='min-h-[200px] bg-[#323232]' /> }
-);
+import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
+import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 
 export default function ContactCompletePage() {
   return (

@@ -117,3 +117,5 @@ export default function MailCompletePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -166,3 +166,5 @@ export default function MailVerifyPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -7,6 +7,7 @@ import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
 
+
 // 最終学歴の表示名を取得
 function getFinalEducationDisplay(finalEducation?: string) {
   const educationMap = {
@@ -148,3 +149,5 @@ export default async function CandidateEducationPage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

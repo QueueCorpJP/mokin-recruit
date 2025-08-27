@@ -5,6 +5,7 @@ import { CandidateRepository } from '@/lib/server/infrastructure/database/Candid
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { getRooms } from '@/lib/rooms';
 
+
 // やることリスト取得用の関数（candidate/taskと同じロジック）
 async function getTaskData(candidateId: string) {
   try {
@@ -207,3 +208,5 @@ export default async function CandidateDashboard() {
 
   return <CandidateDashboardClient user={user} tasks={tasks} messages={messages} jobs={jobs} />;
 }
+
+export const dynamic = 'force-dynamic';

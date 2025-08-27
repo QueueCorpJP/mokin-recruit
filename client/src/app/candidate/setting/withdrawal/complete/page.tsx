@@ -58,3 +58,5 @@ export default function WithdrawalCompletePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

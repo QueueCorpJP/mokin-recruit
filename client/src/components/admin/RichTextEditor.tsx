@@ -33,7 +33,8 @@ const TableOfContents = Node.create({
         }
         
         // 目次ノード自体が選択されている場合は削除を防ぐ
-        if (selection.node && selection.node.type.name === 'tableOfContents') {
+        const { $from, $to } = selection;
+        if ($from.parent.type.name === 'tableOfContents' || $to.parent.type.name === 'tableOfContents') {
           return true;
         }
         
@@ -50,7 +51,8 @@ const TableOfContents = Node.create({
         }
         
         // 目次ノード自体が選択されている場合は削除を防ぐ
-        if (selection.node && selection.node.type.name === 'tableOfContents') {
+        const { $from, $to } = selection;
+        if ($from.parent.type.name === 'tableOfContents' || $to.parent.type.name === 'tableOfContents') {
           return true;
         }
         

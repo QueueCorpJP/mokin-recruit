@@ -7,6 +7,7 @@ import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import ResumeUploadSection from './ResumeUploadSection';
 
+
 export default async function CandidateResumePage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
@@ -34,3 +35,5 @@ export default async function CandidateResumePage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

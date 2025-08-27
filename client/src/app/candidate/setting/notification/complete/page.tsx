@@ -58,3 +58,5 @@ export default function NotificationComplePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

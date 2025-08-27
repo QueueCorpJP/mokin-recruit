@@ -3,6 +3,7 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData, getSkillsData } from '@/lib/server/candidate/candidateData';
 import EditButton from '@/components/candidate/account/EditButton';
 
+
 // 候補者_資格・語学・スキル確認ページ
 export default async function CandidateSkillsPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
@@ -265,3 +266,5 @@ export default async function CandidateSkillsPage() {
     </>
   );
 }
+
+export const dynamic = 'force-dynamic';

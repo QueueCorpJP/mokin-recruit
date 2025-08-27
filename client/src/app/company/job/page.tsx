@@ -12,3 +12,5 @@ interface PageProps {
 export default function CompanyJobsPage({ searchParams }: PageProps) {
   return <JobServerComponent searchParams={searchParams} />;
 }
+
+export const dynamic = 'force-dynamic';

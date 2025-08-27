@@ -3,6 +3,7 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import EditButton from './EditButton';
 
+
 // 候補者データの型定義
 interface CandidateData {
   id: string;
@@ -291,3 +292,5 @@ export default async function CandidateBasicInfoPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -298,3 +298,5 @@ export default function NotificationSettingPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -4,6 +4,7 @@ import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getRecentJobData } from './edit/actions';
 import EditButton from '@/components/candidate/account/EditButton';
 
+
 // 候補者_職務経歴確認ページ
 export default async function CandidateRecentJobPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
@@ -267,3 +268,6 @@ export default async function CandidateRecentJobPage() {
     </>
   );
 }
+
+
+export const dynamic = 'force-dynamic';

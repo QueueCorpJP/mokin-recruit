@@ -28,8 +28,23 @@ interface BasicAuthResult {
 
 /**
  * Supabase サーバークライアントを作成 (読み取り専用 - サーバーコンポーネント用)
+ * 静的レンダリング対応: cookiesを使わない場合はService Role Keyでアクセス
  */
-async function createSupabaseServerClientReadOnly() {
+async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
+  if (!useCookies) {
+    // Static rendering用: Service Role Keyのみ使用（認証なし）
+    return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          getAll() { return []; },
+          setAll() {},
+        },
+      }
+    );
+  }
+
   const cookieStore = await cookies();
   
   return createServerClient(
@@ -78,10 +93,20 @@ async function createSupabaseServerClient() {
 
 /**
  * Supabase認証を使用したサーバー認証チェック (キャッシュ済み)
+ * 静的レンダリング対応版
  */
-export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
+export const getServerAuth = cache(async (allowStatic: boolean = false): Promise<BasicAuthResult> => {
   try {
-    const supabase = await createSupabaseServerClientReadOnly();
+    // 静的レンダリングモードの場合は認証なしを返す
+    if (allowStatic) {
+      return {
+        isAuthenticated: false,
+        user: null,
+        userType: null,
+      };
+    }
+
+    const supabase = await createSupabaseServerClientReadOnly(true);
     
     // Supabase セッションを取得
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -120,6 +145,17 @@ export const getServerAuth = cache(async (): Promise<BasicAuthResult> => {
       userType: null,
     };
   }
+});
+
+/**
+ * 静的レンダリング用の認証チェック（cookiesを使わない）
+ */
+export const getStaticAuth = cache(async (): Promise<BasicAuthResult> => {
+  return {
+    isAuthenticated: false,
+    user: null,
+    userType: null,
+  };
 });
 
 /**

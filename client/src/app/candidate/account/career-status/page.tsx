@@ -9,7 +9,6 @@ import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
 
 
-
 // 選考状況データを取得
 async function getCareerStatusEntries(candidateId: string) {
   try {
@@ -209,3 +208,5 @@ export default async function CandidateCareerStatusPage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

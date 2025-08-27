@@ -1,19 +1,5 @@
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-
-const CompanyAuthLayoutServer = dynamic(
-  () => import('./CompanyAuthLayoutServer'),
-  {
-    loading: () => (
-      <div className="min-h-screen bg-white">
-        <div className="h-[80px] bg-white border-b border-gray-200" />
-        <div className="animate-pulse bg-gray-100 h-4 w-full" />
-        <div className="min-h-[200px] bg-[#323232]" />
-      </div>
-    ),
-    ssr: true,
-  }
-);
+import CompanyAuthLayoutClient from './CompanyAuthLayoutClient';
 
 export default function CompanyAuthLayout({
   children,
@@ -30,7 +16,7 @@ export default function CompanyAuthLayout({
         </div>
       }
     >
-      <CompanyAuthLayoutServer>{children}</CompanyAuthLayoutServer>
+      <CompanyAuthLayoutClient>{children}</CompanyAuthLayoutClient>
     </Suspense>
   );
 }

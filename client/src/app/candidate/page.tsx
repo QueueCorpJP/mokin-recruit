@@ -11,6 +11,7 @@ import { FAQSection } from '@/app/candidate/components/FAQSection';
 import { CTASection } from '@/app/candidate/components/CTASection';
 import { ColumnSection } from '@/app/candidate/components/ColumnSection';
 
+
 export const metadata: Metadata = {
   title: '転職・キャリアアップ支援 | CuePoint',
   description:
