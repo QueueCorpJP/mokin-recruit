@@ -19,7 +19,6 @@ const TableOfContents = Node.create({
   content: 'tocTitle tocItem*',
   atom: false,
   selectable: true,
-  deletable: false,
   
   addKeyboardShortcuts() {
     return {
