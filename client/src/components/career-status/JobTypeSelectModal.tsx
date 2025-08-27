@@ -32,21 +32,22 @@ export default function JobTypeSelectModal({
     setSelectedJobTypes(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (jobTypeId: string) => {
-    if (selectedJobTypes.includes(jobTypeId)) {
+  const handleCheckboxChange = (jobTypeName: string) => {
+    if (selectedJobTypes.includes(jobTypeName)) {
       // 既に選択されている場合は削除
-      const newJobTypes = selectedJobTypes.filter(j => j !== jobTypeId);
+      const newJobTypes = selectedJobTypes.filter(j => j !== jobTypeName);
       setSelectedJobTypes(newJobTypes);
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedJobTypes.length < maxSelections) {
-        const newJobTypes = [...selectedJobTypes, jobTypeId];
+        const newJobTypes = [...selectedJobTypes, jobTypeName];
         setSelectedJobTypes(newJobTypes);
       }
     }
   };
 
   const handleConfirm = () => {
+    console.log('JobTypeSelectModal: Confirming with selected job types:', selectedJobTypes);
     onConfirm(selectedJobTypes);
     onClose();
   };
@@ -216,7 +217,7 @@ export default function JobTypeSelectModal({
           {/* 職種チェックボックスリスト（2列グリッド） */}
           <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
             {selectedCategoryData.jobTypes.map(jobType => {
-              const isSelected = selectedJobTypes.includes(jobType.id);
+              const isSelected = selectedJobTypes.includes(jobType.name);
               const isDisabled =
                 !isSelected && selectedJobTypes.length >= maxSelections;
 
@@ -225,7 +226,7 @@ export default function JobTypeSelectModal({
                   <Checkbox
                     label={jobType.name}
                     checked={isSelected}
-                    onChange={() => handleCheckboxChange(jobType.id)}
+                    onChange={() => handleCheckboxChange(jobType.name)}
                     disabled={isDisabled}
                   />
                 </div>

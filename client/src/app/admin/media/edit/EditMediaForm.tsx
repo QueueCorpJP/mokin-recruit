@@ -59,7 +59,22 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [articleId, setArticleId] = useState<string | null>(initialArticle?.id || null);
+  const [successMessage, setSuccessMessage] = useState('');
   
+  // URLパラメータから成功メッセージをチェック
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      setSuccessMessage('記事が正常に保存されました');
+      // URLから成功パラメータを削除
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('success');
+      window.history.replaceState({}, '', newUrl.toString());
+      // 3秒後にメッセージを消す
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
+  }, []);
+
   // 初期データのセット
   useEffect(() => {
     // まずsessionStorageからプレビューデータをチェック
@@ -303,6 +318,12 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
 
   return (
     <div className="min-h-screen">
+      {/* 成功メッセージ */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+          {successMessage}
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* タイトル */}

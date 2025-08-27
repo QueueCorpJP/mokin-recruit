@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';

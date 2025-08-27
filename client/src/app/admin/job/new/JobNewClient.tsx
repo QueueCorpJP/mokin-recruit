@@ -515,11 +515,13 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
     try {
       const result = await createJob(data);
 
-      if (result && !result.success) {
+      if (result && result.success) {
+        alert('求人を承認待ち状態で投稿しました');
+        router.push(`/admin/job/${result.jobId}`);
+      } else {
         console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
       }
-      // Server Actionが成功するとリダイレクトが自動的に行われる
     } catch (error) {
       console.error('Request Error:', error);
       alert('通信エラーが発生しました');

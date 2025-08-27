@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData, getEducationData } from '@/lib/server/candidate/candidateData';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
@@ -28,6 +30,11 @@ function formatGraduationDate(year?: number, month?: number) {
 
 // 学歴・経験業種/職種確認ページ
 export default async function CandidateEducationPage() {
+  // 認証チェック
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);

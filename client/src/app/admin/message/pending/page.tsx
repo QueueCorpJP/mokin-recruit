@@ -66,50 +66,52 @@ async function fetchPendingMessages(
   const to = from + pageSize - 1;
   const supabase = getSupabaseAdminClient();
   
-  // NGキーワードを取得
-  const ngKeywords = await fetchNGKeywords();
+  // 並列処理でパフォーマンスを改善
+  const [ngKeywords, roomsResult] = await Promise.all([
+    fetchNGKeywords(),
+    supabase
+      .from('rooms')
+      .select(`
+        id,
+        created_at,
+        updated_at,
+        candidate_id,
+        related_job_posting_id,
+        company_group_id,
+        candidates (
+          first_name,
+          last_name
+        ),
+        job_postings (
+          title
+        ),
+        company_groups (
+          group_name,
+          company_account_id,
+          company_accounts (
+            id,
+            company_name
+          )
+        ),
+        messages (
+          id,
+          content,
+          subject,
+          sent_at,
+          sender_type,
+          approval_status
+        )
+      `)
+      .order('updated_at', { ascending: false })
+      .limit(200) // パフォーマンス向上のため上限設定
+  ]);
   
   if (ngKeywords.length === 0) {
     console.log('No NG keywords found');
     return [];
   }
   
-  // ルーム一覧を取得（メッセージも含む）
-  const { data: rooms, error } = await supabase
-    .from('rooms')
-    .select(`
-      id,
-      created_at,
-      updated_at,
-      candidate_id,
-      related_job_posting_id,
-      company_group_id,
-      candidates (
-        first_name,
-        last_name
-      ),
-      job_postings (
-        title
-      ),
-      company_groups (
-        group_name,
-        company_account_id,
-        company_accounts (
-          id,
-          company_name
-        )
-      ),
-      messages (
-        id,
-        content,
-        subject,
-        sent_at,
-        sender_type,
-        approval_status
-      )
-    `)
-    .order('updated_at', { ascending: false })
-    .range(from, to);
+  const { data: rooms, error } = roomsResult;
 
   if (error) {
     console.error('Error fetching rooms:', error);

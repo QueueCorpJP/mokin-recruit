@@ -83,8 +83,9 @@ export function LoginClient({ userType }: LoginClientProps) {
         setSuccess('ログインに成功しました！');
 
       } catch (err) {
-        // Next.jsのredirectエラーは正常な動作
-        if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
+        // Next.jsのリダイレクトエラーは正常な処理なので無視
+        if (err instanceof Error && (err.message.includes('NEXT_REDIRECT') || (err as any).digest?.includes('NEXT_REDIRECT'))) {
+          // リダイレクト中なのでエラーを表示しない
           return;
         }
 

@@ -177,14 +177,14 @@ export async function updateJob(jobId: string, jobData: any) {
         salary_note: jobData.salary_note,
         employment_type: jobData.employment_type,
         employment_type_note: jobData.employment_type_note,
-        work_location: jobData.work_location,
+        work_location: jobData.work_locations,
         location_note: jobData.location_note,
         working_hours: jobData.working_hours,
         overtime: jobData.overtime,
         overtime_info: jobData.overtime_info,
         holidays: jobData.holidays,
-        job_type: jobData.job_type,
-        industry: jobData.industry,
+        job_type: jobData.job_types,
+        industry: jobData.industries,
         selection_process: jobData.selection_process,
         appeal_points: jobData.appeal_points,
         smoking_policy: jobData.smoking_policy,
@@ -226,6 +226,15 @@ export async function createJob(jobData: any) {
   try {
     const supabase = getSupabaseAdminClient();
     
+    console.log('Creating job with data:', {
+      company_group_id: jobData.company_group_id,
+      title: jobData.title,
+      work_locations: jobData.work_locations,
+      job_types: jobData.job_types,
+      industries: jobData.industries,
+      images: jobData.images ? jobData.images.length : 0
+    });
+    
     const { data, error } = await supabase
       .from('job_postings')
       .insert({
@@ -240,14 +249,14 @@ export async function createJob(jobData: any) {
         salary_note: jobData.salary_note,
         employment_type: jobData.employment_type,
         employment_type_note: jobData.employment_type_note,
-        work_location: jobData.work_location,
+        work_location: jobData.work_locations,
         location_note: jobData.location_note,
         working_hours: jobData.working_hours,
         overtime: jobData.overtime,
         overtime_info: jobData.overtime_info,
         holidays: jobData.holidays,
-        job_type: jobData.job_type,
-        industry: jobData.industry,
+        job_type: jobData.job_types,
+        industry: jobData.industries,
         selection_process: jobData.selection_process,
         appeal_points: jobData.appeal_points,
         smoking_policy: jobData.smoking_policy,
@@ -256,18 +265,24 @@ export async function createJob(jobData: any) {
         internal_memo: jobData.internal_memo,
         publication_type: jobData.publication_type || 'public',
         status: jobData.status || 'DRAFT',
-        published_at: jobData.status === 'PUBLISHED' ? new Date().toISOString() : null
+        published_at: jobData.status === 'PUBLISHED' ? new Date().toISOString() : null,
+        image_urls: jobData.images ? jobData.images.map((img: any) => `data:${img.contentType};base64,${img.data}`) : null
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Job create error:', error);
-      return { success: false, error: '作成に失敗しました' };
+      console.error('Job create error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return { success: false, error: `作成に失敗しました: ${error.message}` };
     }
 
     revalidatePath('/admin/job');
-    redirect(`/admin/job/${data.id}`);
+    return { success: true, jobId: data.id };
   } catch (error) {
     console.error('Job create error:', error);
     return { 

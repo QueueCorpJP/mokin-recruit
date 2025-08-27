@@ -28,15 +28,15 @@ export default function IndustrySelectModal({
     setSelectedIndustries(initialSelected);
   }, [initialSelected]);
 
-  const handleCheckboxChange = (industryId: string) => {
-    if (selectedIndustries.includes(industryId)) {
+  const handleCheckboxChange = (industryName: string) => {
+    if (selectedIndustries.includes(industryName)) {
       // 既に選択されている場合は削除
-      const newIndustries = selectedIndustries.filter(i => i !== industryId);
+      const newIndustries = selectedIndustries.filter(i => i !== industryName);
       setSelectedIndustries(newIndustries);
     } else {
       // 新規選択の場合は制限をチェック
       if (selectedIndustries.length < maxSelections) {
-        const newIndustries = [...selectedIndustries, industryId];
+        const newIndustries = [...selectedIndustries, industryName];
         setSelectedIndustries(newIndustries);
       }
     }
@@ -87,7 +87,7 @@ export default function IndustrySelectModal({
           {/* 業種チェックボックスリスト（2列グリッド） */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {allIndustries.map((industryItem) => {
-              const isSelected = selectedIndustries.includes(industryItem.id);
+              const isSelected = selectedIndustries.includes(industryItem.name);
               const isDisabled = !isSelected && selectedIndustries.length >= maxSelections;
               
               return (
@@ -95,7 +95,7 @@ export default function IndustrySelectModal({
                   <Checkbox 
                     label={industryItem.name} 
                     checked={isSelected} 
-                    onChange={() => handleCheckboxChange(industryItem.id)}
+                    onChange={() => handleCheckboxChange(industryItem.name)}
                     disabled={isDisabled}
                   />
                 </div>

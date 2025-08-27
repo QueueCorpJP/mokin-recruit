@@ -47,6 +47,12 @@ export function CandidateLoginClient() {
           setError(result.error || 'ログインに失敗しました');
         }
       } catch (err) {
+        // Next.jsのリダイレクトエラーは正常な処理なので無視
+        if (err instanceof Error && (err.message.includes('NEXT_REDIRECT') || (err as any).digest?.includes('NEXT_REDIRECT'))) {
+          // リダイレクト中なのでエラーを表示しない
+          return;
+        }
+        
         const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました';
         setError(errorMessage);
       }

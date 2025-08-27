@@ -50,7 +50,7 @@ export default function NewsPage() {
         })));
         
         setCategories(categoriesResult.map(cat => cat.name));
-        setTotalPages(Math.ceil(paginationResult.total / ITEMS_PER_PAGE));
+        setTotalPages(Math.ceil(paginationResult.totalCount / ITEMS_PER_PAGE));
         
       } catch (error) {
         console.error('ニュースデータの取得に失敗:', error);

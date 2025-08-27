@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData, getEducationData, getSkillsData } from '@/lib/server/candidate/candidateData';
 

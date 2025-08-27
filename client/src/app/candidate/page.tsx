@@ -53,8 +53,8 @@ export default function CandidateLandingPage() {
   ];
 
   return (
-    <div className="relative w-full overflow-x-hidden">
-      <div className="max-w-[1920px] mx-auto">
+    <div className="relative w-full">
+      <div className="w-full">
         <HeroSection />
         <ScoutServiceSection />
         <FlowSection />
@@ -62,10 +62,8 @@ export default function CandidateLandingPage() {
         <FAQSection />
         <CTASection />
         <ColumnSection />
-        {/* Footer */}
-  
       </div>
-</div>
+    </div>
   );
 }
 //dff

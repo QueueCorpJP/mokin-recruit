@@ -8,6 +8,7 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableCell } from '@tiptap/extension-table-cell';
+import { HardBreak } from '@tiptap/extension-hard-break';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { Button } from '@/components/admin/ui/button';
 
@@ -16,6 +17,48 @@ const TableOfContents = Node.create({
   name: 'tableOfContents',
   group: 'block',
   content: 'tocTitle tocItem*',
+  atom: false,
+  selectable: true,
+  deletable: false,
+  
+  addKeyboardShortcuts() {
+    return {
+      'Delete': () => {
+        const { selection } = this.editor.state;
+        const { $anchor } = selection;
+        
+        // 目次ブロック全体を選択している場合のみ削除を防ぐ
+        if ($anchor.parent.type.name === 'tableOfContents' && selection.empty && 
+            $anchor.parentOffset === 0 && $anchor.parent.childCount === 1) {
+          return true; // ブロック全体の削除を防ぐ
+        }
+        
+        // 目次ノード自体が選択されている場合は削除を防ぐ
+        if (selection.node && selection.node.type.name === 'tableOfContents') {
+          return true;
+        }
+        
+        return false; // テキスト削除は許可
+      },
+      'Backspace': () => {
+        const { selection } = this.editor.state;
+        const { $anchor } = selection;
+        
+        // 目次ブロック全体を選択している場合のみ削除を防ぐ
+        if ($anchor.parent.type.name === 'tableOfContents' && selection.empty && 
+            $anchor.parentOffset === 0) {
+          return true; // ブロック全体の削除を防ぐ
+        }
+        
+        // 目次ノード自体が選択されている場合は削除を防ぐ
+        if (selection.node && selection.node.type.name === 'tableOfContents') {
+          return true;
+        }
+        
+        return false; // テキスト削除は許可
+      }
+    }
+  },
   
   parseHTML() {
     return [{
@@ -24,7 +67,10 @@ const TableOfContents = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { class: 'table-of-contents' }), 0]
+    return ['div', mergeAttributes(HTMLAttributes, { 
+      class: 'table-of-contents fixed-toc',
+      contenteditable: 'true'
+    }), 0]
   },
 })
 
@@ -64,7 +110,8 @@ const TocItem = Node.create({
 const Quote = Node.create({
   name: 'quote',
   group: 'block',
-  content: 'text*',
+  content: 'paragraph+',
+  whitespace: 'pre',
 
   parseHTML() {
     return [{
@@ -88,6 +135,12 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   const editor = useEditor({
     extensions: [
       StarterKit,
+      HardBreak.configure({
+        keepMarks: true,
+        HTMLAttributes: {
+          class: 'hard-break',
+        },
+      }),
       Image.configure({
         inline: false,
         allowBase64: true,
@@ -135,6 +188,35 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);
+    }
+  }, [editor, content]);
+
+  // 初期化時に目次を自動挿入
+  useEffect(() => {
+    if (editor && !content) {
+      editor.commands.insertContent([
+        {
+          type: 'tableOfContents',
+          content: [
+            {
+              type: 'tocTitle',
+              content: [{ type: 'text', text: '目次' }],
+            },
+            {
+              type: 'tocItem',
+              content: [{ type: 'text', text: '項目1' }],
+            },
+            {
+              type: 'tocItem',
+              content: [{ type: 'text', text: '項目2' }],
+            },
+            {
+              type: 'tocItem',
+              content: [{ type: 'text', text: '項目3' }],
+            },
+          ],
+        },
+      ]);
     }
   }, [editor, content]);
 
@@ -387,7 +469,12 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
                 .insertContent([
                   {
                     type: 'quote',
-                    content: [{ type: 'text', text: '引用テキストがここに入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。' }],
+                    content: [
+                      {
+                        type: 'paragraph',
+                        content: [{ type: 'text', text: '引用テキストがここに入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。引用テキストが入ります。' }],
+                      },
+                    ],
                   },
                 ])
                 .run();
