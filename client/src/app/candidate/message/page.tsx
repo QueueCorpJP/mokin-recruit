@@ -2,6 +2,8 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MessagePage({
   searchParams
 }: {

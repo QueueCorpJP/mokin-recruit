@@ -56,3 +56,5 @@ export default function ScoutComplePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

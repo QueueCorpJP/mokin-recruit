@@ -13,14 +13,15 @@ export const viewport: Viewport = {
 };
 
 interface NewPasswordPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Server Component (メタデータ、SEO、静的コンテンツ)
-export default function NewPasswordPage({ searchParams }: NewPasswordPageProps) {
+export default async function NewPasswordPage({ searchParams }: NewPasswordPageProps) {
+  const params = await searchParams;
   return (
     <Suspense fallback={<div className='min-h-screen flex items-center justify-center'>読み込み中...</div>}>
-      <NewPasswordServerComponent searchParams={searchParams} />
+      <NewPasswordServerComponent searchParams={params} />
     </Suspense>
   );
 }

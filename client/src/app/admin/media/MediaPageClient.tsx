@@ -175,17 +175,15 @@ export default function MediaPageClient({
         aValue =
           a.categories && a.categories.length > 0
             ? a.categories
-                .map(cat => cat.name)
                 .sort((x, y) => x.localeCompare(y, 'ja'))
-                .join('、')
-            : a.category?.name || '';
+                .join(', ')
+            : '';
         bValue =
           b.categories && b.categories.length > 0
             ? b.categories
-                .map(cat => cat.name)
                 .sort((x, y) => x.localeCompare(y, 'ja'))
-                .join('、')
-            : b.category?.name || '';
+                .join(', ')
+            : '';
         break;
       case 'title':
         aValue = a.title;
@@ -269,10 +267,9 @@ export default function MediaPageClient({
                       <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
                         {article.categories && article.categories.length > 0
                           ? article.categories
-                              .map(cat => cat.name)
                               .sort((a, b) => a.localeCompare(b, 'ja'))
-                              .join('、')
-                          : article.category?.name || '-'}
+                              .join(', ')
+                          : '-'}
                       </span>
                     ),
                     width: 'w-[150px]',

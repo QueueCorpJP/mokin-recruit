@@ -1,3 +1,5 @@
+'use client';
+
 import CompanyRegistrationForm from '@/components/auth/CompanyRegistrationForm';
 import Link from 'next/link';
 

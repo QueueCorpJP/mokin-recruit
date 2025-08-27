@@ -46,7 +46,7 @@ async function fetchAdminRoomList(
   const to = from + pageSize - 1;
   const supabase = getSupabaseAdminClient();
   
-  // ルーム一覧を取得
+  // ルーム一覧を取得（パフォーマンス向上のため上限設定）
   const { data: rooms, error } = await supabase
     .from('rooms')
     .select(
@@ -85,59 +85,84 @@ async function fetchAdminRoomList(
     return [];
   }
 
-  // 各ルームの最新メッセージ10件とアプリケーション状況を取得
-  const roomsWithMessages = await Promise.all(
-    rooms.map(async (room) => {
-      // 最新のメッセージ10件を取得
-      const { data: messages } = await supabase
+  // メッセージとアプリケーション状況を効率的に取得
+  const [messagesResultsMap, applicationStatusMap] = await Promise.all([
+    // 全ルームのメッセージを一度に取得
+    (async () => {
+      const { data: allMessages } = await supabase
         .from('messages')
-        .select('id, content, sent_at, sender_type')
-        .eq('room_id', room.id)
+        .select('id, content, sent_at, sender_type, room_id')
+        .in('room_id', rooms.map(r => r.id))
         .order('sent_at', { ascending: false })
-        .limit(10);
-
-      // アプリケーション状況を取得
-      let applicationStatus = null;
-      if (room.candidate_id && room.related_job_posting_id) {
-        try {
-          const { data: appData } = await supabase
-            .from('application')
-            .select('status')
-            .eq('candidate_id', room.candidate_id)
-            .eq('job_posting_id', room.related_job_posting_id)
-            .maybeSingle();
-          
-          applicationStatus = appData?.status || null;
-        } catch (appError) {
-          console.warn('Application lookup failed:', appError);
-          applicationStatus = null;
+        .limit(rooms.length * 10);
+      
+      // ルームIDごとにグループ化して上位10件を取得
+      const messageMap = new Map<string, any[]>();
+      allMessages?.forEach(msg => {
+        if (!messageMap.has(msg.room_id)) {
+          messageMap.set(msg.room_id, []);
         }
+        const roomMessages = messageMap.get(msg.room_id)!;
+        if (roomMessages.length < 10) {
+          roomMessages.push(msg);
+        }
+      });
+      return messageMap;
+    })(),
+    // 全ルームのアプリケーション状況を一度に取得
+    (async () => {
+      const validPairs = rooms.filter(r => r.candidate_id && r.related_job_posting_id);
+      if (validPairs.length === 0) return new Map();
+      
+      try {
+        const { data: applications } = await supabase
+          .from('application')
+          .select('candidate_id, job_posting_id, status')
+          .in('candidate_id', validPairs.map(r => r.candidate_id))
+          .in('job_posting_id', validPairs.map(r => r.related_job_posting_id));
+        
+        const statusMap = new Map<string, string>();
+        applications?.forEach(app => {
+          statusMap.set(`${app.candidate_id}|${app.job_posting_id}`, app.status);
+        });
+        return statusMap;
+      } catch (error) {
+        console.warn('Application lookup failed:', error);
+        return new Map();
       }
+    })()
+  ]);
+  
+  const roomsWithMessages = rooms.map((room) => {
+    const messages = messagesResultsMap.get(room.id) || [];
+    const applicationKey = room.candidate_id && room.related_job_posting_id 
+      ? `${room.candidate_id}|${room.related_job_posting_id}`
+      : null;
+    const applicationStatus = applicationKey ? applicationStatusMap.get(applicationKey) || null : null;
 
-      return {
-        id: room.id,
-        created_at: room.created_at,
-        updated_at: room.updated_at,
-        candidate_id: room.candidate_id,
-        candidates: Array.isArray(room.candidates) ? room.candidates[0] || null : room.candidates,
-        related_job_posting_id: room.related_job_posting_id,
-        job_postings: Array.isArray(room.job_postings) ? room.job_postings[0] || null : room.job_postings,
-        company_group_id: room.company_group_id,
-        company_groups: Array.isArray(room.company_groups) 
-          ? (room.company_groups[0] 
-              ? {
-                  ...room.company_groups[0],
-                  company_accounts: Array.isArray(room.company_groups[0].company_accounts)
-                    ? room.company_groups[0].company_accounts[0] || null
-                    : room.company_groups[0].company_accounts
-                }
-              : null)
-          : room.company_groups,
-        latest_messages: messages || [],
-        application: { status: applicationStatus }
-      } as RoomListItem;
-    })
-  );
+    return {
+      id: room.id,
+      created_at: room.created_at,
+      updated_at: room.updated_at,
+      candidate_id: room.candidate_id,
+      candidates: Array.isArray(room.candidates) ? room.candidates[0] || null : room.candidates,
+      related_job_posting_id: room.related_job_posting_id,
+      job_postings: Array.isArray(room.job_postings) ? room.job_postings[0] || null : room.job_postings,
+      company_group_id: room.company_group_id,
+      company_groups: Array.isArray(room.company_groups) 
+        ? (room.company_groups[0] 
+            ? {
+                ...room.company_groups[0],
+                company_accounts: Array.isArray(room.company_groups[0].company_accounts)
+                  ? room.company_groups[0].company_accounts[0] || null
+                  : room.company_groups[0].company_accounts
+              }
+            : null)
+        : room.company_groups,
+      latest_messages: messages,
+      application: { status: applicationStatus }
+    } as RoomListItem;
+  });
 
   return roomsWithMessages;
 }

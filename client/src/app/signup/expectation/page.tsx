@@ -74,10 +74,10 @@ export default function SignupExpectationPage() {
   };
 
   // 業種モーダル
-  const handleIndustriesConfirm = (industryIds: string[]) => {
-    // IDからIndustryオブジェクトに変換
-    const industries: Industry[] = industryIds.map(id => 
-      INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
+  const handleIndustriesConfirm = (industryNames: string[]) => {
+    // 名前からIndustryオブジェクトに変換
+    const industries: Industry[] = industryNames.map(name => 
+      INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.name === name)
     ).filter(Boolean) as Industry[];
     setFormData(prev => ({ ...prev, industries }));
   };
@@ -90,10 +90,10 @@ export default function SignupExpectationPage() {
   };
 
   // 職種モーダル
-  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
-    // IDからJobTypeオブジェクトに変換
-    const jobTypes: JobType[] = jobTypeIds.map(id => 
-      JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
+  const handleJobTypesConfirm = (jobTypeNames: string[]) => {
+    // 名前からJobTypeオブジェクトに変換
+    const jobTypes: JobType[] = jobTypeNames.map(name => 
+      JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.name === name)
     ).filter(Boolean) as JobType[];
     setFormData(prev => ({ ...prev, jobTypes }));
   };
@@ -125,14 +125,14 @@ export default function SignupExpectationPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustriesConfirm}
-        initialSelected={formData.industries.map(i => i.id)}
+        initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}
       />
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypesConfirm}
-        initialSelected={formData.jobTypes.map(j => j.id)}
+        initialSelected={formData.jobTypes.map(j => j.name)}
         maxSelections={3}
       />
       <WorkLocationSelectModal

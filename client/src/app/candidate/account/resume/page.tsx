@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import PageLayout from '@/components/candidate/account/PageLayout';
@@ -5,6 +6,7 @@ import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import ResumeUploadSection from './ResumeUploadSection';
+
 
 export default async function CandidateResumePage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
@@ -33,3 +35,5 @@ export default async function CandidateResumePage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

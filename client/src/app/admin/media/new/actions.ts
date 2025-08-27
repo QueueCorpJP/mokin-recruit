@@ -88,9 +88,6 @@ export async function saveArticle(formData: FormData) {
       .replace(/^-+|-+$/g, '')
       + '-' + Date.now();
 
-    // コンテンツ内の画像情報を抽出
-    const contentImages = extractImagesFromContent(content);
-
     // 記事を作成
     const { data: article, error: createError } = await supabase
       .from('articles')
@@ -102,7 +99,6 @@ export async function saveArticle(formData: FormData) {
         thumbnail_url: thumbnailUrl,
         excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
         published_at: status === 'PUBLISHED' ? new Date().toISOString() : null,
-        content_images: contentImages
       })
       .select()
       .single();
@@ -169,34 +165,6 @@ export async function saveArticle(formData: FormData) {
   }
 }
 
-interface ContentImage {
-  url: string;
-  order: number;
-  position: number;
-  filename: string;
-  uploadedAt: string;
-}
-
-function extractImagesFromContent(content: string): ContentImage[] {
-  const images: ContentImage[] = [];
-  const imgRegex = /<img[^>]+src="([^"]*)"[^>]*data-image-order="([^"]*)"[^>]*data-image-position="([^"]*)"[^>]*>/g;
-  
-  let match;
-  while ((match = imgRegex.exec(content)) !== null) {
-    const [, url, order, position] = match;
-    const filename = url.split('/').pop() || '';
-    
-    images.push({
-      url,
-      order: parseInt(order),
-      position: parseInt(position),
-      filename,
-      uploadedAt: new Date().toISOString()
-    });
-  }
-  
-  return images.sort((a, b) => a.order - b.order);
-}
 
 export async function uploadImageToSupabase(formData: FormData): Promise<{success: boolean, url?: string, error?: string}> {
   const file = formData.get('file') as File;

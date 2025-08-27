@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import ProfileEditForm from './ProfileEditForm';
+
 
 // 候補者データの型定義
 interface CandidateData {
@@ -74,3 +76,5 @@ export default async function ProfileEditPage() {
     <ProfileEditForm candidateData={candidateData} />
   );
 }
+
+export const dynamic = 'force-dynamic';

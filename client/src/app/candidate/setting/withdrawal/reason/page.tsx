@@ -141,3 +141,5 @@ export default function WithdrawalReasonPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

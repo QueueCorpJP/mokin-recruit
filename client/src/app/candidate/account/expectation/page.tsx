@@ -1,9 +1,11 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
+
 
 // 配列データを安全に処理する関数
 const renderTags = (data: any) => {
@@ -109,3 +111,5 @@ export default async function CandidateExpectationPage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

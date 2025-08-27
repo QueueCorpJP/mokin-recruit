@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
@@ -6,7 +7,6 @@ import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
-
 
 
 // 選考状況データを取得
@@ -208,3 +208,5 @@ export default async function CandidateCareerStatusPage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

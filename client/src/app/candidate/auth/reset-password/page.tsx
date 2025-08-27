@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { CandidateResetPasswordServerComponent } from './CandidateResetPasswordServerComponent';
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
 
+
 export const metadata: Metadata = {
   title: 'パスワードの再設定 | CuePoint',
   description: 'パスワードをリセットするためのメールを送信します',

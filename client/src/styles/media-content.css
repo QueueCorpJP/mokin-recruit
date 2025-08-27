@@ -15,6 +15,21 @@
   margin-bottom: 16px !important;
 }
 
+/* h3スタイル */
+.prose h3,
+.media-content-editor h3 {
+  color: #0F9058 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 20px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: 160% !important;
+  letter-spacing: 2.0px !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 14px !important;
+}
+
 /* liスタイル */
 .prose li,
 .media-content-editor li {
@@ -60,6 +75,24 @@
   border-radius: 24px !important;
   border: 2px solid #0F9058 !important;
   margin: 16px 0 !important;
+}
+
+/* 固定目次の削除防止 */
+.prose .table-of-contents.fixed-toc,
+.media-content-editor .table-of-contents.fixed-toc {
+  position: relative !important;
+}
+
+.prose .table-of-contents.fixed-toc::before,
+.media-content-editor .table-of-contents.fixed-toc::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  left: -2px !important;
+  right: -2px !important;
+  bottom: -2px !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
 }
 
 .prose .table-of-contents .toc-title,
@@ -192,16 +225,20 @@
 /* 引用コンテナスタイル（監修者デザインを参考） */
 .prose .quote-container,
 .media-content-editor .quote-container {
-  display: flex !important;
+  display: block !important;
   width: 100% !important;
   max-width: 100% !important;
+  min-height: auto !important;
+  height: auto !important;
   padding: 20px !important;
-  align-items: center !important;
-  gap: 10px !important;
   margin: 16px 0 !important;
   border: none !important;
   border-left: 2px solid #DCDCDC !important;
   background: #EFEFEF !important;
+  white-space: pre-wrap !important;
+  overflow: visible !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .prose blockquote p,
@@ -228,6 +265,30 @@
   font-weight: 500 !important;
   line-height: 180% !important; /* 28.8px */
   letter-spacing: 1.6px !important;
+}
+
+/* 引用コンテナ内の改行要素 */
+.prose .quote-container br,
+.media-content-editor .quote-container br,
+.prose .quote-container .hard-break,
+.media-content-editor .quote-container .hard-break {
+  display: block !important;
+  margin: 0 !important;
+  line-height: 180% !important;
+}
+
+/* 引用コンテナ内の段落要素 */
+.prose .quote-container p,
+.media-content-editor .quote-container p {
+  color: #666666 !important;
+  font-family: "Noto Sans JP" !important;
+  font-size: 16px !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  line-height: 180% !important;
+  letter-spacing: 1.6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 

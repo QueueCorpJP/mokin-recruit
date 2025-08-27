@@ -1,15 +1,103 @@
-'use client';
+import React from 'react';
+import { GroupSignupFormClient } from './GroupSignupFormClient';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { requireCompanyAuth } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
-import React, { useState } from 'react';
-import { PasswordFormField } from '@/components/ui/password-form-field';
-import { BaseInput } from '@/components/ui/base-input';
+export const dynamic = 'force-dynamic';
 
-// グループサインアップページ
-export default function GroupSignupPage() {
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+interface GroupSignupParams {
+  searchParams: Promise<{ groupId?: string; companyId?: string; }>
+}
+
+export default async function GroupSignupPage({ searchParams }: GroupSignupParams) {
+  // searchParamsをawaitで解決
+  const params = await searchParams;
+  // 認証チェック - 認証されていない場合はログインページにリダイレクト
+  const user = await requireCompanyAuth();
+  if (!user) {
+    redirect('/company/auth/login');
+  }
+
+  const supabase = getSupabaseAdminClient();
+  
+  // 認証ユーザーの情報を取得
+  const companyUserId = user.user_metadata?.company_user_id || user.id;
+  const { data: currentUser, error: userError } = await supabase
+    .from('company_users')
+    .select(`
+      email, 
+      full_name,
+      company_accounts!inner(
+        id,
+        company_name,
+        industry,
+        headquarters_address
+      )
+    `)
+    .eq('id', companyUserId)
+    .single();
+
+  if (userError || !currentUser) {
+    console.error('企業ユーザー情報取得エラー:', userError);
+    redirect('/company/auth/login');
+  }
+  
+  let companyData: any = null;
+  let groupData: any = null;
+
+  // 認証済みユーザーの企業アカウント情報から会社データを取得
+  if (currentUser?.company_accounts) {
+    const accounts = currentUser.company_accounts as any;
+    companyData = Array.isArray(accounts) ? accounts[0] : accounts;
+  }
+
+  // URLパラメータからグループの情報を取得
+  if (params.groupId && params.companyId) {
+    // グループの情報を取得（認証ユーザーの企業に所属するグループのみ）
+    const { data: group, error: groupError } = await supabase
+      .from('company_groups')
+      .select(`
+        id,
+        group_name,
+        description
+      `)
+      .eq('id', params.groupId)
+      .eq('company_account_id', params.companyId)
+      .single();
+
+    if (!groupError && group) {
+      groupData = {
+        id: group.id,
+        group_name: group.group_name,
+        description: group.description
+      };
+    }
+  } else if (params.groupId) {
+    // companyIdが指定されていない場合は、認証ユーザーの企業IDを使用
+    const accounts = currentUser?.company_accounts as any;
+    const userCompanyId = Array.isArray(accounts) ? accounts[0]?.id : accounts?.id;
+    if (userCompanyId) {
+      const { data: group, error: groupError } = await supabase
+        .from('company_groups')
+        .select(`
+          id,
+          group_name,
+          description
+        `)
+        .eq('id', params.groupId)
+        .eq('company_account_id', userCompanyId)
+        .single();
+
+      if (!groupError && group) {
+        groupData = {
+          id: group.id,
+          group_name: group.group_name,
+          description: group.description
+        };
+      }
+    }
+  }
 
   return (
     <div
@@ -94,14 +182,14 @@ export default function GroupSignupPage() {
                 marginBottom: '32px',
               }}
             >
-              ご質問、お問い合わせは下記フォームよりご連絡ください。
+              以下の情報を入力してグループに参加してください。
               <br />
-              サービスに登録されているメールアドレス宛に担当者よりご返信いたします。
+              登録ボタンを押すと認証メールが送信されます。
             </p>
           </div>
-          {/* 入力項目エリア */}
+          
+          {/* 企業・グループ情報の表示 */}
           <div className='flex flex-col gap-6 w-full'>
-            {/* 企業名 */}
             <div className='flex w-full justify-end'>
               <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
                 <span
@@ -129,11 +217,10 @@ export default function GroupSignupPage() {
                     display: 'block',
                   }}
                 >
-                  株式会社サンプル
+                  {companyData?.company_name || 'データを取得できませんでした'}
                 </span>
               </div>
             </div>
-            {/* グループ名 */}
             <div className='flex w-full justify-end'>
               <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
                 <span
@@ -161,112 +248,84 @@ export default function GroupSignupPage() {
                     display: 'block',
                   }}
                 >
-                  グループサンプル
+                  {groupData?.group_name || 'データを取得できませんでした'}
                 </span>
-              </div>
-            </div>
-            {/* お名前 input */}
-            <div className='flex w-full justify-end'>
-              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-                <span
-                  className='font-bold text-right'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    width: '160px',
-                    minWidth: '160px',
-                  }}
-                >
-                  お名前
-                </span>
-                <BaseInput
-                  id='name'
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder='お名前を入力してください'
-                  className='w-full'
-                  style={{ maxWidth: '400px' }}
-                />
-              </div>
-            </div>
-            {/* パスワード欄 */}
-            <div className='flex w-full justify-end'>
-              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-                <span
-                  className='font-bold text-right'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    width: '160px',
-                    minWidth: '160px',
-                  }}
-                >
-                  パスワード
-                </span>
-                <div style={{ maxWidth: '400px', width: '100%' }}>
-                  <PasswordFormField
-                    id='password'
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    label=''
-                    placeholder='半角英数字・記号のみ、8文字以上'
-                    showValidation={true}
-                    className='w-full'
-                    hideLabel={true}
-                  />
-                </div>
-              </div>
-            </div>
-            {/* パスワード再入力欄 */}
-            <div className='flex w-full justify-end'>
-              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-                <span
-                  className='font-bold text-right'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    width: '160px',
-                    minWidth: '160px',
-                  }}
-                >
-                  パスワード再入力
-                </span>
-                <div style={{ maxWidth: '400px', width: '100%' }}>
-                  <PasswordFormField
-                    id='passwordConfirm'
-                    value={passwordConfirm}
-                    onChange={e => setPasswordConfirm(e.target.value)}
-                    label=''
-                    placeholder='もう一度パスワードを入力してください'
-                    showValidation={true}
-                    isConfirmField={true}
-                    confirmTarget={password}
-                    className='w-full'
-                    hideLabel={true}
-                  />
-                </div>
               </div>
             </div>
           </div>
-          {/* 送信ボタン */}
-          <div className='flex w-full justify-center mt-10'>
-            <Button
-              variant='green-gradient'
-              style={{
-                width: '160px',
-                height: '60px',
-                borderRadius: '9999px',
-              }}
-            >
-              送信する
-            </Button>
+          
+          {/* 認証ユーザー情報の表示 */}
+          <div className='flex flex-col gap-6 w-full'>
+            <div className='flex w-full justify-end'>
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
+                <span
+                  className='font-bold text-right'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
+                  }}
+                >
+                  メールアドレス
+                </span>
+                <span
+                  className='font-normal'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    maxWidth: '400px',
+                    width: '100%',
+                    textAlign: 'left',
+                    display: 'block',
+                  }}
+                >
+                  {currentUser.email}
+                </span>
+              </div>
+            </div>
+            <div className='flex w-full justify-end'>
+              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
+                <span
+                  className='font-bold text-right'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    display: 'block',
+                    width: '160px',
+                    minWidth: '160px',
+                  }}
+                >
+                  現在のお名前
+                </span>
+                <span
+                  className='font-normal'
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '200%',
+                    letterSpacing: '0.1em',
+                    maxWidth: '400px',
+                    width: '100%',
+                    textAlign: 'left',
+                    display: 'block',
+                  }}
+                >
+                  {currentUser.full_name}
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* フォーム部分はクライアントコンポーネントに移管 */}
+          <GroupSignupFormClient 
+            companyData={companyData}
+            groupData={groupData}
+            currentUser={currentUser}
+          />
         </div>
       </div>
     </div>

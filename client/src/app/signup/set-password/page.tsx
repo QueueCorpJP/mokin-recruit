@@ -13,13 +13,14 @@ export const viewport: Viewport = {
 };
 
 interface SetPasswordPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function SetPasswordPage({ searchParams }: SetPasswordPageProps) {
+export default async function SetPasswordPage({ searchParams }: SetPasswordPageProps) {
+  const params = await searchParams;
   return (
     <Suspense fallback={<div className='min-h-screen flex items-center justify-center'>読み込み中...</div>}>
-      <SetPasswordServerComponent searchParams={searchParams} />
+      <SetPasswordServerComponent searchParams={params} />
     </Suspense>
   );
 }

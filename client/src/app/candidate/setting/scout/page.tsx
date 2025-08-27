@@ -166,3 +166,5 @@ export default function ScoutSettingPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

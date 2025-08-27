@@ -2,12 +2,25 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { autoLoginAction } from './actions';
+import { useState } from 'react';
 
 export default function SignupCompletePage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleMyPageClick = () => {
-    router.push('/mypage');
+  const handleMyPageClick = async () => {
+    try {
+      setIsLoading(true);
+      // 自動ログインを実行してマイページにリダイレクト
+      await autoLoginAction();
+    } catch (error) {
+      console.error('Auto-login error:', error);
+      // エラーの場合はログインページにリダイレクト
+      router.push('/candidate/auth/login?signup_complete=true');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -834,11 +847,12 @@ export default function SignupCompletePage() {
           {/* Button */}
           <Button
             onClick={handleMyPageClick}
+            disabled={isLoading}
             variant="green-gradient"
             size="figma-default"
-            className="min-w-[160px] tracking-[1.6px]"
+            className="min-w-[160px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            マイページへ
+            {isLoading ? 'ログイン中...' : 'マイページへ'}
           </Button>
         </div>
       </main>
@@ -1677,11 +1691,12 @@ export default function SignupCompletePage() {
           {/* Button */}
           <Button
             onClick={handleMyPageClick}
+            disabled={isLoading}
             variant="green-gradient"
             size="figma-default"
-            className="w-full tracking-[1.6px]"
+            className="w-full tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            マイページへ
+            {isLoading ? 'ログイン中...' : 'マイページへ'}
           </Button>
         </div>
       </main>

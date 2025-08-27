@@ -49,7 +49,7 @@ export function HeroSection() {
               alt='hero'
               className='w-full h-auto object-cover'
               loading="eager"
-              fetchpriority="high"
+              fetchPriority="high"
             />
           </picture>
         </div>

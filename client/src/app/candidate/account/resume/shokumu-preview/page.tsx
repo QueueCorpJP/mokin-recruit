@@ -1,5 +1,7 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
+
 
 // 区切り線のSVGコンポーネント
 const DividerLine = () => (
@@ -242,3 +244,5 @@ export default async function ShokumuPreviewPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -10,6 +10,8 @@ export interface Notice {
   created_at: string;
   updated_at?: string;
   published_at?: string;
+  thumbnail_url?: string;
+  categories?: string[];
 }
 
 export async function getNotice(id: string): Promise<Notice | null> {

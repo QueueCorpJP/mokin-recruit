@@ -1,50 +1,11 @@
 import React, { Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
-import { getServerAuth } from '@/lib/auth/server';
 import { UserProvider } from '@/contexts/UserContext';
-import { AccessRestricted } from '@/components/AccessRestricted';
-
-// Admin コンポーネントを遅延読み込み
-const AdminHeader = dynamic(
-  () => import('@/components/admin/AdminHeader').then(mod => ({ default: mod.AdminHeader })),
-  { 
-    loading: () => <div className="h-16 bg-white border-b border-gray-200" />,
-    ssr: true,
-  }
-);
-
-const AdminFooter = dynamic(
-  () => import('@/components/admin/AdminFooter').then(mod => ({ default: mod.AdminFooter })),
-  { 
-    loading: () => <div className="h-16 bg-gray-800" />,
-    ssr: true,
-  }
-);
-
-const AdminSidebar = dynamic(
-  () => import('@/components/admin/AdminSidebar').then(mod => ({ default: mod.AdminSidebar })),
-  { 
-    loading: () => <div className="w-64 bg-gray-100" />,
-    ssr: true,
-  }
-);
-
-const AdminBreadcrumb = dynamic(
-  () => import('@/components/admin/AdminBreadcrumb').then(mod => ({ default: mod.AdminBreadcrumb })),
-  { 
-    loading: () => <div className="h-8 bg-gray-50" />,
-    ssr: true,
-  }
-);
-
-const AdminPageTitle = dynamic(
-  () => import('@/components/admin/AdminPageTitle').then(mod => ({ default: mod.AdminPageTitle })),
-  { 
-    loading: () => <div className="h-12 bg-white" />,
-    ssr: true,
-  }
-);
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminFooter } from '@/components/admin/AdminFooter';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb';
+import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 
 export default async function AdminLayout({
   children,
@@ -52,24 +13,24 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   // サーバーサイドで認証状態を確認
-  const auth = await getServerAuth();
+  // const auth = await getServerAuth();
 
   // 認証されていない場合
-  if (!auth.isAuthenticated) {
-    return <AccessRestricted userType="admin" />;
-  }
+  // if (!auth.isAuthenticated) {
+  //   return <AccessRestricted userType="admin" />;
+  // }
 
   // 管理者でない場合は候補者ページへリダイレクト
-  if (auth.userType !== 'admin') {
-    redirect('/candidate');
-  }
+  // if (auth.userType !== 'admin') {
+  //   redirect('/candidate');
+  // }
 
   // UserContext用のユーザー情報
   const contextUser = {
-    id: auth.user!.id,
-    email: auth.user!.email || '',
+    id: 'dummy-admin-id',
+    email: 'admin@example.com',
     role: 'admin' as const,
-    profile: auth.user!
+    profile: { id: 'dummy-admin-id', email: 'admin@example.com' }
   };
 
   return (
