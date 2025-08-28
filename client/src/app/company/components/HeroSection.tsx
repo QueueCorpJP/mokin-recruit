@@ -84,7 +84,7 @@ export function HeroSection() {
             </div>
             <div className='flex flex-row justify-start items-center gap-4'>
               <Link
-                href='/company/auth/register'
+                href='/company'
                 className="
    mb-[0px]
     flex items-center justify-center gap-[10px]
