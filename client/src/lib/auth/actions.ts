@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { revalidatePath } from 'next/cache';
 
 export interface LogoutResult {
   success: boolean;
@@ -56,6 +57,9 @@ export async function logoutAction(): Promise<LogoutResult> {
     }
 
     console.log('✅ [LOGOUT] Success');
+
+    // すべてのページのキャッシュをクリア
+    revalidatePath('/', 'layout');
 
     return {
       success: true,

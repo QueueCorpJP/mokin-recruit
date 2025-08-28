@@ -4,6 +4,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
 import TaskList from './TaskList';
 
 
@@ -33,7 +34,7 @@ async function getTaskData(): Promise<TaskData> {
   const user = await getCachedCandidateUser();
   
   if (!user) {
-    throw new Error('Authentication required');
+    redirect('/candidate/auth/login');
   }
 
   const candidateId = user.id;
@@ -83,6 +84,11 @@ async function getTaskData(): Promise<TaskData> {
 }
 
 export default async function CandidateTaskPage() {
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
+  
   const taskData = await getTaskData();
 
   const headingListStyle: React.CSSProperties = {

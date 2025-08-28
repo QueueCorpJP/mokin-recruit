@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { revalidatePath } from 'next/cache';
 
 export interface LoginFormData {
   email: string;
@@ -90,6 +91,9 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       userType: actualUserType
     });
 
+    // すべてのページのキャッシュをクリア
+    revalidatePath('/', 'layout');
+    
     // 成功時は適切なダッシュボードにリダイレクト
     const redirectPath = userType === 'company' ? '/company' : '/candidate';
     redirect(redirectPath);

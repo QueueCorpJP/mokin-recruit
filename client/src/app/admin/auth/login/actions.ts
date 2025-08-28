@@ -3,6 +3,7 @@
 import { cookies as nextCookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
+import { revalidatePath } from 'next/cache';
 
 async function createSupabaseServerClient() {
   const cookieStore = await nextCookies();
@@ -83,6 +84,9 @@ export async function loginAction(formData: FormData) {
       userType: actualUserType
     });
 
+    // すべてのページのキャッシュをクリア
+    revalidatePath('/', 'layout');
+    
     // ログイン成功時は /admin へリダイレクト
     redirect('/admin');
 
