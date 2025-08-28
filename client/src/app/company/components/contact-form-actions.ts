@@ -24,7 +24,7 @@ export async function sendContactFormEmail(formData: {
 
     try {
       console.log('Gmail SMTPトランスポーターを作成中...');
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
         secure: false,

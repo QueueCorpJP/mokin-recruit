@@ -11,7 +11,6 @@ import { FAQSection } from '@/app/company/components/FAQSection';
 import { CTASection } from '@/app/company/components/CTASection';
 import { ColumnSection } from '@/app/company/components/ColumnSection';
 
-
 export const metadata: Metadata = {
   title: '転職・キャリアアップ支援 | CuePoint',
   description:
@@ -20,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default function CandidateLandingPage() {
+
   const columnData = [
     {
       imageUrl: '/company.jpg',

@@ -49,22 +49,23 @@ export function CTASection() {
             {cards.map((card, index) => (
               <div 
                 key={index}
-                className="bg-white rounded-[10px] p-[40px] flex flex-col gap-10 items-center justify-between w-full md:w-[350px] min-h-[600px] shadow-lg"
+                className="bg-white rounded-[10px] p-[24px] md:p-[40px] flex flex-col gap-10 items-center justify-between w-full md:w-[350px] md:min-h-[600px] min-h-[400px] shadow-lg"
               >
+                <div className='flex md:flex-col flex-row items-center justify-between w-full'>
                 {/* タイトル */}
                 <h3 className="font-bold text-[#0f9058] text-[24px] text-center tracking-[2.4px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]">
                   {card.title}
                 </h3>
                 
                 {/* 画像 */}
-                <div className="w-full aspect-[3/2] flex items-center justify-center">
+                <div className="w-[100px] md:w-full h-[100px] md:h-[auto] flex items-center justify-end">
                   <img 
                     src={card.image} 
                     alt={card.title}
-                    className="w-full h-full object-contain"
+                    className="w-[100px] md:w-full h-[67px] md:h-[auto] object-contain"
                   />
                 </div>
-                
+                </div>
                 {/* 説明テキスト */}
                 <ul className="w-full space-y-2 flex-1">
                   {card.description.map((item, idx) => (
@@ -78,7 +79,7 @@ export function CTASection() {
                 <Button 
                   variant="green-gradient"
                   size="figma-default"
-                  className="min-w-[160px] mt-auto"
+                  className="min-w-[160px] mt-auto md:w-auto w-full text-center"
                 >
                   {card.buttonText}
                 </Button>

@@ -41,16 +41,21 @@ export function ColumnSection() {
 
     try {
       const result = await sendContactFormEmail(data);
+      console.log('サーバーアクションの結果:', result);
       
-      if (result.success) {
+      if (result?.success) {
         setSubmitMessage('お問い合わせを送信しました。ありがとうございました。');
         // フォームをリセット
-        event.currentTarget.reset();
+        const form = event.currentTarget;
+        if (form) {
+          form.reset();
+        }
         setIsChecked(false);
       } else {
-        setSubmitMessage(result.error || 'エラーが発生しました。');
+        setSubmitMessage(result?.error || 'エラーが発生しました。');
       }
     } catch (error) {
+      console.error('フロントエンドでのエラー:', error);
       setSubmitMessage('エラーが発生しました。しばらく時間をおいて再度お試しください。');
     } finally {
       setIsSubmitting(false);
