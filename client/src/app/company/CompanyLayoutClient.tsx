@@ -4,6 +4,7 @@ import { useCompanyAuth } from '@/hooks/useClientAuth';
 import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
 import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 import { UserProvider } from '@/contexts/UserContext';
+import { usePathname } from 'next/navigation';
 
 export default function CompanyLayoutClient({
   children,
@@ -11,6 +12,7 @@ export default function CompanyLayoutClient({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, companyUser, loading } = useCompanyAuth();
+  const pathname = usePathname();
 
   // 認証情報を整理
   const userInfo = isAuthenticated && companyUser ? {
@@ -38,12 +40,26 @@ export default function CompanyLayoutClient({
     );
   }
 
+  // /company ページのみカスタムCTAボタンを設定
+  const customCTAButton = pathname === '/company' && !isAuthenticated ? {
+    label: '資料請求',
+    href: '#contact-form',
+    onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      const element = document.getElementById('contact-form');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  } : undefined;
+
   return (
     <UserProvider user={contextUser}>
       <AuthAwareNavigationServer 
         variant="company" 
         isLoggedIn={isAuthenticated}
         userInfo={userInfo}
+        customCTAButton={customCTAButton}
       />
       {children}
       <AuthAwareFooterServer 

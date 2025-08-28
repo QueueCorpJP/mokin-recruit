@@ -316,7 +316,7 @@ export function ColumnSection() {
             type="submit"
             variant="green-gradient"
             size="figma-default"
-            className="min-w-40"
+            className="min-w-40 py-[17px]"
             disabled={isSubmitting || !isChecked}
           >
             {isSubmitting ? '送信中...' : 'この内容で送信'}

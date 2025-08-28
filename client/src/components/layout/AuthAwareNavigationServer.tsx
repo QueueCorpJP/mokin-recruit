@@ -10,12 +10,18 @@ interface AuthAwareNavigationServerProps {
   variant?: 'default' | 'candidate' | 'company';
   isLoggedIn?: boolean;
   userInfo?: UserInfo;
+  customCTAButton?: {
+    label: string;
+    href: string;
+    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  };
 }
 
 export function AuthAwareNavigationServer({ 
   variant = 'default',
   isLoggedIn = false,
-  userInfo
+  userInfo,
+  customCTAButton
 }: AuthAwareNavigationServerProps) {
   // Transform userInfo to match Navigation's expected format
   const navigationUserInfo = userInfo ? {
@@ -28,6 +34,7 @@ export function AuthAwareNavigationServer({
       variant={variant}
       isLoggedIn={isLoggedIn}
       userInfo={navigationUserInfo}
+      customCTAButton={customCTAButton}
     />
   );
 }
