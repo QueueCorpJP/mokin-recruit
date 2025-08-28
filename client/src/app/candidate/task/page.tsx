@@ -6,6 +6,7 @@ import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import TaskList from './TaskList';
 
+
 interface Room {
   id: string;
   companyName: string;
@@ -198,3 +199,5 @@ export default async function CandidateTaskPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -114,3 +114,5 @@ export default function RootPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

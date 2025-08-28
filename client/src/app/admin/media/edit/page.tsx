@@ -68,17 +68,20 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
     if (articleError) {
       console.error('記事の読み込みに失敗:', articleError);
     } else {
-      // カテゴリの取得
-      const { data: categoryRelations } = await supabase
-        .from('article_category_relations')
-        .select('category_id, article_categories(id, name)')
-        .eq('article_id', params.id);
-
-      // タグの取得
-      const { data: tagRelations } = await supabase
-        .from('article_tag_relations')
-        .select('tag_id, article_tags(id, name)')
-        .eq('article_id', params.id);
+      // カテゴリとタグを並列取得
+      const [categoryRelationsResult, tagRelationsResult] = await Promise.all([
+        supabase
+          .from('article_category_relations')
+          .select('category_id, article_categories(id, name)')
+          .eq('article_id', params.id),
+        supabase
+          .from('article_tag_relations')
+          .select('tag_id, article_tags(id, name)')
+          .eq('article_id', params.id)
+      ]);
+      
+      const categoryRelations = categoryRelationsResult.data;
+      const tagRelations = tagRelationsResult.data;
 
       // データを整形
       const processedContent = replaceImageVariables(article.content || '');

@@ -102,6 +102,35 @@ export async function getNews(limit: number = 20, offset: number = 0): Promise<A
   }
 }
 
+export async function getNewsWithPagination(limit: number = 20, offset: number = 0): Promise<{
+  articles: Article[];
+  totalCount: number;
+}> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    // Get count first
+    const { count } = await supabase
+      .from('news')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'PUBLISHED');
+    
+    // Get articles
+    const articles = await getNews(limit, offset);
+    
+    return {
+      articles,
+      totalCount: count || 0
+    };
+  } catch (error) {
+    console.error('ニュース取得エラー:', error);
+    return {
+      articles: [],
+      totalCount: 0
+    };
+  }
+}
+
 export async function getRelatedNews(currentArticleId: string, limit: number = 6): Promise<Article[]> {
   try {
     const supabase = getSupabaseAdminClient();

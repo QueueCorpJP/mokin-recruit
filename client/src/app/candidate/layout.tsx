@@ -1,20 +1,5 @@
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-
-// 認証が必要なコンポーネントを遅延読み込み
-const CandidateLayoutServer = dynamic(
-  () => import('./CandidateLayoutServer'),
-  {
-    loading: () => (
-      <div className="min-h-screen bg-white">
-        <div className="h-[80px] bg-white border-b border-gray-200" />
-        <div className="animate-pulse bg-gray-100 h-4 w-full" />
-        <div className="min-h-[200px] bg-[#323232]" />
-      </div>
-    ),
-    ssr: true,
-  }
-);
+import CandidateLayoutClient from './CandidateLayoutClient';
 
 export default function CandidateLayout({
   children,
@@ -31,7 +16,7 @@ export default function CandidateLayout({
         </div>
       }
     >
-      <CandidateLayoutServer>{children}</CandidateLayoutServer>
+      <CandidateLayoutClient>{children}</CandidateLayoutClient>
     </Suspense>
   );
 }

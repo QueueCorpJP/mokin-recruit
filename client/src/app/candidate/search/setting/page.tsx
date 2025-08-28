@@ -2,8 +2,9 @@ import React, { Suspense } from 'react';
 import CandidateSearchServerComponent from './CandidateSearchServerComponent';
 import { SpinnerIcon } from '@/components/ui/Loading';
 
+
 interface CandidateSearchPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     keyword?: string;
     location?: string;
     salaryMin?: string;
@@ -11,7 +12,7 @@ interface CandidateSearchPageProps {
     jobTypes?: string | string[];
     appealPoints?: string | string[];
     page?: string;
-  };
+  }>;
 }
 
 function LoadingSpinner() {
@@ -26,10 +27,11 @@ function LoadingSpinner() {
 }
 
 // ✅ 関数定義が必要
-export default function CandidateSearchPage({ searchParams }: CandidateSearchPageProps) {
+export default async function CandidateSearchPage({ searchParams }: CandidateSearchPageProps) {
+  const params = searchParams ? await searchParams : undefined;
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <CandidateSearchServerComponent searchParams={searchParams} />
+      <CandidateSearchServerComponent searchParams={params} />
     </Suspense>
   );
 }

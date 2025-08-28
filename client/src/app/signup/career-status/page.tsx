@@ -15,6 +15,7 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import { Button } from '@/components/ui/button';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { saveCareerStatusAction } from './actions';
+import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 
 type SelectionEntry = {
   id: string;

@@ -42,3 +42,5 @@ export default async function CompanyMessagePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

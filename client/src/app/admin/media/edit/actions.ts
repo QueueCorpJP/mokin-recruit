@@ -212,7 +212,8 @@ export async function saveArticle(formData: FormData) {
       }
     }
 
-    redirect('/admin/media');
+    // 編集後は同じ編集画面に留まる（または成功メッセージを表示）
+    redirect(`/admin/media/edit?id=${article.id}&success=true`);
   } catch (error) {
     console.error('記事の保存に失敗:', error);
     throw error;

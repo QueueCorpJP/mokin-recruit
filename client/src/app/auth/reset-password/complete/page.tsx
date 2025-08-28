@@ -12,6 +12,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+
 // Server Component (メタデータ、SEO、静的コンテンツ)
 export default function ResetPasswordCompletePage() {
   return (

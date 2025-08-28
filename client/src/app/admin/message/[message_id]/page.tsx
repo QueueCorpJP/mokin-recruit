@@ -179,9 +179,20 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
 async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<RoomMessage[]> {
   const supabase = getSupabaseAdminClient();
   
+  // JOINを使って一括取得でN+1問題を解決
   const { data: messages, error } = await supabase
     .from('messages')
-    .select('*')
+    .select(`
+      *,
+      company_groups:sender_company_group_id (
+        group_name,
+        company_account_id,
+        company_accounts:company_account_id (
+          id,
+          company_name
+        )
+      )
+    `)
     .eq('room_id', roomId)
     .order('sent_at', { ascending: true })
     .limit(limit);
@@ -195,41 +206,26 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
     return [];
   }
 
-  // 各メッセージに対して企業グループ情報を取得（企業からのメッセージのみ）
-  const messagesWithGroups = await Promise.all(
-    messages.map(async (message) => {
-      let processedCompanyGroupData = null;
-      
-      // 企業からのメッセージで company_group_id がある場合のみ企業グループ情報を取得
-      if (message.sender_type === 'COMPANY_USER' && message.sender_company_group_id) {
-        const { data: companyGroupData } = await supabase
-          .from('company_groups')
-          .select(`
-            group_name,
-            company_account_id,
-            company_accounts:company_account_id (
-              id,
-              company_name
-            )
-          `)
-          .eq('id', message.sender_company_group_id)
-          .single();
+  // データを正規化
+  const messagesWithGroups = messages.map((message) => {
+    let processedCompanyGroupData = null;
+    
+    if (message.sender_type === 'COMPANY_USER' && message.company_groups) {
+      const companyGroupData = message.company_groups;
+      processedCompanyGroupData = {
+        group_name: companyGroupData.group_name,
+        company_account_id: companyGroupData.company_account_id,
+        company_accounts: Array.isArray(companyGroupData.company_accounts)
+          ? companyGroupData.company_accounts[0] || null
+          : companyGroupData.company_accounts
+      };
+    }
 
-        processedCompanyGroupData = companyGroupData ? {
-          group_name: companyGroupData.group_name,
-          company_account_id: companyGroupData.company_account_id,
-          company_accounts: Array.isArray(companyGroupData.company_accounts)
-            ? companyGroupData.company_accounts[0] || null
-            : companyGroupData.company_accounts
-        } : null;
-      }
-
-      return {
-        ...message,
-        company_groups: processedCompanyGroupData
-      } as RoomMessage;
-    })
-  );
+    return {
+      ...message,
+      company_groups: processedCompanyGroupData
+    } as RoomMessage;
+  });
 
   return messagesWithGroups;
 }
@@ -310,15 +306,16 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
     );
   }
 
-  const roomMessages = await fetchRoomMessages(messageDetail.room_id, 10);
-
-  const applicationDetail = messageDetail.rooms?.candidate_id && messageDetail.rooms?.related_job_posting_id
-    ? await fetchApplicationDetail(messageDetail.rooms.candidate_id, messageDetail.rooms.related_job_posting_id)
-    : null;
-
-  const careerStatusEntry = messageDetail.rooms?.candidate_id
-    ? await fetchCareerStatusEntry(messageDetail.rooms.candidate_id)
-    : null;
+  // 並列処理でパフォーマンスを改善
+  const [roomMessages, applicationDetail, careerStatusEntry] = await Promise.all([
+    fetchRoomMessages(messageDetail.room_id, 10),
+    messageDetail.rooms?.candidate_id && messageDetail.rooms?.related_job_posting_id
+      ? fetchApplicationDetail(messageDetail.rooms.candidate_id, messageDetail.rooms.related_job_posting_id)
+      : Promise.resolve(null),
+    messageDetail.rooms?.candidate_id
+      ? fetchCareerStatusEntry(messageDetail.rooms.candidate_id)
+      : Promise.resolve(null)
+  ]);
 
   const statusMap: Record<string, string> = {
     SENT: '書類提出',

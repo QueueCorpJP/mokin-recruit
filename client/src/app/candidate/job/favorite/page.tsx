@@ -1,12 +1,13 @@
 import CandidateFavoriteServerComponent from './CandidateFavoriteServerComponent';
 
 interface CandidateFavoritePageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     limit?: string;
-  };
+  }>;
 }
 
-export default function CandidateFavoritePage({ searchParams }: CandidateFavoritePageProps) {
-  return <CandidateFavoriteServerComponent searchParams={searchParams} />;
+export default async function CandidateFavoritePage({ searchParams }: CandidateFavoritePageProps) {
+  const params = await searchParams;
+  return <CandidateFavoriteServerComponent searchParams={params} />;
 }

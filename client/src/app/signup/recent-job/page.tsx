@@ -129,7 +129,7 @@ export default function SignupRecentJobPage() {
   const handleIndustryConfirm = (selectedIndustryNames: string[]) => {
     // Convert selectedIndustries to the expected format
     const industries = selectedIndustryNames.map((industryName, index) => ({
-      id: `industry_${index}_${industryName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      id: `industry_${index}_${industryName}`,
       name: industryName
     }));
     setFormData(prev => ({ ...prev, industries }));
@@ -137,11 +137,13 @@ export default function SignupRecentJobPage() {
   };
 
   const handleJobTypeConfirm = (selectedJobTypeNames: string[]) => {
+    console.log('Selected job type names from modal:', selectedJobTypeNames);
     // Convert selectedJobTypes to the expected format
     const jobTypes = selectedJobTypeNames.map((jobTypeName, index) => ({
-      id: `jobtype_${index}_${jobTypeName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+      id: `jobtype_${index}_${jobTypeName}`,
       name: jobTypeName
     }));
+    console.log('Job types to save:', jobTypes);
     setFormData(prev => ({ ...prev, jobTypes }));
     setIsJobTypeModalOpen(false);
   };

@@ -1,14 +1,12 @@
-'use client';
+import React from 'react';
+import { GroupVerifyClient } from './GroupVerifyClient';
 
-import { Button } from '@/components/ui/button';
-import React, { useState } from 'react';
-import { PasswordFormField } from '@/components/ui/password-form-field';
-import { BaseInput } from '@/components/ui/base-input';
+interface GroupVerifyParams {
+  searchParams: Promise<{ email?: string; }>
+}
 
-// グループサインアップページ
-export default function GroupSignupPage() {
-  const [code, setCode] = useState('');
-
+export default async function GroupVerifyPage({ searchParams }: GroupVerifyParams) {
+  const params = await searchParams;
   return (
     <div
       style={{
@@ -96,94 +94,16 @@ export default function GroupSignupPage() {
                   textAlign: 'center',
                 }}
               >
-                認証コードを~~~~~~~~~~~~~~に送りました。
+                認証コードを {params.email || '指定されたメールアドレス'} に送りました。
                 <br />
-                メールアドレスに届いた4桁の半角英数字を入力してください。
+                メールアドレスに届いた4桁の半角数字を入力してください。
               </p>
             </div>
-            {/* 入力項目エリア */}
-            <div className='flex flex-col gap-6 w-full'>
-              {/* 認証コード input */}
-              <div className='flex w-full justify-center'>
-                <div
-                  className='flex flex-row justify-center gap-4 w-full max-w-[620px]'
-                  style={{ alignItems: 'center' }}
-                >
-                  <span
-                    className='font-bold text-right'
-                    style={{
-                      fontSize: '16px',
-                      lineHeight: '200%',
-                      letterSpacing: '0.1em',
-                      width: '160px',
-                    }}
-                  >
-                    認証コード
-                  </span>
-                  <BaseInput
-                    id='code'
-                    value={code}
-                    onChange={e => {
-                      // 4桁までの数字のみ許可
-                      const value = e.target.value
-                        .replace(/[^0-9]/g, '')
-                        .slice(0, 4);
-                      setCode(value);
-                    }}
-                    placeholder='4桁の認証コードを入力してください'
-                    className='w-full'
-                    style={{ maxWidth: '400px' }}
-                    type='number'
-                    inputMode='numeric'
-                    maxLength={4}
-                  />
-                </div>
-              </div>
-              {/* 認証コード再発行案内テキスト */}
-              <div
-                className='flex flex-row justify-center gap-2 w-full max-w-[620px]'
-                style={{ marginTop: '8px' }}
-              >
-                <span
-                  className='font-bold text-center'
-                  style={{
-                    fontSize: '14px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    minWidth: '160px',
-                  }}
-                >
-                  認証コードが受け取れなかった場合は、新規のコードを発行してください。
-                  <br />
-                  <span
-                    style={{
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '2px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    新しいコードを発行する
-                  </span>
-                </span>
-              </div>
-            </div>
-            {/* 送信ボタン */}
-            <div className='flex w-full justify-center'>
-              <Button
-                variant='green-gradient'
-                style={{
-                  width: '160px',
-                  height: '60px',
-                  borderRadius: '9999px',
-                }}
-              >
-                認証する
-              </Button>
-            </div>
+            
+            {/* フォーム部分はクライアントコンポーネントに移管 */}
+            <GroupVerifyClient email={params.email || ''} />
           </div>
-          {/* 新規追加：外枠のみの白背景フォーム本体 */}
+          {/* 注意事項エリア */}
           <div
             className='w-full bg-white'
             style={{
@@ -217,7 +137,7 @@ export default function GroupSignupPage() {
                 marginTop: '18px',
               }}
             >
-              「@example.com」からのメールを受信できる設定になっているか、
+              メール送信元からのメールを受信できる設定になっているか、
               <br />
               メールが迷惑メールボックスに振り分けられていないかをご確認の上、
               <br />

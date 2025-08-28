@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import EditButton from '@/components/candidate/account/EditButton';
+
 
 // 候補者_職務要約確認ページ
 export default async function CandidateSummaryPage() {
@@ -135,3 +137,5 @@ export default async function CandidateSummaryPage() {
     </>
   );
 }
+
+export const dynamic = 'force-dynamic';

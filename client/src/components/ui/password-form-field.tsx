@@ -72,7 +72,7 @@ export function PasswordFormField({
     >
       {/* ラベル部分: hideLabelがfalseのときのみ表示 */}
       {!hideLabel && (
-        <div className='flex flex-row items-start justify-start pt-0 md:pt-[11px] pb-0 w-full md:w-auto md:flex-shrink-0'>
+        <div className='flex flex-row items-start justify-start pt-0 md:pt-[11px] pb-0 w-full md:w-[200px] md:flex-shrink-0'>
           <label
             htmlFor={id}
             className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] whitespace-nowrap'

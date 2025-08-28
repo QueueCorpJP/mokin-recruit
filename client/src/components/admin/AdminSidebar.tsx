@@ -71,7 +71,7 @@ const navigationItems = [
     subItems: [
       { title: "候補者一覧", href: "/admin/candidate" },
       { title: "新規追加", href: "/admin/candidate/new" },
-      { title: "登録待ち書類", href: "/admin/candidate/pending" },
+      // { title: "登録待ち書類", href: "/admin/candidate/pending" }, // 未実装のため一時的にコメントアウト
     ],
   },
   {

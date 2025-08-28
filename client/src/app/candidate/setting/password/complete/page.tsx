@@ -46,3 +46,5 @@ export default function PasswordCompletePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -1,7 +1,9 @@
+import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getRecentJobData } from './edit/actions';
 import EditButton from '@/components/candidate/account/EditButton';
+
 
 // 候補者_職務経歴確認ページ
 export default async function CandidateRecentJobPage() {
@@ -266,3 +268,6 @@ export default async function CandidateRecentJobPage() {
     </>
   );
 }
+
+
+export const dynamic = 'force-dynamic';

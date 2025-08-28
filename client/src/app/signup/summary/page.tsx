@@ -9,8 +9,12 @@ export default function SignupSummaryPage() {
   const router = useRouter();
   const [jobSummary, setJobSummary] = useState('');
   const [selfPR, setSelfPR] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     try {
       await saveSummaryData({
         jobSummary: jobSummary || undefined,
@@ -21,6 +25,8 @@ export default function SignupSummaryPage() {
       console.error('Summary data save error:', error);
       // エラーの場合は手動でページ遷移
       router.push('/signup/complete');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -196,11 +202,12 @@ export default function SignupSummaryPage() {
           <Button
             type="button"
             onClick={handleSubmit}
+            disabled={isSubmitting}
             variant="green-gradient"
             size="figma-default"
-            className="min-w-[160px] text-[16px] tracking-[1.6px]"
+            className="min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            次へ
+            {isSubmitting ? '送信中...' : '次へ'}
           </Button>
         </div>
       </main>

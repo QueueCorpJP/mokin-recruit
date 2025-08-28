@@ -250,9 +250,10 @@ export function NewPasswordClient({ userType: initialUserType }: NewPasswordClie
 
           // 成功時はサーバーアクションがリダイレクトを行うため、ここには到達しない
         } catch (error) {
-          // Next.jsのredirectエラーは正常な動作なので再スロー
-          if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-            throw error;
+          // Next.jsのリダイレクトエラーは正常な処理なので無視
+          if (error instanceof Error && (error.message.includes('NEXT_REDIRECT') || (error as any).digest?.includes('NEXT_REDIRECT'))) {
+            // リダイレクト中なのでエラーを表示しない
+            return;
           }
           
           // その他のエラーは再スロー（NewPasswordFormでキャッチされる）

@@ -1,9 +1,12 @@
+import { redirect } from 'next/navigation';
+import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData, getEducationData } from '@/lib/server/candidate/candidateData';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
+
 
 // 最終学歴の表示名を取得
 function getFinalEducationDisplay(finalEducation?: string) {
@@ -28,6 +31,11 @@ function formatGraduationDate(year?: number, month?: number) {
 
 // 学歴・経験業種/職種確認ページ
 export default async function CandidateEducationPage() {
+  // 認証チェック
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
@@ -141,3 +149,5 @@ export default async function CandidateEducationPage() {
     </PageLayout>
   );
 }
+
+export const dynamic = 'force-dynamic';

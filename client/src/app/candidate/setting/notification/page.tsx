@@ -75,6 +75,11 @@ export default function NotificationSettingPage() {
         formData.append('recommendationNotification', notifications.recommendationNotification);
         await saveNotificationSettings(formData);
       } catch (err) {
+        // Next.jsのリダイレクトエラーは正常な処理なので無視
+        if (err instanceof Error && (err.message.includes('NEXT_REDIRECT') || (err as any).digest?.includes('NEXT_REDIRECT'))) {
+          // リダイレクト中なのでエラーを表示しない
+          return;
+        }
         setError(err instanceof Error ? err.message : '保存に失敗しました');
       }
     });
@@ -293,3 +298,5 @@ export default function NotificationSettingPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

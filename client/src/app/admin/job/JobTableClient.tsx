@@ -99,7 +99,8 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
   };
 
   // 編集ページに遷移
-  const handleEditJob = (jobId: string) => {
+  const handleEditJob = (jobId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation(); // 念のため追加のイベント伝播防止
     router.push(`/admin/job/${jobId}/edit`);
   };
 
@@ -425,13 +426,16 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
                         <ActionButton
                           text='編集'
                           variant='edit'
-                          onClick={() => handleEditJob(job.id)}
+                          onClick={(e) => handleEditJob(job.id, e)}
                           size='small'
                         />
                         <ActionButton
                           text='削除'
                           variant='delete'
-                          onClick={() => setDeleteModalJobId(job.id)}
+                          onClick={(e) => {
+                            e?.stopPropagation();
+                            setDeleteModalJobId(job.id);
+                          }}
                           size='small'
                         />
                       </div>

@@ -5,6 +5,7 @@ import { CandidateRepository } from '@/lib/server/infrastructure/database/Candid
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { getRooms } from '@/lib/rooms';
 
+
 // やることリスト取得用の関数（candidate/taskと同じロジック）
 async function getTaskData(candidateId: string) {
   try {
@@ -149,7 +150,49 @@ async function getRecommendedJobs(candidateId: string) {
 }
 
 export default async function CandidateDashboard() {
-  const user = await getCachedCandidateUser();
+  let user = await getCachedCandidateUser();
+
+  // サインアップ完了後のユーザーの場合、signup_user_idクッキーをチェックして自動ログイン
+  if (!user) {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    const signupUserId = cookieStore.get('signup_user_id')?.value;
+    
+    if (signupUserId) {
+      // サインアップ完了直後のユーザーの場合、自動でログイン状態にする処理
+      const { createServerClient } = await import('@supabase/ssr');
+      
+      // 管理者権限でユーザー情報を取得
+      const supabaseAdmin = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {
+            getAll() { return []; },
+            setAll() {},
+          },
+        }
+      );
+
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(signupUserId);
+      
+      if (!userError && userData.user) {
+        // ユーザー情報が取得できた場合、認証済みとして扱う
+        user = {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          userType: 'candidate' as const,
+          name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.name,
+          emailConfirmed: userData.user.email_confirmed_at != null,
+          lastSignIn: userData.user.last_sign_in_at || undefined,
+          user_metadata: userData.user.user_metadata,
+        };
+        
+        // signup_user_id クッキーを削除（もう不要）
+        cookieStore.delete('signup_user_id');
+      }
+    }
+  }
 
   if (!user) {
     // レイアウトで既に認証済みのはずなので、ここに到達することは基本的にない
@@ -165,3 +208,5 @@ export default async function CandidateDashboard() {
 
   return <CandidateDashboardClient user={user} tasks={tasks} messages={messages} jobs={jobs} />;
 }
+
+export const dynamic = 'force-dynamic';

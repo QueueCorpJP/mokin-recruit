@@ -5,7 +5,7 @@ import React from 'react';
 interface ActionButtonProps {
   text: string;
   variant: 'delete' | 'edit' | 'approve' | 'primary' | 'secondary';
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   className?: string;
   size?: 'small' | 'medium' | 'large';
 }
@@ -43,9 +43,14 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // イベント伝播を停止
+    onClick?.(e);
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={`
         inline-flex items-center justify-center 
         rounded-[32px] 
