@@ -6,7 +6,6 @@ import { ColumnCard } from '@/components/ui/ColumnCard';
 import { HeroSection } from '@/app/company/components/HeroSection';
 import { ScoutServiceSection } from '@/app/company/components/ScoutServiceSection';
 import { FlowSection } from '@/app/company/components/FlowSection';
-import { JobSearchSection } from '@/app/company/components/JobSearchSection';
 import { FAQSection } from '@/app/company/components/FAQSection';
 import { CTASection } from '@/app/company/components/CTASection';
 import { ColumnSection } from '@/app/company/components/ColumnSection';
