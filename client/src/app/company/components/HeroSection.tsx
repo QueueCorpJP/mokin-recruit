@@ -37,6 +37,12 @@ const ProfileIcon = () => (
 );
 
 export function HeroSection() {
+  const scrollToContactForm = () => {
+    const element = document.getElementById('contact-form');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
   return (
     <div className='relative w-full'>
       {/* Hero Section */}
@@ -83,8 +89,8 @@ export function HeroSection() {
               </div>
             </div>
             <div className='flex flex-row justify-start items-center gap-4'>
-              <Link
-                href='/company'
+              <button
+                onClick={scrollToContactForm}
                 className="
    mb-[0px]
     flex items-center justify-center gap-[10px]
@@ -98,7 +104,7 @@ export function HeroSection() {
               >
                 <img src="./images/files.svg" alt="files" className='flex-shrink-0' />
                 <span className='truncate'>資料請求</span>
-              </Link>
+              </button>
 
               <Link
                 href='/company/auth/login'

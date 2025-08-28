@@ -62,7 +62,7 @@ export function ColumnSection() {
     }
   };
   return (
-    <section className='bg-[#f9f9f9] pt-[120px] pb-[120px] px-[24px] flex flex-col items-center relative overflow-hidden'>
+    <section id="contact-form" className='bg-[#f9f9f9] pt-[120px] pb-[120px] px-[24px] flex flex-col items-center relative overflow-hidden'>
       {/* 背景装飾 - 左上 */}
       <div className='w-[531px] h-[701px] absolute left-0 top-0 mix-blend-multiply pointer-events-none select-none z-0'>
         <img
