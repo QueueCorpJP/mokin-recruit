@@ -4,7 +4,7 @@ export function ScoutServiceSection() {
       img: '/images/card-1.jpg',
       title: '他社選考状況を参考に<br />マッチ度の高いスカウトを実現',
       text: '候補者の他社選考状況を把握できるため、志向性や業界・規模感が近い人材を見極めたうえで、マッチ度の高いスカウトが可能です。',
-      grad: 'bg-gradient-to-b from-[#43C6AC] to-[#3B91C7]',
+      grad: 'bg-gradient-to-b from-[#86C36A] to-[#63BFAD]',
     },
     {
       img: '/images/card-2.jpg',
@@ -16,7 +16,7 @@ export function ScoutServiceSection() {
       img: '/images/card-3.jpg',
       title: '候補者の“比較対象企業”まで見えるから、差別化できる',
       text: 'CuePointでは、候補者が比較検討している企業群までを可視化。 競合を踏まえて、スカウトの訴求内容を最適化できます。選ばれる理由を戦略的に設計し、採用競争で優位に立ちましょう。',
-      grad: 'bg-gradient-to-b from-[#CADA65] to-[#95CA7D]',
+      grad: 'bg-gradient-to-b from-[#86C36A] to-[#63BFAD]',
     },
   ];
 
@@ -27,7 +27,7 @@ export function ScoutServiceSection() {
         {/* メインキャッチ＋背景帯＋ドット装飾 */}
         <div className='relative flex flex-col items-center w-full'>
           {/* 背景帯: Figmaピクセルパーフェクト対応（高さ20pxを明示） */}
-          <div className='absolute left-1/2 -translate-x-1/2 md:top-[73px] top-[51px] md:w-[688px] md:h-[20px] w-[345px] h-[16px] bg-[#FFF6A9]  z-0' />
+          <div className='absolute left-1/2 -translate-x-1/2 md:top-[73px] top-[51px] md:w-[820px] md:h-[20px] w-[345px] h-[16px] bg-[#FFF6A9]  z-0' />
           <div className='md:hidden absolute left-1/2 -translate-x-1/2 md:top-[73px] top-[90px] w-[258px] h-[16px] bg-[#FFF6A9]  z-0 ' />
          
           {/* メインキャッチ */}
@@ -39,7 +39,9 @@ export function ScoutServiceSection() {
 
             <br />
             <span className='block  text-[24px] md:text-[32px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]'>
-            “いま誰と比べられているか”が見える新しい仕組みを
+            “いま誰と
+
+            比べられているか”が見える新しい仕組みを
             </span>
           </h2>
           {/* ドット装飾: Figmaピクセルパーフェクト対応（12px円, テキストとの間隔16px） */}

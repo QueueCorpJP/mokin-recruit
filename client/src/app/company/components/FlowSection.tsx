@@ -16,7 +16,7 @@ export function FlowSection() {
             className='text-center font-bold text-[24px] md:text-[32px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)]'
             style={{ letterSpacing: '0.1em' }}
           >
-            転職活動の流れ
+            ご利用の流れ
           </h2>
           {/* ドット装飾 */}
           <div className='flex flex-row gap-7 mt-4'>

@@ -64,7 +64,7 @@ export function HeroSection() {
             {/* Title & Subtitle */}
             <div className='text-white w-full md:w-auto h-auto'>
               <h1 className='text-[31px] md:text-[44px] leading-[1.6] tracking-widest font-bold text-left mb-2 md:mb-4'>
-              職歴だけでは届かない
+              職歴だけでは届かない、
               <br />
               <span className='text-[#FFF6A9] '>
               志向に深く刺さるスカウト
