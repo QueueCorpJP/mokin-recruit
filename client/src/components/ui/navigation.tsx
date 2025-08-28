@@ -168,6 +168,11 @@ interface NavigationProps {
     companyName?: string;
     userName?: string;
   };
+  customCTAButton?: {
+    label: string;
+    href: string;
+    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  };
 }
 
 
@@ -176,6 +181,7 @@ export function Navigation({
   variant = 'default',
   isLoggedIn = false,
   userInfo,
+  customCTAButton,
 }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -892,6 +898,11 @@ export function Navigation({
 
   // variant に応じたCTAボタンの設定
   const getCTAButton = () => {
+    // カスタムボタンが指定されていればそれを使用
+    if (customCTAButton) {
+      return customCTAButton;
+    }
+    
     switch (variant as string) {
       case 'company':
         return {
@@ -940,7 +951,7 @@ export function Navigation({
               className='rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
               asChild
             >
-              <Link href={ctaButton.href}>{ctaButton.label}</Link>
+              <Link href={ctaButton.href} onClick={ctaButton.onClick}>{ctaButton.label}</Link>
             </Button>
           </div>
 
@@ -969,7 +980,10 @@ export function Navigation({
               >
                 <Link
                   href={ctaButton.href}
-                  onClick={closeMenuCallback}
+                  onClick={(e) => {
+                    ctaButton.onClick?.(e);
+                    closeMenuCallback();
+                  }}
                 >
                   {ctaButton.label}
                 </Link>
