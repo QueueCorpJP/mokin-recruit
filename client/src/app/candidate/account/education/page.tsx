@@ -33,9 +33,6 @@ function formatGraduationDate(year?: number, month?: number) {
 export default async function CandidateEducationPage() {
   // 認証チェック
   const user = await getCachedCandidateUser();
-  if (!user) {
-    throw new Error('Authentication required');
-  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);

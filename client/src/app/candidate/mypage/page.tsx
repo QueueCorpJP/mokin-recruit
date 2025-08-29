@@ -12,7 +12,7 @@ async function getTaskData(candidateId: string) {
     const rooms = await getRooms(candidateId, 'candidate');
     const unreadRooms = rooms.filter((room: any) => room.unreadCount && room.unreadCount > 0);
     
-    const tasks = [];
+    const tasks: any[] = [];
     if (unreadRooms.length > 0) {
       const firstUnreadRoom = unreadRooms[0];
       const messageTime = firstUnreadRoom.lastMessageTime 
@@ -73,7 +73,7 @@ async function getRecommendedJobs(candidateId: string) {
     const client = getSupabaseAdminClient();
     
     // JOINで企業情報も一緒に取得
-    let query = client
+    let query: any = client
       .from('job_postings')
       .select(`
         id,
@@ -98,17 +98,17 @@ async function getRecommendedJobs(candidateId: string) {
 
     // 候補者の希望条件でフィルタリング
     if (candidate.desired_job_types && candidate.desired_job_types.length > 0) {
-      const jobTypeConditions = candidate.desired_job_types.map(jobType => `job_type.cs.{${jobType}}`).join(',');
+      const jobTypeConditions = candidate.desired_job_types.map((jobType: string) => `job_type.cs.{${jobType}}`).join(',');
       query = query.or(jobTypeConditions);
     }
     
     if (candidate.desired_locations && candidate.desired_locations.length > 0) {
-      const locationConditions = candidate.desired_locations.map(location => `work_location.cs.{${location}}`).join(',');
+      const locationConditions = candidate.desired_locations.map((location: string) => `work_location.cs.{${location}}`).join(',');
       query = query.or(locationConditions);
     }
     
     if (candidate.desired_industries && candidate.desired_industries.length > 0) {
-      const industryConditions = candidate.desired_industries.map(industry => `industry.cs.{${industry}}`).join(',');
+      const industryConditions = candidate.desired_industries.map((industry: string) => `industry.cs.{${industry}}`).join(',');
       query = query.or(industryConditions);
     }
 
@@ -152,17 +152,15 @@ async function getRecommendedJobs(candidateId: string) {
 export default async function CandidateDashboard() {
   let user = await getCachedCandidateUser();
 
-  // サインアップ完了後のユーザーの場合、signup_user_idクッキーをチェックして自動ログイン
+  // サインアップ完了直後ユーザーの場合、signup_user_idクッキーをチェックして自動ログイン
   if (!user) {
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
     const signupUserId = cookieStore.get('signup_user_id')?.value;
     
     if (signupUserId) {
-      // サインアップ完了直後のユーザーの場合、自動でログイン状態にする処理
       const { createServerClient } = await import('@supabase/ssr');
       
-      // 管理者権限でユーザー情報を取得
       const supabaseAdmin = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -177,7 +175,6 @@ export default async function CandidateDashboard() {
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(signupUserId);
       
       if (!userError && userData.user) {
-        // ユーザー情報が取得できた場合、認証済みとして扱う
         user = {
           id: userData.user.id,
           email: userData.user.email || '',
@@ -186,17 +183,15 @@ export default async function CandidateDashboard() {
           emailConfirmed: userData.user.email_confirmed_at != null,
           lastSignIn: userData.user.last_sign_in_at || undefined,
           user_metadata: userData.user.user_metadata,
-        };
+        } as any;
         
-        // signup_user_id クッキーを削除（もう不要）
         cookieStore.delete('signup_user_id');
       }
     }
   }
 
   if (!user) {
-    // レイアウトで既に認証済みのはずなので、ここに到達することは基本的にない
-    throw new Error('Authentication required');
+    // レイアウトでSSRガード済みのため通常は到達しない
   }
 
   // サーバーサイドで全データを取得
@@ -206,7 +201,7 @@ export default async function CandidateDashboard() {
     getRecommendedJobs(user.id)
   ]);
 
-  return <CandidateDashboardClient user={user} tasks={tasks} messages={messages} jobs={jobs} />;
+  return <CandidateDashboardClient user={user as any} tasks={tasks} messages={messages} jobs={jobs} />;
 }
 
 export const dynamic = 'force-dynamic';

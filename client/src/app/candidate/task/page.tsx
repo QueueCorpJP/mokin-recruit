@@ -4,7 +4,6 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import { redirect } from 'next/navigation';
 import TaskList from './TaskList';
 
 
@@ -33,8 +32,12 @@ interface TaskData {
 async function getTaskData(): Promise<TaskData> {
   const user = await getCachedCandidateUser();
   
+  // レイアウトでSSR認証済みのため、ここでのリダイレクトは不要
   if (!user) {
-    redirect('/candidate/auth/login');
+    return {
+      hasNewMessage: false,
+      hasUnreadMessage: false,
+    };
   }
 
   const candidateId = user.id;
@@ -85,9 +88,6 @@ async function getTaskData(): Promise<TaskData> {
 
 export default async function CandidateTaskPage() {
   const user = await getCachedCandidateUser();
-  if (!user) {
-    redirect('/candidate/auth/login');
-  }
   
   const taskData = await getTaskData();
 
@@ -130,7 +130,7 @@ export default async function CandidateTaskPage() {
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10">
       <main className="w-full max-w-[1280px] mx-auto">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start">
+        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify中心 items-stretch md:items-start">
           <div className="max-w-[880px] md:px-6 flex-1 box-border w-full">
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
@@ -147,7 +147,7 @@ export default async function CandidateTaskPage() {
           <div className="w-full md:max-w-[320px] md:flex-none">
             <img
               src='/images/banner01.png'
-              alt='バナー画像01'
+              alt='バナー画像1'
               className="w-full h-auto block rounded-lg mb-20"
             />
             <div style={headingListStyle}>
@@ -158,23 +158,23 @@ export default async function CandidateTaskPage() {
                 よくある質問
               </SectionHeading>
               <FaqBox
-                title='退会したい場合はどうすればいいですか？退会手続きの流れを教えてください。'
+                title='退会したい場合はどうすれば良いですか？退会手続きの流れを教えてください'
                 body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。退会後はすべてのデータが削除されます。'
               />
               <FaqBox
-                title='パスワードを忘れた場合はどうすればいいですか？'
+                title='パスワードを忘れた場合はどうすれば良いですか？'
                 body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
               />
               <FaqBox
-                title='登録したメールアドレスを変更したいです。'
+                title='登録したメールアドレスを変更したいです'
                 body='マイページの「アカウント設定」からメールアドレスの変更が可能です。'
               />
               <FaqBox
-                title='求人への応募方法を教えてください。'
+                title='求人への応募方法を教えてください'
                 body='求人詳細ページの「応募する」ボタンから応募手続きを進めてください。'
               />
               <FaqBox
-                title='企業からのスカウトを受け取るにはどうすればいいですか？'
+                title='企業からのスカウトを受け取るにはどうすれば良いですか？'
                 body='プロフィールを充実させることで、企業からのスカウトを受けやすくなります。'
               />
               <FaqBox
@@ -187,7 +187,7 @@ export default async function CandidateTaskPage() {
                   fontWeight: 'bold',
                   fontFamily: "'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif"
                 }}>
-                  Q&amp;A一覧を見る
+                  Q&A一覧を見る
                 </span>
                 <ChevronRightIcon
                   className="h-[16px] w-auto"

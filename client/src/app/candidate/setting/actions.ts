@@ -3,6 +3,10 @@
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
+// 簡単なメモリキャッシュ
+const userSettingsCache = new Map<string, { data: any; timestamp: number }>();
+const USER_SETTINGS_CACHE_TTL = 1 * 60 * 1000; // 1分
+
 export interface NotificationSettings {
   scout_notification: 'receive' | 'not-receive';
   message_notification: 'receive' | 'not-receive';
@@ -21,21 +25,36 @@ export interface UserSettings {
 }
 
 export async function getUserSettings(): Promise<UserSettings | null> {
-  const supabase = getSupabaseAdminClient();
-  
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
     console.error('認証エラー:', authResult.error);
     return null;
   }
 
-  console.log('Fetching user settings for candidateId:', authResult.data.candidateId);
+  const candidateId = authResult.data.candidateId;
+
+  // キャッシュキーの生成
+  const cacheKey = candidateId;
+  const cached = userSettingsCache.get(cacheKey);
+  
+  // 期限切れキャッシュを即座に削除
+  if (cached && Date.now() - cached.timestamp >= USER_SETTINGS_CACHE_TTL) {
+    userSettingsCache.delete(cacheKey);
+  } else if (cached) {
+    console.log('[getUserSettings] Cache hit - returning cached data');
+    return cached.data;
+  }
+  
+  console.log('[getUserSettings] Cache miss - fetching new data');
+  console.log('Fetching user settings for candidateId:', candidateId);
+
+  const supabase = getSupabaseAdminClient();
 
   // Get user email and scout_reception_enabled from candidates table
   const { data: candidateData, error: candidateError } = await supabase
     .from('candidates')
     .select('email, scout_reception_enabled')
-    .eq('id', authResult.data.candidateId)
+    .eq('id', candidateId)
     .maybeSingle();
 
   if (candidateError) {
@@ -51,11 +70,11 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   console.log('Candidate data:', candidateData);
 
   // Get notification settings from notification_settings table
-  console.log('Searching notification_settings with candidate_id:', authResult.data.candidateId);
+  console.log('Searching notification_settings with candidate_id:', candidateId);
   const { data: notificationData, error: notificationError } = await supabase
     .from('notification_settings')
     .select('scout_notification, message_notification, recommendation_notification')
-    .eq('candidate_id', authResult.data.candidateId)
+    .eq('candidate_id', candidateId)
     .maybeSingle();
 
   if (notificationError) {
@@ -64,7 +83,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     const { data: notificationDataStr, error: notificationErrorStr } = await supabase
       .from('notification_settings')
       .select('scout_notification, message_notification, recommendation_notification')
-      .eq('candidate_id', String(authResult.data.candidateId))
+      .eq('candidate_id', String(candidateId))
       .maybeSingle();
     console.log('Notification settings with string conversion:', notificationDataStr, notificationErrorStr);
   } else {
@@ -72,11 +91,11 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   }
 
   // Get scout settings from scout_settings table  
-  console.log('Searching scout_settings with candidate_id:', authResult.data.candidateId);
+  console.log('Searching scout_settings with candidate_id:', candidateId);
   const { data: scoutData, error: scoutError } = await supabase
     .from('scout_settings')
     .select('scout_status')
-    .eq('candidate_id', authResult.data.candidateId)
+    .eq('candidate_id', candidateId)
     .maybeSingle();
 
   if (scoutError) {
@@ -85,7 +104,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     const { data: scoutDataStr, error: scoutErrorStr } = await supabase
       .from('scout_settings')
       .select('scout_status')
-      .eq('candidate_id', String(authResult.data.candidateId))
+      .eq('candidate_id', String(candidateId))
       .maybeSingle();
     console.log('Scout settings with string conversion:', scoutDataStr, scoutErrorStr);
   } else {
@@ -101,7 +120,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     const { data: notificationDataStr } = await supabase
       .from('notification_settings')
       .select('scout_notification, message_notification, recommendation_notification')
-      .eq('candidate_id', String(authResult.data.candidateId))
+      .eq('candidate_id', String(candidateId))
       .maybeSingle();
     finalNotificationData = notificationDataStr;
   }
@@ -110,7 +129,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     const { data: scoutDataStr } = await supabase
       .from('scout_settings')
       .select('scout_status')
-      .eq('candidate_id', String(authResult.data.candidateId))
+      .eq('candidate_id', String(candidateId))
       .maybeSingle();
     finalScoutData = scoutDataStr;
   }
@@ -122,6 +141,17 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   };
 
   console.log('Final user settings result:', result);
+
+  // 成功した場合のみキャッシュに保存
+  userSettingsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  
+  // キャッシュサイズを制限（メモリ使用量対策）
+  if (userSettingsCache.size > 20) {
+    const oldestKey = userSettingsCache.keys().next().value;
+    if (oldestKey) {
+      userSettingsCache.delete(oldestKey);
+    }
+  }
 
   return result;
 }

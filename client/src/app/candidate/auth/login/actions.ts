@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export interface CandidateLoginFormData {
   email: string;
@@ -104,8 +104,9 @@ export async function candidateLoginAction(formData: CandidateLoginFormData): Pr
       userType
     });
 
-    // すべてのページのキャッシュをクリア
+    // 認証関連のキャッシュを完全にクリア
     revalidatePath('/', 'layout');
+    revalidateTag('auth');
     
     // 候補者ダッシュボードにリダイレクト
     redirect('/candidate');

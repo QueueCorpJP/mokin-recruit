@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/mo-dal';
-import { LocationModal } from '@/app/company/company/job/LocationModal';
-import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
-import { IndustryModal } from '@/app/company/company/job/IndustryModal';
-import { FormFields } from '@/app/company/company/job/FormFields';
-import { CompanyGroup } from '@/app/company/company/job/types';
+import { LocationModal } from '@/app/company/job/LocationModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { FormFields } from '@/app/company/job/FormFields';
+import { CompanyGroup } from '@/app/company/job/types';
 
 interface JobDetail {
   id: string;

@@ -1,18 +1,32 @@
 import React from 'react';
 import { ContactFormClient } from './ContactFormClient';
 import CtaGuideSection from '@/components/cta/CtaGuideSection';
-import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
-import { requireCompanyAuth } from '@/lib/auth/server';
+import { getCachedCompanyUser } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ContactPage() {
-  const user = await requireCompanyAuth();
+  // 親レイアウト（CompanyLayoutClient）で認証処理が統一されているため、
+  // ここでは認証チェックを削除
+  const user = await getCachedCompanyUser();
+  
+  // ユーザーが存在しない場合のデフォルト値を設定
   if (!user) {
-    redirect('/company/auth/login');
+    return (
+      <div className='pt-10 px-20 pb-20 flex justify-center w-full' style={{ background: '#F9F9F9' }}>
+        <div className='w-full max-w-[800px]'>
+          <div className='w-full bg-white flex flex-col gap-10' style={{ borderRadius: '10px', boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)', padding: '80px 87px' }}>
+            <div className='flex flex-col items-center gap-6 w-full'>
+              <h1 className='w-full font-bold text-center' style={{ fontSize: '32px', lineHeight: '160%', color: '#0F9058', fontWeight: 'bold', textAlign: 'center' }}>
+                お問い合わせ／申請
+              </h1>
+              <p>認証が必要です。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const supabase = getSupabaseAdminClient();
@@ -33,13 +47,24 @@ export default async function ContactPage() {
 
   if (userError || !companyUser) {
     console.error('企業ユーザー情報取得エラー:', userError);
-    redirect('/company/auth/login');
+    return (
+      <div className='pt-10 px-20 pb-20 flex justify-center w-full' style={{ background: '#F9F9F9' }}>
+        <div className='w-full max-w-[800px]'>
+          <div className='w-full bg-white flex flex-col gap-10' style={{ borderRadius: '10px', boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)', padding: '80px 87px' }}>
+            <div className='flex flex-col items-center gap-6 w-full'>
+              <h1 className='w-full font-bold text-center' style={{ fontSize: '32px', lineHeight: '160%', color: '#0F9058', fontWeight: 'bold', textAlign: 'center' }}>
+                お問い合わせ／申請
+              </h1>
+              <p>企業情報の取得に失敗しました。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      {/* ナビゲーション（ページ上部） */}
-      <AuthAwareNavigation />
       {/* メインコンテンツラッパー（背景色F9F9F9） */}
       <div
         className='pt-10 px-20 pb-20 flex justify-center w-full'
@@ -161,8 +186,6 @@ export default async function ContactPage() {
       </div>
       {/* CTAグラデーションエリア */}
       <CtaGuideSection />
-      {/* フッター */}
-      <AuthAwareFooter />
     </>
   );
 }

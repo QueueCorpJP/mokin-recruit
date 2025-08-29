@@ -1,5 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
+import { unstable_noStore as noStore } from 'next/cache';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { createServerClient } from '@supabase/ssr';
 
@@ -92,11 +93,16 @@ async function createSupabaseServerClient() {
 }
 
 /**
- * Supabase認証を使用したサーバー認証チェック (キャッシュ済み)
- * 静的レンダリング対応版
+ * Supabase認証を使用したサーバー認証チェック 
+ * 静的レンダリング対応版 - ログイン状態チェック時はキャッシュなし
  */
-export const getServerAuth = cache(async (allowStatic: boolean = false): Promise<BasicAuthResult> => {
+export async function getServerAuth(allowStatic: boolean = false, enableCache: boolean = false): Promise<BasicAuthResult> {
   try {
+    // 認証チェック時はキャッシュを無効化
+    if (!enableCache) {
+      noStore();
+    }
+    
     // 静的レンダリングモードの場合は認証なしを返す
     if (allowStatic) {
       return {
@@ -145,7 +151,12 @@ export const getServerAuth = cache(async (allowStatic: boolean = false): Promise
       userType: null,
     };
   }
-});
+}
+
+/**
+ * キャッシュ付きの認証チェック（パフォーマンス重視の場合のみ使用）
+ */
+export const getCachedServerAuth = cache(getServerAuth);
 
 /**
  * 静的レンダリング用の認証チェック（cookiesを使わない）
@@ -162,7 +173,7 @@ export const getStaticAuth = cache(async (): Promise<BasicAuthResult> => {
  * 候補者認証チェック
  */
 export async function requireCandidateAuth(): Promise<User | null> {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
   return auth.isAuthenticated && auth.userType === 'candidate'
     ? auth.user
     : null;
@@ -173,7 +184,7 @@ export async function requireCandidateAuth(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCandidateUser(): Promise<User | null> {
-  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'candidate'
     ? auth.user
     : null;
@@ -184,7 +195,7 @@ export async function getCachedCandidateUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCompanyUser(): Promise<User | null> {
-  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'company_user'
     ? auth.user
     : null;
@@ -195,7 +206,7 @@ export async function getCachedCompanyUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedAdminUser(): Promise<User | null> {
-  const auth = await getServerAuth(); // キャッシュされた結果を再利用
+  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'admin'
     ? auth.user
     : null;
@@ -205,7 +216,7 @@ export async function getCachedAdminUser(): Promise<User | null> {
  * 企業ユーザー認証チェック
  */
 export async function requireCompanyAuth(): Promise<User | null> {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
   return auth.isAuthenticated && auth.userType === 'company_user'
     ? auth.user
     : null;
@@ -215,7 +226,7 @@ export async function requireCompanyAuth(): Promise<User | null> {
  * 管理者認証チェック
  */
 export async function requireAdminAuth(): Promise<User | null> {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
   return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
 
@@ -241,7 +252,7 @@ export type AuthResult<T = any> = AuthErrorResult | AuthSuccessResult<T>;
 export async function requireCandidateAuthForAction(): Promise<
   AuthResult<{ candidateId: string }>
 > {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {
     return {
@@ -271,7 +282,7 @@ export async function requireCandidateAuthForAction(): Promise<
 export async function requireCompanyAuthForAction(): Promise<
   AuthResult<{ companyUserId: string; companyAccountId: string }>
 > {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {
     return {
@@ -313,7 +324,7 @@ export async function requireCompanyAuthForAction(): Promise<
 export async function requireCandidateAuthForAPI(request?: Request): Promise<
   AuthResult<{ candidateId: string }>
 > {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {
     return {
@@ -343,7 +354,7 @@ export async function requireCandidateAuthForAPI(request?: Request): Promise<
 export async function requireCompanyAuthForAPI(request?: Request): Promise<
   AuthResult<{ companyUserId: string; companyAccountId: string }>
 > {
-  const auth = await getServerAuth();
+  const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {
     return {

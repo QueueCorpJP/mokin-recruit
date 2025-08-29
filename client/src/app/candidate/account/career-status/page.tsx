@@ -36,12 +36,6 @@ async function getCareerStatusEntries(candidateId: string) {
 export default async function CandidateCareerStatusPage() {
   // 認証チェック
   const user = await getCachedCandidateUser();
-  if (!user) {
-    throw new Error('Authentication required');
-  }
-  if (!user) {
-    redirect('/candidate/auth/login');
-  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);

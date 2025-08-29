@@ -1,12 +1,19 @@
+import { Suspense } from 'react';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 import { getCachedCompanyUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 
-export default async function CompanyMessagePage() {
-  // レイアウトで認証済みのため、キャッシュされた結果を使用
+// データ取得を行うサーバーコンポーネント
+async function MessageServerComponent() {
+  // 親レイアウト（CompanyLayoutClient）で認証処理が統一されているため、
+  // ここでは認証チェックを削除
   const user = await getCachedCompanyUser();
   if (!user) {
-    throw new Error('Authentication required');
+    return (
+      <div className='flex flex-col bg-white min-h-screen items-center justify-center'>
+        <p>認証が必要です。</p>
+      </div>
+    );
   }
 
   const companyUserId = user.id;
@@ -40,6 +47,28 @@ export default async function CompanyMessagePage() {
         />
       </div>
     </div>
+  );
+}
+
+// ローディング中の表示
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="inline-block">
+          <div className="w-16 h-16 border-4 border-[#0f9058] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="mt-4 text-[#323232] text-lg font-medium">メッセージを読み込み中...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function CompanyMessagePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <MessageServerComponent />
+    </Suspense>
   );
 }
 

@@ -103,7 +103,7 @@ function applyFilters(query: any, params: JobSearchParams) {
 
 // 簡単なメモリキャッシュ
 const searchCache = new Map<string, { data: JobSearchResponse; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5分
+const CACHE_TTL = 2 * 60 * 1000; // 2分
 
 // 最適化された検索関数 - すべての関連データを並列で取得
 async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSearchResponse> {
@@ -243,8 +243,10 @@ export async function getJobSearchData(params: JobSearchParams): Promise<JobSear
   const cacheKey = JSON.stringify(params);
   const cached = searchCache.get(cacheKey);
   
-  // キャッシュが有効な場合は返す
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  // 期限切れキャッシュを即座に削除
+  if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
+    searchCache.delete(cacheKey);
+  } else if (cached) {
     console.log('[getJobSearchData] Cache hit - returning cached data');
     return cached.data;
   }
@@ -259,7 +261,7 @@ export async function getJobSearchData(params: JobSearchParams): Promise<JobSear
     searchCache.set(cacheKey, { data: result, timestamp: Date.now() });
     
     // キャッシュサイズを制限（メモリ使用量対策）
-    if (searchCache.size > 100) {
+    if (searchCache.size > 30) {
       const oldestKey = searchCache.keys().next().value;
       if (oldestKey) {
         searchCache.delete(oldestKey);

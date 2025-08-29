@@ -27,7 +27,7 @@ export default function MailChangePage() {
         setError(result.error);
       } else {
         sessionStorage.setItem('verificationEmail', email);
-        router.push('/candidate/setting/mail/verify');
+        router.push('/company/setting/mail/verify');
       }
     } catch (error) {
       setError('認証コードの送信に失敗しました');
@@ -40,7 +40,7 @@ export default function MailChangePage() {
     <div className="min-h-screen bg-[#f9f9f9]">
       <SettingsHeader
         breadcrumbs={[
-          { label: '各種設定', href: '/candidate/setting' },
+          { label: '各種設定', href: '/company/setting' },
           { label: 'メールアドレス変更' }
         ]}
         title="メールアドレス変更"
@@ -81,7 +81,7 @@ export default function MailChangePage() {
           
           <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center mt-10">
             <Link
-              href="/candidate/setting"
+              href="/company/setting"
               className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] text-center hover:bg-[#0F9058]/20 transition-colors duration-200"
             >
               変更せず戻る

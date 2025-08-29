@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { BaseInput } from '@/components/ui/base-input';
 import { SelectInput } from '@/components/ui/select-input';
 import { Modal } from '@/components/ui/mo-dal';
-import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
-import { LocationModal } from '@/app/company/company/job/LocationModal';
-import { IndustryModal } from '@/app/company/company/job/IndustryModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
+import { LocationModal } from '@/app/company/job/LocationModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
 import { X } from 'lucide-react';
 
 interface SearchFormProps {

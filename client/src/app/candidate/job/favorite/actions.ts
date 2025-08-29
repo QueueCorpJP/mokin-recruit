@@ -3,6 +3,10 @@
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
+// 簡単なメモリキャッシュ
+const favoritesCache = new Map<string, { data: any; timestamp: number }>();
+const FAVORITES_CACHE_TTL = 30 * 1000; // 30秒
+
 export interface FavoriteListParams {
   page?: number;
   limit?: number;
@@ -50,6 +54,20 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     }
 
     const candidateId = authResult.data.candidateId;
+
+    // キャッシュキーの生成（パラメータを含める）
+    const cacheKey = `${candidateId}-${JSON.stringify(params)}`;
+    const cached = favoritesCache.get(cacheKey);
+    
+    // 期限切れキャッシュを即座に削除
+    if (cached && Date.now() - cached.timestamp >= FAVORITES_CACHE_TTL) {
+      favoritesCache.delete(cacheKey);
+    } else if (cached) {
+      console.log('[getFavoriteList] Cache hit - returning cached data');
+      return cached.data;
+    }
+    
+    console.log('[getFavoriteList] Cache miss - fetching new data');
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(50, Math.max(1, params.limit || 20));
     const offset = (page - 1) * limit;
@@ -123,7 +141,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const endTime = performance.now();
     console.log(`[OPTIMIZED] Favorites list with JOIN completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Total: ${totalCount}`);
 
-    return {
+    const result = {
       success: true,
       data: {
         favorites: favoritesWithCompanyNames || [],
@@ -135,6 +153,19 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
         }
       }
     };
+
+    // 成功した場合のみキャッシュに保存
+    favoritesCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    
+    // キャッシュサイズを制限（メモリ使用量対策）
+    if (favoritesCache.size > 20) {
+      const oldestKey = favoritesCache.keys().next().value;
+      if (oldestKey) {
+        favoritesCache.delete(oldestKey);
+      }
+    }
+
+    return result;
 
   } catch (error) {
     console.error('getFavoriteList エラー:', error);

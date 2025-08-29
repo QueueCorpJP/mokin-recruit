@@ -1,7 +1,7 @@
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import AdminJobNewClient from './JobNewClient';
-import { CompanyGroup } from '@/app/company/company/job/types';
+import { CompanyGroup } from '@/app/company/job/types';
 
 async function fetchCompanyGroups(): Promise<CompanyGroup[]> {
   const supabase = getSupabaseAdminClient();
