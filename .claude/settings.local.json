@@ -1,9 +1,9 @@
-
 {
   "permissions": {
     "allow": [
       "mcp__supabase__list_projects",
-      "WebSearch"
+      "WebSearch",
+      "Bash(env)"
     ]
   },
   "enableAllProjectMcpServers": true,

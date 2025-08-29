@@ -130,7 +130,7 @@ export default async function CandidateTaskPage() {
   return (
     <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10">
       <main className="w-full max-w-[1280px] mx-auto">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify中心 items-stretch md:items-start">
+        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start">
           <div className="max-w-[880px] md:px-6 flex-1 box-border w-full">
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
