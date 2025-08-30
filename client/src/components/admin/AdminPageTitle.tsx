@@ -260,6 +260,39 @@ export function AdminPageTitle() {
       };
     }
     
+    if (pathname.match(/^\/admin\/candidate\/[^\/]+$/)) {
+      return {
+        title: '候補者詳細',
+        buttons: [
+          {
+            text: '候補者情報編集',
+            variant: 'green-outline',
+            onClick: () => {
+              const pathParts = pathname.split('/');
+              const candidateId = pathParts[pathParts.length - 1];
+              window.location.href = `/admin/candidate/${candidateId}/edit`;
+            }
+          },
+          {
+            text: 'ブロック企業設定',
+            variant: 'green-outline',
+            onClick: () => {
+              console.log('ブロック企業設定');
+            }
+          },
+          {
+            text: '候補者情報削除',
+            variant: 'green-outline',
+            onClick: () => {
+              if (confirm('候補者情報を削除しますか？')) {
+                console.log('候補者情報削除');
+              }
+            }
+          }
+        ]
+      };
+    }
+
     if (pathname.match(/^\/admin\/media\/[^\/]+$/)) {
       return {
         title: '記事詳細',

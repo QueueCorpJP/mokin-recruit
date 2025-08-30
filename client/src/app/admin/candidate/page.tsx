@@ -5,15 +5,15 @@ import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 export type CandidateListItem = {
   id: string;
   last_login_at: string | null;
-  last_name: string;
-  first_name: string;
+  last_name: string | null;
+  first_name: string | null;
   current_position: string | null;
   gender: 'male' | 'female' | 'unspecified' | null;
   birth_date: string | null;
-  desired_salary: string | null;
+  current_income: string | null;
   phone_number: string | null;
   email: string;
-  current_residence: string | null;
+  recent_job_company_name: string | null;
 };
 
 async function fetchAdminCandidateList(): Promise<CandidateListItem[]> {
@@ -29,10 +29,10 @@ async function fetchAdminCandidateList(): Promise<CandidateListItem[]> {
       current_position,
       gender,
       birth_date,
-      desired_salary,
+      current_income,
       phone_number,
       email,
-      current_residence
+      recent_job_company_name
     `
     )
     .order('last_login_at', { ascending: false });
