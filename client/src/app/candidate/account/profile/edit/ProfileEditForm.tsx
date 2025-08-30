@@ -245,8 +245,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           {PREFECTURES.map((prefecture) => (
-                            <option key={prefecture.value} value={prefecture.value}>
-                              {prefecture.label}
+                            <option key={prefecture} value={prefecture}>
+                              {prefecture}
                             </option>
                           ))}
                         </select>
@@ -279,8 +279,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                             className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                           >
                             {yearOptions.map((year) => (
-                              <option key={year.value} value={year.value}>
-                                {year.label}
+                              <option key={year} value={year}>
+                                {year}
                               </option>
                             ))}
                           </select>
@@ -305,8 +305,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           >
                             <option value="">未選択</option>
                             {monthOptions.map((month) => (
-                              <option key={month.value} value={month.value}>
-                                {month.label}
+                              <option key={month} value={month}>
+                                {month}
                               </option>
                             ))}
                           </select>
@@ -330,8 +330,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           >
                             <option value="">未選択</option>
                             {dayOptions.map((day) => (
-                              <option key={day.value} value={day.value}>
-                                {day.label}
+                              <option key={day} value={day}>
+                                {day}
                               </option>
                             ))}
                           </select>
@@ -577,8 +577,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-bold tracking-[1.4px] appearance-none cursor-pointer"
                         >
                           {PREFECTURES.map((prefecture) => (
-                            <option key={prefecture.value} value={prefecture.value}>
-                              {prefecture.label}
+                            <option key={prefecture} value={prefecture}>
+                              {prefecture}
                             </option>
                           ))}
                         </select>
@@ -611,8 +611,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                             className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-bold tracking-[1.4px] appearance-none cursor-pointer"
                           >
                             {yearOptions.map((year) => (
-                              <option key={year.value} value={year.value}>
-                                {year.label}
+                              <option key={year} value={year}>
+                                {year}
                               </option>
                             ))}
                           </select>
@@ -637,8 +637,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           >
                             <option value="">未選択</option>
                             {monthOptions.map((month) => (
-                              <option key={month.value} value={month.value}>
-                                {month.label}
+                              <option key={month} value={month}>
+                                {month}
                               </option>
                             ))}
                           </select>
@@ -662,8 +662,8 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
                           >
                             <option value="">未選択</option>
                             {dayOptions.map((day) => (
-                              <option key={day.value} value={day.value}>
-                                {day.label}
+                              <option key={day} value={day}>
+                                {day}
                               </option>
                             ))}
                           </select>

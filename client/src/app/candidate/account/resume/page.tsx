@@ -11,6 +11,9 @@ import ResumeUploadSection from './ResumeUploadSection';
 export default async function CandidateResumePage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);

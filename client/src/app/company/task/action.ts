@@ -69,7 +69,7 @@ const FORCE_SHOW_TASKS_FOR_DESIGN_TEST = true;
 export async function getCompanyTaskData(): Promise<TaskData> {
   const user = await getCachedCompanyUser();
   
-  if (!user || !user.company_account_id) {
+  if (!user || !user.user_metadata?.company_account_id) {
     return {
       hasNoJobPostings: false,
       hasNewApplication: false,
@@ -80,8 +80,8 @@ export async function getCompanyTaskData(): Promise<TaskData> {
     };
   }
 
-  const companyAccountId = user.company_account_id;
-  const companyGroupIds = user.company_group_ids || [];
+  const companyAccountId = user.user_metadata.company_account_id;
+  const companyGroupIds = user.user_metadata?.company_group_ids || [];
   const supabase = createServerAdminClient();
   
   const taskData: TaskData = {
@@ -290,6 +290,7 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
  * メッセージ情報を取得
  */
 async function getMessages(companyAccountId: string, companyGroupIds: string[]) {
+  const supabase = createServerAdminClient();
   // まず企業に関連するルームを取得
   const roomQuery = supabase
     .from('rooms')

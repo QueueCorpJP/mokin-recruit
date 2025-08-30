@@ -4,6 +4,7 @@ import { CandidateDashboardClient } from './CandidateDashboardClient';
 import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { getRooms } from '@/lib/rooms';
+import { redirect } from 'next/navigation';
 
 
 // やることリスト取得用の関数（candidate/taskと同じロジック）
@@ -191,7 +192,7 @@ export default async function CandidateDashboard() {
   }
 
   if (!user) {
-    // レイアウトでSSRガード済みのため通常は到達しない
+    redirect('/candidate/auth/login');
   }
 
   // サーバーサイドで全データを取得

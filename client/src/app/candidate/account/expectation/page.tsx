@@ -32,6 +32,9 @@ const renderTags = (data: any) => {
 export default async function CandidateExpectationPage() {
   // 認証チェック
   const user = await getCachedCandidateUser();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
   // expectationsテーブルからデータを取得
   const supabase = getSupabaseAdminClient();

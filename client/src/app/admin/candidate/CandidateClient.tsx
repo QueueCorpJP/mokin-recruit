@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { CandidateListItem } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
@@ -13,12 +14,13 @@ interface Props {
 }
 
 export default function CandidateClient({ candidates }: Props) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const handleCsvDownload = () => {
+  const handleCsvDownload = useCallback(() => {
     // CSVヘッダー
     const headers = [
       '最終ログイン日時',
@@ -84,22 +86,27 @@ export default function CandidateClient({ candidates }: Props) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [candidates]);
 
-  // 検索・ソート・ページネーション
-  const filtered = candidates.filter(
-    c =>
-      (c.last_name || '').includes(searchTerm) ||
-      (c.first_name || '').includes(searchTerm) ||
-      (c.email || '').includes(searchTerm) ||
-      (c.current_position || '').includes(searchTerm) ||
-      (c.phone_number || '').includes(searchTerm) ||
-      (c.recent_job_company_name || '').includes(searchTerm)
-  );
-  const paginated = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // 検索フィルタリング
+  const filtered = searchTerm
+    ? candidates.filter(c => {
+        const term = searchTerm.toLowerCase();
+        return (
+          (c.last_name || '').toLowerCase().includes(term) ||
+          (c.first_name || '').toLowerCase().includes(term) ||
+          (c.email || '').toLowerCase().includes(term) ||
+          (c.current_position || '').toLowerCase().includes(term) ||
+          (c.phone_number || '').includes(searchTerm) ||
+          (c.recent_job_company_name || '').toLowerCase().includes(term)
+        );
+      })
+    : candidates;
+
+  // ページネーション
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginated = filtered.slice(start, end);
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
   const columns = [
@@ -133,6 +140,14 @@ export default function CandidateClient({ candidates }: Props) {
     },
   ];
 
+  // 年齢計算を事前に実行
+  const paginatedWithAge = paginated.map(c => ({
+    ...c,
+    age: c.birth_date 
+      ? new Date().getFullYear() - new Date(c.birth_date).getFullYear()
+      : null
+  }));
+
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
       <div className='mb-6 flex justify-between items-center'>
@@ -160,17 +175,10 @@ export default function CandidateClient({ candidates }: Props) {
             onSort={setSortColumn}
           />
           <div className='mt-2 space-y-2'>
-            {paginated.map(c => {
-              // 年齢計算
-              const age = c.birth_date 
-                ? new Date().getFullYear() - new Date(c.birth_date).getFullYear()
-                : null;
-              
+            {paginatedWithAge.map(c => {
               return (
                 <AdminTableRow
                   key={c.id}
-                  onClick={() => window.location.href = `/admin/candidate/${c.id}`}
-                  className="cursor-pointer hover:bg-gray-50"
                   columns={[
                     {
                       content: c.last_login_at
@@ -194,7 +202,7 @@ export default function CandidateClient({ candidates }: Props) {
                       width: 'w-[100px]',
                     },
                     {
-                      content: age ? `${age}歳` : '',
+                      content: c.age ? `${c.age}歳` : '',
                       width: 'w-[80px]',
                     },
                     {
@@ -214,6 +222,7 @@ export default function CandidateClient({ candidates }: Props) {
                       width: 'w-[150px]',
                     },
                   ]}
+                  onClick={() => router.push(`/admin/candidate/${c.id}`)}
                 />
               );
             })}

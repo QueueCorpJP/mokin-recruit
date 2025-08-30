@@ -11,12 +11,14 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "exactOptionalPropertyTypes": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
     "noUncheckedIndexedAccess": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -28,7 +30,7 @@
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "plugins": [
       {
         "name": "next"

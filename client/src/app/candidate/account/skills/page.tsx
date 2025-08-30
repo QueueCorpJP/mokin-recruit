@@ -8,6 +8,9 @@ import EditButton from '@/components/candidate/account/EditButton';
 export default async function CandidateSkillsPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
 
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);

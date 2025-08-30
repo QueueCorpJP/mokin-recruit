@@ -1,53 +1,53 @@
 export const PREFECTURES = [
-  { value: '', label: '未選択' },
-  { value: 'hokkaido', label: '北海道' },
-  { value: 'aomori', label: '青森' },
-  { value: 'iwate', label: '岩手' },
-  { value: 'miyagi', label: '宮城' },
-  { value: 'akita', label: '秋田' },
-  { value: 'yamagata', label: '山形' },
-  { value: 'fukushima', label: '福島' },
-  { value: 'ibaraki', label: '茨城' },
-  { value: 'tochigi', label: '栃木' },
-  { value: 'gunma', label: '群馬' },
-  { value: 'saitama', label: '埼玉' },
-  { value: 'chiba', label: '千葉' },
-  { value: 'tokyo', label: '東京' },
-  { value: 'kanagawa', label: '神奈川' },
-  { value: 'niigata', label: '新潟' },
-  { value: 'toyama', label: '富山' },
-  { value: 'ishikawa', label: '石川' },
-  { value: 'fukui', label: '福井' },
-  { value: 'yamanashi', label: '山梨' },
-  { value: 'nagano', label: '長野' },
-  { value: 'gifu', label: '岐阜' },
-  { value: 'shizuoka', label: '静岡' },
-  { value: 'aichi', label: '愛知' },
-  { value: 'mie', label: '三重' },
-  { value: 'shiga', label: '滋賀' },
-  { value: 'kyoto', label: '京都' },
-  { value: 'osaka', label: '大阪' },
-  { value: 'hyogo', label: '兵庫' },
-  { value: 'nara', label: '奈良' },
-  { value: 'wakayama', label: '和歌山' },
-  { value: 'tottori', label: '鳥取' },
-  { value: 'shimane', label: '島根' },
-  { value: 'okayama', label: '岡山' },
-  { value: 'hiroshima', label: '広島' },
-  { value: 'yamaguchi', label: '山口' },
-  { value: 'tokushima', label: '徳島' },
-  { value: 'kagawa', label: '香川' },
-  { value: 'ehime', label: '愛媛' },
-  { value: 'kochi', label: '高知' },
-  { value: 'fukuoka', label: '福岡' },
-  { value: 'saga', label: '佐賀' },
-  { value: 'nagasaki', label: '長崎' },
-  { value: 'kumamoto', label: '熊本' },
-  { value: 'oita', label: '大分' },
-  { value: 'miyazaki', label: '宮崎' },
-  { value: 'kagoshima', label: '鹿児島' },
-  { value: 'okinawa', label: '沖縄' },
-  { value: 'overseas', label: '海外' },
+  '未選択',
+  '北海道',
+  '青森',
+  '岩手',
+  '宮城',
+  '秋田',
+  '山形',
+  '福島',
+  '茨城',
+  '栃木',
+  '群馬',
+  '埼玉',
+  '千葉',
+  '東京',
+  '神奈川',
+  '新潟',
+  '富山',
+  '石川',
+  '福井',
+  '山梨',
+  '長野',
+  '岐阜',
+  '静岡',
+  '愛知',
+  '三重',
+  '滋賀',
+  '京都',
+  '大阪',
+  '兵庫',
+  '奈良',
+  '和歌山',
+  '鳥取',
+  '島根',
+  '岡山',
+  '広島',
+  '山口',
+  '徳島',
+  '香川',
+  '愛媛',
+  '高知',
+  '福岡',
+  '佐賀',
+  '長崎',
+  '熊本',
+  '大分',
+  '宮崎',
+  '鹿児島',
+  '沖縄',
+  '海外',
 ] as const;
 
 export const INCOME_RANGES = [
@@ -72,35 +72,36 @@ export const GENDER_OPTIONS = [
   { value: 'unspecified', label: '未回答' },
 ] as const;
 
-export const generateYearOptions = () => {
+export const generateYearOptions = (startYear?: number) => {
   const currentYear = new Date().getFullYear();
-  const years = [{ value: '', label: '未選択' }];
+  const years: string[] = [];
+  const minYear = startYear || 1955;
 
-  // 1955年から現在の年 - 18歳まで
-  for (let year = currentYear - 18; year >= 1955; year--) {
-    years.push({ value: year.toString(), label: `${year}` });
+  // startYear（デフォルト1955年）から現在の年まで
+  for (let year = currentYear; year >= minYear; year--) {
+    years.push(year.toString());
   }
 
   return years;
 };
 
 export const generateMonthOptions = () => {
-  const months = [{ value: '', label: '未選択' }];
+  const months: string[] = [];
 
   for (let month = 1; month <= 12; month++) {
-    months.push({ value: month.toString(), label: `${month}` });
+    months.push(month.toString());
   }
 
   return months;
 };
 
 export const generateDayOptions = (year?: string, month?: string) => {
-  const days = [{ value: '', label: '未選択' }];
+  const days: string[] = [];
 
   if (!year || !month) {
     // 年月が選択されていない場合は1-31日まで表示
     for (let day = 1; day <= 31; day++) {
-      days.push({ value: day.toString(), label: `${day}` });
+      days.push(day.toString());
     }
     return days;
   }
@@ -111,7 +112,7 @@ export const generateDayOptions = (year?: string, month?: string) => {
   const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
 
   for (let day = 1; day <= daysInMonth; day++) {
-    days.push({ value: day.toString(), label: `${day}` });
+    days.push(day.toString());
   }
 
   return days;

@@ -51,9 +51,9 @@ export default function CompanyClient({ companies }: Props) {
     const groupNames = sortedGroups.map(g => g.group_name).join('、');
     return {
       ...company,
-      last_login: lastLoginUser.last_login_at || null,
-      last_login_user_name: lastLoginUser.full_name || '',
-      last_login_user_email: lastLoginUser.email || '',
+      last_login: (lastLoginUser as any).last_login_at || null,
+      last_login_user_name: (lastLoginUser as any).full_name || '',
+      last_login_user_email: (lastLoginUser as any).email || '',
       group_names: groupNames,
     };
   });

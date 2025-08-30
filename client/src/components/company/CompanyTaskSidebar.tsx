@@ -354,15 +354,8 @@ export function CompanyTaskSidebar({ className }: CompanyTaskSidebarProps) {
           <div style={sectionTitleStyle}>スカウトがうまくいかない</div>
           
           <div 
-            style={supportBannerStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 193, 7, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+            // style={supportBannerStyle}
+           
             onClick={() => router.push('/company/support')}
           >
            <img src="/images/consult.svg" />
