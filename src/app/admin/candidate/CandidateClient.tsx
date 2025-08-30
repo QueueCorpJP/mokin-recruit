@@ -8,6 +8,7 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { SearchBar } from '@/components/admin/ui/SearchBar';
+import { SelectInput } from '@/components/ui/select-input';
 
 interface Props {
   candidates: CandidateListItem[];
@@ -15,10 +16,34 @@ interface Props {
 
 export default function CandidateClient({ candidates }: Props) {
   const router = useRouter();
+  const [searchCategory, setSearchCategory] = useState<string>('氏名');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const searchCategoryOptions = [
+    { value: '氏名', label: '氏名' },
+    { value: 'メールアドレス', label: 'メールアドレス' },
+    { value: '電話番号', label: '電話番号' },
+    { value: '在籍企業', label: '在籍企業' },
+    { value: 'ユーザーID', label: 'ユーザーID' }
+  ];
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   const handleCsvDownload = useCallback(() => {
     // CSVヘッダー
@@ -89,25 +114,92 @@ export default function CandidateClient({ candidates }: Props) {
   }, [candidates]);
 
   // 検索フィルタリング
-  const filtered = searchTerm
-    ? candidates.filter(c => {
-        const term = searchTerm.toLowerCase();
-        return (
-          (c.last_name || '').toLowerCase().includes(term) ||
-          (c.first_name || '').toLowerCase().includes(term) ||
-          (c.email || '').toLowerCase().includes(term) ||
-          (c.current_position || '').toLowerCase().includes(term) ||
-          (c.phone_number || '').includes(searchTerm) ||
-          (c.recent_job_company_name || '').toLowerCase().includes(term)
-        );
-      })
-    : candidates;
+  const filtered = candidates.filter(c => {
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      switch (searchCategory) {
+        case '氏名':
+          return (c.last_name || '').toLowerCase().includes(searchLower) ||
+                 (c.first_name || '').toLowerCase().includes(searchLower);
+        case 'メールアドレス':
+          return (c.email || '').toLowerCase().includes(searchLower);
+        case '電話番号':
+          return (c.phone_number || '').includes(searchTerm);
+        case '在籍企業':
+          return (c.recent_job_company_name || '').toLowerCase().includes(searchLower);
+        case 'ユーザーID':
+          return c.id.toLowerCase().includes(searchLower);
+        default:
+          return false;
+      }
+    }
+    return true;
+  });
+
+  // ソート処理
+  const sortedCandidates = [...filtered].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+    
+    let aValue: string | number;
+    let bValue: string | number;
+    
+    switch (sortColumn) {
+      case 'last_login_at':
+        aValue = a.last_login_at || '';
+        bValue = b.last_login_at || '';
+        break;
+      case 'id':
+        aValue = a.id;
+        bValue = b.id;
+        break;
+      case 'gender':
+        aValue = a.gender === 'male' ? '男性' : a.gender === 'female' ? '女性' : (a.gender || '');
+        bValue = b.gender === 'male' ? '男性' : b.gender === 'female' ? '女性' : (b.gender || '');
+        break;
+      case 'age':
+        aValue = a.birth_date ? new Date().getFullYear() - new Date(a.birth_date).getFullYear() : 0;
+        bValue = b.birth_date ? new Date().getFullYear() - new Date(b.birth_date).getFullYear() : 0;
+        break;
+      case 'current_income':
+        aValue = a.current_income || '';
+        bValue = b.current_income || '';
+        break;
+      case 'phone_number':
+        aValue = a.phone_number || '';
+        bValue = b.phone_number || '';
+        break;
+      case 'email':
+        aValue = a.email || '';
+        bValue = b.email || '';
+        break;
+      case 'recent_job_company_name':
+        aValue = a.recent_job_company_name || '';
+        bValue = b.recent_job_company_name || '';
+        break;
+      default:
+        return 0;
+    }
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      if (sortDirection === 'asc') {
+        return aValue.localeCompare(bValue, 'ja');
+      } else {
+        return bValue.localeCompare(aValue, 'ja');
+      }
+    } else {
+      if (sortDirection === 'asc') {
+        return (aValue as number) - (bValue as number);
+      } else {
+        return (bValue as number) - (aValue as number);
+      }
+    }
+  });
 
   // ページネーション
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  const paginated = filtered.slice(start, end);
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = sortedCandidates.slice(start, end);
+  const totalPages = Math.ceil(sortedCandidates.length / itemsPerPage);
 
   const columns = [
     {
@@ -151,12 +243,51 @@ export default function CandidateClient({ candidates }: Props) {
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
       <div className='mb-6 flex justify-between items-center'>
-        <SearchBar
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder='氏名・メール・電話番号・職種・在籍企業で検索'
-          onSearch={() => {}}
-        />
+        <div className='flex gap-2 items-center flex-shrink-0'>
+          <SelectInput
+            options={searchCategoryOptions}
+            value={searchCategory}
+            onChange={setSearchCategory}
+            className="h-10 w-[150px]"
+            style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '16px',
+              fontWeight: 500,
+              lineHeight: 2,
+              letterSpacing: '1.6px'
+            }}
+          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder='氏名・メール・電話番号・在籍企業で検索'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[#ffffff] box-border flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 rounded-[5px] border border-[#999999] border-solid h-10 w-[250px]"
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '16px',
+                fontWeight: 500,
+                lineHeight: 2,
+                letterSpacing: '1.6px',
+                color: '#999999'
+              }}
+            />
+            <button 
+              className="bg-[#0F9058] hover:bg-[#0D7A4A] transition-colors box-border flex flex-row gap-2 items-center justify-center px-4 py-2 rounded-[32px] whitespace-nowrap"
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '14px',
+                fontWeight: 700,
+                lineHeight: 1.6,
+                letterSpacing: '1.4px',
+                color: '#ffffff'
+              }}
+            >
+              検索
+            </button>
+          </div>
+        </div>
         <div className='flex flex-col gap-3'>
           <AdminButton href='/admin/candidate/new' text='新規追加' />
           <AdminButton 
@@ -171,8 +302,8 @@ export default function CandidateClient({ candidates }: Props) {
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
-            sortDirection={null}
-            onSort={setSortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
           <div className='mt-2 space-y-2'>
             {paginatedWithAge.map(c => {

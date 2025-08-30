@@ -31,6 +31,14 @@ type SelectionEntry = {
   department: string;
   progressStatus: string;
   declineReason?: string;
+  // Job history fields
+  startYear?: string;
+  startMonth?: string;
+  endYear?: string;
+  endMonth?: string;
+  isCurrentlyWorking?: boolean;
+  jobDescription?: string;
+  jobTypes?: string[];
 };
 
 interface Props {
@@ -49,15 +57,32 @@ export default function CandidateEditClient({ candidate }: Props) {
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
     [key: number]: string[];
   }>({});
+  // Initialize selectionEntries with existing job history data
   const [selectionEntries, setSelectionEntries] = useState<SelectionEntry[]>([
     {
       id: '1',
       isPrivate: false,
-      industries: [],
-      companyName: '',
-      department: '',
+      industries: candidate.work_experience?.map(exp => 
+        typeof exp.industry_name === 'object' 
+          ? (exp.industry_name.name || exp.industry_name.id || JSON.stringify(exp.industry_name))
+          : exp.industry_name
+      ).filter(Boolean) || [],
+      companyName: candidate.recent_job_company_name || '',
+      department: candidate.recent_job_department_position || '',
       progressStatus: '',
       declineReason: '',
+      // Job history specific fields
+      startYear: candidate.recent_job_start_year || '',
+      startMonth: candidate.recent_job_start_month || '',
+      endYear: candidate.recent_job_end_year || '',
+      endMonth: candidate.recent_job_end_month || '',
+      isCurrentlyWorking: candidate.recent_job_is_currently_working || false,
+      jobDescription: candidate.recent_job_description || '',
+      jobTypes: candidate.job_type_experience?.map(exp => 
+        typeof exp.job_type_name === 'object' 
+          ? (exp.job_type_name.name || exp.job_type_name.id || JSON.stringify(exp.job_type_name))
+          : exp.job_type_name
+      ).filter(Boolean) || [],
     },
   ]);
 

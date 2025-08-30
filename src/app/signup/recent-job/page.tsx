@@ -4,13 +4,13 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import { Modal } from '@/components/ui/mo-dal';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { SelectInput } from '@/components/ui/select-input';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { saveRecentJobAction } from './actions';
-import { useEffect } from 'react';
 
 interface RecentJobFormData {
   companyName: string;
@@ -31,18 +31,21 @@ export default function SignupRecentJobPage() {
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const [userId, setUserId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<RecentJobFormData>({
-    companyName: '',
-    departmentPosition: '',
-    startYear: '',
-    startMonth: '',
-    endYear: '',
-    endMonth: '',
-    isCurrentlyWorking: false,
-    industries: [],
-    jobTypes: [],
-    jobDescription: '',
-  });
+  const [editingIndex, setEditingIndex] = useState(0);
+  const [jobHistories, setJobHistories] = useState<RecentJobFormData[]>([
+    {
+      companyName: '',
+      departmentPosition: '',
+      startYear: '',
+      startMonth: '',
+      endYear: '',
+      endMonth: '',
+      isCurrentlyWorking: false,
+      industries: [],
+      jobTypes: [],
+      jobDescription: '',
+    }
+  ]);
 
 
   // 年の選択肢を生成（1973年から現在の年まで）
@@ -57,33 +60,70 @@ export default function SignupRecentJobPage() {
 
   // 終了年の選択肢を生成（開始年から現在の年まで）
   const endYearOptions = useMemo(() => {
-    if (!formData.startYear) return [];
+    const currentJob = jobHistories[editingIndex];
+    if (!currentJob || !currentJob.startYear) return [];
     const years = [];
-    const startYearNum = parseInt(formData.startYear);
+    const startYearNum = parseInt(currentJob.startYear);
     for (let year = currentYear; year >= startYearNum; year--) {
       years.push(year.toString());
     }
     return years;
-  }, [currentYear, formData.startYear]);
+  }, [currentYear, jobHistories, editingIndex]);
 
   // 月の選択肢を生成（1〜12月）
   const monthOptions = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, '0'),
   );
 
-  // Form validation
+  // Form validation - all job histories must be valid
   const isFormValid = () => {
-    return (
-      formData.companyName.trim() !== '' &&
-      formData.departmentPosition.trim() !== '' &&
-      formData.startYear !== '' &&
-      formData.startMonth !== '' &&
-      formData.industries.length > 0 &&
-      formData.jobTypes.length > 0 &&
-      formData.jobDescription.trim() !== '' &&
-      (formData.isCurrentlyWorking || (formData.endYear !== '' && formData.endMonth !== ''))
-    );
+    return jobHistories.every((job) => (
+      job.companyName.trim() !== '' &&
+      job.departmentPosition.trim() !== '' &&
+      job.startYear !== '' &&
+      job.startMonth !== '' &&
+      job.industries.length > 0 &&
+      job.jobTypes.length > 0 &&
+      job.jobDescription.trim() !== '' &&
+      (job.isCurrentlyWorking || (job.endYear !== '' && job.endMonth !== ''))
+    ));
   };
+
+  // Job history management functions
+  const addJobHistory = () => {
+    const newJobHistory: RecentJobFormData = {
+      companyName: '',
+      departmentPosition: '',
+      startYear: '',
+      startMonth: '',
+      endYear: '',
+      endMonth: '',
+      isCurrentlyWorking: false,
+      industries: [],
+      jobTypes: [],
+      jobDescription: '',
+    };
+    setJobHistories([...jobHistories, newJobHistory]);
+    setEditingIndex(jobHistories.length);
+  };
+
+  const removeJobHistory = (index: number) => {
+    if (jobHistories.length <= 1) return;
+    const newJobHistories = jobHistories.filter((_, i) => i !== index);
+    setJobHistories(newJobHistories);
+    if (editingIndex >= newJobHistories.length) {
+      setEditingIndex(newJobHistories.length - 1);
+    }
+  };
+
+  const updateJobHistory = (index: number, updates: Partial<RecentJobFormData>) => {
+    const newJobHistories = [...jobHistories];
+    newJobHistories[index] = { ...newJobHistories[index], ...updates };
+    setJobHistories(newJobHistories);
+  };
+
+  // Get current job being edited
+  const currentJob = jobHistories[editingIndex] || jobHistories[0];
 
   // Get user ID from cookies
   useEffect(() => {
@@ -110,7 +150,7 @@ export default function SignupRecentJobPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await saveRecentJobAction(formData, userId);
+      const result = await saveRecentJobAction({ jobHistories }, userId);
       
       if (result.success) {
         router.push('/signup/resume');
@@ -132,7 +172,7 @@ export default function SignupRecentJobPage() {
       id: `industry_${index}_${industryName}`,
       name: industryName
     }));
-    setFormData(prev => ({ ...prev, industries }));
+    updateJobHistory(editingIndex, { industries });
     setIsIndustryModalOpen(false);
   };
 
@@ -144,35 +184,32 @@ export default function SignupRecentJobPage() {
       name: jobTypeName
     }));
     console.log('Job types to save:', jobTypes);
-    setFormData(prev => ({ ...prev, jobTypes }));
+    updateJobHistory(editingIndex, { jobTypes });
     setIsJobTypeModalOpen(false);
   };
 
   // 在職中チェックボックスの切り替え
   const handleCurrentlyWorkingToggle = () => {
-    const newValue = !formData.isCurrentlyWorking;
-    setFormData(prev => ({
-      ...prev,
+    const newValue = !currentJob.isCurrentlyWorking;
+    updateJobHistory(editingIndex, {
       isCurrentlyWorking: newValue,
       // 在職中の場合、終了年月をクリア
-      endYear: newValue ? '' : prev.endYear,
-      endMonth: newValue ? '' : prev.endMonth,
-    }));
+      endYear: newValue ? '' : currentJob.endYear,
+      endMonth: newValue ? '' : currentJob.endMonth,
+    });
   };
 
   // 業種・職種を削除
   const removeIndustry = (industryId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      industries: prev.industries.filter((i) => i.id !== industryId)
-    }));
+    updateJobHistory(editingIndex, {
+      industries: currentJob.industries.filter((i) => i.id !== industryId)
+    });
   };
 
   const removeJobType = (jobTypeId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      jobTypes: prev.jobTypes.filter((jt) => jt.id !== jobTypeId)
-    }));
+    updateJobHistory(editingIndex, {
+      jobTypes: currentJob.jobTypes.filter((jt) => jt.id !== jobTypeId)
+    });
   };
 
   return (
@@ -275,8 +312,8 @@ export default function SignupRecentJobPage() {
                 </div>
                 <div className="w-[400px]">
                   <CompanyNameInput
-                    value={formData.companyName}
-                    onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
+                    value={currentJob.companyName}
+                    onChange={(value) => updateJobHistory(editingIndex, { companyName: value })}
                     placeholder="企業名を入力"
                     className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
@@ -294,8 +331,8 @@ export default function SignupRecentJobPage() {
                   <input
                     type="text"
                     placeholder="部署名・役職名を入力"
-                    value={formData.departmentPosition}
-                    onChange={(e) => setFormData(prev => ({ ...prev, departmentPosition: e.target.value }))}
+                    value={currentJob.departmentPosition}
+                    onChange={(e) => updateJobHistory(editingIndex, { departmentPosition: e.target.value })}
                     className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                   />
                 </div>
@@ -310,65 +347,27 @@ export default function SignupRecentJobPage() {
                 </div>
                 <div className="w-[400px]">
                   <div className="flex flex-wrap gap-2 items-center">
-                    <div className="relative">
-                      <select
-                        value={formData.startYear}
-                        onChange={(e) => setFormData(prev => ({ ...prev, startYear: e.target.value }))}
-                        className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                      >
-                        <option value="">未選択</option>
-                        {yearOptions.map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="10"
-                          viewBox="0 0 14 10"
-                          fill="none"
-                        >
-                          <path
-                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                            fill="#0F9058"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      value={currentJob.startYear}
+                      onChange={(value) => updateJobHistory(editingIndex, { startYear: value })}
+                      options={[
+                        { value: '', label: '未選択' },
+                        ...yearOptions.map(year => ({ value: year, label: year }))
+                      ]}
+                      placeholder="未選択"
+                    />
                     <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                       年
                     </span>
-                    <div className="relative">
-                      <select
-                        value={formData.startMonth}
-                        onChange={(e) => setFormData(prev => ({ ...prev, startMonth: e.target.value }))}
-                        className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                      >
-                        <option value="">未選択</option>
-                        {monthOptions.map((month) => (
-                          <option key={month} value={month}>
-                            {month}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="10"
-                          viewBox="0 0 14 10"
-                          fill="none"
-                        >
-                          <path
-                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                            fill="#0F9058"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      value={currentJob.startMonth}
+                      onChange={(value) => updateJobHistory(editingIndex, { startMonth: value })}
+                      options={[
+                        { value: '', label: '未選択' },
+                        ...monthOptions.map(month => ({ value: month, label: month }))
+                      ]}
+                      placeholder="未選択"
+                    />
                     <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                       月
                     </span>
@@ -377,7 +376,7 @@ export default function SignupRecentJobPage() {
               </div>
 
               {/* End Date */}
-              {!formData.isCurrentlyWorking && (
+              {!currentJob.isCurrentlyWorking && (
                 <div className="flex flex-row gap-4 items-start w-full">
                   <div className="pt-[11px] min-w-[130px] text-right">
                     <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
@@ -387,65 +386,27 @@ export default function SignupRecentJobPage() {
                   <div className="w-[400px]">
                     <div className="flex flex-col gap-2">
                       <div className="flex flex-wrap gap-2 items-center">
-                        <div className="relative">
-                          <select
-                            value={formData.endYear}
-                            onChange={(e) => setFormData(prev => ({ ...prev, endYear: e.target.value }))}
-                            className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                          >
-                            <option value="">未選択</option>
-                            {endYearOptions.map((year) => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="10"
-                              viewBox="0 0 14 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+                        <SelectInput
+                          value={currentJob.endYear}
+                          onChange={(value) => updateJobHistory(editingIndex, { endYear: value })}
+                          options={[
+                            { value: '', label: '未選択' },
+                            ...endYearOptions.map(year => ({ value: year, label: year }))
+                          ]}
+                          placeholder="未選択"
+                        />
                         <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                           年
                         </span>
-                        <div className="relative">
-                          <select
-                            value={formData.endMonth}
-                            onChange={(e) => setFormData(prev => ({ ...prev, endMonth: e.target.value }))}
-                            className="px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                          >
-                            <option value="">未選択</option>
-                            {monthOptions.map((month) => (
-                              <option key={month} value={month}>
-                                {month}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="14"
-                              height="10"
-                              viewBox="0 0 14 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+                        <SelectInput
+                          value={currentJob.endMonth}
+                          onChange={(value) => updateJobHistory(editingIndex, { endMonth: value })}
+                          options={[
+                            { value: '', label: '未選択' },
+                            ...monthOptions.map(month => ({ value: month, label: month }))
+                          ]}
+                          placeholder="未選択"
+                        />
                         <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                           月
                         </span>
@@ -475,7 +436,7 @@ export default function SignupRecentJobPage() {
                       >
                         <path
                           d="M2.85714 0C1.28125 0 0 1.28125 0 2.85714V17.1429C0 18.7188 1.28125 20 2.85714 20H17.1429C18.7188 20 20 18.7188 20 17.1429V2.85714C20 1.28125 18.7188 0 17.1429 0H2.85714ZM15.0446 7.90179L9.33036 13.6161C8.91071 14.0357 8.23214 14.0357 7.81696 13.6161L4.95982 10.7589C4.54018 10.3393 4.54018 9.66071 4.95982 9.24554C5.37946 8.83036 6.05804 8.82589 6.47321 9.24554L8.57143 11.3438L13.5268 6.38393C13.9464 5.96429 14.625 5.96429 15.0402 6.38393C15.4554 6.80357 15.4598 7.48214 15.0402 7.89732L15.0446 7.90179Z"
-                          fill={formData.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
+                          fill={currentJob.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
                         />
                       </svg>
                     </div>
@@ -503,7 +464,7 @@ export default function SignupRecentJobPage() {
                       業種を選択
                     </button>
                     <div className="flex flex-wrap gap-2">
-                      {formData.industries.map((industry) => (
+                      {currentJob.industries.map((industry) => (
                         <div
                           key={industry.id}
                           className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -554,7 +515,7 @@ export default function SignupRecentJobPage() {
                       職種を選択
                     </button>
                     <div className="flex flex-wrap gap-2">
-                      {formData.jobTypes.map((jobType) => (
+                      {currentJob.jobTypes.map((jobType) => (
                         <div
                           key={jobType.id}
                           className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -598,8 +559,8 @@ export default function SignupRecentJobPage() {
                 <div className="w-[400px]">
                   <textarea
                     placeholder="担当していた業務内容や役割を簡単にご記入ください。&#10;例）新規事業の立ち上げに従事。市場調査・事業計画の策定から、立ち上げ後のKPI設計・進捗管理までを担当"
-                    value={formData.jobDescription}
-                    onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                    value={currentJob.jobDescription}
+                    onChange={(e) => updateJobHistory(editingIndex, { jobDescription: e.target.value })}
                     className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[160px] resize-none"
                   />
                 </div>
@@ -697,8 +658,8 @@ export default function SignupRecentJobPage() {
                   企業名
                 </label>
                 <CompanyNameInput
-                  value={formData.companyName}
-                  onChange={(value) => setFormData(prev => ({ ...prev, companyName: value }))}
+                  value={currentJob.companyName}
+                  onChange={(value) => updateJobHistory(editingIndex, { companyName: value })}
                   placeholder="企業名を入力"
                   className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
@@ -712,8 +673,8 @@ export default function SignupRecentJobPage() {
                 <input
                   type="text"
                   placeholder="部署名・役職名を入力"
-                  value={formData.departmentPosition}
-                  onChange={(e) => setFormData(prev => ({ ...prev, departmentPosition: e.target.value }))}
+                  value={currentJob.departmentPosition}
+                  onChange={(e) => updateJobHistory(editingIndex, { departmentPosition: e.target.value })}
                   className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
               </div>
@@ -724,65 +685,29 @@ export default function SignupRecentJobPage() {
                   開始年月
                 </label>
                 <div className="flex gap-2 items-center">
-                  <div className="relative flex-1">
-                    <select
-                      value={formData.startYear}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startYear: e.target.value }))}
-                      className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                    >
-                      <option value="">未選択</option>
-                      {yearOptions.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="10"
-                        viewBox="0 0 14 10"
-                        fill="none"
-                      >
-                        <path
-                          d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                          fill="#0F9058"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <SelectInput
+                    value={currentJob.startYear}
+                    onChange={(value) => updateJobHistory(editingIndex, { startYear: value })}
+                    options={[
+                      { value: '', label: '未選択' },
+                      ...yearOptions.map(year => ({ value: year, label: year }))
+                    ]}
+                    placeholder="未選択"
+                    className="flex-1"
+                  />
                   <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                     年
                   </span>
-                  <div className="relative flex-1">
-                    <select
-                      value={formData.startMonth}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startMonth: e.target.value }))}
-                      className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                    >
-                      <option value="">未選択</option>
-                      {monthOptions.map((month) => (
-                        <option key={month} value={month}>
-                          {month}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="10"
-                        viewBox="0 0 14 10"
-                        fill="none"
-                      >
-                        <path
-                          d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                          fill="#0F9058"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <SelectInput
+                    value={currentJob.startMonth}
+                    onChange={(value) => updateJobHistory(editingIndex, { startMonth: value })}
+                    options={[
+                      { value: '', label: '未選択' },
+                      ...monthOptions.map(month => ({ value: month, label: month }))
+                    ]}
+                    placeholder="未選択"
+                    className="flex-1"
+                  />
                   <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                     月
                   </span>
@@ -790,71 +715,35 @@ export default function SignupRecentJobPage() {
               </div>
 
               {/* End Date */}
-              {!formData.isCurrentlyWorking && (
+              {!currentJob.isCurrentlyWorking && (
                 <div className="flex flex-col gap-2">
                   <label className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                     終了年月
                   </label>
                   <div className="flex gap-2 items-center">
-                    <div className="relative flex-1">
-                      <select
-                        value={formData.endYear}
-                        onChange={(e) => setFormData(prev => ({ ...prev, endYear: e.target.value }))}
-                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                      >
-                        <option value="">未選択</option>
-                        {endYearOptions.map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="10"
-                          viewBox="0 0 14 10"
-                          fill="none"
-                        >
-                          <path
-                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                            fill="#0F9058"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      value={currentJob.endYear}
+                      onChange={(value) => updateJobHistory(editingIndex, { endYear: value })}
+                      options={[
+                        { value: '', label: '未選択' },
+                        ...endYearOptions.map(year => ({ value: year, label: year }))
+                      ]}
+                      placeholder="未選択"
+                      className="flex-1"
+                    />
                     <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                       年
                     </span>
-                    <div className="relative flex-1">
-                      <select
-                        value={formData.endMonth}
-                        onChange={(e) => setFormData(prev => ({ ...prev, endMonth: e.target.value }))}
-                        className="w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
-                      >
-                        <option value="">未選択</option>
-                        {monthOptions.map((month) => (
-                          <option key={month} value={month}>
-                            {month}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="10"
-                          viewBox="0 0 14 10"
-                          fill="none"
-                        >
-                          <path
-                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                            fill="#0F9058"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      value={currentJob.endMonth}
+                      onChange={(value) => updateJobHistory(editingIndex, { endMonth: value })}
+                      options={[
+                        { value: '', label: '未選択' },
+                        ...monthOptions.map(month => ({ value: month, label: month }))
+                      ]}
+                      placeholder="未選択"
+                      className="flex-1"
+                    />
                     <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">
                       月
                     </span>
@@ -878,7 +767,7 @@ export default function SignupRecentJobPage() {
                     >
                       <path
                         d="M2.85714 0C1.28125 0 0 1.28125 0 2.85714V17.1429C0 18.7188 1.28125 20 2.85714 20H17.1429C18.7188 20 20 18.7188 20 17.1429V2.85714C20 1.28125 18.7188 0 17.1429 0H2.85714ZM15.0446 7.90179L9.33036 13.6161C8.91071 14.0357 8.23214 14.0357 7.81696 13.6161L4.95982 10.7589C4.54018 10.3393 4.54018 9.66071 4.95982 9.24554C5.37946 8.83036 6.05804 8.82589 6.47321 9.24554L8.57143 11.3438L13.5268 6.38393C13.9464 5.96429 14.625 5.96429 15.0402 6.38393C15.4554 6.80357 15.4598 7.48214 15.0402 7.89732L15.0446 7.90179Z"
-                        fill={formData.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
+                        fill={currentJob.isCurrentlyWorking ? '#0F9058' : '#DCDCDC'}
                       />
                     </svg>
                   </div>
@@ -900,7 +789,7 @@ export default function SignupRecentJobPage() {
                   業種を選択
                 </button>
                 <div className="flex flex-wrap gap-2">
-                  {formData.industries.map((industry) => (
+                  {currentJob.industries.map((industry) => (
                     <div
                       key={industry.id}
                       className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -943,7 +832,7 @@ export default function SignupRecentJobPage() {
                   職種を選択
                 </button>
                 <div className="flex flex-wrap gap-2">
-                  {formData.jobTypes.map((jobType) => (
+                  {currentJob.jobTypes.map((jobType) => (
                     <div
                       key={jobType.id}
                       className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -981,8 +870,8 @@ export default function SignupRecentJobPage() {
                 </label>
                 <textarea
                   placeholder="担当していた業務内容や役割を簡単にご記入ください。例）新規事業の立ち上げに従事。市場調査・事業計画の策定から、立ち上げ後のKPI設計・進捗管理までを担当"
-                  value={formData.jobDescription}
-                  onChange={(e) => setFormData(prev => ({ ...prev, jobDescription: e.target.value }))}
+                  value={currentJob.jobDescription}
+                  onChange={(e) => updateJobHistory(editingIndex, { jobDescription: e.target.value })}
                   className="leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[192px] resize-none"
                 />
               </div>
@@ -1008,7 +897,7 @@ export default function SignupRecentJobPage() {
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
         onConfirm={handleIndustryConfirm}
-        initialSelected={formData.industries.map(industry => industry.name)}
+        initialSelected={currentJob.industries.map(industry => industry.name)}
         maxSelections={3}
       />
 
@@ -1016,7 +905,7 @@ export default function SignupRecentJobPage() {
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={formData.jobTypes.map(jobType => jobType.name)}
+        initialSelected={currentJob.jobTypes.map(jobType => jobType.name)}
         maxSelections={3}
       />
     </>
