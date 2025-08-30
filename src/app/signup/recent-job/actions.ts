@@ -17,14 +17,18 @@ export interface RecentJobFormData {
   jobDescription: string;
 }
 
+export interface MultipleJobHistoriesData {
+  jobHistories: RecentJobFormData[];
+}
+
 export interface SaveRecentJobResult {
   success: boolean;
   error?: string;
   message?: string;
 }
 
-// Validation schema
-const RecentJobSchema = z.object({
+// Validation schema for single job history
+const SingleJobHistorySchema = z.object({
   companyName: z.string().min(1, '企業名を入力してください'),
   departmentPosition: z.string().min(1, '部署名・役職名を入力してください'),
   startYear: z.string().min(1, '開始年月を選択してください'),
@@ -41,7 +45,6 @@ const RecentJobSchema = z.object({
     name: z.string(),
   })).min(1, '職種を1つ以上選択してください').max(3),
   jobDescription: z.string().min(1, '業務内容を入力してください'),
-  userId: z.string().min(1, 'ユーザーIDが必要です'),
 }).superRefine((data, ctx) => {
   // 在職中でない場合は終了年月が必須
   if (!data.isCurrentlyWorking) {
@@ -62,8 +65,14 @@ const RecentJobSchema = z.object({
   }
 });
 
+// Validation schema for multiple job histories
+const MultipleJobHistoriesSchema = z.object({
+  jobHistories: z.array(SingleJobHistorySchema).min(1, '職歴を1つ以上入力してください'),
+  userId: z.string().min(1, 'ユーザーIDが必要です'),
+});
+
 export async function saveRecentJobAction(
-  formData: RecentJobFormData,
+  formData: MultipleJobHistoriesData,
   userId: string
 ): Promise<SaveRecentJobResult> {
   try {
@@ -85,7 +94,7 @@ export async function saveRecentJobAction(
     }
 
     // Validation
-    const validationResult = RecentJobSchema.safeParse({
+    const validationResult = MultipleJobHistoriesSchema.safeParse({
       ...formData,
       userId,
     });
@@ -99,23 +108,11 @@ export async function saveRecentJobAction(
       };
     }
 
-    const {
-      companyName,
-      departmentPosition,
-      startYear,
-      startMonth,
-      endYear,
-      endMonth,
-      isCurrentlyWorking,
-      industries,
-      jobTypes,
-      jobDescription,
-    } = validationResult.data;
+    const { jobHistories } = validationResult.data;
 
     logger.info('Recent job save request details:', {
       userId: userId.substring(0, 8) + '***',
-      companyName: companyName.substring(0, 5) + '***',
-      isCurrentlyWorking,
+      jobHistoriesCount: jobHistories.length,
     });
 
     // Dynamic Supabase import
@@ -148,36 +145,50 @@ export async function saveRecentJobAction(
     });
 
     try {
-      // 単一職歴を配列形式に変換（複数職歴対応準備）
-      const jobHistoryEntry = {
-        companyName,
-        departmentPosition,
-        startYear,
-        startMonth,
-        endYear: endYear || '',
-        endMonth: endMonth || '',
-        isCurrentlyWorking,
-        industries,
-        jobTypes,
-        jobDescription,
-      };
+      // 複数職歴を処理
+      const processedJobHistories = jobHistories.map(job => ({
+        companyName: job.companyName,
+        departmentPosition: job.departmentPosition,
+        startYear: job.startYear,
+        startMonth: job.startMonth,
+        endYear: job.endYear || '',
+        endMonth: job.endMonth || '',
+        isCurrentlyWorking: job.isCurrentlyWorking,
+        industries: job.industries,
+        jobTypes: job.jobTypes,
+        jobDescription: job.jobDescription,
+      }));
+
+      // 最初の職歴を既存フィールドに保存（互換性維持）
+      const firstJobHistory = processedJobHistories[0];
+      
+      // 複数企業名を結合（例：「A社 | B社 | C社」）
+      const allCompanyNames = processedJobHistories.map(job => job.companyName).filter(Boolean).join(' | ');
+      
+      // 複数業務内容を結合
+      const allJobDescriptions = processedJobHistories.map((job, index) => {
+        if (!job.jobDescription) return '';
+        return processedJobHistories.length > 1 
+          ? `【${job.companyName || `企業${index + 1}`}】${job.jobDescription}`
+          : job.jobDescription;
+      }).filter(Boolean).join('\n\n');
 
       // Update candidates table with recent job info
       const { error: candidateUpdateError } = await supabaseAdmin
         .from('candidates')
         .update({
-          // 既存フィールドに保存（互換性維持）
-          recent_job_company_name: companyName,
-          recent_job_department_position: departmentPosition,
-          recent_job_start_year: startYear,
-          recent_job_start_month: startMonth,
-          recent_job_end_year: endYear || null,
-          recent_job_end_month: endMonth || null,
-          recent_job_is_currently_working: isCurrentlyWorking,
-          // 複数職歴対応：単一職歴でも配列として保存
-          recent_job_industries: [jobHistoryEntry],
-          recent_job_types: jobTypes,
-          recent_job_description: jobDescription,
+          // 最初の職歴の基本情報（互換性維持）
+          recent_job_company_name: firstJobHistory.companyName,
+          recent_job_department_position: firstJobHistory.departmentPosition,
+          recent_job_start_year: firstJobHistory.startYear,
+          recent_job_start_month: firstJobHistory.startMonth,
+          recent_job_end_year: firstJobHistory.endYear || null,
+          recent_job_end_month: firstJobHistory.endMonth || null,
+          recent_job_is_currently_working: firstJobHistory.isCurrentlyWorking,
+          // 複数職歴の場合は全職歴を保存、単一の場合は業種・職種を保存
+          recent_job_industries: processedJobHistories.length > 1 ? processedJobHistories : firstJobHistory.industries,
+          recent_job_types: processedJobHistories.length > 1 ? null : firstJobHistory.jobTypes,
+          recent_job_description: allJobDescriptions || null,
           recent_job_updated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -191,11 +202,11 @@ export async function saveRecentJobAction(
         };
       }
 
-      logger.info(`Recent job data saved successfully for user: ${userId}`);
+      logger.info(`Recent job data saved successfully for user: ${userId} with ${processedJobHistories.length} job histories`);
 
       return {
         success: true,
-        message: '直近の職歴情報が保存されました。',
+        message: `${processedJobHistories.length}件の職歴情報が保存されました。`,
       };
 
     } catch (saveError) {
