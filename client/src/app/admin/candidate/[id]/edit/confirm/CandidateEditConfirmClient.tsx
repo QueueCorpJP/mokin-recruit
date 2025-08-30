@@ -445,14 +445,9 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-8">
+           
             <AdminButton 
-              text="戻る" 
-              variant="outline" 
-              size="figma-default"
-              onClick={() => router.back()}
-            />
-            <AdminButton 
-              text={isSubmitting ? "保存中..." : "保存"} 
+              text={isSubmitting ? "保存中..." : "保存する"} 
               variant="green-gradient" 
               size="figma-default"
               onClick={handleConfirmSave}

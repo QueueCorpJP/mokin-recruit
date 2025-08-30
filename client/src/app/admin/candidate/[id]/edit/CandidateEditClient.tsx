@@ -13,6 +13,8 @@ import {
   generateDayOptions 
 } from '@/constants/profile';
 import { UpdateCandidateData, EducationData, WorkExperienceData, JobTypeExperienceData, SkillsData } from './actions';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 
 interface Props {
   candidate: CandidateDetailData;
@@ -22,6 +24,11 @@ export default function CandidateEditClient({ candidate }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memo, setMemo] = useState('');
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    targetType: 'industry' | 'jobtype' | null;
+    targetIndex: number | null;
+  }>({ isOpen: false, targetType: null, targetIndex: null });
 
   // Initialize form data with candidate data
   const [formData, setFormData] = useState<UpdateCandidateData>({
@@ -48,6 +55,16 @@ export default function CandidateEditClient({ candidate }: Props) {
     recent_job_description: candidate.recent_job_description || '',
     job_summary: candidate.job_summary || '',
     self_pr: candidate.self_pr || '',
+    recent_job_industries: candidate.work_experience?.map(exp => 
+      typeof exp.industry_name === 'object' 
+        ? (exp.industry_name.name || exp.industry_name.id || JSON.stringify(exp.industry_name))
+        : exp.industry_name
+    ).filter(Boolean) || [],
+    recent_job_types: candidate.job_type_experience?.map(exp => 
+      typeof exp.job_type_name === 'object' 
+        ? (exp.job_type_name.name || exp.job_type_name.id || JSON.stringify(exp.job_type_name))
+        : exp.job_type_name
+    ).filter(Boolean) || [],
   });
 
   // Education data
@@ -61,19 +78,33 @@ export default function CandidateEditClient({ candidate }: Props) {
 
   // Work experience data
   const [workExperience, setWorkExperience] = useState<WorkExperienceData[]>(
-    candidate.work_experience.length > 0 ? candidate.work_experience : [{ industry_name: '', experience_years: 0 }]
+    candidate.work_experience.length > 0 ? candidate.work_experience.map(exp => ({
+      industry_name: typeof exp.industry_name === 'object' 
+        ? (exp.industry_name.name || exp.industry_name.id || JSON.stringify(exp.industry_name))
+        : exp.industry_name,
+      experience_years: exp.experience_years
+    })) : [{ industry_name: '', experience_years: 0 }]
   );
 
   // Job type experience data
   const [jobTypeExperience, setJobTypeExperience] = useState<JobTypeExperienceData[]>(
-    candidate.job_type_experience.length > 0 ? candidate.job_type_experience : [{ job_type_name: '', experience_years: 0 }]
+    candidate.job_type_experience.length > 0 ? candidate.job_type_experience.map(exp => ({
+      job_type_name: typeof exp.job_type_name === 'object' 
+        ? (exp.job_type_name.name || exp.job_type_name.id || JSON.stringify(exp.job_type_name))
+        : exp.job_type_name,
+      experience_years: exp.experience_years
+    })) : [{ job_type_name: '', experience_years: 0 }]
   );
 
   // Skills data
   const [skills, setSkills] = useState<SkillsData>({
     english_level: candidate.skills[0]?.english_level || '',
     other_languages: candidate.skills[0]?.other_languages || null,
-    skills_list: candidate.skills[0]?.skills_list || [],
+    skills_list: candidate.skills[0]?.skills_list ? candidate.skills[0].skills_list.map(skill =>
+      typeof skill === 'object' 
+        ? (skill.name || skill.id || JSON.stringify(skill))
+        : skill
+    ) : [],
     qualifications: candidate.skills[0]?.qualifications || '',
   });
 
@@ -121,6 +152,16 @@ export default function CandidateEditClient({ candidate }: Props) {
     }
   };
 
+  const handleIndustryConfirm = (selectedIndustries: string[]) => {
+    handleInputChange('recent_job_industries', selectedIndustries);
+    setModalState({ isOpen: false, targetType: null, targetIndex: null });
+  };
+
+  const handleJobTypeConfirm = (selectedJobTypes: string[]) => {
+    handleInputChange('recent_job_types', selectedJobTypes);
+    setModalState({ isOpen: false, targetType: null, targetIndex: null });
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
     
@@ -156,16 +197,8 @@ export default function CandidateEditClient({ candidate }: Props) {
   const birthDay = birthDate ? birthDate.getDate().toString() : '';
 
   return (
+    <>
     <div className="min-h-screen">
-      <div className="p-6 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          候補者情報編集
-        </h1>
-        <p className="text-gray-600">
-          ユーザーID: {candidate.id}
-        </p>
-      </div>
-      
       <div className="p-8">
         {/* 候補者分析 */}
         <section className="mb-12">
@@ -872,126 +905,100 @@ export default function CandidateEditClient({ candidate }: Props) {
 
               {/* Industry */}
               <div className="flex items-center gap-8 mb-6">
-                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
                   業種
                 </label>
-                <div className="w-[400px]">
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      className="w-[160px] py-[12px] border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
-                    >
-                      業種を選択
-                    </button>
-                    <div className="flex flex-wrap gap-2">
-                      {workExperience.map((exp, index) => (
-                        <div
-                          key={index}
-                          className="inline-flex items-center gap-1"
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'industry', targetIndex: -2 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    業種を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.recent_job_industries.map((industry, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {industry}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newIndustries = formData.recent_job_industries.filter((_, i) => i !== index);
+                            handleInputChange('recent_job_industries', newIndustries);
+                          }}
+                          className="w-3 h-3"
                         >
-                          <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]">
-                            <span className="line-clamp-1 break-all">{exp.industry_name || '未入力'}</span>
-                          </span>
-                          <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
-                            <input
-                              type="number"
-                              value={exp.experience_years}
-                              onChange={(e) => updateWorkExperience(index, 'experience_years', e.target.value ? parseInt(e.target.value) : 0)}
-                              className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] w-16 focus:outline-none"
-                              placeholder="0"
-                            />
-                            <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">年</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeWorkExperience(index)}
-                            className="bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]"
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
                           >
-                            <svg
-                              width="13"
-                              height="12"
-                              viewBox="0 0 13 12"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <AdminButton
-                      text="追加"
-                      variant="blue-gradient"
-                      size="figma-small"
-                      onClick={addWorkExperience}
-                    />
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Job Type */}
-              <div className="flex items-center gap-8 mb-6">
-                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+              <div className="flex items-center gap-8">
+                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
                   職種
                 </label>
-                <div className="w-[400px]">
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      className="w-[160px] py-[12px] border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
-                    >
-                      職種を選択
-                    </button>
-                    <div className="flex flex-wrap gap-2">
-                      {jobTypeExperience.map((exp, index) => (
-                        <div
-                          key={index}
-                          className="inline-flex items-center gap-1"
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'jobtype', targetIndex: -2 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    職種を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.recent_job_types.map((jobType, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {jobType}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newJobTypes = formData.recent_job_types.filter((_, i) => i !== index);
+                            handleInputChange('recent_job_types', newJobTypes);
+                          }}
+                          className="w-3 h-3"
                         >
-                          <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]">
-                            <span className="line-clamp-1 break-all">{exp.job_type_name || '未入力'}</span>
-                          </span>
-                          <div className="bg-[#d2f1da] h-[40px] flex items-center px-4">
-                            <input
-                              type="number"
-                              value={exp.experience_years}
-                              onChange={(e) => updateJobTypeExperience(index, 'experience_years', e.target.value ? parseInt(e.target.value) : 0)}
-                              className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] w-16 focus:outline-none"
-                              placeholder="0"
-                            />
-                            <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">年</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeJobTypeExperience(index)}
-                            className="bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]"
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
                           >
-                            <svg
-                              width="13"
-                              height="12"
-                              viewBox="0 0 13 12"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                fill="#0F9058"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <AdminButton
-                      text="追加"
-                      variant="blue-gradient"
-                      size="figma-small"
-                      onClick={addJobTypeExperience}
-                    />
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1154,5 +1161,25 @@ export default function CandidateEditClient({ candidate }: Props) {
         </form>
       </div>
     </div>
+
+    {/* Modals */}
+    {modalState.isOpen && modalState.targetType === 'industry' && (
+      <IndustrySelectModal
+        isOpen={true}
+        onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
+        onConfirm={handleIndustryConfirm}
+        initialSelected={formData.recent_job_industries}
+      />
+    )}
+
+    {modalState.isOpen && modalState.targetType === 'jobtype' && (
+      <JobTypeSelectModal
+        isOpen={true}
+        onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
+        onConfirm={handleJobTypeConfirm}
+        initialSelected={formData.recent_job_types}
+      />
+    )}
+  </>
   );
 }

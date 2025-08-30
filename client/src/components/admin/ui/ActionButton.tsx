@@ -8,6 +8,7 @@ interface ActionButtonProps {
   onClick?: (e?: React.MouseEvent) => void;
   className?: string;
   size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
 }
 
 export const ActionButton: React.FC<ActionButtonProps> = ({ 
@@ -15,7 +16,8 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   variant, 
   onClick, 
   className = '',
-  size = 'medium'
+  size = 'medium',
+  disabled = false
 }) => {
   const getVariantClasses = () => {
     switch (variant) {
@@ -50,7 +52,8 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
 
   return (
     <button
-      onClick={handleClick}
+      onClick={disabled ? undefined : handleClick}
+      disabled={disabled}
       className={`
         inline-flex items-center justify-center 
         rounded-[32px] 
@@ -59,9 +62,8 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
         leading-[1.6] 
         transition-all 
         duration-200 
-        cursor-pointer 
-        hover:shadow-md
-        ${getVariantClasses()} 
+        ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:shadow-md'}
+        ${disabled ? 'bg-gray-400' : getVariantClasses()} 
         ${getSizeClasses()} 
         ${className}
       `}

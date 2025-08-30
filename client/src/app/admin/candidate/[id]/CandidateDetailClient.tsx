@@ -497,8 +497,18 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 直近の在籍企業の業種
               </label>
               <div className="flex flex-col gap-2">
-                <span className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm w-fit">コンサルティング</span>
-                <span className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm w-fit">製薬</span>
+                {candidate.recent_job_industries && Array.isArray(candidate.recent_job_industries) && candidate.recent_job_industries.length > 0 ? (
+                  candidate.recent_job_industries.map((industry, index) => (
+                    <span
+                      key={`industry-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof industry === 'object' ? (industry.name || industry.id || JSON.stringify(industry)) : industry}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
             <div>
@@ -506,8 +516,18 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 直近の在籍企業の業種での職種
               </label>
               <div className="flex flex-col gap-2">
-                <span className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm w-fit">経営者・CEO・COO等</span>
-                <span className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm w-fit">CFO</span>
+                {candidate.recent_job_types && Array.isArray(candidate.recent_job_types) && candidate.recent_job_types.length > 0 ? (
+                  candidate.recent_job_types.map((jobType, index) => (
+                    <span
+                      key={`job-type-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof jobType === 'object' ? (jobType.name || jobType.id || JSON.stringify(jobType)) : jobType}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
             <div>
@@ -569,15 +589,35 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 <div className="flex gap-6">
                   <span className="text-sm font-medium text-gray-700 w-[120px] text-right">業種</span>
                   <div className="flex flex-col gap-2 flex-1">
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm w-fit">IT</span>
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm w-fit">農業</span>
+                    {candidate.work_experience && candidate.work_experience.length > 0 ? (
+                      candidate.work_experience.map((exp, index) => (
+                        <span
+                          key={`work-exp-${index}`}
+                          className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                        >
+                          {typeof exp.industry_name === 'object' ? (exp.industry_name.name || exp.industry_name.id || JSON.stringify(exp.industry_name)) : exp.industry_name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500">未入力</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-6">
                   <span className="text-sm font-medium text-gray-700 w-[120px] text-right">職種</span>
                   <div className="flex flex-col gap-2 flex-1">
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm w-fit">コンサルティング</span>
-                    <span className="px-3 py-1 bg-gray-100 rounded-full text-sm w-fit">営業</span>
+                    {candidate.job_type_experience && candidate.job_type_experience.length > 0 ? (
+                      candidate.job_type_experience.map((exp, index) => (
+                        <span
+                          key={`job-type-exp-${index}`}
+                          className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                        >
+                          {typeof exp.job_type_name === 'object' ? (exp.job_type_name.name || exp.job_type_name.id || JSON.stringify(exp.job_type_name)) : exp.job_type_name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500">未入力</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -624,9 +664,22 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 <div className="flex gap-6">
                   <span className="text-sm font-medium text-gray-700 w-[120px] text-right">スキル</span>
                   <div className="flex flex-col gap-2 flex-1">
-                    <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">プロジェクトマネジメント</span>
-                    <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">ロジカルシンキング</span>
-                    <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">チームビルディング</span>
+                    {uniqueSkills.length > 0 && uniqueSkills.some(skill => skill.skills_list && skill.skills_list.length > 0) ? (
+                      uniqueSkills.map((skill, skillIndex) => 
+                        skill.skills_list && skill.skills_list.length > 0 ? (
+                          skill.skills_list.map((skillName, index) => (
+                            <span
+                              key={`skill-${skillIndex}-${index}`}
+                              className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                            >
+                              {typeof skillName === 'object' ? (skillName.name || skillName.id || JSON.stringify(skillName)) : skillName}
+                            </span>
+                          ))
+                        ) : null
+                      )
+                    ) : (
+                      <span className="text-gray-500">未入力</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-6">
@@ -655,29 +708,69 @@ export default function CandidateDetailClient({ candidate }: Props) {
             <div className="flex gap-6">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望業種</span>
               <div className="flex flex-col gap-2 flex-1">
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">コンサルティング</span>
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">製薬</span>
+                {candidate.desired_industries && Array.isArray(candidate.desired_industries) && candidate.desired_industries.length > 0 ? (
+                  candidate.desired_industries.map((industry, index) => (
+                    <span
+                      key={`desired-industry-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof industry === 'object' ? (industry.name || industry.id || JSON.stringify(industry)) : industry}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
             <div className="flex gap-6">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望職種</span>
               <div className="flex flex-col gap-2 flex-1">
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">経営者・CEO・COO等</span>
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">CFO</span>
+                {candidate.desired_job_types && Array.isArray(candidate.desired_job_types) && candidate.desired_job_types.length > 0 ? (
+                  candidate.desired_job_types.map((jobType, index) => (
+                    <span
+                      key={`desired-job-type-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof jobType === 'object' ? (jobType.name || jobType.id || JSON.stringify(jobType)) : jobType}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
             <div className="flex gap-6">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望勤務地</span>
               <div className="flex flex-col gap-2 flex-1">
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">東京</span>
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">静岡</span>
+                {candidate.desired_locations && Array.isArray(candidate.desired_locations) && candidate.desired_locations.length > 0 ? (
+                  candidate.desired_locations.map((location, index) => (
+                    <span
+                      key={`desired-location-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof location === 'object' ? (location.name || location.id || JSON.stringify(location)) : location}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
             <div className="flex gap-6">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">興味のある働き方</span>
               <div className="flex flex-col gap-2 flex-1">
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">事業責任者ポジションに興味がある</span>
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm w-fit">少数精鋭のチームで働きたい</span>
+                {candidate.interested_work_styles && Array.isArray(candidate.interested_work_styles) && candidate.interested_work_styles.length > 0 ? (
+                  candidate.interested_work_styles.map((workStyle, index) => (
+                    <span
+                      key={`work-style-${index}`}
+                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                    >
+                      {typeof workStyle === 'object' ? (workStyle.name || workStyle.id || JSON.stringify(workStyle)) : workStyle}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">未入力</span>
+                )}
               </div>
             </div>
           </div>

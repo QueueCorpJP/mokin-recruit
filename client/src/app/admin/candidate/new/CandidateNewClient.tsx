@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import {
@@ -63,15 +63,6 @@ export default function CandidateNewClient() {
     selfPr: '',
   });
 
-  // 職歴データ
-  const [workExperience, setWorkExperience] = useState([
-    { industry_name: '', experience_years: 0 }
-  ]);
-  
-  // 職種経験データ  
-  const [jobTypeExperience, setJobTypeExperience] = useState([
-    { job_type_name: '', experience_years: 0 }
-  ]);
   
   // 学歴データ
   const [education, setEducation] = useState({
@@ -110,37 +101,6 @@ export default function CandidateNewClient() {
     setSkills(prev => ({ ...prev, [field]: value }));
   };
 
-  const addWorkExperience = () => {
-    setWorkExperience(prev => [...prev, { industry_name: '', experience_years: 0 }]);
-  };
-
-  const updateWorkExperience = (index: number, field: 'industry_name' | 'experience_years', value: string | number) => {
-    setWorkExperience(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const removeWorkExperience = (index: number) => {
-    if (workExperience.length > 1) {
-      setWorkExperience(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const addJobTypeExperience = () => {
-    setJobTypeExperience(prev => [...prev, { job_type_name: '', experience_years: 0 }]);
-  };
-
-  const updateJobTypeExperience = (index: number, field: 'job_type_name' | 'experience_years', value: string | number) => {
-    setJobTypeExperience(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const removeJobTypeExperience = (index: number) => {
-    if (jobTypeExperience.length > 1) {
-      setJobTypeExperience(prev => prev.filter((_, i) => i !== index));
-    }
-  };
 
   const addSelectionEntry = () => {
     setSelectionEntries(prev => [
@@ -166,6 +126,9 @@ export default function CandidateNewClient() {
       if (modalState.targetIndex === -1) {
         // 最新の職歴の業界を更新
         handleInputChange('recentJobIndustries', selectedIndustries);
+      } else if (modalState.targetIndex === -2) {
+        // 学歴・経験業種/職種セクションの業種を更新
+        handleInputChange('recentJobIndustries', selectedIndustries);
       } else {
         // Selection entriesの業界を更新
         updateSelectionEntry(modalState.targetIndex, 'industries', selectedIndustries);
@@ -178,6 +141,9 @@ export default function CandidateNewClient() {
     if (modalState.targetIndex !== null) {
       if (modalState.targetIndex === -1) {
         // 最新の職歴の職種を更新
+        handleInputChange('recentJobTypes', selectedJobTypes);
+      } else if (modalState.targetIndex === -2) {
+        // 学歴・経験業種/職種セクションの職種を更新
         handleInputChange('recentJobTypes', selectedJobTypes);
       } else {
         // Selection entriesの職種を更新
@@ -204,7 +170,7 @@ export default function CandidateNewClient() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
@@ -265,105 +231,103 @@ export default function CandidateNewClient() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, formData, education, workExperience, jobTypeExperience, skills, selectionEntries, router]);
+
+  useEffect(() => {
+    const handleDraftSave = () => {
+      // 下書き保存処理
+      console.log('Saving draft...');
+      alert('下書きを保存しました（実装予定）');
+    };
+
+    const handleConfirm = () => {
+      // 確認処理
+      handleSubmit();
+    };
+
+    window.addEventListener('candidate-new-draft', handleDraftSave);
+    window.addEventListener('candidate-new-confirm', handleConfirm);
+
+    return () => {
+      window.removeEventListener('candidate-new-draft', handleDraftSave);
+      window.removeEventListener('candidate-new-confirm', handleConfirm);
+    };
+  }, [handleSubmit]);
 
   return (
     <>
       <div className="min-h-screen">
-        {/* Header */}
-        <div className="p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            新規候補者追加
-          </h1>
-        </div>
-
         <div className="p-8">
           <form onSubmit={(e) => e.preventDefault()}>
             {/* メールアドレス */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
                 メールアドレス
-              </span>
-            </div>
-
-            <div className="mb-12">
-              <div className="flex items-center gap-8 mb-6">
-                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
+              </h3>
+              <div className="flex items-center gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
                   メールアドレス
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
                 />
               </div>
-            </div>
+            </section>
 
             {/* 基本情報 */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
                 基本情報
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-6">
+              </h3>
               {/* 氏名 */}
-              <div className="flex items-center gap-8">
-                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
+              <div className="flex items-center gap-8 mb-6">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
                   氏名
                 </label>
-                <div className="flex-1 flex gap-4">
+                <div className="w-[400px] flex gap-2">
                   <input
                     type="text"
+                    placeholder="姓"
+                    autoComplete="off"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    placeholder="姓"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                   />
                   <input
                     type="text"
+                    placeholder="名"
+                    autoComplete="off"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    placeholder="名"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                   />
                 </div>
               </div>
 
               {/* フリガナ */}
-              <div className="flex items-center gap-8">
-                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
+              <div className="flex items-center gap-8 mb-6">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
                   フリガナ
                 </label>
-                <div className="flex-1 flex gap-4">
+                <div className="w-[400px] flex gap-2">
                   <input
                     type="text"
+                    placeholder="セイ"
+                    autoComplete="off"
                     value={formData.lastNameKana}
                     onChange={(e) => handleInputChange('lastNameKana', e.target.value)}
-                    placeholder="セイ"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                   />
                   <input
                     type="text"
+                    placeholder="メイ"
+                    autoComplete="off"
                     value={formData.firstNameKana}
                     onChange={(e) => handleInputChange('firstNameKana', e.target.value)}
-                    placeholder="メイ"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
                   />
                 </div>
               </div>
@@ -504,23 +468,13 @@ export default function CandidateNewClient() {
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* 転職経験 */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
-                転職経験
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-6">
+            {/* 転職活動状況 */}
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+                転職活動状況
+              </h3>
               {/* 転職経験 */}
               <div className="flex items-center gap-8">
                 <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
@@ -666,23 +620,13 @@ export default function CandidateNewClient() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* 直近の職歴 */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
-                直近の職歴
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-6">
+            {/* 職務経歴 */}
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+                職務経歴
+              </h3>
               {/* 会社名 */}
               <div className="flex items-center gap-8">
                 <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
@@ -841,23 +785,14 @@ export default function CandidateNewClient() {
                   placeholder="職務内容を入力してください"
                 />
               </div>
-            </div>
+            </section>
 
             {/* 学歴・経験業種/職種 */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
                 学歴・経験業種/職種
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-8">
+              </h3>
+              <div className="space-y-8">
               {/* 学歴 */}
               <div className="space-y-6">
                 <h3 className="text-[16px] font-bold text-[#323232] tracking-[1.6px]">学歴</h3>
@@ -952,115 +887,112 @@ export default function CandidateNewClient() {
               </div>
 
               {/* 業種経験 */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[16px] font-bold text-[#323232] tracking-[1.6px]">業種経験</h3>
+              <div className="flex items-center gap-8 mb-6">
+                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
+                  業種
+                </label>
+                <div className="flex-1">
                   <button
                     type="button"
-                    onClick={addWorkExperience}
-                    className="px-4 py-2 text-sm bg-blue-500 text-white rounded-[5px] hover:bg-blue-600 transition-colors"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'industry', targetIndex: -2 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
                   >
-                    追加
+                    業種を選択
                   </button>
-                </div>
-
-                {workExperience.map((exp, index) => (
-                  <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-[5px]">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={exp.industry_name}
-                        onChange={(e) => updateWorkExperience(index, 'industry_name', e.target.value)}
-                        placeholder="業界名を入力してください"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="w-24">
-                      <input
-                        type="number"
-                        value={exp.experience_years}
-                        onChange={(e) => updateWorkExperience(index, 'experience_years', parseInt(e.target.value) || 0)}
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <span className="text-[16px] text-[#323232]">年</span>
-                    {workExperience.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeWorkExperience(index)}
-                        className="text-red-500 hover:text-red-700"
+                  <div className="flex flex-wrap gap-2">
+                    {formData.recentJobIndustries.map((industry, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                       >
-                        削除
-                      </button>
-                    )}
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {industry}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newIndustries = formData.recentJobIndustries.filter((_, i) => i !== index);
+                            handleInputChange('recentJobIndustries', newIndustries);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
 
               {/* 職種経験 */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[16px] font-bold text-[#323232] tracking-[1.6px]">職種経験</h3>
+              <div className="flex items-center gap-8">
+                <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
+                  職種
+                </label>
+                <div className="flex-1">
                   <button
                     type="button"
-                    onClick={addJobTypeExperience}
-                    className="px-4 py-2 text-sm bg-blue-500 text-white rounded-[5px] hover:bg-blue-600 transition-colors"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'jobtype', targetIndex: -2 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
                   >
-                    追加
+                    職種を選択
                   </button>
-                </div>
-
-                {jobTypeExperience.map((exp, index) => (
-                  <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-[5px]">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={exp.job_type_name}
-                        onChange={(e) => updateJobTypeExperience(index, 'job_type_name', e.target.value)}
-                        placeholder="職種名を入力してください"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="w-24">
-                      <input
-                        type="number"
-                        value={exp.experience_years}
-                        onChange={(e) => updateJobTypeExperience(index, 'experience_years', parseInt(e.target.value) || 0)}
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-[5px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <span className="text-[16px] text-[#323232]">年</span>
-                    {jobTypeExperience.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeJobTypeExperience(index)}
-                        className="text-red-500 hover:text-red-700"
+                  <div className="flex flex-wrap gap-2">
+                    {formData.recentJobTypes.map((jobType, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
                       >
-                        削除
-                      </button>
-                    )}
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {jobType}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newJobTypes = formData.recentJobTypes.filter((_, i) => i !== index);
+                            handleInputChange('recentJobTypes', newJobTypes);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+              </div>
+            </section>
 
             {/* 資格・語学・スキル */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
                 資格・語学・スキル
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-6">
+              </h3>
               {/* 英語レベル */}
               <div className="flex items-center gap-8">
                 <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
@@ -1142,23 +1074,13 @@ export default function CandidateNewClient() {
                   placeholder="保有資格を入力してください"
                 />
               </div>
-            </div>
+            </section>
 
             {/* 職務要約・自己PR */}
-            <div className="flex flex-row w-full h-[29px] items-center justify-center gap-6 mb-8">
-              <div className="flex-1 h-px relative">
-                <div className="absolute inset-[-1px_-0.3%]">
-                  <svg width="100%" height="1" viewBox="0 0 100 1" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="100" y2="0" stroke="#dcdcdc" strokeWidth="1" />
-                  </svg>
-                </div>
-              </div>
-              <span className="text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap">
+            <section className="mb-12">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
                 職務要約・自己PR
-              </span>
-            </div>
-
-            <div className="mb-12 space-y-6">
+              </h3>
               {/* 職務要約 */}
               <div className="flex items-start gap-8">
                 <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0 pt-2">
@@ -1186,14 +1108,13 @@ export default function CandidateNewClient() {
                   placeholder="自己PRやその他の情報を入力してください"
                 />
               </div>
-            </div>
+            </section>
 
-            {/* Submit Button */}
-            <div className="flex justify-center pt-8">
+            {/* Submit Buttons */}
+            <div className="flex justify-center gap-4 pt-8">
               <AdminButton 
-                text={isSubmitting ? "準備中..." : "確認へ進む"} 
-                variant="green-gradient" 
-                size="figma-default"
+                text={isSubmitting ? "準備中..." : "確認する"}
+                variant="green-gradient"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               />
@@ -1208,7 +1129,7 @@ export default function CandidateNewClient() {
           isOpen={true}
           onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
           onConfirm={handleIndustryConfirm}
-          initialSelected={[]}
+          initialSelected={formData.recentJobIndustries}
         />
       )}
 
@@ -1217,7 +1138,7 @@ export default function CandidateNewClient() {
           isOpen={true}
           onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
           onConfirm={handleJobTypeConfirm}
-          initialSelected={[]}
+          initialSelected={formData.recentJobTypes}
         />
       )}
     </>

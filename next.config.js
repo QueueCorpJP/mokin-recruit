@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -13,7 +12,7 @@ const nextConfig: NextConfig = {
     styledComponents: false,
     reactRemoveProperties: false,
   },
-  serverExternalPackages: ['bcryptjs'],
+  // serverExternalPackages is not supported in Next.js 14.2
   // パフォーマンス最適化
   experimental: {
     optimizeCss: true,
@@ -119,4 +118,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

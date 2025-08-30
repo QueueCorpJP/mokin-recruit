@@ -21,11 +21,11 @@ export interface CandidateDetailData {
   current_company: string | null;
   current_position: string | null;
   current_residence: string | null;
-  desired_industries: string[];
-  desired_job_types: string[];
-  desired_locations: string[];
+  desired_industries: (string | { name?: string; id?: string; [key: string]: any })[];
+  desired_job_types: (string | { name?: string; id?: string; [key: string]: any })[];
+  desired_locations: (string | { name?: string; id?: string; [key: string]: any })[];
   management_experience_count: number;
-  interested_work_styles: string[];
+  interested_work_styles: (string | { name?: string; id?: string; [key: string]: any })[];
   last_login_at: string | null;
   
   // 転職活動状況
@@ -54,11 +54,11 @@ export interface CandidateDetailData {
     graduation_month: number | null;
   }[];
   work_experience: {
-    industry_name: string;
+    industry_name: string | { name?: string; id?: string; [key: string]: any };
     experience_years: number;
   }[];
   job_type_experience: {
-    job_type_name: string;
+    job_type_name: string | { name?: string; id?: string; [key: string]: any };
     experience_years: number;
   }[];
   
@@ -66,7 +66,7 @@ export interface CandidateDetailData {
   skills: {
     english_level: string | null;
     other_languages: any;
-    skills_list: string[] | null;
+    skills_list: (string | { name?: string; id?: string; [key: string]: any })[] | null;
     qualifications: string | null;
   }[];
   
