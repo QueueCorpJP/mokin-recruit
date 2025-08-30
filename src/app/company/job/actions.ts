@@ -1,0 +1,528 @@
+'use server'
+
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
+
+// 求人データの型定義
+interface JobPosting {
+  id: string;
+  title: string;
+  jobType: string[];
+  industry: string[];
+  employmentType: string;
+  workLocation: string[];
+  salaryMin: number | null;
+  salaryMax: number | null;
+  status: string;
+  groupName: string;
+  groupId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  publicationType: string;
+  internalMemo: string;
+}
+
+// 求人一覧取得
+export async function getCompanyJobs(params: {
+  status?: string;
+  groupId?: string;
+  scope?: string;
+  search?: string;
+}) {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    console.log('🔍 getCompanyJobs - Auth result:', authResult);
+    if (!authResult.success) {
+      console.log('❌ getCompanyJobs - Auth failed:', authResult.error);
+      return { success: false, error: authResult.error };
+    }
+
+    const { companyAccountId: userCompanyAccountId } = authResult.data;
+
+    // キャッシュキーの生成（パラメータを含める）
+    const cacheKey = `${userCompanyAccountId}-${JSON.stringify(params)}`;
+    const cached = jobsCache.get(cacheKey);
+    
+    // 期限切れキャッシュを即座に削除
+    if (cached && Date.now() - cached.timestamp >= JOBS_CACHE_TTL) {
+      jobsCache.delete(cacheKey);
+    } else if (cached) {
+      console.log('[getCompanyJobs] Cache hit - returning cached data');
+      return cached.data;
+    }
+    
+    console.log('[getCompanyJobs] Cache miss - fetching new data');
+    const supabase = getSupabaseAdminClient();
+
+    // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
+    let query = supabase
+      .from('job_postings')
+      .select(
+        `
+        id,
+        title,
+        job_description,
+        required_skills,
+        preferred_skills,
+        salary_min,
+        salary_max,
+        employment_type,
+        work_location,
+        remote_work_available,
+        job_type,
+        industry,
+        status,
+        application_deadline,
+        created_at,
+        updated_at,
+        published_at,
+        position_summary,
+        salary_note,
+        location_note,
+        employment_type_note,
+        working_hours,
+        overtime_info,
+        holidays,
+        selection_process,
+        appeal_points,
+        smoking_policy,
+        smoking_policy_note,
+        required_documents,
+        internal_memo,
+        publication_type,
+        image_urls,
+        company_group_id,
+        company_groups (
+          id,
+          group_name
+        )
+      `
+      )
+      .eq('company_account_id', userCompanyAccountId)
+      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    // ステータスフィルター
+    if (params.status && params.status !== 'すべて') {
+      const statusMap: Record<string, string> = {
+        下書き: 'DRAFT',
+        '掲載待ち（承認待ち）': 'PENDING_APPROVAL',
+        掲載済: 'PUBLISHED',
+        停止: 'CLOSED',
+      };
+      if (statusMap[params.status]) {
+        query = query.eq('status', statusMap[params.status]);
+      }
+    }
+
+    // グループフィルター
+    if (params.groupId && params.groupId !== 'すべて') {
+      query = query.eq('company_group_id', params.groupId);
+    }
+
+    // 公開範囲フィルター
+    if (params.scope && params.scope !== 'すべて') {
+      if (params.scope === '公開停止') {
+        query = query.eq('status', 'CLOSED');
+      } else {
+        const scopeMap: Record<string, string> = {
+          '一般公開': 'public',
+          '登録会員限定': 'members',
+          'スカウト限定': 'scout'
+        };
+        if (scopeMap[params.scope]) {
+          query = query.eq('publication_type', scopeMap[params.scope]);
+        }
+      }
+    }
+
+    // キーワード検索
+    if (params.search) {
+      query = query.or(
+        `title.ilike.%${params.search}%,job_type.ilike.%${params.search}%,job_types.cs.{${params.search}},industries.cs.{${params.search}}`
+      );
+    }
+
+    const { data: jobs, error: jobsError } = await query;
+
+    if (jobsError) {
+      console.error('Failed to fetch jobs:', {
+        error: jobsError,
+        message: jobsError.message,
+        details: jobsError.details,
+        hint: jobsError.hint,
+        code: jobsError.code,
+        userCompanyAccountId
+      });
+      return { success: false, error: `求人情報の取得に失敗しました: ${jobsError.message}` };
+    }
+
+    // レスポンス用にデータを整形（JOINされたグループ情報を使用）
+    const formattedJobs = (jobs || []).map(job => ({
+      id: job.id,
+      title: job.title,
+      jobDescription: job.job_description,
+      requiredSkills: job.required_skills,
+      preferredSkills: job.preferred_skills,
+      salaryMin: job.salary_min,
+      salaryMax: job.salary_max,
+      employmentType: job.employment_type,
+      workLocation: job.work_location || [],
+      remoteWorkAvailable: job.remote_work_available,
+      jobType: job.job_type || [],
+      industry: job.industry || [],
+      status: job.status,
+      applicationDeadline: job.application_deadline,
+      positionSummary: job.position_summary,
+      salaryNote: job.salary_note,
+      locationNote: job.location_note,
+      employmentTypeNote: job.employment_type_note,
+      workingHours: job.working_hours,
+      overtimeInfo: job.overtime_info,
+      holidays: job.holidays,
+      selectionProcess: job.selection_process,
+      appealPoints: job.appeal_points || [],
+      smokingPolicy: job.smoking_policy,
+      smokingPolicyNote: job.smoking_policy_note,
+      requiredDocuments: job.required_documents || [],
+      internalMemo: job.internal_memo,
+      publicationType: job.publication_type,
+      imageUrls: job.image_urls || [],
+      groupName: (job.company_groups as any)?.group_name || 'グループ',
+      groupId: job.company_group_id,
+      createdAt: job.created_at,
+      updatedAt: job.updated_at,
+      publishedAt: job.published_at,
+    }));
+
+    const result = { success: true, data: formattedJobs };
+
+    // 成功した場合のみキャッシュに保存
+    jobsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    
+    // キャッシュサイズを制限（メモリ使用量対策）
+    if (jobsCache.size > 30) {
+      const oldestKey = jobsCache.keys().next().value;
+      if (oldestKey) {
+        jobsCache.delete(oldestKey);
+      }
+    }
+
+    return result;
+  } catch (e: any) {
+    console.error('Company jobs error:', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// 新規求人作成
+export async function createJob(data: any) {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
+    }
+
+    const { 
+      companyUserId: actualUserId, 
+      companyAccountId: userCompanyAccountId 
+    } = authResult.data;
+    const supabase = getSupabaseAdminClient();
+
+    // 利用可能なグループを確認
+    const { data: availableUsers } = await supabase
+      .from('company_users')
+      .select('id, email, full_name')
+      .eq('company_account_id', userCompanyAccountId);
+
+    let finalCompanyGroupId = actualUserId;
+    if (data.company_group_id && availableUsers?.some(user => user.id === data.company_group_id)) {
+      finalCompanyGroupId = data.company_group_id;
+    }
+
+    // 画像処理
+    let imageUrls: string[] = [];
+    if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+      try {
+        const uploadPromises = data.images.map(async (imageData: any, index: number) => {
+          const { data: base64Data, contentType } = imageData;
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 15);
+          const fileExtension = contentType.includes('jpeg') ? 'jpg' : contentType.split('/')[1];
+          const fileName = `job-${finalCompanyGroupId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
+          
+          const { data: uploadData, error } = await supabase.storage
+            .from('job-images')
+            .upload(fileName, buffer, {
+              contentType: contentType,
+              upsert: false
+            });
+          
+          if (error) {
+            throw new Error(`画像のアップロードに失敗しました: ${error.message}`);
+          }
+          
+          const { data: urlData } = supabase.storage
+            .from('job-images')
+            .getPublicUrl(fileName);
+          
+          return urlData.publicUrl;
+        });
+        
+        imageUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error('Image upload process failed:', error);
+        return { 
+          success: false, 
+          error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
+        };
+      }
+    }
+
+    // 配列フィールドの処理
+    const ensureArray = (value: any): string[] => {
+      if (Array.isArray(value)) {
+        return value.filter(v => v && typeof v === 'string');
+      }
+      if (value && typeof value === 'string') {
+        return [value];
+      }
+      return [];
+    };
+
+    // テキストフィールドの処理
+    const ensureText = (value: any): string | null => {
+      if (typeof value === 'string') {
+        return value || null;
+      }
+      if (Array.isArray(value)) {
+        const textResult = value.filter(v => v && typeof v === 'string').join(', ');
+        return textResult || null;
+      }
+      return null;
+    };
+
+    // 雇用形態の日本語→英語マッピング
+    const employmentTypeMapping: Record<string, string> = {
+      '正社員': 'FULL_TIME',
+      '契約社員': 'CONTRACT',
+      '派遣社員': 'CONTRACT',
+      'アルバイト・パート': 'PART_TIME',
+      '業務委託': 'CONTRACT',
+      'インターン': 'INTERN'
+    };
+    
+    const mappedEmploymentType = employmentTypeMapping[data.employment_type] || 'FULL_TIME';
+
+    const insertData = {
+      company_account_id: userCompanyAccountId,
+      company_group_id: finalCompanyGroupId,
+      title: data.title || '未設定',
+      job_description: data.job_description || '未設定',
+      position_summary: data.position_summary || null,
+      required_skills: ensureText(data.required_skills),
+      preferred_skills: ensureText(data.preferred_skills),
+      salary_min: data.salary_min !== undefined ? Number(data.salary_min) : null,
+      salary_max: data.salary_max !== undefined ? Number(data.salary_max) : null,
+      salary_note: data.salary_note || null,
+      employment_type: mappedEmploymentType,
+      work_location: ensureArray(data.work_locations),
+      location_note: data.location_note || null,
+      employment_type_note: data.employment_type_note || null,
+      working_hours: data.working_hours || null,
+      overtime: data.overtime || 'あり',
+      overtime_info: data.overtime_info || null,
+      holidays: data.holidays || null,
+      remote_work_available: data.remote_work_available === true || data.remote_work_available === 'true',
+      job_type: ensureArray(data.job_types),
+      industry: ensureArray(data.industries),
+      selection_process: data.selection_process || null,
+      appeal_points: ensureArray(data.appeal_points),
+      smoking_policy: data.smoking_policy || null,
+      smoking_policy_note: data.smoking_policy_note || null,
+      required_documents: ensureArray(data.required_documents),
+      internal_memo: data.internal_memo || null,
+      publication_type: data.publication_type || 'public',
+      image_urls: imageUrls,
+      status: data.status || 'PENDING_APPROVAL',
+      application_deadline: data.application_deadline || null,
+      published_at: data.published_at || null,
+    };
+
+    const { data: insertResult, error } = await supabase.from('job_postings').insert([insertData]);
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: insertResult };
+  } catch (e: any) {
+    console.error('Job creation error:', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// 求人情報取得（編集用）
+export async function getJobForEdit(jobId: string) {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
+    }
+
+    const supabase = getSupabaseAdminClient();
+
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data) {
+      return { success: false, error: '求人情報が見つかりません' };
+    }
+
+    return { success: true, data };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+// 求人情報更新
+export async function updateJob(jobId: string, updateData: any) {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
+    }
+
+    const supabase = getSupabaseAdminClient();
+
+    // ステータスが'PUBLISHED'に変更される場合、published_atを自動設定
+    if (updateData.status === 'PUBLISHED') {
+      const { data: currentJob, error: fetchError } = await supabase
+        .from('job_postings')
+        .select('status, published_at')
+        .eq('id', jobId)
+        .single();
+
+      if (fetchError) {
+        return { success: false, error: fetchError.message };
+      }
+
+      if (currentJob.status !== 'PUBLISHED') {
+        updateData.published_at = new Date().toISOString();
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('job_postings')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', jobId)
+      .select();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data || data.length === 0) {
+      return { success: false, error: '求人情報が見つかりません' };
+    }
+
+    return { success: true, data };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+// 求人削除（ステータスをCLOSEDに変更）
+export async function deleteJob(jobId: string) {
+  return updateJob(jobId, { status: 'CLOSED' });
+}
+
+// 簡単なメモリキャッシュ
+const groupsCache = new Map<string, { data: any; timestamp: number }>();
+const jobsCache = new Map<string, { data: any; timestamp: number }>();
+const GROUPS_CACHE_TTL = 2 * 60 * 1000; // 2分
+const JOBS_CACHE_TTL = 1 * 60 * 1000; // 1分
+
+// グループ一覧取得
+export async function getCompanyGroups() {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    console.log('🔍 getCompanyGroups - Auth result:', authResult);
+    if (!authResult.success) {
+      console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
+      return { success: false, error: authResult.error };
+    }
+
+    const { companyAccountId } = authResult.data;
+
+    // キャッシュキーの生成
+    const cacheKey = companyAccountId;
+    const cached = groupsCache.get(cacheKey);
+    
+    // 期限切れキャッシュを即座に削除
+    if (cached && Date.now() - cached.timestamp >= GROUPS_CACHE_TTL) {
+      groupsCache.delete(cacheKey);
+    } else if (cached) {
+      console.log('[getCompanyGroups] Cache hit - returning cached data');
+      return cached.data;
+    }
+    
+    console.log('[getCompanyGroups] Cache miss - fetching new data');
+    const supabase = getSupabaseAdminClient();
+
+    // 同じcompany_accountに属するユーザー一覧を取得
+    const { data: groups, error } = await supabase
+      .from('company_users')
+      .select('id, email, full_name')
+      .eq('company_account_id', companyAccountId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // グループ形式に変換
+    const formattedGroups = (groups || []).map(user => ({
+      id: user.id,
+      group_name: user.full_name || user.email,
+      description: user.email
+    }));
+
+    const result = { success: true, data: formattedGroups };
+
+    // 成功した場合のみキャッシュに保存
+    groupsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    
+    // キャッシュサイズを制限（メモリ使用量対策）
+    if (groupsCache.size > 20) {
+      const oldestKey = groupsCache.keys().next().value;
+      if (oldestKey) {
+        groupsCache.delete(oldestKey);
+      }
+    }
+
+    return result;
+  } catch (e: any) {
+    console.error('Company groups error:', e);
+    return { success: false, error: e.message };
+  }
+}
