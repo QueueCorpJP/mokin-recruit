@@ -22,6 +22,8 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
   confirmText = "確認",
   secondaryText
 }) => {
+  console.log('AdminNotificationModal render - isOpen:', isOpen, 'title:', title);
+  
   if (!isOpen) return null;
 
   return (
@@ -69,7 +71,7 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
             <div style={{ width: '198px' }}>
               <Button
                 onClick={onSecondaryAction}
-                variant="green-gradient"
+                variant="green-outline"
                 size="figma-default"
                 className="w-full text-[16px] font-bold tracking-[0.1em]"
               >

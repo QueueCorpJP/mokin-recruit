@@ -11,6 +11,7 @@ export default function CandidateNewConfirmClient() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>(null);
 
   useEffect(() => {
@@ -46,12 +47,19 @@ export default function CandidateNewConfirmClient() {
         formData.workExperience,
         formData.jobTypeExperience,
         formData.skills,
+        formData.expectations || {},
         formData.selectionEntries
       );
 
+      console.log('Create candidate result:', result);
+      
       if (result.success) {
+        console.log('Setting candidateId:', result.candidateId);
+        console.log('Setting showModal to true');
+        setCandidateId(result.candidateId);
         setShowModal(true);
       } else {
+        console.error('Creation failed:', result.error);
         alert('候補者の作成に失敗しました: ' + result.error);
       }
     } catch (error) {
@@ -62,23 +70,29 @@ export default function CandidateNewConfirmClient() {
     }
   };
 
-  const handleModalClose = () => {
+  const handleViewCandidate = () => {
     setShowModal(false);
-    router.push('/admin/candidate');
+    if (candidateId) {
+      router.push(`/admin/candidate/${candidateId}`);
+    } else {
+      router.push('/admin/candidate');
+    }
+  };
+
+  const handleBackToAdmin = () => {
+    setShowModal(false);
+    router.push('/admin');
   };
 
   if (!formData) {
     return <div>Loading...</div>;
   }
 
+  console.log('Render - showModal:', showModal, 'candidateId:', candidateId);
+
   return (
     <>
       <div className="min-h-screen">
-        <div className="p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            新規候補者追加確認
-          </h1>
-        </div>
 
         <div className="p-8">
           {/* メールアドレス */}
@@ -361,10 +375,12 @@ export default function CandidateNewConfirmClient() {
       {/* Completion Modal */}
       <AdminNotificationModal
         isOpen={showModal}
-        title="候補者の作成完了"
-        description="新しい候補者の作成が完了しました。"
-        confirmText="候補者一覧に戻る"
-        onConfirm={handleModalClose}
+        title="新規候補者の登録完了"
+        description="新規候補者の登録が完了しました。"
+        confirmText="管理者トップ画面に戻る"
+        secondaryText="候補者情報を確認"
+        onConfirm={handleBackToAdmin}
+        onSecondaryAction={handleViewCandidate}
       />
     </>
   );
