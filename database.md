@@ -363,6 +363,9 @@ CREATE TABLE public.messages (
   updated_at timestamp with time zone DEFAULT now(),
   sender_company_group_id uuid,
   file_urls jsonb DEFAULT '[]'::jsonb,
+  approval_status text DEFAULT '未対応'::text CHECK (approval_status = ANY (ARRAY['未対応'::text, '承認'::text, '非承認'::text])),
+  approval_reason text,
+  approval_comment text,
   CONSTRAINT messages_pkey PRIMARY KEY (id),
   CONSTRAINT messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
   CONSTRAINT messages_sender_candidate_id_fkey FOREIGN KEY (sender_candidate_id) REFERENCES public.candidates(id),
@@ -386,7 +389,9 @@ CREATE TABLE public.messages_backup (
   read_at timestamp with time zone,
   replied_at timestamp with time zone,
   created_at timestamp with time zone,
-  updated_at timestamp with time zone
+  updated_at timestamp with time zone,
+  id_pk uuid NOT NULL DEFAULT gen_random_uuid(),
+  CONSTRAINT messages_backup_pkey PRIMARY KEY (id_pk)
 );
 CREATE TABLE public.ng_keywords (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -399,6 +404,38 @@ CREATE TABLE public.ng_keywords (
   description text,
   CONSTRAINT ng_keywords_pkey PRIMARY KEY (id),
   CONSTRAINT ng_keywords_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.notice_categories (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL UNIQUE,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notice_categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notice_category_relations (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  notice_id uuid NOT NULL,
+  category_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notice_category_relations_pkey PRIMARY KEY (id),
+  CONSTRAINT notice_category_relations_notice_id_fkey FOREIGN KEY (notice_id) REFERENCES public.notices(id),
+  CONSTRAINT notice_category_relations_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.notice_categories(id)
+);
+CREATE TABLE public.notices (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  title text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  content text,
+  excerpt text,
+  status text DEFAULT 'DRAFT'::text CHECK (status = ANY (ARRAY['DRAFT'::text, 'PUBLISHED'::text, 'ARCHIVED'::text])),
+  thumbnail_url text,
+  published_at timestamp with time zone,
+  views_count integer DEFAULT 0,
+  content_images jsonb DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notices_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.notification_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

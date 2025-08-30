@@ -1,0 +1,497 @@
+@import 'tailwindcss';
+
+/* Import media content styles globally */
+@import '../styles/media-content.css';
+
+/* Scrollbar hide utility class */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Font Optimization - Prevent Layout Shift */
+.fonts-loading {
+  opacity: 1;
+}
+
+.fonts-loaded {
+  opacity: 1;
+}
+
+/* Font loading states */
+html:not(.fonts-loaded) body {
+  font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
+}
+
+/* Prevent FOIT (Flash of Invisible Text) */
+@supports (font-display: swap) {
+  @font-face {
+    font-family: 'Noto Sans JP';
+    font-display: swap;
+  }
+}
+
+/* Tailwind CSS v4.0のホバー制限を回避するカスタムバリアント */
+@variant hover-always (&:hover);
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-noto-sans-jp: var(--font-noto-sans-jp);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: #ff5b5b;
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  /* Design Tokens for Green Button System */
+  --green-gradient-start: #198d76;
+  --green-gradient-end: #1ca74f;
+  --green-gradient-hover-start: #12614e;
+  --green-gradient-hover-end: #1a8946;
+  --green-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --green-button-square-radius: 10px;
+  --green-button-round-radius: 32px;
+
+  /* Design Tokens for Green Outline Button */
+  --green-outline-border: #0f9058;
+  --green-outline-text: #0f9058;
+  --green-outline-hover-bg: rgba(15, 144, 88, 0.2);
+  --green-outline-radius: 32px;
+
+  /* Design Tokens for Blue Button System */
+  --blue-gradient-start: #26af94;
+  --blue-gradient-end: #3a93cb;
+  --blue-gradient-hover-start: #249881;
+  --blue-gradient-hover-end: #27668d;
+  --blue-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --blue-button-radius: 32px;
+
+  /* Design Tokens for Blue Outline Button */
+  --blue-outline-border: #26af94;
+  --blue-outline-text: #26af94;
+  --blue-outline-hover-bg: rgba(38, 175, 148, 0.2);
+  --blue-outline-radius: 32px;
+
+  /* Design Tokens for Yellow Button System */
+  --yellow-gradient-start: #ffd000;
+  --yellow-gradient-end: #fff278;
+  --yellow-gradient-hover-start: #eeab02;
+  --yellow-gradient-hover-end: #e1ca11;
+  --yellow-button-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+  --yellow-button-radius: 10px;
+  --yellow-button-text: #323232;
+  --yellow-button-icon: #323232;
+
+  /* Design Tokens for Yellow Outline Button */
+  --yellow-outline-border: #ffd000;
+  --yellow-outline-text: #323232;
+  --yellow-outline-hover-bg: rgba(255, 208, 0, 0.2);
+  --yellow-outline-radius: 10px;
+
+  /* Design Tokens for White Outline Square Button */
+  --white-outline-border: #ffffff;
+  --white-outline-text: #ffffff;
+  --white-outline-icon: #ffffff;
+  --white-outline-hover-bg: rgba(255, 255, 255, 0.3);
+  --white-outline-radius: 10px;
+
+  /* Design Tokens for Red Button System (削除ボタン) */
+  --red-button-bg: #ff5b5b;
+  --red-button-hover-bg: #af4545;
+  --red-button-text: #ffffff;
+  --red-button-radius: 32px;
+
+  /* Design Tokens for Small Button System (リスト内緑) */
+  --small-button-bg: #0f9058;
+  --small-button-text: #ffffff;
+  --small-button-radius: 32px;
+  --small-button-padding-x: 16px;
+  --small-button-padding-y: 4px;
+  --small-button-font-size: 14px;
+
+  --small-button-line-height: 1.6;
+  --small-button-letter-spacing: 0.1em;
+
+  /* Small Button Outline Version */
+  --small-outline-border: #0f9058;
+  --small-outline-text: #0f9058;
+  --small-outline-hover-bg: rgba(15, 144, 88, 0.2);
+  --small-outline-radius: 32px;
+
+  /* Design Tokens for Email Input Form */
+  --email-input-width: 400px;
+  --email-input-padding: 11px;
+  --email-input-border-radius: 5px;
+  --email-input-border-color: #999999;
+  --email-input-border-width: 1px;
+  --email-input-bg: #ffffff;
+  --email-input-text-color: #323232;
+  --email-input-placeholder-color: #999999;
+  --email-input-focus-border-color: #0f9058;
+  --email-input-focus-ring-color: rgba(15, 144, 88, 0.2);
+  --email-input-error-border-color: #dc2626;
+  --email-input-error-ring-color: rgba(220, 38, 38, 0.2);
+
+  /* Email Form Label */
+  --email-label-color: #323232;
+
+  --email-label-font-size: 16px;
+  --email-label-line-height: 2em;
+  --email-label-letter-spacing: 0.1em;
+
+  /* Email Form Layout */
+  --email-form-gap: 16px;
+  --email-form-field-gap: 8px;
+  --email-label-padding-top: 11px;
+
+  /* Design Tokens for Base Input System (共通) */
+  --input-width: 400px;
+  --input-padding: 11px;
+  --input-border-radius: 5px;
+  --input-border-color: #999999;
+  --input-border-width: 1px;
+  --input-bg: #ffffff;
+  --input-text-color: #323232;
+  --input-placeholder-color: #999999;
+  --input-focus-border-color: #0f9058;
+  --input-focus-ring-color: rgba(15, 144, 88, 0.2);
+  --input-error-border-color: #dc2626;
+  --input-error-ring-color: rgba(220, 38, 38, 0.2);
+
+  /* Input Form Text Styles (共通) */
+  --input-text-font-size: 16px;
+  --input-text-line-height: 1.5;
+  --input-text-letter-spacing: 0.025em;
+
+  /* Input Form Label (共通) */
+  --input-label-color: #323232;
+  --input-label-font-size: 16px;
+  --input-label-line-height: 2em;
+  --input-label-letter-spacing: 0.1em;
+  --input-label-width: 140px;
+  --input-label-width-mobile: 120px;
+  --input-label-text-align: right;
+  --input-label-padding-top: 11px;
+
+  /* Input Form Layout (共通) */
+  --input-form-gap: 16px;
+  --input-form-field-gap: 8px;
+
+  /* Error Color */
+  --error-color: #ef4444;
+
+  /* Input Description */
+  --input-description-color: #666666;
+  --input-description-font-size: 14px;
+  --input-description-line-height: 1.4;
+  --input-description-letter-spacing: 0.025em;
+
+  /* Password Icon */
+  --password-icon-size: 20px;
+  --password-icon-color: #666666;
+  --password-icon-hover-color: #323232;
+  --password-icon-right: 11px;
+  --password-icon-padding: 11px;
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: #ff5b5b;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Prevent double scrollbars */
+  html {
+    overflow-x: hidden;
+  }
+  
+  body {
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  /* Navigation height enforcement */
+  .navigation-header {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+  }
+
+  .navigation-container {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+  }
+
+  /* Tiptap Editor Styles */
+  .ProseMirror {
+    outline: none;
+    padding: 12px;
+    min-height: 200px;
+  }
+
+  .ProseMirror h1,
+  .ProseMirror h2,
+  .ProseMirror h3,
+  .ProseMirror h4,
+  .ProseMirror h5,
+  .ProseMirror h6 {
+    margin: 24px 0 16px 0;
+    font-weight: bold;
+    line-height: 1.3;
+  }
+
+  .ProseMirror h1 {
+    font-size: 2rem;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.5rem;
+  }
+
+  .ProseMirror h3 {
+    font-size: 1.25rem;
+  }
+
+  .ProseMirror p {
+    margin: 12px 0;
+  }
+
+  .ProseMirror ul,
+  .ProseMirror ol {
+    padding-left: 24px;
+    margin: 12px 0;
+  }
+
+  .ProseMirror li {
+    margin: 4px 0;
+  }
+
+  .ProseMirror table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 16px 0;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+  }
+
+  .ProseMirror table td,
+  .ProseMirror table th {
+    min-width: 1em;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .ProseMirror table th {
+    font-weight: bold;
+    background-color: #f3f4f6;
+  }
+
+  .ProseMirror table .selectedCell:after {
+    z-index: 2;
+    position: absolute;
+    content: "";
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(200, 200, 255, 0.4);
+    pointer-events: none;
+  }
+
+  .ProseMirror table .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: -2px;
+    width: 4px;
+    background-color: #adf;
+    pointer-events: none;
+  }
+
+  .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 12px 0;
+  }
+
+  .ProseMirror hr {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 24px 0;
+  }
+
+  .ProseMirror blockquote {
+    padding-left: 16px;
+    border-left: 4px solid #e5e7eb;
+    margin: 12px 0;
+    font-style: italic;
+  }
+
+  .ProseMirror code {
+    background-color: #f3f4f6;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .ProseMirror pre {
+    background-color: #f3f4f6;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+
+  .ProseMirror pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  /* Modal Form Styles */
+  .modal-content .modal-form-field {
+    @apply flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start w-full;
+  }
+
+  .modal-content .modal-form-label {
+    @apply font-bold text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px] min-w-[100px] md:min-w-[140px] pt-0 md:pt-[11px];
+  }
+
+  .modal-content .modal-form-input-container {
+    @apply flex flex-col gap-2 w-full;
+  }
+
+  .modal-content .modal-form-input {
+    @apply w-full;
+  }
+
+  /* Ensure inputs don't overflow on mobile */
+  .modal-content input,
+  .modal-content textarea,
+  .modal-content select {
+    @apply w-full min-w-0 max-w-full;
+  }
+
+  /* Prevent form elements from breaking layout */
+  .modal-content .flex-col > * {
+    @apply min-w-0;
+  }
+
+  .modal-content .flex-row > * {
+    @apply min-w-0;
+  }
+}

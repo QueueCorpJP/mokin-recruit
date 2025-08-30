@@ -1,0 +1,120 @@
+'use client';
+import React from 'react';
+import { SectionHeading } from '@/components/ui/SectionHeading';
+import { JobPostCard } from '@/components/ui/JobPostCard';
+
+export interface PublishedJobListSectionProps {
+  jobs: Array<{
+    imageUrl: string;
+    imageAlt: string;
+    title: string;
+    tags: string[];
+    companyName: string;
+    location: string[];
+    salary: string;
+    apell: string[];
+    starred?: boolean;
+    jobId?: string;
+  }>;
+  className?: string;
+  style?: React.CSSProperties;
+  variant?: 'simple' | 'default';
+}
+
+export const PublishedJobListSection: React.FC<
+  PublishedJobListSectionProps
+> = ({ jobs, className = '', style, variant = 'default' }) => {
+  // companyページ用: simpleモード
+  const isSimple = variant === 'simple';
+  return (
+    <div className={className} style={style}>
+      <div style={{ marginBottom: 8 }}>
+        <SectionHeading
+          iconSrc='/images/boad02.svg'
+          iconAlt='求人カードアイコン'
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+            }}
+          >
+            <span style={{ flex: 1 }}>掲載求人</span>
+            <svg
+              width='16'
+              height='16'
+              viewBox='0 0 24 25'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+            >
+              <path
+                d='M21.75 12.9141C21.75 10.3282 20.7228 7.84825 18.8943 6.01977C17.0658 4.19129 14.5859 3.16406 12 3.16406C9.41414 3.16406 6.93419 4.19129 5.10571 6.01977C3.27723 7.84825 2.25 10.3282 2.25 12.9141C2.25 15.4999 3.27723 17.9799 5.10571 19.8084C6.93419 21.6368 9.41414 22.6641 12 22.6641C14.5859 22.6641 17.0658 21.6368 18.8943 19.8084C20.7228 17.9799 21.75 15.4999 21.75 12.9141ZM0 12.9141C0 9.73146 1.26428 6.67922 3.51472 4.42878C5.76516 2.17834 8.8174 0.914063 12 0.914062C15.1826 0.914063 18.2348 2.17834 20.4853 4.42878C22.7357 6.67922 24 9.73146 24 12.9141C24 16.0967 22.7357 19.1489 20.4853 21.3993C18.2348 23.6498 15.1826 24.9141 12 24.9141C8.8174 24.9141 5.76516 23.6498 3.51472 21.3993C1.26428 19.1489 0 16.0967 0 12.9141ZM7.95938 8.6625C8.32969 7.61719 9.32344 6.91406 10.4344 6.91406H13.1672C14.8031 6.91406 16.125 8.24063 16.125 9.87188C16.125 10.9313 15.5578 11.9109 14.6391 12.4406L13.125 13.3078C13.1156 13.9172 12.6141 14.4141 12 14.4141C11.3766 14.4141 10.875 13.9125 10.875 13.2891V12.6562C10.875 12.2531 11.0906 11.8828 11.4422 11.6812L13.5187 10.4906C13.7391 10.3641 13.875 10.1297 13.875 9.87656C13.875 9.48281 13.5562 9.16875 13.1672 9.16875H10.4344C10.275 9.16875 10.1344 9.26719 10.0828 9.41719L10.0641 9.47344C9.85781 10.0594 9.21094 10.3641 8.62969 10.1578C8.04844 9.95156 7.73906 9.30469 7.94531 8.72344L7.96406 8.66719L7.95938 8.6625ZM10.5 17.4141C10.5 17.0162 10.658 16.6347 10.9393 16.3534C11.2206 16.0721 11.6022 15.9141 12 15.9141C12.3978 15.9141 12.7794 16.0721 13.0607 16.3534C13.342 16.6347 13.5 17.0162 13.5 17.4141C13.5 17.8119 13.342 18.1934 13.0607 18.4747C12.7794 18.756 12.3978 18.9141 12 18.9141C11.6022 18.9141 11.2206 18.756 10.9393 18.4747C10.658 18.1934 10.5 17.8119 10.5 17.4141Z'
+                fill='#999999'
+              />
+            </svg>
+          </div>
+        </SectionHeading>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* PC用（md以上） */}
+        <div className='hidden md:flex flex-col gap-2'>
+          {jobs.map((job, i) => (
+            <JobPostCard
+              key={`pc-${i}`}
+              imageUrl={job.imageUrl}
+              imageAlt={job.imageAlt}
+              title={job.title}
+              tags={job.tags}
+              companyName={job.companyName}
+              location={job.location}
+              salary={job.salary}
+              apell={job.apell}
+              starred={job.starred ?? false}
+              onStarClick={() => {}}
+              isFavoriteLoading={false}
+              jobId={job.jobId}
+              showCompanyName={!isSimple ? true : false}
+              showLocation={!isSimple ? true : false}
+              showSalary={!isSimple ? true : false}
+              showApell={!isSimple ? true : false}
+              showStar={true}
+              imageWidth={isSimple ? 103.5 : undefined}
+              imageHeight={isSimple ? 69 : undefined}
+            />
+          ))}
+        </div>
+        {/* SP用（md未満） */}
+        <div className='flex md:hidden flex-col gap-2'>
+          {jobs.map((job, i) => (
+            <JobPostCard
+              key={`sp-${i}`}
+              imageUrl={job.imageUrl}
+              imageAlt={job.imageAlt}
+              title={job.title}
+              tags={job.tags}
+              companyName={job.companyName}
+              location={job.location}
+              salary={job.salary}
+              apell={job.apell}
+              starred={job.starred ?? false}
+              onStarClick={() => {}}
+              isFavoriteLoading={false}
+              jobId={job.jobId}
+              showCompanyName={!isSimple ? true : false}
+              showLocation={!isSimple ? true : false}
+              showSalary={!isSimple ? true : false}
+              showApell={!isSimple ? true : false}
+              showStar={true}
+              imageWidth={isSimple ? 103.5 : undefined}
+              imageHeight={isSimple ? 69 : undefined}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PublishedJobListSection;
