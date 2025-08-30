@@ -15,6 +15,13 @@ export interface CreateCandidateData {
   prefecture: string;
   phone_number: string;
   current_income: string;
+  current_salary?: string;
+  desired_salary?: string;
+  
+  // Current employment
+  current_company?: string;
+  current_position?: string;
+  current_residence?: string;
   
   // Career status
   has_career_change: string;
@@ -36,6 +43,14 @@ export interface CreateCandidateData {
   // Summary
   job_summary: string;
   self_pr: string;
+  
+  // Preferences
+  skills?: string[];
+  desired_industries?: string[];
+  desired_job_types?: string[];
+  desired_locations?: string[];
+  management_experience_count?: number;
+  interested_work_styles?: string[];
 }
 
 export interface EducationData {
@@ -58,8 +73,17 @@ export interface JobTypeExperienceData {
 
 export interface SkillsData {
   english_level: string;
+  other_languages?: any;
   skills_tags: string[];
   qualifications: string;
+}
+
+export interface ExpectationsData {
+  desired_income?: string;
+  desired_industries?: string[];
+  desired_job_types?: string[];
+  desired_work_locations?: string[];
+  desired_work_styles?: string[];
 }
 
 export interface SelectionEntryData {
@@ -74,6 +98,7 @@ export async function createCandidateData(
   workExperience: WorkExperienceData[],
   jobTypeExperience: JobTypeExperienceData[],
   skills: SkillsData,
+  expectations: ExpectationsData,
   selectionEntries: SelectionEntryData[]
 ) {
   try {
@@ -93,6 +118,11 @@ export async function createCandidateData(
         prefecture: formData.prefecture,
         phone_number: formData.phone_number,
         current_income: formData.current_income,
+        current_salary: formData.current_salary || null,
+        desired_salary: formData.desired_salary || null,
+        current_company: formData.current_company || null,
+        current_position: formData.current_position || null,
+        current_residence: formData.current_residence || null,
         has_career_change: formData.has_career_change,
         job_change_timing: formData.job_change_timing,
         current_activity_status: formData.current_activity_status,
@@ -108,6 +138,12 @@ export async function createCandidateData(
         recent_job_types: formData.recent_job_types,
         job_summary: formData.job_summary,
         self_pr: formData.self_pr,
+        skills: formData.skills || null,
+        desired_industries: formData.desired_industries || null,
+        desired_job_types: formData.desired_job_types || null,
+        desired_locations: formData.desired_locations || null,
+        management_experience_count: formData.management_experience_count || 0,
+        interested_work_styles: formData.interested_work_styles || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -187,12 +223,33 @@ export async function createCandidateData(
         .insert({
           candidate_id: candidateId,
           english_level: skills.english_level,
+          other_languages: skills.other_languages || null,
           skills_list: skills.skills_tags,
           qualifications: skills.qualifications,
         });
 
       if (skillsError) {
         throw skillsError;
+      }
+    }
+
+    // Insert expectations
+    if (expectations && (expectations.desired_income || expectations.desired_industries?.length || 
+        expectations.desired_job_types?.length || expectations.desired_work_locations?.length || 
+        expectations.desired_work_styles?.length)) {
+      const { error: expectationsError } = await supabase
+        .from('expectations')
+        .insert({
+          candidate_id: candidateId,
+          desired_income: expectations.desired_income || null,
+          desired_industries: expectations.desired_industries || null,
+          desired_job_types: expectations.desired_job_types || null,
+          desired_work_locations: expectations.desired_work_locations || null,
+          desired_work_styles: expectations.desired_work_styles || null,
+        });
+
+      if (expectationsError) {
+        throw expectationsError;
       }
     }
 

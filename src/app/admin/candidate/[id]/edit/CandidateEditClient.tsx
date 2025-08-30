@@ -136,7 +136,7 @@ export default function CandidateEditClient({ candidate }: Props) {
   // Skills data
   const [skills, setSkills] = useState<SkillsData>({
     english_level: candidate.skills[0]?.english_level || '',
-    other_languages: candidate.skills[0]?.other_languages || null,
+    other_languages: candidate.skills[0]?.other_languages || [{ language: '', level: '' }],
     skills_list: candidate.skills[0]?.skills_list ? candidate.skills[0].skills_list.map(skill =>
       typeof skill === 'object' 
         ? (skill.name || skill.id || JSON.stringify(skill))
@@ -155,6 +155,54 @@ export default function CandidateEditClient({ candidate }: Props) {
 
   const handleSkillsChange = (field: keyof SkillsData, value: any) => {
     setSkills(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle language management
+  const handleAddLanguage = () => {
+    const currentLanguages = skills.other_languages || [];
+    if (currentLanguages.length < 5) {
+      setSkills(prev => ({ ...prev, other_languages: [...currentLanguages, { language: '', level: '' }] }));
+    }
+  };
+
+  const handleRemoveLanguage = (index: number) => {
+    const currentLanguages = skills.other_languages || [];
+    const newLanguages = currentLanguages.filter((_, i) => i !== index);
+    setSkills(prev => ({ ...prev, other_languages: newLanguages }));
+  };
+
+  const handleLanguageChange = (index: number, field: string, value: string) => {
+    const currentLanguages = skills.other_languages || [];
+    const newLanguages = [...currentLanguages];
+    newLanguages[index] = { ...newLanguages[index], [field]: value };
+    setSkills(prev => ({ ...prev, other_languages: newLanguages }));
+  };
+
+  // Skill input and management
+  const [skillInput, setSkillInput] = useState('');
+
+  const addSkillTag = () => {
+    if (skillInput.trim() && !skills.skills_list.includes(skillInput.trim())) {
+      setSkills(prev => ({ ...prev, skills_list: [...prev.skills_list, skillInput.trim()] }));
+      setSkillInput('');
+    }
+  };
+
+  const removeSkillTag = (skillToRemove: string) => {
+    setSkills(prev => ({ 
+      ...prev, 
+      skills_list: prev.skills_list.filter(skill => skill !== skillToRemove) 
+    }));
+  };
+
+  // Handle skill input with Enter key
+  const handleSkillInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (skillInput.trim()) {
+        addSkillTag();
+      }
+    }
   };
 
   // Selection entry helper functions
@@ -1758,16 +1806,126 @@ export default function CandidateEditClient({ candidate }: Props) {
               </div>
             </div>
 
+            {/* その他の言語 */}
+            {skills.other_languages && skills.other_languages.map((field, index) => (
+              <div key={index} className="flex items-start gap-8 mb-6">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  {index === 0 && 'その他の言語'}
+                </label>
+                <div className="w-[400px]">
+                  <div className="flex gap-2 mb-2">
+                    <div className="flex-1 relative">
+                      <select
+                        value={field.language}
+                        onChange={(e) => handleLanguageChange(index, 'language', e.target.value)}
+                        className="w-full px-[11px] py-[11px] pr-10 border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
+                      >
+                        <option value="">言語を選択</option>
+                        <option value="indonesian">インドネシア語</option>
+                        <option value="italian">イタリア語</option>
+                        <option value="spanish">スペイン語</option>
+                        <option value="thai">タイ語</option>
+                        <option value="german">ドイツ語</option>
+                        <option value="french">フランス語</option>
+                        <option value="portuguese">ポルトガル語</option>
+                        <option value="malaysian">マレー語</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="10"
+                          viewBox="0 0 14 10"
+                          fill="none"
+                        >
+                          <path
+                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                            fill="#0F9058"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="flex-1 relative">
+                      <select
+                        value={field.level}
+                        onChange={(e) => handleLanguageChange(index, 'level', e.target.value)}
+                        disabled={!field.language}
+                        className="w-full px-[11px] py-[11px] pr-10 border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer disabled:opacity-50"
+                      >
+                        <option value="">レベルを選択</option>
+                        <option value="native">ネイティブ</option>
+                        <option value="business">ビジネスレベル</option>
+                        <option value="conversation">日常会話</option>
+                        <option value="basic">基礎会話</option>
+                        <option value="none">なし</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="10"
+                          viewBox="0 0 14 10"
+                          fill="none"
+                        >
+                          <path
+                            d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                            fill="#0F9058"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLanguage(index)}
+                        className="px-3 py-2 text-red-600 border border-red-600 rounded-[5px] hover:bg-red-50"
+                      >
+                        削除
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* 言語追加ボタン */}
+            {(!skills.other_languages || skills.other_languages.length < 5) && (
+              <div className="flex items-center gap-8 mb-6">
+                <div className="w-32"></div>
+                <button
+                  type="button"
+                  onClick={handleAddLanguage}
+                  className="px-6 py-2.5 bg-white border border-[#0f9058] rounded-[32px] flex items-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 3V13M3 8H13"
+                      stroke="#0f9058"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span className="text-[#0f9058] text-[14px] font-bold">言語を追加</span>
+                </button>
+              </div>
+            )}
+
             {/* Skills Input */}
             <div className="flex items-start gap-8 mb-6">
               <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
                 スキル
               </label>
               <div className="w-[400px]">
-                <textarea
-                  placeholder="業務で活かしたスキル・ツール・得意分野を入力してください"
-                  className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none"
-                />
+                <div className="flex gap-2 mb-2">
+                  <textarea
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={handleSkillInputKeyDown}
+                    placeholder="業務で活かしたスキル・ツール・得意分野を入力してください（Enterで追加）"
+                    className="flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none"
+                  />
+                </div>
                 <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px] mt-2">
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
@@ -1783,6 +1941,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                         </span>
                         <button
                           type="button"
+                          onClick={() => removeSkillTag(skill)}
                           className="w-3 h-3"
                         >
                           <svg
