@@ -11,6 +11,18 @@ interface CompanyFooterWrapperProps {
   };
 }
 
+const transformUserInfo = (userInfo?: {
+  name: string;
+  email: string;
+  userType: string | null;
+}) => {
+  if (!userInfo) return undefined;
+  return {
+    companyName: userInfo.userType === 'company_user' ? userInfo.name : undefined,
+    userName: userInfo.name,
+  };
+};
+
 export function CompanyFooterWrapper({ isLoggedIn, userInfo }: CompanyFooterWrapperProps) {
-  return <AuthAwareFooter isLoggedIn={isLoggedIn} userInfo={userInfo} />;
+  return <AuthAwareFooter isLoggedIn={isLoggedIn} userInfo={transformUserInfo(userInfo)} />;
 }

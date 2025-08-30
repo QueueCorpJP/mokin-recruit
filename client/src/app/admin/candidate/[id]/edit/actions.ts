@@ -34,6 +34,10 @@ export interface UpdateCandidateData {
   // Summary
   job_summary: string;
   self_pr: string;
+  
+  // Industry and Job Types
+  recent_job_industries: string[];
+  recent_job_types: string[];
 }
 
 export interface EducationData {

@@ -345,16 +345,10 @@ export default function CandidateNewConfirmClient() {
             </div>
           </section>
 
-          {/* Action Buttons */}
-          <div className="flex justify-center gap-4 pt-8">
+          {/* 保存するボタン */}
+          <div className="flex justify-center pt-8">
             <AdminButton 
-              text="戻る" 
-              variant="green-outline" 
-              size="figma-default"
-              onClick={() => router.back()}
-            />
-            <AdminButton 
-              text={isSubmitting ? "作成中..." : "作成"} 
+              text={isSubmitting ? "保存中..." : "保存する"} 
               variant="green-gradient" 
               size="figma-default"
               onClick={handleConfirmSave}

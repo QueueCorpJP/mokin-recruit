@@ -4,7 +4,18 @@ import { useEffect, useMemo, useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Navigation } from '@/components/ui/navigation';
 
-export const AuthAwareNavigation = memo(function AuthAwareNavigation() {
+interface AuthAwareNavigationProps {
+  isLoggedIn?: boolean;
+  userInfo?: {
+    companyName?: string;
+    userName?: string;
+  };
+}
+
+export const AuthAwareNavigation = memo(function AuthAwareNavigation({ 
+  isLoggedIn = false, 
+  userInfo 
+}: AuthAwareNavigationProps = {}) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -36,8 +47,8 @@ export const AuthAwareNavigation = memo(function AuthAwareNavigation() {
   return (
     <Navigation
       variant={variant}
-      isLoggedIn={false} // Server-side auth migration: Will be handled per page
-      userInfo={undefined}
+      isLoggedIn={isLoggedIn}
+      userInfo={userInfo}
     />
   );
 });

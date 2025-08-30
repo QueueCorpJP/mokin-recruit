@@ -4,7 +4,18 @@ import { useEffect, useMemo, useState, memo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Footer } from '@/components/ui/footer';
 
-export const AuthAwareFooter = memo(function AuthAwareFooter() {
+interface AuthAwareFooterProps {
+  isLoggedIn?: boolean;
+  userInfo?: {
+    companyName?: string;
+    userName?: string;
+  };
+}
+
+export const AuthAwareFooter = memo(function AuthAwareFooter({ 
+  isLoggedIn = false, 
+  userInfo 
+}: AuthAwareFooterProps = {}) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -36,8 +47,8 @@ export const AuthAwareFooter = memo(function AuthAwareFooter() {
   return (
     <Footer
       variant={variant}
-      isLoggedIn={false} // Server-side auth migration: Will be handled per page
-      userInfo={undefined}
+      isLoggedIn={isLoggedIn}
+      userInfo={userInfo}
     />
   );
 });

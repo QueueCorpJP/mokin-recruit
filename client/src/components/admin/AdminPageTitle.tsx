@@ -93,7 +93,7 @@ const pageTitleConfig: PageTitleConfig = {
     ],
   },
   '/admin/company': { title: '企業アカウント管理' },
-  '/admin/candidate': { title: '候補者管理' },
+  '/admin/candidate': { title: '候補者一覧' },
   '/admin/media': { 
     title: 'メディア記事一覧',
     buttons: [{ 
@@ -260,6 +260,44 @@ export function AdminPageTitle() {
       };
     }
     
+    if (pathname.match(/^\/admin\/candidate\/[^\/]+\/block$/)) {
+      return { title: 'ブロック企業追加' };
+    }
+    
+    if (pathname.match(/^\/admin\/candidate\/[^\/]+\/edit$/)) {
+      return { title: '候補者情報' };
+    }
+    
+    if (pathname.match(/^\/admin\/candidate\/new\/confirm$/)) {
+      return { title: '候補者情報追加確認' };
+    }
+    
+    if (pathname.match(/^\/admin\/candidate\/new$/)) {
+      return { 
+        title: '候補者情報追加',
+        buttons: [
+          {
+            text: '下書き保存',
+            variant: 'green-outline',
+            onClick: () => {
+              console.log('AdminPageTitle: Dispatching candidate-new-draft event');
+              const event = new CustomEvent('candidate-new-draft');
+              window.dispatchEvent(event);
+            }
+          },
+          {
+            text: '確認する',
+            variant: 'green-gradient',
+            onClick: () => {
+              console.log('AdminPageTitle: Dispatching candidate-new-confirm event');
+              const event = new CustomEvent('candidate-new-confirm');
+              window.dispatchEvent(event);
+            }
+          }
+        ]
+      };
+    }
+    
     if (pathname.match(/^\/admin\/candidate\/[^\/]+$/)) {
       return {
         title: '候補者詳細',
@@ -277,7 +315,9 @@ export function AdminPageTitle() {
             text: 'ブロック企業設定',
             variant: 'green-outline',
             onClick: () => {
-              console.log('ブロック企業設定');
+              const pathParts = pathname.split('/');
+              const candidateId = pathParts[pathParts.length - 1];
+              window.location.href = `/admin/candidate/${candidateId}/block`;
             }
           },
           {
