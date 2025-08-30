@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { injectable } from 'inversify';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 
 // バリデーション結果の型定義
 export interface ValidationResult {

@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from './supabase';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 
 /**
  * テーブルが存在するかチェック

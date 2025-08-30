@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseAdminClient } from '@/database/supabase';
-import { logger } from '@/utils/logger';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { logger } from '@/lib/server/utils/logger';
 
 // Supabaseベースリポジトリ (実用的実装)
 export abstract class SupabaseRepository<T> {

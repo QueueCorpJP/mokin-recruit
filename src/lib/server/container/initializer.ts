@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import * as process from 'process';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 import { container } from './bindings';
 
 /**

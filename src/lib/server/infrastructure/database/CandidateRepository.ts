@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 import { SupabaseRepository } from './SupabaseRepository';
-import { ICandidateRepository } from '@/core/interfaces/IDomainRepository';
+import { ICandidateRepository } from '@/lib/server/core/interfaces/IDomainRepository';
 
 // MVPスキーマに対応したシンプルな候補者エンティティ
 export interface CandidateEntity {

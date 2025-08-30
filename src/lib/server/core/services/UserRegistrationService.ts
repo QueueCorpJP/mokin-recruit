@@ -1,25 +1,25 @@
 import 'reflect-metadata';
 import { injectable } from 'inversify';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 import {
   registerUserWithSupabase,
   UserRegistrationData,
-} from '@/auth/supabaseAuth';
+} from '@/lib/server/auth/supabaseAuth';
 import {
   CandidateRepository,
   CreateCandidateData,
-} from '@/infrastructure/database/CandidateRepository';
+} from '@/lib/server/infrastructure/database/CandidateRepository';
 import {
   CompanyAccountRepository,
   CompanyUserRepository,
   CreateCompanyUserData,
-} from '@/infrastructure/database/CompanyUserRepository';
+} from '@/lib/server/infrastructure/database/CompanyUserRepository';
 import { PasswordService } from './PasswordService';
-import { getSupabaseAdminClient } from '@/database/supabase';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import {
   AuthResult,
   IUserRegistrationService,
-} from '@/core/interfaces/IAuthService';
+} from '@/lib/server/core/interfaces/IAuthService';
 
 // MVPスキーマ対応の候補者登録データ
 export interface CandidateRegistrationData {

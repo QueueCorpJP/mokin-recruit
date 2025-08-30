@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 import { SupabaseRepository } from './SupabaseRepository';
 
 // MVPスキーマに対応した企業ユーザーエンティティ

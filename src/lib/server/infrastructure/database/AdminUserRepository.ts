@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { SupabaseRepository } from './SupabaseRepository';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/server/utils/logger';
 
 export interface AdminUserEntity {
   id: string;

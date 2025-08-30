@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import { inject, injectable } from 'inversify';
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
-import { logger } from '@/utils/logger';
-import { SecurityConfig } from '@/config/security';
-import { IPasswordService } from '@/core/interfaces/IAuthService';
-import { requestPasswordReset, updatePassword } from '@/auth/supabaseAuth';
-import { TYPES } from '@/container/types';
+import { logger } from '@/lib/server/utils/logger';
+import { SecurityConfig } from '@/lib/server/config/security';
+import { IPasswordService } from '@/lib/server/core/interfaces/IAuthService';
+import { requestPasswordReset, updatePassword } from '@/lib/server/auth/supabaseAuth';
+import { TYPES } from '@/lib/server/container/types';
 
 const scryptAsync = promisify(scrypt);
 
