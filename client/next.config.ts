@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  distDir: '.build',
   compiler: {
     // SWC compiler options for JSX
     styledComponents: false,

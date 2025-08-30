@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
 interface PageProps {
-  params: { job_id: string };
+  params: Promise<{ job_id: string }>;
 }
 
 export default async function JobEditConfirmPage({ params }: PageProps) {

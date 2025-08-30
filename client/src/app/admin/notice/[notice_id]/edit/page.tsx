@@ -3,9 +3,9 @@ import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import NoticeEditClient from './NoticeEditClient';
 
 interface NoticeEditPageProps {
-  params: {
+  params: Promise<{
     notice_id: string;
-  };
+  }>;
 }
 
 interface NoticeDetail {

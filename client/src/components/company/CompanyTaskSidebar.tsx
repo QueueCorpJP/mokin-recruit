@@ -365,13 +365,7 @@ export function CompanyTaskSidebar({ className }: CompanyTaskSidebarProps) {
             }}
             onClick={() => router.push('/company/support')}
           >
-            <div style={freeTagStyle}>
-              <span style={freeTextStyle}>無料</span>
-            </div>
-            <div style={supportTextStyle}>
-              サポートに<br />
-              相談してみる
-            </div>
+           <img src="/images/consult.svg" />
           </div>
         </div>
       </div>

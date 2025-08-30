@@ -2,13 +2,13 @@ import { getJobDetails } from './actions';
 import CandidateApplicationClient from './CandidateApplicationClient';
 
 interface CandidateApplicationServerComponentProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function CandidateApplicationServerComponent({
   params
 }: CandidateApplicationServerComponentProps) {
-  const jobId = params.id;
+  const { id: jobId } = await params;
 
   // 認証はLayoutで実行済み、求人情報のみ取得
   const jobResponse = await getJobDetails(jobId);

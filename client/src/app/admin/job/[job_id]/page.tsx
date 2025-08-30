@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 interface JobDetailPageProps {
-  params: {
+  params: Promise<{
     job_id: string;
-  };
+  }>;
 }
 
 interface JobDetail {

@@ -4,7 +4,11 @@
     "outDir": "dist",
     "noEmit": false,
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES2022"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -32,27 +36,52 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/lib/server/*": ["./src/lib/server/*"],
-      "@/utils/*": ["./src/lib/server/utils/*"],
-      "@/config/*": ["./src/lib/server/config/*"],
-      "@/database/*": ["./src/lib/server/database/*"],
-      "@/auth/*": ["./src/lib/server/auth/*"],
-      "@/core/*": ["./src/lib/server/core/*"],
-      "@/infrastructure/*": ["./src/lib/server/infrastructure/*"],
-      "@/container/*": ["./src/lib/server/container/*"],
-      "@/controllers/*": ["./src/lib/server/controllers/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/lib/server/*": [
+        "./src/lib/server/*"
+      ],
+      "@/utils/*": [
+        "./src/lib/server/utils/*"
+      ],
+      "@/config/*": [
+        "./src/lib/server/config/*"
+      ],
+      "@/database/*": [
+        "./src/lib/server/database/*"
+      ],
+      "@/auth/*": [
+        "./src/lib/server/auth/*"
+      ],
+      "@/core/*": [
+        "./src/lib/server/core/*"
+      ],
+      "@/infrastructure/*": [
+        "./src/lib/server/infrastructure/*"
+      ],
+      "@/container/*": [
+        "./src/lib/server/container/*"
+      ],
+      "@/controllers/*": [
+        "./src/lib/server/controllers/*"
+      ]
     }
   },
   "include": [
-    "next-env.d.ts",
+    "**/*.js",
+    "**/*.json",
+    "**/*.mjs",
     "**/*.ts",
     "**/*.tsx",
-    "**/*.js",
-    "**/*.mjs",
-    "**/*.json",
     ".next/types/**/*.ts",
-    "src/types/**/*.d.ts"
+    "next-env.d.ts",
+    "src/types/**/*.d.ts",
+    ".build/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", "dist"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist"
+  ]
 }
