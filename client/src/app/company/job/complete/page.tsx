@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import NewJobHeader from '@/app/company/company/job/NewJobHeader';
+import NewJobHeader from '@/app/company/job/NewJobHeader';
 
 export default function JobCompletePage() {
   const router = useRouter();

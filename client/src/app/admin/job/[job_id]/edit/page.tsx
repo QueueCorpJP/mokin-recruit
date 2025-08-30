@@ -1,7 +1,7 @@
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import AdminJobEditClient from './AdminJobEditClient';
-import { CompanyGroup } from '@/app/company/company/job/types';
+import { CompanyGroup } from '@/app/company/job/types';
 
 interface JobEditPageProps {
   params: Promise<{

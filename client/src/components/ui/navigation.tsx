@@ -384,7 +384,7 @@ export function Navigation({
                   className={btn.className}
                   asChild
                 >
-                  <Link href={btn.href}>{btn.label}</Link>
+                  <Link href={btn.href} prefetch={false}>{btn.label}</Link>
                 </Button>
               ))}
             </div>
@@ -415,6 +415,7 @@ export function Navigation({
                 >
                   <Link
                     href='/candidate/auth/register'
+                    prefetch={false}
                     onClick={closeMenuCallback}
                   >
                     会員登録
@@ -430,6 +431,7 @@ export function Navigation({
                 >
                   <Link
                     href='/candidate/auth/login'
+                    prefetch={false}
                     onClick={closeMenuCallback}
                   >
                     ログイン
@@ -488,6 +490,7 @@ export function Navigation({
                               <Link
                                 key={`${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
+                                prefetch={false}
                                 className={cn(
                                   'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
                                   pathname === dropdownItem.href
@@ -505,6 +508,7 @@ export function Navigation({
                     ) : (
                       <Link
                         href={item.href}
+                        prefetch={false}
                         className={cn(
                           'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                           item.isActive
@@ -600,6 +604,7 @@ export function Navigation({
                               <Link
                                 key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
+                                prefetch={false}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {
                                   setIsMenuOpen(false);
@@ -615,6 +620,7 @@ export function Navigation({
                     ) : (
                       <Link
                         href={item.href}
+                        prefetch={false}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={closeMenuCallback}
                       >
@@ -731,6 +737,7 @@ export function Navigation({
                     ) : (
                       <Link
                         href={item.href}
+                        prefetch={false}
                         className={cn(
                           'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                           item.isActive
@@ -824,6 +831,7 @@ export function Navigation({
                               <Link
                                 key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                 href={dropdownItem.href}
+                                prefetch={false}
                                 className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                                 onClick={() => {
                                   setIsMenuOpen(false);
@@ -839,6 +847,7 @@ export function Navigation({
                     ) : (
                       <Link
                         href={item.href}
+                        prefetch={false}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={closeMenuCallback}
                       >
@@ -951,7 +960,7 @@ export function Navigation({
               className='rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
               asChild
             >
-              <Link href={ctaButton.href} onClick={ctaButton.onClick}>{ctaButton.label}</Link>
+              <Link href={ctaButton.href} prefetch={false} onClick={ctaButton.onClick}>{ctaButton.label}</Link>
             </Button>
           </div>
 

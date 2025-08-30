@@ -9,12 +9,12 @@ import { useFavoriteStatusQuery } from '@/hooks/useFavoriteApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { favoriteKeys } from '@/hooks/useFavoriteApi';
 
-import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
-import { LocationModal } from '@/app/company/company/job/LocationModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
+import { LocationModal } from '@/app/company/job/LocationModal';
 import { Modal } from '@/components/ui/mo-dal';
 import { X } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
-import { IndustryModal } from '@/app/company/company/job/IndustryModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
 import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';

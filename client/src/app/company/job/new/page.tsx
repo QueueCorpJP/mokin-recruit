@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { getCompanyGroups } from '../actions';
 import JobNewClient from './JobNewClient';
 
-export default async function JobNewPage() {
+// データ取得を行うサーバーコンポーネント
+async function JobNewServerComponent() {
   // サーバーサイドで企業グループ情報を取得
   const groupsResult = await getCompanyGroups();
   
@@ -24,5 +25,27 @@ export default async function JobNewPage() {
     <JobNewClient 
       initialCompanyGroups={companyGroups}
     />
+  );
+}
+
+// ローディング中の表示
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f9f9f9]">
+      <div className="text-center">
+        <div className="inline-block">
+          <div className="w-16 h-16 border-4 border-[#0f9058] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="mt-4 text-[#323232] text-lg font-medium">読み込み中...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function JobNewPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <JobNewServerComponent />
+    </Suspense>
   );
 }

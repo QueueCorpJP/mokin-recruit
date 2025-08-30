@@ -4,8 +4,9 @@ import { useCandidateAuth } from '@/hooks/useClientAuth';
 import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
 import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 import { UserProvider } from '@/contexts/UserContext';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function CandidateLayoutClient({
   children,
@@ -14,6 +15,35 @@ export default function CandidateLayoutClient({
 }) {
   const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // 認証が必要なパス（候補者用）
+  const protectedPaths = [
+    '/candidate/mypage',
+    '/candidate/message',
+    '/candidate/task',
+    '/candidate/account',
+    '/candidate/setting',
+    '/candidate/search'
+  ];
+
+  // 対象パスで未ログインならログイン画面へ。別ユーザー種別なら企業側へ退避
+  useEffect(() => {
+    if (loading) return;
+
+    const isProtectedPath = protectedPaths.some((p) => pathname.startsWith(p));
+
+    // 未ログインで保護パスに来ている場合はログインへ誘導
+    if (!isAuthenticated && isProtectedPath) {
+      router.push('/candidate/auth/login');
+      return;
+    }
+
+    // ログイン済みだが候補者ユーザーでない場合は企業側トップへ退避
+    if (isAuthenticated && !candidateUser) {
+      router.push('/company');
+    }
+  }, [loading, isAuthenticated, candidateUser, pathname, router]);
 
   // 認証情報を整理
   const userInfo = isAuthenticated && candidateUser ? {
@@ -39,6 +69,12 @@ export default function CandidateLayoutClient({
         <div className="min-h-[200px] bg-[#323232]" />
       </div>
     );
+  }
+
+  // 認証が必要なページに未ログインでアクセスした場合のフォールバック
+  const isProtectedPath = protectedPaths.some((p) => pathname.startsWith(p));
+  if (isProtectedPath && !isAuthenticated) {
+    return <AccessRestricted userType="candidate" />;
   }
 
   return (

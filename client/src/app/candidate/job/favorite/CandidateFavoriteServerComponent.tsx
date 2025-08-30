@@ -21,9 +21,6 @@ export default async function CandidateFavoriteServerComponent({
 
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
-  if (!user) {
-    throw new Error('Authentication required');
-  }
 
   // Server Actionを使用してお気に入りデータを取得
   const favoriteData = await getFavoriteList({ page, limit });

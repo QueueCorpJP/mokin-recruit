@@ -13,9 +13,9 @@ import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { PendingJobDetailActions } from './PendingJobDetailActions';
 
 interface PendingJobDetailPageProps {
-  params: {
+  params: Promise<{
     job_id: string;
-  };
+  }>;
 }
 
 interface JobDetail {

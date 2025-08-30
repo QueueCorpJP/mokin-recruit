@@ -1,6 +1,4 @@
 import React from 'react';
-import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 
 // 利用規約ページのラッパー（Wrapper）
 // - 上部padding: 40px
@@ -11,8 +9,6 @@ import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 export default function TermsPage() {
   return (
     <>
-      {/* ナビゲーション（ページ上部） */}
-      <AuthAwareNavigation />
       {/* メインコンテンツラッパー（背景色F9F9F9） */}
       <div
         className='pt-10 px-20 pb-20 flex justify-center w-full'
@@ -191,8 +187,6 @@ export default function TermsPage() {
           </div>
         </div>
       </div>
-      {/* フッター（ページ下部） */}
-      <AuthAwareFooter />
     </>
   );
 }

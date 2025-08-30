@@ -60,9 +60,6 @@ export default async function ProfileEditPage() {
   // 認証チェック
   const user = await getCachedCandidateUser();
   if (!user) {
-    throw new Error('Authentication required');
-  }
-  if (!user) {
     redirect('/candidate/auth/login');
   }
 

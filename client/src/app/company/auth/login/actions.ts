@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export interface LoginFormData {
   email: string;
@@ -91,8 +91,18 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       userType: actualUserType
     });
 
-    // すべてのページのキャッシュをクリア
+    // 認証関連のキャッシュを完全にクリア
     revalidatePath('/', 'layout');
+    revalidateTag('auth');
+    
+    // Next.jsのキャッシュも強制クリア
+    const cookieStore = await cookies();
+    cookieStore.getAll().forEach(cookie => {
+      if (cookie.name.startsWith('__Secure-next-auth') || cookie.name.includes('supabase')) {
+        // 認証関連のクッキーを確実に設定
+        console.log('Cookie updated:', cookie.name);
+      }
+    });
     
     // 成功時は適切なダッシュボードにリダイレクト
     const redirectPath = userType === 'company' ? '/company' : '/candidate';

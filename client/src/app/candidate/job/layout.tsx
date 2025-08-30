@@ -1,10 +1,11 @@
-// 動的レンダリングを強制してプリフェッチを防ぐ
-export const revalidate = 0;
+import CandidateLayoutServer from '../CandidateLayoutServer';
 
 export default function CandidateJobLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  // /candidate/job 配下はSSRで一度だけ候補者認証を行う
+  return <CandidateLayoutServer>{children}</CandidateLayoutServer>;
 }
+

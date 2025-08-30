@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import ApproveButton from './ApproveButton';
 
 interface MessageDetailPageProps {
-  params: {
+  params: Promise<{
     message_id: string;
-  };
+  }>;
 }
 
 interface MessageDetail {

@@ -3,14 +3,10 @@
 import { Button } from '@/components/ui/button';
 import CtaGuideSection from '@/components/cta/CtaGuideSection';
 import React from 'react';
-import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 
 export default function ContactCompletePage() {
   return (
     <>
-      {/* ナビゲーション（ページ上部） */}
-      <AuthAwareNavigation />
       {/* メインコンテンツラッパー（背景色F9F9F9） */}
       <div
         className='pt-10 px-20 flex justify-center w-full'
@@ -75,8 +71,6 @@ export default function ContactCompletePage() {
       </div>
       {/* CTAグラデーションエリア */}
       <CtaGuideSection />
-      {/* フッター（ページ下部） */}
-      <AuthAwareFooter />
     </>
   );
 }

@@ -40,6 +40,20 @@ export async function getCompanyJobs(params: {
     }
 
     const { companyAccountId: userCompanyAccountId } = authResult.data;
+
+    // キャッシュキーの生成（パラメータを含める）
+    const cacheKey = `${userCompanyAccountId}-${JSON.stringify(params)}`;
+    const cached = jobsCache.get(cacheKey);
+    
+    // 期限切れキャッシュを即座に削除
+    if (cached && Date.now() - cached.timestamp >= JOBS_CACHE_TTL) {
+      jobsCache.delete(cacheKey);
+    } else if (cached) {
+      console.log('[getCompanyJobs] Cache hit - returning cached data');
+      return cached.data;
+    }
+    
+    console.log('[getCompanyJobs] Cache miss - fetching new data');
     const supabase = getSupabaseAdminClient();
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
@@ -183,7 +197,20 @@ export async function getCompanyJobs(params: {
       publishedAt: job.published_at,
     }));
 
-    return { success: true, data: formattedJobs };
+    const result = { success: true, data: formattedJobs };
+
+    // 成功した場合のみキャッシュに保存
+    jobsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    
+    // キャッシュサイズを制限（メモリ使用量対策）
+    if (jobsCache.size > 30) {
+      const oldestKey = jobsCache.keys().next().value;
+      if (oldestKey) {
+        jobsCache.delete(oldestKey);
+      }
+    }
+
+    return result;
   } catch (e: any) {
     console.error('Company jobs error:', e);
     return { success: false, error: e.message };
@@ -428,6 +455,12 @@ export async function deleteJob(jobId: string) {
   return updateJob(jobId, { status: 'CLOSED' });
 }
 
+// 簡単なメモリキャッシュ
+const groupsCache = new Map<string, { data: any; timestamp: number }>();
+const jobsCache = new Map<string, { data: any; timestamp: number }>();
+const GROUPS_CACHE_TTL = 2 * 60 * 1000; // 2分
+const JOBS_CACHE_TTL = 1 * 60 * 1000; // 1分
+
 // グループ一覧取得
 export async function getCompanyGroups() {
   try {
@@ -440,6 +473,20 @@ export async function getCompanyGroups() {
     }
 
     const { companyAccountId } = authResult.data;
+
+    // キャッシュキーの生成
+    const cacheKey = companyAccountId;
+    const cached = groupsCache.get(cacheKey);
+    
+    // 期限切れキャッシュを即座に削除
+    if (cached && Date.now() - cached.timestamp >= GROUPS_CACHE_TTL) {
+      groupsCache.delete(cacheKey);
+    } else if (cached) {
+      console.log('[getCompanyGroups] Cache hit - returning cached data');
+      return cached.data;
+    }
+    
+    console.log('[getCompanyGroups] Cache miss - fetching new data');
     const supabase = getSupabaseAdminClient();
 
     // 同じcompany_accountに属するユーザー一覧を取得
@@ -460,7 +507,20 @@ export async function getCompanyGroups() {
       description: user.email
     }));
 
-    return { success: true, data: formattedGroups };
+    const result = { success: true, data: formattedGroups };
+
+    // 成功した場合のみキャッシュに保存
+    groupsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    
+    // キャッシュサイズを制限（メモリ使用量対策）
+    if (groupsCache.size > 20) {
+      const oldestKey = groupsCache.keys().next().value;
+      if (oldestKey) {
+        groupsCache.delete(oldestKey);
+      }
+    }
+
+    return result;
   } catch (e: any) {
     console.error('Company groups error:', e);
     return { success: false, error: e.message };

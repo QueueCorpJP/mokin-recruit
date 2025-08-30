@@ -1,7 +1,6 @@
 'use client';
 
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+// Header/Footer はレイアウトで提供されるため本フォームでは描画しない
 import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRouter } from 'next/navigation';
@@ -235,7 +234,6 @@ export default function CandidateEducationEditPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AuthAwareNavigationServer variant="candidate" isLoggedIn />
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {isDesktop ? (
@@ -1175,7 +1173,7 @@ export default function CandidateEducationEditPage() {
         )}
       </form>
 
-      <AuthAwareFooterServer isLoggedIn />
+      {/* Footer はレイアウトで描画済み */}
 
       {/* Modals */}
       <IndustrySelectModal

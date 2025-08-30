@@ -60,9 +60,8 @@ async function getCandidateData(candidateId: string): Promise<CandidateData | nu
 export default async function CandidateBasicInfoPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
-  
   if (!user) {
-    throw new Error('Authentication required');
+    redirect('/candidate/auth/login');
   }
 
   // ユーザーIDが確定してからデータ取得

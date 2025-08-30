@@ -9,7 +9,7 @@ export default async function CandidateSummaryPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();
   if (!user) {
-    throw new Error('Authentication required');
+    redirect('/candidate/auth/login');
   }
 
   // 候補者データを取得

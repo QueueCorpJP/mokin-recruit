@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { any } from 'zod';
 
 interface CareerStatusFormData {
   transferDesiredTime: string;

@@ -34,7 +34,7 @@ export default async function CandidateEducationPage() {
   // 認証チェック
   const user = await getCachedCandidateUser();
   if (!user) {
-    throw new Error('Authentication required');
+    redirect('/candidate/auth/login');
   }
 
   // 候補者データを取得

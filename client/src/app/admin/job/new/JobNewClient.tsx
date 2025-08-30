@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-// import NewJobHeader from '@/app/company/company/job/NewJobHeader';
+// import NewJobHeader from '@/app/company/job/NewJobHeader';
 import { Modal } from '@/components/ui/mo-dal';
-import { CompanyGroup } from '@/app/company/company/job/types';
-import { LocationModal } from '@/app/company/company/job/LocationModal';
-import { JobTypeModal } from '@/app/company/company/job/JobTypeModal';
-import { IndustryModal } from '@/app/company/company/job/IndustryModal';
-import { FormFields } from '@/app/company/company/job/FormFields';
-import { ConfirmView } from '@/app/company/company/job/ConfirmView';
+import { CompanyGroup } from '@/app/company/job/types';
+import { LocationModal } from '@/app/company/job/LocationModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { FormFields } from '@/app/company/job/FormFields';
+import { ConfirmView } from '@/app/company/job/ConfirmView';
 // Note: Auth is now handled server-side, user info passed as props
 import { createJob } from '../pending/actions';
 

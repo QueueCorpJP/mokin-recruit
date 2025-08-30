@@ -17,8 +17,26 @@ export interface Room {
   unreadCount?: number; // 未読メッセージ数を追加
 }
 
+// 簡単なメモリキャッシュ
+const roomsCache = new Map<string, { data: Room[]; timestamp: number }>();
+const CACHE_TTL = 15 * 1000; // 15秒 (メッセージは頻繁に更新される可能性があるため短めに設定)
+
 export async function getRooms(userId: string, userType: 'candidate' | 'company'): Promise<Room[]> {
   console.log('🚀 [STEP A] getRooms called:', { userId, userType });
+  
+  // キャッシュキーの生成
+  const cacheKey = `${userId}-${userType}`;
+  const cached = roomsCache.get(cacheKey);
+  
+  // 期限切れキャッシュを即座に削除
+  if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
+    roomsCache.delete(cacheKey);
+  } else if (cached) {
+    console.log('[getRooms] Cache hit - returning cached data');
+    return cached.data;
+  }
+  
+  console.log('[getRooms] Cache miss - fetching new data');
   
   // RLS問題を解決するためAdmin clientを使用
   const supabase = getSupabaseAdminClient();
@@ -54,7 +72,20 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         return [];
       }
 
-      return await buildRoomsData(rooms || [], userType);
+      const result = await buildRoomsData(rooms || [], userType);
+      
+      // 成功した場合のみキャッシュに保存
+      roomsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      
+      // キャッシュサイズを制限（メモリ使用量対策）
+      if (roomsCache.size > 20) {
+        const oldestKey = roomsCache.keys().next().value;
+        if (oldestKey) {
+          roomsCache.delete(oldestKey);
+        }
+      }
+
+      return result;
       
     } else {
       // 企業ユーザーの場合: 権限レベルに応じてアクセス可能なグループを決定
@@ -184,6 +215,17 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
           jobTitle: r.jobTitle
         }))
       });
+      
+      // 成功した場合のみキャッシュに保存
+      roomsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      
+      // キャッシュサイズを制限（メモリ使用量対策）
+      if (roomsCache.size > 20) {
+        const oldestKey = roomsCache.keys().next().value;
+        if (oldestKey) {
+          roomsCache.delete(oldestKey);
+        }
+      }
       
       return result;
     }

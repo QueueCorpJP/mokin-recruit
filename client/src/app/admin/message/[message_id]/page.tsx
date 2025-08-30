@@ -7,9 +7,9 @@ import { ApplicationStatusSelect } from '@/components/admin/message/ApplicationS
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
 interface MessageDetailPageProps {
-  params: {
+  params: Promise<{
     message_id: string;
-  };
+  }>;
 }
 
 interface MessageDetail {

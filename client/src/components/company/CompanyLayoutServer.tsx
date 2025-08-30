@@ -1,39 +1,38 @@
-import { redirect } from 'next/navigation';
 import { getServerAuth } from '@/lib/auth/server';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+import { redirect } from 'next/navigation';
+import { UserProvider } from '@/contexts/UserContext';
 
 export default async function CompanyLayoutServer({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // 企業認証チェック（並列処理で最適化）
+  // サーバーサイドで認証状態を確認（一度だけ）
   const auth = await getServerAuth();
-  
-  if (!auth.isAuthenticated || auth.userType !== 'company_user') {
+
+  // 企業で未ログイン（または企業ではない）ならログインへ
+  if (!auth.isAuthenticated || auth.userType !== 'company') {
     redirect('/company/auth/login');
   }
 
-  const userInfo = {
-    name: auth.user?.name || auth.user?.email || '企業ユーザー',
-    email: auth.user?.email || '',
+  // 認証情報を整理
+  const userInfo = auth.isAuthenticated && auth.user ? {
+    name: auth.user.name || auth.user.email || '',
+    email: auth.user.email || '',
     userType: auth.userType
-  };
+  } : undefined;
+
+  // UserContext用のユーザー情報
+  const contextUser = auth.isAuthenticated && auth.user ? {
+    id: auth.user.id,
+    email: auth.user.email || '',
+    role: 'company' as const,
+    profile: auth.user
+  } : null;
 
   return (
-    <>
-      <AuthAwareNavigationServer 
-        variant="company" 
-        isLoggedIn={true}
-        userInfo={userInfo}
-      />
+    <UserProvider user={contextUser}>
       {children}
-      <AuthAwareFooterServer 
-        variant="company" 
-        isLoggedIn={true}
-        userInfo={userInfo}
-      />
-    </>
+    </UserProvider>
   );
 }

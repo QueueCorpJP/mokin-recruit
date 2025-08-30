@@ -7,6 +7,5 @@ interface CandidateSearchSettingConfirmPageProps {
 export default async function CandidateSearchSettingConfirmPage({
   params
 }: CandidateSearchSettingConfirmPageProps) {
-  const resolvedParams = await params;
-  return <CandidateApplicationServerComponent params={resolvedParams} />;
+  return <CandidateApplicationServerComponent params={params} />;
 }

@@ -18,7 +18,7 @@ export default function MailVerifyPage() {
   useEffect(() => {
     const verificationEmail = sessionStorage.getItem('verificationEmail');
     if (!verificationEmail) {
-      router.push('/candidate/setting/mail');
+      router.push('/company/setting/mail');
       return;
     }
     setEmail(verificationEmail);
@@ -37,7 +37,7 @@ export default function MailVerifyPage() {
       } else {
         sessionStorage.removeItem('verificationEmail');
         // メールアドレス変更が完了したので、完了ページに移動
-        router.push('/candidate/setting/mail/complete');
+        router.push('/company/setting/mail/complete');
       }
     } catch (error) {
       setError('認証に失敗しました');
@@ -72,8 +72,8 @@ export default function MailVerifyPage() {
     <div className="min-h-screen bg-[#f9f9f9]">
       <SettingsHeader
         breadcrumbs={[
-          { label: '各種設定', href: '/candidate/setting' },
-          { label: 'メールアドレス変更', href: '/candidate/setting/mail' },
+          { label: '各種設定', href: '/company/setting' },
+          { label: 'メールアドレス変更', href: '/company/setting/mail' },
           { label: '変更メールアドレス認証' }
         ]}
         title="メールアドレス変更"
