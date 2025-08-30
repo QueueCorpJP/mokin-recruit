@@ -17,6 +17,22 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // Safe fallback for scout_stats if undefined
+  const scoutStats = candidate.scout_stats || {
+    scout_received_7days: 0,
+    scout_opened_7days: 0,
+    scout_replied_7days: 0,
+    applications_7days: 0,
+    scout_received_30days: 0,
+    scout_opened_30days: 0,
+    scout_replied_30days: 0,
+    applications_30days: 0,
+    scout_received_total: 0,
+    scout_opened_total: 0,
+    scout_replied_total: 0,
+    applications_total: 0,
+  };
+
   // Calculate age from formData birth_date
   const age = formData.birth_date 
     ? new Date().getFullYear() - new Date(formData.birth_date).getFullYear()
@@ -144,7 +160,7 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
-                        <p className="leading-[1.3]">{candidate.scout_stats.scout_received_7days}</p>
+                        <p className="leading-[1.3]">{scoutStats.scout_received_7days}</p>
                       </div>
                     </div>
                   </div>
@@ -153,8 +169,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_opened_7days}
-                          {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                          {scoutStats.scout_opened_7days}
+                          {scoutStats.scout_received_7days > 0 ? ` (${Math.round(scoutStats.scout_opened_7days / scoutStats.scout_received_7days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -164,8 +180,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_replied_7days}
-                          {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                          {scoutStats.scout_replied_7days}
+                          {scoutStats.scout_received_7days > 0 ? ` (${Math.round(scoutStats.scout_replied_7days / scoutStats.scout_received_7days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -175,8 +191,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
                         <p className="leading-[1.3] whitespace-pre">
-                          {candidate.scout_stats.applications_7days}
-                          {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.applications_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                          {scoutStats.applications_7days}
+                          {scoutStats.scout_received_7days > 0 ? ` (${Math.round(scoutStats.applications_7days / scoutStats.scout_received_7days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -197,7 +213,7 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
-                        <p className="leading-[1.3]">{candidate.scout_stats.scout_received_30days}</p>
+                        <p className="leading-[1.3]">{scoutStats.scout_received_30days}</p>
                       </div>
                     </div>
                   </div>
@@ -206,8 +222,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_opened_30days}
-                          {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                          {scoutStats.scout_opened_30days}
+                          {scoutStats.scout_received_30days > 0 ? ` (${Math.round(scoutStats.scout_opened_30days / scoutStats.scout_received_30days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -217,8 +233,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_replied_30days}
-                          {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                          {scoutStats.scout_replied_30days}
+                          {scoutStats.scout_received_30days > 0 ? ` (${Math.round(scoutStats.scout_replied_30days / scoutStats.scout_received_30days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -228,8 +244,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
                         <p className="leading-[1.3] whitespace-pre">
-                          {candidate.scout_stats.applications_30days}
-                          {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.applications_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                          {scoutStats.applications_30days}
+                          {scoutStats.scout_received_30days > 0 ? ` (${Math.round(scoutStats.applications_30days / scoutStats.scout_received_30days * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -250,7 +266,7 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
-                        <p className="leading-[1.3]">{candidate.scout_stats.scout_received_total}</p>
+                        <p className="leading-[1.3]">{scoutStats.scout_received_total}</p>
                       </div>
                     </div>
                   </div>
@@ -259,8 +275,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_opened_total}
-                          {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                          {scoutStats.scout_opened_total}
+                          {scoutStats.scout_received_total > 0 ? ` (${Math.round(scoutStats.scout_opened_total / scoutStats.scout_received_total * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -270,8 +286,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
                         <p className="leading-[1.3]">
-                          {candidate.scout_stats.scout_replied_total}
-                          {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                          {scoutStats.scout_replied_total}
+                          {scoutStats.scout_received_total > 0 ? ` (${Math.round(scoutStats.scout_replied_total / scoutStats.scout_received_total * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>
@@ -281,8 +297,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                     <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
                       <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
                         <p className="leading-[1.3] whitespace-pre">
-                          {candidate.scout_stats.applications_total}
-                          {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.applications_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                          {scoutStats.applications_total}
+                          {scoutStats.scout_received_total > 0 ? ` (${Math.round(scoutStats.applications_total / scoutStats.scout_received_total * 100)}%)` : ''}
                         </p>
                       </div>
                     </div>

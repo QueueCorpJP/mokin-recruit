@@ -157,14 +157,106 @@ export default function CandidateEditClient({ candidate }: Props) {
     setSkills(prev => ({ ...prev, [field]: value }));
   };
 
+  // Selection entry helper functions
+  const updateSelectionEntry = (index: number, field: string, value: any) => {
+    setSelectionEntries(prev => 
+      prev.map((entry, i) => 
+        i === index ? { ...entry, [field]: value } : entry
+      )
+    );
+  };
+
+  const addSelectionEntry = () => {
+    setSelectionEntries(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        isPrivate: false,
+        industries: [],
+        companyName: '',
+        department: '',
+        progressStatus: '',
+        declineReason: '',
+        startYear: '',
+        startMonth: '',
+        endYear: '',
+        endMonth: '',
+        isCurrentlyWorking: false,
+        jobDescription: '',
+        jobTypes: [],
+      },
+    ]);
+  };
+
+  const removeSelectionEntry = (index: number) => {
+    if (selectionEntries.length > 1) {
+      setSelectionEntries(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const openIndustryModal = (targetIndex: number) => {
+    setModalState({ isOpen: true, targetType: 'industry', targetIndex });
+  };
+
+  const openJobTypeModal = (targetIndex: number) => {
+    setModalState({ isOpen: true, targetType: 'jobtype', targetIndex });
+  };
+
+  const getModalInitialData = (modalType: 'industry' | 'jobtype', targetIndex: number) => {
+    if (modalType === 'industry') {
+      if (targetIndex === -1 || targetIndex === -2) {
+        return formData.recent_job_industries;
+      } else if (targetIndex >= 1000 && targetIndex < 2000) {
+        const entryIndex = targetIndex - 1000;
+        return selectionEntries[entryIndex]?.industries || [];
+      } else if (targetIndex >= 0 && targetIndex < selectionEntries.length) {
+        return selectedIndustriesMap[targetIndex] || [];
+      }
+    } else if (modalType === 'jobtype') {
+      if (targetIndex === -1 || targetIndex === -2) {
+        return formData.recent_job_types;
+      } else if (targetIndex >= 2000) {
+        const entryIndex = targetIndex - 2000;
+        return selectionEntries[entryIndex]?.jobTypes || [];
+      }
+    }
+    
+    return [];
+  };
+
 
   const handleIndustryConfirm = (selectedIndustries: string[]) => {
-    handleInputChange('recent_job_industries', selectedIndustries);
+    const { targetIndex } = modalState;
+    
+    if (targetIndex !== null) {
+      if (targetIndex === -1 || targetIndex === -2) {
+        handleInputChange('recent_job_industries', selectedIndustries);
+      } else if (targetIndex >= 1000 && targetIndex < 2000) {
+        // Job history entry industries
+        const entryIndex = targetIndex - 1000;
+        updateSelectionEntry(entryIndex, 'industries', selectedIndustries);
+      } else {
+        // Career status entries (existing logic)
+        const newMap = { ...selectedIndustriesMap };
+        newMap[targetIndex] = selectedIndustries;
+        setSelectedIndustriesMap(newMap);
+      }
+    }
     setModalState({ isOpen: false, targetType: null, targetIndex: null });
   };
 
   const handleJobTypeConfirm = (selectedJobTypes: string[]) => {
-    handleInputChange('recent_job_types', selectedJobTypes);
+    const { targetIndex } = modalState;
+    
+    if (targetIndex !== null) {
+      if (targetIndex === -1 || targetIndex === -2) {
+        handleInputChange('recent_job_types', selectedJobTypes);
+      } else if (targetIndex >= 2000) {
+        // Job history entry job types
+        const entryIndex = targetIndex - 2000;
+        updateSelectionEntry(entryIndex, 'jobTypes', selectedJobTypes);
+      }
+    }
     setModalState({ isOpen: false, targetType: null, targetIndex: null });
   };
 
@@ -175,18 +267,40 @@ export default function CandidateEditClient({ candidate }: Props) {
     
     try {
       // Prepare data for confirmation page
+      // Collect all industries and job types from all job history entries
+      const allIndustries = [...new Set(selectionEntries.flatMap(entry => entry.industries || []))];
+      const allJobTypes = [...new Set(selectionEntries.flatMap(entry => entry.jobTypes || []))];
+      
+      // Update formData with first entry's job history data for backward compatibility
+      const firstEntry = selectionEntries[0];
+      const updatedFormData = {
+        ...formData,
+        recent_job_company_name: firstEntry?.companyName || '',
+        recent_job_department_position: firstEntry?.department || '',
+        recent_job_start_year: firstEntry?.startYear || '',
+        recent_job_start_month: firstEntry?.startMonth || '',
+        recent_job_end_year: firstEntry?.endYear || '',
+        recent_job_end_month: firstEntry?.endMonth || '',
+        recent_job_is_currently_working: firstEntry?.isCurrentlyWorking || false,
+        recent_job_description: firstEntry?.jobDescription || '',
+        recent_job_industries: allIndustries,
+        recent_job_types: allJobTypes,
+      };
+      
       const confirmData = {
-        updateData: formData,
+        updateData: updatedFormData,
         education,
-        workExperience: formData.recent_job_industries.map(industry => ({ 
+        workExperience: allIndustries.map(industry => ({ 
           industry_name: industry, 
           experience_years: 0 
         })),
-        jobTypeExperience: formData.recent_job_types.map(jobType => ({ 
+        jobTypeExperience: allJobTypes.map(jobType => ({ 
           job_type_name: jobType, 
           experience_years: 0 
         })),
-        skills
+        skills,
+        // Include job history entries for future database updates
+        jobHistoryEntries: selectionEntries
       };
 
       // Navigate to confirmation page with data
@@ -1107,115 +1221,251 @@ export default function CandidateEditClient({ candidate }: Props) {
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               職務経歴
             </h3>
-            {/* 会社名 */}
-            <div className="flex items-center gap-8 mb-6">
-              <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
-                会社名
-              </label>
-              <input
-                type="text"
-                value={formData.recent_job_company_name}
-                onChange={(e) => handleInputChange('recent_job_company_name', e.target.value)}
-                className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
-              />
-            </div>
-
-            {/* 部署・役職 */}
-            <div className="flex items-center gap-8 mb-6">
-              <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
-                部署・役職
-              </label>
-              <input
-                type="text"
-                value={formData.recent_job_department_position}
-                onChange={(e) => handleInputChange('recent_job_department_position', e.target.value)}
-                className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
-              />
-            </div>
-
-            {/* 在籍期間 */}
-            <div className="flex items-start gap-8 mb-6">
-              <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                在籍期間
-              </label>
-              <div className="w-[400px] space-y-4">
-                <div className="flex gap-4 items-center">
-                  <select
-                    value={formData.recent_job_start_year}
-                    onChange={(e) => handleInputChange('recent_job_start_year', e.target.value)}
-                    className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+            
+            {/* 職務経歴エントリ */}
+            {selectionEntries.map((entry, index) => (
+              <div key={entry.id} className="bg-[#f9f9f9] rounded-[10px] p-6 mb-6 relative">
+                {/* 削除ボタン（最初のエントリ以外） */}
+                {index > 0 && (
+                  <div 
+                    className="absolute top-4 right-4 w-4 h-4 cursor-pointer"
+                    onClick={() => removeSelectionEntry(index)}
                   >
-                    <option value="">年</option>
-                    {generateYearOptions(1970).map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                  <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">年</span>
-                  <select
-                    value={formData.recent_job_start_month}
-                    onChange={(e) => handleInputChange('recent_job_start_month', e.target.value)}
-                    className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
-                  >
-                    <option value="">月</option>
-                    {generateMonthOptions().map(month => (
-                      <option key={month} value={month}>{month}</option>
-                    ))}
-                  </select>
-                  <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">月〜</span>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.recent_job_is_currently_working}
-                      onChange={(e) => handleInputChange('recent_job_is_currently_working', e.target.checked)}
-                    />
-                    <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">現在も在籍中</span>
-                  </label>
-                </div>
-
-                {!formData.recent_job_is_currently_working && (
-                  <div className="flex gap-4 items-center">
-                    <select
-                      value={formData.recent_job_end_year}
-                      onChange={(e) => handleInputChange('recent_job_end_year', e.target.value)}
-                      className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
-                    >
-                      <option value="">年</option>
-                      {generateYearOptions(1970).map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                    <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">年</span>
-                    <select
-                      value={formData.recent_job_end_month}
-                      onChange={(e) => handleInputChange('recent_job_end_month', e.target.value)}
-                      className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
-                    >
-                      <option value="">月</option>
-                      {generateMonthOptions().map(month => (
-                        <option key={month} value={month}>{month}</option>
-                      ))}
-                    </select>
-                    <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">月まで</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M1 1L15 15M1 15L15 1" stroke="#999999" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
                   </div>
                 )}
-              </div>
-            </div>
+                
+                {/* 会社名 */}
+                <div className="flex items-center gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                    会社名
+                  </label>
+                  <CompanyNameInput
+                    value={entry.companyName}
+                    onChange={(value) => updateSelectionEntry(index, 'companyName', value)}
+                    placeholder="企業名を入力"
+                    className="w-[400px]"
+                  />
+                </div>
 
-            {/* 職務内容 */}
-            <div className="flex items-start gap-8 mb-6">
-              <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                職務内容
-              </label>
-              <textarea
-                value={formData.recent_job_description}
-                onChange={(e) => handleInputChange('recent_job_description', e.target.value)}
-                rows={4}
-                className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none"
-                placeholder="職務内容を入力してください"
-              />
+                {/* 部署・役職 */}
+                <div className="flex items-center gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                    部署・役職
+                  </label>
+                  <input
+                    type="text"
+                    value={entry.department}
+                    onChange={(e) => updateSelectionEntry(index, 'department', e.target.value)}
+                    className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
+                    placeholder="部署名・役職名を入力"
+                  />
+                </div>
+
+                {/* 在籍期間 */}
+                <div className="flex items-start gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                    在籍期間
+                  </label>
+                  <div className="w-[400px] space-y-4">
+                    <div className="flex gap-4 items-center">
+                      <select
+                        value={entry.startYear || ''}
+                        onChange={(e) => updateSelectionEntry(index, 'startYear', e.target.value)}
+                        className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                      >
+                        <option value="">年</option>
+                        {generateYearOptions(1970).map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                      <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">年</span>
+                      <select
+                        value={entry.startMonth || ''}
+                        onChange={(e) => updateSelectionEntry(index, 'startMonth', e.target.value)}
+                        className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                      >
+                        <option value="">月</option>
+                        {generateMonthOptions().map(month => (
+                          <option key={month} value={month}>{month}</option>
+                        ))}
+                      </select>
+                      <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">月〜</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={entry.isCurrentlyWorking || false}
+                          onChange={(e) => updateSelectionEntry(index, 'isCurrentlyWorking', e.target.checked)}
+                        />
+                        <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">現在も在籍中</span>
+                      </label>
+                    </div>
+
+                    {!entry.isCurrentlyWorking && (
+                      <div className="flex gap-4 items-center">
+                        <select
+                          value={entry.endYear || ''}
+                          onChange={(e) => updateSelectionEntry(index, 'endYear', e.target.value)}
+                          className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                        >
+                          <option value="">年</option>
+                          {generateYearOptions(1970).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                        <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">年</span>
+                        <select
+                          value={entry.endMonth || ''}
+                          onChange={(e) => updateSelectionEntry(index, 'endMonth', e.target.value)}
+                          className="px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                        >
+                          <option value="">月</option>
+                          {generateMonthOptions().map(month => (
+                            <option key={month} value={month}>{month}</option>
+                          ))}
+                        </select>
+                        <span className="text-[#323232] text-[16px] font-bold tracking-[1.6px]">月まで</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 業種 */}
+                <div className="flex items-start gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                    業種
+                  </label>
+                  <div className="w-[400px]">
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        className="w-[170px] py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                        onClick={() => openIndustryModal(index + 1000)} // Use unique modal index for job history
+                      >
+                        業種を選択
+                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {(entry.industries || []).map((industry, industryIndex) => (
+                          <div
+                            key={industryIndex}
+                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                          >
+                            <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
+                              {industry}
+                            </span>
+                            <button
+                              type="button"
+                              className="w-3 h-3"
+                              onClick={() => {
+                                const newIndustries = [...(entry.industries || [])];
+                                newIndustries.splice(industryIndex, 1);
+                                updateSelectionEntry(index, 'industries', newIndustries);
+                              }}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                              >
+                                <path
+                                  d="M1 1L11 11M1 11L11 1"
+                                  stroke="#0f9058"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 職種 */}
+                <div className="flex items-start gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                    職種
+                  </label>
+                  <div className="w-[400px]">
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        className="w-[170px] py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]"
+                        onClick={() => openJobTypeModal(index + 2000)} // Use unique modal index for job history
+                      >
+                        職種を選択
+                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {(entry.jobTypes || []).map((jobType, jobTypeIndex) => (
+                          <div
+                            key={jobTypeIndex}
+                            className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                          >
+                            <span className="text-[#0f9058] text-[14px] font-bold tracking-[1.4px]">
+                              {jobType}
+                            </span>
+                            <button
+                              type="button"
+                              className="w-3 h-3"
+                              onClick={() => {
+                                const newJobTypes = [...(entry.jobTypes || [])];
+                                newJobTypes.splice(jobTypeIndex, 1);
+                                updateSelectionEntry(index, 'jobTypes', newJobTypes);
+                              }}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                              >
+                                <path
+                                  d="M1 1L11 11M1 11L11 1"
+                                  stroke="#0f9058"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 職務内容 */}
+                <div className="flex items-start gap-8 mb-6">
+                  <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                    職務内容
+                  </label>
+                  <textarea
+                    value={entry.jobDescription || ''}
+                    onChange={(e) => updateSelectionEntry(index, 'jobDescription', e.target.value)}
+                    rows={4}
+                    className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none"
+                    placeholder="職務内容を入力してください"
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* 職務経歴追加ボタン */}
+            <div className="flex justify-center mt-6">
+              <button
+                type="button"
+                onClick={addSelectionEntry}
+                className="px-8 py-3 bg-[#0F9058] text-white rounded-[32px] text-[16px] font-bold tracking-[1.6px] hover:bg-[#0d7a4a] transition-colors"
+              >
+                + 職務経歴を追加
+              </button>
             </div>
           </section>
 
@@ -1624,12 +1874,12 @@ export default function CandidateEditClient({ candidate }: Props) {
     </div>
 
     {/* Modals */}
-    {modalState.isOpen && modalState.targetType === 'industry' && modalState.targetIndex !== null && (
+    {modalState.isOpen && modalState.targetType === 'industry' && (
       <IndustrySelectModal
         isOpen={true}
         onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
-        onConfirm={handleIndustrySelect}
-        initialSelected={selectedIndustriesMap[modalState.targetIndex] || []}
+        onConfirm={handleIndustryConfirm}
+        initialSelected={getModalInitialData('industry', modalState.targetIndex || 0)}
       />
     )}
 
@@ -1638,16 +1888,7 @@ export default function CandidateEditClient({ candidate }: Props) {
         isOpen={true}
         onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
         onConfirm={handleJobTypeConfirm}
-        initialSelected={formData.recent_job_types}
-      />
-    )}
-
-    {modalState.isOpen && modalState.targetType === 'industry' && modalState.targetIndex === null && (
-      <IndustrySelectModal
-        isOpen={true}
-        onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
-        onConfirm={handleIndustryConfirm}
-        initialSelected={formData.recent_job_industries}
+        initialSelected={getModalInitialData('jobtype', modalState.targetIndex || 0)}
       />
     )}
   </>

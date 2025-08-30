@@ -267,7 +267,9 @@ export function AdminPageTitle() {
     if (pathname.match(/^\/admin\/candidate\/[^\/]+\/edit$/)) {
       return { title: '候補者情報' };
     }
-    
+      if (pathname.match(/^\/admin\/candidate\/[^\/]+\/edit\/confirm$/)) {
+      return { title: '候補者情報' };
+    }
     if (pathname.match(/^\/admin\/candidate\/new\/confirm$/)) {
       return { title: '候補者情報追加確認' };
     }

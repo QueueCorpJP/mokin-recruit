@@ -57,7 +57,7 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
           <div style={{ width: '198px' }}>
             <Button
               onClick={onConfirm}
-              variant="green-outline"
+              variant="green-gradient"
               size="figma-default"
               className="w-full text-[16px] font-bold tracking-[0.1em]"
             >
