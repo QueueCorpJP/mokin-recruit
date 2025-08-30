@@ -1340,7 +1340,7 @@ export default function CandidateNewClient() {
                         <div className="w-[400px]">
                           <textarea
                             value={skills.qualifications}
-                            onChange={(e) => handleSkillsChange('qualifications', e.target.value)}
+                            onChange={(e) => updateSkills('qualifications', e.target.value)}
                             placeholder="例）TOEIC850点、簿記2級、中小企業診断士など"
                             className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none"
                           />
@@ -1363,7 +1363,7 @@ export default function CandidateNewClient() {
                         </label>
                         <textarea
                           value={formData.jobSummary}
-                          onChange={(e) => handleInputChange('jobSummary', e.target.value)}
+                          onChange={(e) => updateFormData('jobSummary', e.target.value)}
                           rows={4}
                           className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none"
                           placeholder="職務要約を入力してください"
@@ -1377,7 +1377,7 @@ export default function CandidateNewClient() {
                         </label>
                         <textarea
                           value={formData.selfPr}
-                          onChange={(e) => handleInputChange('selfPr', e.target.value)}
+                          onChange={(e) => updateFormData('selfPr', e.target.value)}
                           rows={4}
                           className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none"
                           placeholder="自己PRやその他の情報を入力してください"

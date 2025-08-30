@@ -63,6 +63,14 @@ export interface SelectionEntry {
   department: string;
   progressStatus: string;
   declineReason?: string;
+  // Job history fields
+  startYear?: string;
+  startMonth?: string;
+  endYear?: string;
+  endMonth?: string;
+  isCurrentlyWorking?: boolean;
+  jobDescription?: string;
+  jobTypes?: string[];
 }
 
 export interface ModalState {
@@ -159,6 +167,13 @@ const initialState: CandidateState = {
       department: '',
       progressStatus: '',
       declineReason: '',
+      startYear: '',
+      startMonth: '',
+      endYear: '',
+      endMonth: '',
+      isCurrentlyWorking: false,
+      jobDescription: '',
+      jobTypes: [],
     },
   ],
   selectedIndustriesMap: {},
@@ -212,6 +227,13 @@ function candidateReducer(state: CandidateState, action: CandidateAction): Candi
             department: '',
             progressStatus: '',
             declineReason: '',
+            startYear: '',
+            startMonth: '',
+            endYear: '',
+            endMonth: '',
+            isCurrentlyWorking: false,
+            jobDescription: '',
+            jobTypes: [],
           },
         ],
       };
