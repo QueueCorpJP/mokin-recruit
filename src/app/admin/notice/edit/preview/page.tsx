@@ -65,8 +65,8 @@ export default function EditPreviewPage() {
                   .eq('id', categoryId)
                   .single();
                 
-                if (categoryData && categoryData.name) {
-                  names[categoryId] = categoryData.name as string;
+                if (categoryData && (categoryData as any).name) {
+                  names[categoryId] = (categoryData as any).name as string;
                 }
               } catch (err) {
                 console.error('Individual category fetch failed:', categoryId, err);

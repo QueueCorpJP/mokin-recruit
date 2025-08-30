@@ -84,7 +84,7 @@ export async function updateEducationData(formData: FormData) {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      throw new Error(authResult.error);
+      throw new Error((authResult as any).error);
     }
 
     const { candidateId } = authResult.data;

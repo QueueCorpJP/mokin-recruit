@@ -145,9 +145,9 @@ export default function PreviewPage() {
                   .eq('id', categoryId)
                   .single();
                 
-                if (categoryData && categoryData.name) {
-                  names[categoryId] = categoryData.name as string;
-                  console.log('Individual category fetch:', { categoryId, name: categoryData.name });
+                if (categoryData && (categoryData as any).name) {
+                  names[categoryId] = (categoryData as any).name as string;
+                  console.log('Individual category fetch:', { categoryId, name: (categoryData as any).name });
                 }
               } catch (err) {
                 console.error('Individual category fetch failed:', categoryId, err);

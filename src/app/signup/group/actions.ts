@@ -68,7 +68,7 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     // パスワードをハッシュ化
     const bcrypt = await import('bcrypt');
     const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(formData.password, saltRounds);
+    const passwordHash = await (bcrypt as any).hash(formData.password, saltRounds);
     
     const userData = {
       name: formData.name,

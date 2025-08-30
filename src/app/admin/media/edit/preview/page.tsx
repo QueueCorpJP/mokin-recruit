@@ -58,8 +58,8 @@ export default function EditPreviewPage() {
             if (data.categoryIds && data.categoryIds.length > 0) {
               const names: {[key: string]: string} = {};
               for (const categoryId of data.categoryIds) {
-                const category = categoriesData.find((cat: any) => cat.id === categoryId);
-                if (category && typeof category.name === 'string') {
+                const category = (categoriesData as any[]).find((cat: any) => cat.id === categoryId);
+                if (category && category.name) {
                   names[categoryId] = category.name;
                 }
               }
