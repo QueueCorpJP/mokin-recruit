@@ -496,38 +496,62 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 直近の在籍企業の業種
               </label>
-              <div className="flex flex-col gap-2">
-                {candidate.recent_job_industries && Array.isArray(candidate.recent_job_industries) && candidate.recent_job_industries.length > 0 ? (
-                  candidate.recent_job_industries.map((industry, index) => (
-                    <span
-                      key={`industry-${index}`}
-                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
-                    >
-                      {typeof industry === 'object' ? (industry.name || industry.id || JSON.stringify(industry)) : industry}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500">未入力</span>
-                )}
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  // recent_job_industriesは配列で、各要素がindustries配列を持つ
+                  const allIndustries: any[] = [];
+                  if (candidate.recent_job_industries && Array.isArray(candidate.recent_job_industries)) {
+                    candidate.recent_job_industries.forEach((entry: any) => {
+                      if (entry.industries && Array.isArray(entry.industries)) {
+                        allIndustries.push(...entry.industries);
+                      }
+                    });
+                  }
+                  
+                  return allIndustries.length > 0 ? (
+                    allIndustries.map((industry: any, index: number) => (
+                      <span
+                        key={`industry-${index}`}
+                        className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                      >
+                        {industry?.name || industry?.id || '未設定'}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">未入力</span>
+                  );
+                })()}
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 直近の在籍企業の業種での職種
               </label>
-              <div className="flex flex-col gap-2">
-                {candidate.recent_job_types && Array.isArray(candidate.recent_job_types) && candidate.recent_job_types.length > 0 ? (
-                  candidate.recent_job_types.map((jobType, index) => (
-                    <span
-                      key={`job-type-${index}`}
-                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
-                    >
-                      {typeof jobType === 'object' ? (jobType.name || jobType.id || JSON.stringify(jobType)) : jobType}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500">未入力</span>
-                )}
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  // recent_job_typesは配列で、各要素がjobTypes配列を持つ
+                  const allJobTypes: any[] = [];
+                  if (candidate.recent_job_industries && Array.isArray(candidate.recent_job_industries)) {
+                    candidate.recent_job_industries.forEach((entry: any) => {
+                      if (entry.jobTypes && Array.isArray(entry.jobTypes)) {
+                        allJobTypes.push(...entry.jobTypes);
+                      }
+                    });
+                  }
+                  
+                  return allJobTypes.length > 0 ? (
+                    allJobTypes.map((jobType: any, index: number) => (
+                      <span
+                        key={`job-type-${index}`}
+                        className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
+                      >
+                        {jobType?.name || jobType?.id || '未設定'}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">未入力</span>
+                  );
+                })()}
               </div>
             </div>
             <div>
@@ -551,35 +575,59 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">
                 最終学歴
               </h4>
-              {uniqueEducation.length > 0 ? (
-                uniqueEducation.map((edu, index) => (
-                  <div key={`education-${index}-${edu.school_name || ''}-${edu.graduation_year || ''}`} className="space-y-6">
+              <div className="space-y-6">
+                {uniqueEducation.length > 0 ? (
+                  uniqueEducation.map((edu, index) => (
+                    <div key={`education-${index}-${edu.school_name || ''}-${edu.graduation_year || ''}`} className="space-y-6">
+                      <div className="flex gap-6">
+                        <span className="text-sm font-medium text-gray-700 w-[120px] text-right">最終学歴</span>
+                        <span className="text-gray-900 flex-1">{edu.final_education || '未設定'}</span>
+                      </div>
+                      <div className="flex gap-6">
+                        <span className="text-sm font-medium text-gray-700 w-[120px] text-right">学校名</span>
+                        <span className="text-gray-900 flex-1">{edu.school_name || '未設定'}</span>
+                      </div>
+                      <div className="flex gap-6">
+                        <span className="text-sm font-medium text-gray-700 w-[120px] text-right">学部学科専攻</span>
+                        <span className="text-gray-900 flex-1">{edu.department || '未設定'}</span>
+                      </div>
+                      <div className="flex gap-6">
+                        <span className="text-sm font-medium text-gray-700 w-[120px] text-right">卒業年月</span>
+                        <div className="flex gap-2 items-center text-gray-900 flex-1">
+                          <span>{edu.graduation_year || '未設定'}</span>
+                          <span className="text-gray-600">年</span>
+                          <span>{edu.graduation_month || '未設定'}</span>
+                          <span className="text-gray-600">月</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="space-y-6">
                     <div className="flex gap-6">
                       <span className="text-sm font-medium text-gray-700 w-[120px] text-right">最終学歴</span>
-                      <span className="text-gray-900 flex-1">{edu.final_education || '選択された内容を表示'}</span>
+                      <span className="text-gray-500 flex-1">未設定</span>
                     </div>
                     <div className="flex gap-6">
                       <span className="text-sm font-medium text-gray-700 w-[120px] text-right">学校名</span>
-                      <span className="text-gray-900 flex-1">{edu.school_name || '入力された内容を表示'}</span>
+                      <span className="text-gray-500 flex-1">未設定</span>
                     </div>
                     <div className="flex gap-6">
                       <span className="text-sm font-medium text-gray-700 w-[120px] text-right">学部学科専攻</span>
-                      <span className="text-gray-900 flex-1">{edu.department || '入力された内容を表示'}</span>
+                      <span className="text-gray-500 flex-1">未設定</span>
                     </div>
                     <div className="flex gap-6">
                       <span className="text-sm font-medium text-gray-700 w-[120px] text-right">卒業年月</span>
-                      <div className="flex gap-2 items-center text-gray-900 flex-1">
-                        <span>{edu.graduation_year || '選択された内容を表示'}</span>
-                        <span className="text-gray-600">年</span>
-                        <span>{edu.graduation_month || '選択された内容を表示'}</span>
-                        <span className="text-gray-600">月</span>
+                      <div className="flex gap-2 items-center text-gray-500 flex-1">
+                        <span>未設定</span>
+                        <span>年</span>
+                        <span>未設定</span>
+                        <span>月</span>
                       </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-gray-500">未入力</div>
-              )}
+                )}
+              </div>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">
@@ -635,26 +683,47 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">
                 語学
               </h4>
-              {uniqueSkills.length > 0 ? (
-                uniqueSkills.map((skill, index) => (
-                  <div key={`skill-${index}-${skill.english_level || ''}-${JSON.stringify(skill.other_languages) || ''}`} className="space-y-6">
-                    <div className="flex gap-6">
-                      <span className="text-sm font-medium text-gray-700 w-[120px] text-right">英語</span>
-                      <span className="text-gray-900 flex-1">{skill.english_level || '選択された内容を表示'}</span>
-                    </div>
+              <div className="space-y-4">
+                {/* 英語レベルは必ず表示 */}
+                <div className="flex gap-6">
+                  <span className="text-sm font-medium text-gray-700 w-[120px] text-right">英語レベル</span>
+                  <span className="text-gray-900 flex-1">
+                    {(() => {
+                      const skill = uniqueSkills.length > 0 ? uniqueSkills[0] : null;
+                      const englishLevel = skill?.english_level;
+                      
+                      if (englishLevel === 'none') return 'なし';
+                      if (englishLevel === 'basic') return '日常会話レベル';
+                      if (englishLevel === 'business') return 'ビジネスレベル';
+                      if (englishLevel === 'native') return 'ネイティブレベル';
+                      return '未設定';
+                    })()}
+                  </span>
+                </div>
+                
+                {/* その他の言語はデータがある場合のみ表示 */}
+                {(() => {
+                  const allOtherLanguages: any[] = [];
+                  uniqueSkills.forEach(skill => {
+                    if (skill.other_languages && Array.isArray(skill.other_languages)) {
+                      allOtherLanguages.push(...skill.other_languages);
+                    }
+                  });
+                  
+                  return allOtherLanguages.length > 0 ? (
                     <div className="flex gap-6">
                       <span className="text-sm font-medium text-gray-700 w-[120px] text-right">その他の言語</span>
-                      <span className="text-gray-900 flex-1">
-                        {skill.other_languages && Array.isArray(skill.other_languages) 
-                          ? skill.other_languages.join(', ') 
-                          : '言語種別自由入力'}
-                      </span>
+                      <div className="flex flex-col gap-2 flex-1">
+                        {allOtherLanguages.map((lang, langIndex) => (
+                          <span key={`lang-${langIndex}`} className="text-gray-900">
+                            {typeof lang === 'object' ? `${lang.language || ''} ${lang.level || ''}` : lang}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500">未入力</div>
-              )}
+                  ) : null;
+                })()}
+              </div>
             </div>
             <div>
               <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">

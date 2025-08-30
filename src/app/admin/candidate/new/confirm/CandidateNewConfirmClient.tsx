@@ -308,7 +308,7 @@ export default function CandidateNewConfirmClient() {
                 {formData.skills?.english_level === 'none' ? 'なし' :
                  formData.skills?.english_level === 'basic' ? '日常会話レベル' :
                  formData.skills?.english_level === 'business' ? 'ビジネスレベル' :
-                 formData.skills?.english_level === 'native' ? 'ネイティブレベル' : 'なし'}
+                 formData.skills?.english_level === 'native' ? 'ネイティブレベル' : '未設定'}
               </div>
               <div className="text-gray-700">
                 <span className="font-semibold">スキル: </span>

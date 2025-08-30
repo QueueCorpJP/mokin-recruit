@@ -161,28 +161,212 @@ export default function CandidateEditClient({ candidate }: Props) {
           <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
             候補者分析
           </h2>
-          <div className="bg-white p-4 rounded border">
-            <div className="grid grid-cols-5 gap-4 text-center">
-              <div className="font-semibold">スカウト統計</div>
-              <div className="font-semibold">スカウト受信</div>
-              <div className="font-semibold">開封数</div>
-              <div className="font-semibold">返信数</div>
-              <div className="font-semibold">応募数</div>
+          <div className="bg-white relative rounded-[4px] w-full">
+            <div className="content-stretch flex flex-col items-start justify-start overflow-clip relative w-full">
+              {/* ヘッダー行 */}
+              <div className="bg-[rgba(255,255,255,0)] content-stretch flex items-start justify-start overflow-clip relative shrink-0 w-full">
+                <div className="basis-0 bg-[rgba(0,0,0,0.06)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-semibold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">&nbsp;</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(0,0,0,0.06)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-semibold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">スカウト受信数</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(0,0,0,0.06)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-semibold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">開封数（開封率）</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(0,0,0,0.06)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-semibold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">返信数（返信率）</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(0,0,0,0.06)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-semibold grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">応募数（応募率）</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 過去7日合計行 */}
+              <div className="bg-[rgba(255,255,255,0)] content-stretch flex items-start justify-start overflow-clip relative shrink-0 w-full">
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">過去7日合計</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">{candidate.scout_stats.scout_received_7days}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_opened_7days}
+                        {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_replied_7days}
+                        {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
+                      <p className="leading-[1.3] whitespace-pre">
+                        {candidate.scout_stats.applications_7days}
+                        {candidate.scout_stats.scout_received_7days > 0 ? ` (${Math.round(candidate.scout_stats.applications_7days / candidate.scout_stats.scout_received_7days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 過去30日間合計行 */}
+              <div className="bg-[rgba(255,255,255,0)] content-stretch flex items-start justify-start overflow-clip relative shrink-0 w-full">
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">過去30日間合計</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">{candidate.scout_stats.scout_received_30days}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_opened_30days}
+                        {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_replied_30days}
+                        {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
+                      <p className="leading-[1.3] whitespace-pre">
+                        {candidate.scout_stats.applications_30days}
+                        {candidate.scout_stats.scout_received_30days > 0 ? ` (${Math.round(candidate.scout_stats.applications_30days / candidate.scout_stats.scout_received_30days * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 累計行 */}
+              <div className="bg-[rgba(255,255,255,0)] content-stretch flex items-start justify-start overflow-clip relative shrink-0 w-full">
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">累計</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">{candidate.scout_stats.scout_received_total}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_opened_total}
+                        {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.scout_opened_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="basis-0 font-normal grow leading-[0] min-h-px min-w-px not-italic relative shrink-0 text-[12px] text-black">
+                      <p className="leading-[1.3]">
+                        {candidate.scout_stats.scout_replied_total}
+                        {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.scout_replied_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-0 bg-[rgba(255,255,255,0)] content-stretch flex flex-col grow items-start justify-start min-h-px min-w-px relative self-stretch shrink-0">
+                  <div aria-hidden="true" className="absolute border-[#b9b9b9] border-[1px_0px_0px_1px] border-solid inset-0 pointer-events-none" />
+                  <div className="box-border content-stretch flex items-start justify-start overflow-clip px-3 py-2.5 relative shrink-0 w-full">
+                    <div className="font-normal leading-[0] not-italic relative shrink-0 text-[12px] text-black text-nowrap">
+                      <p className="leading-[1.3] whitespace-pre">
+                        {candidate.scout_stats.applications_total}
+                        {candidate.scout_stats.scout_received_total > 0 ? ` (${Math.round(candidate.scout_stats.applications_total / candidate.scout_stats.scout_received_total * 100)}%)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-5 gap-4 text-center mt-2">
-              <div>過去7日</div>
-              <div>{candidate.scout_stats.scout_received_7days}</div>
-              <div>{candidate.scout_stats.scout_opened_7days}</div>
-              <div>{candidate.scout_stats.scout_replied_7days}</div>
-              <div>{candidate.scout_stats.applications_7days}</div>
-            </div>
-            <div className="grid grid-cols-5 gap-4 text-center mt-2">
-              <div>過去30日</div>
-              <div>{candidate.scout_stats.scout_received_30days}</div>
-              <div>{candidate.scout_stats.scout_opened_30days}</div>
-              <div>{candidate.scout_stats.scout_replied_30days}</div>
-              <div>{candidate.scout_stats.applications_30days}</div>
-            </div>
+            <div aria-hidden="true" className="absolute border border-[#b9b9b9] border-solid inset-0 pointer-events-none rounded-[4px]" />
           </div>
         </section>
 
