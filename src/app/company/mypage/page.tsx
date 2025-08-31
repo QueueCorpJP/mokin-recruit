@@ -299,7 +299,7 @@ export default async function CompanyMypage() {
               </Button>
             </div>
             {/* おすすめの候補者 見出し */}
-            <div className='mt-20'>
+            <div className='mt-20 mb-6'>
               <div className='flex flex-row items-center pb-2 border-b-2 border-[#DCDCDC]'>
                 <div className='flex flex-row items-center gap-3'>
                   <img
