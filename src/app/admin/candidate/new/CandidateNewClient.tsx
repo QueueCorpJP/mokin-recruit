@@ -180,6 +180,40 @@ export default function CandidateNewClient() {
                         />
                       </div>
                     </section>
+
+                    {/* パスワード */}
+                    <section className="mb-12">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+                        パスワード
+                      </h3>
+                      {/* 新規パスワード */}
+                      <div className="flex items-center gap-8 mb-6">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                          新規パスワード
+                        </label>
+                        <input
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => updateFormData('password', e.target.value)}
+                          className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
+                          placeholder="新しいパスワードを入力"
+                        />
+                      </div>
+                      
+                      {/* 新規パスワード再入力 */}
+                      <div className="flex items-center gap-8">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                          新規パスワード再入力
+                        </label>
+                        <input
+                          type="password"
+                          value={formData.passwordConfirm}
+                          onChange={(e) => updateFormData('passwordConfirm', e.target.value)}
+                          className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
+                          placeholder="パスワードを再度入力"
+                        />
+                      </div>
+                    </section>
           
                     {/* 基本情報 */}
                     <section className="mb-12">

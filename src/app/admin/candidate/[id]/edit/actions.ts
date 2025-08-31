@@ -79,7 +79,7 @@ export interface UpdateCandidateData {
   desired_job_types?: string[];
   desired_locations?: string[];
   management_experience_count?: number;
-  interested_work_styles?: string[];
+  desired_work_styles?: string[];
   
   // Password
   password?: string;
@@ -136,47 +136,56 @@ export async function updateCandidateData(
       birth_date = formData.birth_date;
     }
 
+    // Handle password update
+    let updateData: any = {
+      email: formData.email,
+      last_name: formData.last_name,
+      first_name: formData.first_name,
+      last_name_kana: formData.last_name_kana,
+      first_name_kana: formData.first_name_kana,
+      gender: formData.gender,
+      birth_date: birth_date,
+      prefecture: formData.prefecture,
+      phone_number: formData.phone_number,
+      current_income: formData.current_income,
+      current_salary: formData.current_salary || null,
+      desired_salary: formData.desired_salary || null,
+      current_company: formData.current_company || null,
+      current_position: formData.current_position || null,
+      current_residence: formData.current_residence || null,
+      has_career_change: formData.has_career_change,
+      job_change_timing: formData.job_change_timing,
+      current_activity_status: formData.current_activity_status,
+      recent_job_company_name: formData.recent_job_company_name,
+      recent_job_department_position: formData.recent_job_department_position,
+      recent_job_start_year: formData.recent_job_start_year,
+      recent_job_start_month: formData.recent_job_start_month,
+      recent_job_end_year: formData.recent_job_end_year,
+      recent_job_end_month: formData.recent_job_end_month,
+      recent_job_is_currently_working: formData.recent_job_is_currently_working,
+      recent_job_description: formData.recent_job_description,
+      recent_job_industries: formData.recent_job_industries,
+      recent_job_types: formData.recent_job_types,
+      job_summary: formData.job_summary,
+      self_pr: formData.self_pr,
+      desired_industries: formData.desired_industries || null,
+      desired_job_types: formData.desired_job_types || null,
+      desired_locations: formData.desired_locations || null,
+      management_experience_count: formData.management_experience_count || 0,
+      interested_work_styles: formData.desired_work_styles || null,
+    };
+
+    // Add password hash if password is provided
+    if (formData.password && formData.password.trim()) {
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(formData.password, 10);
+      updateData.password_hash = hashedPassword;
+    }
+
     // Update main candidate record
     const { error: candidateError } = await supabase
       .from('candidates')
-      .update({
-        email: formData.email,
-        last_name: formData.last_name,
-        first_name: formData.first_name,
-        last_name_kana: formData.last_name_kana,
-        first_name_kana: formData.first_name_kana,
-        gender: formData.gender,
-        birth_date: birth_date,
-        prefecture: formData.prefecture,
-        phone_number: formData.phone_number,
-        current_income: formData.current_income,
-        current_salary: formData.current_salary || null,
-        desired_salary: formData.desired_salary || null,
-        current_company: formData.current_company || null,
-        current_position: formData.current_position || null,
-        current_residence: formData.current_residence || null,
-        has_career_change: formData.has_career_change,
-        job_change_timing: formData.job_change_timing,
-        current_activity_status: formData.current_activity_status,
-        recent_job_company_name: formData.recent_job_company_name,
-        recent_job_department_position: formData.recent_job_department_position,
-        recent_job_start_year: formData.recent_job_start_year,
-        recent_job_start_month: formData.recent_job_start_month,
-        recent_job_end_year: formData.recent_job_end_year,
-        recent_job_end_month: formData.recent_job_end_month,
-        recent_job_is_currently_working: formData.recent_job_is_currently_working,
-        recent_job_description: formData.recent_job_description,
-        recent_job_industries: formData.recent_job_industries,
-        recent_job_types: formData.recent_job_types,
-        job_summary: formData.job_summary,
-        self_pr: formData.self_pr,
-        skills: formData.skills || null,
-        desired_industries: formData.desired_industries || null,
-        desired_job_types: formData.desired_job_types || null,
-        desired_locations: formData.desired_locations || null,
-        management_experience_count: formData.management_experience_count || 0,
-        interested_work_styles: formData.interested_work_styles || null,
-      })
+      .update(updateData)
       .eq('id', candidateId);
 
     if (candidateError) {
