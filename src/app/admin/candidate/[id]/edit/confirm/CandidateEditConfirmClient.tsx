@@ -63,7 +63,9 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
         formData.workExperience,
         formData.jobTypeExperience,
         formData.skills,
-        formData.expectations || {}
+        formData.expectations || {},
+        formData.memo,
+        formData.selectionEntries
       );
 
       if (result.success) {

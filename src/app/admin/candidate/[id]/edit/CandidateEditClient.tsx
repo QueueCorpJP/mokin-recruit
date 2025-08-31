@@ -524,7 +524,13 @@ export default function CandidateEditClient({ candidate }: Props) {
         memo,
         workExperience: workExperience,
         jobTypeExperience: jobTypeExperience,
-        jobHistoryEntries: selectionEntries
+        expectations: {
+          desired_income: formData.desired_salary,
+          desired_industries: formData.desired_industries,
+          desired_job_types: formData.desired_job_types,
+          desired_work_locations: formData.desired_locations,
+          desired_work_styles: formData.desired_work_styles,
+        }
       };
 
       // デバッグ用

@@ -125,7 +125,9 @@ export async function updateCandidateData(
   workExperience: WorkExperienceData[],
   jobTypeExperience: JobTypeExperienceData[],
   skills: SkillsData,
-  expectations: ExpectationsData
+  expectations: ExpectationsData,
+  memo?: string,
+  selectionEntries?: any[]
 ) {
   try {
     const supabase = getSupabaseAdminClient();
@@ -311,6 +313,53 @@ export async function updateCandidateData(
 
       if (expectationsError) {
         throw expectationsError;
+      }
+    }
+
+    // Update memo if provided
+    if (memo !== undefined) {
+      const { error: memoError } = await supabase
+        .from('candidates')
+        .update({ admin_memo: memo })
+        .eq('id', candidateId);
+
+      if (memoError) {
+        throw memoError;
+      }
+    }
+
+    // Update selection entries (career status) if provided
+    if (selectionEntries && selectionEntries.length > 0) {
+      // Delete existing career status entries
+      await supabase
+        .from('career_status_entries')
+        .delete()
+        .eq('candidate_id', candidateId);
+
+      // Insert new career status entries
+      const careerStatusData = selectionEntries.map(entry => ({
+        candidate_id: candidateId,
+        company_name: entry.companyName || '',
+        department: entry.department || '',
+        position: entry.position || '',
+        start_year: entry.startYear || null,
+        start_month: entry.startMonth || null,
+        end_year: entry.endYear || null,
+        end_month: entry.endMonth || null,
+        is_currently_working: entry.isCurrentlyWorking || false,
+        job_description: entry.jobDescription || '',
+        industries: entry.industries || [],
+        job_types: entry.jobTypes || [],
+        is_private: entry.isPrivate || false,
+        progress_status: entry.progressStatus || null,
+      }));
+
+      const { error: careerStatusError } = await supabase
+        .from('career_status_entries')
+        .insert(careerStatusData);
+
+      if (careerStatusError) {
+        throw careerStatusError;
       }
     }
 
