@@ -63,7 +63,9 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
         formData.workExperience,
         formData.jobTypeExperience,
         formData.skills,
-        formData.expectations || {}
+        formData.expectations || {},
+        formData.memo,
+        formData.selectionEntries
       );
 
       if (result.success) {
@@ -799,8 +801,8 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
               <div className="flex gap-8">
                 <span className="text-sm font-medium text-gray-700 w-[120px] text-right">興味のある働き方</span>
                 <div className="flex flex-col gap-2 flex-1">
-                  {formData.updateData?.interested_work_styles && formData.updateData.interested_work_styles.length > 0 ? (
-                    formData.updateData.interested_work_styles.map((workStyle: string, index: number) => (
+                  {formData.updateData?.desired_work_styles && formData.updateData.desired_work_styles.length > 0 ? (
+                    formData.updateData.desired_work_styles.map((workStyle: string, index: number) => (
                       <span
                         key={index}
                         className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
