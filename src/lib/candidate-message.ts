@@ -36,6 +36,19 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
   try {
     const supabase = await getCandidateSupabase();
 
+    // 候補者のNG企業リストを取得
+    const { data: blockedCompanies, error: blockedError } = await supabase
+      .from('blocked_companies')
+      .select('company_names')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    if (blockedError && blockedError.code !== 'PGRST116') {
+      console.error('Error fetching blocked companies:', blockedError);
+    }
+
+    const blockedCompanyNames = blockedCompanies?.company_names || [];
+
     // 候補者が参加しているルーム一覧を取得
     const { data: participantRooms, error: participantError } = await supabase
       .from('room_participants')
@@ -127,6 +140,11 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
                          `${companyUser?.last_name || ''} ${companyUser?.first_name || ''}`.trim() || 
                          '企業担当者';
 
+      // NG企業チェック - company_nameがブロックリストに含まれている場合は除外
+      if (blockedCompanyNames.includes(companyName)) {
+        return null;
+      }
+
       // 最新メッセージ
       const roomMessages = latestMessages?.filter((m: any) => m.room_id === roomId) || [];
       const latestMessage = roomMessages[0];
@@ -152,7 +170,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
         unreadCount,
         isUnread: unreadCount > 0,
       };
-    });
+    }).filter(room => room !== null); // NG企業を除外
 
     return rooms;
   } catch (error) {

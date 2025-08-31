@@ -89,6 +89,7 @@ export default function CandidateEditClient({ candidate }: Props) {
   // Initialize form data with candidate data
   const [formData, setFormData] = useState<UpdateCandidateData>({
     email: candidate.email || '',
+    password: '', // パスワード編集欄を追加
     last_name: candidate.last_name || '',
     first_name: candidate.first_name || '',
     last_name_kana: candidate.last_name_kana || '',
@@ -254,6 +255,8 @@ export default function CandidateEditClient({ candidate }: Props) {
     if (modalType === 'industry') {
       if (targetIndex === -1 || targetIndex === -2) {
         return formData.recent_job_industries;
+      } else if (targetIndex === -3) {
+        return formData.desired_industries || [];
       } else if (targetIndex >= 1000 && targetIndex < 2000) {
         const entryIndex = targetIndex - 1000;
         return selectionEntries[entryIndex]?.industries || [];
@@ -263,6 +266,8 @@ export default function CandidateEditClient({ candidate }: Props) {
     } else if (modalType === 'jobtype') {
       if (targetIndex === -1 || targetIndex === -2) {
         return formData.recent_job_types;
+      } else if (targetIndex === -3) {
+        return formData.desired_job_types || [];
       } else if (targetIndex >= 2000) {
         const entryIndex = targetIndex - 2000;
         return selectionEntries[entryIndex]?.jobTypes || [];
@@ -279,6 +284,8 @@ export default function CandidateEditClient({ candidate }: Props) {
     if (targetIndex !== null) {
       if (targetIndex === -1 || targetIndex === -2) {
         handleInputChange('recent_job_industries', selectedIndustries);
+      } else if (targetIndex === -3) {
+        handleInputChange('desired_industries', selectedIndustries);
       } else if (targetIndex >= 1000 && targetIndex < 2000) {
         // Job history entry industries
         const entryIndex = targetIndex - 1000;
@@ -299,6 +306,8 @@ export default function CandidateEditClient({ candidate }: Props) {
     if (targetIndex !== null) {
       if (targetIndex === -1 || targetIndex === -2) {
         handleInputChange('recent_job_types', selectedJobTypes);
+      } else if (targetIndex === -3) {
+        handleInputChange('desired_job_types', selectedJobTypes);
       } else if (targetIndex >= 2000) {
         // Job history entry job types
         const entryIndex = targetIndex - 2000;
@@ -308,8 +317,52 @@ export default function CandidateEditClient({ candidate }: Props) {
     setModalState({ isOpen: false, targetType: null, targetIndex: null });
   };
 
+  // バリデーション機能
+  const validateForm = () => {
+    const errors = [];
+    
+    // 必須項目のバリデーション
+    if (!formData.email) {
+      errors.push('メールアドレスを入力してください');
+    }
+    if (!formData.last_name) {
+      errors.push('姓を入力してください');
+    }
+    if (!formData.first_name) {
+      errors.push('名を入力してください');
+    }
+    if (!formData.last_name_kana) {
+      errors.push('姓（カナ）を入力してください');
+    }
+    if (!formData.first_name_kana) {
+      errors.push('名（カナ）を入力してください');
+    }
+    if (!formData.phone_number) {
+      errors.push('電話番号を入力してください');
+    }
+    
+    // メールアドレス形式のバリデーション
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push('正しいメールアドレスを入力してください');
+    }
+    
+    // 電話番号形式のバリデーション
+    if (formData.phone_number && !/^\d{10,11}$/.test(formData.phone_number.replace(/[-\s]/g, ''))) {
+      errors.push('正しい電話番号を入力してください');
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
+    
+    // バリデーション実行
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      alert('以下のエラーを修正してください:\n\n' + validationErrors.join('\n'));
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -347,6 +400,13 @@ export default function CandidateEditClient({ candidate }: Props) {
           experience_years: 0 
         })),
         skills,
+        expectations: {
+          desired_income: formData.desired_salary || null,
+          desired_industries: formData.desired_industries || null,
+          desired_job_types: formData.desired_job_types || null,
+          desired_work_locations: formData.desired_locations || null,
+          desired_work_styles: formData.interested_work_styles || null,
+        },
         // Include job history entries for future database updates
         jobHistoryEntries: selectionEntries
       };
@@ -653,6 +713,25 @@ export default function CandidateEditClient({ candidate }: Props) {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
+                className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
+              />
+            </div>
+          </section>
+
+          {/* パスワード */}
+          <section className="mb-12">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              パスワード
+            </h3>
+            <div className="flex items-center gap-8">
+              <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                パスワード
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="新しいパスワードを入力（変更する場合のみ）"
                 className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
               />
             </div>
@@ -1290,11 +1369,12 @@ export default function CandidateEditClient({ candidate }: Props) {
                   <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
                     会社名
                   </label>
-                  <CompanyNameInput
+                  <input
+                    type="text"
                     value={entry.companyName}
-                    onChange={(value) => updateSelectionEntry(index, 'companyName', value)}
+                    onChange={(e) => updateSelectionEntry(index, 'companyName', e.target.value)}
+                    className="w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px]"
                     placeholder="企業名を入力"
-                    className="w-[400px]"
                   />
                 </div>
 
@@ -1517,10 +1597,10 @@ export default function CandidateEditClient({ candidate }: Props) {
             </div>
           </section>
 
-          {/* 学歴・経験業種/職種 */}
+          {/* 学歴 */}
           <section className="mb-12">
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
-              学歴・経験業種/職種
+              学歴
             </h3>
             {/* Education Form Fields */}
             <div className="space-y-8">
@@ -1662,8 +1742,17 @@ export default function CandidateEditClient({ candidate }: Props) {
                 </div>
               </div>
 
+            </div>
+          </section>
+
+          {/* 今までに経験した業種・職種 */}
+          <section className="mb-12">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              今までに経験した業種・職種
+            </h3>
+            <div className="space-y-6">
               {/* Industry */}
-              <div className="flex items-center gap-8 mb-6">
+              <div className="flex items-center gap-8">
                 <label className="text-[16px] font-bold text-[#323232] tracking-[1.6px] w-32 text-right shrink-0">
                   業種
                 </label>
@@ -1980,6 +2069,146 @@ export default function CandidateEditClient({ candidate }: Props) {
                 <p className="text-[#999999] text-[14px] font-medium tracking-[1.4px] mt-2">
                   ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
                 </p>
+              </div>
+            </div>
+          </section>
+
+          {/* 希望条件 */}
+          <section className="mb-12">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              希望条件
+            </h3>
+            <div className="space-y-6">
+              {/* 希望業種 */}
+              <div className="flex items-start gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  希望業種
+                </label>
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'industry', targetIndex: -3 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    希望業種を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.desired_industries?.map((industry, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {industry}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newIndustries = formData.desired_industries?.filter((_, i) => i !== index) || [];
+                            handleInputChange('desired_industries', newIndustries);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 希望職種 */}
+              <div className="flex items-start gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  希望職種
+                </label>
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'jobtype', targetIndex: -3 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    希望職種を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.desired_job_types?.map((jobType, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {jobType}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newJobTypes = formData.desired_job_types?.filter((_, i) => i !== index) || [];
+                            handleInputChange('desired_job_types', newJobTypes);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 希望勤務地 */}
+              <div className="flex items-start gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  希望勤務地
+                </label>
+                <div className="w-[400px]">
+                  <input
+                    type="text"
+                    value={formData.desired_locations?.join(', ') || ''}
+                    onChange={(e) => handleInputChange('desired_locations', e.target.value.split(', ').filter(v => v.trim()))}
+                    placeholder="希望勤務地を入力してください"
+                    className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                  />
+                </div>
+              </div>
+
+              {/* 希望年収 */}
+              <div className="flex items-start gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  希望年収
+                </label>
+                <div className="w-[400px]">
+                  <input
+                    type="text"
+                    value={formData.desired_salary || ''}
+                    onChange={(e) => handleInputChange('desired_salary', e.target.value)}
+                    placeholder="希望年収を入力してください"
+                    className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                  />
+                </div>
               </div>
             </div>
           </section>

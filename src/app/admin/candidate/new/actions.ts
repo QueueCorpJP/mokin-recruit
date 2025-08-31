@@ -151,10 +151,13 @@ export async function createCandidateData(
       .single();
 
     if (candidateError) {
+      console.error('Candidate creation error:', candidateError);
       throw candidateError;
     }
 
-    const candidateId = candidate.id;
+    console.log('Created candidate:', candidate);
+    const candidateId = String(candidate.id);
+    console.log('Candidate ID:', candidateId, typeof candidateId);
 
     // Insert education
     if (education.final_education || education.school_name) {
@@ -278,6 +281,7 @@ export async function createCandidateData(
     // Revalidate the candidate list page
     revalidatePath('/admin/candidate');
 
+    console.log('About to return success with candidateId:', candidateId);
     return { success: true, candidateId };
   } catch (error) {
     console.error('Error creating candidate:', error);

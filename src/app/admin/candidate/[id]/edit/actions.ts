@@ -53,6 +53,9 @@ export interface UpdateCandidateData {
   desired_locations?: string[];
   management_experience_count?: number;
   interested_work_styles?: string[];
+  
+  // Password
+  password?: string;
 }
 
 export interface EducationData {

@@ -46,6 +46,21 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
     if (userType === 'candidate') {
       // 候補者の場合: Supabase user.idを直接使用
       console.log('🔍 [CANDIDATE] Using Supabase user ID:', userId);
+     
+      // 候補者のNG企業リストを取得
+      const { data: blockedCompanies, error: blockedError } = await supabase
+        .from('blocked_companies')
+        .select('company_names')
+        .eq('candidate_id', userId)
+        .single();
+
+      if (blockedError && blockedError.code !== 'PGRST116') {
+        console.error('Error fetching blocked companies:', blockedError);
+      }
+
+      const blockedCompanyNames = blockedCompanies?.company_names || [];
+      console.log('🚫 [BLOCKED COMPANIES]:', blockedCompanyNames);
+
       // JOINで関連情報もまとめて取得
       const { data: rooms, error: roomsError } = await supabase
         .from('rooms')
@@ -72,7 +87,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         return [];
       }
 
-      const result = await buildRoomsData(rooms || [], userType);
+      const result = await buildRoomsData(rooms || [], userType, blockedCompanyNames);
       
       // 成功した場合のみキャッシュに保存
       roomsCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -238,7 +253,8 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
 
 async function buildRoomsData(
   rooms: any[],
-  userType: 'candidate' | 'company'
+  userType: 'candidate' | 'company',
+  blockedCompanyNames: string[] = []
 ): Promise<Room[]> {
   if (!rooms.length) return [];
   // 最新メッセージは従来通りRPCで取得
@@ -268,6 +284,12 @@ async function buildRoomsData(
     if (userType === 'candidate') {
       groupName = room.company_groups?.company_accounts?.company_name || '';
       companyName = room.company_groups?.group_name || '';
+      
+      // 候補者の場合、NG企業をチェック
+      if (blockedCompanyNames.includes(groupName)) {
+        console.log('🚫 [FILTERED] Blocked company room:', { roomId, groupName });
+        return null;
+      }
     } else {
       if (room.candidates) {
         candidateName = `${room.candidates.last_name} ${room.candidates.first_name}`;
@@ -292,5 +314,5 @@ async function buildRoomsData(
       currentCompany,
       unreadCount: 0,
     };
-  });
+  }).filter(room => room !== null); // NG企業を除外
 }

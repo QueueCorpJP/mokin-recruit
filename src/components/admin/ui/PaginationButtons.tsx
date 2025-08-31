@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface PaginationButtonsProps {
   onPrevious?: () => void;
@@ -18,15 +19,13 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
   return (
     <div className="flex items-center gap-4">
       {/* Previous Button */}
-      <button
+      <Button
         onClick={onPrevious}
         disabled={previousDisabled}
         aria-label="前のページ"
-        className={`px-6 py-3 rounded-full border-2 flex items-center gap-2 transition-all font-['Noto_Sans_JP'] text-[14px] font-medium ${
-          previousDisabled
-            ? 'border-gray-300 bg-gray-50 cursor-not-allowed text-gray-400'
-            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md text-[#0F9058]'
-        }`}
+        variant="green-gradient"
+        size="figma-default"
+        className="rounded-full"
       >
         <svg
           width="18"
@@ -37,25 +36,23 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
         >
           <path
             d="M15 18L9 12L15 6"
-            stroke={previousDisabled ? '#999999' : '#0F9058'}
+            stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
         前へ
-      </button>
+      </Button>
 
       {/* Next Button */}
-      <button
+      <Button
         onClick={onNext}
         disabled={nextDisabled}
         aria-label="次のページ"
-        className={`px-6 py-3 rounded-full border-2 flex items-center gap-2 transition-all font-['Noto_Sans_JP'] text-[14px] font-medium ${
-          nextDisabled
-            ? 'border-gray-300 bg-gray-50 cursor-not-allowed text-gray-400'
-            : 'border-[#0F9058] bg-white hover:bg-[#F0FAF4] hover:shadow-md text-[#0F9058]'
-        }`}
+        variant="green-gradient"
+        size="figma-default"
+        className="rounded-full"
       >
         次へ
         <svg
@@ -67,13 +64,13 @@ export const PaginationButtons: React.FC<PaginationButtonsProps> = ({
         >
           <path
             d="M9 18L15 12L9 6"
-            stroke={nextDisabled ? '#999999' : '#0F9058'}
+            stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
-      </button>
+      </Button>
     </div>
   );
 };

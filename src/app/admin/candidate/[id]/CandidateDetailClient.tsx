@@ -1,15 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CandidateDetailData } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminModal } from '@/components/admin/ui/AdminModal';
+import { deleteCandidate } from './actions';
 
 interface Props {
   candidate: CandidateDetailData;
 }
 
 export default function CandidateDetailClient({ candidate }: Props) {
+  const router = useRouter();
   const [memo, setMemo] = useState('');
+  const [deleteInputValue, setDeleteInputValue] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Deduplicate arrays to avoid key conflicts
   const uniqueEducation = candidate.education?.filter((edu, index, arr) => 
@@ -36,16 +43,70 @@ export default function CandidateDetailClient({ candidate }: Props) {
     });
   };
 
+  const handleDelete = useCallback(() => {
+    setShowDeleteModal(true);
+    setDeleteInputValue('');
+  }, []);
+
+  const handleConfirmDelete = useCallback(async (inputValue: string) => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteCandidate(candidate.id);
+      if (result.success) {
+        router.push(`/admin/candidate/${candidate.id}/deleted`);
+      } else {
+        alert(result.error || '削除に失敗しました');
+        setIsDeleting(false);
+        setShowDeleteModal(false);
+      }
+    } catch (error) {
+      console.error('Error deleting candidate:', error);
+      alert('削除に失敗しました');
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  }, [candidate.id, router]);
+
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteModal(false);
+    setDeleteInputValue('');
+  }, []);
+
+  // CustomEventリスナーの設定
+  useEffect(() => {
+    const handleDeleteModal = () => {
+      handleDelete();
+    };
+
+    window.addEventListener('candidate-delete-modal', handleDeleteModal);
+
+    return () => {
+      window.removeEventListener('candidate-delete-modal', handleDeleteModal);
+    };
+  }, [handleDelete]);
+
   return (
     <div className="min-h-screen">
+      {/* 削除確認モーダル */}
+      <AdminModal
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="候補者アカウント消去"
+        description={`候補者氏名: ${candidate.last_name && candidate.first_name ? `${candidate.last_name} ${candidate.first_name}` : `ID: ${candidate.id}`}\n\n候補者アカウントを消去しますか？`}
+        inputValue=""
+        onInputChange={() => {}}
+        confirmText={isDeleting ? '消去中...' : '消去する'}
+        cancelText="キャンセル"
+        placeholder=""
+        showInput={false}
+      />
+
       {/* ユーザーID表示 */}
       <div className="p-6 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+        <h1 className="text-2xl font-bold text-gray-800">
           ユーザーID: {candidate.id}
         </h1>
-        <div className="text-sm text-gray-600">
-          退会済ユーザーの場合は、ユーザーIDの前に退会済と退会日表示
-        </div>
       </div>
 
       <div className="p-8">
@@ -440,10 +501,6 @@ export default function CandidateDetailClient({ candidate }: Props) {
                     <div className="text-gray-900">入力された内容を表示</div>
                   </div>
                 </div>
-                <div className="mt-4 text-gray-600 text-sm">
-                  選考企業1社ずつ別ボックスで表示 また、プラットフォーム内で応募、
-                  ステータスが変わった企業などもこちらにボックス追加された形で表示
-                </div>
               </div>
               <div className="mt-4 text-center">
                 <AdminButton text="メッセージを見る" variant="green-outline" size="figma-small" />
@@ -774,55 +831,57 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 {candidate.desired_salary || (candidate.expectations.length > 0 ? candidate.expectations[0].desired_income : '') || '選択された内容を表示'}
               </span>
             </div>
-            <div className="flex gap-6">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望業種</span>
-              <div className="flex flex-col gap-2 flex-1">
-                {candidate.desired_industries && Array.isArray(candidate.desired_industries) && candidate.desired_industries.length > 0 ? (
-                  candidate.desired_industries.map((industry, index) => (
-                    <span
-                      key={`desired-industry-${index}`}
-                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
-                    >
-                      {typeof industry === 'object' ? (industry.name || industry.id || JSON.stringify(industry)) : industry}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500">未入力</span>
-                )}
+            <div className="flex gap-8">
+              <div className="flex-1">
+                <span className="text-sm font-medium text-gray-700 block mb-2">希望業種</span>
+                <div className="flex flex-wrap gap-2">
+                  {candidate.desired_industries && Array.isArray(candidate.desired_industries) && candidate.desired_industries.length > 0 ? (
+                    candidate.desired_industries.map((industry, index) => (
+                      <span
+                        key={`desired-industry-${index}`}
+                        className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px]"
+                      >
+                        {typeof industry === 'object' ? (industry.name || industry.id || JSON.stringify(industry)) : industry}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">未入力</span>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex gap-6">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望職種</span>
-              <div className="flex flex-col gap-2 flex-1">
-                {candidate.desired_job_types && Array.isArray(candidate.desired_job_types) && candidate.desired_job_types.length > 0 ? (
-                  candidate.desired_job_types.map((jobType, index) => (
-                    <span
-                      key={`desired-job-type-${index}`}
-                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
-                    >
-                      {typeof jobType === 'object' ? (jobType.name || jobType.id || JSON.stringify(jobType)) : jobType}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500">未入力</span>
-                )}
+              <div className="flex-1">
+                <span className="text-sm font-medium text-gray-700 block mb-2">希望職種</span>
+                <div className="flex flex-wrap gap-2">
+                  {candidate.desired_job_types && Array.isArray(candidate.desired_job_types) && candidate.desired_job_types.length > 0 ? (
+                    candidate.desired_job_types.map((jobType, index) => (
+                      <span
+                        key={`desired-job-type-${index}`}
+                        className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px]"
+                      >
+                        {typeof jobType === 'object' ? (jobType.name || jobType.id || JSON.stringify(jobType)) : jobType}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">未入力</span>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex gap-6">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望勤務地</span>
-              <div className="flex flex-col gap-2 flex-1">
-                {candidate.desired_locations && Array.isArray(candidate.desired_locations) && candidate.desired_locations.length > 0 ? (
-                  candidate.desired_locations.map((location, index) => (
-                    <span
-                      key={`desired-location-${index}`}
-                      className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] w-fit"
-                    >
-                      {typeof location === 'object' ? (location.name || location.id || JSON.stringify(location)) : location}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500">未入力</span>
-                )}
+              <div className="flex-1">
+                <span className="text-sm font-medium text-gray-700 block mb-2">希望勤務地</span>
+                <div className="flex flex-wrap gap-2">
+                  {candidate.desired_locations && Array.isArray(candidate.desired_locations) && candidate.desired_locations.length > 0 ? (
+                    candidate.desired_locations.map((location, index) => (
+                      <span
+                        key={`desired-location-${index}`}
+                        className="inline-block px-3 py-1 rounded-[5px] bg-[#D2F1DA] text-[#0F9058] font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px]"
+                      >
+                        {typeof location === 'object' ? (location.name || location.id || JSON.stringify(location)) : location}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">未入力</span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex gap-6">

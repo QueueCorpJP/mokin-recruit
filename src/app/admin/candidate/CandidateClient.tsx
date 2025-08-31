@@ -50,8 +50,8 @@ export default function CandidateClient({ candidates }: Props) {
     const headers = [
       '最終ログイン日時',
       'ユーザーID',
-      '姓',
-      '名',
+      'ユーザー名',
+      '住まい',
       '性別',
       '年齢',
       '現在年収',
@@ -82,8 +82,8 @@ export default function CandidateClient({ candidates }: Props) {
       return [
         lastLogin,
         c.id,
-        c.last_name || '',
-        c.first_name || '',
+        `${c.last_name || ''} ${c.first_name || ''}`.trim() || '名前なし',
+        c.prefecture || c.current_residence || '',
         genderText,
         age ? `${age}歳` : '',
         c.current_income || '',
@@ -152,6 +152,14 @@ export default function CandidateClient({ candidates }: Props) {
         aValue = a.id;
         bValue = b.id;
         break;
+      case 'name':
+        aValue = `${a.last_name || ''} ${a.first_name || ''}`.trim();
+        bValue = `${b.last_name || ''} ${b.first_name || ''}`.trim();
+        break;
+      case 'residence':
+        aValue = a.prefecture || a.current_residence || '';
+        bValue = b.prefecture || b.current_residence || '';
+        break;
       case 'gender':
         aValue = a.gender === 'male' ? '男性' : a.gender === 'female' ? '女性' : (a.gender || '');
         bValue = b.gender === 'male' ? '男性' : b.gender === 'female' ? '女性' : (b.gender || '');
@@ -209,6 +217,8 @@ export default function CandidateClient({ candidates }: Props) {
       width: 'w-[180px]',
     },
     { key: 'id', label: 'ユーザーID', sortable: true, width: 'w-[180px]' },
+    { key: 'name', label: 'ユーザー名', sortable: true, width: 'w-[150px]' },
+    { key: 'residence', label: '住まい', sortable: true, width: 'w-[150px]' },
     { key: 'gender', label: '性別', sortable: true, width: 'w-[100px]' },
     { key: 'age', label: '年齢', sortable: true, width: 'w-[80px]' },
     {
@@ -327,6 +337,14 @@ export default function CandidateClient({ candidates }: Props) {
                     {
                       content: c.id,
                       width: 'w-[180px]',
+                    },
+                    {
+                      content: `${c.last_name || ''} ${c.first_name || ''}`.trim() || '名前なし',
+                      width: 'w-[150px]',
+                    },
+                    {
+                      content: c.prefecture || c.current_residence || '',
+                      width: 'w-[150px]',
                     },
                     {
                       content: c.gender === 'male' ? '男性' : c.gender === 'female' ? '女性' : (c.gender || ''),

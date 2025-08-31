@@ -322,41 +322,108 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             </div>
           </section>
 
+          {/* パスワード */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              パスワード
+            </h3>
+            <div className="px-4 py-4">
+              <div className="text-gray-700">
+                <span className="font-semibold">パスワード: </span>
+                {formData.updateData?.password ? '変更あり' : '変更なし'}
+              </div>
+            </div>
+          </section>
+
           {/* 基本情報 */}
           <section className="mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               基本情報
             </h3>
-            <div className="px-4 py-4 space-y-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">氏名: </span>
-                {formData.updateData?.last_name} {formData.updateData?.first_name}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">フリガナ: </span>
-                {formData.updateData?.last_name_kana} {formData.updateData?.first_name_kana}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">性別: </span>
-                {formData.updateData?.gender === 'male' ? '男性' : 
-                 formData.updateData?.gender === 'female' ? '女性' : '回答しない'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">生年月日: </span>
-                {formData.updateData?.birth_date || 'なし'} {age && `(${age}歳)`}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">現在の住まい: </span>
-                {formData.updateData?.prefecture || 'なし'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">電話番号: </span>
-                {formData.updateData?.phone_number || 'なし'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">現在の年収: </span>
-                {formData.updateData?.current_income || 'なし'}
-              </div>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      お名前
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.last_name} {formData.updateData?.first_name}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      フリガナ
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.last_name_kana} {formData.updateData?.first_name_kana}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      性別
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.gender === 'male' ? '男性' : 
+                       formData.updateData?.gender === 'female' ? '女性' : '回答しない'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      生年月日
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.birth_date || 'なし'} {age && `(${age}歳)`}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      現在の住まい
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.prefecture || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      連絡先電話番号
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.phone_number || 'なし'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700">
+                      現在の年収
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.current_income || 'なし'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* 転職経験 */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              転職経験
+            </h3>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      転職経験
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.has_career_change === 'yes' ? 'あり' : 
+                       formData.updateData?.has_career_change === 'no' ? 'なし' : 'なし'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
@@ -365,26 +432,33 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               転職活動状況
             </h3>
-            <div className="px-4 py-4 space-y-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">転職経験: </span>
-                {formData.updateData?.has_career_change === 'yes' ? 'あり' : 
-                 formData.updateData?.has_career_change === 'no' ? 'なし' : 'なし'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">転職希望時期: </span>
-                {formData.updateData?.job_change_timing === 'immediately' ? 'すぐにでも' :
-                 formData.updateData?.job_change_timing === 'within_3months' ? '3ヶ月以内' :
-                 formData.updateData?.job_change_timing === 'within_6months' ? '6ヶ月以内' :
-                 formData.updateData?.job_change_timing === 'within_1year' ? '1年以内' :
-                 formData.updateData?.job_change_timing === 'undecided' ? '未定' : '未選択'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">現在の活動状況: </span>
-                {formData.updateData?.current_activity_status === 'active' ? '積極的に活動中' :
-                 formData.updateData?.current_activity_status === 'passive' ? '良い求人があれば' :
-                 formData.updateData?.current_activity_status === 'not_active' ? '活動していない' : '未選択'}
-              </div>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      転職希望時期
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.job_change_timing === 'immediately' ? 'すぐにでも' :
+                       formData.updateData?.job_change_timing === 'within_3months' ? '3ヶ月以内' :
+                       formData.updateData?.job_change_timing === 'within_6months' ? '6ヶ月以内' :
+                       formData.updateData?.job_change_timing === 'within_1year' ? '1年以内' :
+                       formData.updateData?.job_change_timing === 'undecided' ? '未定' : '未選択'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      現在の活動状況
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.current_activity_status === 'active' ? '積極的に活動中' :
+                       formData.updateData?.current_activity_status === 'passive' ? '良い求人があれば' :
+                       formData.updateData?.current_activity_status === 'not_active' ? '活動していない' : '未選択'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
@@ -393,122 +467,297 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               職務経歴
             </h3>
-            <div className="px-4 py-4 space-y-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">会社名: </span>
-                {formData.updateData?.recent_job_company_name || 'なし'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">部署・役職: </span>
-                {formData.updateData?.recent_job_department_position || 'なし'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">在籍期間: </span>
-                {formData.updateData?.recent_job_start_year && formData.updateData?.recent_job_start_month ? 
-                  `${formData.updateData.recent_job_start_year}年${formData.updateData.recent_job_start_month}月` : ''
-                }
-                {!formData.updateData?.recent_job_is_currently_working && 
-                 formData.updateData?.recent_job_end_year && formData.updateData?.recent_job_end_month ? 
-                  ` 〜 ${formData.updateData.recent_job_end_year}年${formData.updateData.recent_job_end_month}月` : 
-                  formData.updateData?.recent_job_is_currently_working ? ' 〜 現在' : ''
-                }
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">職務内容: </span>
-                <div className="mt-2 whitespace-pre-wrap">
-                  {formData.updateData?.recent_job_description || 'なし'}
-                </div>
-              </div>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      会社名
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.recent_job_company_name || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      部署・役職
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.recent_job_department_position || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      業種
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.recent_job_industries?.length > 0 
+                        ? formData.updateData.recent_job_industries.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      職種
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.recent_job_types?.length > 0 
+                        ? formData.updateData.recent_job_types.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      在籍期間
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.recent_job_start_year && formData.updateData?.recent_job_start_month ? 
+                        `${formData.updateData.recent_job_start_year}年${formData.updateData.recent_job_start_month}月` : ''
+                      }
+                      {!formData.updateData?.recent_job_is_currently_working && 
+                       formData.updateData?.recent_job_end_year && formData.updateData?.recent_job_end_month ? 
+                        ` 〜 ${formData.updateData.recent_job_end_year}年${formData.updateData.recent_job_end_month}月` : 
+                        formData.updateData?.recent_job_is_currently_working ? ' 〜 現在' : ''
+                      }
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      業務内容
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="whitespace-pre-wrap">
+                        {formData.updateData?.recent_job_description || 'なし'}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
-          {/* 学歴・経験業種/職種 */}
+          {/* 最終学歴 */}
           <section className="mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
-              学歴・経験業種/職種
+              最終学歴
             </h3>
-            <div className="px-4 py-4 space-y-6">
-              {/* 学歴 */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-700">学歴</h4>
-                <div className="pl-4 space-y-2">
-                  <div className="text-gray-700">
-                    <span className="font-semibold">最終学歴: </span>
-                    {formData.education?.final_education === 'high_school' ? '高校卒' :
-                     formData.education?.final_education === 'vocational' ? '専門学校卒' :
-                     formData.education?.final_education === 'junior_college' ? '短大卒' :
-                     formData.education?.final_education === 'university' ? '大学卒' :
-                     formData.education?.final_education === 'graduate' ? '大学院卒' : 'なし'}
-                  </div>
-                  <div className="text-gray-700">
-                    <span className="font-semibold">学校名: </span>
-                    {formData.education?.school_name || 'なし'}
-                  </div>
-                  <div className="text-gray-700">
-                    <span className="font-semibold">学部・学科: </span>
-                    {formData.education?.department || 'なし'}
-                  </div>
-                  <div className="text-gray-700">
-                    <span className="font-semibold">卒業年月: </span>
-                    {formData.education?.graduation_year && formData.education?.graduation_month ? 
-                      `${formData.education.graduation_year}年${formData.education.graduation_month}月` : 'なし'}
-                  </div>
-                </div>
-              </div>
-
-              {/* 業種経験 */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-700">業種経験</h4>
-                <div className="pl-4">
-                  {formData.workExperience && formData.workExperience.length > 0 ? (
-                    formData.workExperience.map((exp: any, index: number) => (
-                      <div key={index} className="text-gray-700 mb-2">
-                        {exp.industry_name}: {exp.experience_years}年
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-700">なし</div>
-                  )}
-                </div>
-              </div>
-
-              {/* 職種経験 */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-gray-700">職種経験</h4>
-                <div className="pl-4">
-                  {formData.jobTypeExperience && formData.jobTypeExperience.length > 0 ? (
-                    formData.jobTypeExperience.map((exp: any, index: number) => (
-                      <div key={index} className="text-gray-700 mb-2">
-                        {exp.job_type_name}: {exp.experience_years}年
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-700">なし</div>
-                  )}
-                </div>
-              </div>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      最終学歴
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.education?.final_education === 'high_school' ? '高校卒' :
+                       formData.education?.final_education === 'vocational' ? '専門学校卒' :
+                       formData.education?.final_education === 'junior_college' ? '短大卒' :
+                       formData.education?.final_education === 'university' ? '大学卒' :
+                       formData.education?.final_education === 'graduate' ? '大学院卒' : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      学校名
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.education?.school_name || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      学部・学科
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.education?.department || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      卒業年月
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.education?.graduation_year && formData.education?.graduation_month ? 
+                        `${formData.education.graduation_year}年${formData.education.graduation_month}月` : 'なし'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
-          {/* 資格・語学・スキル */}
+          {/* 今までに経験した業種職種 */}
           <section className="mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
-              資格・語学・スキル
+              今までに経験した業種職種
             </h3>
-            <div className="px-4 py-4 space-y-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">英語レベル: </span>
-                {formData.skills?.english_level === 'none' ? 'なし' :
-                 formData.skills?.english_level === 'basic' ? '日常会話レベル' :
-                 formData.skills?.english_level === 'business' ? 'ビジネスレベル' :
-                 formData.skills?.english_level === 'native' ? 'ネイティブレベル' : '未設定'}
-              </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">保有資格: </span>
-                <div className="mt-2 whitespace-pre-wrap">
-                  {formData.skills?.qualifications || 'なし'}
-                </div>
-              </div>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      業種経験
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.workExperience && formData.workExperience.length > 0 ? (
+                        <div className="space-y-1">
+                          {formData.workExperience.map((exp: any, index: number) => (
+                            <div key={index} className="text-gray-700">
+                              {exp.industry_name}: {exp.experience_years}年
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-gray-700">なし</div>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      職種経験
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.jobTypeExperience && formData.jobTypeExperience.length > 0 ? (
+                        <div className="space-y-1">
+                          {formData.jobTypeExperience.map((exp: any, index: number) => (
+                            <div key={index} className="text-gray-700">
+                              {exp.job_type_name}: {exp.experience_years}年
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-gray-700">なし</div>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* 語学 */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              語学
+            </h3>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      英語レベル
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.skills?.english_level === 'none' ? 'なし' :
+                       formData.skills?.english_level === 'basic' ? '日常会話レベル' :
+                       formData.skills?.english_level === 'business' ? 'ビジネスレベル' :
+                       formData.skills?.english_level === 'native' ? 'ネイティブレベル' : '未設定'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      その他言語
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.skills?.other_languages || 'なし'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* スキル */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              スキル
+            </h3>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      スキル
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.skills?.skills_list?.length > 0 
+                        ? formData.skills.skills_list.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      保有資格
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="whitespace-pre-wrap">
+                        {formData.skills?.qualifications || 'なし'}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* 希望条件 */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              希望条件
+            </h3>
+            <div className="bg-white border rounded-lg">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48">
+                      希望年収
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.desired_salary || 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      希望業種
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.desired_industries?.length > 0 
+                        ? formData.updateData.desired_industries.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      希望職種
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.desired_job_types?.length > 0 
+                        ? formData.updateData.desired_job_types.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      希望勤務地
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.desired_locations?.length > 0 
+                        ? formData.updateData.desired_locations.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-700 w-48 align-top">
+                      希望働き方
+                    </td>
+                    <td className="px-4 py-3">
+                      {formData.updateData?.interested_work_styles?.length > 0 
+                        ? formData.updateData.interested_work_styles.join(', ')
+                        : 'なし'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
