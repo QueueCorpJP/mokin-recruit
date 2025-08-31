@@ -1,17 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { ChevronRightIcon } from 'lucide-react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
 interface CompanyTaskSidebarProps {
   className?: string;
+  showTodoAndNews?: boolean;
 }
 
-export function CompanyTaskSidebar({ className }: CompanyTaskSidebarProps) {
+export function CompanyTaskSidebar({ className, showTodoAndNews = false }: CompanyTaskSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -278,6 +276,204 @@ export function CompanyTaskSidebar({ className }: CompanyTaskSidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* 対応リストセクション - mypageでのみ表示 */}
+      {showTodoAndNews && (
+      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+        <SectionHeading
+          iconSrc='/images/list.svg'
+          iconAlt='対応リストアイコン'
+        >
+          対応リスト
+        </SectionHeading>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* 対応リストカード */}
+          <div style={{
+            background: 'white',
+            padding: '16px 24px',
+            borderRadius: '8px',
+            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            {/* グラデーションタグ */}
+            <div style={{
+              background: 'linear-gradient(to left, #86c36a, #65bdac)',
+              borderRadius: '8px',
+              padding: '0 20px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              maxWidth: '100%',
+            }}>
+              <span style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'white',
+                letterSpacing: '1.4px',
+                lineHeight: '1.6',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                グループ名テキストグループ名テキスト
+              </span>
+            </div>
+            
+            {/* メインテキスト */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#323232',
+                letterSpacing: '1.6px',
+                lineHeight: '2',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+              }}>
+                まずは求人を登録しましょう。
+              </div>
+              <div style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '10px',
+                fontWeight: 500,
+                color: '#999999',
+                letterSpacing: '1px',
+                lineHeight: '1.6',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+              }}>
+                求人を登録すると、スカウト送信が可能になります。
+              </div>
+            </div>
+          </div>
+          
+          {/* もっと見るボタン */}
+          <button style={{
+            background: 'linear-gradient(135deg, #0F9058, #65bdac)',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '15px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+            width: 'full',
+          }}>
+            <span style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '16px',
+              fontWeight: 700,
+              color: 'white',
+              letterSpacing: '1.6px',
+              lineHeight: '2',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              textAlign: 'center',
+            }}>
+              すべての対応リストを見る
+            </span>
+            <svg width="12" height="12" viewBox="0 0 256 448" fill="none">
+              <path d="M17.9 193.2L193.2 17.9C205.8 5.3 226.2 5.3 238.8 17.9L238.9 18C251.5 30.6 251.5 51 238.9 63.6L99.5 203L238.9 342.4C251.5 355 251.5 375.4 238.9 388L238.8 388.1C226.2 400.7 205.8 400.7 193.2 388.1L17.9 212.8C5.3 200.2 5.3 179.8 17.9 167.2L17.9 193.2Z" fill="white" transform="scale(-1,1) translate(-256,0)"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      )}
+
+      {/* お知らせセクション - mypageでのみ表示 */}
+      {showTodoAndNews && (
+      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+        <SectionHeading
+          iconSrc='/images/new.svg'
+          iconAlt='お知らせアイコン'
+        >
+          お知らせ
+        </SectionHeading>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* お知らせカード */}
+          <div style={{
+            background: 'white',
+            padding: '16px 24px',
+            borderRadius: '8px',
+            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            {/* 日付 */}
+            <div style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '10px',
+              fontWeight: 500,
+              color: '#999999',
+              letterSpacing: '1px',
+              lineHeight: '1.6',
+            }}>
+              2025/4/19
+            </div>
+            
+            {/* タイトル */}
+            <div style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '16px',
+              fontWeight: 700,
+              color: '#323232',
+              letterSpacing: '1.6px',
+              lineHeight: '2',
+              height: '63px',
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+            }}>
+              お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。
+            </div>
+          </div>
+          
+          {/* もっと見るボタン */}
+          <button style={{
+            background: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '15px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+            width: "full",
+          }}>
+            <span style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontSize: '16px',
+              fontWeight: 700,
+              color: '#0F9058',
+              letterSpacing: '1.6px',
+              lineHeight: '2',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              textAlign: 'center',
+            }}>
+              お知らせ一覧を見る
+            </span>
+            <svg width="12" height="12" viewBox="0 0 256 448" fill="none">
+              <path d="M17.9 193.2L193.2 17.9C205.8 5.3 226.2 5.3 238.8 17.9L238.9 18C251.5 30.6 251.5 51 238.9 63.6L99.5 203L238.9 342.4C251.5 355 251.5 375.4 238.9 388L238.8 388.1C226.2 400.7 205.8 400.7 193.2 388.1L17.9 212.8C5.3 200.2 5.3 179.8 17.9 167.2L17.9 193.2Z" fill="#0F9058" transform="scale(-1,1) translate(-256,0)"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      )}
 
       {/* ヘルプセクション */}
       <div style={headingListStyle}>
