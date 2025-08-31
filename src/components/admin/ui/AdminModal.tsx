@@ -14,6 +14,7 @@ interface AdminModalProps {
   confirmText?: string;
   cancelText?: string;
   placeholder?: string;
+  showInput?: boolean;
 }
 
 export const AdminModal: React.FC<AdminModalProps> = ({
@@ -26,7 +27,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   onInputChange,
   confirmText = "確認する",
   cancelText = "閉じる",
-  placeholder = "入力してください"
+  placeholder = "入力してください",
+  showInput = true
 }) => {
   const handleConfirm = () => {
     onConfirm(inputValue);
@@ -61,22 +63,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
         {/* 説明文 */}
         <div className="text-center mb-6">
-          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6] font-bold">
+          <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6] font-bold whitespace-pre-line">
             {description}
           </p>
         </div>
 
         {/* 入力フィールド */}
-        <div className="mb-8 flex justify-center items-center">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            className="w-[343px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] outline-none"
-            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-            placeholder={placeholder}
-          />
-        </div>
+        {showInput && (
+          <div className="mb-8 flex justify-center items-center">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={handleInputChange}
+              className="w-[343px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] outline-none"
+              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+              placeholder={placeholder}
+            />
+          </div>
+        )}
+
+        {!showInput && <div className="mb-8"></div>}
 
         {/* ボタン */}
         <div className="flex gap-4 justify-center">

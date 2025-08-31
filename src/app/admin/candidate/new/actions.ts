@@ -3,6 +3,26 @@
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
 
+export async function checkEmailDuplication(email: string) {
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('id')
+      .eq('email', email);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { isDuplicate: data && data.length > 0 };
+  } catch (error) {
+    console.error('Error checking email duplication:', error);
+    return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 export interface CreateCandidateData {
   // Basic info
   email: string;
@@ -151,10 +171,13 @@ export async function createCandidateData(
       .single();
 
     if (candidateError) {
+      console.error('Candidate creation error:', candidateError);
       throw candidateError;
     }
 
-    const candidateId = candidate.id;
+    console.log('Created candidate:', candidate);
+    const candidateId = String(candidate.id);
+    console.log('Candidate ID:', candidateId, typeof candidateId);
 
     // Insert education
     if (education.final_education || education.school_name) {
@@ -278,6 +301,7 @@ export async function createCandidateData(
     // Revalidate the candidate list page
     revalidatePath('/admin/candidate');
 
+    console.log('About to return success with candidateId:', candidateId);
     return { success: true, candidateId };
   } catch (error) {
     console.error('Error creating candidate:', error);

@@ -61,6 +61,25 @@ export function useCandidateModals() {
     context.openModal('jobtype', targetIndex);
   }, [context]);
 
+  // 働き方選択モーダルの処理
+  const handleWorkStyleConfirm = useCallback((selectedStyles: { id: string; name: string }[]) => {
+    const { modalState } = context;
+    
+    if (modalState.targetIndex !== null) {
+      if (modalState.targetIndex === -4) {
+        // 希望の働き方
+        const styleNames = selectedStyles.map(style => style.name);
+        context.updateFormData('desiredWorkStyles', styleNames);
+      }
+    }
+    context.closeModal();
+  }, [context]);
+
+  // 働き方選択モーダルを開く
+  const openWorkStyleModal = useCallback((targetIndex: number) => {
+    context.openModal('workstyle', targetIndex);
+  }, [context]);
+
   // 選択された業界の削除
   const removeIndustryFromSelection = useCallback((entryIndex: number, industry: string) => {
     const { selectedIndustriesMap } = context;
@@ -85,7 +104,7 @@ export function useCandidateModals() {
   }, [context]);
 
   // モーダルの初期値を取得するヘルパー
-  const getModalInitialData = useCallback((modalType: 'industry' | 'jobtype', targetIndex: number) => {
+  const getModalInitialData = useCallback((modalType: 'industry' | 'jobtype' | 'workstyle', targetIndex: number) => {
     const { formData, selectionEntries } = context;
     
     if (modalType === 'industry') {
@@ -104,6 +123,14 @@ export function useCandidateModals() {
         const entryIndex = targetIndex - 2000;
         return selectionEntries[entryIndex]?.jobTypes || [];
       }
+    } else if (modalType === 'workstyle') {
+      if (targetIndex === -4) {
+        // 希望の働き方の初期値を変換
+        return (formData.desiredWorkStyles || []).map(style => ({
+          id: style.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name: style
+        }));
+      }
     }
     
     return [];
@@ -114,8 +141,10 @@ export function useCandidateModals() {
     selectedIndustriesMap: context.selectedIndustriesMap,
     handleIndustryConfirm,
     handleJobTypeConfirm,
+    handleWorkStyleConfirm,
     openIndustryModal,
     openJobTypeModal,
+    openWorkStyleModal,
     closeModal: context.closeModal,
     removeIndustryFromSelection,
     removeRecentJobIndustry,

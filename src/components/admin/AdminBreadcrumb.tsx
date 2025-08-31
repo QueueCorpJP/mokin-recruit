@@ -23,7 +23,7 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/admin/login': 'ログイン',
   '/admin/message': 'メッセージ管理',
   '/admin/company': '企業アカウント管理',
-  '/admin/candidate': '候補者管理',
+  '/admin/candidate': '候補者一覧',
   '/admin/media': 'メディア記事一覧',
   '/admin/media/new': '新規記事作成',
   '/admin/media/edit': '記事編集',
@@ -48,7 +48,21 @@ export function AdminBreadcrumb() {
     for (let i = 0; i < pathSegments.length; i++) {
       currentPath += `/${pathSegments[i]}`;
       const isLast = i === pathSegments.length - 1;
-      const title = breadcrumbConfig[currentPath] || pathSegments[i];
+      let title = breadcrumbConfig[currentPath] || pathSegments[i];
+      
+      // 動的ルートのラベルを日本語化
+      if (pathSegments[i] === 'block') {
+        title = 'ブロック企業';
+      } else if (pathSegments[i] === 'edit') {
+        title = '編集';
+      } else if (pathSegments[i] === 'confirm') {
+        title = '確認';
+      } else if (pathSegments[i] === 'new') {
+        title = '新規登録';
+      } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathSegments[i])) {
+        // UUID形式の場合は「詳細」と表示
+        title = '詳細';
+      }
       
       // 全ての階層を表示
       breadcrumbs.push({

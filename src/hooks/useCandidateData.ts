@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useCandidateContext, CandidateFormData } from '@/contexts/CandidateContext';
+import { checkEmailDuplication } from '@/app/admin/candidate/new/actions';
 
 // 候補者データの変換とビジネスロジックを処理するhook
 export function useCandidateData() {
@@ -44,6 +45,9 @@ export function useCandidateData() {
         // Summary
         job_summary: formData.jobSummary,
         self_pr: formData.selfPr,
+        
+        // Desired conditions
+        desired_work_styles: formData.desiredWorkStyles || [],
       },
       education,
       workExperience: formData.recentJobIndustries.map(industry => ({ 
@@ -128,18 +132,40 @@ export function useCandidateData() {
   }, [context]);
 
   // バリデーション
-  const validateFormData = useCallback(() => {
+  const validateFormData = useCallback(async () => {
     const { formData, skills } = context;
     const errors: string[] = [];
 
-    // 必須フィールドのチェック
-    if (!formData.email) errors.push('メールアドレスは必須です');
-    if (!formData.lastName) errors.push('姓は必須です');
-    if (!formData.firstName) errors.push('名は必須です');
+    // メールアドレスのバリデーション（VALIDATION_ERRORS.mdに準拠）
+    if (!formData.email) {
+      errors.push('メールアドレスを入力してください。');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push('メールアドレスの形式が正しくありません。');
+    } else {
+      // メール重複チェック
+      try {
+        const result = await checkEmailDuplication(formData.email);
+        if (result.isDuplicate) {
+          errors.push('このメールアドレスはすでに登録されています。');
+        }
+      } catch (error) {
+        console.error('Email duplication check failed:', error);
+        // ネットワークエラーなどの場合は重複チェックをスキップ
+      }
+    }
+
+    // 必須フィールドのチェック（VALIDATION_ERRORS.mdに準拠）
+    if (!formData.lastName) errors.push('姓を入力してください');
+    if (!formData.firstName) errors.push('名を入力してください');
     
-    // スキルタグの最低3個チェック
+    // スキルタグの最低3個チェック（VALIDATION_ERRORS.mdに準拠）
     if (skills.skills_tags.length < 3) {
-      errors.push('スキルは最低3つ以上選択してください');
+      errors.push('スキルは最低3つ以上入力してください');
+    }
+    
+    // 希望の働き方のバリデーション（VALIDATION_ERRORS.mdに準拠）
+    if (!formData.desiredWorkStyles || formData.desiredWorkStyles.length === 0) {
+      errors.push('興味のある働き方を選択してください');
     }
 
     return {

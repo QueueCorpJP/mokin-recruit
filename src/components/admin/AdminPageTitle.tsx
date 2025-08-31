@@ -260,6 +260,10 @@ export function AdminPageTitle() {
       };
     }
     
+    if (pathname.match(/^\/admin\/candidate\/[^\/]+\/deleted$/)) {
+      return { title: '候補者消去完了' };
+    }
+    
     if (pathname.match(/^\/admin\/candidate\/[^\/]+\/block$/)) {
       return { title: 'ブロック企業追加' };
     }
@@ -313,6 +317,7 @@ export function AdminPageTitle() {
               window.location.href = `/admin/candidate/${candidateId}/edit`;
             }
           },
+         
           {
             text: 'ブロック企業設定',
             variant: 'green-outline',
@@ -326,9 +331,9 @@ export function AdminPageTitle() {
             text: '候補者情報削除',
             variant: 'green-outline',
             onClick: () => {
-              if (confirm('候補者情報を削除しますか？')) {
-                console.log('候補者情報削除');
-              }
+              console.log('AdminPageTitle: Dispatching candidate-delete-modal event');
+              const event = new CustomEvent('candidate-delete-modal');
+              window.dispatchEvent(event);
             }
           }
         ]

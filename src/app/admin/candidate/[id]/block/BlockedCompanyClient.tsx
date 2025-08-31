@@ -8,7 +8,8 @@ import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
-import { deleteBlockedCompany } from './actions';
+import { AdminModal } from '@/components/admin/ui/AdminModal';
+import { deleteBlockedCompany, addBlockedCompany } from './actions';
 
 interface Props {
   blockedCompanies: BlockedCompanyItem[];
@@ -28,6 +29,9 @@ export default function BlockedCompanyClient({ blockedCompanies, candidateId }: 
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
   const itemsPerPage = 10;
   
   // ブロック企業データをフラット化（company_namesは配列なので展開）
@@ -74,8 +78,40 @@ export default function BlockedCompanyClient({ blockedCompanies, candidateId }: 
   }, [candidateId, isDeleting, router]);
 
   const handleAddNewCompany = useCallback(() => {
-    // TODO: 新規追加モーダルの実装
-    console.log('Adding new company');
+    setShowAddModal(true);
+    setNewCompanyName('');
+  }, []);
+
+  const handleConfirmAdd = useCallback(async (inputValue: string) => {
+    if (!inputValue.trim()) {
+      alert('企業名を入力してください');
+      return;
+    }
+
+    if (isAdding) return;
+    
+    setIsAdding(true);
+    
+    try {
+      const result = await addBlockedCompany(candidateId, inputValue.trim());
+      if (result.success) {
+        setShowAddModal(false);
+        setNewCompanyName('');
+        router.refresh();
+      } else {
+        alert(result.error || '追加に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error adding company:', error);
+      alert('追加中にエラーが発生しました');
+    } finally {
+      setIsAdding(false);
+    }
+  }, [candidateId, isAdding, router]);
+
+  const handleCancelAdd = useCallback(() => {
+    setShowAddModal(false);
+    setNewCompanyName('');
   }, []);
 
   const handleSort = useCallback((column: string) => {
@@ -178,8 +214,22 @@ export default function BlockedCompanyClient({ blockedCompanies, candidateId }: 
 
   return (
     <div className='bg-gray-50 flex flex-col overflow-x-hidden min-h-screen'>
+      {/* 新規追加モーダル */}
+      <AdminModal
+        isOpen={showAddModal}
+        onClose={handleCancelAdd}
+        onConfirm={handleConfirmAdd}
+        title="ブロック企業を追加"
+        description="ブロックする企業名を入力してください"
+        inputValue={newCompanyName}
+        onInputChange={setNewCompanyName}
+        confirmText={isAdding ? '追加中...' : '追加'}
+        cancelText="キャンセル"
+        placeholder="企業名を入力"
+      />
+
       <div className='mb-6 flex justify-end items-center max-w-full px-6 pt-6'>
-        <AdminButton text='新規追加' onClick={handleAddNewCompany} variant='green-gradient' />
+        <AdminButton text='新規追加' onClick={handleAddNewCompany} variant='green-outline' />
       </div>
 
       {/* テーブル */}

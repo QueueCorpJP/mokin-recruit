@@ -15,6 +15,8 @@ export type CandidateListItem = {
   phone_number: string | null;
   email: string;
   recent_job_company_name: string | null;
+  current_residence: string | null;
+  prefecture: string | null;
 };
 
 const getCachedCandidates = unstable_cache(
@@ -46,7 +48,9 @@ async function fetchAdminCandidateList(): Promise<CandidateListItem[]> {
         current_income,
         phone_number,
         email,
-        recent_job_company_name
+        recent_job_company_name,
+        current_residence,
+        prefecture
       `
       )
       .order('last_login_at', { ascending: false });
