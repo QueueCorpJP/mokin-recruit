@@ -48,19 +48,6 @@ export default async function CandidateEditConfirmPage({ params, searchParams }:
     notFound();
   }
 
-  // Get the form data from search params
-  const { data: formDataString } = await searchParams;
-  if (!formDataString) {
-    notFound();
-  }
-
-  let formData;
-  try {
-    formData = JSON.parse(decodeURIComponent(formDataString));
-  } catch (error) {
-    console.error('Error parsing form data:', error);
-    notFound();
-  }
-
-  return <CandidateEditConfirmClient candidate={candidate} formData={formData} />;
+  // FormData will be retrieved from sessionStorage in the client component
+  return <CandidateEditConfirmClient candidate={candidate} formData={null} />;
 }

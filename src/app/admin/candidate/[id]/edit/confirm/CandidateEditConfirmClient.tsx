@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CandidateDetailData } from '../../page';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -12,10 +12,34 @@ interface Props {
   formData: any;
 }
 
-export default function CandidateEditConfirmClient({ candidate, formData }: Props) {
+export default function CandidateEditConfirmClient({ candidate, formData: initialFormData }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<any>(initialFormData);
+
+  useEffect(() => {
+    // Retrieve form data from sessionStorage if not provided
+    if (!formData && typeof window !== 'undefined') {
+      const storedData = sessionStorage.getItem('candidateEditData');
+      if (storedData) {
+        try {
+          setFormData(JSON.parse(storedData));
+        } catch (error) {
+          console.error('Error parsing stored form data:', error);
+          router.push(`/admin/candidate/${candidate.id}/edit`);
+        }
+      } else {
+        // No data found, redirect back to edit page
+        router.push(`/admin/candidate/${candidate.id}/edit`);
+      }
+    }
+  }, []);
+
+  // Show loading state while retrieving data from sessionStorage
+  if (!formData) {
+    return <div>Loading...</div>;
+  }
 
   // Safe fallback for scout_stats if undefined
   const scoutStats = candidate.scout_stats || {
@@ -50,83 +74,6 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
     });
   };
 
-  // Language translation mapping
-  const languageMap: { [key: string]: string } = {
-    'English': '英語',
-    'Chinese': '中国語',
-    'Korean': '韓国語',
-    'Japanese': '日本語',
-    'Spanish': 'スペイン語',
-    'French': 'フランス語',
-    'German': 'ドイツ語',
-    'Italian': 'イタリア語',
-    'Portuguese': 'ポルトガル語',
-    'Russian': 'ロシア語',
-    'Arabic': 'アラビア語',
-    'Hindi': 'ヒンディー語',
-    'Thai': 'タイ語',
-    'Vietnamese': 'ベトナム語',
-    'Indonesian': 'インドネシア語',
-    'Malaysian': 'マレー語',
-    'Tagalog': 'タガログ語',
-    'Turkish': 'トルコ語',
-    'Dutch': 'オランダ語',
-    'Swedish': 'スウェーデン語',
-    'Norwegian': 'ノルウェー語',
-    'Danish': 'デンマーク語',
-    'Finnish': 'フィンランド語',
-    'Polish': 'ポーランド語',
-    'Czech': 'チェコ語',
-    'Hungarian': 'ハンガリー語',
-    'Greek': 'ギリシャ語',
-    'Hebrew': 'ヘブライ語',
-    'Persian': 'ペルシャ語',
-    'Urdu': 'ウルドゥー語',
-    'Bengali': 'ベンガル語',
-    'Tamil': 'タミル語',
-    'Telugu': 'テルグ語',
-    'Marathi': 'マラーティー語',
-    'Gujarati': 'グジャラート語',
-    'Kannada': 'カンナダ語',
-    'Malayalam': 'マラヤーラム語',
-    'Punjabi': 'パンジャーブ語',
-    'Nepali': 'ネパール語',
-    'Sinhalese': 'シンハラ語',
-    'Burmese': 'ビルマ語',
-    'Khmer': 'クメール語',
-    'Lao': 'ラオ語',
-    'Mongolian': 'モンゴル語',
-    'Tibetan': 'チベット語',
-    'Swahili': 'スワヒリ語',
-    'Amharic': 'アムハラ語',
-    'Yoruba': 'ヨルバ語',
-    'Igbo': 'イボ語',
-    'Hausa': 'ハウサ語',
-    'Zulu': 'ズールー語',
-    'Afrikaans': 'アフリカーンス語'
-  };
-
-  // Level translation mapping
-  const levelMap: { [key: string]: string } = {
-    'beginner': '初級',
-    'elementary': '初級',
-    'intermediate': '中級',
-    'upper-intermediate': '中上級',
-    'advanced': '上級',
-    'proficient': '熟練',
-    'native': 'ネイティブ',
-    'fluent': '流暢',
-    'conversational': '会話レベル',
-    'basic': '基礎'
-  };
-
-  const translateLanguage = (language: string): string => {
-    return languageMap[language] || language;
-  };
-
-  const translateLevel = (level: string): string => {
-    return levelMap[level.toLowerCase()] || level;
-  };
 
   const handleConfirmSave = async () => {
     if (isSubmitting) return;
@@ -134,17 +81,17 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
     setIsSubmitting(true);
     
     try {
-      const result = await updateCandidateData(
-        candidate.id,
-        formData.updateData,
-        formData.education,
-        formData.workExperience,
-        formData.jobTypeExperience,
-        formData.skills,
-        formData.expectations || {},
-        formData.memo,
-        formData.selectionEntries
-      );
+      const result = await updateCandidateData({
+        candidateId: candidate.id,
+        formData: formData.updateData,
+        education: formData.education,
+        workExperience: formData.workExperience,
+        jobTypeExperience: formData.jobTypeExperience,
+        skills: formData.skills,
+        expectations: formData.expectations || {},
+        memo: formData.memo,
+        selectionEntries: formData.selectionEntries
+      });
 
       if (result.success) {
         setShowModal(true);
@@ -161,6 +108,10 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
 
   const handleModalClose = () => {
     setShowModal(false);
+    // Clear stored data from sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('candidateEditData');
+    }
     router.push(`/admin/candidate/${candidate.id}`);
   };
 
@@ -770,7 +721,7 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
                           {languageArray.map((lang, langIndex) => (
                             <span key={`lang-${langIndex}`} className="text-gray-900">
                               {typeof lang === 'object' && lang.language && lang.level 
-                                ? `${translateLanguage(lang.language)} (${translateLevel(lang.level)}レベル)` 
+                                ? `${lang.language} (${lang.level}レベル)` 
                                 : typeof lang === 'object' 
                                   ? JSON.stringify(lang)
                                   : String(lang)}

@@ -537,9 +537,11 @@ export default function CandidateEditClient({ candidate }: Props) {
       console.log('FormData desired_work_styles:', formData.desired_work_styles);
       console.log('ConfirmData expectations:', confirmData.expectations);
 
-      const params = new URLSearchParams();
-      params.set('data', JSON.stringify(confirmData));
-      router.push(`/admin/candidate/${candidate.id}/edit/confirm?${params.toString()}`);
+      // Store data in sessionStorage instead of URL params to avoid 431 error
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('candidateEditData', JSON.stringify(confirmData));
+      }
+      router.push(`/admin/candidate/${candidate.id}/edit/confirm`);
       
     } catch (error) {
       console.error('Error preparing candidate data:', error);
@@ -1749,14 +1751,14 @@ export default function CandidateEditClient({ candidate }: Props) {
                           className="w-full px-[11px] py-[11px] pr-10 border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
                         >
                           <option value="">言語を選択</option>
-                          <option value="indonesian">インドネシア語</option>
-                          <option value="italian">イタリア語</option>
-                          <option value="spanish">スペイン語</option>
-                          <option value="thai">タイ語</option>
-                          <option value="german">ドイツ語</option>
-                          <option value="french">フランス語</option>
-                          <option value="portuguese">ポルトガル語</option>
-                          <option value="malaysian">マレー語</option>
+                          <option value="インドネシア語">インドネシア語</option>
+                          <option value="イタリア語">イタリア語</option>
+                          <option value="スペイン語">スペイン語</option>
+                          <option value="タイ語">タイ語</option>
+                          <option value="ドイツ語">ドイツ語</option>
+                          <option value="フランス語">フランス語</option>
+                          <option value="ポルトガル語">ポルトガル語</option>
+                          <option value="マレー語">マレー語</option>
                         </select>
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                           <svg

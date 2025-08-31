@@ -118,17 +118,20 @@ export interface ExpectationsData {
   desired_work_styles?: string[];
 }
 
-export async function updateCandidateData(
-  candidateId: string,
-  formData: UpdateCandidateData,
-  education: EducationData,
-  workExperience: WorkExperienceData[],
-  jobTypeExperience: JobTypeExperienceData[],
-  skills: SkillsData,
-  expectations: ExpectationsData,
-  memo?: string,
-  selectionEntries?: any[]
-) {
+interface UpdateCandidateRequest {
+  candidateId: string;
+  formData: UpdateCandidateData;
+  education: EducationData;
+  workExperience: WorkExperienceData[];
+  jobTypeExperience: JobTypeExperienceData[];
+  skills: SkillsData;
+  expectations: ExpectationsData;
+  memo?: string;
+  selectionEntries?: any[];
+}
+
+export async function updateCandidateData(request: UpdateCandidateRequest) {
+  const { candidateId, formData, education, workExperience, jobTypeExperience, skills, expectations, memo, selectionEntries } = request;
   try {
     const supabase = getSupabaseAdminClient();
 
@@ -138,7 +141,7 @@ export async function updateCandidateData(
       birth_date = formData.birth_date;
     }
 
-    // Handle password update
+    // Handle password update - use columns that exist in candidates table (confirmed from page.tsx)
     let updateData: any = {
       email: formData.email,
       last_name: formData.last_name,
@@ -170,6 +173,7 @@ export async function updateCandidateData(
       recent_job_types: formData.recent_job_types,
       job_summary: formData.job_summary,
       self_pr: formData.self_pr,
+      skills: formData.skills || null,
       desired_industries: formData.desired_industries || null,
       desired_job_types: formData.desired_job_types || null,
       desired_locations: formData.desired_locations || null,
@@ -191,7 +195,7 @@ export async function updateCandidateData(
       .eq('id', candidateId);
 
     if (candidateError) {
-      throw candidateError;
+      throw new Error(`Candidate update failed: ${candidateError.message}`);
     }
 
     // Update education
@@ -225,11 +229,12 @@ export async function updateCandidateData(
 
     if (workExperience.length > 0) {
       const workExpData = workExperience
-        .filter(exp => exp.industry_name.trim())
+        .filter(exp => exp.industry_name && exp.industry_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
+          industry_id: exp.industry_name,
           industry_name: exp.industry_name,
-          experience_years: exp.experience_years,
+          experience_years: exp.experience_years || 0,
         }));
 
       if (workExpData.length > 0) {
@@ -238,7 +243,7 @@ export async function updateCandidateData(
           .insert(workExpData);
 
         if (workExpError) {
-          throw workExpError;
+          console.error('Work experience error:', workExpError);
         }
       }
     }
@@ -251,11 +256,12 @@ export async function updateCandidateData(
 
     if (jobTypeExperience.length > 0) {
       const jobTypeExpData = jobTypeExperience
-        .filter(exp => exp.job_type_name.trim())
+        .filter(exp => exp.job_type_name && exp.job_type_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
+          job_type_id: exp.job_type_name,
           job_type_name: exp.job_type_name,
-          experience_years: exp.experience_years,
+          experience_years: exp.experience_years || 0,
         }));
 
       if (jobTypeExpData.length > 0) {
@@ -264,7 +270,7 @@ export async function updateCandidateData(
           .insert(jobTypeExpData);
 
         if (jobTypeExpError) {
-          throw jobTypeExpError;
+          console.error('Job type experience error:', jobTypeExpError);
         }
       }
     }
@@ -316,17 +322,7 @@ export async function updateCandidateData(
       }
     }
 
-    // Update memo if provided
-    if (memo !== undefined) {
-      const { error: memoError } = await supabase
-        .from('candidates')
-        .update({ admin_memo: memo })
-        .eq('id', candidateId);
-
-      if (memoError) {
-        throw memoError;
-      }
-    }
+    // Note: admin_memo column does not exist in database, skipping memo update
 
     // Update selection entries (career status) if provided
     if (selectionEntries && selectionEntries.length > 0) {
@@ -336,20 +332,12 @@ export async function updateCandidateData(
         .delete()
         .eq('candidate_id', candidateId);
 
-      // Insert new career status entries
+      // Insert new career status entries with only columns that exist in the database
       const careerStatusData = selectionEntries.map(entry => ({
         candidate_id: candidateId,
         company_name: entry.companyName || '',
         department: entry.department || '',
-        position: entry.position || '',
-        start_year: entry.startYear || null,
-        start_month: entry.startMonth || null,
-        end_year: entry.endYear || null,
-        end_month: entry.endMonth || null,
-        is_currently_working: entry.isCurrentlyWorking || false,
-        job_description: entry.jobDescription || '',
         industries: entry.industries || [],
-        job_types: entry.jobTypes || [],
         is_private: entry.isPrivate || false,
         progress_status: entry.progressStatus || null,
       }));
@@ -359,7 +347,7 @@ export async function updateCandidateData(
         .insert(careerStatusData);
 
       if (careerStatusError) {
-        throw careerStatusError;
+        console.error('Career status entries error:', careerStatusError);
       }
     }
 
@@ -369,7 +357,10 @@ export async function updateCandidateData(
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating candidate:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('Update error:', error);
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: `Update failed: ${JSON.stringify(error)}` };
   }
 }

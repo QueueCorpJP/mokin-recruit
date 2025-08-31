@@ -551,14 +551,6 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <span className="text-gray-900 flex-1">{candidate.recent_job_department_position || '入力された内容を表示'}</span>
             </div>
             <div className="flex gap-8">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">在籍中</span>
-              <span className="text-gray-900 flex-1">
-                {candidate.recent_job_is_currently_working !== null ? 
-                  (candidate.recent_job_is_currently_working ? '選択された内容を表示' : '選択された内容を表示') : 
-                  '選択された内容を表示'}
-              </span>
-            </div>
-            <div className="flex gap-8">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">開始年月</span>
               <div className="flex gap-2 items-center text-gray-900 flex-1">
                 <span>{candidate.recent_job_start_year || '選択された内容を表示'}</span>
@@ -567,15 +559,24 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 <span className="text-gray-600">月</span>
               </div>
             </div>
-            <div className="flex gap-8">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">終了年月</span>
-              <div className="flex gap-2 items-center text-gray-900 flex-1">
-                <span>{candidate.recent_job_end_year || '選択された内容を表示'}</span>
-                <span className="text-gray-600">年</span>
-                <span>{candidate.recent_job_end_month || '選択された内容を表示'}</span>
-                <span className="text-gray-600">月</span>
+            {candidate.recent_job_is_currently_working ? (
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right"></span>
+                <div className="flex gap-2 items-center text-gray-900 flex-1">
+                  <span>在籍中</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">終了年月</span>
+                <div className="flex gap-2 items-center text-gray-900 flex-1">
+                  <span>{candidate.recent_job_end_year || ''}</span>
+                  {candidate.recent_job_end_year && <span className="text-gray-600">年</span>}
+                  <span>{candidate.recent_job_end_month || ''}</span>
+                  {candidate.recent_job_end_month && <span className="text-gray-600">月</span>}
+                </div>
+              </div>
+            )}
             <div className="flex gap-8">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">直近の在籍企業の業種</span>
               <div className="flex flex-wrap gap-2 flex-1">
