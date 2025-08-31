@@ -83,6 +83,9 @@ export interface CandidateDetailData {
   job_summary: string | null;
   self_pr: string | null;
   
+  // 運営メモ
+  admin_memo: string | null;
+  
   // スカウト統計
   scout_stats: {
     scout_received_7days: number;
@@ -117,7 +120,7 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
       recent_job_is_currently_working, recent_job_industries, recent_job_types,
       recent_job_description, job_summary, self_pr, current_company, current_position,
       current_residence, skills, desired_industries, desired_job_types, desired_locations,
-      management_experience_count, interested_work_styles
+      management_experience_count, interested_work_styles, admin_memo
     `)
       .eq('id', candidateId)
       .single(),

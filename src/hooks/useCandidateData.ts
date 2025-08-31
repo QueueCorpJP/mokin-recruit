@@ -50,16 +50,18 @@ export function useCandidateData() {
         desired_work_styles: formData.desiredWorkStyles || [],
       },
       education,
-      workExperience: formData.recentJobIndustries.map(industry => ({ 
-        industry_name: industry, 
-        experience_years: 0 
-      })),
-      jobTypeExperience: formData.recentJobTypes.map(jobType => ({ 
-        job_type_name: jobType, 
-        experience_years: 0 
-      })),
+      workExperience: [],
+      jobTypeExperience: [],
       skills,
-      selectionEntries: selectionEntries.filter(entry => entry.companyName)
+      selectionEntries: selectionEntries.filter(entry => entry.companyName),
+      memo: context.memo,
+      expectations: {
+        desired_income: formData.desiredSalary,
+        desired_industries: formData.desiredIndustries,
+        desired_job_types: formData.desiredJobTypes,
+        desired_work_locations: formData.desiredLocations,
+        desired_work_styles: formData.desiredWorkStyles,
+      }
     };
   }, [context]);
 

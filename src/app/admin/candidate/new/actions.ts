@@ -119,7 +119,8 @@ export async function createCandidateData(
   jobTypeExperience: JobTypeExperienceData[],
   skills: SkillsData,
   expectations: ExpectationsData,
-  selectionEntries: SelectionEntryData[]
+  selectionEntries: SelectionEntryData[],
+  memo?: string
 ) {
   try {
     const supabase = getSupabaseAdminClient();
@@ -295,6 +296,18 @@ export async function createCandidateData(
         if (entriesError && entriesError.code !== '42P01') { // Ignore table doesn't exist error for now
           console.warn('Selection entries table may not exist:', entriesError);
         }
+      }
+    }
+
+    // Update memo if provided
+    if (memo !== undefined) {
+      const { error: memoError } = await supabase
+        .from('candidates')
+        .update({ admin_memo: memo })
+        .eq('id', candidateId);
+
+      if (memoError) {
+        console.warn('Error updating memo:', memoError);
       }
     }
 
