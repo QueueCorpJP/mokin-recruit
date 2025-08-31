@@ -39,6 +39,9 @@ export interface CandidateFormData {
   // 職務要約・自己PR
   jobSummary: string;
   selfPr: string;
+  
+  // 希望条件
+  desiredWorkStyles?: string[];
 }
 
 export interface EducationData {
@@ -75,7 +78,7 @@ export interface SelectionEntry {
 
 export interface ModalState {
   isOpen: boolean;
-  targetType: 'industry' | 'jobtype' | null;
+  targetType: 'industry' | 'jobtype' | 'workstyle' | null;
   targetIndex: number | null;
 }
 

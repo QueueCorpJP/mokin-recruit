@@ -13,6 +13,7 @@ import {
 } from '@/constants/profile';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import {
   JOB_CHANGE_TIMING_OPTIONS,
@@ -86,8 +87,10 @@ export default function CandidateNewClient() {
     selectedIndustriesMap,
     handleIndustryConfirm,
     handleJobTypeConfirm,
+    handleWorkStyleConfirm,
     openIndustryModal,
     openJobTypeModal,
+    openWorkStyleModal,
     closeModal,
     removeIndustryFromSelection,
     removeRecentJobIndustry,
@@ -99,7 +102,7 @@ export default function CandidateNewClient() {
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     
-    const validation = validateFormData();
+    const validation = await validateFormData();
     if (!validation.isValid) {
       alert(validation.errors.join('\n'));
       return;
@@ -1515,6 +1518,63 @@ export default function CandidateNewClient() {
                         />
                       </div>
                     </section>
+
+                    {/* 希望条件 */}
+                    <section className="mb-12">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+                        希望条件
+                      </h3>
+
+                      {/* 興味のある働き方 */}
+                      <div className="flex items-start gap-8">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                          興味のある働き方
+                        </label>
+                        <div className="flex-1">
+                          <button
+                            type="button"
+                            onClick={() => openWorkStyleModal(-4)}
+                            className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                          >
+                            興味のある働き方を選択
+                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.desiredWorkStyles?.map((workStyle, index) => (
+                              <div
+                                key={index}
+                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                              >
+                                <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                                  {workStyle}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newWorkStyles = formData.desiredWorkStyles?.filter((_, i) => i !== index) || [];
+                                    updateFormData('desiredWorkStyles', newWorkStyles);
+                                  }}
+                                  className="w-3 h-3"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M1 1L11 11M1 11L11 1"
+                                      stroke="#0f9058"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
           
                     {/* Submit Buttons */}
                     <div className="flex justify-center gap-4 pt-8">
@@ -1546,6 +1606,15 @@ export default function CandidateNewClient() {
           onClose={closeModal}
           onConfirm={handleJobTypeConfirm}
           initialSelected={getModalInitialData('jobtype', modalState.targetIndex || 0)}
+        />
+      )}
+
+      {modalState.isOpen && modalState.targetType === 'workstyle' && (
+        <WorkStyleSelectModal
+          isOpen={true}
+          onClose={closeModal}
+          onConfirm={handleWorkStyleConfirm}
+          initialSelected={getModalInitialData('workstyle', modalState.targetIndex || 0)}
         />
       )}
     </>

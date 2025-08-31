@@ -3,6 +3,26 @@
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
 
+export async function checkEmailDuplication(email: string) {
+  try {
+    const supabase = getSupabaseAdminClient();
+    
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('id')
+      .eq('email', email);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { isDuplicate: data && data.length > 0 };
+  } catch (error) {
+    console.error('Error checking email duplication:', error);
+    return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 export interface CreateCandidateData {
   // Basic info
   email: string;

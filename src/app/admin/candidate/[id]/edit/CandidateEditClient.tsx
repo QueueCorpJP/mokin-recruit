@@ -12,9 +12,11 @@ import {
   generateMonthOptions, 
   generateDayOptions 
 } from '@/constants/profile';
-import { UpdateCandidateData, EducationData, WorkExperienceData, JobTypeExperienceData, SkillsData } from './actions';
+import { UpdateCandidateData, EducationData, WorkExperienceData, JobTypeExperienceData, SkillsData, checkEmailDuplication } from './actions';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
+import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import {
   JOB_CHANGE_TIMING_OPTIONS,
@@ -51,7 +53,7 @@ export default function CandidateEditClient({ candidate }: Props) {
   const [memo, setMemo] = useState('');
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    targetType: 'industry' | 'jobtype' | null;
+    targetType: 'industry' | 'jobtype' | 'location' | 'workstyle' | null;
     targetIndex: number | null;
   }>({ isOpen: false, targetType: null, targetIndex: null });
   const [selectedIndustriesMap, setSelectedIndustriesMap] = useState<{
@@ -251,7 +253,7 @@ export default function CandidateEditClient({ candidate }: Props) {
     setModalState({ isOpen: true, targetType: 'jobtype', targetIndex });
   };
 
-  const getModalInitialData = (modalType: 'industry' | 'jobtype', targetIndex: number) => {
+  const getModalInitialData = (modalType: 'industry' | 'jobtype' | 'location' | 'workstyle', targetIndex: number) => {
     if (modalType === 'industry') {
       if (targetIndex === -1 || targetIndex === -2) {
         return formData.recent_job_industries;
@@ -271,6 +273,22 @@ export default function CandidateEditClient({ candidate }: Props) {
       } else if (targetIndex >= 2000) {
         const entryIndex = targetIndex - 2000;
         return selectionEntries[entryIndex]?.jobTypes || [];
+      }
+    } else if (modalType === 'location') {
+      if (targetIndex === -3) {
+        // 希望勤務地の初期値を変換
+        return (formData.desired_locations || []).map(location => ({
+          id: location.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name: location
+        }));
+      }
+    } else if (modalType === 'workstyle') {
+      if (targetIndex === -4) {
+        // 希望の働き方の初期値を変換
+        return (formData.desired_work_styles || []).map(style => ({
+          id: style.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name: style
+        }));
       }
     }
     
@@ -317,13 +335,52 @@ export default function CandidateEditClient({ candidate }: Props) {
     setModalState({ isOpen: false, targetType: null, targetIndex: null });
   };
 
-  // バリデーション機能
-  const validateForm = () => {
+  const handleLocationConfirm = (selectedLocations: { id: string; name: string }[]) => {
+    const { targetIndex } = modalState;
+    
+    if (targetIndex !== null) {
+      if (targetIndex === -3) {
+        // 希望勤務地
+        const locationNames = selectedLocations.map(loc => loc.name);
+        handleInputChange('desired_locations', locationNames);
+      }
+    }
+    setModalState({ isOpen: false, targetType: null, targetIndex: null });
+  };
+
+  const handleWorkStyleConfirm = (selectedStyles: { id: string; name: string }[]) => {
+    const { targetIndex } = modalState;
+    
+    if (targetIndex !== null) {
+      if (targetIndex === -4) {
+        // 希望の働き方
+        const styleNames = selectedStyles.map(style => style.name);
+        handleInputChange('desired_work_styles', styleNames);
+      }
+    }
+    setModalState({ isOpen: false, targetType: null, targetIndex: null });
+  };
+
+  // バリデーション機能（VALIDATION_ERRORS.mdに準拠）
+  const validateForm = async () => {
     const errors = [];
     
-    // 必須項目のバリデーション
+    // メールアドレスのバリデーション
     if (!formData.email) {
-      errors.push('メールアドレスを入力してください');
+      errors.push('メールアドレスを入力してください。');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push('メールアドレスの形式が正しくありません。');
+    } else {
+      // メール重複チェック（編集時は自分のIDを除外）
+      try {
+        const result = await checkEmailDuplication(formData.email, candidateId);
+        if (result.isDuplicate) {
+          errors.push('このメールアドレスはすでに登録されています。');
+        }
+      } catch (error) {
+        console.error('Email duplication check failed:', error);
+        // ネットワークエラーなどの場合は重複チェックをスキップ
+      }
     }
     if (!formData.last_name) {
       errors.push('姓を入力してください');
@@ -332,23 +389,39 @@ export default function CandidateEditClient({ candidate }: Props) {
       errors.push('名を入力してください');
     }
     if (!formData.last_name_kana) {
-      errors.push('姓（カナ）を入力してください');
+      errors.push('セイを入力してください');
     }
     if (!formData.first_name_kana) {
-      errors.push('名（カナ）を入力してください');
+      errors.push('メイを入力してください');
     }
     if (!formData.phone_number) {
       errors.push('電話番号を入力してください');
     }
     
-    // メールアドレス形式のバリデーション
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.push('正しいメールアドレスを入力してください');
+    // フリガナのカタカナチェック
+    const katakanaRegex = /^[ァ-ヶー\s]+$/;
+    if (formData.last_name_kana && !katakanaRegex.test(formData.last_name_kana)) {
+      errors.push('全角カタカナで入力してください');
+    }
+    if (formData.first_name_kana && !katakanaRegex.test(formData.first_name_kana)) {
+      errors.push('全角カタカナで入力してください');
     }
     
-    // 電話番号形式のバリデーション
-    if (formData.phone_number && !/^\d{10,11}$/.test(formData.phone_number.replace(/[-\s]/g, ''))) {
-      errors.push('正しい電話番号を入力してください');
+    // 電話番号のバリデーション（VALIDATION_ERRORS.mdに準拠）
+    if (formData.phone_number) {
+      const phone = formData.phone_number;
+      if (phone.includes('-')) {
+        errors.push('「-」なしで入力してください');
+      } else if (!/^[0-9]+$/.test(phone)) {
+        errors.push('数字のみで入力してください');
+      } else if (phone.length !== 10 && phone.length !== 11) {
+        errors.push('10桁または11桁で入力してください');
+      }
+    }
+    
+    // 希望の働き方のバリデーション
+    if (!formData.desired_work_styles || formData.desired_work_styles.length === 0) {
+      errors.push('興味のある働き方を選択してください');
     }
     
     return errors;
@@ -357,8 +430,8 @@ export default function CandidateEditClient({ candidate }: Props) {
   const handleSubmit = async () => {
     if (isSubmitting) return;
     
-    // バリデーション実行
-    const validationErrors = validateForm();
+    // バリデーション実行（非同期）
+    const validationErrors = await validateForm();
     if (validationErrors.length > 0) {
       alert('以下のエラーを修正してください:\n\n' + validationErrors.join('\n'));
       return;
@@ -1017,7 +1090,7 @@ export default function CandidateEditClient({ candidate }: Props) {
               転職活動状況
             </h3>
             
-            <div>
+            <div className='p-3'>
               <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">
                 転職経験
               </h4>
@@ -1466,7 +1539,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                 {/* 業種 */}
                 <div className="flex items-start gap-8 mb-6">
                   <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                    業種
+                    直近の在籍企業の業種
                   </label>
                   <div className="w-[400px]">
                     <div className="flex flex-col gap-2">
@@ -1519,7 +1592,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                 {/* 職種 */}
                 <div className="flex items-start gap-8 mb-6">
                   <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                    職種
+                    直近の在籍企業の業種での職種
                   </label>
                   <div className="w-[400px]">
                     <div className="flex flex-col gap-2">
@@ -1572,7 +1645,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                 {/* 職務内容 */}
                 <div className="flex items-start gap-8 mb-6">
                   <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                    職務内容
+                    直近の在籍企業での業務内容
                   </label>
                   <textarea
                     value={entry.jobDescription || ''}
@@ -1600,10 +1673,13 @@ export default function CandidateEditClient({ candidate }: Props) {
           {/* 学歴 */}
           <section className="mb-12">
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
-              学歴
+             学歴・経験業種/職種
             </h3>
             {/* Education Form Fields */}
-            <div className="space-y-8">
+            <div className="space-y-8 p-3">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 pb-1 border-b-2 border-gray-200">
+              最終学歴
+              </h4>
               {/* Final Education */}
               <div className="flex items-center gap-8 mb-6">
                 <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
@@ -1896,7 +1972,7 @@ export default function CandidateEditClient({ candidate }: Props) {
             </div>
 
             {/* その他の言語 */}
-            {skills.other_languages && skills.other_languages.map((field, index) => (
+            {skills.other_languages && Array.isArray(skills.other_languages) && skills.other_languages.map((field, index) => (
               <div key={index} className="flex items-start gap-8 mb-6">
                 <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
                   {index === 0 && 'その他の言語'}
@@ -2079,6 +2155,45 @@ export default function CandidateEditClient({ candidate }: Props) {
               希望条件
             </h3>
             <div className="space-y-6">
+              {/* 希望年収 */}
+              <div className="flex items-start gap-8">
+                <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                  希望年収
+                </label>
+                <div className="w-[400px] relative">
+                  <select
+                    value={formData.desired_salary || ''}
+                    onChange={(e) => handleInputChange('desired_salary', e.target.value)}
+                    className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] appearance-none bg-white"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="300万円未満">300万円未満</option>
+                    <option value="300万円〜400万円">300万円〜400万円</option>
+                    <option value="400万円〜500万円">400万円〜500万円</option>
+                    <option value="500万円〜600万円">500万円〜600万円</option>
+                    <option value="600万円〜700万円">600万円〜700万円</option>
+                    <option value="700万円〜800万円">700万円〜800万円</option>
+                    <option value="800万円〜900万円">800万円〜900万円</option>
+                    <option value="900万円〜1000万円">900万円〜1000万円</option>
+                    <option value="1000万円以上">1000万円以上</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="10"
+                      viewBox="0 0 14 10"
+                      fill="none"
+                    >
+                      <path
+                        d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                        fill="#0F9058"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               {/* 希望業種 */}
               <div className="flex items-start gap-8">
                 <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
@@ -2184,30 +2299,98 @@ export default function CandidateEditClient({ candidate }: Props) {
                 <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
                   希望勤務地
                 </label>
-                <div className="w-[400px]">
-                  <input
-                    type="text"
-                    value={formData.desired_locations?.join(', ') || ''}
-                    onChange={(e) => handleInputChange('desired_locations', e.target.value.split(', ').filter(v => v.trim()))}
-                    placeholder="希望勤務地を入力してください"
-                    className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
-                  />
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'location', targetIndex: -3 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    希望勤務地を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.desired_locations?.map((location, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {location}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newLocations = formData.desired_locations?.filter((_, i) => i !== index) || [];
+                            handleInputChange('desired_locations', newLocations);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* 希望年収 */}
+              {/* 興味のある働き方 */}
               <div className="flex items-start gap-8">
                 <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
-                  希望年収
+                  興味のある働き方
                 </label>
-                <div className="w-[400px]">
-                  <input
-                    type="text"
-                    value={formData.desired_salary || ''}
-                    onChange={(e) => handleInputChange('desired_salary', e.target.value)}
-                    placeholder="希望年収を入力してください"
-                    className="w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]"
-                  />
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalState({ isOpen: true, targetType: 'workstyle', targetIndex: -4 })}
+                    className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                  >
+                    興味のある働き方を選択
+                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.desired_work_styles?.map((workStyle, index) => (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                      >
+                        <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                          {workStyle}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newWorkStyles = formData.desired_work_styles?.filter((_, i) => i !== index) || [];
+                            handleInputChange('desired_work_styles', newWorkStyles);
+                          }}
+                          className="w-3 h-3"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                          >
+                            <path
+                              d="M1 1L11 11M1 11L11 1"
+                              stroke="#0f9058"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2277,6 +2460,24 @@ export default function CandidateEditClient({ candidate }: Props) {
         onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
         onConfirm={handleJobTypeConfirm}
         initialSelected={getModalInitialData('jobtype', modalState.targetIndex || 0)}
+      />
+    )}
+
+    {modalState.isOpen && modalState.targetType === 'location' && (
+      <WorkLocationSelectModal
+        isOpen={true}
+        onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
+        onConfirm={handleLocationConfirm}
+        initialSelected={getModalInitialData('location', modalState.targetIndex || 0)}
+      />
+    )}
+
+    {modalState.isOpen && modalState.targetType === 'workstyle' && (
+      <WorkStyleSelectModal
+        isOpen={true}
+        onClose={() => setModalState({ isOpen: false, targetType: null, targetIndex: null })}
+        onConfirm={handleWorkStyleConfirm}
+        initialSelected={getModalInitialData('workstyle', modalState.targetIndex || 0)}
       />
     )}
   </>

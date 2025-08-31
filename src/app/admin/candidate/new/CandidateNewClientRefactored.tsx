@@ -66,7 +66,7 @@ export default function CandidateNewClientRefactored() {
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     
-    const validation = validateFormData();
+    const validation = await validateFormData();
     if (!validation.isValid) {
       alert(validation.errors.join('\n'));
       return;

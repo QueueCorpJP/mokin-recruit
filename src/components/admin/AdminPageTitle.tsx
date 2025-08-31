@@ -317,6 +317,7 @@ export function AdminPageTitle() {
               window.location.href = `/admin/candidate/${candidateId}/edit`;
             }
           },
+         
           {
             text: 'ブロック企業設定',
             variant: 'green-outline',

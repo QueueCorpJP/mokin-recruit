@@ -314,10 +314,10 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               メールアドレス
             </h3>
-            <div className="px-4 py-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">メールアドレス: </span>
-                {formData.updateData?.email || 'なし'}
+            <div className="px-4 py-4 space-y-6">
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">メールアドレス</span>
+                <span className="text-gray-900 flex-1">{formData.updateData?.email || 'なし'}</span>
               </div>
             </div>
           </section>
@@ -327,10 +327,10 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               パスワード
             </h3>
-            <div className="px-4 py-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">パスワード: </span>
-                {formData.updateData?.password ? '変更あり' : '変更なし'}
+            <div className="px-4 py-4 space-y-6">
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">パスワード</span>
+                <span className="text-gray-900 flex-1">{formData.updateData?.password ? '変更あり' : '変更なし'}</span>
               </div>
             </div>
           </section>
@@ -766,16 +766,16 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
               職務要約
             </h3>
-            <div className="px-4 py-4 space-y-4">
-              <div className="text-gray-700">
-                <span className="font-semibold">職務要約: </span>
-                <div className="mt-2 whitespace-pre-wrap">
+            <div className="px-4 py-4 space-y-6">
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">職務要約</span>
+                <div className="text-gray-900 whitespace-pre-wrap flex-1">
                   {formData.updateData?.job_summary || 'なし'}
                 </div>
               </div>
-              <div className="text-gray-700">
-                <span className="font-semibold">自己PR・その他: </span>
-                <div className="mt-2 whitespace-pre-wrap">
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">自己PR・その他</span>
+                <div className="text-gray-900 whitespace-pre-wrap flex-1">
                   {formData.updateData?.self_pr || 'なし'}
                 </div>
               </div>
