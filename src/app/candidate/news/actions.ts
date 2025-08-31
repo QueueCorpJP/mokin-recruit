@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export interface PopularArticle {
   id: string;
@@ -37,67 +37,35 @@ export interface Article {
 
 export async function getNews(limit: number = 20, offset: number = 0): Promise<Article[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from('news') // Assuming news is in a different table
+      .from('notices')
       .select(`
         id, title, excerpt, content, thumbnail_url, published_at, created_at,
-        news_category_relations(
-          news_categories(name)
-        ),
-        news_tag_relations(
-          news_tags(name)
+        notice_category_relations(
+          notice_categories(name)
         )
       `)
       .eq('status', 'PUBLISHED')
+      .not('published_at', 'is', null)
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (error) {
-      // Fallback to articles table if news table doesn't exist
-      const { data: articleData, error: articleError } = await supabase
-        .from('articles')
-        .select(`
-          id, title, excerpt, content, thumbnail_url, published_at, created_at,
-          article_category_relations(
-            article_categories(name)
-          ),
-          article_tag_relations(
-            article_tags(name)
-          )
-        `)
-        .eq('status', 'PUBLISHED')
-        .order('published_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+    if (error) throw error;
 
-      if (articleError) throw articleError;
-      
-      return articleData?.map(article => ({
-        id: article.id,
-        title: article.title,
-        excerpt: article.excerpt || '',
-        content: article.content,
-        thumbnail_url: article.thumbnail_url,
-        published_at: article.published_at || '',
-        created_at: article.created_at,
-        categories: article.article_category_relations?.map(rel => (rel.article_categories as any)?.name) || [],
-        tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
-      })) || [];
-    }
-
-    return data?.map(article => ({
-      id: article.id,
-      title: article.title,
-      excerpt: article.excerpt || '',
-      content: article.content,
-      thumbnail_url: article.thumbnail_url,
-      published_at: article.published_at || '',
-      created_at: article.created_at,
-      categories: article.news_category_relations?.map(rel => (rel.news_categories as any)?.name) || [],
-      tags: article.news_tag_relations?.map(rel => (rel.news_tags as any)?.name) || []
+    return data?.map(notice => ({
+      id: notice.id,
+      title: notice.title,
+      excerpt: notice.excerpt || '',
+      content: notice.content,
+      thumbnail_url: notice.thumbnail_url || '',
+      published_at: notice.published_at || '',
+      created_at: notice.created_at,
+      categories: notice.notice_category_relations?.map(rel => (rel.notice_categories as any)?.name) || ['お知らせ'],
+      tags: [] // noticesテーブルにはタグがないため空配列
     })) || [];
   } catch (error) {
-    console.error('ニュース取得エラー:', error);
+    console.error('お知らせ取得エラー:', error);
     return [];
   }
 }
@@ -107,13 +75,14 @@ export async function getNewsWithPagination(limit: number = 20, offset: number =
   totalCount: number;
 }> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     
     // Get count first
     const { count } = await supabase
-      .from('news')
+      .from('notices')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'PUBLISHED');
+      .eq('status', 'PUBLISHED')
+      .not('published_at', 'is', null);
     
     // Get articles
     const articles = await getNews(limit, offset);
@@ -123,7 +92,7 @@ export async function getNewsWithPagination(limit: number = 20, offset: number =
       totalCount: count || 0
     };
   } catch (error) {
-    console.error('ニュース取得エラー:', error);
+    console.error('お知らせ取得エラー:', error);
     return {
       articles: [],
       totalCount: 0
@@ -133,151 +102,80 @@ export async function getNewsWithPagination(limit: number = 20, offset: number =
 
 export async function getRelatedNews(currentArticleId: string, limit: number = 6): Promise<Article[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     
-    // Try news table first, fallback to articles
     const { data, error } = await supabase
-      .from('news')
+      .from('notices')
       .select(`
         id, title, excerpt, content, thumbnail_url, published_at, created_at,
-        news_category_relations(
-          news_categories(name)
-        ),
-        news_tag_relations(
-          news_tags(name)
+        notice_category_relations(
+          notice_categories(name)
         )
       `)
       .eq('status', 'PUBLISHED')
+      .not('published_at', 'is', null)
       .neq('id', currentArticleId)
       .order('published_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      // Fallback to articles
-      const { data: articleData, error: articleError } = await supabase
-        .from('articles')
-        .select(`
-          id, title, excerpt, content, thumbnail_url, published_at, created_at,
-          article_category_relations(
-            article_categories(name)
-          ),
-          article_tag_relations(
-            article_tags(name)
-          )
-        `)
-        .eq('status', 'PUBLISHED')
-        .neq('id', currentArticleId)
-        .order('published_at', { ascending: false })
-        .limit(limit);
+    if (error) throw error;
 
-      if (articleError) throw articleError;
-      
-      return articleData?.map(article => ({
-        id: article.id,
-        title: article.title,
-        excerpt: article.excerpt || '',
-        content: article.content,
-        thumbnail_url: article.thumbnail_url,
-        published_at: article.published_at || '',
-        created_at: article.created_at,
-        categories: article.article_category_relations?.map(rel => (rel.article_categories as any)?.name) || [],
-        tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
-      })) || [];
-    }
-
-    return data?.map(article => ({
-      id: article.id,
-      title: article.title,
-      excerpt: article.excerpt || '',
-      content: article.content,
-      thumbnail_url: article.thumbnail_url,
-      published_at: article.published_at || '',
-      created_at: article.created_at,
-      categories: article.news_category_relations?.map(rel => (rel.news_categories as any)?.name) || [],
-      tags: article.news_tag_relations?.map(rel => (rel.news_tags as any)?.name) || []
+    return data?.map(notice => ({
+      id: notice.id,
+      title: notice.title,
+      excerpt: notice.excerpt || '',
+      content: notice.content,
+      thumbnail_url: notice.thumbnail_url || '',
+      published_at: notice.published_at || '',
+      created_at: notice.created_at,
+      categories: notice.notice_category_relations?.map(rel => (rel.notice_categories as any)?.name) || ['お知らせ'],
+      tags: []
     })) || [];
   } catch (error) {
-    console.error('関連ニュース取得エラー:', error);
+    console.error('関連お知らせ取得エラー:', error);
     return getNews(limit);
   }
 }
 
 export async function getPopularNews(limit: number = 5): Promise<PopularArticle[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from('news')
+      .from('notices')
       .select('id, title, views_count, published_at, created_at, excerpt, content, thumbnail_url')
       .eq('status', 'PUBLISHED')
+      .not('published_at', 'is', null)
       .order('views_count', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      // Fallback to articles table
-      const { data: articleData, error: articleError } = await supabase
-        .from('articles')
-        .select('id, title, views_count, published_at, created_at, excerpt, content, thumbnail_url')
-        .eq('status', 'PUBLISHED')
-        .order('views_count', { ascending: false })
-        .limit(limit);
-
-      if (articleError) throw articleError;
-      return articleData || [];
-    }
+    if (error) throw error;
 
     return data || [];
   } catch (error) {
-    console.error('人気ニュース取得エラー:', error);
+    console.error('人気お知らせ取得エラー:', error);
     return [];
   }
 }
 
 export async function getNewsCategories(): Promise<ArticleCategory[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from('news_categories')
+      .from('notice_categories')
       .select(`
         name,
-        news_category_relations!inner(
-          news!inner(
+        notice_category_relations!inner(
+          notices!inner(
             id,
-            status
+            status,
+            published_at
           )
         )
       `)
-      .eq('news_category_relations.news.status', 'PUBLISHED');
+      .eq('notice_category_relations.notices.status', 'PUBLISHED')
+      .not('notice_category_relations.notices.published_at', 'is', null);
 
-    if (error) {
-      // Fallback to article categories
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('article_categories')
-        .select(`
-          name,
-          article_category_relations!inner(
-            articles!inner(
-              id,
-              status
-            )
-          )
-        `)
-        .eq('article_category_relations.articles.status', 'PUBLISHED');
-
-      if (categoryError) throw categoryError;
-
-      const categoryMap = new Map<string, number>();
-      
-      categoryData?.forEach((category: any) => {
-        const categoryName = category.name;
-        const currentCount = categoryMap.get(categoryName) || 0;
-        categoryMap.set(categoryName, currentCount + 1);
-      });
-
-      return Array.from(categoryMap.entries()).map(([name, count]) => ({
-        name,
-        count
-      }));
-    }
+    if (error) throw error;
 
     const categoryMap = new Map<string, number>();
     
@@ -292,74 +190,14 @@ export async function getNewsCategories(): Promise<ArticleCategory[]> {
       count
     }));
   } catch (error) {
-    console.error('ニュースカテゴリー取得エラー:', error);
-    return [];
+    console.error('お知らせカテゴリー取得エラー:', error);
+    return [{ name: 'お知らせ', count: 0 }];
   }
 }
 
 export async function getNewsTags(): Promise<ArticleTag[]> {
-  try {
-    const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from('news_tags')
-      .select(`
-        name,
-        news_tag_relations!inner(
-          news!inner(
-            id,
-            status
-          )
-        )
-      `)
-      .eq('news_tag_relations.news.status', 'PUBLISHED');
-
-    if (error) {
-      // Fallback to article tags
-      const { data: tagData, error: tagError } = await supabase
-        .from('article_tags')
-        .select(`
-          name,
-          article_tag_relations!inner(
-            articles!inner(
-              id,
-              status
-            )
-          )
-        `)
-        .eq('article_tag_relations.articles.status', 'PUBLISHED');
-
-      if (tagError) throw tagError;
-
-      const tagMap = new Map<string, number>();
-      
-      tagData?.forEach((tag: any) => {
-        const tagName = tag.name;
-        const currentCount = tagMap.get(tagName) || 0;
-        tagMap.set(tagName, currentCount + 1);
-      });
-
-      return Array.from(tagMap.entries()).map(([name, count]) => ({
-        name,
-        count
-      }));
-    }
-
-    const tagMap = new Map<string, number>();
-    
-    data?.forEach((tag: any) => {
-      const tagName = tag.name;
-      const currentCount = tagMap.get(tagName) || 0;
-      tagMap.set(tagName, currentCount + 1);
-    });
-
-    return Array.from(tagMap.entries()).map(([name, count]) => ({
-      name,
-      count
-    }));
-  } catch (error) {
-    console.error('ニュースタグ取得エラー:', error);
-    return [];
-  }
+  // noticesテーブルにはタグ機能がないため空配列を返す
+  return [];
 }
 
 export async function getSidebarData(): Promise<{

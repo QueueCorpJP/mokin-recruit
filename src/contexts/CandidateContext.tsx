@@ -7,6 +7,7 @@ export interface CandidateFormData {
   // 基本情報
   email: string;
   password?: string;
+  passwordConfirm?: string;
   lastName: string;
   firstName: string;
   lastNameKana: string;
@@ -115,6 +116,8 @@ type CandidateAction =
 
 const initialFormData: CandidateFormData = {
   email: '',
+  password: '',
+  passwordConfirm: '',
   lastName: '',
   firstName: '',
   lastNameKana: '',

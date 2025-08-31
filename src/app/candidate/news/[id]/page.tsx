@@ -2,11 +2,11 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { getRelatedNews } from '@/app/candidate/news/actions';
-import { createServerAdminClient } from '@/lib/supabase/server-admin';
+import { createClient } from '@/lib/supabase/server';
 
 // 実際のnoticesテーブルからニュース記事を取得
 async function getNewsData(newsId: string) {
-  const supabase = createServerAdminClient();
+  const supabase = await createClient();
   
   try {
     const { data, error } = await supabase
@@ -42,9 +42,9 @@ async function getNewsData(newsId: string) {
 }
 
 // メタデータ生成
-export async function generateMetadata({ params }: { params: Promise<{ news_id: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const article = await getNewsData(resolvedParams.news_id);
+  const article = await getNewsData(resolvedParams.id);
   
   if (!article) {
     return {
@@ -64,9 +64,9 @@ export async function generateMetadata({ params }: { params: Promise<{ news_id: 
   };
 }
 
-export default async function NewsDetailPage({ params }: { params: Promise<{ news_id: string }> }) {
+export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const newsId = resolvedParams.news_id;
+  const newsId = resolvedParams.id;
   
   if (!newsId) {
     notFound();

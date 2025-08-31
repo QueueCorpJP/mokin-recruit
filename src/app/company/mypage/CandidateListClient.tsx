@@ -5,9 +5,10 @@ import { CandidateCard, CandidateData } from '@/components/company/CandidateCard
 
 interface CandidateListClientProps {
   candidates: CandidateData[];
+  showActions?: boolean;
 }
 
-export function CandidateListClient({ candidates: initialCandidates }: CandidateListClientProps) {
+export function CandidateListClient({ candidates: initialCandidates, showActions = true }: CandidateListClientProps) {
   const [candidates, setCandidates] = useState(initialCandidates);
 
   const togglePickup = (id: number) => {
@@ -30,7 +31,7 @@ export function CandidateListClient({ candidates: initialCandidates }: Candidate
           candidate={candidate}
           onTogglePickup={togglePickup}
           onToggleHidden={toggleHidden}
-          showActions={true}
+          showActions={showActions}
         />
       ))}
     </div>

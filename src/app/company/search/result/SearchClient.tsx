@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
+import { CandidateCard } from '@/components/company/CandidateCard';
+import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 
@@ -177,6 +180,7 @@ const mockCandidates = [
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
 export default function SearchClient() {
+  const searchParams = useSearchParams();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
   const [candidates, setCandidates] = useState(mockCandidates);
@@ -243,6 +247,122 @@ export default function SearchClient() {
   const [isDesiredLocationModalOpen, setIsDesiredLocationModalOpen] =
     useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
+
+  // URLパラメータから検索条件を読み込む
+  useEffect(() => {
+    // 職種の処理
+    const jobTypesParam = searchParams.get('job_types');
+    if (jobTypesParam) {
+      const jobTypes = jobTypesParam.split(',').map((name, index) => ({
+        id: `job-${index}`,
+        name: name.trim(),
+      }));
+      setExperienceJobTypes(jobTypes);
+    }
+
+    // 業界の処理
+    const industriesParam = searchParams.get('industries');
+    if (industriesParam) {
+      const industries = industriesParam.split(',').map((name, index) => ({
+        id: `industry-${index}`,
+        name: name.trim(),
+      }));
+      setExperienceIndustries(industries);
+    }
+
+    // 勤務地の処理
+    const locationsParam = searchParams.get('locations');
+    if (locationsParam) {
+      const locations = locationsParam.split(',').map((name, index) => ({
+        id: `location-${index}`,
+        name: name.trim(),
+      }));
+      setDesiredLocations(locations);
+    }
+
+    // 年齢の処理
+    const ageMinParam = searchParams.get('age_min');
+    if (ageMinParam) {
+      setAgeMin(ageMinParam);
+    }
+
+    const ageMaxParam = searchParams.get('age_max');
+    if (ageMaxParam) {
+      setAgeMax(ageMaxParam);
+    }
+
+    // 年収の処理
+    const salaryMinParam = searchParams.get('salary_min');
+    if (salaryMinParam) {
+      setDesiredSalaryMin(salaryMinParam);
+    }
+
+    const salaryMaxParam = searchParams.get('salary_max');
+    if (salaryMaxParam) {
+      setDesiredSalaryMax(salaryMaxParam);
+    }
+
+    // スキルの処理
+    const skillsParam = searchParams.get('skills');
+    if (skillsParam) {
+      setKeyword(skillsParam);
+    }
+
+    // 言語の処理
+    const languagesParam = searchParams.get('languages');
+    if (languagesParam) {
+      setOtherLanguage(languagesParam);
+    }
+
+    // キャリアチェンジ・専門性の処理
+    const careerChangeParam = searchParams.get('career_change');
+    if (careerChangeParam === 'true') {
+      // キャリアチェンジ志向の場合の処理（必要に応じて）
+    }
+
+    const professionalFocusParam = searchParams.get('professional_focus');
+    if (professionalFocusParam === 'true') {
+      // 専門性追求の場合の処理（必要に応じて）
+    }
+
+    // 学歴の処理
+    const educationLevelParam = searchParams.get('education_level');
+    if (educationLevelParam) {
+      setEducation(educationLevelParam);
+    }
+
+    // 検索ボックスを開く（パラメータがある場合）
+    const hasParams = searchParams.toString().length > 0;
+    if (hasParams) {
+      setIsSearchBoxOpen(true);
+      
+      // URLパラメータに基づいて候補者をフィルタリング
+      const searchConditions = {
+        job_types: jobTypesParam?.split(',').map(t => t.trim()),
+        industries: industriesParam?.split(',').map(t => t.trim()),
+        locations: locationsParam?.split(',').map(t => t.trim()),
+        age_min: ageMinParam ? parseInt(ageMinParam) : undefined,
+        age_max: ageMaxParam ? parseInt(ageMaxParam) : undefined,
+        salary_min: salaryMinParam ? parseInt(salaryMinParam) : undefined,
+        salary_max: salaryMaxParam ? parseInt(salaryMaxParam) : undefined,
+        skills: skillsParam?.split(',').map(t => t.trim()),
+        languages: languagesParam?.split(',').map(t => t.trim()),
+        career_change: careerChangeParam === 'true',
+        professional_focus: professionalFocusParam === 'true',
+        education_level: educationLevelParam?.split(',').map(t => t.trim()),
+      };
+
+      // 条件が存在する場合のみフィルタリングを実行
+      const hasSearchConditions = Object.values(searchConditions).some(value => 
+        Array.isArray(value) ? value.length > 0 : value !== undefined
+      );
+
+      if (hasSearchConditions) {
+        const filteredCandidates = filterCandidatesByConditions(mockCandidates, searchConditions);
+        setCandidates(filteredCandidates);
+      }
+    }
+  }, [searchParams]);
 
   const togglePickup = (id: number) => {
     setCandidates((prev) =>
