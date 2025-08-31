@@ -83,6 +83,9 @@ export interface CandidateDetailData {
   job_summary: string | null;
   self_pr: string | null;
   
+  // 運営メモ
+  admin_memo: string | null;
+  
   // スカウト統計
   scout_stats: {
     scout_received_7days: number;
@@ -101,7 +104,13 @@ export interface CandidateDetailData {
 }
 
 async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetailData> {
+  console.log('fetchCandidateDetail called with ID:', candidateId, 'Type:', typeof candidateId);
   const supabase = getSupabaseAdminClient();
+  
+  // IDの形式を確認してみる
+  if (!candidateId || candidateId.trim() === '') {
+    throw new Error('無効な候補者IDです');
+  }
   
   // 並列クエリ実行
   const [candidateResult, educationResult, workExpResult, jobTypeExpResult, skillsResult, expectationsResult, roomsResult] = await Promise.all([
@@ -167,7 +176,42 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
   const { data: expectations } = expectationsResult;
   const { data: rooms } = roomsResult;
 
-  if (candidateError || !candidate) {
+  console.log('Candidate query result:', { candidate, candidateError, candidateId });
+
+  if (candidateError) {
+    console.error('Candidate query error:', candidateError);
+    
+    // Try a simple query to see if the candidate exists at all
+    const simpleQuery = await supabase
+      .from('candidates')
+      .select('id, email')
+      .eq('id', candidateId)
+      .single();
+    
+    console.log('Simple query result:', simpleQuery);
+    
+    throw new Error(`候補者データ取得エラー: ${candidateError.message} (詳細: ${candidateError.details || 'なし'}, hint: ${candidateError.hint || 'なし'})`);
+  }
+
+  if (!candidate) {
+    console.error('Candidate not found for ID:', candidateId);
+    
+    // Check if any candidates exist
+    const countQuery = await supabase
+      .from('candidates')
+      .select('id', { count: 'exact' });
+    
+    console.log('Total candidates count:', countQuery.count);
+    
+    // Try to find candidate with string conversion
+    const stringQuery = await supabase
+      .from('candidates')
+      .select('id, email')
+      .eq('id', String(candidateId))
+      .single();
+    
+    console.log('String query result:', stringQuery);
+    
     throw new Error('候補者が見つかりません');
   }
 
@@ -292,12 +336,67 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
   }));
 
   return {
-    ...processedCandidate,
+    // 基本情報
+    id: processedCandidate.id,
+    email: processedCandidate.email,
+    password_hash: processedCandidate.password_hash,
+    last_name: processedCandidate.last_name,
+    first_name: processedCandidate.first_name,
+    last_name_kana: processedCandidate.last_name_kana,
+    first_name_kana: processedCandidate.first_name_kana,
+    gender: processedCandidate.gender,
+    birth_date: processedCandidate.birth_date,
+    prefecture: processedCandidate.prefecture,
+    phone_number: processedCandidate.phone_number,
+    current_income: processedCandidate.current_income,
+    current_salary: processedCandidate.current_salary,
+    desired_salary: processedCandidate.desired_salary,
+    current_company: processedCandidate.current_company,
+    current_position: processedCandidate.current_position,
+    current_residence: processedCandidate.current_residence,
+    desired_industries: processedCandidate.desired_industries,
+    desired_job_types: processedCandidate.desired_job_types,
+    desired_locations: processedCandidate.desired_locations,
+    management_experience_count: processedCandidate.management_experience_count || 0,
+    interested_work_styles: processedCandidate.interested_work_styles,
+    last_login_at: processedCandidate.last_login_at,
+    
+    // 転職活動状況
+    has_career_change: processedCandidate.has_career_change,
+    job_change_timing: processedCandidate.job_change_timing,
+    current_activity_status: processedCandidate.current_activity_status,
+    
+    // 職務経歴
+    recent_job_company_name: processedCandidate.recent_job_company_name,
+    recent_job_department_position: processedCandidate.recent_job_department_position,
+    recent_job_start_year: processedCandidate.recent_job_start_year,
+    recent_job_start_month: processedCandidate.recent_job_start_month,
+    recent_job_end_year: processedCandidate.recent_job_end_year,
+    recent_job_end_month: processedCandidate.recent_job_end_month,
+    recent_job_is_currently_working: processedCandidate.recent_job_is_currently_working,
+    recent_job_industries: processedCandidate.recent_job_industries,
+    recent_job_types: processedCandidate.recent_job_types,
+    recent_job_description: processedCandidate.recent_job_description,
+    
+    // 学歴・経験
     education: education || [],
     work_experience: workExperience || [],
     job_type_experience: jobTypeExperience || [],
+    
+    // スキル・語学
     skills: processedSkills,
+    
+    // 希望条件
     expectations: processedExpectations,
+    
+    // 職務要約・自己PR
+    job_summary: processedCandidate.job_summary,
+    self_pr: processedCandidate.self_pr,
+    
+    // 運営メモ
+    admin_memo: null,
+    
+    // スカウト統計
     scout_stats: scoutStats
   } as CandidateDetailData;
 }
@@ -308,6 +407,12 @@ interface PageProps {
 
 export default async function CandidateDetailPage({ params }: PageProps) {
   const { id } = await params;
+  console.log('Page received candidate ID:', id);
+  
+  if (!id) {
+    throw new Error('候補者IDが指定されていません');
+  }
+  
   const candidateData = await fetchCandidateDetail(id);
   
   return <CandidateDetailClient candidate={candidateData} />;

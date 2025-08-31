@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CandidateDetailData } from '../../page';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -12,10 +12,34 @@ interface Props {
   formData: any;
 }
 
-export default function CandidateEditConfirmClient({ candidate, formData }: Props) {
+export default function CandidateEditConfirmClient({ candidate, formData: initialFormData }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState<any>(initialFormData);
+
+  useEffect(() => {
+    // Retrieve form data from sessionStorage if not provided
+    if (!formData && typeof window !== 'undefined') {
+      const storedData = sessionStorage.getItem('candidateEditData');
+      if (storedData) {
+        try {
+          setFormData(JSON.parse(storedData));
+        } catch (error) {
+          console.error('Error parsing stored form data:', error);
+          router.push(`/admin/candidate/${candidate.id}/edit`);
+        }
+      } else {
+        // No data found, redirect back to edit page
+        router.push(`/admin/candidate/${candidate.id}/edit`);
+      }
+    }
+  }, []);
+
+  // Show loading state while retrieving data from sessionStorage
+  if (!formData) {
+    return <div>Loading...</div>;
+  }
 
   // Safe fallback for scout_stats if undefined
   const scoutStats = candidate.scout_stats || {
@@ -50,23 +74,24 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
     });
   };
 
+
   const handleConfirmSave = async () => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
     
     try {
-      const result = await updateCandidateData(
-        candidate.id,
-        formData.updateData,
-        formData.education,
-        formData.workExperience,
-        formData.jobTypeExperience,
-        formData.skills,
-        formData.expectations || {},
-        formData.memo,
-        formData.selectionEntries
-      );
+      const result = await updateCandidateData({
+        candidateId: candidate.id,
+        formData: formData.updateData,
+        education: formData.education,
+        workExperience: formData.workExperience,
+        jobTypeExperience: formData.jobTypeExperience,
+        skills: formData.skills,
+        expectations: formData.expectations || {},
+        memo: formData.memo,
+        selectionEntries: formData.selectionEntries
+      });
 
       if (result.success) {
         setShowModal(true);
@@ -83,6 +108,10 @@ export default function CandidateEditConfirmClient({ candidate, formData }: Prop
 
   const handleModalClose = () => {
     setShowModal(false);
+    // Clear stored data from sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('candidateEditData');
+    }
     router.push(`/admin/candidate/${candidate.id}`);
   };
 

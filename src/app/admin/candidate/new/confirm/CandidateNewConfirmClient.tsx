@@ -48,7 +48,8 @@ export default function CandidateNewConfirmClient() {
         formData.jobTypeExperience,
         formData.skills,
         formData.expectations || {},
-        formData.selectionEntries
+        formData.selectionEntries,
+        formData.memo
       );
 
       console.log('Create candidate result:', result);

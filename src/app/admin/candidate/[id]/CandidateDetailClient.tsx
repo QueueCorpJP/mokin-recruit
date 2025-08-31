@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CandidateDetailData } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
-import { deleteCandidate } from './actions';
+import { deleteCandidate, updateCandidateMemo } from './actions';
 
 interface Props {
   candidate: CandidateDetailData;
@@ -13,7 +13,8 @@ interface Props {
 
 export default function CandidateDetailClient({ candidate }: Props) {
   const router = useRouter();
-  const [memo, setMemo] = useState('');
+  const [memo, setMemo] = useState(candidate.admin_memo || '');
+  const [isSavingMemo, setIsSavingMemo] = useState(false);
   const [deleteInputValue, setDeleteInputValue] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,6 +72,23 @@ export default function CandidateDetailClient({ candidate }: Props) {
     setShowDeleteModal(false);
     setDeleteInputValue('');
   }, []);
+
+  const handleSaveMemo = useCallback(async () => {
+    setIsSavingMemo(true);
+    try {
+      const result = await updateCandidateMemo(candidate.id, memo);
+      if (result.success) {
+        alert('メモを保存しました');
+      } else {
+        alert(result.error || 'メモの保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error saving memo:', error);
+      alert('メモの保存に失敗しました');
+    } finally {
+      setIsSavingMemo(false);
+    }
+  }, [candidate.id, memo]);
 
   // CustomEventリスナーの設定
   useEffect(() => {
@@ -330,9 +348,18 @@ export default function CandidateDetailClient({ candidate }: Props) {
           <textarea
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
-            className="w-full h-32 p-4 border border-gray-300 rounded-lg resize-none"
+            className="w-full h-32 p-4 border border-gray-300 rounded-lg resize-none mb-4"
             placeholder="自由にメモを記入できます。同一グループ内の方が閲覧可能です。"
           />
+          <div className="flex justify-end">
+            <AdminButton
+              onClick={handleSaveMemo}
+              text={isSavingMemo ? '保存中...' : 'メモを保存'}
+              variant="blue"
+              size="small"
+              disabled={isSavingMemo}
+            />
+          </div>
         </section>
 
         {/* メールアドレス */}
@@ -524,14 +551,6 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <span className="text-gray-900 flex-1">{candidate.recent_job_department_position || '入力された内容を表示'}</span>
             </div>
             <div className="flex gap-8">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">在籍中</span>
-              <span className="text-gray-900 flex-1">
-                {candidate.recent_job_is_currently_working !== null ? 
-                  (candidate.recent_job_is_currently_working ? '選択された内容を表示' : '選択された内容を表示') : 
-                  '選択された内容を表示'}
-              </span>
-            </div>
-            <div className="flex gap-8">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">開始年月</span>
               <div className="flex gap-2 items-center text-gray-900 flex-1">
                 <span>{candidate.recent_job_start_year || '選択された内容を表示'}</span>
@@ -540,15 +559,24 @@ export default function CandidateDetailClient({ candidate }: Props) {
                 <span className="text-gray-600">月</span>
               </div>
             </div>
-            <div className="flex gap-8">
-              <span className="text-sm font-medium text-gray-700 w-[120px] text-right">終了年月</span>
-              <div className="flex gap-2 items-center text-gray-900 flex-1">
-                <span>{candidate.recent_job_end_year || '選択された内容を表示'}</span>
-                <span className="text-gray-600">年</span>
-                <span>{candidate.recent_job_end_month || '選択された内容を表示'}</span>
-                <span className="text-gray-600">月</span>
+            {candidate.recent_job_is_currently_working ? (
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right"></span>
+                <div className="flex gap-2 items-center text-gray-900 flex-1">
+                  <span>在籍中</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">終了年月</span>
+                <div className="flex gap-2 items-center text-gray-900 flex-1">
+                  <span>{candidate.recent_job_end_year || ''}</span>
+                  {candidate.recent_job_end_year && <span className="text-gray-600">年</span>}
+                  <span>{candidate.recent_job_end_month || ''}</span>
+                  {candidate.recent_job_end_month && <span className="text-gray-600">月</span>}
+                </div>
+              </div>
+            )}
             <div className="flex gap-8">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">直近の在籍企業の業種</span>
               <div className="flex flex-wrap gap-2 flex-1">
@@ -582,12 +610,16 @@ export default function CandidateDetailClient({ candidate }: Props) {
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">直近の在籍企業の業種での職種</span>
               <div className="flex flex-wrap gap-2 flex-1">
                 {(() => {
-                  // recent_job_typesは配列で、各要素がjobTypes配列を持つ
+                  // recent_job_typesを使用する（recent_job_industriesではなく）
                   const allJobTypes: any[] = [];
-                  if (candidate.recent_job_industries && Array.isArray(candidate.recent_job_industries)) {
-                    candidate.recent_job_industries.forEach((entry: any) => {
+                  if (candidate.recent_job_types && Array.isArray(candidate.recent_job_types)) {
+                    candidate.recent_job_types.forEach((entry: any) => {
                       if (entry.jobTypes && Array.isArray(entry.jobTypes)) {
                         allJobTypes.push(...entry.jobTypes);
+                      } else if (Array.isArray(entry)) {
+                        allJobTypes.push(...entry);
+                      } else {
+                        allJobTypes.push(entry);
                       }
                     });
                   }
