@@ -19,8 +19,6 @@ export interface CandidateData {
   salary: string;
   university: string;
   degree: string;
-  language: string;
-  languageLevel: string;
   experienceJobs: string[];
   experienceIndustries: string[];
   careerHistory: Array<{
@@ -279,28 +277,21 @@ export function CandidateCard({
               </div>
               <div className="flex gap-10 mt-2">
                 <span
-                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
+                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap"
                   style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 >
-                  {candidate.location}／{candidate.age}／
-                  {candidate.gender}／{candidate.salary}
+                  {candidate.location}／{candidate.age}／{candidate.gender}／{candidate.salary}
                 </span>
                 <span
-                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
+                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap"
                   style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 >
                   {candidate.degree}／{candidate.university}
                 </span>
-                <span
-                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  {candidate.language}／{candidate.languageLevel}
-                </span>
               </div>
             </div>
             <div
-              className="text-[#999999] text-[12px] font-medium tracking-[1.2px]"
+              className="text-[#999999] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               最終ログイン：{candidate.lastLogin}
@@ -317,74 +308,92 @@ export function CandidateCard({
                 >
                   経験職種
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {candidate.experienceJobs.map((job, index) => (
-                    <span
+                    <div
                       key={index}
-                      className="inline-block bg-[#f9f9f9] rounded-[4px] px-2 py-1 text-[12px] text-[#323232] font-medium tracking-[1.2px]"
-                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
                     >
-                      {job}
-                    </span>
+                      <span
+                        className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                        }}
+                      >
+                        {job}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
-              <div className="flex gap-6 items-center mt-2">
+            </div>
+            <div className="flex-1">
+              <div className="flex gap-6 items-center">
                 <span
                   className="text-[#999999] text-[12px] font-bold tracking-[1.2px] w-[65px]"
                   style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 >
                   経験業種
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {candidate.experienceIndustries.map((industry, index) => (
-                    <span
+                    <div
                       key={index}
-                      className="inline-block bg-[#f9f9f9] rounded-[4px] px-2 py-1 text-[12px] text-[#323232] font-medium tracking-[1.2px]"
-                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
                     >
-                      {industry}
-                    </span>
+                      <span
+                        className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                        }}
+                      >
+                        {industry}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Career History and Selection */}
-          <div className="flex gap-10 flex-col xl:flex-row">
+          {/* Separator Line */}
+          <div className="border-t border-[#dcdcdc] mb-6"></div>
+
+          {/* Selection Companies */}
+          <div className="flex gap-5 xl:gap-10 flex-col xl:flex-row">
             <div className="flex-1">
-              <h4
-                className="text-[#999999] text-[12px] font-bold tracking-[1.2px] mb-2"
-                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-              >
-                職歴
-              </h4>
-              <div className="space-y-2">
-                {candidate.careerHistory.map((career, index) => (
-                  <div key={index} className="text-[#323232] text-[12px] font-medium tracking-[1.2px]">
-                    <span style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
-                      {career.period}　{career.company}　{career.role}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex-1">
-              <h4
-                className="text-[#999999] text-[12px] font-bold tracking-[1.2px] mb-2"
-                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-              >
-                選考中企業
-              </h4>
-              <div className="space-y-2">
-                {candidate.selectionCompanies.map((company, index) => (
-                  <div key={index} className="text-[#323232] text-[12px] font-medium tracking-[1.2px]">
-                    <span style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
-                      {company.company}　／　{company.detail}
-                    </span>
-                  </div>
-                ))}
+              <div className="flex gap-4">
+                <span
+                  className="text-[#999999] text-[12px] font-bold tracking-[1.2px]"
+                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                >
+                  選考中企業
+                </span>
+                <div className="flex flex-col gap-2">
+                  {candidate.selectionCompanies.map((selection, index) => (
+                    <div
+                      key={index}
+                      className="flex gap-4 items-start"
+                    >
+                      <span
+                        className="text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate"
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                        }}
+                      >
+                        {selection.company}
+                      </span>
+                      <span
+                        className="text-[#323232] text-[12px] font-medium tracking-[1.2px] flex-1 truncate xl:max-w-[220px] 2xl:max-w-[300px]"
+                        style={{
+                          fontFamily: 'Noto Sans JP, sans-serif',
+                        }}
+                      >
+                        {selection.detail}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

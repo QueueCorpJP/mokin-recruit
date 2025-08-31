@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "groupName": "データサイエンティスト採用",
+    "title": "機械学習・AI分野の専門人材",
+    "conditions": {
+      "job_types": ["データサイエンティスト", "機械学習エンジニア"],
+      "industries": ["IT・インターネット", "AI・機械学習", "フィンテック"],
+      "locations": ["東京都", "神奈川県", "大阪府"],
+      "age_min": 25,
+      "age_max": 40,
+      "salary_min": 800,
+      "salary_max": 1200,
+      "experience_years_min": 3,
+      "skills": ["Python", "Machine Learning", "TensorFlow", "PyTorch"],
+      "career_change": false,
+      "professional_focus": true
+    }
+  },
+  {
+    "id": 2,
+    "groupName": "セキュリティ人材採用",
+    "title": "サイバーセキュリティエンジニア",
+    "conditions": {
+      "job_types": ["セキュリティエンジニア", "セキュリティコンサルタント"],
+      "industries": ["IT・インターネット", "セキュリティ", "金融"],
+      "locations": ["東京都", "大阪府", "リモート可"],
+      "age_min": 26,
+      "age_max": 45,
+      "salary_min": 900,
+      "salary_max": 1400,
+      "experience_years_min": 4,
+      "skills": ["セキュリティ", "ペネトレーションテスト", "CISSP", "AWS Security"],
+      "career_change": false,
+      "professional_focus": true
+    }
+  },
+  {
+    "id": 3,
+    "groupName": "デザイナー採用",
+    "title": "UI/UXデザイナー急募",
+    "conditions": {
+      "job_types": ["UI/UXデザイナー", "プロダクトデザイナー", "Webデザイナー"],
+      "industries": ["IT・インターネット", "デザイン", "広告・PR"],
+      "locations": ["東京都", "大阪府"],
+      "age_min": 23,
+      "age_max": 35,
+      "salary_min": 600,
+      "salary_max": 900,
+      "experience_years_min": 2,
+      "skills": ["Figma", "Sketch", "Adobe XD", "ユーザビリティテスト"],
+      "career_change": false,
+      "professional_focus": true,
+      "education_level": ["大学卒", "専門学校卒"]
+    }
+  }
+]

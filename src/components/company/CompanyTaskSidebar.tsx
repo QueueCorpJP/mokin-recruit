@@ -3,15 +3,154 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers';
+
+// TaskDataインターフェース（TaskListと同じ）
+interface TaskData {
+  hasNoJobPostings: boolean;
+  hasNewApplication: boolean;
+  newApplications?: Array<{
+    id: string;
+    candidateName: string;
+    jobTitle: string;
+    appliedAt: Date;
+  }>;
+  hasUnreadApplication: boolean;
+  unreadApplications?: Array<{
+    id: string;
+    candidateName: string;
+    jobTitle: string;
+    appliedAt: Date;
+  }>;
+  hasNewMessage: boolean;
+  newMessages?: Array<{
+    roomId: string;
+    candidateName: string;
+    jobTitle: string;
+    sentAt: Date;
+    messagePreview?: string;
+  }>;
+  hasUnreadMessage: boolean;
+  unreadMessages?: Array<{
+    roomId: string;
+    candidateName: string;
+    jobTitle: string;
+    sentAt: Date;
+    messagePreview?: string;
+  }>;
+  hasUnregisteredInterviewResult: boolean;
+  unregisteredInterviews?: Array<{
+    id: string;
+    candidateName: string;
+    jobTitle: string;
+    interviewDate?: Date;
+  }>;
+}
+
+interface TaskItem {
+  id: string;
+  title: string;
+  description: string;
+  iconSrc?: string;
+  completed?: boolean;
+  triggerFunction: () => boolean;
+  navigateTo?: string;
+}
 
 interface CompanyTaskSidebarProps {
   className?: string;
   showTodoAndNews?: boolean;
+  taskData?: TaskData;
+  notices?: NoticeData[];
 }
 
-export function CompanyTaskSidebar({ className, showTodoAndNews = false }: CompanyTaskSidebarProps) {
+export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskData, notices = [] }: CompanyTaskSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // デフォルトの空のタスクデータ
+  const defaultTaskData: TaskData = {
+    hasNoJobPostings: false,
+    hasNewApplication: false,
+    hasUnreadApplication: false, 
+    hasNewMessage: false,
+    hasUnreadMessage: false,
+    hasUnregisteredInterviewResult: false,
+  };
+
+  const userState = taskData || defaultTaskData;
+
+  const checkNoJobPostings = () => userState.hasNoJobPostings;
+  const checkNewApplication = () => userState.hasNewApplication;
+  const checkUnreadApplication = () => userState.hasUnreadApplication;
+  const checkNewMessage = () => userState.hasNewMessage;
+  const checkUnreadMessage = () => userState.hasUnreadMessage;
+  const checkUnregisteredInterviewResult = () => userState.hasUnregisteredInterviewResult;
+
+  const generateSubText = (candidates: any[], type: 'application' | 'message' | 'interview'): string => {
+    if (!candidates || candidates.length === 0) {
+      return '候補者名 | 求人タイトル';
+    }
+    
+    const candidate = candidates[0]; // 最初の候補者を表示
+    const candidateName = candidate.candidateName || '候補者名未設定';
+    const jobTitle = candidate.jobTitle || '求人タイトル未設定';
+    
+    return `${candidateName} | ${jobTitle}`;
+  };
+
+  const taskItems: TaskItem[] = [
+    {
+      id: '1',
+      title: 'まずは求人を登録しましょう。',
+      description: '求人を登録すると、スカウト送信が可能になります。',
+      triggerFunction: checkNoJobPostings,
+      navigateTo: '/company/job/new',
+    },
+    {
+      id: '2',
+      title: '確認していない応募があります。早めに対応しましょう。',
+      description: generateSubText(userState.newApplications || [], 'application'),
+      triggerFunction: checkNewApplication,
+      navigateTo: `/company/message`,
+    },
+    {
+      id: '3', 
+      title: '確認していない応募があります。早めに対応しましょう。',
+      description: generateSubText(userState.unreadApplications || [], 'application'),
+      triggerFunction: checkUnreadApplication,
+      navigateTo: `/company/message`,
+    },
+    {
+      id: '4',
+      title: '求職者からメッセージが届きました！内容を確認しましょう。',
+      description: generateSubText(userState.newMessages || [], 'message'),
+      triggerFunction: checkNewMessage,
+      navigateTo: `/company/message`,
+    },
+    {
+      id: '5',
+      title: '未読のメッセージがあります。早めに確認しましょう。',
+      description: generateSubText(userState.unreadMessages || [], 'message'),
+      triggerFunction: checkUnreadMessage,
+      navigateTo: `/company/message`,
+    },
+    {
+      id: '6',
+      title: '面談はいかがでしたか？選考結果を登録しましょう。',
+      description: generateSubText(userState.unregisteredInterviews || [], 'interview'),
+      triggerFunction: checkUnregisteredInterviewResult,
+      navigateTo: `/company/message`,
+    },
+  ];
+
+  const visibleItems = taskItems.filter(item => item.triggerFunction());
+
+  const handleTaskItemClick = (item: TaskItem) => {
+    if (item.navigateTo) {
+      router.push(item.navigateTo);
+    }
+  };
 
   // Figmaデザインに基づくスタイル定義
   // Upper block (Plan Information) styles
@@ -288,101 +427,138 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false }: Compa
         </SectionHeading>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* 対応リストカード */}
-          <div style={{
-            background: 'white',
-            padding: '16px 24px',
-            borderRadius: '8px',
-            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-          }}>
-            {/* グラデーションタグ */}
+          {visibleItems.length > 0 ? (
+            <>
+              {/* 最初の1件のみ表示 */}
+              {visibleItems.slice(0, 1).map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'white',
+                    padding: '16px 24px',
+                    borderRadius: '8px',
+                    boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleTaskItemClick(item)}
+                >
+                  {/* グラデーションタグ */}
+                  <div style={{
+                    background: 'linear-gradient(to left, #86c36a, #65bdac)',
+                    borderRadius: '8px',
+                    padding: '0 20px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    maxWidth: '100%',
+                  }}>
+                    <span style={{
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: 'white',
+                      letterSpacing: '1.4px',
+                      lineHeight: '1.6',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      グループ名テキスト
+                    </span>
+                  </div>
+                  
+                  {/* メインテキスト */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#323232',
+                      letterSpacing: '1.6px',
+                      lineHeight: '2',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}>
+                      {item.title}
+                    </div>
+                    <div style={{
+                      fontFamily: "'Noto Sans JP', sans-serif",
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      color: '#999999',
+                      letterSpacing: '1px',
+                      lineHeight: '1.6',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}>
+                      {item.description}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* もっと見るボタン */}
+              <button 
+                style={{
+                  background: 'linear-gradient(135deg, #0F9058, #65bdac)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '15px 24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+                  width: 'full',
+                }}
+                onClick={() => router.push('/company/task')}
+              >
+                <span style={{
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: 'white',
+                  letterSpacing: '1.6px',
+                  lineHeight: '2',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  textAlign: 'center',
+                }}>
+                  すべての対応リストを見る
+                </span>
+                <svg width="12" height="12" viewBox="0 0 256 448" fill="none">
+                  <path d="M17.9 193.2L193.2 17.9C205.8 5.3 226.2 5.3 238.8 17.9L238.9 18C251.5 30.6 251.5 51 238.9 63.6L99.5 203L238.9 342.4C251.5 355 251.5 375.4 238.9 388L238.8 388.1C226.2 400.7 205.8 400.7 193.2 388.1L17.9 212.8C5.3 200.2 5.3 179.8 17.9 167.2L17.9 193.2Z" fill="white" transform="scale(-1,1) translate(-256,0)"/>
+                </svg>
+              </button>
+            </>
+          ) : (
+            /* 対応リストが0件の場合の表示 */
             <div style={{
-              background: 'linear-gradient(to left, #86c36a, #65bdac)',
+              background: 'white',
+              padding: '40px 24px',
               borderRadius: '8px',
-              padding: '0 20px',
-              height: '32px',
+              boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              maxWidth: '100%',
+              textAlign: 'center',
             }}>
               <span style={{
                 fontFamily: "'Noto Sans JP', sans-serif",
-                fontSize: '14px',
-                fontWeight: 700,
-                color: 'white',
-                letterSpacing: '1.4px',
-                lineHeight: '1.6',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                グループ名テキストグループ名テキスト
-              </span>
-            </div>
-            
-            {/* メインテキスト */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{
-                fontFamily: "'Noto Sans JP', sans-serif",
                 fontSize: '16px',
-                fontWeight: 700,
+                fontWeight: 500,
                 color: '#323232',
                 letterSpacing: '1.6px',
                 lineHeight: '2',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
               }}>
-                まずは求人を登録しましょう。
-              </div>
-              <div style={{
-                fontFamily: "'Noto Sans JP', sans-serif",
-                fontSize: '10px',
-                fontWeight: 500,
-                color: '#999999',
-                letterSpacing: '1px',
-                lineHeight: '1.6',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-              }}>
-                求人を登録すると、スカウト送信が可能になります。
-              </div>
+                現在対応すべきことはありません。
+              </span>
             </div>
-          </div>
-          
-          {/* もっと見るボタン */}
-          <button style={{
-            background: 'linear-gradient(135deg, #0F9058, #65bdac)',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '15px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
-            width: 'full',
-          }}>
-            <span style={{
-              fontFamily: "'Noto Sans JP', sans-serif",
-              fontSize: '16px',
-              fontWeight: 700,
-              color: 'white',
-              letterSpacing: '1.6px',
-              lineHeight: '2',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              textAlign: 'center',
-            }}>
-              すべての対応リストを見る
-            </span>
-            <svg width="12" height="12" viewBox="0 0 256 448" fill="none">
-              <path d="M17.9 193.2L193.2 17.9C205.8 5.3 226.2 5.3 238.8 17.9L238.9 18C251.5 30.6 251.5 51 238.9 63.6L99.5 203L238.9 342.4C251.5 355 251.5 375.4 238.9 388L238.8 388.1C226.2 400.7 205.8 400.7 193.2 388.1L17.9 212.8C5.3 200.2 5.3 179.8 17.9 167.2L17.9 193.2Z" fill="white" transform="scale(-1,1) translate(-256,0)"/>
-            </svg>
-          </button>
+          )}
         </div>
       </div>
 
@@ -399,61 +575,95 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false }: Compa
         </SectionHeading>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* お知らせカード */}
-          <div style={{
-            background: 'white',
-            padding: '16px 24px',
-            borderRadius: '8px',
-            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-          }}>
-            {/* 日付 */}
+          {/* お知らせカード - 最新3件まで表示 */}
+          {notices.length > 0 ? (
+            notices.slice(0, 3).map((notice) => (
+              <div 
+                key={notice.id}
+                style={{
+                  background: 'white',
+                  padding: '16px 24px',
+                  borderRadius: '8px',
+                  boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => router.push(`/candidate/news/${notice.id}`)}
+              >
+                {/* 日付 */}
+                <div style={{
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  color: '#999999',
+                  letterSpacing: '1px',
+                  lineHeight: '1.6',
+                }}>
+                  {formatNoticeDate(notice.published_at || notice.created_at)}
+                </div>
+                
+                {/* タイトル */}
+                <div style={{
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: '#323232',
+                  letterSpacing: '1.6px',
+                  lineHeight: '2',
+                  height: '63px',
+                  overflow: 'hidden',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                }}>
+                  {notice.title}
+                </div>
+              </div>
+            ))
+          ) : (
             <div style={{
-              fontFamily: "'Noto Sans JP', sans-serif",
-              fontSize: '10px',
-              fontWeight: 500,
-              color: '#999999',
-              letterSpacing: '1px',
-              lineHeight: '1.6',
+              background: 'white',
+              padding: '40px 24px',
+              borderRadius: '8px',
+              boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
             }}>
-              2025/4/19
+              <span style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontSize: '16px',
+                fontWeight: 500,
+                color: '#999999',
+                letterSpacing: '1.6px',
+                lineHeight: '2',
+              }}>
+                お知らせはありません
+              </span>
             </div>
-            
-            {/* タイトル */}
-            <div style={{
-              fontFamily: "'Noto Sans JP', sans-serif",
-              fontSize: '16px',
-              fontWeight: 700,
-              color: '#323232',
-              letterSpacing: '1.6px',
-              lineHeight: '2',
-              height: '63px',
-              overflow: 'hidden',
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-            }}>
-              お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。お知らせ情報のタイトルが入ります。
-            </div>
-          </div>
+          )}
           
           {/* もっと見るボタン */}
-          <button style={{
-            background: 'white',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '15px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
-            width: "full",
-          }}>
+          <button 
+            style={{
+              background: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '15px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+              width: "full",
+            }}
+            onClick={() => router.push('/candidate/news')}
+          >
             <span style={{
               fontFamily: "'Noto Sans JP', sans-serif",
               fontSize: '16px',

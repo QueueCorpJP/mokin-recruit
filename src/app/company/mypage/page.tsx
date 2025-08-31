@@ -6,8 +6,12 @@ import { Message } from './NewMessageItem';
 import { CandidateCard, CandidateData } from '@/components/company/CandidateCard';
 import { CompanyTaskSidebar } from '@/components/company/CompanyTaskSidebar';
 import { CandidateListClient } from './CandidateListClient';
+import { RecommendedCandidatesSection } from '@/components/company/RecommendedCandidatesSection';
 import { createClient } from '@/lib/supabase/server';
 import { unstable_cache } from 'next/cache';
+import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
+import searchConditionsData from '@/data/mockSearchConditions.json';
+import { getPublishedNotices } from '@/lib/utils/noticeHelpers';
 
 // キャッシュ付きの候補者データ取得関数
 const getCandidatesData = unstable_cache(
@@ -40,7 +44,7 @@ const getCandidatesData = unstable_cache(
         recent_job_industries,
         recent_job_types,
         recent_job_description,
-        education!inner(
+        education(
           final_education,
           school_name
         ),
@@ -82,6 +86,7 @@ const getCandidatesData = unstable_cache(
 
       // 実際の職歴・業界経験データを活用
       const experienceJobs = candidate.job_type_experience?.map(exp => exp.job_type_name) || 
+                            candidate.desired_job_types || 
                             candidate.skills || 
                             [];
 
@@ -119,15 +124,15 @@ const getCandidatesData = unstable_cache(
         badgeType: experienceJobs.length > 2 ? 'multiple' as const :
                   candidate.recent_job_types && candidate.recent_job_types.length > 0 
                     ? 'change' as const 
-                    : candidate.experience_years && candidate.experience_years > 5
+                    : candidate.experience_years && candidate.experience_years > 1
                       ? 'professional' as const
-                      : undefined,
+                      : 'change' as const, // フォールバック値として全候補者にタグを表示
         badgeText: experienceJobs.length > 2 ? '複数職種経験' :
                   candidate.recent_job_types && candidate.recent_job_types.length > 0 
                     ? 'キャリアチェンジ志向'
-                    : candidate.experience_years && candidate.experience_years > 5
+                    : candidate.experience_years && candidate.experience_years > 1
                       ? 'エキスパート'
-                      : undefined,
+                      : 'キャリアチェンジ志向', // フォールバック値
         lastLogin,
         companyName: candidate.current_company || candidate.recent_job_company_name || '企業名未登録',
         department: candidate.recent_job_department_position || '部署名未登録',
@@ -139,8 +144,6 @@ const getCandidatesData = unstable_cache(
         salary: candidate.desired_salary || candidate.current_income || '未設定',
         university: candidate.education?.[0]?.school_name || '未設定',
         degree: candidate.education?.[0]?.final_education || '未設定',
-        language: '英語', // TODO: skillsテーブルから言語データを取得
-        languageLevel: '未設定',
         experienceJobs: experienceJobs.slice(0, 3), // 表示用に最大3つまで
         experienceIndustries: experienceIndustries.slice(0, 3),
         careerHistory,
@@ -246,10 +249,20 @@ const getRecentMessages = unstable_cache(
 );
 
 export default async function CompanyMypage() {
-  const [candidates, messages] = await Promise.all([
+  const [candidates, messages, notices] = await Promise.all([
     getCandidatesData(),
-    getRecentMessages()
+    getRecentMessages(),
+    getPublishedNotices(3) // 最新3件まで取得
   ]);
+
+  // おすすめ候補者データの生成
+  const recommendedSections = searchConditionsData.map(condition => {
+    const matchingCandidates = searchCandidatesWithMockData(condition.conditions, candidates);
+    return {
+      searchCondition: condition,
+      candidates: matchingCandidates.slice(0, 3) // 3名まで表示
+    };
+  });
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -307,16 +320,16 @@ export default async function CompanyMypage() {
                     おすすめの候補者
                   </span>
                 </div>
-                <div className='relative ml-2'>
-                  <div className='flex items-center justify-center'>
+                <div className='relative ml-2 group'>
+                  <div className='flex items-center justify-center cursor-pointer'>
                     <img 
                       src='/images/question.svg' 
                       alt='クエスチョンアイコン' 
-                      className='w-4 h-4' 
+                      className='w-4 h-4 hover:opacity-70 filter grayscale' 
                     />
                   </div>
                   <div 
-                    className='absolute left-8 -top-2 z-10 w-80 flex flex-col items-start justify-center rounded-[5px] bg-[#F0F9F3] p-4 opacity-0 pointer-events-none'
+                    className='absolute left-8 -top-2 z-10 w-80 flex flex-col items-start justify-center rounded-[5px] bg-[#F0F9F3] p-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200'
                     style={{ 
                       boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
                       border: '1px solid #E5E5E5'
@@ -338,15 +351,19 @@ export default async function CompanyMypage() {
                 </div>
               </div>
             </div>
-          
-            {/* 区切り線 */}
-            <div className='border-t border-gray-300 mb-6' />
-           
-            {/* 候補者カード */}
-            <CandidateListClient candidates={candidates} />
+            {/* おすすめ候補者セクション */}
+            <div className="space-y-6">
+              {recommendedSections.map((section, index) => (
+                <RecommendedCandidatesSection
+                  key={`recommended-section-${section.searchCondition.id}-${index}`}
+                  searchCondition={section.searchCondition}
+                  candidates={section.candidates}
+                />
+              ))}
+            </div>
           </div>
           {/* 右カラム（サブ） */}
-          <CompanyTaskSidebar className="md:flex-none" showTodoAndNews={true} />
+          <CompanyTaskSidebar className="md:flex-none" showTodoAndNews={true} notices={notices} />
         </div>
       </main>
     </div>

@@ -14,6 +14,7 @@ export function useCandidateData() {
       updateData: {
         // Basic info (snake_case for API)
         email: formData.email,
+        password: formData.password,
         last_name: formData.lastName,
         first_name: formData.firstName,
         last_name_kana: formData.lastNameKana,
@@ -153,6 +154,16 @@ export function useCandidateData() {
       } catch (error) {
         console.error('Email duplication check failed:', error);
         // ネットワークエラーなどの場合は重複チェックをスキップ
+      }
+    }
+
+    // パスワードのバリデーション（signupに準拠）
+    if (formData.password && formData.password.trim()) {
+      if (formData.password.length < 8) {
+        errors.push('パスワードは8文字以上で入力してください');
+      }
+      if (formData.password !== formData.passwordConfirm) {
+        errors.push('パスワードが一致しません');
       }
     }
 
