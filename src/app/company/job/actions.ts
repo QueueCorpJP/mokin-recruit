@@ -219,7 +219,17 @@ export async function createJob(data: any) {
           
           const timestamp = Date.now();
           const randomSuffix = Math.random().toString(36).substring(2, 15);
-          const fileExtension = contentType.includes('jpeg') ? 'jpg' : contentType.split('/')[1];
+          
+          // ファイル拡張子の決定（SVGを含む）
+          let fileExtension;
+          if (contentType.includes('jpeg')) {
+            fileExtension = 'jpg';
+          } else if (contentType.includes('svg')) {
+            fileExtension = 'svg';
+          } else {
+            fileExtension = contentType.split('/')[1];
+          }
+          
           const fileName = `job-${finalCompanyGroupId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
           
           const { data: uploadData, error } = await supabase.storage
@@ -456,14 +466,61 @@ export async function updateJob(jobId: string, updateData: any) {
     // 画像処理
     let imageUrls: string[] | undefined = undefined;
     if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
-      try {
-        const uploadPromises = updateData.images.map(async (imageData: any, index: number) => {
-          const { data: base64Data, contentType } = imageData;
+      // 既存のURL（文字列）と新規画像データ（オブジェクト）を分離
+      const existingUrls: string[] = [];
+      const newImageData: any[] = [];
+      
+      updateData.images.forEach((item: any) => {
+        if (typeof item === 'string') {
+          // 既存の画像URL
+          existingUrls.push(item);
+        } else if (item && typeof item === 'object' && item.data) {
+          // 新規画像データ
+          newImageData.push(item);
+        }
+      });
+      
+      // 新規画像データがある場合のみアップロード処理を実行
+      let uploadedUrls: string[] = [];
+      if (newImageData.length > 0) {
+        try {
+          const uploadPromises = newImageData.map(async (imageData: any, index: number) => {
+          // 画像データ構造の検証
+          let base64Data, contentType;
+          
+          if (imageData.data && imageData.contentType) {
+            // 期待される構造: { data: base64string, contentType: string }
+            base64Data = imageData.data;
+            contentType = imageData.contentType;
+          } else if (typeof imageData === 'string') {
+            // base64文字列のみの場合（デフォルトでjpegとして扱う）
+            base64Data = imageData;
+            contentType = 'image/jpeg';
+          } else {
+            console.error('Invalid image data structure:', imageData);
+            throw new Error('画像データの形式が正しくありません');
+          }
+
+          if (!base64Data) {
+            console.error('Missing base64Data in imageData:', imageData);
+            throw new Error('画像データが見つかりません');
+          }
+
           const buffer = Buffer.from(base64Data, 'base64');
           
           const timestamp = Date.now();
           const randomSuffix = Math.random().toString(36).substring(2, 15);
-          const fileExtension = contentType.includes('jpeg') ? 'jpg' : contentType.split('/')[1];
+          
+          // ファイル拡張子の決定（SVGを含む）
+          let fileExtension;
+          if (contentType.includes('jpeg')) {
+            fileExtension = 'jpg';
+          } else if (contentType.includes('svg')) {
+            fileExtension = 'svg';
+          } else {
+            fileExtension = contentType.split('/')[1];
+          }
+          
           const fileName = `job-${jobId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
           
           const { data: uploadData, error } = await supabase.storage
@@ -482,16 +539,20 @@ export async function updateJob(jobId: string, updateData: any) {
             .getPublicUrl(fileName);
           
           return urlData.publicUrl;
-        });
-        
-        imageUrls = await Promise.all(uploadPromises);
-      } catch (error) {
-        console.error('Image upload process failed:', error);
-        return { 
-          success: false, 
-          error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
-        };
+          });
+          
+          uploadedUrls = await Promise.all(uploadPromises);
+        } catch (error) {
+          console.error('Image upload process failed:', error);
+          return { 
+            success: false, 
+            error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
+          };
+        }
       }
+      
+      // 既存のURLと新規アップロードされたURLを結合
+      imageUrls = [...existingUrls, ...uploadedUrls];
     }
 
     // 配列フィールドの処理
@@ -531,9 +592,10 @@ export async function updateJob(jobId: string, updateData: any) {
       (employmentTypeMapping[updateData.employment_type] || updateData.employment_type) : 
       undefined;
 
-    // 更新用データの準備
+    // 更新用データの準備（idフィールドとUI用の一時フィールドを除外）
+    const { id, _existingImages, ...updateDataWithoutId } = updateData;
     const finalUpdateData: any = {
-      ...updateData,
+      ...updateDataWithoutId,
       updated_at: new Date().toISOString()
     };
 

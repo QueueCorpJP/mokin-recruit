@@ -72,6 +72,14 @@ export default function JobEditClient({
   const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>(initialCompanyGroups);
   const [title, setTitle] = useState(jobData.title || '');
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>(
+    (jobData.imageUrls || []).filter(url => url && url.trim() !== '')
+  );
+
+  const handleRemoveExistingImage = (index: number) => {
+    const updatedImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(updatedImages);
+  };
   const [jobTypes, setJobTypes] = useState<string[]>(jobData.jobType || []);
   const [industries, setIndustries] = useState<string[]>(jobData.industry || []);
   const [jobDescription, setJobDescription] = useState(jobData.jobDescription || '');
@@ -131,6 +139,11 @@ export default function JobEditClient({
         setMemo(editData.internal_memo || jobData.internalMemo || '');
         setPublicationType(editData.publication_type || jobData.publicationType || 'public');
         setGroup(editData.groupId || jobData.groupId || '');
+        
+        // 既存画像を復元（編集データに保存されている場合はそれを使用、なければ元のデータを使用）
+        if (editData._existingImages !== undefined) {
+          setExistingImages(editData._existingImages);
+        }
         
         console.log('Edit data restored from sessionStorage');
       }
@@ -322,7 +335,7 @@ export default function JobEditClient({
     }
 
     // 既存の画像URLと新しい画像を組み合わせる
-    const allImages = [...jobData.imageUrls, ...encodedImages];
+    const allImages = [...existingImages, ...encodedImages];
 
     // confirmページに送信するデータ
     const editData = {
@@ -352,6 +365,7 @@ export default function JobEditClient({
       internal_memo: memo || '',
       publication_type: publicationType || 'public',
       images: allImages,
+      _existingImages: existingImages, // UI用の一時データ（データベースに送信されない）
       groupId: group,
       applicationDeadline: ''
     };
@@ -395,6 +409,8 @@ export default function JobEditClient({
               setImages(images);
               clearFieldError('images');
             }}
+            existingImages={existingImages}
+            onRemoveExistingImage={handleRemoveExistingImage}
             jobTypes={jobTypes}
             setJobTypes={(types: string[]) => {
               setJobTypes(types);

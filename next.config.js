@@ -6,18 +6,19 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
+    },
+    optimizeCss: true,
+    optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
+    swcPlugins: [],
+  },
   distDir: '.next',
   compiler: {
     // SWC compiler options for JSX
     styledComponents: false,
     reactRemoveProperties: false,
-  },
-  // serverExternalPackages is not supported in Next.js 14.2
-  // パフォーマンス最適化
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
-    swcPlugins: [],
   },
   // Code splitting最適化
   webpack: (config, { isServer }) => {

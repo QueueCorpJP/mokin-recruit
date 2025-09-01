@@ -23,6 +23,8 @@ interface FormFieldsProps {
   setTitle: (value: string) => void;
   images: File[];
   setImages: (images: File[]) => void;
+  existingImages?: string[];
+  onRemoveExistingImage?: (index: number) => void;
   jobTypes: string[];
   setJobTypes: (types: string[]) => void;
   industries: string[];
@@ -88,6 +90,8 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   setTitle,
   images,
   setImages,
+  existingImages,
+  onRemoveExistingImage,
   jobTypes,
   setJobTypes,
   industries,
@@ -273,7 +277,13 @@ export const FormFields: React.FC<FormFieldsProps> = ({
         </div>
         <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
           <div className='flex flex-col gap-2 items-start justify-start w-full'>
-            <ImageUpload images={images} onChange={setImages} maxImages={3} />
+            <ImageUpload 
+              images={images} 
+              onChange={setImages} 
+              existingImages={existingImages}
+              onRemoveExisting={onRemoveExistingImage}
+              maxImages={3} 
+            />
           </div>
         </div>
       </div>

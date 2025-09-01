@@ -2,8 +2,54 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+
+interface JobImageSectionProps {
+  images: string[];
+}
+
+const JobImageSection: React.FC<JobImageSectionProps> = ({ images }) => {
+  const validImages = images.filter(image => {
+    if (!image) return false;
+    if (typeof image === 'string') return image.trim() !== '';
+    if (typeof image === 'object' && image.data) return true;
+    return false;
+  });
+  
+  if (validImages.length > 0) {
+    return (
+      <>
+        {validImages.map((image, index) => (
+          <div
+            key={index}
+            className="relative border rounded overflow-hidden bg-gray-100"
+            style={{ width: '200px', height: '133px' }}
+          >
+            {typeof image === 'string' ? (
+              <img
+                src={image}
+                alt="求人画像"
+                className="object-cover w-full h-full rounded"
+              />
+            ) : image && typeof image === 'object' && image.data ? (
+              <img
+                src={`data:${image.contentType || 'image/jpeg'};base64,${image.data}`}
+                alt="求人画像" 
+                className="object-cover w-full h-full rounded" 
+              />
+            ) : null}
+          </div>
+        ))}
+      </>
+    );
+  }
+  
+  return (
+    <div className="text-[#999999] py-4">
+      画像が設定されていません
+    </div>
+  );
+};
 
 interface JobData {
   id: string;
@@ -297,26 +343,7 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 </div>
                 <div className="flex-1 py-6">
                   <div className="flex gap-4">
-                    {displayData.imageUrls && displayData.imageUrls.length > 0 ? (
-                      displayData.imageUrls.map((image, index) => (
-                        <div
-                          key={index}
-                          className="relative border rounded overflow-hidden bg-gray-100"
-                          style={{ width: '200px', height: '133px' }}
-                        >
-                          <Image
-                            src={image}
-                            alt={`イメージ画像${index + 1}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-[#999999] py-4">
-                        画像が設定されていません
-                      </div>
-                    )}
+                    <JobImageSection images={displayData.imageUrls || []} />
                   </div>
                 </div>
               </div>
