@@ -4,7 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers';
-
+import { tr } from 'zod/v4/locales';
+import { Button } from '@/components/ui/button';
 // TaskDataインターフェース（TaskListと同じ）
 interface TaskData {
   hasNoJobPostings: boolean;
@@ -368,7 +369,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
   return (
     <div className={cn("w-full max-w-[320px]", className)}>
       {/* プラン情報セクション */}
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/ticket.svg'
           iconAlt='スカウトチケットアイコン'
@@ -385,24 +386,27 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
                 <span style={remainingTextStyle}>残数：</span>
                 <span style={remainingNumberStyle}>100</span>
               </div>
-              <div style={nextUpdateStyle}>残り期間：2024/12/31</div>
+              <div style={nextUpdateStyle}>次回更新日：2024/12/31</div>
             </div>
           </div>
-          
-          <button 
-            style={planButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F0F9FF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
-            <div style={planButtonTextStyle}>
-              チケットの追加購入／<br />プラン変更
-            </div>
-          </button>
-          
+          <Button
+                          variant='green-outline'
+                          size='lg'
+                          style={{
+                            width: '100%',
+                            paddingLeft: 40,
+                            paddingRight: 40,
+                            height: 60,
+                            borderRadius: '999px',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            fontWeight: 700,
+                            letterSpacing: '0.05em'
+                          }}
+                        >
+                          チケットの追加購入／<br />プラン変更
+                        </Button>
+ 
           <div style={faqLinkStyle}>
             <img src="/images/question.svg" 
             className='font-[#999] w-4 h-4'
@@ -418,7 +422,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
 
       {/* 対応リストセクション - mypageでのみ表示 */}
       {showTodoAndNews && (
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/list.svg'
           iconAlt='対応リストアイコン'
@@ -566,7 +570,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
 
       {/* お知らせセクション - mypageでのみ表示 */}
       {showTodoAndNews && (
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/new.svg'
           iconAlt='お知らせアイコン'
