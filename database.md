@@ -448,6 +448,17 @@ CREATE TABLE public.notification_settings (
   CONSTRAINT notification_settings_pkey PRIMARY KEY (id),
   CONSTRAINT notification_settings_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES public.candidates(id)
 );
+CREATE TABLE public.company_notification_settings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  company_user_id uuid NOT NULL UNIQUE,
+  application_notification character varying NOT NULL DEFAULT 'receive'::character varying CHECK (application_notification::text = ANY (ARRAY['receive'::character varying, 'not-receive'::character varying]::text[])),
+  message_notification character varying NOT NULL DEFAULT 'receive'::character varying CHECK (message_notification::text = ANY (ARRAY['receive'::character varying, 'not-receive'::character varying]::text[])),
+  system_notification character varying NOT NULL DEFAULT 'receive'::character varying CHECK (system_notification::text = ANY (ARRAY['receive'::character varying, 'not-receive'::character varying]::text[])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT company_notification_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT company_notification_settings_company_user_id_fkey FOREIGN KEY (company_user_id) REFERENCES public.company_users(id) ON DELETE CASCADE
+);
 CREATE TABLE public.password_reset_tokens (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   email text NOT NULL,
