@@ -181,6 +181,40 @@ const mockCandidates = [
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
+// 相対時間表示のヘルパー関数
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // 1日未満（24時間未満）の場合
+  if (diffHours < 24) {
+    return diffHours <= 0 ? '1時間前' : `${diffHours}時間前`;
+  }
+  // 1日以上〜6日以内の場合
+  else if (diffDays >= 1 && diffDays <= 6) {
+    return `${diffDays}日前`;
+  }
+  // 7日以上〜13日以内の場合
+  else if (diffDays >= 7 && diffDays <= 13) {
+    return '1週間前';
+  }
+  // 14日以上〜29日以内の場合
+  else if (diffDays >= 14 && diffDays <= 29) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks}週間前`;
+  }
+  // 30日以上の場合
+  else {
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    });
+  }
+}
+
 // 候補者データを取得する関数
 async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
   try {
@@ -200,7 +234,9 @@ async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         current_income,
         recent_job_company_name,
         recent_job_department_position,
-        has_career_change,
+        recent_job_types,
+        desired_job_types,
+        last_login_at,
         education!left(
           final_education,
           school_name,
@@ -222,6 +258,13 @@ async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
           job_type_id,
           job_type_name,
           experience_years
+        ),
+        career_status_entries!left(
+          company_name,
+          industries,
+          job_types,
+          progress_status,
+          is_private
         )
       `);
 
@@ -233,30 +276,98 @@ async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
     console.log('Raw candidates from DB:', candidates?.length || 0);
     console.log('First raw candidate:', candidates?.[0]);
 
-    return candidates?.map((candidate: any): CandidateData => ({
-      id: candidate.id,
-      isPickup: false,
-      isHidden: false,
-      isAttention: Math.random() > 0.5,
-      badgeType: candidate.has_career_change ? 'change' : 'professional',
-      badgeText: candidate.has_career_change ? 'キャリアチェンジ志向' : '専門性追求志向',
-      lastLogin: '1時間前',
-      companyName: candidate.recent_job_company_name || candidate.current_company || '企業名未設定',
-      department: candidate.recent_job_department_position || '部署名未設定',
-      position: candidate.current_position || '役職名未設定',
-      location: candidate.prefecture || '未設定',
-      age: candidate.birth_date ? `${new Date().getFullYear() - new Date(candidate.birth_date).getFullYear()}歳` : '年齢未設定',
-      gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '未設定',
-      salary: candidate.current_income ? `${candidate.current_income}万円` : '年収未設定',
-      university: candidate.education?.school_name || '学校名未設定',
-      degree: candidate.education?.final_education || '学歴未設定',
-      language: candidate.skills?.english_level !== 'none' ? '英語' : '言語スキルなし',
-      languageLevel: candidate.skills?.english_level || 'なし',
-      experienceJobs: candidate.job_type_experience?.map((exp: any) => exp.job_type_name) || ['職種未設定'],
-      experienceIndustries: candidate.work_experience?.map((exp: any) => exp.industry_name) || ['業界未設定'],
-      careerHistory: [],
-      selectionCompanies: []
-    })) || [];
+    return candidates?.map((candidate: any): CandidateData => {
+      // 最終ログイン時間の表示
+      const lastLogin = candidate.last_login_at 
+        ? formatRelativeTime(new Date(candidate.last_login_at))
+        : '未ログイン';
+
+      // 選考中企業の実データを反映
+      const selectionCompanies = candidate.career_status_entries
+        ?.filter((entry: any) => entry.progress_status && !entry.is_private)
+        .map((entry: any) => ({
+          company: entry.company_name || '企業名未設定',
+          detail: Array.isArray(entry.industries) 
+            ? entry.industries.join('、') 
+            : '業界情報なし',
+          jobTypes: entry.job_types || []
+        })) || [];
+
+      // 思考ラベルのアルゴリズム実装
+      let badgeType: 'change' | 'professional' | 'multiple' = 'change';
+      let badgeText = 'キャリアチェンジ志向';
+
+      // 直近の職種を取得
+      const currentJobTypes = candidate.recent_job_types || [];
+      
+      // 選考中の求人の職種を取得
+      const selectionJobTypes = new Set<string>();
+      selectionCompanies.forEach((company: any) => {
+        if (company.jobTypes && Array.isArray(company.jobTypes)) {
+          company.jobTypes.forEach((jobType: string) => selectionJobTypes.add(jobType));
+        }
+      });
+
+      // 希望職種を取得
+      const desiredJobTypes = candidate.desired_job_types || [];
+
+      // 多職種志向：選考中の求人の種類が3種類以上ある
+      if (selectionJobTypes.size >= 3) {
+        badgeType = 'multiple';
+        badgeText = '多職種志向';
+      }
+      // 専門性追求志向：直近の在籍企業と同一職種の求人のみ選考中
+      else if (
+        currentJobTypes.length > 0 && 
+        selectionJobTypes.size > 0 &&
+        Array.from(selectionJobTypes).every(jobType => 
+          currentJobTypes.some((currentJob: string) => 
+            currentJob.toLowerCase() === jobType.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'professional';
+        badgeText = '専門性追求志向';
+      }
+      // キャリアチェンジ志向：直近の在籍企業と希望職種が違うものが含まれる
+      else if (
+        currentJobTypes.length > 0 &&
+        desiredJobTypes.length > 0 &&
+        desiredJobTypes.some((desiredJob: string) => 
+          !currentJobTypes.some((currentJob: string) => 
+            currentJob.toLowerCase() === desiredJob.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'change';
+        badgeText = 'キャリアチェンジ志向';
+      }
+
+      return {
+        id: candidate.id,
+        isPickup: false,
+        isHidden: false,
+        isAttention: Math.random() > 0.5,
+        badgeType,
+        badgeText,
+        lastLogin,
+        companyName: candidate.recent_job_company_name || candidate.current_company || '企業名未設定',
+        department: candidate.recent_job_department_position || '部署名未設定',
+        position: candidate.current_position || '役職名未設定',
+        location: candidate.prefecture || '未設定',
+        age: candidate.birth_date ? `${new Date().getFullYear() - new Date(candidate.birth_date).getFullYear()}歳` : '年齢未設定',
+        gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '未設定',
+        salary: candidate.current_income ? `${candidate.current_income}万円` : '年収未設定',
+        university: candidate.education?.school_name || '学校名未設定',
+        degree: candidate.education?.final_education || '学歴未設定',
+        language: candidate.skills?.english_level !== 'none' ? '英語' : '言語スキルなし',
+        languageLevel: candidate.skills?.english_level || 'なし',
+        experienceJobs: candidate.job_type_experience?.map((exp: any) => exp.job_type_name) || ['職種未設定'],
+        experienceIndustries: candidate.work_experience?.map((exp: any) => exp.industry_name) || ['業界未設定'],
+        careerHistory: [],
+        selectionCompanies: selectionCompanies.slice(0, 3) // 表示用に最大3つまで
+      };
+    }) || [];
   } catch (error) {
     console.error('Database error:', error);
     return [];
