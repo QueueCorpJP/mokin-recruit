@@ -26,26 +26,26 @@ export function filterCandidatesByConditions(
   console.log('Filtering candidates:', candidates.length, 'conditions:', conditions);
   return candidates.filter(candidate => {
     console.log('Checking candidate:', candidate.id, 'experienceJobs:', candidate.experienceJobs, 'experienceIndustries:', candidate.experienceIndustries);
-    // 職種フィルタ（AND検索：すべての職種を満たす必要がある）
+    // 職種フィルタ（OR検索：いずれかの職種に該当すれば良い）
     if (conditions.job_types?.length) {
-      const hasAllJobTypes = conditions.job_types.every(jobType => 
+      const hasMatchingJobType = conditions.job_types.some(jobType => 
         candidate.experienceJobs.some(job => 
           job.toLowerCase().includes(jobType.toLowerCase()) ||
           jobType.toLowerCase().includes(job.toLowerCase())
         )
       );
-      if (!hasAllJobTypes) return false;
+      if (!hasMatchingJobType) return false;
     }
 
-    // 業界フィルタ（AND検索：すべての業界を満たす必要がある）
+    // 業界フィルタ（OR検索：いずれかの業界に該当すれば良い）
     if (conditions.industries?.length) {
-      const hasAllIndustries = conditions.industries.every(industry => 
+      const hasMatchingIndustry = conditions.industries.some(industry => 
         candidate.experienceIndustries.some(exp => 
           exp.toLowerCase().includes(industry.toLowerCase()) ||
           industry.toLowerCase().includes(exp.toLowerCase())
         )
       );
-      if (!hasAllIndustries) return false;
+      if (!hasMatchingIndustry) return false;
     }
 
     // 地域フィルタ

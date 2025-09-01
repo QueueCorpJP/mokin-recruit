@@ -11,8 +11,10 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
+import { createClient } from '@/lib/supabase/client';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
+import type { CandidateData } from '@/components/company/CandidateCard';
 
 // モックデータ
 const mockCandidates = [
@@ -179,11 +181,206 @@ const mockCandidates = [
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
+// 相対時間表示のヘルパー関数
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // 1日未満（24時間未満）の場合
+  if (diffHours < 24) {
+    return diffHours <= 0 ? '1時間前' : `${diffHours}時間前`;
+  }
+  // 1日以上〜6日以内の場合
+  else if (diffDays >= 1 && diffDays <= 6) {
+    return `${diffDays}日前`;
+  }
+  // 7日以上〜13日以内の場合
+  else if (diffDays >= 7 && diffDays <= 13) {
+    return '1週間前';
+  }
+  // 14日以上〜29日以内の場合
+  else if (diffDays >= 14 && diffDays <= 29) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks}週間前`;
+  }
+  // 30日以上の場合
+  else {
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    });
+  }
+}
+
+// 候補者データを取得する関数
+async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
+  try {
+    const supabase = createClient();
+    
+    const { data: candidates, error } = await supabase
+      .from('candidates')
+      .select(`
+        id,
+        last_name,
+        first_name,
+        current_company,
+        current_position,
+        prefecture,
+        birth_date,
+        gender,
+        current_income,
+        recent_job_company_name,
+        recent_job_department_position,
+        recent_job_types,
+        desired_job_types,
+        last_login_at,
+        education!left(
+          final_education,
+          school_name,
+          department,
+          graduation_year,
+          graduation_month
+        ),
+        skills!left(
+          english_level,
+          qualifications,
+          skills_list
+        ),
+        work_experience!left(
+          industry_id,
+          industry_name,
+          experience_years
+        ),
+        job_type_experience!left(
+          job_type_id,
+          job_type_name,
+          experience_years
+        ),
+        career_status_entries!left(
+          company_name,
+          industries,
+          job_types,
+          progress_status,
+          is_private
+        )
+      `);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return [];
+    }
+
+    console.log('Raw candidates from DB:', candidates?.length || 0);
+    console.log('First raw candidate:', candidates?.[0]);
+
+    return candidates?.map((candidate: any): CandidateData => {
+      // 最終ログイン時間の表示
+      const lastLogin = candidate.last_login_at 
+        ? formatRelativeTime(new Date(candidate.last_login_at))
+        : '未ログイン';
+
+      // 選考中企業の実データを反映
+      const selectionCompanies = candidate.career_status_entries
+        ?.filter((entry: any) => entry.progress_status && !entry.is_private)
+        .map((entry: any) => ({
+          company: entry.company_name || '企業名未設定',
+          detail: Array.isArray(entry.industries) 
+            ? entry.industries.join('、') 
+            : '業界情報なし',
+          jobTypes: entry.job_types || []
+        })) || [];
+
+      // 思考ラベルのアルゴリズム実装
+      let badgeType: 'change' | 'professional' | 'multiple' = 'change';
+      let badgeText = 'キャリアチェンジ志向';
+
+      // 直近の職種を取得
+      const currentJobTypes = candidate.recent_job_types || [];
+      
+      // 選考中の求人の職種を取得
+      const selectionJobTypes = new Set<string>();
+      selectionCompanies.forEach((company: any) => {
+        if (company.jobTypes && Array.isArray(company.jobTypes)) {
+          company.jobTypes.forEach((jobType: string) => selectionJobTypes.add(jobType));
+        }
+      });
+
+      // 希望職種を取得
+      const desiredJobTypes = candidate.desired_job_types || [];
+
+      // 多職種志向：選考中の求人の種類が3種類以上ある
+      if (selectionJobTypes.size >= 3) {
+        badgeType = 'multiple';
+        badgeText = '多職種志向';
+      }
+      // 専門性追求志向：直近の在籍企業と同一職種の求人のみ選考中
+      else if (
+        currentJobTypes.length > 0 && 
+        selectionJobTypes.size > 0 &&
+        Array.from(selectionJobTypes).every(jobType => 
+          currentJobTypes.some((currentJob: string) => 
+            currentJob.toLowerCase() === jobType.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'professional';
+        badgeText = '専門性追求志向';
+      }
+      // キャリアチェンジ志向：直近の在籍企業と希望職種が違うものが含まれる
+      else if (
+        currentJobTypes.length > 0 &&
+        desiredJobTypes.length > 0 &&
+        desiredJobTypes.some((desiredJob: string) => 
+          !currentJobTypes.some((currentJob: string) => 
+            currentJob.toLowerCase() === desiredJob.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'change';
+        badgeText = 'キャリアチェンジ志向';
+      }
+
+      return {
+        id: candidate.id,
+        isPickup: false,
+        isHidden: false,
+        isAttention: Math.random() > 0.5,
+        badgeType,
+        badgeText,
+        lastLogin,
+        companyName: candidate.recent_job_company_name || candidate.current_company || '企業名未設定',
+        department: candidate.recent_job_department_position || '部署名未設定',
+        position: candidate.current_position || '役職名未設定',
+        location: candidate.prefecture || '未設定',
+        age: candidate.birth_date ? `${new Date().getFullYear() - new Date(candidate.birth_date).getFullYear()}歳` : '年齢未設定',
+        gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '未設定',
+        salary: candidate.current_income ? `${candidate.current_income}万円` : '年収未設定',
+        university: candidate.education?.school_name || '学校名未設定',
+        degree: candidate.education?.final_education || '学歴未設定',
+        language: candidate.skills?.english_level !== 'none' ? '英語' : '言語スキルなし',
+        languageLevel: candidate.skills?.english_level || 'なし',
+        experienceJobs: candidate.job_type_experience?.map((exp: any) => exp.job_type_name) || ['職種未設定'],
+        experienceIndustries: candidate.work_experience?.map((exp: any) => exp.industry_name) || ['業界未設定'],
+        careerHistory: [],
+        selectionCompanies: selectionCompanies.slice(0, 3) // 表示用に最大3つまで
+      };
+    }) || [];
+  } catch (error) {
+    console.error('Database error:', error);
+    return [];
+  }
+}
+
 export default function SearchClient() {
   const searchParams = useSearchParams();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
-  const [candidates, setCandidates] = useState(mockCandidates);
+  const [candidates, setCandidates] = useState<CandidateData[]>([]);
+  const [allCandidates, setAllCandidates] = useState<CandidateData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     pickup: false,
     newUser: false,
@@ -232,7 +429,6 @@ export default function SearchClient() {
   }
   const [workStyles, setWorkStyles] = useState<WorkStyle[]>([]);
   const [selectionStatus, setSelectionStatus] = useState('');
-  const [] = useState(false);
   const [similarCompanyIndustry, setSimilarCompanyIndustry] = useState('');
   const [similarCompanyLocation, setSimilarCompanyLocation] = useState('');
   const [lastLoginMin, setLastLoginMin] = useState('');
@@ -248,8 +444,30 @@ export default function SearchClient() {
     useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
 
+  // 初期データ読み込み
+  useEffect(() => {
+    const loadCandidates = async () => {
+      try {
+        setLoading(true);
+        const data = await getCandidatesFromDatabase();
+        setAllCandidates(data);
+        setCandidates(data);
+      } catch (error) {
+        console.error('Failed to load candidates:', error);
+        // エラーの場合はモックデータを使用
+        setAllCandidates(mockCandidates as CandidateData[]);
+        setCandidates(mockCandidates as CandidateData[]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCandidates();
+  }, []);
+
   // URLパラメータから検索条件を読み込む
   useEffect(() => {
+    if (allCandidates.length === 0) return;
     // 職種の処理
     const jobTypesParam = searchParams.get('job_types');
     if (jobTypesParam) {
@@ -357,14 +575,26 @@ export default function SearchClient() {
         Array.isArray(value) ? value.length > 0 : value !== undefined
       );
 
+      console.log('Search conditions:', searchConditions);
+      console.log('All candidates count:', allCandidates.length);
+      console.log('First candidate:', allCandidates[0]);
+      
       if (hasSearchConditions) {
-        const filteredCandidates = filterCandidatesByConditions(mockCandidates, searchConditions);
-        setCandidates(filteredCandidates);
+        const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
+        console.log('Filtered candidates count:', filteredCandidates.length);
+        
+        // デバッグ用：フィルタ結果が0件の場合、全候補者を表示
+        if (filteredCandidates.length === 0 && allCandidates.length > 0) {
+          console.warn('No filtered results, showing all candidates for debugging');
+          setCandidates(allCandidates);
+        } else {
+          setCandidates(filteredCandidates);
+        }
       }
     }
-  }, [searchParams]);
+  }, [searchParams, allCandidates]);
 
-  const togglePickup = (id: number) => {
+  const togglePickup = (id: string | number) => {
     setCandidates((prev) =>
       prev.map((candidate) =>
         candidate.id === id
@@ -374,7 +604,7 @@ export default function SearchClient() {
     );
   };
 
-  const toggleHidden = (id: number) => {
+  const toggleHidden = (id: string | number) => {
     setCandidates((prev) =>
       prev.map((candidate) =>
         candidate.id === id
@@ -1849,7 +2079,16 @@ export default function SearchClient() {
 
           {/* Candidate Cards */}
           <div className="space-y-2">
-            {candidates.map((candidate) => (
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-pulse text-gray-500">読み込み中...</div>
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-gray-500">該当する候補者が見つかりませんでした</div>
+              </div>
+            ) : (
+              candidates.map((candidate) => (
               <div
                 key={candidate.id}
                 className={`rounded-[10px] p-6 ${
@@ -2258,8 +2497,9 @@ export default function SearchClient() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
+        </div>
 
           {/* Pagination */}
           <div className="flex justify-center items-center gap-4 mt-10">

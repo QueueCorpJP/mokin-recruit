@@ -101,10 +101,12 @@ const getCandidatesData = unstable_cache(
           company: entry.company_name || '企業名未設定',
           detail: Array.isArray(entry.industries) 
             ? entry.industries.join('、') 
-            : '業界情報なし'
+            : '業界情報なし',
+          jobTypes: entry.job_types || []
         })) || [{
           company: '選考状況未登録',
-          detail: '選考詳細未登録'
+          detail: '選考詳細未登録',
+          jobTypes: []
         }];
 
       // 実際の職歴データから構築
@@ -116,23 +118,63 @@ const getCandidatesData = unstable_cache(
         }
       ];
 
+      // 思考ラベルのアルゴリズム実装
+      let badgeType: 'change' | 'professional' | 'multiple' = 'change';
+      let badgeText = 'キャリアチェンジ志向';
+
+      // 直近の職種を取得
+      const currentJobTypes = candidate.recent_job_types || [];
+      
+      // 選考中の求人の職種を取得
+      const selectionJobTypes = new Set<string>();
+      selectionCompanies.forEach(company => {
+        if (company.jobTypes && Array.isArray(company.jobTypes)) {
+          company.jobTypes.forEach(jobType => selectionJobTypes.add(jobType));
+        }
+      });
+
+      // 希望職種を取得
+      const desiredJobTypes = candidate.desired_job_types || [];
+
+      // 多職種志向：選考中の求人の種類が3種類以上ある
+      if (selectionJobTypes.size >= 3) {
+        badgeType = 'multiple';
+        badgeText = '多職種志向';
+      }
+      // 専門性追求志向：直近の在籍企業と同一職種の求人のみ選考中
+      else if (
+        currentJobTypes.length > 0 && 
+        selectionJobTypes.size > 0 &&
+        Array.from(selectionJobTypes).every(jobType => 
+          currentJobTypes.some(currentJob => 
+            currentJob.toLowerCase() === jobType.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'professional';
+        badgeText = '専門性追求志向';
+      }
+      // キャリアチェンジ志向：直近の在籍企業と希望職種が違うものが含まれる
+      else if (
+        currentJobTypes.length > 0 &&
+        desiredJobTypes.length > 0 &&
+        desiredJobTypes.some(desiredJob => 
+          !currentJobTypes.some(currentJob => 
+            currentJob.toLowerCase() === desiredJob.toLowerCase()
+          )
+        )
+      ) {
+        badgeType = 'change';
+        badgeText = 'キャリアチェンジ志向';
+      }
+
       return {
         id: index + 1,
         isPickup: false,
         isHidden: false,
         isAttention: index % 3 === 0, // 一時的なロジック、将来的にはユーザー設定に基づく
-        badgeType: experienceJobs.length > 2 ? 'multiple' as const :
-                  candidate.recent_job_types && candidate.recent_job_types.length > 0 
-                    ? 'change' as const 
-                    : candidate.experience_years && candidate.experience_years > 1
-                      ? 'professional' as const
-                      : 'change' as const, // フォールバック値として全候補者にタグを表示
-        badgeText: experienceJobs.length > 2 ? '複数職種経験' :
-                  candidate.recent_job_types && candidate.recent_job_types.length > 0 
-                    ? 'キャリアチェンジ志向'
-                    : candidate.experience_years && candidate.experience_years > 1
-                      ? 'エキスパート'
-                      : 'キャリアチェンジ志向', // フォールバック値
+        badgeType,
+        badgeText,
         lastLogin,
         companyName: candidate.current_company || candidate.recent_job_company_name || '企業名未登録',
         department: candidate.recent_job_department_position || '部署名未登録',
@@ -167,18 +209,30 @@ const getCandidatesData = unstable_cache(
 function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 60) {
-    return diffMins <= 1 ? '1分前' : `${diffMins}分前`;
-  } else if (diffHours < 24) {
-    return `${diffHours}時間前`;
-  } else if (diffDays < 7) {
+  // 1日未満（24時間未満）の場合
+  if (diffHours < 24) {
+    return diffHours <= 0 ? '1時間前' : `${diffHours}時間前`;
+  }
+  // 1日以上〜6日以内の場合
+  else if (diffDays >= 1 && diffDays <= 6) {
     return `${diffDays}日前`;
-  } else {
+  }
+  // 7日以上〜13日以内の場合
+  else if (diffDays >= 7 && diffDays <= 13) {
+    return '1週間前';
+  }
+  // 14日以上〜29日以内の場合
+  else if (diffDays >= 14 && diffDays <= 29) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks}週間前`;
+  }
+  // 30日以上の場合
+  else {
     return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
       month: 'numeric',
       day: 'numeric'
     });

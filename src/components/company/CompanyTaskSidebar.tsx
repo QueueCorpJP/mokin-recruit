@@ -385,7 +385,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
                 <span style={remainingTextStyle}>残数：</span>
                 <span style={remainingNumberStyle}>100</span>
               </div>
-              <div style={nextUpdateStyle}>次回更新日：2024/12/31</div>
+              <div style={nextUpdateStyle}>残り期間：2024/12/31</div>
             </div>
           </div>
           

@@ -290,7 +290,7 @@ export function Navigation({
       hasDropdown: true,
       isActive: pathname.startsWith('/company/candidates'),
       dropdownItems: [
-        { label: '候補者検索', href: '/company/candidates/search' },
+        { label: '候補者検索', href: '/company/search/result' },
         { label: 'スカウト履歴', href: '/company/candidates/scout-history' },
       ],
     },
