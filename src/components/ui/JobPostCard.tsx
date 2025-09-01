@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
@@ -69,7 +70,8 @@ export function JobPostCard({
   } else {
     imgClass += ' w-full aspect-[3/2] max-h-[200px] md:w-[477px] md:h-[318px] md:aspect-auto md:max-h-none';
   }
-  return (
+
+  const cardContent = (
     <div
       style={{
         width: '100%',
@@ -78,7 +80,7 @@ export function JobPostCard({
         // maxHeight: isSimple ? 117 : undefined, // ← 削除
       }}
       className={cardClass}
-      onClick={onClick}
+      onClick={jobId ? undefined : onClick}
     >
       <div
         className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
@@ -324,4 +326,15 @@ export function JobPostCard({
       </div>
     </div>
   );
+
+  // jobIdがある場合は詳細ページへのリンクでラップ
+  if (jobId) {
+    return (
+      <Link href={`/candidate/job/${jobId}`} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }

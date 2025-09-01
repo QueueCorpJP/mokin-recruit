@@ -13,4 +13,5 @@ export default function CompanyJobsPage({ searchParams }: PageProps) {
   return <JobServerComponent searchParams={searchParams} />;
 }
 
-export const dynamic = 'force-dynamic';
+// ISR設定 - 30秒間キャッシュし、その後バックグラウンドで再生成
+export const revalidate = 30;
