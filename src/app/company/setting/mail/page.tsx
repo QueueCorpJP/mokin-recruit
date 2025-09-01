@@ -86,16 +86,20 @@ export default function MailChangePage() {
             >
               変更せず戻る
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="green-gradient"
+              size="figma-default"
+              className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
             >
               {isLoading ? '送信中...' : '認証コードを送信'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';
