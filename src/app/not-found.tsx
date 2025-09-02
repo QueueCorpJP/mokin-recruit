@@ -59,7 +59,11 @@ export default function NotFound() {
               variant="outline"
               size="lg"
               className="rounded-full px-8 py-3 font-bold tracking-[0.1em] h-12 border-2 border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] transition-all duration-200 ease-in-out"
-              onClick={() => window.history.back()}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.history.back();
+                }
+              }}
             >
               前のページに戻る
             </Button>

@@ -41,8 +41,10 @@ export default function CandidateFavoriteClient({
 
   // propsの変更を監視して状態を同期
   useEffect(() => {
-    setData(initialData);
-    setParams(initialParams);
+    if (initialData && initialParams) {
+      setData(initialData);
+      setParams(initialParams);
+    }
   }, [initialData, initialParams]);
 
   // データの変換

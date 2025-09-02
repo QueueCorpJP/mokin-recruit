@@ -11,6 +11,10 @@ import { ColumnSection } from '@/app/company/components/ColumnSection';
 export default function CompanyPageClient() {
   // ページ読み込み時にカスタムボタンを設定
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
     // 資料請求ボタンへのスムーズスクロール設定
     const handleScrollToContact = (e: Event) => {
       e.preventDefault();

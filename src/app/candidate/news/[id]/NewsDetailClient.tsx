@@ -39,7 +39,7 @@ export default function NewsDetailClient({
     };
 
     fetchRelatedData();
-  }, [article.id, article.categories]);
+  }, [article?.id, article?.categories]);
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative">
