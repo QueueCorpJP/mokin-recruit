@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { useRouter } from 'next/navigation';
 import { updateCompanyProfile, getCompanyUserSettings } from '../actions';
@@ -58,7 +59,10 @@ export default function PositionPage() {
     } catch (error) {
       setError('部署・役職の更新に失敗しました');
     } finally {
-      setIsLoading(false);
+
+
+
+
     }
   };
 

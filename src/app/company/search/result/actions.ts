@@ -35,7 +35,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
           qualifications,
           other_languages
         ),
-        career_histories!left(
+        career_status_entries!left(
           start_date,
           end_date,
           company_name,
@@ -93,7 +93,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
       };
 
       // キャリア履歴の変換
-      const careerHistory = candidate.career_histories?.map((history: any) => ({
+      const careerHistory = candidate.career_status_entries?.map((history: any) => ({
         period: `${history.start_date}〜${history.end_date || '現在'}`,
         company: history.company_name || '',
         role: `${history.department || ''}${history.position_title || ''}`,

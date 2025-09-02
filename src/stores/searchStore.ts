@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface JobType {
   id: string;
@@ -163,7 +164,8 @@ const initialState: SearchFormData = {
 };
 
 export const useSearchStore = create<SearchState>()(
-  subscribeWithSelector((set, get) => ({
+  persist(
+    subscribeWithSelector((set, get) => ({
     // Initial state
     ...initialState,
     
@@ -303,5 +305,48 @@ export const useSearchStore = create<SearchState>()(
       
       return params;
     },
-  }))
+  })),
+    {
+      name: 'search-store',
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined') {
+          return localStorage;
+        }
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        };
+      }),
+      partialize: (state) => ({
+        searchGroup: state.searchGroup,
+        keyword: state.keyword,
+        experienceJobTypes: state.experienceJobTypes,
+        experienceIndustries: state.experienceIndustries,
+        jobTypeAndSearch: state.jobTypeAndSearch,
+        industryAndSearch: state.industryAndSearch,
+        currentSalaryMin: state.currentSalaryMin,
+        currentSalaryMax: state.currentSalaryMax,
+        currentCompany: state.currentCompany,
+        education: state.education,
+        englishLevel: state.englishLevel,
+        otherLanguage: state.otherLanguage,
+        otherLanguageLevel: state.otherLanguageLevel,
+        qualifications: state.qualifications,
+        ageMin: state.ageMin,
+        ageMax: state.ageMax,
+        desiredJobTypes: state.desiredJobTypes,
+        desiredIndustries: state.desiredIndustries,
+        desiredSalaryMin: state.desiredSalaryMin,
+        desiredSalaryMax: state.desiredSalaryMax,
+        desiredLocations: state.desiredLocations,
+        transferTime: state.transferTime,
+        workStyles: state.workStyles,
+        selectionStatus: state.selectionStatus,
+        similarCompanyIndustry: state.similarCompanyIndustry,
+        similarCompanyLocation: state.similarCompanyLocation,
+        lastLoginMin: state.lastLoginMin,
+      }),
+    }
+  )
 );

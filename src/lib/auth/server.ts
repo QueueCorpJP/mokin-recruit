@@ -1,6 +1,5 @@
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
-import { unstable_noStore as noStore } from 'next/cache';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { createServerClient } from '@supabase/ssr';
 
@@ -98,10 +97,6 @@ async function createSupabaseServerClient() {
  */
 export async function getServerAuth(allowStatic: boolean = false, enableCache: boolean = false): Promise<BasicAuthResult> {
   try {
-    // 認証チェック時はキャッシュを無効化
-    if (!enableCache) {
-      noStore();
-    }
     
     // 静的レンダリングモードの場合は認証なしを返す
     if (allowStatic) {
@@ -184,7 +179,6 @@ export async function requireCandidateAuth(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCandidateUser(): Promise<User | null> {
-  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'candidate'
     ? auth.user
@@ -196,7 +190,6 @@ export async function getCachedCandidateUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCompanyUser(): Promise<User | null> {
-  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'company_user'
     ? auth.user
@@ -208,7 +201,6 @@ export async function getCachedCompanyUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedAdminUser(): Promise<User | null> {
-  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'admin'
     ? auth.user

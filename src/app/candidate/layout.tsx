@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import CandidateLayoutClient from './CandidateLayoutClient';
 
+export const dynamic = 'force-dynamic';
+
 export default function CandidateLayout({
   children,
 }: {

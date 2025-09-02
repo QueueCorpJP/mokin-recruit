@@ -4,7 +4,11 @@ import { useState } from 'react';
 import SearchForm from "./SearchForm";
 import { useSearchStore } from '../../../stores/searchStore';
 
-export default function Search() {
+interface SearchProps {
+  companyId: string;
+}
+
+export default function Search({ companyId }: SearchProps) {
   const { searchGroup, keyword, experienceJobTypes, experienceIndustries, desiredJobTypes, desiredIndustries } = useSearchStore();
 
   const getSearchConditionText = () => {
@@ -60,7 +64,7 @@ export default function Search() {
     
    </div>
    <div className="w-full max-w-[1280px] mx-auto p-10">
-     <SearchForm />
+     <SearchForm companyId={companyId} />
    </div>
 </div>
   );

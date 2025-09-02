@@ -5,8 +5,13 @@ import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useSearchStore } from '@/stores/searchStore';
+import { SaveSearchButton } from './SaveSearchButton';
 
-export default function SearchForm() {
+interface SearchFormProps {
+  companyId: string;
+}
+
+export default function SearchForm({ companyId }: SearchFormProps) {
   const {
     // Form data
     searchGroup,
@@ -1306,34 +1311,7 @@ export default function SearchForm() {
                     >
                       この条件で検索
                     </Button>
-                    <Button
-                      variant="green-outline"
-                      size="figma-outline"
-                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      onClick={() => {
-                        // タッチ済みにしてバリデーションをトリガー
-                        setSearchGroupTouched(true);
-
-                        // バリデーションチェック
-                        if (validateForm()) {
-                          // 保存処理
-                          console.log('検索条件保存');
-                        } else {
-                          // エラーフィールドまでスクロール
-                          const element = document.querySelector(
-                            '[data-field="search-group"]',
-                          );
-                          if (element) {
-                            element.scrollIntoView({
-                              behavior: 'smooth',
-                              block: 'center',
-                            });
-                          }
-                        }
-                      }}
-                    >
-                      検索条件を保存
-                    </Button>
+                    <SaveSearchButton companyId={companyId} />
                   </div>
                 </div>
               </div>
