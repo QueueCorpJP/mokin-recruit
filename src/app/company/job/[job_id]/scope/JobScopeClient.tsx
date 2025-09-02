@@ -145,7 +145,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
                       className="text-white text-[16px] font-medium tracking-[1.6px]"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      求人編集
+                      求人一覧
                     </span>
                     <svg 
                       width="6" 
@@ -164,7 +164,26 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
                       className="text-white text-[16px] font-medium tracking-[1.6px]"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      公開設定
+                      求人詳細
+                    </span>
+                     <svg 
+                      width="6" 
+                      height="8" 
+                      viewBox="0 0 6 8" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mx-1"
+                    >
+                     <path 
+                        d="M5.11804 3.59656C5.34118 3.8197 5.34118 4.18208 5.11804 4.40522L1.69061 7.83264C1.46747 8.05579 1.10509 8.05579 0.881954 7.83264C0.658815 7.60951 0.658815 7.24713 0.881954 7.02399L3.90594 4L0.883739 0.976012C0.6606 0.752873 0.6606 0.390494 0.883739 0.167355C1.10688 -0.0557849 1.46926 -0.0557849 1.6924 0.167355L5.11982 3.59478L5.11804 3.59656Z" 
+                        fill="white"
+                      />
+                    </svg>
+                    <span
+                      className="text-white text-[16px] font-medium tracking-[1.6px]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      求人の公開設定変更
                     </span>
                   </div>
                   <h1

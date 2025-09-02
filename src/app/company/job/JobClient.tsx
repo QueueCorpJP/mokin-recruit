@@ -504,9 +504,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                         {/* 職種/求人タイトル */}
                         <div className='w-[424px]'>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            {/* 職種を配列から動的に表示 */}
+                            {/* 職種を配列から動的に表示（最大6個まで、3行目は非表示） */}
                             {job.jobType && job.jobType.length > 0 ? (
-                              job.jobType.map((jobType, index) => (
+                              job.jobType.slice(0, 6).map((jobType, index) => (
                                 <span
                                   key={index}
                                   className='rounded-[8px] font-medium text-[14px] leading-tight line-clamp-2'

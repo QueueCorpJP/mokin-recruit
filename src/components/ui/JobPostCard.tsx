@@ -81,7 +81,7 @@ export function JobPostCard({
         // maxHeight: isSimple ? 117 : undefined, // ← 削除
       }}
       className={cardClass}
-      onClick={jobId ? undefined : onClick}
+      onClick={jobId && typeof jobId === 'string' ? undefined : onClick}
     >
       <div
         className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
@@ -332,7 +332,7 @@ export function JobPostCard({
   );
 
   // jobIdがある場合は詳細ページへのリンクでラップ
-  if (jobId) {
+  if (jobId && typeof jobId === 'string' && jobId.length > 0) {
     return (
       <Link href={`/candidate/job/${jobId}`} className="block">
         {cardContent}
