@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import TaskList from './TaskList';
+import Image from 'next/image';
 
 
 interface Room {
@@ -145,9 +146,11 @@ export default async function CandidateTaskPage() {
           </div>
           
           <div className="w-full md:max-w-[320px] md:flex-none">
-            <img
+            <Image
               src='/images/banner01.png'
               alt='バナー画像1'
+              width={320}
+              height={200}
               className="w-full h-auto block rounded-lg mb-20"
             />
             <div style={headingListStyle}>

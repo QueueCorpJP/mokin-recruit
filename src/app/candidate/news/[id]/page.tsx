@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { getRelatedNews } from '@/app/candidate/news/actions';
 import { createClient } from '@/lib/supabase/server';
+import Image from 'next/image';
 
 // 実際のnoticesテーブルからニュース記事を取得
 async function getNewsData(newsId: string) {
@@ -142,10 +143,11 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
               {/* メイン画像 */}
               {article.thumbnail_url && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
-                  <img 
+                  <Image 
                     src={article.thumbnail_url} 
                     alt={article.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

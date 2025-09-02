@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sendContactFormEmail } from './contact-form-actions';
@@ -121,21 +122,25 @@ export function ColumnSection() {
     <section id="contact-form" className='bg-[#f9f9f9] pt-[120px] pb-[120px] px-[24px] flex flex-col items-center relative overflow-hidden'>
       {/* 背景装飾 - 左上 */}
       <div className='w-[531px] h-[701px] absolute left-0 top-0 mix-blend-multiply pointer-events-none select-none z-0'>
-        <img
+        <Image
           src='/images/vector.svg'
           alt='装飾ベクター'
-          className='w-full h-full object-cover'
-          draggable='false'
+          width={531}
+          height={701}
+          className='object-cover'
+          draggable={false}
         />
       </div>
 
       {/* 背景装飾 - 右下 */}
       <div className='w-[531px] h-[682px] absolute right-0 bottom-0 mix-blend-multiply pointer-events-none select-none z-0 rotate-180'>
-        <img
+        <Image
           src='/images/vector.svg'
           alt='装飾ベクター'
-          className='w-full h-full object-cover'
-          draggable='false'
+          width={531}
+          height={682}
+          className='object-cover'
+          draggable={false}
         />
       </div>
 
@@ -242,7 +247,7 @@ export function ColumnSection() {
                   <option value='その他'>その他</option>
                 </select>
                 <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                  <img src='/images/down.svg' alt='下矢印' className='w-3.5 h-[9.333px]' />
+                  <img src='/images/down.svg' alt='下矢印' width={14} height={9} loading="lazy" className='w-3.5 h-[9.333px]' />
                 </div>
               </div>
               {errors.inquiryType && (

@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface Candidate {
   id: string;
@@ -26,7 +27,7 @@ export const CandidateItem: React.FC<CandidateItemProps> = ({ candidate }) => (
       )}
       {candidate.changeCareer && (
         <div className='h-8 flex items-center justify-center bg-[#44B0EF] rounded-full px-5 gap-2'>
-          <img
+          <Image
             src='/rotate.svg'
             alt='キャリアチェンジアイコン'
             width={16}

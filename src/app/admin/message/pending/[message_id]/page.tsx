@@ -7,6 +7,7 @@ import { ApplicationStatusSelect } from '@/components/admin/message/ApplicationS
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import ApproveButton from './ApproveButton';
+import Image from 'next/image';
 
 interface MessageDetailPageProps {
   params: Promise<{
@@ -577,9 +578,11 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                   <div key={message.id} className={`flex gap-4 ${isCompany ? 'flex-row' : 'flex-row-reverse'} items-start`}>
                     <div className="flex-shrink-0 flex flex-col items-center mt-2">
                       {isCompany && companyLogo ? (
-                        <img 
+                        <Image 
                           src={companyLogo} 
                           alt={companyName}
+                          width={48}
+                          height={48}
                           className="w-12 h-12 rounded-full object-cover border border-gray-200"
                         />
                       ) : (

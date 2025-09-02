@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getArticle, type Article } from '@/app/admin/media/actions';
+import Image from 'next/image';
 
 
 export default function AdminMediaDetailPage() {
@@ -115,10 +116,11 @@ export default function AdminMediaDetailPage() {
               {/* メイン画像 */}
               {article.thumbnail_url && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 overflow-hidden mb-[40px]">
-                  <img 
+                  <Image 
                     src={article.thumbnail_url} 
                     alt={article.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

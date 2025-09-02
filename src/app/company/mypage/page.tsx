@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { NewMessageList } from './NewMessageList';
@@ -361,7 +362,7 @@ export default async function CompanyMypage() {
                     alt='おすすめの候補者アイコン'
                     width={24}
                     height={25}
-                    style={{ display: 'block' }}
+                    loading="lazy"
                   />
                   <span 
                     className='text-[18px] font-bold text-[#222]'
@@ -379,7 +380,10 @@ export default async function CompanyMypage() {
                     <img 
                       src='/images/question.svg' 
                       alt='クエスチョンアイコン' 
-                      className='w-4 h-4 hover:opacity-70 filter grayscale' 
+                      width={16}
+                      height={16}
+                      className='hover:opacity-70 filter grayscale'
+                      loading="lazy" 
                     />
                   </div>
                   <div 

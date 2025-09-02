@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
@@ -119,15 +120,18 @@ export function JobPostCard({
             )}
           </button>
         )}
-        <img
+        <Image
           src={imageUrl}
           alt={imageAlt}
+          width={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 313 : 104) : 477}
+          height={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 208 : 69) : 318}
           style={{
             height: isSimple ? undefined : (imgHeight ?? 318),
             objectFit: 'cover',
             borderRadius: 5,
           }}
           className={imgClass}
+          loading="lazy"
         />
         <div
           className='flex-1 flex flex-col items-start relative'

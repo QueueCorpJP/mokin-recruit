@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export function FAQSection() {
   const faqs = [
     {
@@ -25,11 +27,14 @@ export function FAQSection() {
     <section className='bg-[#f9f9f9] pt-[120px] pb-[120px] flex flex-col items-center relative overflow-hidden'>
       {/* Vector.svgを左上に、はみ出さないように配置 */}
       <div className='w-[531px] h-[701px] absolute left-0 top-0 mix-blend-multiply pointer-events-none select-none z-0'>
-        <img
+        <Image
           src='/images/vector.svg'
           alt='装飾ベクター'
+          width={531}
+          height={701}
           className='w-full h-full object-cover'
           draggable='false'
+          loading="lazy"
         />
       </div>
       {/* 背景装飾テキスト */}

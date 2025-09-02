@@ -9,6 +9,7 @@ import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
+import Image from 'next/image';
 
 interface ArticleCategory {
   id: string;
@@ -649,10 +650,11 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
             {thumbnailPreview && !thumbnailError && (
               <div className="mt-3">
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden" style={{ minWidth: '300px', maxWidth: '500px' }}>
-                  <img 
+                  <Image 
                     src={thumbnailPreview} 
                     alt={thumbnail ? "選択中の画像" : "現在のサムネイル"} 
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="mt-2 flex justify-between items-center">

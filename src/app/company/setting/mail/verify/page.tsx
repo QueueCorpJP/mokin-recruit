@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { verifyCode, sendVerificationCode } from '../actions';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,7 @@ export default function MailVerifyPage() {
           { label: '変更メールアドレス認証' }
         ]}
         title="メールアドレス変更"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">

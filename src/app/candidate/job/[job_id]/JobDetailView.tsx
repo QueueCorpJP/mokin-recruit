@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -93,10 +94,13 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
             <div className="flex-shrink-0">
               <div className="w-full md:w-48 h-32 md:h-32 bg-gray-200 rounded-lg overflow-hidden">
                 {jobDetail.image_urls?.[0] ? (
-                  <img
+                  <Image
                     src={jobDetail.image_urls[0]}
                     alt={jobDetail.company_account?.company_name}
+                    width={800}
+                    height={400}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">

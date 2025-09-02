@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/mo-dal';
 import { updateJob } from '../../actions';
 import AttentionBanner from '@/components/ui/AttentionBanner';
+import Image from 'next/image';
 
 interface ImageSectionProps {
   images: (File | string)[];
@@ -29,15 +30,19 @@ const ImageSection: React.FC<ImageSectionProps> = ({ images }) => {
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
-              <img
+              <Image
                 src={image}
                 alt="求人画像"
+                width={200}
+                height={133}
                 className="object-cover w-full h-full rounded"
               />
             ) : image && typeof image === 'object' && image.data ? (
-              <img
+              <Image
                 src={`data:${image.contentType || 'image/jpeg'};base64,${image.data}`}
                 alt="求人画像"
+                width={200}
+                height={133}
                 className="object-cover w-full h-full rounded"
               />
             ) : (

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { updateCompanyProfile, getCompanyUserSettings } from '../actions';
 import { Button } from '@/components/ui/button';

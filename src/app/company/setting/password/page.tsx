@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { Eye, EyeOff } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { changePassword } from './actions';
@@ -64,7 +63,7 @@ export default function PasswordChangePage() {
           { label: 'パスワード変更' }
         ]}
         title="パスワード変更"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">

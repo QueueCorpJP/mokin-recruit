@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { getNotice, type Notice } from '@/app/admin/notice/[notice_id]/actions';
 
 
@@ -123,10 +124,11 @@ export default function AdminNoticeDetailPage() {
               {/* メイン画像 */}
               {notice.thumbnail_url && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 overflow-hidden mb-[40px]">
-                  <img 
+                  <Image 
                     src={notice.thumbnail_url} 
                     alt={notice.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

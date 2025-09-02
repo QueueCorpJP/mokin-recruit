@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { updateCompanyProfile, getCompanyUserSettings } from '../actions';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,7 @@ export default function ProfilePage() {
             { label: 'プロフィール変更' }
           ]}
           title="プロフィール変更"
-          icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+          icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
         />
         <div className="px-4 md:px-20 py-10">
           <div className="bg-white rounded-[10px] p-4 md:p-10">
@@ -85,7 +84,7 @@ export default function ProfilePage() {
           { label: 'プロフィール変更' }
         ]}
         title="プロフィール変更"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">

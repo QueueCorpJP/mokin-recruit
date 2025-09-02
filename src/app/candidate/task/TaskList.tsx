@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/Pagination';
 
@@ -205,12 +206,12 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
               onClick={() => handleTaskItemClick(item)}
             >
               <div style={todoItemRowStyle}>
-                <img
+                <Image
                   src={item.iconSrc || '/images/check.svg'}
                   alt={item.completed ? '完了チェック' : 'タスクアイコン'}
                   width={48}
                   height={48}
-                  style={{ display: 'block' }}
+                  loading="lazy"
                 />
                 <div style={todoTextsWrapperStyle}>
                   <span style={{
@@ -272,16 +273,18 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
                 top: 'calc(50% + 0.293px)',
                 transform: 'translateY(-50%)',
               }}>
-                <img
+                <Image
                   src='/images/list.svg'
                   alt=''
+                  width={120}
+                  height={101}
                   style={{
-                    display: 'block',
                     maxWidth: 'none',
                     width: '100%',
                     height: '100%',
                     filter: 'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(95%)',
                   }}
+                  loading="lazy"
                 />
               </div>
             </div>

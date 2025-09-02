@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Input } from '@/components/admin/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
@@ -449,10 +450,11 @@ export default function EditNoticeForm({ categories, saveNotice, initialNotice }
             {thumbnailPreview && !thumbnailError && (
               <div className="mt-3">
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden" style={{ minWidth: '300px', maxWidth: '500px' }}>
-                  <img 
+                  <Image 
                     src={thumbnailPreview} 
                     alt={thumbnail ? "選択中の画像" : "現在のサムネイル"} 
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="mt-2 flex justify-between items-center">

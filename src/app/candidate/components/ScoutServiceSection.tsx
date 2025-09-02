@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export function ScoutServiceSection() {
   const cards = [
     {
@@ -70,10 +72,13 @@ export function ScoutServiceSection() {
             {/* イメージエリア */}
             <div className='relative w-[240px] h-[240px] flex items-center justify-center '>
               {/* メイン円形画像（Figmaエクスポート画像） */}
-              <img
+              <Image
                 src={card.img}
                 alt='カードイメージ'
-                className='w-[220px] h-[220px] rounded-full object-cover'
+                width={220}
+                height={220}
+                className='rounded-full object-cover'
+                loading="lazy"
               />
               {/* サブ円（グラデーション） */}
               <div

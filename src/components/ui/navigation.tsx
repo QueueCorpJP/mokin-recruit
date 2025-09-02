@@ -7,7 +7,6 @@ import { X, ChevronDown, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { logoutAction } from '@/lib/auth/actions';
 
 // Custom Icon Components
@@ -15,12 +14,12 @@ import { logoutAction } from '@/lib/auth/actions';
 const DownIcon = memo(({ className }: { className?: string }) => {
   return (
     <div className={cn('relative w-[10px] h-[10px] transition-transform duration-300', className)}>
-      <Image
+      <img
         src='/images/down.svg'
         alt='down-icon'
-        fill
-        sizes="10px"
-        className='object-contain'
+        width={10}
+        height={10}
+        className='object-contain w-full h-full'
       />
     </div>
   );
@@ -326,7 +325,7 @@ export function Navigation({
       isActive: pathname.startsWith('/company/help'),
       dropdownItems: [
         { label: 'よくある質問', href: '/company/help/faq' },
-        { label: 'お問い合わせ', href: '/contact' },
+        { label: 'お問い合わせ', href: '/company/contact' },
       ],
     },
   ], [pathname]);
