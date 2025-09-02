@@ -626,7 +626,7 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                     </div>
 
                     {/* 勤務地 */}
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-4">
                       <div
                         className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
