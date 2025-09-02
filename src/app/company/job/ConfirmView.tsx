@@ -190,7 +190,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
         <div className='flex-1 flex flex-col items-start justify-start px-0 py-6'>
           <div className='flex flex-col items-start justify-start w-full'>
             {jobTypes.length > 0 ? (
-              <TagDisplay items={jobTypes} />
+              <TagDisplay items={jobTypes.slice(0, 4)} />
             ) : (
               <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#999999]">
                 職種が選択されていません

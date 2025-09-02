@@ -504,15 +504,16 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                         {/* 職種/求人タイトル */}
                         <div className='w-[424px]'>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            {/* 職種を配列から動的に表示（最大6個まで、3行目は非表示） */}
+                            {/* 職種を配列から動的に表示（最大4個まで、3行目は非表示） */}
                             {job.jobType && job.jobType.length > 0 ? (
-                              job.jobType.slice(0, 6).map((jobType, index) => (
+                              job.jobType.slice(0, 4).map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className='rounded-[8px] font-medium text-[14px] leading-tight line-clamp-2'
+                                  className='rounded-[8px] font-medium text-[14px] leading-tight'
                                   style={{
-                                    width: '136px',
+                                    maxWidth: '136px',
                                     minHeight: '32px',
+                                    maxHeight: '48px',
                                     paddingLeft: '16px',
                                     paddingRight: '16px',
                                     paddingTop: '6px',
@@ -523,7 +524,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                     hyphens: 'auto',
                                     display: '-webkit-box',
                                     WebkitBoxOrient: 'vertical',
+                                    WebkitLineClamp: 2,
                                     overflow: 'hidden',
+                                    lineHeight: '1.4',
                                   }}
                                 >
                                   {jobType}

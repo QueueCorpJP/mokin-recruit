@@ -389,7 +389,7 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 </div>
                 <div className="flex items-center py-6 gap-2">
                   {displayData.jobType && displayData.jobType.length > 0 ? (
-                    displayData.jobType.map((jobType, index) => (
+                    displayData.jobType.slice(0, 4).map((jobType, index) => (
                       <div key={index} className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
                         <span
                           className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
