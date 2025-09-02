@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 
+// Image constructor polyfill
+import '@/lib/image-polyfill';
+
 // Stagewise Toolbar (development only)
 // import StagewiseToolbarClient from './stagewise-toolbar-client';
 
