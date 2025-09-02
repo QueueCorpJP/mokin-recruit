@@ -56,6 +56,9 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
 
   // プレビューからの戻り時にデータを復元
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     const storedData = sessionStorage.getItem('previewArticle');
     if (storedData) {
       try {
@@ -185,7 +188,9 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
       thumbnailName: thumbnail?.name || null
     };
 
-    sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    }
     router.push('/admin/media/preview');
   };
 

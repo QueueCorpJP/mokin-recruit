@@ -143,7 +143,9 @@ export default function EditNoticeForm({ categories, saveNotice, initialNotice }
       status
     };
 
-    sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+    }
     router.push('/admin/notice/edit/preview');
   };
 

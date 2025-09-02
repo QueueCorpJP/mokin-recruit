@@ -167,7 +167,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
   const handleViewJob = (jobId: string) => {
     // 該当するjobデータを取得
     const jobData = jobs.find(job => job.id === jobId);
-    if (jobData) {
+    if (jobData && typeof window !== 'undefined') {
       // 詳細画面で使用するためにsessionStorageに保存
       sessionStorage.setItem('jobPreviewData', JSON.stringify(jobData));
     }

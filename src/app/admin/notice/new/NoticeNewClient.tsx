@@ -37,6 +37,9 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
 
   // プレビューからの戻り時にデータを復元
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     const storedData = sessionStorage.getItem('previewNotice');
     if (storedData) {
       try {
@@ -152,7 +155,9 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
       thumbnailName: thumbnail?.name || null
     };
 
-    sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+    }
     router.push('/admin/notice/preview');
   };
 

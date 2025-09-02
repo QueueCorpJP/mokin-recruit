@@ -78,6 +78,9 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
 
   // 初期データのセット
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     // まずsessionStorageからプレビューデータをチェック
     const previewData = sessionStorage.getItem('previewArticle');
     if (previewData) {
@@ -216,7 +219,9 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
       thumbnailName: thumbnail?.name || null
     };
 
-    sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    }
     router.push('/admin/media/edit/preview');
   };
 

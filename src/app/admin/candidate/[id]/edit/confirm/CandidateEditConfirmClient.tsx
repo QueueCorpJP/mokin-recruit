@@ -19,8 +19,13 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
   const [formData, setFormData] = useState<any>(initialFormData);
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // Retrieve form data from sessionStorage if not provided
-    if (!formData && typeof window !== 'undefined') {
+    if (!formData) {
       const storedData = sessionStorage.getItem('candidateEditData');
       if (storedData) {
         try {
@@ -34,7 +39,7 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
         router.push(`/admin/candidate/${candidate.id}/edit`);
       }
     }
-  }, []);
+  }, [formData, candidate.id, router]);
 
   // Show loading state while retrieving data from sessionStorage
   if (!formData) {

@@ -23,7 +23,9 @@ export default function MailCompletePage() {
         cacheKeys.forEach(key => {
           try {
             localStorage.removeItem(key);
-            sessionStorage.removeItem(key);
+            if (typeof window !== 'undefined') {
+              sessionStorage.removeItem(key);
+            }
             console.log(`キャッシュクリア: ${key}`);
           } catch (error) {
             console.log(`キャッシュクリアスキップ: ${key}`);
@@ -79,7 +81,9 @@ export default function MailCompletePage() {
                 additionalKeys.forEach(key => {
                   try {
                     localStorage.removeItem(key);
-                    sessionStorage.removeItem(key);
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem(key);
+                    }
                   } catch (error) {
                     // silent fail
                   }

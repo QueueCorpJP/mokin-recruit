@@ -59,6 +59,11 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
   const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // sessionStorageから編集データを取得
     try {
       const savedEditData = sessionStorage.getItem(`editData-${jobId}`);

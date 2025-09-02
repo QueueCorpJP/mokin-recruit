@@ -52,6 +52,11 @@ export default function JobEditConfirmPageClient({ jobData, jobId }: JobEditConf
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // sessionStorageから編集データを取得
     try {
       const savedEditData = sessionStorage.getItem(`editData-${jobId}`);
