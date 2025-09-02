@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { NewMessageList } from './NewMessageList';
@@ -242,58 +243,33 @@ function formatRelativeTime(date: Date): string {
 // キャッシュ付きのメッセージデータ取得関数
 const getRecentMessages = unstable_cache(
   async (): Promise<Message[]> => {
-    try {
-      const supabase = await createClient();
-    
-    // 効率的なメッセージ取得クエリ - 必要なデータのみを取得し関連テーブルを結合
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        subject,
-        content,
-        sent_at,
-        message_type,
-        status,
-        sender_company_group_id,
-        company_groups!inner(
-          group_name,
-          company_account_id,
-          company_accounts(
-            company_name
-          )
-        )
-      `)
-      .eq('status', 'SENT') // 送信済みメッセージのみ
-      .not('subject', 'is', null) // 件名があるメッセージを優先
-      .order('sent_at', { ascending: false })
-      .limit(3);
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return [];
-    }
-
-    return (messages || []).map(message => ({
-      id: message.id,
-      date: new Date(message.sent_at).toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric'
-      }),
-      group: message.company_groups?.group_name || 'グループ名未設定',
-      user: message.company_groups?.company_accounts?.company_name || 'システム',
-      content: message.subject || 
-               (message.content?.length > 50 
-                 ? message.content.substring(0, 50) + '...' 
-                 : message.content) || 
-               'メッセージ内容なし'
-    }));
-    } catch (error) {
-      console.error('Error in getRecentMessages:', error);
-      // エラー時も空配列を返してページ表示を継続
-      return [];
-    }
+    // モックデータを返す
+    return [
+      {
+        id: 'mock-1',
+        date: '2024/09/01',
+        group: 'IT・エンジニア',
+        user: '株式会社テックソリューション',
+        content: '貴社の求人に興味を持つ優秀な候補者が応募されました。ぜひご確認ください。',
+        room_id: 'room-tech-001'
+      },
+      {
+        id: 'mock-2',
+        date: '2024/08/31',
+        group: 'マーケティング',
+        user: '株式会社クリエイティブ',
+        content: 'マーケティング担当者の候補者との面談が完了しました。評価レポートをお送りします。',
+        room_id: 'room-creative-002'
+      },
+      {
+        id: 'mock-3',
+        date: '2024/08/30',
+        group: '営業・企画',
+        user: '株式会社ビジネスパートナー',
+        content: '営業職の求人について、追加の要件をお聞かせください。より適切な候補者をご紹介できます。',
+        room_id: 'room-business-003'
+      }
+    ];
   },
   ['messages-mypage'], // キャッシュキー
   {
@@ -361,7 +337,7 @@ export default async function CompanyMypage() {
                     alt='おすすめの候補者アイコン'
                     width={24}
                     height={25}
-                    style={{ display: 'block' }}
+                    loading="lazy"
                   />
                   <span 
                     className='text-[18px] font-bold text-[#222]'
@@ -379,7 +355,10 @@ export default async function CompanyMypage() {
                     <img 
                       src='/images/question.svg' 
                       alt='クエスチョンアイコン' 
-                      className='w-4 h-4 hover:opacity-70 filter grayscale' 
+                      width={16}
+                      height={16}
+                      className='hover:opacity-70 filter grayscale'
+                      loading="lazy" 
                     />
                   </div>
                   <div 

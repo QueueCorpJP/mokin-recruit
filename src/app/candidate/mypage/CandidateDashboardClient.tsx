@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { Pagination } from '@/components/ui/Pagination';
@@ -171,12 +172,13 @@ export function CandidateDashboardClient({
                             gap: '16px',
                           }}
                         >
-                          <img
+                          <Image
                             src={'/images/check.svg'}
                             alt={'タスクアイコン'}
                             width={48}
                             height={48}
                             style={{ display: 'block' }}
+                            loading="lazy"
                           />
                           <div
                             style={{
@@ -561,20 +563,25 @@ export function CandidateDashboardClient({
                   >
                     お知らせ一覧を見る
                   </span>
-                  <img
+                  <Image
                     src='/images/arrow.svg'
                     alt='arrow'
                     width={12}
+                    height={12}
+                    loading="lazy"
                     height={12}
                     style={{ display: 'block' }}
                   />
                 </div>
               </div>
               {/* バナー画像を表示 */}
-              <img
+              <Image
                 src='/images/banner01.png'
                 alt='バナー画像01'
+                width={800}
+                height={200}
                 className='w-full h-auto block rounded-lg'
+                loading="lazy"
               />
               {/* FAQ/QAセクション */}
               <div
@@ -631,10 +638,12 @@ export function CandidateDashboardClient({
                   >
                     Q&A一覧を見る
                   </span>
-                  <img
+                  <Image
                     src='/images/arrow.svg'
                     alt='arrow'
                     width={12}
+                    height={12}
+                    loading="lazy"
                     height={12}
                     style={{ display: 'block' }}
                   />

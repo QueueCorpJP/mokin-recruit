@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image';
+
 export function FlowSection() {
     const steps = [
       { icon: '/images/flow-1.svg', label: '会員情報を登録' },
@@ -33,7 +35,7 @@ export function FlowSection() {
                 >
                   {/* アイコン部 */}
                   <div className='w-[80px] h-[80px] rounded-full border-2 border-[#0F9058] flex items-center justify-center'>
-                    <img src={step.icon} alt='' className='w-[44px] h-[44px]' />
+                    <Image src={step.icon} alt={step.label} width={44} height={44} className='w-[44px] h-[44px]' loading="lazy" />
                   </div>
                   {/* テキスト部 */}
                   <div
@@ -47,16 +49,20 @@ export function FlowSection() {
                 {idx < steps.length - 1 && (
                     <>
                       {/* モバイル用矢印 */}
-                      <img
+                      <Image
                         src='/images/flow-arrow2.svg'
                         alt=''
-                        className='block md:hidden w-[24px] h-[24px] items-center justify-center'
+                        width={24}
+                        height={24}
+                        className='block md:hidden items-center justify-center'
                       />
                       {/* デスクトップ用矢印 */}
-                      <img
+                      <Image
                         src='/images/flow-arrow.svg'
                         alt=''
-                        className='hidden md:block w-[32px] h-[32px] items-center justify-center'
+                        width={32}
+                        height={32}
+                        className='hidden md:block items-center justify-center'
                       />
                     </>
                 )}

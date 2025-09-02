@@ -8,6 +8,7 @@ import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationM
 import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
+import Image from 'next/image';
 
 interface PreviewData {
   id?: string;
@@ -284,10 +285,11 @@ export default function EditPreviewPage() {
               {/* サムネイル画像 */}
               {previewData.thumbnail && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]" style={{ minWidth: '900px' }}>
-                  <img
+                  <Image
                     src={previewData.thumbnail}
                     alt="記事のサムネイル"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

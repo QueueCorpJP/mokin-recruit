@@ -52,15 +52,18 @@ export function CTASection() {
           className='md:py-[80px] md:px-[80px] py-[40px] px-[24px] flex flex-col items-center gap-10 relative overflow-hidden min-h-[700px] md:min-h-[500px]'
           style={{ background: 'linear-gradient(0deg, #17856F 0%, #229A4E 100%)' }}>
           {/* bar.png を絶対配置で下部に配置 - 固定サイズ、中央配置 */}
-          <img 
+          <Image 
             src="/bar.png" 
             alt="" 
+            width={1360}
+            height={200}
             className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
             style={{ 
               width: '1360px',
               height: 'auto',
               maxWidth: 'none'
             }}
+            loading="lazy"
           />
           
           {/* カードコンテナ */}
@@ -78,10 +81,13 @@ export function CTASection() {
                 
                 {/* 画像 */}
                 <div className="w-[100px] md:w-full h-[100px] md:h-[auto] flex items-center justify-end">
-                  <img 
+                  <Image 
                     src={card.image} 
                     alt={card.title}
+                    width={200}
+                    height={134}
                     className="w-[100px] md:w-full h-[67px] md:h-[auto] object-contain"
+                    loading="lazy"
                   />
                 </div>
                 </div>

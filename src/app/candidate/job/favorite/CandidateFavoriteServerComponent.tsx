@@ -12,12 +12,9 @@ interface CandidateFavoriteServerComponentProps {
 export default async function CandidateFavoriteServerComponent({ 
   searchParams 
 }: CandidateFavoriteServerComponentProps) {
-  // searchParamsを待機
-  const awaitedSearchParams = await searchParams;
-  
   // パラメータ解析
-  const page = parseInt(awaitedSearchParams.page || '1');
-  const limit = parseInt(awaitedSearchParams.limit || '12');
+  const page = parseInt(searchParams.page || '1');
+  const limit = parseInt(searchParams.limit || '12');
 
   // レイアウトで認証済みのため、キャッシュされた結果を使用
   const user = await getCachedCandidateUser();

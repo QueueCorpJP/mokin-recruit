@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { getRelatedNews, getNews, type Article } from '@/app/candidate/news/actions';
@@ -94,10 +95,11 @@ export default function NewsDetailClient({
               {/* メイン画像 */}
               {article.thumbnail_url && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]">
-                  <img 
+                  <Image 
                     src={article.thumbnail_url} 
                     alt={article.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}
@@ -115,16 +117,20 @@ export default function NewsDetailClient({
               {/* CTAバナー */}
               <div className="mb-[60px]">
                 {/* デスクトップ用バナー */}
-                <img 
+                <Image 
                   src="/images/baner.svg" 
                   alt="プロフィール登録バナー"
+                  width={800}
+                  height={200}
                   className="w-full hidden md:block cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => router.push('/candidate')}
                 />
                 {/* モバイル用バナー */}
-                <img 
+                <Image 
                   src="/images/baner2.svg" 
                   alt="プロフィール登録バナー"
+                  width={400}
+                  height={150}
                   className="w-full md:hidden cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => router.push('/candidate')}
                 />
@@ -140,7 +146,7 @@ export default function NewsDetailClient({
                 <div className="flex flex-col lg:flex-row lg:justify-between">
                   <div className="flex-1">
                     <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
-                      <img src="/images/new.svg" alt="new" />
+                      <img src="/images/new.svg" alt="new" width={24} height={24} loading="lazy" />
                       <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">関連ニュース</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
@@ -158,10 +164,11 @@ export default function NewsDetailClient({
                         >
                           <div className="relative h-[200px] bg-gray-200 overflow-hidden">
                             {relatedArticle.thumbnail_url ? (
-                              <img 
+                              <Image 
                                 src={relatedArticle.thumbnail_url} 
                                 alt={relatedArticle.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-300 flex items-center justify-center">
@@ -232,7 +239,7 @@ export default function NewsDetailClient({
                 <div className="flex flex-col lg:flex-row lg:justify-between">
                   <div className="flex-1">
                     <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]">
-                      <img src="/images/new.svg" alt="new" />
+                      <img src="/images/new.svg" alt="new" width={24} height={24} loading="lazy" />
                       <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">新着ニュース</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
@@ -250,10 +257,11 @@ export default function NewsDetailClient({
                         >
                           <div className="relative h-[200px] bg-gray-200 overflow-hidden">
                             {newArticle.thumbnail_url ? (
-                              <img 
+                              <Image 
                                 src={newArticle.thumbnail_url} 
                                 alt={newArticle.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-300 flex items-center justify-center">

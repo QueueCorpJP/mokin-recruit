@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import {
   CompanyGroup,
   appealPointCategories,
@@ -159,10 +160,12 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
                     key={idx}
                     className='relative w-40 h-28 border border-[#e9ecef] rounded-[5px] overflow-hidden bg-gray-100 flex items-center justify-center'
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`preview-${idx}`}
-                      className='object-cover w-full h-full'
+                      width={160}
+                      height={112}
+                      className='object-cover'
                     />
                   </div>
                 );

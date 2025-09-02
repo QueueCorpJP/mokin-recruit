@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
 interface JobImageSectionProps {
@@ -26,16 +27,20 @@ const JobImageSection: React.FC<JobImageSectionProps> = ({ images }) => {
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
-              <img
+              <Image
                 src={image}
                 alt="求人画像"
-                className="object-cover w-full h-full rounded"
+                width={200}
+                height={133}
+                className="object-cover rounded"
               />
             ) : image && typeof image === 'object' && image.data ? (
-              <img
+              <Image
                 src={`data:${image.contentType || 'image/jpeg'};base64,${image.data}`}
                 alt="求人画像" 
-                className="object-cover w-full h-full rounded" 
+                width={200}
+                height={133}
+                className="object-cover rounded" 
               />
             ) : null}
           </div>

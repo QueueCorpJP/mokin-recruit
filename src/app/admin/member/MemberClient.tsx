@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 export type AdminUserEntity = {
   id: string;
   email: string;
@@ -93,8 +94,10 @@ function SelectField({ placeholder }: { placeholder: string }) {
       <div className='flex flex-row items-center self-stretch'>
         <div className='box-border content-stretch flex flex-col h-full items-center justify-start pb-0 pt-3 px-0 relative shrink-0 w-3.5'>
           <div className='h-[9.333px] relative shrink-0 w-3.5'>
-            <img
+            <Image
               alt=''
+              width={14}
+              height={9}
               className='block max-w-none size-full'
               src={arrowDownIcon}
             />
@@ -159,9 +162,10 @@ function TabNavigation({ tabs }: { tabs: TabItem[] }) {
           />
           <div className='box-border content-stretch flex flex-row gap-2.5 items-center justify-center p-0 relative shrink-0 size-6'>
             <div className='aspect-[48/54] h-full relative shrink-0'>
-              <img
+              <Image
                 alt=''
-                className='block max-w-none size-full'
+                fill
+                className='block max-w-none object-contain'
                 src={tab.icon}
               />
             </div>

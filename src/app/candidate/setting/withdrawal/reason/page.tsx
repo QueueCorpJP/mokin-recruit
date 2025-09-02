@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { processWithdrawal } from './actions';
-import Image from 'next/image';
 
 interface SelectOption {
   value: string;
@@ -62,7 +61,7 @@ export default function WithdrawalReasonPage() {
           { label: '退会理由の選択' }
         ]}
         title="退会理由の選択"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       <div
         className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full"

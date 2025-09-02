@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { HelpCircle } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Radio } from '@/components/ui/radio';
 import { getCompanyUserSettings, CompanyUserSettings, getCompanyNotificationSettings, saveCompanyNotificationSettings } from './actions';
@@ -75,7 +73,7 @@ export default function SettingsPage() {
       <SettingsHeader
         breadcrumbs={[{ label: '各種設定' }]}
         title="各種設定"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">

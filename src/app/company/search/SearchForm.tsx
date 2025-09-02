@@ -1,262 +1,106 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Checkbox } from '@/components/ui/checkbox';
+import React from 'react';
 import { SelectInput } from '@/components/ui/select-input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
-import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
-import { CandidateCard } from '@/components/company/CandidateCard';
-import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
-import { getCandidatesFromDatabase, loadSearchParamsToStore } from './actions';
-import { useSearchStore } from '../../../../stores/searchStore';
-import type { JobType } from '@/constants/job-type-data';
-import type { Industry } from '@/constants/industry-data';
-import type { CandidateData } from '@/components/company/CandidateCard';
+import { useSearchStore } from '@/stores/searchStore';
 
-
-type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
-
-// 相対時間表示のヘルパー関数
-function formatRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  // 1日未満（24時間未満）の場合
-  if (diffHours < 24) {
-    return diffHours <= 0 ? '1時間前' : `${diffHours}時間前`;
-  }
-  // 1日以上〜6日以内の場合
-  else if (diffDays >= 1 && diffDays <= 6) {
-    return `${diffDays}日前`;
-  }
-  // 7日以上〜13日以内の場合
-  else if (diffDays >= 7 && diffDays <= 13) {
-    return '1週間前';
-  }
-  // 14日以上〜29日以内の場合
-  else if (diffDays >= 14 && diffDays <= 29) {
-    const weeks = Math.floor(diffDays / 7);
-    return `${weeks}週間前`;
-  }
-  // 30日以上の場合
-  else {
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric'
-    });
-  }
-}
-
-// 候補者データを取得する関数
-
-export default function SearchClient() {
-  const searchParams = useSearchParams();
-  const searchStore = useSearchStore();
-  const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState<SortType>('featured');
-  const [candidates, setCandidates] = useState<CandidateData[]>([]);
-  const [allCandidates, setAllCandidates] = useState<CandidateData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    pickup: false,
-    newUser: false,
-    lastLogin: false,
-    working: false,
-  });
-
-  // 初期データ読み込み
-  useEffect(() => {
-    const loadCandidates = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getCandidatesFromDatabase();
-        setAllCandidates(data);
-        setCandidates(data);
-      } catch (error) {
-        console.error('Failed to load candidates:', error);
-        setError('候補者データの読み込みに失敗しました');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // URLパラメータから検索条件をストアに復元
-    loadSearchParamsToStore(searchParams, searchStore);
-    loadCandidates();
-  }, []);
-
-  // ストアの状態に基づいて候補者をフィルタリング
-  useEffect(() => {
-    if (allCandidates.length === 0) return;
+export default function SearchForm() {
+  const {
+    // Form data
+    searchGroup,
+    keyword,
+    experienceJobTypes,
+    experienceIndustries,
+    jobTypeAndSearch,
+    industryAndSearch,
+    currentSalaryMin,
+    currentSalaryMax,
+    currentCompany,
+    education,
+    englishLevel,
+    otherLanguage,
+    otherLanguageLevel,
+    qualifications,
+    ageMin,
+    ageMax,
+    desiredJobTypes,
+    desiredIndustries,
+    desiredSalaryMin,
+    desiredSalaryMax,
+    desiredLocations,
+    transferTime,
+    workStyles,
+    selectionStatus,
+    similarCompanyIndustry,
+    similarCompanyLocation,
+    lastLoginMin,
     
-    const searchConditions = {
-      searchGroup: searchStore.searchGroup,
-      keyword: searchStore.keyword,
-      experience_job_types: searchStore.experienceJobTypes.map(j => j.name),
-      experience_industries: searchStore.experienceIndustries.map(i => i.name),
-      current_salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
-      current_salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
-      age_min: searchStore.ageMin ? parseInt(searchStore.ageMin) : undefined,
-      age_max: searchStore.ageMax ? parseInt(searchStore.ageMax) : undefined,
-      desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
-      desired_industries: searchStore.desiredIndustries.map(i => i.name),
-      desired_locations: searchStore.desiredLocations.map(l => l.name),
-      work_styles: searchStore.workStyles.map(w => w.name),
-      education: searchStore.education,
-      english_level: searchStore.englishLevel,
-    };
-
-    const hasSearchConditions = Object.values(searchConditions).some(value => 
-      Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
-    );
-
-    if (hasSearchConditions) {
-      const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
-      setCandidates(filteredCandidates);
-    } else {
-      setCandidates(allCandidates);
-    }
-  }, [
-    allCandidates,
-    searchStore.searchGroup,
-    searchStore.keyword,
-    searchStore.experienceJobTypes,
-    searchStore.experienceIndustries,
-    searchStore.currentSalaryMin,
-    searchStore.currentSalaryMax,
-    searchStore.ageMin,
-    searchStore.ageMax,
-    searchStore.desiredJobTypes,
-    searchStore.desiredIndustries,
-    searchStore.desiredLocations,
-    searchStore.workStyles,
-    searchStore.education,
-    searchStore.englishLevel
-  ]);
-
-  const togglePickup = (id: string | number) => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        candidate.id === id
-          ? { ...candidate, isPickup: !candidate.isPickup }
-          : candidate,
-      ),
-    );
-  };
-
-  const toggleHidden = (id: string | number) => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        candidate.id === id
-          ? { ...candidate, isHidden: !candidate.isHidden }
-          : candidate,
-      ),
-    );
-  };
+    // Modal states
+    isJobTypeModalOpen,
+    isIndustryModalOpen,
+    isDesiredJobTypeModalOpen,
+    isDesiredIndustryModalOpen,
+    isDesiredLocationModalOpen,
+    isWorkStyleModalOpen,
+    
+    // Validation states
+    searchGroupTouched,
+    searchGroupError,
+    
+    // Actions
+    setSearchGroup,
+    setKeyword,
+    setExperienceJobTypes,
+    setExperienceIndustries,
+    setJobTypeAndSearch,
+    setIndustryAndSearch,
+    setCurrentSalaryMin,
+    setCurrentSalaryMax,
+    setCurrentCompany,
+    setEducation,
+    setEnglishLevel,
+    setOtherLanguage,
+    setOtherLanguageLevel,
+    setQualifications,
+    setAgeMin,
+    setAgeMax,
+    setDesiredJobTypes,
+    setDesiredIndustries,
+    setDesiredSalaryMin,
+    setDesiredSalaryMax,
+    setDesiredLocations,
+    setTransferTime,
+    setWorkStyles,
+    setSelectionStatus,
+    setSimilarCompanyIndustry,
+    setSimilarCompanyLocation,
+    setLastLoginMin,
+    
+    // Modal actions
+    setIsJobTypeModalOpen,
+    setIsIndustryModalOpen,
+    setIsDesiredJobTypeModalOpen,
+    setIsDesiredIndustryModalOpen,
+    setIsDesiredLocationModalOpen,
+    setIsWorkStyleModalOpen,
+    
+    // Validation actions
+    setSearchGroupTouched,
+    setSearchGroupError,
+    
+    // Utility actions
+    validateForm,
+  } = useSearchStore();
 
   return (
-    <>
-      {/* Hero Section */}
-      <div
-        className="bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10"
-        style={{
-          background: 'linear-gradient(to top, #17856f, #229a4e)',
-        }}
-      >
-        <div className="w-full max-w-[1280px] mx-auto">
-          <div className="flex items-center gap-4 mb-10">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M26.0013 12.9967C26.0013 15.8656 25.07 18.5157 23.5011 20.6659L31.414 28.585C32.1953 29.3663 32.1953 30.6351 31.414 31.4164C30.6327 32.1977 29.3639 32.1977 28.5826 31.4164L20.6698 23.4972C18.5197 25.0723 15.8695 25.9974 13.0006 25.9974C5.81903 25.9974 0 20.1783 0 12.9967C0 5.81513 5.81903 -0.00390625 13.0006 -0.00390625C20.1822 -0.00390625 26.0013 5.81513 26.0013 12.9967ZM13.0006 21.9972C14.1826 21.9972 15.353 21.7644 16.445 21.312C17.5369 20.8597 18.5291 20.1968 19.3649 19.361C20.2007 18.5252 20.8636 17.533 21.316 16.441C21.7683 15.3491 22.0011 14.1787 22.0011 12.9967C22.0011 11.8148 21.7683 10.6444 21.316 9.55241C20.8636 8.46043 20.2007 7.46822 19.3649 6.63246C18.5291 5.79669 17.5369 5.13372 16.445 4.68141C15.353 4.22909 14.1826 3.99629 13.0006 3.99629C11.8187 3.99629 10.6483 4.22909 9.55632 4.68141C8.46433 5.13372 7.47213 5.79669 6.63636 6.63246C5.8006 7.46822 5.13763 8.46043 4.68531 9.55241C4.233 10.6444 4.0002 11.8148 4.0002 12.9967C4.0002 14.1787 4.233 15.3491 4.68531 16.441C5.13763 17.533 5.8006 18.5252 6.63636 19.361C7.47213 20.1968 8.46433 20.8597 9.55632 21.312C10.6483 21.7644 11.8187 21.9972 13.0006 21.9972Z"
-                fill="white"
-              />
-            </svg>
+              <div className="bg-white rounded-[10px]">
 
-            <h1
-              className="text-white text-[24px] font-bold tracking-[2.4px]"
-              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-            >
-              候補者検索
-            </h1>
-          </div>
-          {/* Search Box */}
-          <div className="bg-white rounded-[10px]">
-            <div
-              className="flex items-center justify-between p-10 cursor-pointer"
-              onClick={() => setIsSearchBoxOpen(!isSearchBoxOpen)}
-            >
-              <div className="flex-1 flex gap-6 overflow-hidden items-center">
-                <span
-                  className="text-[20px] font-bold text-[#323232] tracking-[1.4px] flex-shrink-0"
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  検索条件
-                </span>
-                <span
-                  className="truncate"
-                  style={{
-                    fontFamily: 'Noto Sans JP, sans-serif',
-                    maxWidth: '1020px',
-                  }}
-                >
-                  <strong className="text-[16px] font-medium text-[#323232] tracking-[1.6px] ">
-                    検索条件名テキストが入ります。
-                  </strong>
-                  <span className="text-[14px] font-medium text-[#323232] tracking-[1.4px] ">
-                    検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名
-                  </span>
-                </span>
-              </div>
-              <button className="p-2">
-                {isSearchBoxOpen ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M10.4088 3.93415L0.401419 16.2595C-0.582016 17.4707 0.353592 19.1992 1.99265 19.1992H22.0074C23.6464 19.1992 24.582 17.4707 23.5986 16.2595L13.5912 3.93415C12.7956 2.95424 11.2044 2.95424 10.4088 3.93415Z"
-                      fill="#0F9058"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M13.5912 20.0659L23.5986 7.74049C24.582 6.52927 23.6464 4.80078 22.0074 4.80078L1.99265 4.80078C0.353592 4.80078 -0.582015 6.52927 0.401421 7.7405L10.4088 20.0659C11.2044 21.0458 12.7956 21.0458 13.5912 20.0659Z"
-                      fill="#0F9058"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-
-            {isSearchBoxOpen && (
-              <div className="p-10">
+     <div className="p-10">
                 <div className="flex flex-col gap-2">
                   {/* 検索履歴保存グループ */}
+                  <h3 className="text-[#323232] text-[20px] font-bold tracking-[2px] leading-[32px] mb-2">  検索条件</h3> 
                   <div
                     className="flex gap-6 items-strech mb-0 border-t-[2px] border-[#EFEFEF] pt-6"
                     data-field="search-group"
@@ -274,15 +118,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div>
                         <SelectInput
-                          value={searchStore.searchGroup}
+                          value={searchGroup}
                           onChange={(value: string) => {
-                            searchStore.setSearchGroup(value);
-                            searchStore.setSearchGroupError('');
+                            setSearchGroup(value);
+                            setSearchGroupError('');
                           }}
                           onBlur={() => {
-                            searchStore.setSearchGroupTouched(true);
-                            if (!searchStore.searchGroup) {
-                              searchStore.setSearchGroupError(
+                            setSearchGroupTouched(true);
+                            if (!searchGroup) {
+                              setSearchGroupError(
                                 'グループを選択してください。',
                               );
                             }
@@ -303,9 +147,9 @@ export default function SearchClient() {
                           placeholder="未選択"
                           className="w-[400px]"
                         />
-                        {searchStore.searchGroupTouched && searchStore.searchGroupError && (
+                        {searchGroupTouched && searchGroupError && (
                           <p className="text-[#ff0000] text-[12px] mt-2">
-                            {searchStore.searchGroupError}
+                            {searchGroupError}
                           </p>
                         )}
                       </div>
@@ -325,8 +169,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center text-[#999]">
                       <input
                         type="text"
-                        value={searchStore.keyword}
-                        onChange={(e) => searchStore.setKeyword(e.target.value)}
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
                         placeholder="検索したいワードを入力"
                         className="w-100 px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -348,7 +192,7 @@ export default function SearchClient() {
                       {/* ボタンとチェックボックスのコンテナ */}
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => searchStore.setIsJobTypeModalOpen(true)}
+                          onClick={() => setIsJobTypeModalOpen(true)}
                           className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
@@ -358,9 +202,9 @@ export default function SearchClient() {
                         {/* AND検索チェックボックス */}
                         <div className="flex items-center gap-2">
                           <Checkbox
-                            checked={searchStore.jobTypeAndSearch}
+                            checked={jobTypeAndSearch}
                             onChange={(checked: boolean) =>
-                              searchStore.setJobTypeAndSearch(checked)
+                              setJobTypeAndSearch(checked)
                             }
                           />
                           <label
@@ -373,9 +217,9 @@ export default function SearchClient() {
                       </div>
 
                       {/* 選択された職種のタグ表示 */}
-                      {searchStore.experienceJobTypes.length > 0 && (
+                      {experienceJobTypes.length > 0 && (
                         <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {searchStore.experienceJobTypes.map((job) => (
+                          {experienceJobTypes.map((job) => (
                             <div key={job.id} className="flex flex-row gap-0.5">
                               <div className="inline-flex items-strech gap-1">
                                 <div
@@ -390,7 +234,7 @@ export default function SearchClient() {
                                   <select
                                     value={job.experienceYears || ''}
                                     onChange={(e) => {
-                                      const updated = searchStore.experienceJobTypes.map(
+                                      const updated = experienceJobTypes.map(
                                         (j) =>
                                           j.id === job.id
                                             ? {
@@ -399,7 +243,7 @@ export default function SearchClient() {
                                               }
                                             : j,
                                       );
-                                      searchStore.setExperienceJobTypes(updated);
+                                      setExperienceJobTypes(updated);
                                     }}
                                     className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     style={{
@@ -435,8 +279,8 @@ export default function SearchClient() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  searchStore.setExperienceJobTypes(
-                                    searchStore.experienceJobTypes.filter(
+                                  setExperienceJobTypes(
+                                    experienceJobTypes.filter(
                                       (j) => j.id !== job.id,
                                     ),
                                   );
@@ -477,7 +321,7 @@ export default function SearchClient() {
                       {/* ボタンとチェックボックスのコンテナ */}
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => searchStore.setIsIndustryModalOpen(true)}
+                          onClick={() => setIsIndustryModalOpen(true)}
                           className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
@@ -487,9 +331,9 @@ export default function SearchClient() {
                         {/* AND検索チェックボックス */}
                         <div className="flex items-center gap-2">
                           <Checkbox
-                            checked={searchStore.industryAndSearch}
+                            checked={industryAndSearch}
                             onChange={(checked: boolean) =>
-                              searchStore.setIndustryAndSearch(checked)
+                              setIndustryAndSearch(checked)
                             }
                           />
                           <label
@@ -502,9 +346,9 @@ export default function SearchClient() {
                       </div>
 
                       {/* 選択された業種のタグ表示 */}
-                      {searchStore.experienceIndustries.length > 0 && (
+                      {experienceIndustries.length > 0 && (
                         <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {searchStore.experienceIndustries.map((industry) => (
+                          {experienceIndustries.map((industry) => (
                             <div
                               key={industry.id}
                               className="flex flex-row gap-0.5"
@@ -522,7 +366,7 @@ export default function SearchClient() {
                                   <select
                                     value={industry.experienceYears || ''}
                                     onChange={(e) => {
-                                      const updated = searchStore.experienceIndustries.map(
+                                      const updated = experienceIndustries.map(
                                         (ind) =>
                                           ind.id === industry.id
                                             ? {
@@ -531,7 +375,7 @@ export default function SearchClient() {
                                               }
                                             : ind,
                                       );
-                                      searchStore.setExperienceIndustries(updated);
+                                      setExperienceIndustries(updated);
                                     }}
                                     className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     style={{
@@ -567,8 +411,8 @@ export default function SearchClient() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  searchStore.setExperienceIndustries(
-                                    searchStore.experienceIndustries.filter(
+                                  setExperienceIndustries(
+                                    experienceIndustries.filter(
                                       (i) => i.id !== industry.id,
                                     ),
                                   );
@@ -608,10 +452,10 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2 ">
                         <SelectInput
-                          value={searchStore.currentSalaryMin}
+                          value={currentSalaryMin}
                           className="min-w-60"
                           onChange={(value: string) =>
-                            searchStore.setCurrentSalaryMin(value)
+                            setCurrentSalaryMin(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -632,10 +476,10 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={searchStore.currentSalaryMax}
+                          value={currentSalaryMax}
                           className="min-w-60"
                           onChange={(value: string) =>
-                            searchStore.setCurrentSalaryMax(value)
+                            setCurrentSalaryMax(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -671,8 +515,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <input
                         type="text"
-                        value={searchStore.currentCompany}
-                        onChange={(e) => searchStore.setCurrentCompany(e.target.value)}
+                        value={currentCompany}
+                        onChange={(e) => setCurrentCompany(e.target.value)}
                         placeholder="在籍企業を入力"
                         className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -693,9 +537,9 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={searchStore.education}
+                          value={education}
                           className=" w-[358px]"
-                          onChange={(value: string) => searchStore.setEducation(value)}
+                          onChange={(value: string) => setEducation(value)}
                           options={[
                             { value: '', label: '指定なし' },
                             { value: 'middle', label: '中学卒' },
@@ -739,8 +583,8 @@ export default function SearchClient() {
                             英語
                           </label>
                           <SelectInput
-                            value={searchStore.englishLevel}
-                            onChange={(value: string) => searchStore.setEnglishLevel(value)}
+                            value={englishLevel}
+                            onChange={(value: string) => setEnglishLevel(value)}
                             className="w-fit"
                             options={[
                               { value: '', label: 'レベルの指定なし' },
@@ -762,9 +606,9 @@ export default function SearchClient() {
                           </label>
                           <div className="flex items-center gap-2">
                             <SelectInput
-                              value={searchStore.otherLanguage}
+                              value={otherLanguage}
                               onChange={(value: string) =>
-                                searchStore.setOtherLanguage(value)
+                                setOtherLanguage(value)
                               }
                               options={[
                                 { value: '', label: '指定なし' },
@@ -788,9 +632,9 @@ export default function SearchClient() {
                               placeholder="指定なし"
                             />
                             <SelectInput
-                              value={searchStore.otherLanguageLevel}
+                              value={otherLanguageLevel}
                               onChange={(value: string) =>
-                                searchStore.setOtherLanguageLevel(value)
+                                setOtherLanguageLevel(value)
                               }
                               options={[
                                 { value: '', label: 'レベルの指定なし' },
@@ -821,8 +665,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <input
                         type="text"
-                        value={searchStore.qualifications}
-                        onChange={(e) => searchStore.setQualifications(e.target.value)}
+                        value={qualifications}
+                        onChange={(e) => setQualifications(e.target.value)}
                         placeholder="保有資格を入力"
                         className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -843,8 +687,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={searchStore.ageMin}
-                          onChange={(value: string) => searchStore.setAgeMin(value)}
+                          value={ageMin}
+                          onChange={(value: string) => setAgeMin(value)}
                           className="w-60"
                           options={[
                             { value: '', label: '指定なし' },
@@ -865,9 +709,9 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={searchStore.ageMax}
+                          value={ageMax}
                           className="w-60"
-                          onChange={(value: string) => searchStore.setAgeMax(value)}
+                          onChange={(value: string) => setAgeMax(value)}
                           options={[
                             { value: '', label: '指定なし' },
                             { value: '18', label: '18歳' },
@@ -905,15 +749,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => searchStore.setIsDesiredJobTypeModalOpen(true)}
+                          onClick={() => setIsDesiredJobTypeModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           職種を選択
                         </button>
-                        {searchStore.desiredJobTypes.length > 0 && (
+                        {desiredJobTypes.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {searchStore.desiredJobTypes.map((job) => (
+                            {desiredJobTypes.map((job) => (
                               <div
                                 key={job.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -928,8 +772,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    searchStore.setDesiredJobTypes(
-                                      searchStore.desiredJobTypes.filter(
+                                    setDesiredJobTypes(
+                                      desiredJobTypes.filter(
                                         (j) => j.id !== job.id,
                                       ),
                                     )
@@ -971,15 +815,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => searchStore.setIsDesiredIndustryModalOpen(true)}
+                          onClick={() => setIsDesiredIndustryModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           業種を選択
                         </button>
-                        {searchStore.desiredIndustries.length > 0 && (
+                        {desiredIndustries.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {searchStore.desiredIndustries.map((industry) => (
+                            {desiredIndustries.map((industry) => (
                               <div
                                 key={industry.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -994,8 +838,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    searchStore.setDesiredIndustries(
-                                      searchStore.desiredIndustries.filter(
+                                    setDesiredIndustries(
+                                      desiredIndustries.filter(
                                         (i) => i.id !== industry.id,
                                       ),
                                     )
@@ -1037,10 +881,10 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={searchStore.desiredSalaryMin}
+                          value={desiredSalaryMin}
                           className="w-60"
                           onChange={(value: string) =>
-                            searchStore.setDesiredSalaryMin(value)
+                            setDesiredSalaryMin(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1061,10 +905,10 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={searchStore.desiredSalaryMax}
+                          value={desiredSalaryMax}
                           className="w-60"
                           onChange={(value: string) =>
-                            searchStore.setDesiredSalaryMax(value)
+                            setDesiredSalaryMax(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1100,15 +944,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => searchStore.setIsDesiredLocationModalOpen(true)}
+                          onClick={() => setIsDesiredLocationModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           勤務地を選択
                         </button>
-                        {searchStore.desiredLocations.length > 0 && (
+                        {desiredLocations.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {searchStore.desiredLocations.map((location) => (
+                            {desiredLocations.map((location) => (
                               <div
                                 key={location.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1123,8 +967,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    searchStore.setDesiredLocations(
-                                      searchStore.desiredLocations.filter(
+                                    setDesiredLocations(
+                                      desiredLocations.filter(
                                         (l) => l.id !== location.id,
                                       ),
                                     )
@@ -1165,9 +1009,9 @@ export default function SearchClient() {
                     </div>
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
-                        value={searchStore.transferTime}
+                        value={transferTime}
                         className="w-100"
-                        onChange={(value: string) => searchStore.setTransferTime(value)}
+                        onChange={(value: string) => setTransferTime(value)}
                         options={[
                           { value: '', label: '指定なし' },
                           { value: 'immediately', label: 'すぐにでも' },
@@ -1195,15 +1039,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => searchStore.setIsWorkStyleModalOpen(true)}
+                          onClick={() => setIsWorkStyleModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           働き方を選択
                         </button>
-                        {searchStore.workStyles.length > 0 && (
+                        {workStyles.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {searchStore.workStyles.map((style) => (
+                            {workStyles.map((style) => (
                               <div
                                 key={style.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1218,8 +1062,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    searchStore.setWorkStyles(
-                                      searchStore.workStyles.filter(
+                                    setWorkStyles(
+                                      workStyles.filter(
                                         (s) => s.id !== style.id,
                                       ),
                                     )
@@ -1260,9 +1104,9 @@ export default function SearchClient() {
                     </div>
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
-                        value={searchStore.selectionStatus}
+                        value={selectionStatus}
                         className="w-100"
-                        onChange={(value: string) => searchStore.setSelectionStatus(value)}
+                        onChange={(value: string) => setSelectionStatus(value)}
                         options={[
                           { value: '', label: '指定なし' },
                           { value: 'not-started', label: 'まだ始めていない' },
@@ -1348,9 +1192,9 @@ export default function SearchClient() {
                               業種
                             </span>
                             <SelectInput
-                              value={searchStore.similarCompanyIndustry}
+                              value={similarCompanyIndustry}
                               onChange={(value: string) =>
-                                searchStore.setSimilarCompanyIndustry(value)
+                                setSimilarCompanyIndustry(value)
                               }
                               className="w-[350px]"
                               options={[
@@ -1372,9 +1216,9 @@ export default function SearchClient() {
                               所在地
                             </span>
                             <SelectInput
-                              value={searchStore.similarCompanyLocation}
+                              value={similarCompanyLocation}
                               onChange={(value: string) =>
-                                searchStore.setSimilarCompanyLocation(value)
+                                setSimilarCompanyLocation(value)
                               }
                               className="w-[350px]"
                               options={[
@@ -1409,8 +1253,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={searchStore.lastLoginMin}
-                          onChange={(value: string) => searchStore.setLastLoginMin(value)}
+                          value={lastLoginMin}
+                          onChange={(value: string) => setLastLoginMin(value)}
                           className="w-[358px]"
                           options={[
                             { value: '', label: '指定なし' },
@@ -1440,11 +1284,13 @@ export default function SearchClient() {
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       onClick={() => {
                         // タッチ済みにしてバリデーションをトリガー
-                        searchStore.setSearchGroupTouched(true);
+                        setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchStore.searchGroup === '') {
-                          searchStore.setSearchGroupError('グループを選択してください。');
+                        if (validateForm()) {
+                          // 検索実行処理
+                          console.log('検索実行');
+                        } else {
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
                             '[data-field="search-group"]',
@@ -1455,8 +1301,6 @@ export default function SearchClient() {
                               block: 'center',
                             });
                           }
-                        } else {
-                          // 検索実行処理
                         }
                       }}
                     >
@@ -1468,11 +1312,13 @@ export default function SearchClient() {
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       onClick={() => {
                         // タッチ済みにしてバリデーションをトリガー
-                        searchStore.setSearchGroupTouched(true);
+                        setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchStore.searchGroup === '') {
-                          searchStore.setSearchGroupError('グループを選択してください。');
+                        if (validateForm()) {
+                          // 保存処理
+                          console.log('検索条件保存');
+                        } else {
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
                             '[data-field="search-group"]',
@@ -1483,8 +1329,6 @@ export default function SearchClient() {
                               block: 'center',
                             });
                           }
-                        } else {
-                          // 保存処理
                         }
                       }}
                     >
@@ -1493,695 +1337,6 @@ export default function SearchClient() {
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
-        <div className="w-full max-w-[1280px] mx-auto">
-          {/* Filters and Sort */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              {/* Filters */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={filters.pickup}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, pickup: checked }))
-                    }
-                  />
-                  <span
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    ピックアップ済のみ︎
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={filters.newUser}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, newUser: checked }))
-                    }
-                  />
-                  <span
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    非表示を除く
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={filters.lastLogin}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, lastLogin: checked }))
-                    }
-                  />
-                  <span
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    スカウト済を除く
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={filters.working}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, working: checked }))
-                    }
-                  />
-                  <span
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    業種が同じ企業の選考中
-                  </span>
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Sort Tabs && Results Count */}
-          <div className="flex mb-10 items-center justify-between">
-            {/* Sort Tabs */}
-            <div className="flex items-center">
-              {(['featured', 'newest', 'updated', 'lastLogin'] as const).map(
-                (sort) => (
-                  <button
-                    key={sort}
-                    onClick={() => setSelectedSort(sort)}
-                    className={`px-4 py-1 text-[14px] font-bold tracking-[1.4px] transition-colors border solid border-[#EFEFEF] ${
-                      selectedSort === sort
-                        ? 'bg-[#D2F1DA] text-[#0f9058]'
-                        : 'bg-[#f9f9f9] text-[#999] hover:bg-[#efefef]'
-                    }`}
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    {sort === 'featured' && '注目順'}
-                    {sort === 'newest' && '新着順'}
-                    {sort === 'updated' && '更新順'}
-                    {sort === 'lastLogin' && '最終ログイン日順'}
-                  </button>
-                ),
-              )}
-            </div>
-
-            {/* Results Count */}
-            <div className="text-right">
-              <span
-                className="text-[12px] font-bold text-[#323232] tracking-[1.2px] flex items-center gap-2 "
-                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-              >
-                <svg
-                  width="8"
-                  height="8"
-                  viewBox="0 0 8 8"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M1.88172 3.59656C1.65858 3.8197 1.65858 4.18208 1.88172 4.40522L5.30914 7.83264C5.53228 8.05579 5.89466 8.05579 6.1178 7.83264C6.34094 7.60951 6.34094 7.24713 6.1178 7.02399L3.09381 4L6.11602 0.976012C6.33916 0.752873 6.33916 0.390494 6.11602 0.167355C5.89288 -0.0557849 5.5305 -0.0557849 5.30736 0.167355L1.87993 3.59478L1.88172 3.59656Z"
-                    fill="#0F9058"
-                  />
-                </svg>
-                1〜10件 / 1,000件
-                <svg
-                  width="8"
-                  height="8"
-                  viewBox="0 0 8 8"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M6.11828 3.59656C6.34142 3.8197 6.34142 4.18208 6.11828 4.40522L2.69086 7.83264C2.46772 8.05579 2.10534 8.05579 1.8822 7.83264C1.65906 7.60951 1.65906 7.24713 1.8822 7.02399L4.90619 4L1.88398 0.976012C1.66084 0.752873 1.66084 0.390494 1.88398 0.167355C2.10712 -0.0557849 2.4695 -0.0557849 2.69264 0.167355L6.12007 3.59478L6.11828 3.59656Z"
-                    fill="#0F9058"
-                  />
-                </svg>
-              </span>
-            </div>
-          </div>
-
-          {/* Candidate Cards */}
-          <div className="space-y-2">
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-pulse text-gray-500">読み込み中...</div>
-              </div>
-            ) : candidates.length === 0 ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-gray-500">該当する候補者が見つかりませんでした</div>
-              </div>
-            ) : (
-              candidates.map((candidate) => (
-              <div
-                key={candidate.id}
-                className={`rounded-[10px] p-6 ${
-                  candidate.isHidden
-                    ? 'bg-[#efefef]'
-                    : 'bg-white shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
-                }`}
-              >
-                <div className="flex gap-6">
-                  {/* Actions */}
-                  <div className="flex flex-col gap-6 w-8">
-                    <button
-                      onClick={() => togglePickup(candidate.id)}
-                      className="w-8 h-8 flex items-center justify-center"
-                    >
-                      {candidate.isPickup ? (
-                        <svg
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z"
-                            fill="#FFDA5F"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129898 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z"
-                            fill="#DCDCDC"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => toggleHidden(candidate.id)}
-                      className="w-8 h-8 flex items-center justify-center"
-                    >
-                      {candidate.isHidden ? (
-                        <svg
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M1.94025 3.43918C1.42026 3.02869 0.665269 3.1238 0.255277 3.64442C-0.154716 4.16504 -0.0597179 4.92094 0.460273 5.33143L30.0598 28.5591C30.5797 28.9696 31.3347 28.8745 31.7447 28.3538C32.1547 27.8332 32.0597 27.0773 31.5397 26.6668L26.2798 22.5419C28.2598 20.5095 29.5998 18.2318 30.2747 16.6149C30.4397 16.2194 30.4397 15.7789 30.2747 15.3834C29.5298 13.5963 27.9648 10.9932 25.6248 8.82058C23.2749 6.62797 20.0399 4.78578 16 4.78578C12.5901 4.78578 9.75011 6.10235 7.53515 7.8294L1.94025 3.43918ZM11.1551 10.6678C12.4301 9.50139 14.135 8.79055 16 8.79055C19.9749 8.79055 23.1999 12.0194 23.1999 15.9991C23.1999 17.2456 22.8849 18.417 22.3299 19.4382L20.3999 17.9264C20.8199 16.9603 20.9299 15.854 20.6399 14.7576C20.0849 12.6802 18.25 11.2835 16.21 11.1984C15.92 11.1884 15.75 11.5038 15.84 11.7841C15.945 12.1045 16.005 12.4449 16.005 12.8003C16.005 13.3109 15.885 13.7915 15.675 14.217L11.1601 10.6728L11.1551 10.6678ZM18.65 22.7021C17.83 23.0275 16.935 23.2077 16 23.2077C12.0251 23.2077 8.80013 19.9789 8.80013 15.9991C8.80013 15.6537 8.82512 15.3183 8.87012 14.9879L4.15521 11.2685C3.01523 12.7553 2.20024 14.237 1.72525 15.3834C1.56025 15.7789 1.56025 16.2194 1.72525 16.6149C2.47024 18.402 4.03521 21.0051 6.37517 23.1777C8.72513 25.3703 11.9601 27.2125 16 27.2125C18.39 27.2125 20.4949 26.5667 22.3099 25.5855L18.65 22.7021Z"
-                            fill="#999999"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="32"
-                          height="32"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M1.94025 3.43918C1.42026 3.02869 0.665269 3.1238 0.255277 3.64442C-0.154716 4.16504 -0.0597179 4.92094 0.460273 5.33143L30.0598 28.5591C30.5797 28.9696 31.3347 28.8745 31.7447 28.3538C32.1547 27.8332 32.0597 27.0773 31.5397 26.6668L26.2798 22.5419C28.2598 20.5095 29.5998 18.2318 30.2747 16.6149C30.4397 16.2194 30.4397 15.7789 30.2747 15.3834C29.5298 13.5963 27.9648 10.9932 25.6248 8.82058C23.2749 6.62797 20.0399 4.78578 16 4.78578C12.5901 4.78578 9.75011 6.10235 7.53515 7.8294L1.94025 3.43918ZM11.1551 10.6678C12.4301 9.50139 14.135 8.79055 16 8.79055C19.9749 8.79055 23.1999 12.0194 23.1999 15.9991C23.1999 17.2456 22.8849 18.417 22.3299 19.4382L20.3999 17.9264C20.8199 16.9603 20.9299 15.854 20.6399 14.7576C20.0849 12.6802 18.25 11.2835 16.21 11.1984C15.92 11.1884 15.75 11.5038 15.84 11.7841C15.945 12.1045 16.005 12.4449 16.005 12.8003C16.005 13.3109 15.885 13.7915 15.675 14.217L11.1601 10.6728L11.1551 10.6678ZM18.65 22.7021C17.83 23.0275 16.935 23.2077 16 23.2077C12.0251 23.2077 8.80013 19.9789 8.80013 15.9991C8.80013 15.6537 8.82512 15.3183 8.87012 14.9879L4.15521 11.2685C3.01523 12.7553 2.20024 14.237 1.72525 15.3834C1.56025 15.7789 1.56025 16.2194 1.72525 16.6149C2.47024 18.402 4.03521 21.0051 6.37517 23.1777C8.72513 25.3703 11.9601 27.2125 16 27.2125C18.39 27.2125 20.4949 26.5667 22.3099 25.5855L18.65 22.7021Z"
-                            fill="#DCDCDC"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Candidate Info */}
-                  <div className="flex-1">
-                    {/* Badges */}
-                    <div className="flex items-center gap-2 mb-2">
-                      {candidate.isAttention && (
-                        <div className="bg-[#ff9d00] px-5 py-0 h-8 rounded-[100px] flex items-center justify-center">
-                          <span
-                            className="text-white text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            注目
-                          </span>
-                        </div>
-                      )}
-                      {candidate.badgeType === 'change' && (
-                        <div className="bg-[#44b0ef] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M2.97062 6.24841C3.22734 5.53293 3.64409 4.86011 4.23088 4.28575C6.31465 2.23448 9.69202 2.23448 11.7758 4.28575L12.3459 4.85026H11.2023C10.6122 4.85026 10.1354 5.3196 10.1354 5.90052C10.1354 6.48144 10.6122 6.95077 11.2023 6.95077H14.9198H14.9331C15.5232 6.95077 16 6.48144 16 5.90052V2.22464C16 1.64372 15.5232 1.17438 14.9331 1.17438C14.343 1.17438 13.8662 1.64372 13.8662 2.22464V3.37991L13.2828 2.80227C10.3655 -0.0695081 5.63784 -0.0695081 2.72057 2.80227C1.90706 3.60309 1.32028 4.54503 0.9602 5.55262C0.763492 6.10072 1.05689 6.69805 1.61034 6.89169C2.16378 7.08533 2.77391 6.79651 2.97062 6.25169V6.24841ZM0.766826 9.09394C0.600125 9.14317 0.440092 9.23178 0.310065 9.36307C0.176703 9.49435 0.0866848 9.65188 0.0400084 9.82255C0.0300063 9.86193 0.0200042 9.9046 0.0133361 9.94727C0.00333401 10.0031 0 10.0589 0 10.1147V13.7774C0 14.3583 0.476766 14.8277 1.06689 14.8277C1.65701 14.8277 2.13378 14.3583 2.13378 13.7774V12.6254L2.72057 13.1998C5.63784 16.0683 10.3655 16.0683 13.2794 13.1998C14.0929 12.3989 14.6831 11.457 15.0431 10.4494C15.2398 9.90132 14.9464 9.30399 14.393 9.11035C13.8396 8.91671 13.2294 9.20553 13.0327 9.75034C12.776 10.4658 12.3592 11.1386 11.7725 11.713C9.68869 13.7643 6.31132 13.7643 4.22755 11.713L4.22421 11.7097L3.65409 11.1518H4.801C5.39112 11.1518 5.86789 10.6824 5.86789 10.1015C5.86789 9.5206 5.39112 9.05127 4.801 9.05127H1.08023C1.02688 9.05127 0.973536 9.05455 0.920192 9.06112C0.866847 9.06768 0.816837 9.07753 0.766826 9.09394Z"
-                              fill="white"
-                            />
-                          </svg>
-
-                          <span
-                            className="text-white text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.badgeText}
-                          </span>
-                        </div>
-                      )}
-                      {candidate.badgeType === 'professional' && (
-                        <div className="bg-[#b687e8] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z"
-                              fill="white"
-                            />
-                            <path
-                              fill-rule="evenodd"
-                              clip-rule="evenodd"
-                              d="M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8ZM8 1.33333C4.31803 1.33333 1.33333 4.31803 1.33333 8C1.33333 11.682 4.31803 14.6667 8 14.6667C11.682 14.6667 14.6667 11.682 14.6667 8C14.6667 4.31803 11.682 1.33333 8 1.33333Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M7.33333 2V4H8.66667V2H7.33333Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M7.33333 12V14H8.66667V12H7.33333Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M2 7.33333H4V8.66667H2V7.33333Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M12 7.33333H14V8.66667H12V7.33333Z"
-                              fill="white"
-                            />
-                          </svg>
-                          <span
-                            className="text-white text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.badgeText}
-                          </span>
-                        </div>
-                      )}
-                      {candidate.badgeType === 'multiple' && (
-                        <div className="bg-[#f182b4] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2">
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M0 0V6H2V2.94118L5.52941 6.47059L6.47059 5.52941L2.94118 2H6V0H0Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M10 0V2H13.0588L9.52941 5.52941L10.4706 6.47059L14 2.94118V6H16V0H10Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M2 13.0588V10H0V16H6V14H2.94118L6.47059 10.4706L5.52941 9.52941L2 13.0588Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M13.0588 14H10V16H16V10H14V13.0588L10.4706 9.52941L9.52941 10.4706L13.0588 14Z"
-                              fill="white"
-                            />
-                          </svg>
-                          <span
-                            className="text-white text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.badgeText}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Main Info */}
-                    <div className="flex gap-10">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3
-                            className="text-[#0f9058] text-[18px] font-bold tracking-[1.8px] truncate"
-                            style={{
-                              fontFamily: 'Noto Sans JP, sans-serif',
-                              maxWidth: '323px',
-                            }}
-                          >
-                            {candidate.companyName}
-                          </h3>
-                          <div className="border-l border-[#dcdcdc] h-7"></div>
-                          <span
-                            className="text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate"
-                            style={{
-                              fontFamily: 'Noto Sans JP, sans-serif',
-                              maxWidth: '300px',
-                            }}
-                          >
-                            {candidate.department}
-                          </span>
-                          <div className="border-l border-[#dcdcdc] h-7"></div>
-                          <span
-                            className="text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate"
-                            style={{
-                              fontFamily: 'Noto Sans JP, sans-serif',
-                              maxWidth: '300px',
-                            }}
-                          >
-                            {candidate.position}
-                          </span>
-                        </div>
-                        <div className="flex gap-10 mt-2">
-                          <span
-                            className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.location}／{candidate.age}／
-                            {candidate.gender}／{candidate.salary}
-                          </span>
-                          <span
-                            className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.degree}／{candidate.university}
-                          </span>
-                          <span
-                            className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            {candidate.language}／{candidate.languageLevel}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className="text-[#999999] text-[12px] font-medium tracking-[1.2px]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        最終ログイン：{candidate.lastLogin}
-                      </div>
-                    </div>
-
-                    {/* Experience */}
-                    <div className="flex gap-5 xl:gap-10 my-6 flex-col xl:flex-row">
-                      <div className="flex-1">
-                        <div className="flex gap-6 items-center">
-                          <span
-                            className="text-[#999999] text-[12px] font-bold tracking-[1.2px] w-[65px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            経験職種
-                          </span>
-                          <div className="flex gap-2 flex-wrap">
-                            {candidate.experienceJobs.map((job, index) => (
-                              <div
-                                key={index}
-                                className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
-                              >
-                                <span
-                                  className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {job}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex gap-6 items-center">
-                          <span
-                            className="text-[#999999] text-[12px] font-bold tracking-[1.2px] w-[65px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            経験業種
-                          </span>
-                          <div className="flex gap-2 flex-wrap">
-                            {candidate.experienceIndustries.map(
-                              (industry, index) => (
-                                <div
-                                  key={index}
-                                  className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
-                                >
-                                  <span
-                                    className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    {industry}
-                                  </span>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Separator Line */}
-                    <div className="border-t border-[#dcdcdc] mb-6"></div>
-
-                    {/* Career History and Selection Companies */}
-                    <div className="flex gap-5 xl:gap-10 flex-col xl:flex-row">
-                      <div className="flex-1">
-                        <div className="flex gap-6">
-                          <span
-                            className="text-[#999999] text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            職務経歴
-                          </span>
-                          <div className="flex flex-col gap-2">
-                            {candidate.careerHistory.map((career, index) => (
-                              <div
-                                key={index}
-                                className="flex gap-4 items-start"
-                              >
-                                <span
-                                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px] w-[136px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {career.period}
-                                </span>
-                                <span
-                                  className="text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                    maxWidth: '160px',
-                                  }}
-                                >
-                                  {career.company}
-                                </span>
-                                <span
-                                  className="text-[#323232] text-[12px] font-medium tracking-[1.2px] truncate flex-1 truncate xl:max-w-[100px] 2xl:max-w-[160px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {career.role}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex gap-4 ">
-                          <span
-                            className="text-[#999999] text-[12px] font-bold tracking-[1.2px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            選考中企業
-                          </span>
-                          <div className="flex flex-col gap-2">
-                            {candidate.selectionCompanies.map(
-                              (selection, index) => (
-                                <div
-                                  key={index}
-                                  className="flex gap-4 items-start"
-                                >
-                                  <span
-                                    className="text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    {selection.company}
-                                  </span>
-                                  <span
-                                    className="text-[#323232] text-[12px] font-medium tracking-[1.2px] flex-1 truncate xl:max-w-[220px] 2xl:max-w-[300px]"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    {selection.detail}
-                                  </span>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-          {/* Pagination */}
-          <div className="flex justify-center items-center gap-4 mt-10">
-            {/* Previous Button */}
-            <button className="w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:bg-[#e8f5ec] transition-colors">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="rotate-180"
-              >
-                <path
-                  d="M6 12L10 8L6 4"
-                  stroke="#0f9058"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-
-            {/* Page Numbers */}
-            {[1, 9, 10, 11, 100].map((page) => (
-              <button
-                key={page}
-                className={`w-14 h-14 rounded-[32px] flex items-center justify-center transition-colors ${
-                  page === 10
-                    ? 'bg-[#0f9058] text-white'
-                    : 'border border-[#0f9058] text-[#0f9058] hover:bg-[#e8f5ec]'
-                }`}
-              >
-                <span
-                  className="text-[16px] font-bold tracking-[1.6px]"
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  {page}
-                </span>
-              </button>
-            ))}
-
-            {/* Next Button */}
-            <button className="w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:bg-[#e8f5ec] transition-colors">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M6 12L10 8L6 4"
-                  stroke="#0f9058"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal Components */}
-      <JobTypeSelectModal
-        isOpen={searchStore.isJobTypeModalOpen}
-        onClose={() => searchStore.setIsJobTypeModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setExperienceJobTypes(
-            selected.map((j) => ({ ...j, experienceYears: '' })),
-          );
-          searchStore.setIsJobTypeModalOpen(false);
-        }}
-        initialSelected={searchStore.experienceJobTypes}
-        maxSelections={10}
-      />
-
-      <IndustrySelectModal
-        isOpen={searchStore.isIndustryModalOpen}
-        onClose={() => searchStore.setIsIndustryModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setExperienceIndustries(
-            selected.map((i) => ({ ...i, experienceYears: '' })),
-          );
-          searchStore.setIsIndustryModalOpen(false);
-        }}
-        initialSelected={searchStore.experienceIndustries}
-        maxSelections={10}
-      />
-
-      <JobTypeSelectModal
-        isOpen={searchStore.isDesiredJobTypeModalOpen}
-        onClose={() => searchStore.setIsDesiredJobTypeModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setDesiredJobTypes(selected);
-          searchStore.setIsDesiredJobTypeModalOpen(false);
-        }}
-        initialSelected={searchStore.desiredJobTypes}
-        maxSelections={10}
-      />
-
-      <IndustrySelectModal
-        isOpen={searchStore.isDesiredIndustryModalOpen}
-        onClose={() => searchStore.setIsDesiredIndustryModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setDesiredIndustries(selected);
-          searchStore.setIsDesiredIndustryModalOpen(false);
-        }}
-        initialSelected={searchStore.desiredIndustries}
-        maxSelections={10}
-      />
-
-      <WorkLocationSelectModal
-        isOpen={searchStore.isDesiredLocationModalOpen}
-        onClose={() => searchStore.setIsDesiredLocationModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setDesiredLocations(selected);
-          searchStore.setIsDesiredLocationModalOpen(false);
-        }}
-        initialSelected={searchStore.desiredLocations}
-      />
-
-      <WorkStyleSelectModal
-        isOpen={searchStore.isWorkStyleModalOpen}
-        onClose={() => searchStore.setIsWorkStyleModalOpen(false)}
-        onConfirm={(selected) => {
-          searchStore.setWorkStyles(selected);
-          searchStore.setIsWorkStyleModalOpen(false);
-        }}
-        initialSelected={searchStore.workStyles}
-        maxSelections={10}
-      />
-    </>
   );
 }

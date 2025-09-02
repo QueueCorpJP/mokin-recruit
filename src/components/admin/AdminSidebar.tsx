@@ -3,7 +3,6 @@
 import Link from "next/link";
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 // Separator component (inline)
 interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "horizontal" | "vertical";
@@ -30,13 +29,13 @@ Separator.displayName = "Separator";
 // Navigation data structure for better maintainability
 const navigationItems = [
   {
-    icon: <Image src="/images/admin/home.svg" alt="home" width={20} height={20} />,
+    icon: <img src="/images/admin/home.svg" alt="home" width={20} height={20} />,
     title: "管理画面ホーム",
     href: "/admin",
     subItems: [],
   },
   {
-    icon: <Image src="/images/admin/ofer.svg" alt="file-text" width={20} height={20} />,
+    icon: <img src="/images/admin/ofer.svg" alt="file-text" width={20} height={20} />,
     title: "求人",
     href: "/admin/job",
     subItems: [
@@ -46,7 +45,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/mail.svg" alt="mail" width={20} height={20} />,
+    icon: <img src="/images/admin/mail.svg" alt="mail" width={20} height={20} />,
     title: "メッセージ",
     href: "/admin/message",
     subItems: [
@@ -56,7 +55,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/company.svg" alt="building" width={20} height={20} />,
+    icon: <img src="/images/admin/company.svg" alt="building" width={20} height={20} />,
     title: "企業アカウント",
     href: "/admin/company",
     subItems: [
@@ -65,7 +64,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/candidate.svg" alt="users" width={20} height={20} />,
+    icon: <img src="/images/admin/candidate.svg" alt="users" width={20} height={20} />,
     title: "候補者",
     href: "/admin/candidate",
     subItems: [
@@ -75,7 +74,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/media.svg" alt="newspaper" width={20} height={20} />,
+    icon: <img src="/images/admin/media.svg" alt="newspaper" width={20} height={20} />,
     title: "メディア",
     href: "/admin/media",
     subItems: [
@@ -88,7 +87,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/notice.svg" alt="megaphone" width={20} height={20} />,
+    icon: <img src="/images/admin/notice.svg" alt="megaphone" width={20} height={20} />,
     title: "運営からのお知らせ",
     href: "/admin/notice",
     subItems: [
@@ -97,7 +96,7 @@ const navigationItems = [
     ],
   },
   {
-    icon: <Image src="/images/admin/chert.svg" alt="bar-chart" width={20} height={20} />,
+    icon: <img src="/images/admin/chert.svg" alt="bar-chart" width={20} height={20} />,
     title: "分析",
     href: "/admin/analytics",
     subItems: [

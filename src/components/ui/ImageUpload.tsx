@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import { useToast } from './toast';
 
 interface ImageUploadProps {
@@ -91,10 +92,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             className="relative border rounded overflow-visible bg-gray-100 flex items-center justify-center"
             style={{ width: '200px', height: '133px' }}
           >
-            <img
+            <Image
               src={imageUrl}
               alt={`existing-${idx}`}
+              width={200}
+              height={133}
               className="object-cover w-full h-full rounded"
+              loading="lazy"
             />
             {onRemoveExisting && (
               <button
@@ -118,10 +122,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               className="relative border rounded overflow-visible bg-gray-100 flex items-center justify-center"
               style={{ width: '200px', height: '133px' }}
             >
-              <img
+              <Image
                 src={url}
                 alt={`preview-${idx}`}
+                width={200}
+                height={133}
                 className="object-cover w-full h-full rounded"
+                loading="lazy"
               />
               <button
                 type="button"

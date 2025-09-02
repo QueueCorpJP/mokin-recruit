@@ -51,6 +51,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
         width={iconWidth}
         height={iconHeight}
         style={{ display: 'block' }}
+        loading="lazy"
       />
       <span style={headingTextStyle}>{children}</span>
     </div>

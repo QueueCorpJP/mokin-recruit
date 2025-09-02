@@ -25,7 +25,7 @@ export const PopularNewsSidebar: React.FC<PopularNewsSidebarProps> = ({
       {articles.length > 0 && (
         <>
           <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px]">
-            <img src="/images/king.svg" alt="king" />
+            <img src="/images/king.svg" alt="king" width={24} height={24} loading="lazy" />
             <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">人気記事</h2>
           </div>
           <div className="flex flex-col gap-[8px] mt-[-16px]">
@@ -36,7 +36,7 @@ export const PopularNewsSidebar: React.FC<PopularNewsSidebarProps> = ({
                 onClick={() => router.push(`/candidate/news/${article.id}`)}
               >
                 <div className="flex items-center gap-[16px] flex-row">
-                  <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} />
+                  <img src={`/images/book${index + 1}.svg`} alt={`book ${index + 1}`} width={24} height={24} loading="lazy" />
                   <h4 
                     className="text-[#323232] overflow-hidden text-ellipsis text-[14px] font-noto-sans-jp" 
                     style={{ 
@@ -59,7 +59,7 @@ export const PopularNewsSidebar: React.FC<PopularNewsSidebarProps> = ({
       {/* カテゴリーセクション */}
       <div className="flex flex-col gap-[8px]">
         <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
-          <img src="/images/cotegory.svg" alt="category" />
+          <img src="/images/cotegory.svg" alt="category" width={24} height={24} loading="lazy" />
           <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">カテゴリー</h2>
         </div>
         {categories.length > 0 ? (
@@ -87,7 +87,7 @@ export const PopularNewsSidebar: React.FC<PopularNewsSidebarProps> = ({
       {/* タグセクション */}
       <div className="flex flex-col gap-[8px]">
         <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] mb-[16px]">
-          <img src="/images/tag.svg" alt="tag" />
+          <img src="/images/tag.svg" alt="tag" width={24} height={24} loading="lazy" />
           <h2 className="text-[20px] font-bold text-[#323232] Noto_Sans_JP">タグ</h2>
         </div>
         {tags.length > 0 ? (

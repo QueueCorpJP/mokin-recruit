@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image';
+
 export function FlowSection() {
     const steps = [
       { icon: '/images/service.png', label: 'サービス利用面談' },
@@ -34,7 +36,7 @@ export function FlowSection() {
                 >
                   {/* アイコン部 */}
                   <div className='w-[70px] h-[70px] flex items-center justify-center'>
-                    <img src={step.icon} alt='' className='w-[60px] h-[60px]' />
+                    <Image src={step.icon} alt={step.label} width={60} height={60} loading="lazy" className='w-[60px] h-[60px]' />
                   </div>
                   {/* テキスト部 */}
                   <div
@@ -48,16 +50,20 @@ export function FlowSection() {
                 {idx < steps.length - 1 && (
                     <>
                       {/* モバイル用矢印 */}
-                      <img
+                      <Image
                         src='/images/flow-arrow2.svg'
                         alt=''
-                        className='block md:hidden w-[24px] h-[24px] items-center justify-center'
+                        width={24}
+                        height={24}
+                        className='block md:hidden items-center justify-center'
                       />
                       {/* デスクトップ用矢印 */}
-                      <img
+                      <Image
                         src='/images/flow-arrow.svg'
                         alt=''
-                        className='hidden md:block w-[32px] h-[32px] items-center justify-center'
+                        width={32}
+                        height={32}
+                        className='hidden md:block items-center justify-center'
                       />
                     </>
                 )}
