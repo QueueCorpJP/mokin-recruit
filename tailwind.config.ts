@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-const config: Config & { safelist?: string[] } = {
+const config: Config = {
   content: [
     './src/app/**/*.{ts,tsx,js,jsx,mdx}',
     './src/components/**/*.{ts,tsx,js,jsx}',
@@ -21,7 +21,7 @@ const config: Config & { safelist?: string[] } = {
     'animate-pulse',
     'animate-spin',
   ],
-  darkMode: ['class', '.dark'],
+  darkMode: 'class',
   theme: {
     // レスポンシブブレークポイントの明示的な設定
     screens: {

@@ -11,7 +11,6 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
     },
-    optimizeCss: true,
     optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
     swcPlugins: [],
   },

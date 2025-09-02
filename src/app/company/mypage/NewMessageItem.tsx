@@ -21,7 +21,7 @@ export const NewMessageItem: React.FC<NewMessageItemProps> = ({ message }) => (
         <span className='text-xs text-gray-400' style={{ lineHeight: '160%' }}>
           {message.date}
         </span>
-        <div className='w-40 h-8 flex items-center justify-center bg-gradient-to-r from-[#65BDAC] to-[#86C36A] rounded-lg'>
+        <div className='w-40 h-8 flex items-center justify-center bg-gradient-to-r from-[#65BDAC] to-[#86C36A] rounded-[8px]'>
           <span
             className='text-xs font-bold text-white w-full text-center truncate'
             style={{ lineHeight: '160%' }}

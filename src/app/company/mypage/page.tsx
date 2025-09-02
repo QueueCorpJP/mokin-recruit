@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { Button } from '@/components/ui/button';
+import { MessageButton } from './MessageButton';
 import { NewMessageList } from './NewMessageList';
 import { Message } from './NewMessageItem';
 import { CandidateCard, CandidateData } from '@/components/company/CandidateCard';
@@ -315,18 +315,7 @@ export default async function CompanyMypage() {
                 marginTop: 24,
               }}
             >
-              <Button
-                variant='green-outline'
-                size='lg'
-                style={{
-                  paddingLeft: 40,
-                  paddingRight: 40,
-                  height: 60,
-                  borderRadius: '999px',
-                }}
-              >
-                メッセージ一覧
-              </Button>
+              <MessageButton />
             </div>
             {/* おすすめの候補者 見出し */}
             <div className='mt-20 mb-6'>
