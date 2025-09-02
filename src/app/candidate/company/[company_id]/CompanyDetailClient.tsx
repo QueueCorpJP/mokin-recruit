@@ -148,7 +148,7 @@ export default function CompanyDetailClient({
 
   // favoriteStatusが更新されたらローカルステートも更新
   // useEffect(() => {
-  //   if (favoriteStatus !== undefined) {
+  //   if (favoriteStatus !== undefined && companyId) {
   //     setIsFavorite(favoriteStatus[companyId] || false);
   //   }
   // }, [favoriteStatus, companyId]);
@@ -189,7 +189,9 @@ export default function CompanyDetailClient({
 
   const handleApply = () => {
     // 企業詳細ページから応募ページへの遷移
-    router.push(`/company/${params.company_id}/apply`);
+    if (params.company_id) {
+      router.push(`/company/${params.company_id}/apply`);
+    }
   };
 
   const handleBackToResults = () => {

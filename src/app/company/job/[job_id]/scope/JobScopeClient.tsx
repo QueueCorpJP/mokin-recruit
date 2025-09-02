@@ -60,7 +60,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
 
   useEffect(() => {
     // クライアントサイドでのみ実行
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !jobId) {
       return;
     }
     

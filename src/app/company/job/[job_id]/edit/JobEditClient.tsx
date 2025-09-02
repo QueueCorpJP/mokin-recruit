@@ -108,7 +108,7 @@ export default function JobEditClient({
   // データ復元のためのuseEffect
   useEffect(() => {
     // クライアントサイドでのみ実行
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !jobId) {
       return;
     }
     
@@ -155,7 +155,7 @@ export default function JobEditClient({
     } catch (error) {
       console.error('Failed to restore edit data from sessionStorage:', error);
     }
-  }, [jobId]);
+  }, [jobId, jobData]);
 
   // モーダルの状態
   const [isLocationModalOpen, setLocationModalOpen] = useState(false);
