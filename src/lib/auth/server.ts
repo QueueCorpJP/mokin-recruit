@@ -184,6 +184,7 @@ export async function requireCandidateAuth(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCandidateUser(): Promise<User | null> {
+  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'candidate'
     ? auth.user
@@ -195,6 +196,7 @@ export async function getCachedCandidateUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCompanyUser(): Promise<User | null> {
+  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'company_user'
     ? auth.user
@@ -206,6 +208,7 @@ export async function getCachedCompanyUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedAdminUser(): Promise<User | null> {
+  noStore();
   const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
   return auth.isAuthenticated && auth.userType === 'admin'
     ? auth.user
