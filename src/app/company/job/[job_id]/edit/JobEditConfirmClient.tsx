@@ -308,7 +308,7 @@ export default function JobEditConfirmClient({
                 </div>
                 <div className="flex items-center py-6 gap-2">
                   {editData.job_types && editData.job_types.length > 0 ? (
-                    editData.job_types.map((jobType, index) => (
+                    editData.job_types.slice(0, 4).map((jobType, index) => (
                       <div key={index} className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
                         <span
                           className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
