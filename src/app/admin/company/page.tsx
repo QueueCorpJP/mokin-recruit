@@ -12,6 +12,7 @@ async function fetchAdminCompanyList(): Promise<CompanyListItem[]> {
       id,
       company_name,
       plan,
+      headquarters_address,
       created_at,
       company_users (
         id,

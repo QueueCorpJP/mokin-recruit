@@ -93,6 +93,14 @@ const pageTitleConfig: PageTitleConfig = {
     ],
   },
   '/admin/company': { title: '企業アカウント管理' },
+  '/admin/company/new': { title: '新規企業追加' },
+  '/admin/company/new/confirm': { title: '企業情報詳細' },
+  '/admin/company/delete': { title: '企業アカウント削除完了' },
+  '/admin/company/withdraw': { title: '退会完了' },
+  '/admin/company/group': { title: '企業グループ削除完了' },
+  '/admin/company/user': { title: '企業ユーザー削除完了' },
+  '/admin/company/edit': { title: '企業アカウント編集' },
+  '/admin/company/debug-company': { title: '企業詳細' },
   '/admin/candidate': { title: '候補者一覧' },
   '/admin/media': { 
     title: 'メディア記事一覧',
@@ -218,6 +226,14 @@ export function AdminPageTitle() {
     }
     
     // 動的ルートのチェック
+    if (pathname.match(/^\/admin\/company\/[^\/]+\/edit$/)) {
+      return { title: '企業アカウント編集' };
+    }
+    
+    if (pathname.match(/^\/admin\/company\/[^\/]+$/) && !pathname.includes('/edit') && !pathname.includes('/debug-company')) {
+      return { title: '企業詳細' };
+    }
+    
     if (pathname.match(/^\/admin\/message\/pending\/[\w-]+$/)) {
       return { title: 'メッセージ詳細' };
     }
