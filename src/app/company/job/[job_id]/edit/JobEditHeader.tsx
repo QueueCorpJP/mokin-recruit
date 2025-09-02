@@ -60,6 +60,17 @@ export default function JobEditHeader({
               <div
                 className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
               >
+                求人詳細
+              </div>
+              <div
+                className="flex items-center justify-center"
+                style={{ width: '6px', height: '8px' }}
+              >
+                <RightLine />
+              </div>
+              <div
+                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
+              >
                   {titleText}
               </div>
             </div>

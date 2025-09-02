@@ -1,17 +1,24 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
+import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { useSearchStore } from '@/stores/searchStore';
-import { SaveSearchButton } from './SaveSearchButton';
+import { saveSearchConditions } from './actions';
 
 interface SearchFormProps {
   companyId: string;
 }
 
 export default function SearchForm({ companyId }: SearchFormProps) {
+  const router = useRouter();
+  
   const {
     // Form data
     searchGroup,
@@ -49,6 +56,12 @@ export default function SearchForm({ companyId }: SearchFormProps) {
     isDesiredIndustryModalOpen,
     isDesiredLocationModalOpen,
     isWorkStyleModalOpen,
+    isSaveModalOpen,
+    
+    // Save modal states
+    saveSearchName,
+    saveError,
+    isSaveLoading,
     
     // Validation states
     searchGroupTouched,
@@ -90,6 +103,12 @@ export default function SearchForm({ companyId }: SearchFormProps) {
     setIsDesiredIndustryModalOpen,
     setIsDesiredLocationModalOpen,
     setIsWorkStyleModalOpen,
+    setIsSaveModalOpen,
+    
+    // Save modal actions
+    setSaveSearchName,
+    setSaveError,
+    setIsSaveLoading,
     
     // Validation actions
     setSearchGroupTouched,
@@ -99,8 +118,76 @@ export default function SearchForm({ companyId }: SearchFormProps) {
     validateForm,
   } = useSearchStore();
 
+  const handleSave = async () => {
+    if (!saveSearchName.trim()) {
+      setSaveError('検索条件名を入力してください');
+      return;
+    }
+
+    if (!searchGroup) {
+      setSaveError('グループを選択してください');
+      return;
+    }
+
+    setIsSaveLoading(true);
+    setSaveError('');
+
+    const searchData = {
+      searchGroup,
+      keyword,
+      experienceJobTypes,
+      experienceIndustries,
+      jobTypeAndSearch,
+      industryAndSearch,
+      currentSalaryMin,
+      currentSalaryMax,
+      currentCompany,
+      education,
+      englishLevel,
+      otherLanguage,
+      otherLanguageLevel,
+      qualifications,
+      ageMin,
+      ageMax,
+      desiredJobTypes,
+      desiredIndustries,
+      desiredSalaryMin,
+      desiredSalaryMax,
+      desiredLocations,
+      transferTime,
+      workStyles,
+      selectionStatus,
+      similarCompanyIndustry,
+      similarCompanyLocation,
+      lastLoginMin,
+    };
+
+    try {
+      const result = await saveSearchConditions(
+        companyId,
+        searchGroup,
+        saveSearchName.trim(),
+        searchData
+      );
+
+      if (result.success) {
+        setIsSaveModalOpen(false);
+        setSaveSearchName('');
+        alert('検索条件を保存しました');
+      } else {
+        setSaveError(result.error || '保存に失敗しました');
+      }
+    } catch (error) {
+      setSaveError('保存に失敗しました');
+      console.error('Save error:', error);
+    } finally {
+      setIsSaveLoading(false);
+    }
+  };
+
   return (
-              <div className="bg-white rounded-[10px]">
+    <>
+      <div className="bg-white rounded-[10px]">
 
      <div className="p-10">
                 <div className="flex flex-col gap-2">
@@ -223,89 +310,11 @@ export default function SearchForm({ companyId }: SearchFormProps) {
 
                       {/* 選択された職種のタグ表示 */}
                       {experienceJobTypes.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
+                        <div className="flex flex-wrap gap-2 mt-4">
                           {experienceJobTypes.map((job) => (
-                            <div key={job.id} className="flex flex-row gap-0.5">
-                              <div className="inline-flex items-strech gap-1">
-                                <div
-                                  className="bg-[#d2f1da] px-6 py-[10px] rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {job.name}
-                                </div>
-                                <div className="bg-[#d2f1da] px-6 py-[10px] flex items-center justify-between relative">
-                                  <select
-                                    value={job.experienceYears || ''}
-                                    onChange={(e) => {
-                                      const updated = experienceJobTypes.map(
-                                        (j) =>
-                                          j.id === job.id
-                                            ? {
-                                                ...j,
-                                                experienceYears: e.target.value,
-                                              }
-                                            : j,
-                                      );
-                                      setExperienceJobTypes(updated);
-                                    }}
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    <option value="">経験年数：指定なし</option>
-                                    <option value="0">
-                                      経験年数：経験なし
-                                    </option>
-                                    <option value="1">経験年数：1年以上</option>
-                                    <option value="3">経験年数：3年以上</option>
-                                    <option value="5">経験年数：5年以上</option>
-                                    <option value="10">
-                                      経験年数：10年以上
-                                    </option>
-                                  </select>
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="10"
-                                    viewBox="0 0 14 10"
-                                    fill="none"
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                  >
-                                    <path
-                                      d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                      fill="#0F9058"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setExperienceJobTypes(
-                                    experienceJobTypes.filter(
-                                      (j) => j.id !== job.id,
-                                    ),
-                                  );
-                                }}
-                                className="bg-[#d2f1da] p-[14px] rounded-r-[10px] flex items-center hover:bg-[#c2e1ca] transition-colors"
-                              >
-                                <svg
-                                  width="13"
-                                  height="12"
-                                  viewBox="0 0 13 12"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                    fill="#0F9058"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
+                            <span key={job.id} className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
+                              {job.name}
+                            </span>
                           ))}
                         </div>
                       )}
@@ -352,92 +361,11 @@ export default function SearchForm({ companyId }: SearchFormProps) {
 
                       {/* 選択された業種のタグ表示 */}
                       {experienceIndustries.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
+                        <div className="flex flex-wrap gap-2 mt-4">
                           {experienceIndustries.map((industry) => (
-                            <div
-                              key={industry.id}
-                              className="flex flex-row gap-0.5"
-                            >
-                              <div className="inline-flex items-strech gap-1">
-                                <div
-                                  className="bg-[#d2f1da] px-6 py-[10px] rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {industry.name}
-                                </div>
-                                <div className="bg-[#d2f1da] px-6 py-[10px] flex items-center justify-between relative">
-                                  <select
-                                    value={industry.experienceYears || ''}
-                                    onChange={(e) => {
-                                      const updated = experienceIndustries.map(
-                                        (ind) =>
-                                          ind.id === industry.id
-                                            ? {
-                                                ...ind,
-                                                experienceYears: e.target.value,
-                                              }
-                                            : ind,
-                                      );
-                                      setExperienceIndustries(updated);
-                                    }}
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    <option value="">経験年数：指定なし</option>
-                                    <option value="0">
-                                      経験年数：経験なし
-                                    </option>
-                                    <option value="1">経験年数：1年以上</option>
-                                    <option value="3">経験年数：3年以上</option>
-                                    <option value="5">経験年数：5年以上</option>
-                                    <option value="10">
-                                      経験年数：10年以上
-                                    </option>
-                                  </select>
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="10"
-                                    viewBox="0 0 14 10"
-                                    fill="none"
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                  >
-                                    <path
-                                      d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                      fill="#0F9058"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setExperienceIndustries(
-                                    experienceIndustries.filter(
-                                      (i) => i.id !== industry.id,
-                                    ),
-                                  );
-                                }}
-                                className="bg-[#d2f1da] p-[14px] rounded-r-[10px] flex items-center hover:bg-[#c2e1ca] transition-colors"
-                              >
-                                <svg
-                                  width="13"
-                                  height="12"
-                                  viewBox="0 0 13 12"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                    fill="#0F9058"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
+                            <span key={industry.id} className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
+                              {industry.name}
+                            </span>
                           ))}
                         </div>
                       )}
@@ -763,43 +691,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         {desiredJobTypes.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {desiredJobTypes.map((job) => (
-                              <div
-                                key={job.id}
-                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
-                              >
-                                <span
-                                  className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {job.name}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    setDesiredJobTypes(
-                                      desiredJobTypes.filter(
-                                        (j) => j.id !== job.id,
-                                      ),
-                                    )
-                                  }
-                                  className="w-3 h-3"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 12 12"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M1 1L11 11M1 11L11 1"
-                                      stroke="#0f9058"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
+                              <span key={job.id} className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
+                                {job.name}
+                              </span>
                             ))}
                           </div>
                         )}
@@ -829,43 +723,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         {desiredIndustries.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {desiredIndustries.map((industry) => (
-                              <div
-                                key={industry.id}
-                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
-                              >
-                                <span
-                                  className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {industry.name}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    setDesiredIndustries(
-                                      desiredIndustries.filter(
-                                        (i) => i.id !== industry.id,
-                                      ),
-                                    )
-                                  }
-                                  className="w-3 h-3"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 12 12"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M1 1L11 11M1 11L11 1"
-                                      stroke="#0f9058"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
+                              <span key={industry.id} className="inline-block px-3 py-1 text-xs font-medium text-[#198D76] bg-[#E8F5F0] rounded-full">
+                                {industry.name}
+                              </span>
                             ))}
                           </div>
                         )}
@@ -1293,8 +1153,54 @@ export default function SearchForm({ companyId }: SearchFormProps) {
 
                         // バリデーションチェック
                         if (validateForm()) {
-                          // 検索実行処理
-                          console.log('検索実行');
+                          // 検索条件をURLパラメータとして結果ページに遷移
+                          const searchParams = new URLSearchParams();
+                          
+                          // 基本検索条件
+                          if (searchGroup) searchParams.set('search_group', searchGroup);
+                          if (keyword) searchParams.set('keyword', keyword);
+                          
+                          // 経験職種・業界
+                          if (experienceJobTypes.length > 0) {
+                            searchParams.set('experience_job_types', experienceJobTypes.map(j => j.name).join(','));
+                          }
+                          if (experienceIndustries.length > 0) {
+                            searchParams.set('experience_industries', experienceIndustries.map(i => i.name).join(','));
+                          }
+                          
+                          // 給与
+                          if (currentSalaryMin) searchParams.set('current_salary_min', currentSalaryMin);
+                          if (currentSalaryMax) searchParams.set('current_salary_max', currentSalaryMax);
+                          
+                          // 企業・学歴
+                          if (currentCompany) searchParams.set('current_company', currentCompany);
+                          if (education) searchParams.set('education', education);
+                          if (englishLevel) searchParams.set('english_level', englishLevel);
+                          
+                          // 年齢
+                          if (ageMin) searchParams.set('age_min', ageMin);
+                          if (ageMax) searchParams.set('age_max', ageMax);
+                          
+                          // 希望条件
+                          if (desiredJobTypes.length > 0) {
+                            searchParams.set('desired_job_types', desiredJobTypes.map(j => j.name).join(','));
+                          }
+                          if (desiredIndustries.length > 0) {
+                            searchParams.set('desired_industries', desiredIndustries.map(i => i.name).join(','));
+                          }
+                          if (desiredLocations.length > 0) {
+                            searchParams.set('desired_locations', desiredLocations.map(l => l.name).join(','));
+                          }
+                          if (workStyles.length > 0) {
+                            searchParams.set('work_styles', workStyles.map(w => w.name).join(','));
+                          }
+                          
+                          // その他条件
+                          if (transferTime) searchParams.set('transfer_time', transferTime);
+                          if (selectionStatus) searchParams.set('selection_status', selectionStatus);
+                          if (lastLoginMin) searchParams.set('last_login_min', lastLoginMin);
+                          
+                          router.push(`/company/search/result?${searchParams.toString()}`);
                         } else {
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
@@ -1311,10 +1217,149 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     >
                       この条件で検索
                     </Button>
-                    <SaveSearchButton companyId={companyId} />
+                    <Button
+                      variant="green-outline"
+                      size="figma-outline"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      onClick={() => {
+                        // タッチ済みにしてバリデーションをトリガー
+                        setSearchGroupTouched(true);
+
+                        // バリデーションチェック
+                        if (validateForm()) {
+                          // モーダルを開く
+                          setIsSaveModalOpen(true);
+                        } else {
+                          // エラーフィールドまでスクロール
+                          const element = document.querySelector(
+                            '[data-field="search-group"]',
+                          );
+                          if (element) {
+                            element.scrollIntoView({
+                              behavior: 'smooth',
+                              block: 'center',
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      検索条件を保存
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
+            
+      {/* 保存モーダル */}
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="text-lg font-bold mb-4">検索条件を保存</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                検索条件名
+              </label>
+              <input
+                type="text"
+                value={saveSearchName}
+                onChange={(e) => setSaveSearchName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="検索条件名を入力"
+                disabled={isSaveLoading}
+              />
+            </div>
+
+            {saveError && (
+              <div className="mb-4 text-red-600 text-sm">
+                {saveError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleSave}
+                disabled={isSaveLoading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSaveLoading ? '保存中...' : '保存'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsSaveModalOpen(false);
+                  setSaveSearchName('');
+                  setSaveError('');
+                }}
+                disabled={isSaveLoading}
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Components */}
+      <JobTypeSelectModal
+        isOpen={isJobTypeModalOpen}
+        onClose={() => setIsJobTypeModalOpen(false)}
+        onConfirm={(selected) => {
+          setExperienceJobTypes(selected);
+          setIsJobTypeModalOpen(false);
+        }}
+        initialSelected={experienceJobTypes}
+      />
+
+      <IndustrySelectModal
+        isOpen={isIndustryModalOpen}
+        onClose={() => setIsIndustryModalOpen(false)}
+        onConfirm={(selected) => {
+          setExperienceIndustries(selected);
+          setIsIndustryModalOpen(false);
+        }}
+        initialSelected={experienceIndustries}
+      />
+
+      <JobTypeSelectModal
+        isOpen={isDesiredJobTypeModalOpen}
+        onClose={() => setIsDesiredJobTypeModalOpen(false)}
+        onConfirm={(selected) => {
+          setDesiredJobTypes(selected);
+          setIsDesiredJobTypeModalOpen(false);
+        }}
+        initialSelected={desiredJobTypes}
+      />
+
+      <IndustrySelectModal
+        isOpen={isDesiredIndustryModalOpen}
+        onClose={() => setIsDesiredIndustryModalOpen(false)}
+        onConfirm={(selected) => {
+          setDesiredIndustries(selected);
+          setIsDesiredIndustryModalOpen(false);
+        }}
+        initialSelected={desiredIndustries}
+      />
+
+      <WorkLocationSelectModal
+        isOpen={isDesiredLocationModalOpen}
+        onClose={() => setIsDesiredLocationModalOpen(false)}
+        onConfirm={(selected) => {
+          setDesiredLocations(selected);
+          setIsDesiredLocationModalOpen(false);
+        }}
+        initialSelected={desiredLocations}
+      />
+
+      <WorkStyleSelectModal
+        isOpen={isWorkStyleModalOpen}
+        onClose={() => setIsWorkStyleModalOpen(false)}
+        onConfirm={(selected) => {
+          setWorkStyles(selected);
+          setIsWorkStyleModalOpen(false);
+        }}
+        initialSelected={workStyles}
+      />
+    </>
   );
 }

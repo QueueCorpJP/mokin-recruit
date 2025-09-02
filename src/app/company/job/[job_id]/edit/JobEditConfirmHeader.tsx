@@ -29,10 +29,7 @@ interface JobEditConfirmHeaderProps {
   titleText?: string;
 }
 
-export default function JobEditConfirmHeader({ 
-  breadcrumbText = '求人編集', 
-  titleText = '求人編集確認' 
-}: JobEditConfirmHeaderProps = {}) {
+export default function JobEditConfirmHeader() {
   return (
     <div
       className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10"
@@ -48,7 +45,7 @@ export default function JobEditConfirmHeader({
                 <div
                   className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
                 >
-                    {breadcrumbText}
+                  求人一覧
                 </div>
               </div>
               <div
@@ -60,7 +57,29 @@ export default function JobEditConfirmHeader({
               <div
                 className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
               >
-                  {titleText}
+                求人詳細
+              </div>
+              <div
+                className="flex items-center justify-center"
+                style={{ width: '6px', height: '8px' }}
+              >
+                <RightLine />
+              </div>
+              <div
+                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
+              >
+                求人編集
+              </div>
+              <div
+                className="flex items-center justify-center"
+                style={{ width: '6px', height: '8px' }}
+              >
+                <RightLine />
+              </div>
+              <div
+                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
+              >
+                編集内容確認
               </div>
             </div>
             <div
@@ -88,7 +107,7 @@ export default function JobEditConfirmHeader({
               <div
                 className="font-['Noto_Sans_JP'] font-bold grow leading-[1.6] not-italic text-white text-[24px] text-left tracking-[2.4px]"
               >
-                {titleText}
+                編集内容確認
               </div>
           </div>
         </div>

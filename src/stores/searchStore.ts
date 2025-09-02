@@ -75,6 +75,7 @@ export interface SearchState extends SearchFormData {
   isDesiredIndustryModalOpen: boolean;
   isDesiredLocationModalOpen: boolean;
   isWorkStyleModalOpen: boolean;
+  isSaveModalOpen: boolean;
   
   // Validation states
   searchGroupTouched: boolean;
@@ -83,6 +84,11 @@ export interface SearchState extends SearchFormData {
   // Loading and error states
   isLoading: boolean;
   error: string | null;
+  
+  // Save modal states
+  saveSearchName: string;
+  saveError: string;
+  isSaveLoading: boolean;
   
   // Actions
   setSearchGroup: (value: string) => void;
@@ -120,6 +126,7 @@ export interface SearchState extends SearchFormData {
   setIsDesiredIndustryModalOpen: (open: boolean) => void;
   setIsDesiredLocationModalOpen: (open: boolean) => void;
   setIsWorkStyleModalOpen: (open: boolean) => void;
+  setIsSaveModalOpen: (open: boolean) => void;
   
   // Validation actions
   setSearchGroupTouched: (touched: boolean) => void;
@@ -128,6 +135,9 @@ export interface SearchState extends SearchFormData {
   // Utility actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setSaveSearchName: (name: string) => void;
+  setSaveError: (error: string) => void;
+  setIsSaveLoading: (loading: boolean) => void;
   resetForm: () => void;
   validateForm: () => boolean;
   getSearchParams: () => URLSearchParams;
@@ -176,6 +186,7 @@ export const useSearchStore = create<SearchState>()(
     isDesiredIndustryModalOpen: false,
     isDesiredLocationModalOpen: false,
     isWorkStyleModalOpen: false,
+    isSaveModalOpen: false,
     
     // Validation states
     searchGroupTouched: false,
@@ -184,6 +195,11 @@ export const useSearchStore = create<SearchState>()(
     // Loading and error states
     isLoading: false,
     error: null,
+    
+    // Save modal states
+    saveSearchName: '',
+    saveError: '',
+    isSaveLoading: false,
     
     // Form field setters
     setSearchGroup: (value) => set({ searchGroup: value }),
@@ -221,6 +237,7 @@ export const useSearchStore = create<SearchState>()(
     setIsDesiredIndustryModalOpen: (open) => set({ isDesiredIndustryModalOpen: open }),
     setIsDesiredLocationModalOpen: (open) => set({ isDesiredLocationModalOpen: open }),
     setIsWorkStyleModalOpen: (open) => set({ isWorkStyleModalOpen: open }),
+    setIsSaveModalOpen: (open) => set({ isSaveModalOpen: open }),
     
     // Validation setters
     setSearchGroupTouched: (touched) => set({ searchGroupTouched: touched }),
@@ -229,6 +246,9 @@ export const useSearchStore = create<SearchState>()(
     // Utility setters
     setLoading: (loading) => set({ isLoading: loading }),
     setError: (error) => set({ error }),
+    setSaveSearchName: (name) => set({ saveSearchName: name }),
+    setSaveError: (error) => set({ saveError: error }),
+    setIsSaveLoading: (loading) => set({ isSaveLoading: loading }),
     
     // Reset form
     resetForm: () => set({

@@ -23,7 +23,7 @@ const JobImageSection: React.FC<JobImageSectionProps> = ({ images }) => {
         {validImages.map((image, index) => (
           <div
             key={index}
-            className="relative border rounded overflow-hidden bg-gray-100"
+            className="relative rounded overflow-hidden bg-gray-100"
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
@@ -921,14 +921,14 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 </div>
               </div>
 
-              {/* 受動喜煙防止措置 */}
+              {/* 受動喫煙防止措置 */}
               <div className="flex gap-6">
                 <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
                   <div
                     className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    受動喜煙防止措置
+                    受動喫煙防止措置
                   </div>
                 </div>
                 <div className="flex-1 py-6">
