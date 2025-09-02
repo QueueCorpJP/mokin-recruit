@@ -92,20 +92,28 @@ export default function CompanyLayoutClient({
 
   // 認証が必要なページでリダイレクト処理
   useEffect(() => {
-    const { isAuthenticated, companyUser } = authState;
+    const { isAuthenticated, companyUser, loading } = authState;
+    
+    if (loading) return;
     
     if (!isAuthenticated) {
       const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
       if (isProtectedPath) {
         router.push('/company/auth/login');
+        return;
       }
     }
     
     // 認証済みで企業ユーザーでない場合は候補者ページへリダイレクト
-    if (isAuthenticated && companyUser?.userType !== 'company_user') {
+    if (isAuthenticated && companyUser === undefined) {
+      // companyUserが未定義の場合は少し待つ
+      return;
+    }
+    
+    if (isAuthenticated && companyUser && companyUser.userType !== 'company_user') {
       router.push('/candidate');
     }
-  }, [authState.isAuthenticated, pathname, authState.companyUser, router]);
+  }, [authState.isAuthenticated, authState.loading, pathname, authState.companyUser, router]);
 
   const { isAuthenticated, companyUser } = authState;
   

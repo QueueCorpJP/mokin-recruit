@@ -53,7 +53,7 @@ export default function JobEditConfirmPageClient({ jobData, jobId }: JobEditConf
 
   useEffect(() => {
     // クライアントサイドでのみ実行
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !jobId) {
       return;
     }
     

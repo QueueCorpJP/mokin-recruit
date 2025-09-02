@@ -21,20 +21,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     let mounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
     
     async function initializeAuth() {
       try {
         const createClient = await createClientLazy();
+        if (!createClient) {
+          if (!mounted) return;
+          console.error('🔍 [AUTH PROVIDER] Failed to load Supabase client');
+          startTransition(() => {
+            setUser(null);
+            setAccessToken(null);
+            setLoading(false);
+          });
+          return;
+        }
+
         const supabase = createClient();
+        if (!supabase) {
+          if (!mounted) return;
+          console.error('🔍 [AUTH PROVIDER] Failed to create Supabase instance');
+          startTransition(() => {
+            setUser(null);
+            setAccessToken(null);
+            setLoading(false);
+          });
+          return;
+        }
         
-        // 並列でセッション取得とリスナー設定
-        const [sessionResult] = await Promise.all([
-          supabase.auth.getSession(),
-          // リスナー設定も並列で実行（遅延初期化）
-          new Promise<void>(async (resolve) => {
+        // リスナー設定を先に行う
+        const setupListener = async () => {
+          try {
             const createClient = await createClientLazy();
+            if (!createClient || !mounted) return;
+            
             const supabaseForListener = createClient();
-            const { data: { subscription } } = supabaseForListener.auth.onAuthStateChange((event, session) => {
+            if (!supabaseForListener || !mounted) return;
+
+            const { data: { subscription: authSubscription } } = supabaseForListener.auth.onAuthStateChange((event, session) => {
               if (!mounted) return;
               
               startTransition(() => {
@@ -48,21 +72,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
             });
             
-            // クリーンアップ関数を設定
+            subscription = authSubscription;
+          } catch (error) {
             if (mounted) {
-              const cleanup = () => subscription.unsubscribe();
-              // コンポーネントがアンマウントされたときにクリーンアップ
-              // cleanup関数をここで何かする必要があれば処理
+              console.error('🔍 [AUTH PROVIDER] Auth listener setup error:', error);
             }
-            resolve();
-          })
+          }
+        };
+
+        // セッション取得とリスナー設定を並列実行
+        const [sessionResult] = await Promise.all([
+          supabase.auth.getSession(),
+          setupListener()
         ]);
         
         if (!mounted) return;
         
         const { data: { session }, error } = sessionResult;
         
-        // 状態更新を並列で実行（React 18のstartTransition使用）
+        // 状態更新
         startTransition(() => {
           if (error) {
             console.error('🔍 [AUTH PROVIDER] Session error:', error);
@@ -92,6 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return () => {
       mounted = false;
+      if (subscription) {
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('🔍 [AUTH PROVIDER] Cleanup error:', error);
+        }
+      }
     };
   }, []);
   
