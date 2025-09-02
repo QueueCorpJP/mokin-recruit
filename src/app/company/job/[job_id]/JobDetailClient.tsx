@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { getJobForEdit } from '../actions';
 
 interface JobImageSectionProps {
   images: string[];
@@ -141,8 +142,31 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
     router.push(`/company/job/${displayData.id}/edit`);
   };
 
-  const handleDuplicate = () => {
-    // 複製処理
+  const handleDuplicate = async () => {
+    try {
+      const result = await getJobForEdit(displayData.id);
+      
+      if (result.success && result.data) {
+        const originalJob = result.data;
+        
+        // 複製データを作成
+        const duplicateData = {
+          ...originalJob,
+          title: `${originalJob.title}のコピー`,
+        };
+        
+        // クライアントサイドでのみsessionStorageに保存
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('duplicateJobData', JSON.stringify(duplicateData));
+        }
+        router.push('/company/job/new');
+      } else {
+        alert('求人データの取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('複製処理でエラーが発生しました:', error);
+      alert('複製処理でエラーが発生しました');
+    }
   };
 
   // ステータス表示の設定
