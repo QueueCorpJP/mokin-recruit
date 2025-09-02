@@ -119,9 +119,12 @@ async function _getCompanyJobs(params: {
 
     // キーワード検索
     if (params.search) {
-      query = query.or(
-        `title.ilike.%${params.search}%,job_type.ilike.%${params.search}%,job_types.cs.{${params.search}},industries.cs.{${params.search}}`
-      );
+      const searchTerm = params.search.trim();
+      if (searchTerm) {
+        query = query.or(
+          `title.ilike.%${searchTerm}%,job_type.cs.{${searchTerm}},industry.cs.{${searchTerm}}`
+        );
+      }
     }
 
     const { data: jobs, error: jobsError } = await query;
