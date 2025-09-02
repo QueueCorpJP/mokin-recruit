@@ -23,7 +23,7 @@ const JobImageSection: React.FC<JobImageSectionProps> = ({ images }) => {
         {validImages.map((image, index) => (
           <div
             key={index}
-            className="relative border rounded overflow-hidden bg-gray-100"
+            className="relative rounded overflow-hidden bg-gray-100"
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
@@ -102,40 +102,40 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
   const [displayData, setDisplayData] = React.useState<JobData>(jobData);
 
   React.useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     // sessionStorageからプレビューデータを取得
     const previewData = sessionStorage.getItem('jobPreviewData');
     if (previewData) {
       try {
         const parsedData = JSON.parse(previewData);
         // プレビューデータを一時的に表示（サーバーデータより軽量な情報を表示）
-        setDisplayData({
-          ...jobData, // サーバーデータをベースに
+        setDisplayData(prevData => ({
+          ...prevData, // 現在のデータをベースに
           // 一覧から取得可能な基本情報で上書き（即座に表示）
-          title: parsedData.title,
-          status: parsedData.status,
-          groupName: parsedData.groupName,
-          publicationType: parsedData.publicationType,
-          jobType: parsedData.jobType || [],
-          industry: parsedData.industry || [],
-          employmentType: parsedData.employmentType,
-          salaryMin: parsedData.salaryMin,
-          salaryMax: parsedData.salaryMax,
-          workLocation: parsedData.workLocation || [],
-          internalMemo: parsedData.internalMemo || '',
-          createdAt: parsedData.createdAt,
-          updatedAt: parsedData.updatedAt,
-          publishedAt: parsedData.publishedAt,
-        });
+          title: parsedData.title || prevData.title,
+          status: parsedData.status || prevData.status,
+          groupName: parsedData.groupName || prevData.groupName,
+          publicationType: parsedData.publicationType || prevData.publicationType,
+          jobType: parsedData.jobType || prevData.jobType || [],
+          industry: parsedData.industry || prevData.industry || [],
+          employmentType: parsedData.employmentType || prevData.employmentType,
+          salaryMin: parsedData.salaryMin ?? prevData.salaryMin,
+          salaryMax: parsedData.salaryMax ?? prevData.salaryMax,
+          workLocation: parsedData.workLocation || prevData.workLocation || [],
+          internalMemo: parsedData.internalMemo || prevData.internalMemo || '',
+          createdAt: parsedData.createdAt || prevData.createdAt,
+          updatedAt: parsedData.updatedAt || prevData.updatedAt,
+          publishedAt: parsedData.publishedAt || prevData.publishedAt,
+        }));
         // 使用後は削除
         sessionStorage.removeItem('jobPreviewData');
       } catch (error) {
         console.error('Failed to parse preview data:', error);
       }
     }
-
-    // サーバーから正式なデータが到着したら更新
-    setDisplayData(jobData);
-  }, [displayData]);
+  }, []);
 
   const handleEdit = () => {
     router.push(`/company/job/${displayData.id}/edit`);
@@ -921,14 +921,14 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 </div>
               </div>
 
-              {/* 受動喜煙防止措置 */}
+              {/* 受動喫煙防止措置 */}
               <div className="flex gap-6">
                 <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
                   <div
                     className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    受動喜煙防止措置
+                    受動喫煙防止措置
                   </div>
                 </div>
                 <div className="flex-1 py-6">

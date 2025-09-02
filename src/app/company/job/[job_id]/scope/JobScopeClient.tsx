@@ -59,6 +59,11 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
   const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // sessionStorageから編集データを取得
     try {
       const savedEditData = sessionStorage.getItem(`editData-${jobId}`);
@@ -183,7 +188,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
             />
           </div>
           <div className="w-full max-w-[1280px] mx-auto">
-            <div className="p-10">
+            <div className="">
               {/* 公開範囲選択セクション */}
               <div className="w-full">
                 <div className="border-2 border-[#0f9058] border-solid rounded-[10px] bg-white p-[40px]">

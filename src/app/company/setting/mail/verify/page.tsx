@@ -15,6 +15,9 @@ export default function MailVerifyPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     const verificationEmail = sessionStorage.getItem('verificationEmail');
     if (!verificationEmail) {
       router.push('/company/setting/mail');
@@ -34,7 +37,9 @@ export default function MailVerifyPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        sessionStorage.removeItem('verificationEmail');
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('verificationEmail');
+        }
         // メールアドレス変更が完了したので、完了ページに移動
         router.push('/company/setting/mail/complete');
       }

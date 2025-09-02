@@ -89,7 +89,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         {existingImages.map((imageUrl, idx) => (
           <div
             key={`existing-${idx}`}
-            className="relative border rounded overflow-visible bg-gray-100 flex items-center justify-center"
+            className="relative rounded overflow-visible bg-gray-100 flex items-center justify-center"
             style={{ width: '200px', height: '133px' }}
           >
             <Image
@@ -119,7 +119,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           return (
             <div
               key={`new-${idx}`}
-              className="relative border rounded overflow-visible bg-gray-100 flex items-center justify-center"
+              className="relative rounded overflow-visible bg-gray-100 flex items-center justify-center"
               style={{ width: '200px', height: '133px' }}
             >
               <Image

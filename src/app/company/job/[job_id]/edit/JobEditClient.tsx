@@ -107,6 +107,11 @@ export default function JobEditClient({
 
   // データ復元のためのuseEffect
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // sessionStorageからデータを復元
     try {
       const savedEditData = sessionStorage.getItem(`editData-${jobId}`);

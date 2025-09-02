@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/mo-dal';
 import { updateJob } from '../../actions';
 import AttentionBanner from '@/components/ui/AttentionBanner';
 import Image from 'next/image';
+import JobEditConfirmHeader from './JobEditConfirmHeader';
 
 interface ImageSectionProps {
   images: (File | string)[];
@@ -26,7 +27,7 @@ const ImageSection: React.FC<ImageSectionProps> = ({ images }) => {
         {validImages.map((image, index) => (
           <div
             key={index}
-            className="relative border rounded overflow-hidden bg-gray-100"
+            className="relative rounded overflow-hidden bg-gray-100"
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
@@ -222,76 +223,7 @@ export default function JobEditConfirmClient({
   return (
     <>
       {/* ヘッダー部分 */}
-      <div
-        className="bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10"
-        style={{
-          background: 'linear-gradient(to top, #17856f, #229a4e)',
-        }}
-      >
-        <div className="w-full max-w-[1280px] mx-auto ">
-          {/* タイトルとステータス */}
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-white text-[16px] font-medium tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    求人編集
-                  </span>
-                  <svg 
-                    width="6" 
-                    height="8" 
-                    viewBox="0 0 6 8" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mx-1"
-                  >
-                    <path 
-                      d="M5.11804 3.59656C5.34118 3.8197 5.34118 4.18208 5.11804 4.40522L1.69061 7.83264C1.46747 8.05579 1.10509 8.05579 0.881954 7.83264C0.658815 7.60951 0.658815 7.24713 0.881954 7.02399L3.90594 4L0.883739 0.976012C0.6606 0.752873 0.6606 0.390494 0.883739 0.167355C1.10688 -0.0557849 1.46926 -0.0557849 1.6924 0.167355L5.11982 3.59478L5.11804 3.59656Z" 
-                      fill="white"
-                    />
-                  </svg>
-                  <span
-                    className="text-white text-[16px] font-medium tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    確認画面
-                  </span>
-                </div>
-                <h1
-                  className="text-white text-[24px] font-bold tracking-[2.4px]"
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  {editData.title}
-                </h1>
-              </div>
-            </div>
-          </div>
-
-          {/* ステータスバッジとボタン */}
-          <div className="flex items-center justify-start gap-6">
-            <div className="flex items-center gap-1">
-              <svg
-                width="8"
-                height="8"
-                viewBox="0 0 8 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="4" cy="4" r="4" fill={statusDisplay.color} />
-              </svg>
-              <span className="text-[#fff] text-[16px] font-bold">
-                {statusDisplay.text}
-              </span>
-            </div>
-            <span className="text-[#0F9058] text-[16px] font-bold bg-white w-[107px] flex items-center justify-center rounded-[5px]">
-              {getPublicationTypeLabel()}
-            </span>
-          </div>
-        </div>
-      </div>
+      <JobEditConfirmHeader />
 
       {/* メインコンテンツ */}
       <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
@@ -612,7 +544,7 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 勤務地 */}
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 justify-start items-start">
                       <div
                         className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}

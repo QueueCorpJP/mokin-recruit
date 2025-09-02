@@ -158,7 +158,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
                 return (
                   <div
                     key={idx}
-                    className='relative w-40 h-28 border border-[#e9ecef] rounded-[5px] overflow-hidden bg-gray-100 flex items-center justify-center'
+                    className='relative w-40 h-28 rounded-[5px] overflow-hidden bg-gray-100 flex items-center justify-center'
                   >
                     <Image
                       src={url}

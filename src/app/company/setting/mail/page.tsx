@@ -25,7 +25,9 @@ export default function MailChangePage() {
       if (result.error) {
         setError(result.error);
       } else {
-        sessionStorage.setItem('verificationEmail', email);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('verificationEmail', email);
+        }
         router.push('/company/setting/mail/verify');
       }
     } catch (error) {

@@ -90,6 +90,9 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
 
   // 複製データまたは下書きデータを復元
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     const loadData = () => {
       try {
         // 複製データがあるかチェック（優先）
