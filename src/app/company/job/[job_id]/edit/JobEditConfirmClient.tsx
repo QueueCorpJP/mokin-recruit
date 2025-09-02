@@ -8,6 +8,7 @@ import { updateJob } from '../../actions';
 import AttentionBanner from '@/components/ui/AttentionBanner';
 import Image from 'next/image';
 import JobEditConfirmHeader from './JobEditConfirmHeader';
+import { appealPointCategories } from '../../types';
 
 interface ImageSectionProps {
   images: (File | string)[];
@@ -740,35 +741,44 @@ export default function JobEditConfirmClient({
                 </div>
                 <div className="flex-1 py-6">
                   <div className="flex flex-col gap-6">
-                    {/* 業務・ポジション */}
-                    <div className="flex flex-col gap-2">
-                      <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        業務・ポジション
-                      </div>
-                      <div className="flex flex-wrap gap-1 items-start">
-                        {editData.appeal_points && editData.appeal_points.length > 0 ? (
-                          editData.appeal_points.map((point, index) => (
-                            <span
-                              key={index}
-                              className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                            >
-                              {point}{index < editData.appeal_points.length - 1 && '、'}
-                            </span>
-                          ))
-                        ) : (
-                          <span
-                            className="text-[16px] font-medium text-[#999999] tracking-[1.6px]"
+                    {appealPointCategories.map((category, idx) => {
+                      const selected = category.points.filter(p =>
+                        editData.appeal_points && editData.appeal_points.includes(p)
+                      );
+                      return (
+                        <div
+                          key={category.name}
+                          className={`flex flex-col gap-2${idx !== appealPointCategories.length - 1 ? ' mb-4' : ''}`}
+                        >
+                          <div
+                            className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            アピールポイントが設定されていません
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                            {category.name}
+                          </div>
+                          <div className="flex flex-wrap gap-1 items-start">
+                            {selected.length > 0 ? (
+                              selected.map((point, index) => (
+                                <span
+                                  key={index}
+                                  className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
+                                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                >
+                                  {point}{index < selected.length - 1 && '、'}
+                                </span>
+                              ))
+                            ) : (
+                              <span
+                                className="text-[16px] font-medium text-[#999999] tracking-[1.6px]"
+                                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                              >
+                                未入力
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
