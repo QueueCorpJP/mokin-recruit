@@ -777,7 +777,6 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
            <img 
              src="/images/consult.svg"
              alt="お問い合わせ"
-            
            />
           </div>
         </div>
