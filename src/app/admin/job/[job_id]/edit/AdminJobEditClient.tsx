@@ -141,7 +141,9 @@ export default function AdminJobEditClient({
       console.log('Job update successful, result:', result);
       
       // 成功時に確認画面にリダイレクト
-      window.location.href = `/admin/job/${jobId}/edit/confirm`;
+      if (typeof window !== 'undefined') {
+        window.location.href = `/admin/job/${jobId}/edit/confirm`;
+      }
     } catch (error) {
       console.error('Update error:', error);
       alert('更新に失敗しました');

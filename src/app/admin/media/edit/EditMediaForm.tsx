@@ -64,6 +64,10 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
   
   // URLパラメータから成功メッセージをチェック
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
       setSuccessMessage('記事が正常に保存されました');

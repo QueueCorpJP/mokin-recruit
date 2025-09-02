@@ -32,7 +32,7 @@ interface JobEditConfirmHeaderProps {
 export default function JobEditConfirmHeader() {
   return (
     <div
-      className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10"
+      className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10 px-10"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl md:px-[80px]">
         <div className="flex flex-col gap-4 items-start justify-start">
@@ -79,7 +79,7 @@ export default function JobEditConfirmHeader() {
               <div
                 className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
               >
-                編集内容確認
+                編集内容の確認
               </div>
             </div>
             <div

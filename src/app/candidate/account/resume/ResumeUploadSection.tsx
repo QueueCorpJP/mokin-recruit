@@ -11,6 +11,9 @@ export default function ResumeUploadSection() {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const handleResumeUpload = () => {
+    if (typeof document === 'undefined') {
+      return;
+    }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf';
@@ -27,6 +30,9 @@ export default function ResumeUploadSection() {
   };
 
   const handleCvUpload = () => {
+    if (typeof document === 'undefined') {
+      return;
+    }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf';

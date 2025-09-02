@@ -111,9 +111,11 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
     setThumbnail(null);
     setThumbnailError('');
     // ファイル入力をクリア
-    const fileInput = document.getElementById('thumbnail-input') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
+    if (typeof document !== 'undefined') {
+      const fileInput = document.getElementById('thumbnail-input') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
     }
   };
 
@@ -409,7 +411,11 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => document.getElementById('thumbnail-input')?.click()}
+                onClick={() => {
+                  if (typeof document !== 'undefined') {
+                    document.getElementById('thumbnail-input')?.click();
+                  }
+                }}
                 className="px-10 h-[50px] border border-[#999999] rounded-[32px] text-[#323232] text-[16px] font-bold tracking-[1.6px] bg-white w-fit"
               >
                 画像をアップロード

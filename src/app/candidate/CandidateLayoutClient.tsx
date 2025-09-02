@@ -43,7 +43,7 @@ export default function CandidateLayoutClient({
     if (isAuthenticated && !candidateUser) {
       router.push('/company');
     }
-  }, [loading, isAuthenticated, candidateUser, pathname, router]);
+  }, [loading, isAuthenticated, candidateUser, pathname]);
 
   // 認証情報を整理
   const userInfo = isAuthenticated && candidateUser ? {
