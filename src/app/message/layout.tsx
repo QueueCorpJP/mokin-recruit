@@ -2,6 +2,8 @@ import { getServerAuth } from '@/lib/auth/server';
 import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
 import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MessageLayout({
   children,
 }: {
