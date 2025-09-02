@@ -190,7 +190,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
                     className="text-white text-[24px] font-bold tracking-[2.4px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {editData.title}
+                    求人の公開設定変更
                   </h1>
                 </div>
               </div>
