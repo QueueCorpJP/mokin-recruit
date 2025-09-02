@@ -69,12 +69,49 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
   const pathname = usePathname();
   const router = useRouter();
 
-  // デフォルトの空のタスクデータ
+  // デフォルトのサンプルタスクデータ
   const defaultTaskData: TaskData = {
     hasNoJobPostings: false,
-    hasNewApplication: false,
-    hasUnreadApplication: false, 
-    hasNewMessage: false,
+    hasNewApplication: true,
+    newApplications: [
+      {
+        id: '1',
+        candidateName: '田中太郎',
+        jobTitle: 'フロントエンドエンジニア',
+        appliedAt: new Date('2024-01-15T10:30:00'),
+      },
+      {
+        id: '2', 
+        candidateName: '佐藤花子',
+        jobTitle: 'バックエンドエンジニア',
+        appliedAt: new Date('2024-01-14T14:20:00'),
+      }
+    ],
+    hasUnreadApplication: false,
+    hasNewMessage: true,
+    newMessages: [
+      {
+        roomId: 'room_001',
+        candidateName: '山田次郎',
+        jobTitle: 'UI/UXデザイナー',
+        sentAt: new Date('2024-01-15T16:45:00'),
+        messagePreview: '面接の件でお聞きしたいことがあります',
+      },
+      {
+        roomId: 'room_002',
+        candidateName: '鈴木美咲',
+        jobTitle: 'プロダクトマネージャー',
+        sentAt: new Date('2024-01-15T12:30:00'),
+        messagePreview: 'ご連絡ありがとうございます。来週の面接について...',
+      },
+      {
+        roomId: 'room_003',
+        candidateName: '高橋健太',
+        jobTitle: 'データサイエンティスト',
+        sentAt: new Date('2024-01-14T18:15:00'),
+        messagePreview: '技術的な質問がございます',
+      }
+    ],
     hasUnreadMessage: false,
     hasUnregisteredInterviewResult: false,
   };
