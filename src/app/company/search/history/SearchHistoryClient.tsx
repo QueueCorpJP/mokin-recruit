@@ -1,0 +1,469 @@
+'use client';
+
+import React, { ChangeEvent, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
+import { EditSearchConditionModal } from './EditSearchConditionModal';
+import { Input } from '@/components/ui/input';
+import { SelectInput } from '@/components/ui/select-input';
+
+// Icons
+const SearchIcon = () => (
+  <svg
+    width='32'
+    height='32'
+    viewBox='0 0 32 32'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+  >
+    <path
+      d='M14.5 25C20.299 25 25 20.299 25 14.5C25 8.70101 20.299 4 14.5 4C8.70101 4 4 8.70101 4 14.5C4 20.299 8.70101 25 14.5 25Z'
+      stroke='white'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+    <path
+      d='M21.925 21.925L28 28'
+      stroke='white'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  </svg>
+);
+
+const BookmarkIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='18'
+    height='24'
+    viewBox='0 0 18 24'
+    fill='none'
+  >
+    <path
+      d='M0 2.25V22.8609C0 23.4891 0.510937 24 1.13906 24C1.37344 24 1.60312 23.9297 1.79531 23.7938L9 18.75L16.2047 23.7938C16.3969 23.9297 16.6266 24 16.8609 24C17.4891 24 18 23.4891 18 22.8609V2.25C18 1.00781 16.9922 0 15.75 0H2.25C1.00781 0 0 1.00781 0 2.25Z'
+      fill={filled ? '#FFDA5F' : '#DCDCDC'}
+    />
+  </svg>
+);
+
+const DotsMenuIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='24'
+    height='8'
+    viewBox='0 0 24 8'
+    fill='none'
+  >
+    <path
+      d='M0 3.99997C0 3.17485 0.327777 2.38353 0.911223 1.80008C1.49467 1.21663 2.28599 0.888855 3.11111 0.888855C3.93623 0.888855 4.72755 1.21663 5.311 1.80008C5.89445 2.38353 6.22222 3.17485 6.22222 3.99997C6.22222 4.82508 5.89445 5.61641 5.311 6.19985C4.72755 6.7833 3.93623 7.11108 3.11111 7.11108C2.28599 7.11108 1.49467 6.7833 0.911223 6.19985C0.327777 5.61641 0 4.82508 0 3.99997ZM8.88889 3.99997C8.88889 3.17485 9.21667 2.38353 9.80011 1.80008C10.3836 1.21663 11.1749 0.888855 12 0.888855C12.8251 0.888855 13.6164 1.21663 14.1999 1.80008C14.7833 2.38353 15.1111 3.17485 15.1111 3.99997C15.1111 4.82508 14.7833 5.61641 14.1999 6.19985C13.6164 6.7833 12.8251 7.11108 12 7.11108C11.1749 7.11108 10.3836 6.7833 9.80011 6.19985C9.21667 5.61641 8.88889 4.82508 8.88889 3.99997ZM20.8889 0.888855C21.714 0.888855 22.5053 1.21663 23.0888 1.80008C23.6722 2.38353 24 3.17485 24 3.99997C24 4.82508 23.6722 5.61641 23.0888 6.19985C22.5053 6.7833 21.714 7.11108 20.8889 7.11108C20.0638 7.11108 19.2724 6.7833 18.689 6.19985C18.1056 5.61641 17.7778 4.82508 17.7778 3.99997C17.7778 3.17485 18.1056 2.38353 18.689 1.80008C19.2724 1.21663 20.0638 0.888855 20.8889 0.888855Z'
+      fill='#DCDCDC'
+    />
+  </svg>
+);
+
+const ChevronLeftIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='10'
+    height='16'
+    viewBox='0 0 10 16'
+    fill='none'
+  >
+    <path
+      d='M0.763927 7.19313C0.317649 7.63941 0.317649 8.36416 0.763927 8.81044L7.61878 15.6653C8.06506 16.1116 8.78981 16.1116 9.23609 15.6653C9.68237 15.219 9.68237 14.4943 9.23609 14.048L3.18812 8L9.23252 1.95202C9.6788 1.50575 9.6788 0.780988 9.23252 0.334709C8.78624 -0.11157 8.06148 -0.11157 7.61521 0.334709L0.760357 7.18956L0.763927 7.19313Z'
+      fill='#0F9058'
+    />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='10'
+    height='16'
+    viewBox='0 0 10 16'
+    fill='none'
+  >
+    <path
+      d='M9.23607 7.19313C9.68235 7.63941 9.68235 8.36416 9.23607 8.81044L2.38122 15.6653C1.93494 16.1116 1.21019 16.1116 0.763909 15.6653C0.317629 15.219 0.317629 14.4943 0.763909 14.048L6.81188 8L0.767479 1.95202C0.3212 1.50575 0.3212 0.780988 0.767479 0.334709C1.21376 -0.11157 1.93852 -0.11157 2.38479 0.334709L9.23964 7.18956L9.23607 7.19313Z'
+      fill='#0F9058'
+    />
+  </svg>
+);
+
+interface SearchHistoryItem {
+  id: string;
+  saved: boolean;
+  group: string;
+  searchCondition: string;
+  searcher: string;
+  date: string;
+  isMenuOpen?: boolean;
+}
+
+export function SearchHistoryClient() {
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [keyword, setKeyword] = useState<string>('');
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<SearchHistoryItem | null>(
+    null
+  );
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<SearchHistoryItem | null>(
+    null
+  );
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([
+    {
+      id: '1',
+      saved: true,
+      group: 'グループ名テキスト',
+      searchCondition:
+        'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円〜〇〇万円',
+      searcher: '検索者名テキスト検索者名テキスト',
+      date: 'yyyy/mm/dd',
+      isMenuOpen: false,
+    },
+    ...Array.from({ length: 9 }, (_, i) => ({
+      id: `${i + 2}`,
+      saved: false,
+      group: 'グループ名テキスト',
+      searchCondition:
+        '検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。',
+      searcher: '検索者名テキスト検索者名テキスト',
+      date: 'yyyy/mm/dd',
+      isMenuOpen: false,
+    })),
+  ]);
+
+  const toggleMenu = (id: string) => {
+    setSearchHistory((prev: SearchHistoryItem[]) =>
+      prev.map((item: SearchHistoryItem) =>
+        item.id === id
+          ? { ...item, isMenuOpen: !item.isMenuOpen }
+          : { ...item, isMenuOpen: false }
+      )
+    );
+  };
+
+  const toggleBookmark = (id: string) => {
+    setSearchHistory((prev: SearchHistoryItem[]) =>
+      prev.map((item: SearchHistoryItem) =>
+        item.id === id ? { ...item, saved: !item.saved } : item
+      )
+    );
+  };
+
+  const handleEdit = (item: SearchHistoryItem) => {
+    setEditingItem(item);
+    setEditModalOpen(true);
+    // Close the dropdown menu
+    setSearchHistory((prev: SearchHistoryItem[]) =>
+      prev.map((i: SearchHistoryItem) => ({ ...i, isMenuOpen: false }))
+    );
+  };
+
+  const handleSaveEdit = (newSearchCondition: string) => {
+    if (editingItem) {
+      setSearchHistory((prev: SearchHistoryItem[]) =>
+        prev.map((item: SearchHistoryItem) =>
+          item.id === editingItem.id
+            ? { ...item, searchCondition: newSearchCondition }
+            : item
+        )
+      );
+    }
+    setEditModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleDelete = (item: SearchHistoryItem) => {
+    setDeletingItem(item);
+    setDeleteModalOpen(true);
+    // Close the dropdown menu
+    setSearchHistory((prev: SearchHistoryItem[]) =>
+      prev.map((i: SearchHistoryItem) => ({ ...i, isMenuOpen: false }))
+    );
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingItem) {
+      setSearchHistory((prev: SearchHistoryItem[]) =>
+        prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
+      );
+    }
+    setDeleteModalOpen(false);
+    setDeletingItem(null);
+  };
+
+  // グループ選択用のオプション
+  const groupOptions = [
+    { value: '', label: '未選択' },
+    { value: 'group1', label: 'グループ名テキスト' },
+    { value: 'group2', label: 'グループ名2' },
+    { value: 'group3', label: 'グループ名3' },
+  ];
+
+  return (
+    <>
+      {/* Hero Section with Gradient Background */}
+      <div
+        className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10'
+        style={{
+          background: 'linear-gradient(to top, #17856f, #229a4e)',
+        }}
+      >
+        <div className='w-full max-w-[1200px] mx-auto'>
+          {/* Page Title */}
+          <div className='flex items-center gap-4'>
+            <SearchIcon />
+            <h1
+              className='text-white text-[24px] font-bold tracking-[2.4px]'
+              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+            >
+              検索履歴
+            </h1>
+          </div>
+        </div>
+
+        {/* Search Filters */}
+        <div className='w-full max-w-[1200px] mx-auto mt-10'>
+          <div className='bg-white rounded-[10px] p-6 min-[1200px]:p-10'>
+            <div className='flex flex-col min-[1200px]:flex-row gap-6 min-[1200px]:gap-10 items-start'>
+              {/* Group Select */}
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
+                  グループ
+                </span>
+                <SelectInput
+                  options={groupOptions}
+                  value={selectedGroup}
+                  onChange={setSelectedGroup}
+                  placeholder='未選択'
+                  className='w-full min-[1200px]:w-60'
+                />
+              </div>
+
+              {/* Keyword Search */}
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
+                  検索条件名から検索
+                </span>
+                <div className='flex gap-2 w-full min-[1200px]:w-auto'>
+                  <Input
+                    type='text'
+                    value={keyword}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setKeyword(e.target.value)
+                    }
+                    placeholder='キーワード検索'
+                    className='bg-white border-[#999999] flex-1 min-[1200px]:w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1'
+                  />
+                  <Button
+                    variant='small-green'
+                    size='figma-small'
+                    className='px-6 py-2'
+                  >
+                    検索
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Saved Only Checkbox */}
+            <div className='mt-6'>
+              <Checkbox
+                checked={showSavedOnly}
+                onChange={setShowSavedOnly}
+                label={
+                  <span className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                    保存済のみ表示
+                  </span>
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className='bg-[#f9f9f9] px-20 pt-10 pb-20 min-h-[577px]'>
+        <div className='w-full max-w-[1200px] mx-auto'>
+          {/* Top Actions */}
+          <div className='flex justify-between items-center mb-10'>
+            <Button
+              variant='blue-gradient'
+              size='figma-blue'
+              className='min-w-[160px]'
+            >
+              新規検索
+            </Button>
+
+            {/* Pagination Info */}
+            <div className='flex items-center gap-2'>
+              <ChevronLeftIcon />
+              <span className='text-[#323232] text-[12px] font-bold tracking-[1.2px]'>
+                1〜10件 / 1,000件
+              </span>
+              <ChevronRightIcon />
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className='flex items-center px-10 pb-2 border-b border-[#dcdcdc]'>
+            {/* Spacer for bookmark icon */}
+            <div className='w-[18px]'></div>
+
+            {/* Group column */}
+            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              グループ
+            </div>
+
+            {/* Search Condition column */}
+            <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px] truncate'>
+              検索条件名
+            </div>
+
+            {/* Searcher column */}
+            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              検索者
+            </div>
+
+            {/* Date column */}
+            <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              検索日
+            </div>
+
+            {/* Spacer for menu button */}
+            <div className='w-[24px] ml-4 min-[1200px]:ml-6'></div>
+          </div>
+
+          {/* Search History Items */}
+          <div className='flex flex-col gap-2 mt-2'>
+            {searchHistory.map((item: SearchHistoryItem) => (
+              <div
+                key={item.id}
+                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
+              >
+                {/* Bookmark Icon */}
+                <button
+                  className='w-[18px] flex-shrink-0'
+                  onClick={() => toggleBookmark(item.id)}
+                >
+                  <BookmarkIcon filled={item.saved} />
+                </button>
+
+                {/* Group Badge */}
+                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                  <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
+                    {item.group}
+                  </span>
+                </div>
+
+                {/* Search Condition */}
+                <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.searchCondition}
+                </div>
+
+                {/* Searcher */}
+                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.searcher}
+                </div>
+
+                {/* Date */}
+                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                  {item.date}
+                </div>
+
+                {/* Menu Button */}
+                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
+                  <button onClick={() => toggleMenu(item.id)}>
+                    <DotsMenuIcon />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {item.isMenuOpen && (
+                    <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        編集
+                      </button>
+                      <button className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'>
+                        複製
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        削除
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className='flex items-center justify-center gap-4 mt-10'>
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
+              <ChevronLeftIcon />
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
+              1
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
+              9
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] bg-[#0f9058] flex items-center justify-center text-white text-[16px] font-bold tracking-[1.6px] hover:opacity-80 transition-opacity duration-200'>
+              10
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
+              11
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
+              100
+            </button>
+
+            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
+              <ChevronRightIcon />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Modal */}
+      <EditSearchConditionModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingItem(null);
+        }}
+        onSave={handleSaveEdit}
+        groupName={editingItem?.group || ''}
+        initialValue={editingItem?.searchCondition || ''}
+      />
+
+      {/* Delete Modal */}
+      <DeleteSearchConditionModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeletingItem(null);
+        }}
+        onDelete={handleConfirmDelete}
+        searchConditionName={deletingItem?.searchCondition || ''}
+      />
+    </>
+  );
+}

@@ -25,8 +25,11 @@ export default function IndustrySelectModal({
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
-    setSelectedIndustries(initialSelected);
-  }, [initialSelected]);
+    // モーダルが開いた時のみ初期化
+    if (isOpen && selectedIndustries.length === 0 && initialSelected.length >= 0) {
+      setSelectedIndustries(initialSelected);
+    }
+  }, [isOpen]);
 
   const handleCheckboxChange = (industryName: string) => {
     if (selectedIndustries.includes(industryName)) {
@@ -44,7 +47,7 @@ export default function IndustrySelectModal({
 
   const handleConfirm = () => {
     onConfirm(selectedIndustries);
-    onClose();
+    // モーダルを閉じるのは親コンポーネントに任せる
   };
 
   // カテゴリごとに業種を整理
@@ -95,7 +98,10 @@ export default function IndustrySelectModal({
                   <Checkbox 
                     label={industryItem.name} 
                     checked={isSelected} 
-                    onChange={() => handleCheckboxChange(industryItem.name)}
+                    onChange={(checked) => {
+                      console.log('Industry Checkbox onChange called with:', checked, 'for:', industryItem.name);
+                      handleCheckboxChange(industryItem.name);
+                    }}
                     disabled={isDisabled}
                   />
                 </div>

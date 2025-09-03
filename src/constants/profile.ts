@@ -63,7 +63,10 @@ export const INCOME_RANGES = [
   { value: '1200-1300', label: '1200~1300万' },
   { value: '1300-1400', label: '1300~1400万' },
   { value: '1400-1500', label: '1400~1500万' },
-  { value: 'over-1500', label: '1500万~' },
+  { value: '1500-2000', label: '1500~2000万' },
+  { value: '2000-3000', label: '2000~3000万' },
+  { value: '3000-5000', label: '3000~5000万' },
+  { value: 'over-5000', label: '5000万~' },
 ] as const;
 
 export const GENDER_OPTIONS = [

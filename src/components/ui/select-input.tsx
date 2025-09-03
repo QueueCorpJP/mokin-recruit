@@ -225,12 +225,13 @@ export function SelectInput({
           'bg-white border border-[#999999] rounded-[8px] text-left',
           'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
+          'appearance-none outline-none focus:outline-none',
 
           // 状態別スタイル
           !disabled &&
             !error && [
               'hover:border-[#4FC3A1] hover:shadow-[0_0_0_2px_rgba(79,195,161,0.1)]',
-              'focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] focus:outline-none',
+              'focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]',
               isOpen &&
                 'border-[#4FC3A1] shadow-[0_0_0_2px_rgba(79,195,161,0.2)]',
             ],

@@ -13,6 +13,8 @@ import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import { getCandidatesFromDatabase, loadSearchParamsToStore } from './actions';
 import { useSearchStore } from '../../../../stores/searchStore';
+import ExperienceSearchConditionForm from '../components/ExperienceSearchConditionForm';
+import SelectableTagWithYears from '../components/SelectableTagWithYears';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
@@ -54,6 +56,7 @@ function formatRelativeTime(date: Date): string {
   }
 }
 
+
 // 候補者データを取得する関数
 
 export default function SearchClient() {
@@ -61,6 +64,7 @@ export default function SearchClient() {
   const searchStore = useSearchStore();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
+  const [openSelectId, setOpenSelectId] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<CandidateData[]>([]);
   const [allCandidates, setAllCandidates] = useState<CandidateData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -98,49 +102,52 @@ export default function SearchClient() {
   useEffect(() => {
     if (allCandidates.length === 0) return;
     
+    // 空文字列（「指定なし」）を除外する処理
+    const filterEmptyValues = (items: Array<{name: string}>) => 
+      items.filter(item => item.name && item.name.trim() !== '').map(item => item.name);
+    
     const searchConditions = {
-      searchGroup: searchStore.searchGroup,
-      keyword: searchStore.keyword,
-      experience_job_types: searchStore.experienceJobTypes.map(j => j.name),
-      experience_industries: searchStore.experienceIndustries.map(i => i.name),
-      current_salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
-      current_salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
-      age_min: searchStore.ageMin ? parseInt(searchStore.ageMin) : undefined,
-      age_max: searchStore.ageMax ? parseInt(searchStore.ageMax) : undefined,
-      desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
-      desired_industries: searchStore.desiredIndustries.map(i => i.name),
-      desired_locations: searchStore.desiredLocations.map(l => l.name),
-      work_styles: searchStore.workStyles.map(w => w.name),
-      education: searchStore.education,
-      english_level: searchStore.englishLevel,
+      job_types: filterEmptyValues(searchStore.experienceJobTypes),
+      industries: filterEmptyValues(searchStore.experienceIndustries),
+      locations: filterEmptyValues(searchStore.desiredLocations),
+      salary_min: searchStore.currentSalaryMin && searchStore.currentSalaryMin.trim() !== '' 
+        ? parseInt(searchStore.currentSalaryMin) : undefined,
+      salary_max: searchStore.currentSalaryMax && searchStore.currentSalaryMax.trim() !== '' 
+        ? parseInt(searchStore.currentSalaryMax) : undefined,
+      age_min: searchStore.ageMin && searchStore.ageMin.trim() !== '' 
+        ? parseInt(searchStore.ageMin) : undefined,
+      age_max: searchStore.ageMax && searchStore.ageMax.trim() !== '' 
+        ? parseInt(searchStore.ageMax) : undefined,
+      education_level: searchStore.education && searchStore.education.trim() !== '' 
+        ? [searchStore.education] : undefined,
     };
 
     const hasSearchConditions = Object.values(searchConditions).some(value => 
       Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
     );
 
+    console.log('Search conditions:', searchConditions);
+    console.log('Has search conditions:', hasSearchConditions);
+    console.log('All candidates count:', allCandidates.length);
+
     if (hasSearchConditions) {
       const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
+      console.log('Filtered candidates count:', filteredCandidates.length);
       setCandidates(filteredCandidates);
     } else {
+      console.log('No search conditions, showing all candidates');
       setCandidates(allCandidates);
     }
   }, [
     allCandidates,
-    searchStore.searchGroup,
-    searchStore.keyword,
     searchStore.experienceJobTypes,
     searchStore.experienceIndustries,
+    searchStore.desiredLocations,
     searchStore.currentSalaryMin,
     searchStore.currentSalaryMax,
     searchStore.ageMin,
     searchStore.ageMax,
-    searchStore.desiredJobTypes,
-    searchStore.desiredIndustries,
-    searchStore.desiredLocations,
-    searchStore.workStyles,
-    searchStore.education,
-    searchStore.englishLevel
+    searchStore.education
   ]);
 
   const togglePickup = (id: string | number) => {
@@ -334,266 +341,8 @@ export default function SearchClient() {
                     </div>
                   </div>
 
-                  {/* 経験職種 */}
-                  <div className="flex gap-6 items-strech">
-                    <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
-                      <span
-                        className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        経験職種
-                      </span>
-                    </div>
-                    <div className="flex-1 py-6">
-                      {/* ボタンとチェックボックスのコンテナ */}
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => searchStore.setIsJobTypeModalOpen(true)}
-                          className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
-                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                        >
-                          職種を選択
-                        </button>
-
-                        {/* AND検索チェックボックス */}
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={searchStore.jobTypeAndSearch}
-                            onChange={(checked: boolean) =>
-                              searchStore.setJobTypeAndSearch(checked)
-                            }
-                          />
-                          <label
-                            className="text-[#323232] text-[14px] font-medium tracking-[1.4px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            選択した職種すべてが当てはまる
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* 選択された職種のタグ表示 */}
-                      {searchStore.experienceJobTypes.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {searchStore.experienceJobTypes.map((job) => (
-                            <div key={job.id} className="flex flex-row gap-0.5">
-                              <div className="inline-flex items-strech gap-1">
-                                <div
-                                  className="bg-[#d2f1da] px-6 py-[10px] rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {job.name}
-                                </div>
-                                <div className="bg-[#d2f1da] px-6 py-[10px] flex items-center justify-between relative">
-                                  <select
-                                    value={job.experienceYears || ''}
-                                    onChange={(e) => {
-                                      const updated = searchStore.experienceJobTypes.map(
-                                        (j) =>
-                                          j.id === job.id
-                                            ? {
-                                                ...j,
-                                                experienceYears: e.target.value,
-                                              }
-                                            : j,
-                                      );
-                                      searchStore.setExperienceJobTypes(updated);
-                                    }}
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    <option value="">経験年数：指定なし</option>
-                                    <option value="0">
-                                      経験年数：経験なし
-                                    </option>
-                                    <option value="1">経験年数：1年以上</option>
-                                    <option value="3">経験年数：3年以上</option>
-                                    <option value="5">経験年数：5年以上</option>
-                                    <option value="10">
-                                      経験年数：10年以上
-                                    </option>
-                                  </select>
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="10"
-                                    viewBox="0 0 14 10"
-                                    fill="none"
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                  >
-                                    <path
-                                      d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                      fill="#0F9058"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  searchStore.setExperienceJobTypes(
-                                    searchStore.experienceJobTypes.filter(
-                                      (j) => j.id !== job.id,
-                                    ),
-                                  );
-                                }}
-                                className="bg-[#d2f1da] p-[14px] rounded-r-[10px] flex items-center hover:bg-[#c2e1ca] transition-colors"
-                              >
-                                <svg
-                                  width="13"
-                                  height="12"
-                                  viewBox="0 0 13 12"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                    fill="#0F9058"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 経験業種 */}
-                  <div className="flex gap-6 items-strech">
-                    <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
-                      <span
-                        className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        経験業種
-                      </span>
-                    </div>
-                    <div className="flex-1 py-6">
-                      {/* ボタンとチェックボックスのコンテナ */}
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => searchStore.setIsIndustryModalOpen(true)}
-                          className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
-                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                        >
-                          業種を選択
-                        </button>
-
-                        {/* AND検索チェックボックス */}
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={searchStore.industryAndSearch}
-                            onChange={(checked: boolean) =>
-                              searchStore.setIndustryAndSearch(checked)
-                            }
-                          />
-                          <label
-                            className="text-[#323232] text-[14px] font-medium tracking-[1.4px]"
-                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          >
-                            選択した職種すべてが当てはまる
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* 選択された業種のタグ表示 */}
-                      {searchStore.experienceIndustries.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {searchStore.experienceIndustries.map((industry) => (
-                            <div
-                              key={industry.id}
-                              className="flex flex-row gap-0.5"
-                            >
-                              <div className="inline-flex items-strech gap-1">
-                                <div
-                                  className="bg-[#d2f1da] px-6 py-[10px] rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {industry.name}
-                                </div>
-                                <div className="bg-[#d2f1da] px-6 py-[10px] flex items-center justify-between relative">
-                                  <select
-                                    value={industry.experienceYears || ''}
-                                    onChange={(e) => {
-                                      const updated = searchStore.experienceIndustries.map(
-                                        (ind) =>
-                                          ind.id === industry.id
-                                            ? {
-                                                ...ind,
-                                                experienceYears: e.target.value,
-                                              }
-                                            : ind,
-                                      );
-                                      searchStore.setExperienceIndustries(updated);
-                                    }}
-                                    className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    <option value="">経験年数：指定なし</option>
-                                    <option value="0">
-                                      経験年数：経験なし
-                                    </option>
-                                    <option value="1">経験年数：1年以上</option>
-                                    <option value="3">経験年数：3年以上</option>
-                                    <option value="5">経験年数：5年以上</option>
-                                    <option value="10">
-                                      経験年数：10年以上
-                                    </option>
-                                  </select>
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="10"
-                                    viewBox="0 0 14 10"
-                                    fill="none"
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                                  >
-                                    <path
-                                      d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
-                                      fill="#0F9058"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  searchStore.setExperienceIndustries(
-                                    searchStore.experienceIndustries.filter(
-                                      (i) => i.id !== industry.id,
-                                    ),
-                                  );
-                                }}
-                                className="bg-[#d2f1da] p-[14px] rounded-r-[10px] flex items-center hover:bg-[#c2e1ca] transition-colors"
-                              >
-                                <svg
-                                  width="13"
-                                  height="12"
-                                  viewBox="0 0 13 12"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
-                                    fill="#0F9058"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* Experience conditions - using shared component */}
+                  <ExperienceSearchConditionForm />
 
                   {/* 現在の年収 */}
                   <div className="flex gap-6 items-strech">
@@ -912,45 +661,30 @@ export default function SearchClient() {
                           職種を選択
                         </button>
                         {searchStore.desiredJobTypes.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-col items-start gap-2 mt-4">
                             {searchStore.desiredJobTypes.map((job) => (
-                              <div
+                              <SelectableTagWithYears
                                 key={job.id}
-                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
-                              >
-                                <span
-                                  className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {job.name}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    searchStore.setDesiredJobTypes(
-                                      searchStore.desiredJobTypes.filter(
-                                        (j) => j.id !== job.id,
-                                      ),
-                                    )
-                                  }
-                                  className="w-3 h-3"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 12 12"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M1 1L11 11M1 11L11 1"
-                                      stroke="#0f9058"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
+                                id={job.id}
+                                name={job.name}
+                                experienceYears={job.experienceYears}
+                                onYearsChange={(id, years) => {
+                                  const updatedJobTypes = searchStore.desiredJobTypes.map(j => 
+                                    j.id === id ? { ...j, experienceYears: years } : j
+                                  );
+                                  searchStore.setDesiredJobTypes(updatedJobTypes);
+                                }}
+                                onRemove={(id) => {
+                                  searchStore.setDesiredJobTypes(
+                                    searchStore.desiredJobTypes.filter(
+                                      (j) => j.id !== id,
+                                    ),
+                                  );
+                                }}
+                                openSelectId={openSelectId}
+                                setOpenSelectId={setOpenSelectId}
+                                selectIdPrefix="desired-job"
+                              />
                             ))}
                           </div>
                         )}
@@ -978,45 +712,30 @@ export default function SearchClient() {
                           業種を選択
                         </button>
                         {searchStore.desiredIndustries.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-col items-start gap-2 mt-4">
                             {searchStore.desiredIndustries.map((industry) => (
-                              <div
+                              <SelectableTagWithYears
                                 key={industry.id}
-                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
-                              >
-                                <span
-                                  className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                                  style={{
-                                    fontFamily: 'Noto Sans JP, sans-serif',
-                                  }}
-                                >
-                                  {industry.name}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    searchStore.setDesiredIndustries(
-                                      searchStore.desiredIndustries.filter(
-                                        (i) => i.id !== industry.id,
-                                      ),
-                                    )
-                                  }
-                                  className="w-3 h-3"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 12 12"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M1 1L11 11M1 11L11 1"
-                                      stroke="#0f9058"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
+                                id={industry.id}
+                                name={industry.name}
+                                experienceYears={industry.experienceYears}
+                                onYearsChange={(id, years) => {
+                                  const updatedIndustries = searchStore.desiredIndustries.map(i => 
+                                    i.id === id ? { ...i, experienceYears: years } : i
+                                  );
+                                  searchStore.setDesiredIndustries(updatedIndustries);
+                                }}
+                                onRemove={(id) => {
+                                  searchStore.setDesiredIndustries(
+                                    searchStore.desiredIndustries.filter(
+                                      (i) => i.id !== id,
+                                    ),
+                                  );
+                                }}
+                                openSelectId={openSelectId}
+                                setOpenSelectId={setOpenSelectId}
+                                selectIdPrefix="industry"
+                              />
                             ))}
                           </div>
                         )}
@@ -2159,7 +1878,7 @@ export default function SearchClient() {
           searchStore.setIsDesiredIndustryModalOpen(false);
         }}
         initialSelected={searchStore.desiredIndustries}
-        maxSelections={10}
+        maxSelections={10}い
       />
 
       <WorkLocationSelectModal
