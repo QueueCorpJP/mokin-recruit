@@ -93,7 +93,7 @@ export function PasswordFormField({
                   value={value}
                   onChange={onChange}
                   placeholder={placeholder}
-                  className='flex-1 bg-transparent text-[#323232] text-[14px] md:text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] placeholder:tracking-[1.2px] md:placeholder:tracking-[1.6px] placeholder:whitespace-pre placeholder:text-[11px] md:placeholder:text-[14px] border-none outline-none focus:outline-none [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden'
+                  className='flex-1 bg-transparent text-[#323232] text-[14px] md:text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] placeholder:tracking-[1.2px] md:placeholder:tracking-[1.6px] placeholder:whitespace-pre placeholder:text-[11px] md:placeholder:text-[14px] border-none outline-none [&::-ms-reveal]:hidden [&::-webkit-credentials-auto-fill-button]:hidden'
                 />
                 <button
                   type='button'
