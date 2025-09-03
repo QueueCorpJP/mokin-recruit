@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import CompanyDetailClient from '../[id]/CompanyDetailClient';
 import type { CompanyEditData } from '../[id]/edit/page';
@@ -63,5 +65,12 @@ const dummyCompany: CompanyEditData = {
 };
 
 export default function CompanyDebugDetailPage() {
-  return <CompanyDetailClient company={dummyCompany} />;
+  // デバッグページ用の企業ユーザー削除完了ハンドラー
+  const handleUserDeleteComplete = () => {
+    // デバッグページでは削除完了後も同じページに留まる
+    console.log('デバッグ: 企業ユーザー削除完了');
+    alert('企業ユーザー削除が完了しました（デバッグモード）');
+  };
+
+  return <CompanyDetailClient company={dummyCompany} onUserDeleteComplete={handleUserDeleteComplete} />;
 }

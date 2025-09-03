@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import CompanyRegistrationCompleteModal from '@/components/admin/CompanyRegistrationCompleteModal';
 
 interface CompanyFormData {
   companyId: string;
@@ -34,17 +35,25 @@ interface CompanyConfirmClientProps {
 
 export default function CompanyConfirmClient({ companyData }: CompanyConfirmClientProps) {
   const router = useRouter();
+  const [registrationCompleteModalOpen, setRegistrationCompleteModalOpen] = useState(false);
 
   const handleSave = () => {
     // TODO: 企業データの保存処理を実装
     console.log('Saving company data:', companyData);
-    alert('保存機能の実装が必要です');
-    // 保存後は企業一覧ページまたは完了ページにリダイレクト
-    // router.push('/admin/company');
+
+    // 保存処理のシミュレーション（実際の実装ではAPI呼び出し）
+    setTimeout(() => {
+      // 保存完了後に完了モーダルを表示
+      setRegistrationCompleteModalOpen(true);
+    }, 500); // 実際のAPI呼び出し時間をシミュレート
   };
 
   const handleBack = () => {
     router.back();
+  };
+
+  const handleRegistrationCompleteClose = () => {
+    setRegistrationCompleteModalOpen(false);
   };
 
   return (
@@ -259,6 +268,13 @@ export default function CompanyConfirmClient({ companyData }: CompanyConfirmClie
           保存する
         </button>
       </div>
+
+      {/* 企業アカウント登録完了モーダル */}
+      <CompanyRegistrationCompleteModal
+        isOpen={registrationCompleteModalOpen}
+        onClose={handleRegistrationCompleteClose}
+        companyName={companyData.companyName}
+      />
     </div>
   );
 }
