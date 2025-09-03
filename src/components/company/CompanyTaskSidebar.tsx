@@ -4,7 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers';
-
+import { tr } from 'zod/v4/locales';
+import { Button } from '@/components/ui/button';
 // TaskDataインターフェース（TaskListと同じ）
 interface TaskData {
   hasNoJobPostings: boolean;
@@ -68,12 +69,49 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
   const pathname = usePathname();
   const router = useRouter();
 
-  // デフォルトの空のタスクデータ
+  // デフォルトのサンプルタスクデータ
   const defaultTaskData: TaskData = {
     hasNoJobPostings: false,
-    hasNewApplication: false,
-    hasUnreadApplication: false, 
-    hasNewMessage: false,
+    hasNewApplication: true,
+    newApplications: [
+      {
+        id: '1',
+        candidateName: '田中太郎',
+        jobTitle: 'フロントエンドエンジニア',
+        appliedAt: new Date('2024-01-15T10:30:00'),
+      },
+      {
+        id: '2', 
+        candidateName: '佐藤花子',
+        jobTitle: 'バックエンドエンジニア',
+        appliedAt: new Date('2024-01-14T14:20:00'),
+      }
+    ],
+    hasUnreadApplication: false,
+    hasNewMessage: true,
+    newMessages: [
+      {
+        roomId: 'room_001',
+        candidateName: '山田次郎',
+        jobTitle: 'UI/UXデザイナー',
+        sentAt: new Date('2024-01-15T16:45:00'),
+        messagePreview: '面接の件でお聞きしたいことがあります',
+      },
+      {
+        roomId: 'room_002',
+        candidateName: '鈴木美咲',
+        jobTitle: 'プロダクトマネージャー',
+        sentAt: new Date('2024-01-15T12:30:00'),
+        messagePreview: 'ご連絡ありがとうございます。来週の面接について...',
+      },
+      {
+        roomId: 'room_003',
+        candidateName: '高橋健太',
+        jobTitle: 'データサイエンティスト',
+        sentAt: new Date('2024-01-14T18:15:00'),
+        messagePreview: '技術的な質問がございます',
+      }
+    ],
     hasUnreadMessage: false,
     hasUnregisteredInterviewResult: false,
   };
@@ -368,7 +406,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
   return (
     <div className={cn("w-full max-w-[320px]", className)}>
       {/* プラン情報セクション */}
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/ticket.svg'
           iconAlt='スカウトチケットアイコン'
@@ -385,28 +423,35 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
                 <span style={remainingTextStyle}>残数：</span>
                 <span style={remainingNumberStyle}>100</span>
               </div>
-              <div style={nextUpdateStyle}>残り期間：2024/12/31</div>
+              <div style={nextUpdateStyle}>次回更新日：2024/12/31</div>
             </div>
           </div>
-          
-          <button 
-            style={planButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F0F9FF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
-            <div style={planButtonTextStyle}>
-              チケットの追加購入／<br />プラン変更
-            </div>
-          </button>
-          
+          <Button
+                          variant='green-outline'
+                          size='lg'
+                          style={{
+                            width: '100%',
+                            paddingLeft: 40,
+                            paddingRight: 40,
+                            height: 60,
+                            borderRadius: '999px',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            fontWeight: 700,
+                            letterSpacing: '0.05em'
+                          }}
+                        >
+                          チケットの追加購入／<br />プラン変更
+                        </Button>
+ 
           <div style={faqLinkStyle}>
-            <img src="/images/question.svg" 
-            className='font-[#999] w-4 h-4'
-            style={{
+            <img 
+              src="/images/question.svg" 
+              alt="プラン比較"
+              width={16}
+              height={16}
+              loading="lazy"
+              style={{
                     display: 'block',
                     maxWidth: 'none',
                     filter: 'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%) contrast(95%)',
@@ -418,7 +463,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
 
       {/* 対応リストセクション - mypageでのみ表示 */}
       {showTodoAndNews && (
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/list.svg'
           iconAlt='対応リストアイコン'
@@ -566,7 +611,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
 
       {/* お知らせセクション - mypageでのみ表示 */}
       {showTodoAndNews && (
-      <div style={{ ...headingListStyle, marginBottom: '20px' }}>
+      <div style={{ ...headingListStyle, marginBottom: '80px' }}>
         <SectionHeading
           iconSrc='/images/new.svg'
           iconAlt='お知らせアイコン'
@@ -710,16 +755,17 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
               onClick={() => router.push('/company/guide')}
             >
              
-             <img src="/images/book.svg" 
-             style={
-              {
-                    display: 'block',
-                    maxWidth: 'none',
-                    width: '24px',
-                    height: '24px',
-                    filter: 'brightness(0) saturate(100%) invert(36%) sepia(75%) saturate(1045%) hue-rotate(114deg) brightness(91%) contrast(92%)',
-                  }
-             }
+             <img 
+               src="/images/book.svg"
+               alt="ご利用ガイド"
+               width={24}
+               height={24}
+               loading="lazy"
+               style={{
+                 display: 'block',
+                 maxWidth: 'none',
+                 filter: 'brightness(0) saturate(100%) invert(36%) sepia(75%) saturate(1045%) hue-rotate(114deg) brightness(91%) contrast(92%)',
+               }}
              />
               <span style={helpButtonTextStyle}>ご利用ガイド</span>
             </button>
@@ -734,16 +780,17 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
               }}
               onClick={() => router.push('/company/faq')}
             >
-             <img src="/images/question.svg" 
-             style={
-              {
-                    display: 'block',
-                    maxWidth: 'none',
-                    width: '24px',
-                    height: '24px',
-                    filter: 'brightness(0) saturate(100%) invert(36%) sepia(75%) saturate(1045%) hue-rotate(114deg) brightness(91%) contrast(92%)',
-                  }
-             }
+             <img 
+               src="/images/question.svg"
+               alt="よくある質問"
+               width={24}
+               height={24}
+               loading="lazy"
+               style={{
+                 display: 'block',
+                 maxWidth: 'none',
+                 filter: 'brightness(0) saturate(100%) invert(36%) sepia(75%) saturate(1045%) hue-rotate(114deg) brightness(91%) contrast(92%)',
+               }}
              />
 
               <span style={helpButtonTextStyle}>よくある質問</span>
@@ -762,9 +809,12 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
           <div 
             // style={supportBannerStyle}
            
-            onClick={() => router.push('/company/support')}
+            onClick={() => router.push('/company/contact')}
           >
-           <img src="/images/consult.svg" />
+           <img 
+             src="/images/consult.svg"
+             alt="お問い合わせ"
+           />
           </div>
         </div>
       </div>

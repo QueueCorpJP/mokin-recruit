@@ -9,6 +9,7 @@ import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
+import Image from 'next/image';
 
 interface ArticleCategory {
   id: string;
@@ -63,6 +64,10 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
   
   // URLパラメータから成功メッセージをチェック
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
       setSuccessMessage('記事が正常に保存されました');
@@ -77,6 +82,9 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
 
   // 初期データのセット
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') return;
+    
     // まずsessionStorageからプレビューデータをチェック
     const previewData = sessionStorage.getItem('previewArticle');
     if (previewData) {
@@ -215,7 +223,9 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
       thumbnailName: thumbnail?.name || null
     };
 
-    sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewArticle', JSON.stringify(articleData));
+    }
     router.push('/admin/media/edit/preview');
   };
 
@@ -649,10 +659,11 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
             {thumbnailPreview && !thumbnailError && (
               <div className="mt-3">
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden" style={{ minWidth: '300px', maxWidth: '500px' }}>
-                  <img 
+                  <Image 
                     src={thumbnailPreview} 
                     alt={thumbnail ? "選択中の画像" : "現在のサムネイル"} 
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="mt-2 flex justify-between items-center">

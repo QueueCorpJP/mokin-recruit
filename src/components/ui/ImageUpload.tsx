@@ -1,13 +1,22 @@
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import { useToast } from './toast';
 
 interface ImageUploadProps {
   images: File[];
   onChange: (images: File[]) => void;
+  existingImages?: string[];
+  onRemoveExisting?: (index: number) => void;
   maxImages?: number;
 }
 
-export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxImages = 5 }) => {
+export const ImageUpload: React.FC<ImageUploadProps> = ({ 
+  images, 
+  onChange, 
+  existingImages = [], 
+  onRemoveExisting, 
+  maxImages = 5 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
 
@@ -26,7 +35,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxI
       }
     }
     
-    const merged = [...images, ...newFiles].slice(0, maxImages);
+    const totalImages = existingImages.length + images.length;
+    const availableSlots = maxImages - totalImages;
+    const merged = [...images, ...newFiles.slice(0, availableSlots)];
     onChange(merged);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -63,8 +74,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxI
     </div>
   );
 
+  const totalImages = existingImages.length + images.length;
+
   // ✅ 画像がないとき
-  if (images.length === 0) {
+  if (totalImages === 0) {
     return <UploadBox />;
   }
 
@@ -72,18 +85,50 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxI
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row flex-wrap gap-4">
+        {/* 既存の画像 */}
+        {existingImages.map((imageUrl, idx) => (
+          <div
+            key={`existing-${idx}`}
+            className="relative rounded overflow-visible bg-gray-100 flex items-center justify-center"
+            style={{ width: '200px', height: '133px' }}
+          >
+            <Image
+              src={imageUrl}
+              alt={`existing-${idx}`}
+              width={200}
+              height={133}
+              className="object-cover w-full h-full rounded"
+              loading="lazy"
+            />
+            {onRemoveExisting && (
+              <button
+                type="button"
+                className="flex w-6 h-6 justify-center items-center gap-2.5 aspect-square absolute -right-2 -top-2 rounded-2xl bg-[#0F9058] text-white hover:bg-opacity-80"
+                onClick={() => onRemoveExisting(idx)}
+                aria-label="画像を削除"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+        
+        {/* 新しい画像 */}
         {images.map((file, idx) => {
           const url = URL.createObjectURL(file);
           return (
             <div
-              key={idx}
-              className="relative border rounded overflow-visible bg-gray-100 flex items-center justify-center"
+              key={`new-${idx}`}
+              className="relative rounded overflow-visible bg-gray-100 flex items-center justify-center"
               style={{ width: '200px', height: '133px' }}
             >
-              <img
+              <Image
                 src={url}
                 alt={`preview-${idx}`}
+                width={200}
+                height={133}
                 className="object-cover w-full h-full rounded"
+                loading="lazy"
               />
               <button
                 type="button"
@@ -96,7 +141,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ images, onChange, maxI
             </div>
           );
         })}
-        {images.length < maxImages && <UploadBox />}
+        
+        {totalImages < maxImages && <UploadBox />}
       </div>
       <div className="text-xs text-gray-400">最大{maxImages}枚までアップロードできます。</div>
     </div>

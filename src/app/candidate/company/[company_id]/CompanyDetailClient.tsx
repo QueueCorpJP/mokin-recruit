@@ -74,6 +74,10 @@ const SingleRowLocationTags: React.FC<{ locations: string[] }> = ({
       setVisibleCount(Math.max(1, count)); // 最低1つは表示
     };
 
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const timeoutId = setTimeout(calculateVisibleTags, 0);
 
     const resizeObserver = new ResizeObserver(() => {
@@ -132,7 +136,7 @@ export default function CompanyDetailClient({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // お気に入り機能（企業用）
-  const companyId = params.company_id as string;
+  const companyId = params?.company_id as string;
   // TODO: 企業用のお気に入り機能のhookを実装
   // const { data: favoriteStatus } = useCompanyFavoriteStatusQuery([companyId]);
   // const favoriteToggleMutation = useCompanyFavoriteToggleMutation();
@@ -144,7 +148,7 @@ export default function CompanyDetailClient({
 
   // favoriteStatusが更新されたらローカルステートも更新
   // useEffect(() => {
-  //   if (favoriteStatus !== undefined) {
+  //   if (favoriteStatus !== undefined && companyId) {
   //     setIsFavorite(favoriteStatus[companyId] || false);
   //   }
   // }, [favoriteStatus, companyId]);
@@ -185,7 +189,9 @@ export default function CompanyDetailClient({
 
   const handleApply = () => {
     // 企業詳細ページから応募ページへの遷移
-    router.push(`/company/${params.company_id}/apply`);
+    if (params.company_id) {
+      router.push(`/company/${params.company_id}/apply`);
+    }
   };
 
   const handleBackToResults = () => {

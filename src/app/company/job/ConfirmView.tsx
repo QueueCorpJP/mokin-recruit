@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import {
   CompanyGroup,
   appealPointCategories,
@@ -157,12 +158,14 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
                 return (
                   <div
                     key={idx}
-                    className='relative w-40 h-28 border border-[#e9ecef] rounded-[5px] overflow-hidden bg-gray-100 flex items-center justify-center'
+                    className='relative w-40 h-28 rounded-[5px] overflow-hidden bg-gray-100 flex items-center justify-center'
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`preview-${idx}`}
-                      className='object-cover w-full h-full'
+                      width={160}
+                      height={112}
+                      className='object-cover'
                     />
                   </div>
                 );
@@ -187,7 +190,7 @@ export const ConfirmView: React.FC<ConfirmViewProps> = ({
         <div className='flex-1 flex flex-col items-start justify-start px-0 py-6'>
           <div className='flex flex-col items-start justify-start w-full'>
             {jobTypes.length > 0 ? (
-              <TagDisplay items={jobTypes} />
+              <TagDisplay items={jobTypes.slice(0, 4)} />
             ) : (
               <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#999999]">
                 職種が選択されていません

@@ -7,20 +7,25 @@ import { X, ChevronDown, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { logoutAction } from '@/lib/auth/actions';
 
 // Custom Icon Components
 
 const DownIcon = memo(({ className }: { className?: string }) => {
   return (
-    <div className={cn('relative w-[10px] h-[10px]', className)}>
-      <Image
+    <div className={cn('relative w-[10px] h-[10px] transition-transform duration-300', className)}>
+      <img
         src='/images/down.svg'
         alt='down-icon'
+<<<<<<< HEAD
         fill
         sizes='10px'
         className='object-contain'
+=======
+        width={10}
+        height={10}
+        className='object-contain w-full h-full'
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
       />
     </div>
   );
@@ -220,6 +225,7 @@ export function Navigation({
   }, [variant, router]);
 
   // メモ化されたnavigationItems
+<<<<<<< HEAD
   const candidateNavigationItems = useCallback(
     () => [
       {
@@ -324,6 +330,116 @@ export function Navigation({
     ],
     [pathname]
   );
+=======
+  const candidateNavigationItems = useCallback(() => [
+    {
+      label: 'マイページ',
+      href: '/candidate/mypage',
+      icon: HomeIcon,
+      hasDropdown: false,
+      isActive: pathname === '/candidate/mypage',
+      prefetch: true,
+    },
+    {
+      label: 'メッセージ',
+      href: '/candidate/message',
+      icon: MessageIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/candidate/message'),
+      prefetch: false,
+      dropdownItems: [
+        { label: '受信メッセージ', href: '/candidate/message/inbox', prefetch: false },
+        { label: '送信メッセージ', href: '/candidate/message/sent', prefetch: false },
+      ],
+    },
+    {
+      label: '求人を探す',
+      href: '/candidate/search/setting',
+      icon: SearchIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/search/setting'),
+      prefetch: false,
+    },
+    {
+      label: 'やることリスト',
+      href: '/candidate/task',
+      icon: ResponseListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/task'),
+      prefetch: false,
+    },
+    {
+      label: 'プロフィール確認・編集',
+      href: '/candidate/account',
+      icon: User,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/candidate/account'),
+      prefetch: false,
+    },
+  ], [pathname]);
+
+  const companyNavigationItems = useCallback(() => [
+    {
+      label: 'マイページ',
+      href: '/company/mypage',
+      icon: HomeIcon,
+      hasDropdown: false,
+      isActive: pathname === '/company/mypage',
+      prefetch: true,
+    },
+    {
+      label: 'メッセージ',
+      href: '/company/message',
+      icon: MessageIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/message'),
+      prefetch: false,
+      dropdownItems: [
+        { label: '受信メッセージ', href: '/company/message/inbox', prefetch: false },
+        { label: '送信メッセージ', href: '/company/message/sent', prefetch: false },
+      ],
+    },
+    {
+      label: '候補者を探す',
+      href: '/company/candidates',
+      icon: SearchIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/candidates'),
+      prefetch: false,
+      dropdownItems: [
+        { label: '候補者検索', href: '/company/search/result', prefetch: false },
+        { label: 'スカウト履歴', href: '/company/candidates/scout-history', prefetch: false },
+      ],
+    },
+    {
+      label: '求人一覧',
+      href: '/company/job',
+      icon: JobListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/company/job'),
+      prefetch: false,
+    },
+    {
+      label: '対応リスト',
+      href: '/company/task',
+      icon: ResponseListIcon,
+      hasDropdown: false,
+      isActive: pathname.startsWith('/company/task'),
+      prefetch: false,
+    },
+    {
+      label: 'ヘルプ',
+      href: '/company/help',
+      icon: HelpIcon,
+      hasDropdown: true,
+      isActive: pathname.startsWith('/company/help'),
+      dropdownItems: [
+        { label: 'よくある質問', href: '/company/help/faq' },
+        { label: 'お問い合わせ', href: '/company/contact' },
+      ],
+    },
+  ], [pathname]);
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
 
   const toggleMenuCallback = useCallback(() => {
     setIsMenuOpen(!isMenuOpen);
@@ -471,11 +587,15 @@ export function Navigation({
               {/* すべてのナビゲーション項目を配置 */}
               <div className='flex items-center gap-10'>
                 {navigationItems.map((item, index) => (
-                  <div key={`${item.label}-${index}`} className='relative'>
+                  <div 
+                    key={`${item.label}-${index}`} 
+                    className='relative group'
+                    onMouseEnter={() => item.hasDropdown && setOpenDropdown(item.label)}
+                    onMouseLeave={() => item.hasDropdown && setOpenDropdown(null)}
+                  >
                     {item.hasDropdown ? (
                       <div>
                         <button
-                          onClick={() => toggleDropdown(item.label)}
                           className={cn(
                             'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                             openDropdown === item.label || item.isActive
@@ -487,11 +607,12 @@ export function Navigation({
                         >
                           <item.icon className='w-5 h-5' />
                           <span>{item.label}</span>
-                          <DownIcon className='ml-1' />
+                          <DownIcon className={cn('ml-1', openDropdown === item.label && 'rotate-180')} />
                         </button>
                         {/* ドロップダウンメニュー */}
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
+<<<<<<< HEAD
                             {item.dropdownItems?.map(
                               (dropdownItem, dropdownIndex) => (
                                 <Link
@@ -510,13 +631,30 @@ export function Navigation({
                                 </Link>
                               )
                             )}
+=======
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
+                              <Link
+                                key={`${dropdownItem.label}-${dropdownIndex}`}
+                                href={dropdownItem.href}
+                                prefetch={dropdownItem.prefetch}
+                                className={cn(
+                                  'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                                  pathname === dropdownItem.href
+                                    ? 'text-[#0F9058] bg-[#F3FBF7]'
+                                    : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                                )}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
                           </div>
                         )}
                       </div>
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={false}
+                        prefetch={item.prefetch}
                         className={cn(
                           'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                           item.isActive
@@ -532,9 +670,12 @@ export function Navigation({
                 ))}
 
                 {/* アカウント情報も他のメニュー項目と同様に配置 */}
-                <div className='relative'>
+                <div 
+                  className='relative group'
+                  onMouseEnter={() => setOpenDropdown('account')}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
                   <button
-                    onClick={() => toggleDropdown('account')}
                     className={cn(
                       'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px]',
                       openDropdown === 'account'
@@ -546,20 +687,19 @@ export function Navigation({
                     <span className='max-w-[160px] truncate'>
                       {userInfo?.companyName || 'ユーザー名'}
                     </span>
-                    <DownIcon className='ml-1' />
+                    <DownIcon className={cn('ml-1', openDropdown === 'account' && 'rotate-180')} />
                   </button>
                   {/* アカウントドロップダウン */}
                   {openDropdown === 'account' && (
                     <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                       <Link
-                        href='/company/settings'
+                        href='/company/setting'
                         className={cn(
                           'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
-                          pathname === '/company/settings'
+                          pathname === '/company/setting'
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}
-                        onClick={closeDropdownCallback}
                       >
                         アカウント設定
                       </Link>
@@ -613,6 +753,7 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
+<<<<<<< HEAD
                             {item.dropdownItems?.map(
                               (dropdownItem, dropdownIndex) => (
                                 <Link
@@ -629,13 +770,29 @@ export function Navigation({
                                 </Link>
                               )
                             )}
+=======
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
+                              <Link
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                href={dropdownItem.href}
+                                prefetch={dropdownItem.prefetch}
+                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
                           </div>
                         )}
                       </div>
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={false}
+                        prefetch={item.prefetch}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={closeMenuCallback}
                       >
@@ -668,7 +825,7 @@ export function Navigation({
                   {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
                       <Link
-                        href='/company/settings'
+                        href='/company/setting'
                         className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={() => {
                           setIsMenuOpen(false);
@@ -716,11 +873,15 @@ export function Navigation({
             <nav className='hidden lg:flex items-center ml-[40px]'>
               <div className='flex items-center gap-10'>
                 {navigationItems.map(item => (
-                  <div key={item.label} className='relative'>
+                  <div 
+                    key={item.label} 
+                    className='relative group'
+                    onMouseEnter={() => item.hasDropdown && setOpenDropdown(item.label)}
+                    onMouseLeave={() => item.hasDropdown && setOpenDropdown(null)}
+                  >
                     {item.hasDropdown ? (
                       <div>
                         <button
-                          onClick={() => toggleDropdown(item.label)}
                           className={cn(
                             'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                             openDropdown === item.label || item.isActive
@@ -732,10 +893,11 @@ export function Navigation({
                         >
                           <item.icon className='w-5 h-5' />
                           <span>{item.label}</span>
-                          <DownIcon className='ml-1' />
+                          <DownIcon className={cn('ml-1', openDropdown === item.label && 'rotate-180')} />
                         </button>
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
+<<<<<<< HEAD
                             {item.dropdownItems?.map(
                               (dropdownItem, dropdownIndex) => (
                                 <Link
@@ -753,13 +915,30 @@ export function Navigation({
                                 </Link>
                               )
                             )}
+=======
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
+                              <Link
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                href={dropdownItem.href}
+                                prefetch={dropdownItem.prefetch}
+                                className={cn(
+                                  'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                                  pathname === dropdownItem.href
+                                    ? 'text-[#0F9058] bg-[#F3FBF7]'
+                                    : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                                )}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
                           </div>
                         )}
                       </div>
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={false}
+                        prefetch={item.prefetch}
                         className={cn(
                           'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px] relative',
                           item.isActive
@@ -774,9 +953,12 @@ export function Navigation({
                   </div>
                 ))}
                 {/* アカウント情報 */}
-                <div className='relative'>
+                <div 
+                  className='relative group'
+                  onMouseEnter={() => setOpenDropdown('account')}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                >
                   <button
-                    onClick={() => toggleDropdown('account')}
                     className={cn(
                       'flex items-center gap-1 py-2 font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px] text-[16px]',
                       openDropdown === 'account'
@@ -788,7 +970,7 @@ export function Navigation({
                     <span className='max-w-[160px] truncate'>
                       {userInfo?.userName || 'ユーザー名'}
                     </span>
-                    <DownIcon className='ml-1' />
+                    <DownIcon className={cn('ml-1', openDropdown === 'account' && 'rotate-180')} />
                   </button>
                   {openDropdown === 'account' && (
                     <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
@@ -800,7 +982,6 @@ export function Navigation({
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}
-                        onClick={closeDropdownCallback}
                       >
                         アカウント設定
                       </Link>
@@ -854,6 +1035,7 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
+<<<<<<< HEAD
                             {item.dropdownItems?.map(
                               (dropdownItem, dropdownIndex) => (
                                 <Link
@@ -870,13 +1052,29 @@ export function Navigation({
                                 </Link>
                               )
                             )}
+=======
+                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
+                              <Link
+                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                href={dropdownItem.href}
+                                prefetch={dropdownItem.prefetch}
+                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                {dropdownItem.label}
+                              </Link>
+                            ))}
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
                           </div>
                         )}
                       </div>
                     ) : (
                       <Link
                         href={item.href}
-                        prefetch={false}
+                        prefetch={item.prefetch}
                         className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         onClick={closeMenuCallback}
                       >

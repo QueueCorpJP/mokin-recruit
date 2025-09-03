@@ -1,4 +1,6 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Import media content styles globally */
 @import '../styles/media-content.css';
@@ -302,7 +304,7 @@ html:not(.fonts-loaded) body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -487,11 +489,7 @@ html:not(.fonts-loaded) body {
   }
 
   /* Prevent form elements from breaking layout */
-  .modal-content .flex-col > * {
-    @apply min-w-0;
-  }
-
-  .modal-content .flex-row > * {
-    @apply min-w-0;
+  .modal-content [class*="flex-"] > * {
+    min-width: 0;
   }
 }

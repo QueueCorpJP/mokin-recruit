@@ -4,6 +4,8 @@ import { getServerAuth } from '@/lib/auth/server';
 import { CompanyNavigationWrapper } from '@/components/layout/CompanyNavigationWrapper';
 import { CompanyFooterWrapper } from '@/components/layout/CompanyFooterWrapper';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CompanyLayout({
   children,
 }: {

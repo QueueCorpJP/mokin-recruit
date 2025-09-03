@@ -100,7 +100,6 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
     setCurrentPage(1); // ページをリセット
   }, [initialJobs, initialGroups, initialConditions]);
 
-  // URLパラメータを更新してサーバーコンポーネントを再実行
   const updateSearchParams = (params: Record<string, string>) => {
     const searchParams = new URLSearchParams();
     
@@ -166,7 +165,13 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
 
   // 求人詳細表示
   const handleViewJob = (jobId: string) => {
-    router.push(`/company/job/view/${jobId}`);
+    // 該当するjobデータを取得
+    const jobData = jobs.find(job => job.id === jobId);
+    if (jobData && typeof window !== 'undefined') {
+      // 詳細画面で使用するためにsessionStorageに保存
+      sessionStorage.setItem('jobPreviewData', JSON.stringify(jobData));
+    }
+    router.push(`/company/job/${jobId}`);
   };
 
   // 求人複製
@@ -475,8 +480,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                     {displayedJobs.map(job => (
                       <div
                         key={job.id}
-                        className='bg-[#FFFFFF] hover:bg-[#E9E9E9] transition-colors flex gap-[24px] py-[20px] px-[24px] rounded-[10px]'
+                        className='bg-[#FFFFFF] hover:bg-[#E9E9E9] transition-colors flex gap-[24px] py-[20px] px-[24px] rounded-[10px] cursor-pointer'
                         style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
+                        onClick={() => handleViewJob(job.id)}
                       >
                         {/* グループ */}
                         <div className='w-[160px] flex items-center'>
@@ -498,15 +504,16 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                         {/* 職種/求人タイトル */}
                         <div className='w-[424px]'>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            {/* 職種を配列から動的に表示 */}
+                            {/* 職種を配列から動的に表示（最大4個まで、3行目は非表示） */}
                             {job.jobType && job.jobType.length > 0 ? (
-                              job.jobType.map((jobType, index) => (
+                              job.jobType.slice(0, 4).map((jobType, index) => (
                                 <span
                                   key={index}
-                                  className='rounded-[8px] font-medium text-[14px] leading-tight line-clamp-2'
+                                  className='rounded-[8px] font-medium text-[14px] leading-tight'
                                   style={{
-                                    width: '136px',
+                                    maxWidth: '136px',
                                     minHeight: '32px',
+                                    maxHeight: '48px',
                                     paddingLeft: '16px',
                                     paddingRight: '16px',
                                     paddingTop: '6px',
@@ -517,7 +524,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                     hyphens: 'auto',
                                     display: '-webkit-box',
                                     WebkitBoxOrient: 'vertical',
+                                    WebkitLineClamp: 2,
                                     overflow: 'hidden',
+                                    lineHeight: '1.4',
                                   }}
                                 >
                                   {jobType}
@@ -648,7 +657,11 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                         <div className='col-span-2 flex items-center gap-2 relative'>
                           <button
                             className='text-[#DCDCDC] hover:text-[#323232] rounded-full p-2'
-                            onClick={() => setPopupJobId(job.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPopupJobId(job.id);
+                            }}
                           >
                             <MoreHorizontal className='w-10 h-10' />
                           </button>
@@ -666,7 +679,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                   height: '22px',
                                   padding: 0,
                                 }}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   handleDuplicateJob(job.id);
                                   setPopupJobId(null);
                                 }}
@@ -683,7 +698,9 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                   padding: 0,
                                   marginTop: '4px',
                                 }}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   handleDeleteJob(job.id);
                                   setPopupJobId(null);
                                 }}

@@ -6,18 +6,19 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  output: 'standalone',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
+    },
+    optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
+    swcPlugins: [],
+  },
   distDir: '.next',
   compiler: {
     // SWC compiler options for JSX
     styledComponents: false,
     reactRemoveProperties: false,
-  },
-  // serverExternalPackages is not supported in Next.js 14.2
-  // パフォーマンス最適化
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
-    swcPlugins: [],
   },
   // Code splitting最適化
   webpack: (config, { isServer }) => {
@@ -68,12 +69,7 @@ const nextConfig = {
     return config;
   },
   images: {
-    // 複数の設定方法で確実に動作するように設定
-    domains: [
-      'mjhqeagxibsklugikyma.supabase.co',
-      'localhost',
-      'mokin-recruit-client.vercel.app'
-    ],
+    // remotePatterns のみを使用（domains は廃止予定）
     remotePatterns: [
       {
         protocol: 'http',
@@ -113,8 +109,8 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/webp'],
     minimumCacheTTL: 60,
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    // SVGファイルは通常のimgタグで扱い、Next.js Image最適化は無効にする
+    dangerouslyAllowSVG: false,
   },
 };
 

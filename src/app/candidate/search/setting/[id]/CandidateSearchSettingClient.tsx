@@ -130,8 +130,8 @@ export default function CandidateSearchSettingClient({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // お気に入り機能のhook
-  const jobId = params.id as string;
-  const { data: favoriteStatus } = useFavoriteStatusQuery([jobId]);
+  const jobId = params?.id as string;
+  const { data: favoriteStatus } = useFavoriteStatusQuery(jobId ? [jobId] : []);
   const favoriteToggleMutation = useFavoriteToggleMutation();
 
   // お気に入り状態をローカルステートで管理（即座の更新のため）
@@ -139,7 +139,7 @@ export default function CandidateSearchSettingClient({
 
   // favoriteStatusが更新されたらローカルステートも更新
   useEffect(() => {
-    if (favoriteStatus !== undefined) {
+    if (favoriteStatus !== undefined && jobId) {
       setIsFavorite(favoriteStatus[jobId] || false);
     }
   }, [favoriteStatus, jobId]);

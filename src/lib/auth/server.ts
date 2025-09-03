@@ -1,6 +1,5 @@
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
-import { unstable_noStore as noStore } from 'next/cache';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { createServerClient } from '@supabase/ssr';
 
@@ -98,10 +97,6 @@ async function createSupabaseServerClient() {
  */
 export async function getServerAuth(allowStatic: boolean = false, enableCache: boolean = false): Promise<BasicAuthResult> {
   try {
-    // 認証チェック時はキャッシュを無効化
-    if (!enableCache) {
-      noStore();
-    }
     
     // 静的レンダリングモードの場合は認証なしを返す
     if (allowStatic) {

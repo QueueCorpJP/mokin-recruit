@@ -119,6 +119,7 @@ export default function CtaGuideSection() {
               width={22}
               height={24}
               style={{ display: 'inline', marginRight: 8 }}
+              loading="lazy"
             />
             ご利用ガイド
           </button>
@@ -144,6 +145,7 @@ export default function CtaGuideSection() {
               width={24}
               height={24}
               style={{ display: 'inline', marginRight: 8 }}
+              loading="lazy"
             />
             よくある質問
           </button>

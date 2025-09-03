@@ -45,7 +45,9 @@ function ProfileEditClientWrapper({ profile }: { profile: ProfileFormData }) {
   const dayOptions = generateDayOptions(selectedYear, selectedMonth);
   const isSubmitting = false;
   const handleCancel = () => {
-    window.history.back();
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
   };
 
   useEffect(() => {

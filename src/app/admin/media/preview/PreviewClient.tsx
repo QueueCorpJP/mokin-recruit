@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
+import Image from 'next/image';
 
 interface PreviewData {
   title: string;
@@ -205,10 +206,11 @@ export default function PreviewClient({ categories, saveArticleAction }: Preview
 
               {previewData.thumbnail && (
                 <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]" style={{ minWidth: '900px' }}>
-                  <img
+                  <Image
                     src={previewData.thumbnail}
                     alt="記事のサムネイル"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

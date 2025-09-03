@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/mo-dal';
@@ -100,7 +100,7 @@ export default function AdminJobEditClient({
   const [showErrors, setShowErrors] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleUpdate = async () => {
+  const handleUpdate = useCallback(async () => {
     setIsUpdating(true);
     try {
       const updateData = {
@@ -141,13 +141,15 @@ export default function AdminJobEditClient({
       console.log('Job update successful, result:', result);
       
       // 成功時に確認画面にリダイレクト
-      window.location.href = `/admin/job/${jobId}/edit/confirm`;
+      if (typeof window !== 'undefined') {
+        window.location.href = `/admin/job/${jobId}/edit/confirm`;
+      }
     } catch (error) {
       console.error('Update error:', error);
       alert('更新に失敗しました');
       setIsUpdating(false);
     }
-  };
+  }, [group, title, jobDescription, positionSummary, skills, otherRequirements, salaryMin, salaryMax, salaryNote, employmentType, employmentTypeNote, locations, locationNote, workingHours, overtime, overtimeMemo, holidays, jobTypes, industries, selectionProcess, appealPoints, smoke, smokeNote, resumeRequired, memo, jobId]);
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {

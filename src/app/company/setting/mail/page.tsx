@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendVerificationCode } from './actions';
@@ -26,7 +25,9 @@ export default function MailChangePage() {
       if (result.error) {
         setError(result.error);
       } else {
-        sessionStorage.setItem('verificationEmail', email);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('verificationEmail', email);
+        }
         router.push('/company/setting/mail/verify');
       }
     } catch (error) {
@@ -44,7 +45,7 @@ export default function MailChangePage() {
           { label: 'メールアドレス変更' }
         ]}
         title="メールアドレス変更"
-        icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       
       <div className="px-4 md:px-20 py-10">
@@ -86,16 +87,20 @@ export default function MailChangePage() {
             >
               変更せず戻る
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="green-gradient"
+              size="figma-default"
+              className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
             >
               {isLoading ? '送信中...' : '認証コードを送信'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -40,7 +40,12 @@ export default function CandidateLayoutClient({
     }
 
     // ログイン済みだが候補者ユーザーでない場合は企業側トップへ退避
-    if (isAuthenticated && !candidateUser) {
+    if (isAuthenticated && candidateUser === undefined) {
+      // candidateUserが未定義の場合は少し待つ
+      return;
+    }
+
+    if (isAuthenticated && candidateUser === null) {
       router.push('/company');
     }
   }, [loading, isAuthenticated, candidateUser, pathname, router]);

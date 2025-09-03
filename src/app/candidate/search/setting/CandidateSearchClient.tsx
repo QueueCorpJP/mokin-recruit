@@ -238,10 +238,12 @@ export default function CandidateSearchClient({
     fetchJobs(page);
     
     // ページ遷移後にページトップにスクロール
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (

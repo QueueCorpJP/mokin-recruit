@@ -48,16 +48,26 @@ export function HeroSection() {
       {/* Hero Section */}
       <div className='relative w-full h-auto'>
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
-          <picture>
-            <source media='(max-width: 768px)' srcSet='/sm_company_back.png' />
-            <img
+          {/* モバイル用画像 */}
+          <div className='block md:hidden relative w-full aspect-[375/300]'>
+            <Image
+              src='/sm_company_back.png'
+              alt='hero'
+              fill
+              className='object-cover'
+              priority
+            />
+          </div>
+          {/* デスクトップ用画像 */}
+          <div className='hidden md:block relative w-full aspect-[1200/600]'>
+            <Image
               src='/company_back.png'
               alt='hero'
-              className='w-full h-auto object-cover'
-              loading="eager"
-              fetchPriority="high"
+              fill
+              className='object-cover'
+              priority
             />
-          </picture>
+          </div>
         </div>
         <div className='absolute inset-0 flex md:items-center items-start justify-start p-[20px] sm:p-[40px] md:p-[80px] '>
           <div className='flex flex-col items-start justify-start gap-[24px] text-left w-full md:w-auto'>
@@ -102,7 +112,7 @@ export function HeroSection() {
     transition-all duration-200 hover:bg-[linear-gradient(to_right_top,#EEAB02,#E1CA11)]
   "
               >
-                <img src="./images/files.svg" alt="files" className='flex-shrink-0' />
+                <img src="/images/files.svg" alt="files" width={20} height={20} loading="lazy" className='flex-shrink-0' />
                 <span className='truncate'>資料請求</span>
               </button>
 

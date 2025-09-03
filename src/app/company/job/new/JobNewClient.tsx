@@ -90,6 +90,11 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
 
   // 複製データまたは下書きデータを復元
   useEffect(() => {
+    // クライアントサイドでのみ実行
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     const loadData = () => {
       try {
         // 複製データがあるかチェック（優先）
@@ -691,23 +696,20 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
                     type='button'
                     variant='green-outline'
                     size='lg'
-                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-7 bg-white text-[#198D76] font-['Noto_Sans_JP']"
                     onClick={saveDraft}
                   >
                     下書き保存
                   </Button>
-                  <button
+                  <Button
                     type='button'
+                    size='lg'
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-7 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] font-['Noto_Sans_JP'] disabled:bg-gray-300 disabled:text-gray-500"
                     disabled={showErrors && !isFormValid()}
-                    className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
-                      !showErrors || isFormValid()
-                        ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
                     onClick={handleConfirm}
                   >
                     確認する
-                  </button>
+                  </Button>
                 </>
               )}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';
 
@@ -68,7 +69,7 @@ export const NewsGrid: React.FC<NewsGridProps> = ({
   return (
     <div className="flex-1">
       <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[24px]">
-        <img src={sectionInfo.icon} alt={sectionInfo.alt} />
+        <Image src={sectionInfo.icon} alt={sectionInfo.alt} width={24} height={24} loading="lazy" />
         <h2 className="text-[20px] text-[#323232] Noto_Sans_JP" style={{ 
           fontWeight: 700,
           fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -91,11 +92,11 @@ export const NewsGrid: React.FC<NewsGridProps> = ({
                 {article.imageUrl ? (
                   // Next.js Imageコンポーネントは設定済み - 必要に応じて以下のように変更可能:
                   // <Image src={article.imageUrl} alt={article.title} fill sizes="..." className="..." />
-                  <img
+                  <Image
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-300 flex items-center justify-center">

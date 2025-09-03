@@ -99,20 +99,18 @@ export async function sendVerificationCode(email: string) {
     const verificationCode = Math.random().toString(36).substring(2, 6).toUpperCase();
     console.log('生成された認証コード:', verificationCode);
     
-    // データベースに認証コードを保存
-    console.log('認証コードをデータベースに保存中...');
+    // 一時的な解決策：password_reset_tokensテーブルを利用して認証コードを保存
+    console.log('認証コードをpassword_reset_tokensテーブルに保存中...');
     const { error: saveError } = await supabase
-      .from('email_verification_codes')
+      .from('password_reset_tokens')
       .upsert({
-        company_user_id: user.id,
-        email: email,
-        code: verificationCode,
-        created_at: new Date().toISOString(),
+        email: `company_email_verification:${user.id}:${email}`,
+        user_type: 'company',
+        token: verificationCode,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10分後に期限切れ
-        used: false
-      }, {
-        onConflict: 'company_user_id',
-        ignoreDuplicates: false
+        used: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
 
     if (saveError) {
@@ -197,12 +195,12 @@ export async function verifyCode(code: string) {
 
     const supabase = getSupabaseAdminClient();
     
-    console.log('認証コードをデータベースから検索中...');
+    console.log('認証コードをpassword_reset_tokensテーブルから検索中...');
     const { data: verification, error: fetchError } = await supabase
-      .from('email_verification_codes')
+      .from('password_reset_tokens')
       .select('*')
-      .eq('company_user_id', user.id)
-      .eq('code', code.toUpperCase())
+      .like('email', `company_email_verification:${user.id}:%`)
+      .eq('token', code.toUpperCase())
       .eq('used', false)
       .single();
 
@@ -218,12 +216,21 @@ export async function verifyCode(code: string) {
     }
     console.log('認証コードは有効です');
 
+    // emailフィールドから新しいメールアドレスを抽出
+    const emailParts = verification.email.split(':');
+    const newEmail = emailParts.length >= 3 ? emailParts[2] : '';
+    
+    if (!newEmail) {
+      console.error('新しいメールアドレスの抽出に失敗:', verification.email);
+      return { error: '認証処理に失敗しました' };
+    }
+
     // メールアドレス更新前に再度重複チェック（認証コード送信後に他の人が同じメールを使った可能性）
     console.log('最終重複チェックを実行中...');
     const { data: existingUser, error: finalCheckError } = await supabase
       .from('company_users')
       .select('id, email')
-      .eq('email', verification.email)
+      .eq('email', newEmail)
       .neq('id', user.id)
       .single();
 
@@ -240,8 +247,8 @@ export async function verifyCode(code: string) {
 
     console.log('認証コードを使用済みにマーク中...');
     const { error: markUsedError } = await supabase
-      .from('email_verification_codes')
-      .update({ used: true })
+      .from('password_reset_tokens')
+      .update({ used: true, updated_at: new Date().toISOString() })
       .eq('id', verification.id);
 
     if (markUsedError) {
@@ -259,12 +266,12 @@ export async function verifyCode(code: string) {
     
     console.log('メールアドレスを更新中...');
     console.log('更新前のメールアドレス:', beforeUpdate?.email);
-    console.log('更新予定のメールアドレス:', verification.email);
+    console.log('更新予定のメールアドレス:', newEmail);
     
     const { data: updateResult, error: updateEmailError } = await supabase
       .from('company_users')
       .update({ 
-        email: verification.email,
+        email: newEmail,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id)
@@ -283,7 +290,7 @@ export async function verifyCode(code: string) {
     try {
       const { data: authUpdateResult, error: authUpdateError } = await supabase.auth.admin.updateUserById(
         user.id,
-        { email: verification.email }
+        { email: newEmail }
       );
 
       if (authUpdateError) {
@@ -341,7 +348,7 @@ export async function verifyCode(code: string) {
     }
     
     console.log('=== verifyCode完了 ===');
-    return { success: true, newEmail: verification.email };
+    return { success: true, newEmail: newEmail };
   } catch (error) {
     console.error('❌ verifyCode全体エラー:', error);
     return { error: 'システムエラーが発生しました' };

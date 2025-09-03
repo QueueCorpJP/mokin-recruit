@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { MessageBubble } from '@/components/admin/ui/MessageBubble';
 import { ApplicationStatusSelect } from '@/components/admin/message/ApplicationStatusSelect';
@@ -484,10 +485,12 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                     {/* アイコンと名前 */}
                     <div className="flex-shrink-0 flex flex-col items-center mt-2">
                       {isCompany && companyLogo ? (
-                        <img 
+                        <Image 
                           src={companyLogo} 
                           alt={companyName}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover border border-gray-200"
                         />
                       ) : (
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${

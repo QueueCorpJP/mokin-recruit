@@ -42,6 +42,7 @@ export function HeroSection() {
       {/* Hero Section */}
       <div className='relative w-full h-auto'>
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
+<<<<<<< HEAD
           <picture>
             <source media='(max-width: 768px)' srcSet='/image.png' />
             <img
@@ -52,6 +53,18 @@ export function HeroSection() {
               fetchPriority='high'
             />
           </picture>
+=======
+          <Image
+            src='/top.png'
+            alt='hero'
+            width={1920}
+            height={1080}
+            className='w-full h-auto object-cover'
+            priority={true}
+            sizes="100vw"
+            style={{ width: '100%', height: 'auto' }}
+          />
+>>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
         </div>
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='flex flex-col items-center justify-center gap-[24px] text-center'>

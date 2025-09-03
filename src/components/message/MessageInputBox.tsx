@@ -317,7 +317,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
             className='flex items-center justify-center w-8 h-8 p-0 bg-transparent border-none cursor-pointer flex-shrink-0'
             onClick={handleClipClick}
           >
-            <Image src='/images/clip.svg' alt='添付' width={24} height={24} />
+            <img src='/images/clip.svg' alt='添付' width={24} height={24} />
           </button>
           
           {/* 添付ファイルタグ */}
@@ -364,7 +364,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
             disabled={isSending || message.length > 2000}
             onClick={handleSendMessage}
           >
-            <Image src='/images/form.svg' alt='送信' width={16} height={16} />
+            <img src='/images/form.svg' alt='送信' width={16} height={16} />
             {isSending ? '送信中...' : '送信'}
           </button>
         </div>
@@ -378,7 +378,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
             disabled={isSending || message.length > 2000}
             onClick={handleSendMessage}
           >
-            <Image src='/images/form.svg' alt='送信' width={16} height={16} />
+            <img src='/images/form.svg' alt='送信' width={16} height={16} />
             {isSending ? '送信中...' : '送信'}
           </button>
         </div>

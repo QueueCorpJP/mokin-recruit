@@ -3,7 +3,8 @@
     "allow": [
       "mcp__supabase__list_projects",
       "WebSearch",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(npm run build:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

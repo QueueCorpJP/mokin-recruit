@@ -1,4 +1,6 @@
 import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
@@ -69,7 +71,8 @@ export function JobPostCard({
   } else {
     imgClass += ' w-full aspect-[3/2] max-h-[200px] md:w-[477px] md:h-[318px] md:aspect-auto md:max-h-none';
   }
-  return (
+
+  const cardContent = (
     <div
       style={{
         width: '100%',
@@ -78,7 +81,7 @@ export function JobPostCard({
         // maxHeight: isSimple ? 117 : undefined, // ← 削除
       }}
       className={cardClass}
-      onClick={onClick}
+      onClick={jobId && typeof jobId === 'string' ? undefined : onClick}
     >
       <div
         className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
@@ -117,15 +120,18 @@ export function JobPostCard({
             )}
           </button>
         )}
-        <img
+        <Image
           src={imageUrl}
           alt={imageAlt}
+          width={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 313 : 104) : 477}
+          height={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 208 : 69) : 318}
           style={{
             height: isSimple ? undefined : (imgHeight ?? 318),
             objectFit: 'cover',
             borderRadius: 5,
           }}
           className={imgClass}
+          loading="lazy"
         />
         <div
           className='flex-1 flex flex-col items-start relative'
@@ -324,4 +330,15 @@ export function JobPostCard({
       </div>
     </div>
   );
+
+  // jobIdがある場合は詳細ページへのリンクでラップ
+  if (jobId && typeof jobId === 'string' && jobId.length > 0) {
+    return (
+      <Link href={`/candidate/job/${jobId}`} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }

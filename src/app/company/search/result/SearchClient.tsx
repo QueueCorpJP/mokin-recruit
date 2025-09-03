@@ -11,173 +11,12 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
-import { createClient } from '@/lib/supabase/client';
+import { getCandidatesFromDatabase, loadSearchParamsToStore } from './actions';
+import { useSearchStore } from '../../../../stores/searchStore';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
 
-// モックデータ
-const mockCandidates = [
-  {
-    id: 1,
-    isPickup: false,
-    isHidden: false,
-    isAttention: true,
-    badgeType: 'change' as const,
-    badgeText: 'キャリアチェンジ志向',
-    lastLogin: '1時間前',
-    companyName: '直近企業名テキスト直近企業名テキスト',
-    department: '部署名テキスト部署名テキスト部署名テキスト',
-    position: '役職名テキスト役職名テキスト役職名テキスト',
-    location: '東京',
-    age: '28歳',
-    gender: '男性',
-    salary: '500〜600万円',
-    university: '青山大学',
-    degree: '大学卒',
-    language: '英語',
-    languageLevel: 'ネイティブ',
-    experienceJobs: ['職種テキスト', '職種テキスト', '職種テキスト'],
-    experienceIndustries: ['業種テキスト', '業種テキスト', '業種テキスト'],
-    careerHistory: [
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-    ],
-    selectionCompanies: [
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-    ],
-  },
-  {
-    id: 2,
-    isPickup: true,
-    isHidden: false,
-    isAttention: true,
-    badgeType: 'professional' as const,
-    badgeText: '専門性追求志向',
-    lastLogin: '1時間前',
-    companyName: '直近企業名テキスト直近企業名テキスト',
-    department: '部署名テキスト部署名テキスト部署名テキスト',
-    position: '役職名テキスト役職名テキスト役職名テキスト',
-    location: '東京',
-    age: '28歳',
-    gender: '男性',
-    salary: '500〜600万円',
-    university: '青山大学',
-    degree: '大学卒',
-    language: '英語',
-    languageLevel: 'ネイティブ',
-    experienceJobs: ['職種テキスト', '職種テキスト', '職種テキスト'],
-    experienceIndustries: ['業種テキスト', '業種テキスト', '業種テキスト'],
-    careerHistory: [
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-    ],
-    selectionCompanies: [
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-    ],
-  },
-  {
-    id: 3,
-    isPickup: false,
-    isHidden: true,
-    isAttention: true,
-    badgeType: 'multiple' as const,
-    badgeText: '多職種志向',
-    lastLogin: '1時間前',
-    companyName: '直近企業名テキスト直近企業名テキスト',
-    department: '部署名テキスト部署名テキスト部署名テキスト',
-    position: '役職名テキスト役職名テキスト役職名テキスト',
-    location: '東京',
-    age: '28歳',
-    gender: '男性',
-    salary: '500〜600万円',
-    university: '青山大学',
-    degree: '大学卒',
-    language: '英語',
-    languageLevel: 'ネイティブ',
-    experienceJobs: ['職種テキスト', '職種テキスト', '職種テキスト'],
-    experienceIndustries: ['業種テキスト', '業種テキスト', '業種テキスト'],
-    careerHistory: [
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-      {
-        period: 'yyyy/mm〜現在',
-        company: '企業名テキスト企業名テキスト',
-        role: '役職名テキスト役職名テキスト',
-      },
-    ],
-    selectionCompanies: [
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-      {
-        company: '企業名テキスト企業名テキスト',
-        detail: '職種テキスト、職種テキスト、職種テキスト職種テキスト',
-      },
-    ],
-  },
-];
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
@@ -216,171 +55,16 @@ function formatRelativeTime(date: Date): string {
 }
 
 // 候補者データを取得する関数
-async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
-  try {
-    const supabase = createClient();
-    
-    const { data: candidates, error } = await supabase
-      .from('candidates')
-      .select(`
-        id,
-        last_name,
-        first_name,
-        current_company,
-        current_position,
-        prefecture,
-        birth_date,
-        gender,
-        current_income,
-        recent_job_company_name,
-        recent_job_department_position,
-        recent_job_types,
-        desired_job_types,
-        last_login_at,
-        education!left(
-          final_education,
-          school_name,
-          department,
-          graduation_year,
-          graduation_month
-        ),
-        skills!left(
-          english_level,
-          qualifications,
-          skills_list
-        ),
-        work_experience!left(
-          industry_id,
-          industry_name,
-          experience_years
-        ),
-        job_type_experience!left(
-          job_type_id,
-          job_type_name,
-          experience_years
-        ),
-        career_status_entries!left(
-          company_name,
-          industries,
-          job_types,
-          progress_status,
-          is_private
-        )
-      `);
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return [];
-    }
-
-    console.log('Raw candidates from DB:', candidates?.length || 0);
-    console.log('First raw candidate:', candidates?.[0]);
-
-    return candidates?.map((candidate: any): CandidateData => {
-      // 最終ログイン時間の表示
-      const lastLogin = candidate.last_login_at 
-        ? formatRelativeTime(new Date(candidate.last_login_at))
-        : '未ログイン';
-
-      // 選考中企業の実データを反映
-      const selectionCompanies = candidate.career_status_entries
-        ?.filter((entry: any) => entry.progress_status && !entry.is_private)
-        .map((entry: any) => ({
-          company: entry.company_name || '企業名未設定',
-          detail: Array.isArray(entry.industries) 
-            ? entry.industries.join('、') 
-            : '業界情報なし',
-          jobTypes: entry.job_types || []
-        })) || [];
-
-      // 思考ラベルのアルゴリズム実装
-      let badgeType: 'change' | 'professional' | 'multiple' = 'change';
-      let badgeText = 'キャリアチェンジ志向';
-
-      // 直近の職種を取得
-      const currentJobTypes = candidate.recent_job_types || [];
-      
-      // 選考中の求人の職種を取得
-      const selectionJobTypes = new Set<string>();
-      selectionCompanies.forEach((company: any) => {
-        if (company.jobTypes && Array.isArray(company.jobTypes)) {
-          company.jobTypes.forEach((jobType: string) => selectionJobTypes.add(jobType));
-        }
-      });
-
-      // 希望職種を取得
-      const desiredJobTypes = candidate.desired_job_types || [];
-
-      // 多職種志向：選考中の求人の種類が3種類以上ある
-      if (selectionJobTypes.size >= 3) {
-        badgeType = 'multiple';
-        badgeText = '多職種志向';
-      }
-      // 専門性追求志向：直近の在籍企業と同一職種の求人のみ選考中
-      else if (
-        currentJobTypes.length > 0 && 
-        selectionJobTypes.size > 0 &&
-        Array.from(selectionJobTypes).every(jobType => 
-          currentJobTypes.some((currentJob: string) => 
-            currentJob.toLowerCase() === jobType.toLowerCase()
-          )
-        )
-      ) {
-        badgeType = 'professional';
-        badgeText = '専門性追求志向';
-      }
-      // キャリアチェンジ志向：直近の在籍企業と希望職種が違うものが含まれる
-      else if (
-        currentJobTypes.length > 0 &&
-        desiredJobTypes.length > 0 &&
-        desiredJobTypes.some((desiredJob: string) => 
-          !currentJobTypes.some((currentJob: string) => 
-            currentJob.toLowerCase() === desiredJob.toLowerCase()
-          )
-        )
-      ) {
-        badgeType = 'change';
-        badgeText = 'キャリアチェンジ志向';
-      }
-
-      return {
-        id: candidate.id,
-        isPickup: false,
-        isHidden: false,
-        isAttention: Math.random() > 0.5,
-        badgeType,
-        badgeText,
-        lastLogin,
-        companyName: candidate.recent_job_company_name || candidate.current_company || '企業名未設定',
-        department: candidate.recent_job_department_position || '部署名未設定',
-        position: candidate.current_position || '役職名未設定',
-        location: candidate.prefecture || '未設定',
-        age: candidate.birth_date ? `${new Date().getFullYear() - new Date(candidate.birth_date).getFullYear()}歳` : '年齢未設定',
-        gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '未設定',
-        salary: candidate.current_income ? `${candidate.current_income}万円` : '年収未設定',
-        university: candidate.education?.school_name || '学校名未設定',
-        degree: candidate.education?.final_education || '学歴未設定',
-        language: candidate.skills?.english_level !== 'none' ? '英語' : '言語スキルなし',
-        languageLevel: candidate.skills?.english_level || 'なし',
-        experienceJobs: candidate.job_type_experience?.map((exp: any) => exp.job_type_name) || ['職種未設定'],
-        experienceIndustries: candidate.work_experience?.map((exp: any) => exp.industry_name) || ['業界未設定'],
-        careerHistory: [],
-        selectionCompanies: selectionCompanies.slice(0, 3) // 表示用に最大3つまで
-      };
-    }) || [];
-  } catch (error) {
-    console.error('Database error:', error);
-    return [];
-  }
-}
 
 export default function SearchClient() {
   const searchParams = useSearchParams();
+  const searchStore = useSearchStore();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
   const [candidates, setCandidates] = useState<CandidateData[]>([]);
   const [allCandidates, setAllCandidates] = useState<CandidateData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     pickup: false,
     newUser: false,
@@ -388,211 +72,76 @@ export default function SearchClient() {
     working: false,
   });
 
-  // 検索条件の状態管理
-  const [searchGroup, setSearchGroup] = useState('');
-  const [searchGroupError, setSearchGroupError] = useState('');
-  const [searchGroupTouched, setSearchGroupTouched] = useState(false);
-  const [keyword, setKeyword] = useState('');
-  const [experienceJobTypes, setExperienceJobTypes] = useState<
-    Array<JobType & { experienceYears?: string }>
-  >([]);
-  const [jobTypeAndSearch, setJobTypeAndSearch] = useState(false);
-  const [experienceIndustries, setExperienceIndustries] = useState<
-    Array<Industry & { experienceYears?: string }>
-  >([]);
-  const [industryAndSearch, setIndustryAndSearch] = useState(false);
-  const [currentSalaryMin, setCurrentSalaryMin] = useState('');
-  const [currentSalaryMax, setCurrentSalaryMax] = useState('');
-  const [currentCompany, setCurrentCompany] = useState('');
-  const [education, setEducation] = useState('');
-  const [englishLevel, setEnglishLevel] = useState('');
-  const [otherLanguage, setOtherLanguage] = useState('');
-  const [otherLanguageLevel, setOtherLanguageLevel] = useState('');
-  const [qualifications, setQualifications] = useState('');
-  const [ageMin, setAgeMin] = useState('');
-  const [ageMax, setAgeMax] = useState('');
-
-  // 希望条件の状態管理
-  const [desiredJobTypes, setDesiredJobTypes] = useState<JobType[]>([]);
-  const [desiredIndustries, setDesiredIndustries] = useState<Industry[]>([]);
-  const [desiredSalaryMin, setDesiredSalaryMin] = useState('');
-  const [desiredSalaryMax, setDesiredSalaryMax] = useState('');
-  interface Location {
-    id: string;
-    name: string;
-  }
-  const [desiredLocations, setDesiredLocations] = useState<Location[]>([]);
-  const [transferTime, setTransferTime] = useState('');
-  interface WorkStyle {
-    id: string;
-    name: string;
-  }
-  const [workStyles, setWorkStyles] = useState<WorkStyle[]>([]);
-  const [selectionStatus, setSelectionStatus] = useState('');
-  const [similarCompanyIndustry, setSimilarCompanyIndustry] = useState('');
-  const [similarCompanyLocation, setSimilarCompanyLocation] = useState('');
-  const [lastLoginMin, setLastLoginMin] = useState('');
-
-  // モーダルの状態管理
-  const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
-  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
-  const [isDesiredJobTypeModalOpen, setIsDesiredJobTypeModalOpen] =
-    useState(false);
-  const [isDesiredIndustryModalOpen, setIsDesiredIndustryModalOpen] =
-    useState(false);
-  const [isDesiredLocationModalOpen, setIsDesiredLocationModalOpen] =
-    useState(false);
-  const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
-
   // 初期データ読み込み
   useEffect(() => {
     const loadCandidates = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await getCandidatesFromDatabase();
         setAllCandidates(data);
         setCandidates(data);
       } catch (error) {
         console.error('Failed to load candidates:', error);
-        // エラーの場合はモックデータを使用
-        setAllCandidates(mockCandidates as CandidateData[]);
-        setCandidates(mockCandidates as CandidateData[]);
+        setError('候補者データの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
     };
 
+    // URLパラメータから検索条件をストアに復元
+    loadSearchParamsToStore(searchParams, searchStore);
     loadCandidates();
   }, []);
 
-  // URLパラメータから検索条件を読み込む
+  // ストアの状態に基づいて候補者をフィルタリング
   useEffect(() => {
     if (allCandidates.length === 0) return;
-    // 職種の処理
-    const jobTypesParam = searchParams.get('job_types');
-    if (jobTypesParam) {
-      const jobTypes = jobTypesParam.split(',').map((name, index) => ({
-        id: `job-${index}`,
-        name: name.trim(),
-      }));
-      setExperienceJobTypes(jobTypes);
+    
+    const searchConditions = {
+      searchGroup: searchStore.searchGroup,
+      keyword: searchStore.keyword,
+      experience_job_types: searchStore.experienceJobTypes.map(j => j.name),
+      experience_industries: searchStore.experienceIndustries.map(i => i.name),
+      current_salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
+      current_salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
+      age_min: searchStore.ageMin ? parseInt(searchStore.ageMin) : undefined,
+      age_max: searchStore.ageMax ? parseInt(searchStore.ageMax) : undefined,
+      desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
+      desired_industries: searchStore.desiredIndustries.map(i => i.name),
+      desired_locations: searchStore.desiredLocations.map(l => l.name),
+      work_styles: searchStore.workStyles.map(w => w.name),
+      education: searchStore.education,
+      english_level: searchStore.englishLevel,
+    };
+
+    const hasSearchConditions = Object.values(searchConditions).some(value => 
+      Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
+    );
+
+    if (hasSearchConditions) {
+      const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
+      setCandidates(filteredCandidates);
+    } else {
+      setCandidates(allCandidates);
     }
-
-    // 業界の処理
-    const industriesParam = searchParams.get('industries');
-    if (industriesParam) {
-      const industries = industriesParam.split(',').map((name, index) => ({
-        id: `industry-${index}`,
-        name: name.trim(),
-      }));
-      setExperienceIndustries(industries);
-    }
-
-    // 勤務地の処理
-    const locationsParam = searchParams.get('locations');
-    if (locationsParam) {
-      const locations = locationsParam.split(',').map((name, index) => ({
-        id: `location-${index}`,
-        name: name.trim(),
-      }));
-      setDesiredLocations(locations);
-    }
-
-    // 年齢の処理
-    const ageMinParam = searchParams.get('age_min');
-    if (ageMinParam) {
-      setAgeMin(ageMinParam);
-    }
-
-    const ageMaxParam = searchParams.get('age_max');
-    if (ageMaxParam) {
-      setAgeMax(ageMaxParam);
-    }
-
-    // 年収の処理
-    const salaryMinParam = searchParams.get('salary_min');
-    if (salaryMinParam) {
-      setDesiredSalaryMin(salaryMinParam);
-    }
-
-    const salaryMaxParam = searchParams.get('salary_max');
-    if (salaryMaxParam) {
-      setDesiredSalaryMax(salaryMaxParam);
-    }
-
-    // スキルの処理
-    const skillsParam = searchParams.get('skills');
-    if (skillsParam) {
-      setKeyword(skillsParam);
-    }
-
-    // 言語の処理
-    const languagesParam = searchParams.get('languages');
-    if (languagesParam) {
-      setOtherLanguage(languagesParam);
-    }
-
-    // キャリアチェンジ・専門性の処理
-    const careerChangeParam = searchParams.get('career_change');
-    if (careerChangeParam === 'true') {
-      // キャリアチェンジ志向の場合の処理（必要に応じて）
-    }
-
-    const professionalFocusParam = searchParams.get('professional_focus');
-    if (professionalFocusParam === 'true') {
-      // 専門性追求の場合の処理（必要に応じて）
-    }
-
-    // 学歴の処理
-    const educationLevelParam = searchParams.get('education_level');
-    if (educationLevelParam) {
-      setEducation(educationLevelParam);
-    }
-
-    // 検索ボックスを開く（パラメータがある場合）
-    const hasParams = searchParams.toString().length > 0;
-    if (hasParams) {
-      setIsSearchBoxOpen(true);
-      
-      // URLパラメータに基づいて候補者をフィルタリング
-      const searchConditions = {
-        job_types: jobTypesParam?.split(',').map(t => t.trim()),
-        industries: industriesParam?.split(',').map(t => t.trim()),
-        locations: locationsParam?.split(',').map(t => t.trim()),
-        age_min: ageMinParam ? parseInt(ageMinParam) : undefined,
-        age_max: ageMaxParam ? parseInt(ageMaxParam) : undefined,
-        salary_min: salaryMinParam ? parseInt(salaryMinParam) : undefined,
-        salary_max: salaryMaxParam ? parseInt(salaryMaxParam) : undefined,
-        skills: skillsParam?.split(',').map(t => t.trim()),
-        languages: languagesParam?.split(',').map(t => t.trim()),
-        career_change: careerChangeParam === 'true',
-        professional_focus: professionalFocusParam === 'true',
-        education_level: educationLevelParam?.split(',').map(t => t.trim()),
-      };
-
-      // 条件が存在する場合のみフィルタリングを実行
-      const hasSearchConditions = Object.values(searchConditions).some(value => 
-        Array.isArray(value) ? value.length > 0 : value !== undefined
-      );
-
-      console.log('Search conditions:', searchConditions);
-      console.log('All candidates count:', allCandidates.length);
-      console.log('First candidate:', allCandidates[0]);
-      
-      if (hasSearchConditions) {
-        const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
-        console.log('Filtered candidates count:', filteredCandidates.length);
-        
-        // デバッグ用：フィルタ結果が0件の場合、全候補者を表示
-        if (filteredCandidates.length === 0 && allCandidates.length > 0) {
-          console.warn('No filtered results, showing all candidates for debugging');
-          setCandidates(allCandidates);
-        } else {
-          setCandidates(filteredCandidates);
-        }
-      }
-    }
-  }, [searchParams, allCandidates]);
+  }, [
+    allCandidates,
+    searchStore.searchGroup,
+    searchStore.keyword,
+    searchStore.experienceJobTypes,
+    searchStore.experienceIndustries,
+    searchStore.currentSalaryMin,
+    searchStore.currentSalaryMax,
+    searchStore.ageMin,
+    searchStore.ageMax,
+    searchStore.desiredJobTypes,
+    searchStore.desiredIndustries,
+    searchStore.desiredLocations,
+    searchStore.workStyles,
+    searchStore.education,
+    searchStore.englishLevel
+  ]);
 
   const togglePickup = (id: string | number) => {
     setCandidates((prev) =>
@@ -725,15 +274,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div>
                         <SelectInput
-                          value={searchGroup}
+                          value={searchStore.searchGroup}
                           onChange={(value: string) => {
-                            setSearchGroup(value);
-                            setSearchGroupError('');
+                            searchStore.setSearchGroup(value);
+                            searchStore.setSearchGroupError('');
                           }}
                           onBlur={() => {
-                            setSearchGroupTouched(true);
-                            if (!searchGroup) {
-                              setSearchGroupError(
+                            searchStore.setSearchGroupTouched(true);
+                            if (!searchStore.searchGroup) {
+                              searchStore.setSearchGroupError(
                                 'グループを選択してください。',
                               );
                             }
@@ -754,9 +303,9 @@ export default function SearchClient() {
                           placeholder="未選択"
                           className="w-[400px]"
                         />
-                        {searchGroupTouched && searchGroupError && (
+                        {searchStore.searchGroupTouched && searchStore.searchGroupError && (
                           <p className="text-[#ff0000] text-[12px] mt-2">
-                            {searchGroupError}
+                            {searchStore.searchGroupError}
                           </p>
                         )}
                       </div>
@@ -776,8 +325,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center text-[#999]">
                       <input
                         type="text"
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
+                        value={searchStore.keyword}
+                        onChange={(e) => searchStore.setKeyword(e.target.value)}
                         placeholder="検索したいワードを入力"
                         className="w-100 px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -799,7 +348,7 @@ export default function SearchClient() {
                       {/* ボタンとチェックボックスのコンテナ */}
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => setIsJobTypeModalOpen(true)}
+                          onClick={() => searchStore.setIsJobTypeModalOpen(true)}
                           className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
@@ -809,9 +358,9 @@ export default function SearchClient() {
                         {/* AND検索チェックボックス */}
                         <div className="flex items-center gap-2">
                           <Checkbox
-                            checked={jobTypeAndSearch}
+                            checked={searchStore.jobTypeAndSearch}
                             onChange={(checked: boolean) =>
-                              setJobTypeAndSearch(checked)
+                              searchStore.setJobTypeAndSearch(checked)
                             }
                           />
                           <label
@@ -824,9 +373,9 @@ export default function SearchClient() {
                       </div>
 
                       {/* 選択された職種のタグ表示 */}
-                      {experienceJobTypes.length > 0 && (
+                      {searchStore.experienceJobTypes.length > 0 && (
                         <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {experienceJobTypes.map((job) => (
+                          {searchStore.experienceJobTypes.map((job) => (
                             <div key={job.id} className="flex flex-row gap-0.5">
                               <div className="inline-flex items-strech gap-1">
                                 <div
@@ -841,7 +390,7 @@ export default function SearchClient() {
                                   <select
                                     value={job.experienceYears || ''}
                                     onChange={(e) => {
-                                      const updated = experienceJobTypes.map(
+                                      const updated = searchStore.experienceJobTypes.map(
                                         (j) =>
                                           j.id === job.id
                                             ? {
@@ -850,7 +399,7 @@ export default function SearchClient() {
                                               }
                                             : j,
                                       );
-                                      setExperienceJobTypes(updated);
+                                      searchStore.setExperienceJobTypes(updated);
                                     }}
                                     className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     style={{
@@ -886,8 +435,8 @@ export default function SearchClient() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setExperienceJobTypes(
-                                    experienceJobTypes.filter(
+                                  searchStore.setExperienceJobTypes(
+                                    searchStore.experienceJobTypes.filter(
                                       (j) => j.id !== job.id,
                                     ),
                                   );
@@ -928,7 +477,7 @@ export default function SearchClient() {
                       {/* ボタンとチェックボックスのコンテナ */}
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={() => setIsIndustryModalOpen(true)}
+                          onClick={() => searchStore.setIsIndustryModalOpen(true)}
                           className="w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
@@ -938,9 +487,9 @@ export default function SearchClient() {
                         {/* AND検索チェックボックス */}
                         <div className="flex items-center gap-2">
                           <Checkbox
-                            checked={industryAndSearch}
+                            checked={searchStore.industryAndSearch}
                             onChange={(checked: boolean) =>
-                              setIndustryAndSearch(checked)
+                              searchStore.setIndustryAndSearch(checked)
                             }
                           />
                           <label
@@ -953,9 +502,9 @@ export default function SearchClient() {
                       </div>
 
                       {/* 選択された業種のタグ表示 */}
-                      {experienceIndustries.length > 0 && (
+                      {searchStore.experienceIndustries.length > 0 && (
                         <div className="flex flex-col gap-2 mt-4 max-w-[400px] w-full">
-                          {experienceIndustries.map((industry) => (
+                          {searchStore.experienceIndustries.map((industry) => (
                             <div
                               key={industry.id}
                               className="flex flex-row gap-0.5"
@@ -973,7 +522,7 @@ export default function SearchClient() {
                                   <select
                                     value={industry.experienceYears || ''}
                                     onChange={(e) => {
-                                      const updated = experienceIndustries.map(
+                                      const updated = searchStore.experienceIndustries.map(
                                         (ind) =>
                                           ind.id === industry.id
                                             ? {
@@ -982,7 +531,7 @@ export default function SearchClient() {
                                               }
                                             : ind,
                                       );
-                                      setExperienceIndustries(updated);
+                                      searchStore.setExperienceIndustries(updated);
                                     }}
                                     className="bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full"
                                     style={{
@@ -1018,8 +567,8 @@ export default function SearchClient() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setExperienceIndustries(
-                                    experienceIndustries.filter(
+                                  searchStore.setExperienceIndustries(
+                                    searchStore.experienceIndustries.filter(
                                       (i) => i.id !== industry.id,
                                     ),
                                   );
@@ -1059,10 +608,10 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2 ">
                         <SelectInput
-                          value={currentSalaryMin}
+                          value={searchStore.currentSalaryMin}
                           className="min-w-60"
                           onChange={(value: string) =>
-                            setCurrentSalaryMin(value)
+                            searchStore.setCurrentSalaryMin(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1083,10 +632,10 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={currentSalaryMax}
+                          value={searchStore.currentSalaryMax}
                           className="min-w-60"
                           onChange={(value: string) =>
-                            setCurrentSalaryMax(value)
+                            searchStore.setCurrentSalaryMax(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1122,8 +671,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <input
                         type="text"
-                        value={currentCompany}
-                        onChange={(e) => setCurrentCompany(e.target.value)}
+                        value={searchStore.currentCompany}
+                        onChange={(e) => searchStore.setCurrentCompany(e.target.value)}
                         placeholder="在籍企業を入力"
                         className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -1144,9 +693,9 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={education}
+                          value={searchStore.education}
                           className=" w-[358px]"
-                          onChange={(value: string) => setEducation(value)}
+                          onChange={(value: string) => searchStore.setEducation(value)}
                           options={[
                             { value: '', label: '指定なし' },
                             { value: 'middle', label: '中学卒' },
@@ -1190,8 +739,8 @@ export default function SearchClient() {
                             英語
                           </label>
                           <SelectInput
-                            value={englishLevel}
-                            onChange={(value: string) => setEnglishLevel(value)}
+                            value={searchStore.englishLevel}
+                            onChange={(value: string) => searchStore.setEnglishLevel(value)}
                             className="w-fit"
                             options={[
                               { value: '', label: 'レベルの指定なし' },
@@ -1213,9 +762,9 @@ export default function SearchClient() {
                           </label>
                           <div className="flex items-center gap-2">
                             <SelectInput
-                              value={otherLanguage}
+                              value={searchStore.otherLanguage}
                               onChange={(value: string) =>
-                                setOtherLanguage(value)
+                                searchStore.setOtherLanguage(value)
                               }
                               options={[
                                 { value: '', label: '指定なし' },
@@ -1239,9 +788,9 @@ export default function SearchClient() {
                               placeholder="指定なし"
                             />
                             <SelectInput
-                              value={otherLanguageLevel}
+                              value={searchStore.otherLanguageLevel}
                               onChange={(value: string) =>
-                                setOtherLanguageLevel(value)
+                                searchStore.setOtherLanguageLevel(value)
                               }
                               options={[
                                 { value: '', label: 'レベルの指定なし' },
@@ -1272,8 +821,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <input
                         type="text"
-                        value={qualifications}
-                        onChange={(e) => setQualifications(e.target.value)}
+                        value={searchStore.qualifications}
+                        onChange={(e) => searchStore.setQualifications(e.target.value)}
                         placeholder="保有資格を入力"
                         className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -1294,8 +843,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={ageMin}
-                          onChange={(value: string) => setAgeMin(value)}
+                          value={searchStore.ageMin}
+                          onChange={(value: string) => searchStore.setAgeMin(value)}
                           className="w-60"
                           options={[
                             { value: '', label: '指定なし' },
@@ -1316,9 +865,9 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={ageMax}
+                          value={searchStore.ageMax}
                           className="w-60"
-                          onChange={(value: string) => setAgeMax(value)}
+                          onChange={(value: string) => searchStore.setAgeMax(value)}
                           options={[
                             { value: '', label: '指定なし' },
                             { value: '18', label: '18歳' },
@@ -1356,15 +905,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => setIsDesiredJobTypeModalOpen(true)}
+                          onClick={() => searchStore.setIsDesiredJobTypeModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           職種を選択
                         </button>
-                        {desiredJobTypes.length > 0 && (
+                        {searchStore.desiredJobTypes.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {desiredJobTypes.map((job) => (
+                            {searchStore.desiredJobTypes.map((job) => (
                               <div
                                 key={job.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1379,8 +928,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    setDesiredJobTypes(
-                                      desiredJobTypes.filter(
+                                    searchStore.setDesiredJobTypes(
+                                      searchStore.desiredJobTypes.filter(
                                         (j) => j.id !== job.id,
                                       ),
                                     )
@@ -1422,15 +971,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => setIsDesiredIndustryModalOpen(true)}
+                          onClick={() => searchStore.setIsDesiredIndustryModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           業種を選択
                         </button>
-                        {desiredIndustries.length > 0 && (
+                        {searchStore.desiredIndustries.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {desiredIndustries.map((industry) => (
+                            {searchStore.desiredIndustries.map((industry) => (
                               <div
                                 key={industry.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1445,8 +994,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    setDesiredIndustries(
-                                      desiredIndustries.filter(
+                                    searchStore.setDesiredIndustries(
+                                      searchStore.desiredIndustries.filter(
                                         (i) => i.id !== industry.id,
                                       ),
                                     )
@@ -1488,10 +1037,10 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={desiredSalaryMin}
+                          value={searchStore.desiredSalaryMin}
                           className="w-60"
                           onChange={(value: string) =>
-                            setDesiredSalaryMin(value)
+                            searchStore.setDesiredSalaryMin(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1512,10 +1061,10 @@ export default function SearchClient() {
                         />
                         <span className="text-[#323232]">〜</span>
                         <SelectInput
-                          value={desiredSalaryMax}
+                          value={searchStore.desiredSalaryMax}
                           className="w-60"
                           onChange={(value: string) =>
-                            setDesiredSalaryMax(value)
+                            searchStore.setDesiredSalaryMax(value)
                           }
                           options={[
                             { value: '', label: '指定なし' },
@@ -1551,15 +1100,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => setIsDesiredLocationModalOpen(true)}
+                          onClick={() => searchStore.setIsDesiredLocationModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           勤務地を選択
                         </button>
-                        {desiredLocations.length > 0 && (
+                        {searchStore.desiredLocations.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {desiredLocations.map((location) => (
+                            {searchStore.desiredLocations.map((location) => (
                               <div
                                 key={location.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1574,8 +1123,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    setDesiredLocations(
-                                      desiredLocations.filter(
+                                    searchStore.setDesiredLocations(
+                                      searchStore.desiredLocations.filter(
                                         (l) => l.id !== location.id,
                                       ),
                                     )
@@ -1616,9 +1165,9 @@ export default function SearchClient() {
                     </div>
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
-                        value={transferTime}
+                        value={searchStore.transferTime}
                         className="w-100"
-                        onChange={(value: string) => setTransferTime(value)}
+                        onChange={(value: string) => searchStore.setTransferTime(value)}
                         options={[
                           { value: '', label: '指定なし' },
                           { value: 'immediately', label: 'すぐにでも' },
@@ -1646,15 +1195,15 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex flex-col gap-2">
                         <button
-                          onClick={() => setIsWorkStyleModalOpen(true)}
+                          onClick={() => searchStore.setIsWorkStyleModalOpen(true)}
                           className="w-[170px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           働き方を選択
                         </button>
-                        {workStyles.length > 0 && (
+                        {searchStore.workStyles.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {workStyles.map((style) => (
+                            {searchStore.workStyles.map((style) => (
                               <div
                                 key={style.id}
                                 className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
@@ -1669,8 +1218,8 @@ export default function SearchClient() {
                                 </span>
                                 <button
                                   onClick={() =>
-                                    setWorkStyles(
-                                      workStyles.filter(
+                                    searchStore.setWorkStyles(
+                                      searchStore.workStyles.filter(
                                         (s) => s.id !== style.id,
                                       ),
                                     )
@@ -1711,9 +1260,9 @@ export default function SearchClient() {
                     </div>
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
-                        value={selectionStatus}
+                        value={searchStore.selectionStatus}
                         className="w-100"
-                        onChange={(value: string) => setSelectionStatus(value)}
+                        onChange={(value: string) => searchStore.setSelectionStatus(value)}
                         options={[
                           { value: '', label: '指定なし' },
                           { value: 'not-started', label: 'まだ始めていない' },
@@ -1799,9 +1348,9 @@ export default function SearchClient() {
                               業種
                             </span>
                             <SelectInput
-                              value={similarCompanyIndustry}
+                              value={searchStore.similarCompanyIndustry}
                               onChange={(value: string) =>
-                                setSimilarCompanyIndustry(value)
+                                searchStore.setSimilarCompanyIndustry(value)
                               }
                               className="w-[350px]"
                               options={[
@@ -1823,9 +1372,9 @@ export default function SearchClient() {
                               所在地
                             </span>
                             <SelectInput
-                              value={similarCompanyLocation}
+                              value={searchStore.similarCompanyLocation}
                               onChange={(value: string) =>
-                                setSimilarCompanyLocation(value)
+                                searchStore.setSimilarCompanyLocation(value)
                               }
                               className="w-[350px]"
                               options={[
@@ -1860,8 +1409,8 @@ export default function SearchClient() {
                     <div className="flex-1 py-6 flex items-center">
                       <div className="flex items-center gap-2">
                         <SelectInput
-                          value={lastLoginMin}
-                          onChange={(value: string) => setLastLoginMin(value)}
+                          value={searchStore.lastLoginMin}
+                          onChange={(value: string) => searchStore.setLastLoginMin(value)}
                           className="w-[358px]"
                           options={[
                             { value: '', label: '指定なし' },
@@ -1891,11 +1440,11 @@ export default function SearchClient() {
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       onClick={() => {
                         // タッチ済みにしてバリデーションをトリガー
-                        setSearchGroupTouched(true);
+                        searchStore.setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchGroup === '') {
-                          setSearchGroupError('グループを選択してください。');
+                        if (searchStore.searchGroup === '') {
+                          searchStore.setSearchGroupError('グループを選択してください。');
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
                             '[data-field="search-group"]',
@@ -1919,11 +1468,11 @@ export default function SearchClient() {
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       onClick={() => {
                         // タッチ済みにしてバリデーションをトリガー
-                        setSearchGroupTouched(true);
+                        searchStore.setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchGroup === '') {
-                          setSearchGroupError('グループを選択してください。');
+                        if (searchStore.searchGroup === '') {
+                          searchStore.setSearchGroupError('グループを選択してください。');
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
                             '[data-field="search-group"]',
@@ -2566,71 +2115,71 @@ export default function SearchClient() {
 
       {/* Modal Components */}
       <JobTypeSelectModal
-        isOpen={isJobTypeModalOpen}
-        onClose={() => setIsJobTypeModalOpen(false)}
+        isOpen={searchStore.isJobTypeModalOpen}
+        onClose={() => searchStore.setIsJobTypeModalOpen(false)}
         onConfirm={(selected) => {
-          setExperienceJobTypes(
+          searchStore.setExperienceJobTypes(
             selected.map((j) => ({ ...j, experienceYears: '' })),
           );
-          setIsJobTypeModalOpen(false);
+          searchStore.setIsJobTypeModalOpen(false);
         }}
-        initialSelected={experienceJobTypes}
+        initialSelected={searchStore.experienceJobTypes}
         maxSelections={10}
       />
 
       <IndustrySelectModal
-        isOpen={isIndustryModalOpen}
-        onClose={() => setIsIndustryModalOpen(false)}
+        isOpen={searchStore.isIndustryModalOpen}
+        onClose={() => searchStore.setIsIndustryModalOpen(false)}
         onConfirm={(selected) => {
-          setExperienceIndustries(
+          searchStore.setExperienceIndustries(
             selected.map((i) => ({ ...i, experienceYears: '' })),
           );
-          setIsIndustryModalOpen(false);
+          searchStore.setIsIndustryModalOpen(false);
         }}
-        initialSelected={experienceIndustries}
+        initialSelected={searchStore.experienceIndustries}
         maxSelections={10}
       />
 
       <JobTypeSelectModal
-        isOpen={isDesiredJobTypeModalOpen}
-        onClose={() => setIsDesiredJobTypeModalOpen(false)}
+        isOpen={searchStore.isDesiredJobTypeModalOpen}
+        onClose={() => searchStore.setIsDesiredJobTypeModalOpen(false)}
         onConfirm={(selected) => {
-          setDesiredJobTypes(selected);
-          setIsDesiredJobTypeModalOpen(false);
+          searchStore.setDesiredJobTypes(selected);
+          searchStore.setIsDesiredJobTypeModalOpen(false);
         }}
-        initialSelected={desiredJobTypes}
+        initialSelected={searchStore.desiredJobTypes}
         maxSelections={10}
       />
 
       <IndustrySelectModal
-        isOpen={isDesiredIndustryModalOpen}
-        onClose={() => setIsDesiredIndustryModalOpen(false)}
+        isOpen={searchStore.isDesiredIndustryModalOpen}
+        onClose={() => searchStore.setIsDesiredIndustryModalOpen(false)}
         onConfirm={(selected) => {
-          setDesiredIndustries(selected);
-          setIsDesiredIndustryModalOpen(false);
+          searchStore.setDesiredIndustries(selected);
+          searchStore.setIsDesiredIndustryModalOpen(false);
         }}
-        initialSelected={desiredIndustries}
+        initialSelected={searchStore.desiredIndustries}
         maxSelections={10}
       />
 
       <WorkLocationSelectModal
-        isOpen={isDesiredLocationModalOpen}
-        onClose={() => setIsDesiredLocationModalOpen(false)}
+        isOpen={searchStore.isDesiredLocationModalOpen}
+        onClose={() => searchStore.setIsDesiredLocationModalOpen(false)}
         onConfirm={(selected) => {
-          setDesiredLocations(selected);
-          setIsDesiredLocationModalOpen(false);
+          searchStore.setDesiredLocations(selected);
+          searchStore.setIsDesiredLocationModalOpen(false);
         }}
-        initialSelected={desiredLocations}
+        initialSelected={searchStore.desiredLocations}
       />
 
       <WorkStyleSelectModal
-        isOpen={isWorkStyleModalOpen}
-        onClose={() => setIsWorkStyleModalOpen(false)}
+        isOpen={searchStore.isWorkStyleModalOpen}
+        onClose={() => searchStore.setIsWorkStyleModalOpen(false)}
         onConfirm={(selected) => {
-          setWorkStyles(selected);
-          setIsWorkStyleModalOpen(false);
+          searchStore.setWorkStyles(selected);
+          searchStore.setIsWorkStyleModalOpen(false);
         }}
-        initialSelected={workStyles}
+        initialSelected={searchStore.workStyles}
         maxSelections={10}
       />
     </>

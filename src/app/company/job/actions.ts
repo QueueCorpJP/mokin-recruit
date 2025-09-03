@@ -2,6 +2,7 @@
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
+import { unstable_cache, revalidateTag } from 'next/cache';
 
 // 求人データの型定義
 interface JobPosting {
@@ -23,37 +24,15 @@ interface JobPosting {
   internalMemo: string;
 }
 
-// 求人一覧取得
-export async function getCompanyJobs(params: {
+// 求人一覧取得の内部実装
+async function _getCompanyJobs(params: {
   status?: string;
   groupId?: string;
   scope?: string;
   search?: string;
-}) {
+}, companyAccountId: string) {
   try {
-    // 統一的な認証チェック
-    const authResult = await requireCompanyAuthForAction();
-    console.log('🔍 getCompanyJobs - Auth result:', authResult);
-    if (!authResult.success) {
-      console.log('❌ getCompanyJobs - Auth failed:', authResult.error);
-      return { success: false, error: authResult.error };
-    }
-
-    const { companyAccountId: userCompanyAccountId } = authResult.data;
-
-    // キャッシュキーの生成（パラメータを含める）
-    const cacheKey = `${userCompanyAccountId}-${JSON.stringify(params)}`;
-    const cached = jobsCache.get(cacheKey);
-    
-    // 期限切れキャッシュを即座に削除
-    if (cached && Date.now() - cached.timestamp >= JOBS_CACHE_TTL) {
-      jobsCache.delete(cacheKey);
-    } else if (cached) {
-      console.log('[getCompanyJobs] Cache hit - returning cached data');
-      return cached.data;
-    }
-    
-    console.log('[getCompanyJobs] Cache miss - fetching new data');
+    console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
     const supabase = getSupabaseAdminClient();
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
@@ -100,7 +79,7 @@ export async function getCompanyJobs(params: {
         )
       `
       )
-      .eq('company_account_id', userCompanyAccountId)
+      .eq('company_account_id', companyAccountId)
       .order('updated_at', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -140,9 +119,12 @@ export async function getCompanyJobs(params: {
 
     // キーワード検索
     if (params.search) {
-      query = query.or(
-        `title.ilike.%${params.search}%,job_type.ilike.%${params.search}%,job_types.cs.{${params.search}},industries.cs.{${params.search}}`
-      );
+      const searchTerm = params.search.trim();
+      if (searchTerm) {
+        query = query.or(
+          `title.ilike.%${searchTerm}%,job_type.cs.{${searchTerm}},industry.cs.{${searchTerm}}`
+        );
+      }
     }
 
     const { data: jobs, error: jobsError } = await query;
@@ -154,7 +136,7 @@ export async function getCompanyJobs(params: {
         details: jobsError.details,
         hint: jobsError.hint,
         code: jobsError.code,
-        userCompanyAccountId
+        companyAccountId
       });
       return { success: false, error: `求人情報の取得に失敗しました: ${jobsError.message}` };
     }
@@ -197,20 +179,7 @@ export async function getCompanyJobs(params: {
       publishedAt: job.published_at,
     }));
 
-    const result = { success: true, data: formattedJobs };
-
-    // 成功した場合のみキャッシュに保存
-    jobsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-    
-    // キャッシュサイズを制限（メモリ使用量対策）
-    if (jobsCache.size > 30) {
-      const oldestKey = jobsCache.keys().next().value;
-      if (oldestKey) {
-        jobsCache.delete(oldestKey);
-      }
-    }
-
-    return result;
+    return { success: true, data: formattedJobs };
   } catch (e: any) {
     console.error('Company jobs error:', e);
     return { success: false, error: e.message };
@@ -228,7 +197,7 @@ export async function createJob(data: any) {
 
     const { 
       companyUserId: actualUserId, 
-      companyAccountId: userCompanyAccountId 
+      companyAccountId: companyAccountId 
     } = authResult.data;
     const supabase = getSupabaseAdminClient();
 
@@ -236,7 +205,7 @@ export async function createJob(data: any) {
     const { data: availableUsers } = await supabase
       .from('company_users')
       .select('id, email, full_name')
-      .eq('company_account_id', userCompanyAccountId);
+      .eq('company_account_id', companyAccountId);
 
     let finalCompanyGroupId = actualUserId;
     if (data.company_group_id && availableUsers?.some(user => user.id === data.company_group_id)) {
@@ -253,7 +222,17 @@ export async function createJob(data: any) {
           
           const timestamp = Date.now();
           const randomSuffix = Math.random().toString(36).substring(2, 15);
-          const fileExtension = contentType.includes('jpeg') ? 'jpg' : contentType.split('/')[1];
+          
+          // ファイル拡張子の決定（SVGを含む）
+          let fileExtension;
+          if (contentType.includes('jpeg')) {
+            fileExtension = 'jpg';
+          } else if (contentType.includes('svg')) {
+            fileExtension = 'svg';
+          } else {
+            fileExtension = contentType.split('/')[1];
+          }
+          
           const fileName = `job-${finalCompanyGroupId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
           
           const { data: uploadData, error } = await supabase.storage
@@ -320,7 +299,7 @@ export async function createJob(data: any) {
     const mappedEmploymentType = employmentTypeMapping[data.employment_type] || 'FULL_TIME';
 
     const insertData = {
-      company_account_id: userCompanyAccountId,
+      company_account_id: companyAccountId,
       company_group_id: finalCompanyGroupId,
       title: data.title || '未設定',
       job_description: data.job_description || '未設定',
@@ -399,6 +378,83 @@ export async function getJobForEdit(jobId: string) {
   }
 }
 
+// 求人詳細表示用（job_idベース）
+export async function getJobDetail(jobId: string) {
+  try {
+    // 統一的な認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
+    }
+
+    const { companyAccountId: companyAccountId } = authResult.data;
+    const supabase = getSupabaseAdminClient();
+
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select(`
+        *,
+        company_groups (
+          id,
+          group_name
+        )
+      `)
+      .eq('id', jobId)
+      .eq('company_account_id', companyAccountId)
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data) {
+      return { success: false, error: '求人情報が見つかりません' };
+    }
+
+    // レスポンス用にデータを整形
+    const formattedJob = {
+      id: data.id,
+      title: data.title,
+      jobDescription: data.job_description,
+      positionSummary: data.position_summary,
+      requiredSkills: data.required_skills,
+      preferredSkills: data.preferred_skills,
+      salaryMin: data.salary_min,
+      salaryMax: data.salary_max,
+      salaryNote: data.salary_note,
+      employmentType: data.employment_type,
+      workLocation: data.work_location || [],
+      locationNote: data.location_note,
+      employmentTypeNote: data.employment_type_note,
+      workingHours: data.working_hours,
+      overtimeInfo: data.overtime_info,
+      holidays: data.holidays,
+      remoteWorkAvailable: data.remote_work_available,
+      jobType: data.job_type || [],
+      industry: data.industry || [],
+      selectionProcess: data.selection_process,
+      appealPoints: data.appeal_points || [],
+      smokingPolicy: data.smoking_policy,
+      smokingPolicyNote: data.smoking_policy_note,
+      requiredDocuments: data.required_documents || [],
+      internalMemo: data.internal_memo,
+      publicationType: data.publication_type,
+      imageUrls: data.image_urls || [],
+      groupName: (data.company_groups as any)?.group_name || 'グループ',
+      groupId: data.company_group_id,
+      status: data.status,
+      applicationDeadline: data.application_deadline,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      publishedAt: data.published_at,
+    };
+
+    return { success: true, data: formattedJob };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
 // 求人情報更新
 export async function updateJob(jobId: string, updateData: any) {
   try {
@@ -409,6 +465,418 @@ export async function updateJob(jobId: string, updateData: any) {
     }
 
     const supabase = getSupabaseAdminClient();
+
+    // 画像処理
+    let imageUrls: string[] | undefined = undefined;
+    if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
+      // 既存のURL（文字列）と新規画像データ（オブジェクト）を分離
+      const existingUrls: string[] = [];
+      const newImageData: any[] = [];
+      
+      updateData.images.forEach((item: any) => {
+        if (typeof item === 'string') {
+          // 既存の画像URL
+          existingUrls.push(item);
+        } else if (item && typeof item === 'object' && item.data) {
+          // 新規画像データ
+          newImageData.push(item);
+        }
+      });
+      
+      // 新規画像データがある場合のみアップロード処理を実行
+      let uploadedUrls: string[] = [];
+      if (newImageData.length > 0) {
+        try {
+          const uploadPromises = newImageData.map(async (imageData: any, index: number) => {
+          // 画像データ構造の検証
+          let base64Data, contentType;
+          
+          if (imageData.data && imageData.contentType) {
+            // 期待される構造: { data: base64string, contentType: string }
+            base64Data = imageData.data;
+            contentType = imageData.contentType;
+          } else if (typeof imageData === 'string') {
+            // base64文字列のみの場合（デフォルトでjpegとして扱う）
+            base64Data = imageData;
+            contentType = 'image/jpeg';
+          } else {
+            console.error('Invalid image data structure:', imageData);
+            throw new Error('画像データの形式が正しくありません');
+          }
+
+          if (!base64Data) {
+            console.error('Missing base64Data in imageData:', imageData);
+            throw new Error('画像データが見つかりません');
+          }
+
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 15);
+          
+          // ファイル拡張子の決定（SVGを含む）
+          let fileExtension;
+          if (contentType.includes('jpeg')) {
+            fileExtension = 'jpg';
+          } else if (contentType.includes('svg')) {
+            fileExtension = 'svg';
+          } else {
+            fileExtension = contentType.split('/')[1];
+          }
+          
+          const fileName = `job-${jobId}-${timestamp}-${index}-${randomSuffix}.${fileExtension}`;
+          
+          const { data: uploadData, error } = await supabase.storage
+            .from('job-images')
+            .upload(fileName, buffer, {
+              contentType: contentType,
+              upsert: false
+            });
+          
+          if (error) {
+            throw new Error(`画像のアップロードに失敗しました: ${error.message}`);
+          }
+          
+          const { data: urlData } = supabase.storage
+            .from('job-images')
+            .getPublicUrl(fileName);
+          
+          return urlData.publicUrl;
+          });
+          
+          uploadedUrls = await Promise.all(uploadPromises);
+        } catch (error) {
+          console.error('Image upload process failed:', error);
+          return { 
+            success: false, 
+            error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
+          };
+        }
+      }
+      
+      // 既存のURLと新規アップロードされたURLを結合
+      imageUrls = [...existingUrls, ...uploadedUrls];
+    }
+
+    // 配列フィールドの処理
+    const ensureArray = (value: any): string[] => {
+      if (Array.isArray(value)) {
+        return value.filter(v => v && typeof v === 'string');
+      }
+      if (value && typeof value === 'string') {
+        return [value];
+      }
+      return [];
+    };
+
+    // テキストフィールドの処理
+    const ensureText = (value: any): string | null => {
+      if (typeof value === 'string') {
+        return value || null;
+      }
+      if (Array.isArray(value)) {
+        const textResult = value.filter(v => v && typeof v === 'string').join(', ');
+        return textResult || null;
+      }
+      return null;
+    };
+
+    // 雇用形態の日本語→英語マッピング
+    const employmentTypeMapping: Record<string, string> = {
+      '正社員': 'FULL_TIME',
+      '契約社員': 'CONTRACT',
+      '派遣社員': 'CONTRACT',
+      'アルバイト・パート': 'PART_TIME',
+      '業務委託': 'CONTRACT',
+      'インターン': 'INTERN'
+    };
+    
+    const mappedEmploymentType = updateData.employment_type ? 
+      (employmentTypeMapping[updateData.employment_type] || updateData.employment_type) : 
+      undefined;
+
+    // 更新用データの準備（idフィールドとUI用の一時フィールドを除外）
+    const { id, _existingImages, ...updateDataWithoutId } = updateData;
+    const finalUpdateData: any = {
+      ...updateDataWithoutId,
+      updated_at: new Date().toISOString()
+    };
+
+    // camelCase -> snake_case のマッピング
+    if (updateData.applicationDeadline !== undefined) {
+      finalUpdateData.application_deadline = updateData.applicationDeadline || null;
+      delete finalUpdateData.applicationDeadline;
+    }
+    
+    if (updateData.employmentType !== undefined) {
+      finalUpdateData.employment_type = updateData.employmentType;
+      delete finalUpdateData.employmentType;
+    }
+    
+    if (updateData.employmentTypeNote !== undefined) {
+      finalUpdateData.employment_type_note = updateData.employmentTypeNote;
+      delete finalUpdateData.employmentTypeNote;
+    }
+    
+    if (updateData.jobDescription !== undefined) {
+      finalUpdateData.job_description = updateData.jobDescription;
+      delete finalUpdateData.jobDescription;
+    }
+    
+    if (updateData.positionSummary !== undefined) {
+      finalUpdateData.position_summary = updateData.positionSummary;
+      delete finalUpdateData.positionSummary;
+    }
+    
+    if (updateData.requiredSkills !== undefined) {
+      finalUpdateData.required_skills = updateData.requiredSkills;
+      delete finalUpdateData.requiredSkills;
+    }
+    
+    if (updateData.preferredSkills !== undefined) {
+      finalUpdateData.preferred_skills = updateData.preferredSkills;
+      delete finalUpdateData.preferredSkills;
+    }
+    
+    if (updateData.salaryMin !== undefined) {
+      finalUpdateData.salary_min = updateData.salaryMin;
+      delete finalUpdateData.salaryMin;
+    }
+    
+    if (updateData.salaryMax !== undefined) {
+      finalUpdateData.salary_max = updateData.salaryMax;
+      delete finalUpdateData.salaryMax;
+    }
+    
+    if (updateData.salaryNote !== undefined) {
+      finalUpdateData.salary_note = updateData.salaryNote;
+      delete finalUpdateData.salaryNote;
+    }
+    
+    if (updateData.locationNote !== undefined) {
+      finalUpdateData.location_note = updateData.locationNote;
+      delete finalUpdateData.locationNote;
+    }
+    
+    if (updateData.workingHours !== undefined) {
+      finalUpdateData.working_hours = updateData.workingHours;
+      delete finalUpdateData.workingHours;
+    }
+    
+    if (updateData.overtimeInfo !== undefined) {
+      finalUpdateData.overtime_info = updateData.overtimeInfo;
+      delete finalUpdateData.overtimeInfo;
+    }
+    
+    if (updateData.selectionProcess !== undefined) {
+      finalUpdateData.selection_process = updateData.selectionProcess;
+      delete finalUpdateData.selectionProcess;
+    }
+    
+    if (updateData.smokingPolicy !== undefined) {
+      finalUpdateData.smoking_policy = updateData.smokingPolicy;
+      delete finalUpdateData.smokingPolicy;
+    }
+    
+    if (updateData.smokingPolicyNote !== undefined) {
+      finalUpdateData.smoking_policy_note = updateData.smokingPolicyNote;
+      delete finalUpdateData.smokingPolicyNote;
+    }
+    
+    if (updateData.internalMemo !== undefined) {
+      finalUpdateData.internal_memo = updateData.internalMemo;
+      delete finalUpdateData.internalMemo;
+    }
+    
+    if (updateData.publicationType !== undefined) {
+      finalUpdateData.publication_type = updateData.publicationType;
+      delete finalUpdateData.publicationType;
+    }
+    
+    if (updateData.remoteWorkAvailable !== undefined) {
+      finalUpdateData.remote_work_available = updateData.remoteWorkAvailable;
+      delete finalUpdateData.remoteWorkAvailable;
+    }
+    
+    if (updateData.groupId !== undefined) {
+      finalUpdateData.company_group_id = updateData.groupId;
+      delete finalUpdateData.groupId;
+    }
+
+    // その他の残りのcamelCase -> snake_caseマッピング
+    if (updateData.images !== undefined) {
+      // imagesは画像処理で既に処理されているため削除のみ
+      delete finalUpdateData.images;
+    }
+    
+    if (updateData.overtimeMemo !== undefined) {
+      finalUpdateData.overtime_info = updateData.overtimeMemo;
+      delete finalUpdateData.overtimeMemo;
+    }
+    
+    if (updateData.memo !== undefined) {
+      finalUpdateData.internal_memo = updateData.memo;
+      delete finalUpdateData.memo;
+    }
+    
+    if (updateData.smoke !== undefined) {
+      finalUpdateData.smoking_policy = updateData.smoke;
+      delete finalUpdateData.smoke;
+    }
+    
+    if (updateData.smokeNote !== undefined) {
+      finalUpdateData.smoking_policy_note = updateData.smokeNote;
+      delete finalUpdateData.smokeNote;
+    }
+    
+    if (updateData.resumeRequired !== undefined) {
+      finalUpdateData.required_documents = ensureArray(updateData.resumeRequired);
+      delete finalUpdateData.resumeRequired;
+    }
+    
+    if (updateData.skills !== undefined) {
+      finalUpdateData.required_skills = updateData.skills;
+      delete finalUpdateData.skills;
+    }
+    
+    if (updateData.otherRequirements !== undefined) {
+      finalUpdateData.preferred_skills = updateData.otherRequirements;
+      delete finalUpdateData.otherRequirements;
+    }
+    
+    if (updateData.locations !== undefined) {
+      finalUpdateData.work_location = ensureArray(updateData.locations);
+      delete finalUpdateData.locations;
+    }
+    
+    if (updateData.overtime !== undefined) {
+      finalUpdateData.overtime_info = updateData.overtime;
+      delete finalUpdateData.overtime;
+    }
+    
+    if (updateData.appealPoints !== undefined) {
+      finalUpdateData.appeal_points = ensureArray(updateData.appealPoints);
+      delete finalUpdateData.appealPoints;
+    }
+    
+    if (updateData.jobTypes !== undefined) {
+      finalUpdateData.job_type = ensureArray(updateData.jobTypes);
+      delete finalUpdateData.jobTypes;
+    }
+    
+    if (updateData.job_types !== undefined) {
+      finalUpdateData.job_type = ensureArray(updateData.job_types);
+      delete finalUpdateData.job_types;
+    }
+    
+    if (updateData.industries !== undefined) {
+      finalUpdateData.industry = ensureArray(updateData.industries);
+      delete finalUpdateData.industries;
+    }
+    
+    if (updateData.workLocation !== undefined) {
+      finalUpdateData.work_location = ensureArray(updateData.workLocation);
+      delete finalUpdateData.workLocation;
+    }
+    
+    if (updateData.work_location !== undefined) {
+      finalUpdateData.work_location = ensureArray(updateData.work_location);
+      delete finalUpdateData.work_location;
+    }
+    
+    if (updateData.imageUrls !== undefined) {
+      finalUpdateData.image_urls = updateData.imageUrls;
+      delete finalUpdateData.imageUrls;
+    }
+    
+    if (updateData.image_urls !== undefined) {
+      finalUpdateData.image_urls = updateData.image_urls;
+      delete finalUpdateData.image_urls;
+    }
+    
+    if (updateData.requiredDocuments !== undefined) {
+      finalUpdateData.required_documents = ensureArray(updateData.requiredDocuments);
+      delete finalUpdateData.requiredDocuments;
+    }
+    
+    if (updateData.required_documents !== undefined) {
+      finalUpdateData.required_documents = ensureArray(updateData.required_documents);
+      delete finalUpdateData.required_documents;
+    }
+    
+    // Additional snake_case fields that might come from editData
+    if (updateData.working_hours !== undefined) {
+      finalUpdateData.working_hours = updateData.working_hours;
+      delete finalUpdateData.working_hours;
+    }
+    
+    if (updateData.overtime_info !== undefined) {
+      finalUpdateData.overtime_info = updateData.overtime_info;
+      delete finalUpdateData.overtime_info;
+    }
+    
+    if (updateData.selection_process !== undefined) {
+      finalUpdateData.selection_process = updateData.selection_process;
+      delete finalUpdateData.selection_process;
+    }
+    
+    if (updateData.smoking_policy !== undefined) {
+      finalUpdateData.smoking_policy = updateData.smoking_policy;
+      delete finalUpdateData.smoking_policy;
+    }
+    
+    if (updateData.smoking_policy_note !== undefined) {
+      finalUpdateData.smoking_policy_note = updateData.smoking_policy_note;
+      delete finalUpdateData.smoking_policy_note;
+    }
+    
+    if (updateData.internal_memo !== undefined) {
+      finalUpdateData.internal_memo = updateData.internal_memo;
+      delete finalUpdateData.internal_memo;
+    }
+    
+    if (updateData.publication_type !== undefined) {
+      finalUpdateData.publication_type = updateData.publication_type;
+      delete finalUpdateData.publication_type;
+    }
+    
+    if (updateData.remote_work_available !== undefined) {
+      finalUpdateData.remote_work_available = updateData.remote_work_available;
+      delete finalUpdateData.remote_work_available;
+    }
+    
+    if (updateData.location_note !== undefined) {
+      finalUpdateData.location_note = updateData.location_note;
+      delete finalUpdateData.location_note;
+    }
+    
+    if (updateData.employment_type_note !== undefined) {
+      finalUpdateData.employment_type_note = updateData.employment_type_note;
+      delete finalUpdateData.employment_type_note;
+    }
+    
+    if (updateData.appeal_points !== undefined) {
+      finalUpdateData.appeal_points = ensureArray(updateData.appeal_points);
+      delete finalUpdateData.appeal_points;
+    }
+
+    // 画像URLが生成された場合のみ追加
+    if (imageUrls) {
+      finalUpdateData.image_urls = imageUrls;
+    }
+
+    // 雇用形態のマッピングを適用
+    if (mappedEmploymentType) {
+      finalUpdateData.employment_type = mappedEmploymentType;
+    }
+
+    // 配列フィールドの処理（snake_caseのみ - 上でマッピングされていないもののみ）
+    if (updateData.work_locations) {
+      finalUpdateData.work_location = ensureArray(updateData.work_locations);
+      delete finalUpdateData.work_locations;
+    }
+    
+    // camelCaseフィールドは上で既に削除されているため、ここでは処理しない
 
     // ステータスが'PUBLISHED'に変更される場合、published_atを自動設定
     if (updateData.status === 'PUBLISHED') {
@@ -423,16 +891,13 @@ export async function updateJob(jobId: string, updateData: any) {
       }
 
       if (currentJob.status !== 'PUBLISHED') {
-        updateData.published_at = new Date().toISOString();
+        finalUpdateData.published_at = new Date().toISOString();
       }
     }
 
     const { data, error } = await supabase
       .from('job_postings')
-      .update({
-        ...updateData,
-        updated_at: new Date().toISOString()
-      })
+      .update(finalUpdateData)
       .eq('id', jobId)
       .select();
 
@@ -455,11 +920,57 @@ export async function deleteJob(jobId: string) {
   return updateJob(jobId, { status: 'CLOSED' });
 }
 
+// キャッシュ付きの求人一覧取得（公開関数）
+export async function getCompanyJobs(params: {
+  status?: string;
+  groupId?: string;
+  scope?: string;
+  search?: string;
+}) {
+  try {
+    // 認証チェック
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
+    }
+
+    const { companyAccountId } = authResult.data;
+
+    // キャッシュ付きで内部関数を呼び出し
+    const getCachedJobs = unstable_cache(
+      _getCompanyJobs,
+      [`company-jobs-${companyAccountId}`, JSON.stringify(params)],
+      {
+        tags: [`company-jobs-${companyAccountId}`],
+        revalidate: 30, // 30秒間キャッシュ
+      }
+    );
+
+    return await getCachedJobs(params, companyAccountId);
+  } catch (error: any) {
+    console.error('getCompanyJobs error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// キャッシュ無効化関数
+export async function revalidateCompanyJobs() {
+  try {
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return;
+    }
+
+    const { companyAccountId } = authResult.data;
+    revalidateTag(`company-jobs-${companyAccountId}`);
+  } catch (error) {
+    console.error('Failed to revalidate company jobs cache:', error);
+  }
+}
+
 // 簡単なメモリキャッシュ
 const groupsCache = new Map<string, { data: any; timestamp: number }>();
-const jobsCache = new Map<string, { data: any; timestamp: number }>();
 const GROUPS_CACHE_TTL = 2 * 60 * 1000; // 2分
-const JOBS_CACHE_TTL = 1 * 60 * 1000; // 1分
 
 // グループ一覧取得
 export async function getCompanyGroups() {
