@@ -1,11 +1,11 @@
-'use server'
+'use server';
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,20 +38,22 @@ export interface CandidateResetPasswordResult {
   error?: string;
 }
 
-export async function candidateResetPasswordRequestAction(formData: CandidateResetPasswordFormData): Promise<CandidateResetPasswordResult> {
+export async function candidateResetPasswordRequestAction(
+  formData: CandidateResetPasswordFormData
+): Promise<CandidateResetPasswordResult> {
   try {
     // バリデーション
     if (!formData.email?.trim()) {
       return {
         success: false,
-        error: 'メールアドレスは必須です'
+        error: 'メールアドレスは必須です',
       };
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       return {
         success: false,
-        error: '有効なメールアドレスを入力してください'
+        error: '有効なメールアドレスを入力してください',
       };
     }
 
@@ -68,21 +70,21 @@ export async function candidateResetPasswordRequestAction(formData: CandidateRes
       console.error('Supabase reset password error:', error);
       return {
         success: false,
-        error: 'パスワードリセット要求の送信に失敗しました'
+        error: 'パスワードリセット要求の送信に失敗しました',
       };
     }
 
     return {
       success: true,
-      message: 'パスワード再設定のご案内のメールをお送りいたします。'
+      message: 'パスワード再設定のご案内のメールをお送りいたします。',
     };
-
   } catch (error) {
     console.error('Candidate reset password request error:', error);
-    
+
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
+      error:
+        'ネットワークエラーが発生しました。しばらくしてから再度お試しください。',
     };
   }
 }

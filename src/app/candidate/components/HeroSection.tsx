@@ -49,7 +49,7 @@ export function HeroSection() {
             height={1080}
             className='w-full h-auto object-cover'
             priority={true}
-            sizes="100vw"
+            sizes='100vw'
             style={{ width: '100%', height: 'auto' }}
           />
         </div>
@@ -86,7 +86,7 @@ export function HeroSection() {
             </div>
             <div className='flex flex-row justify-center items-center gap-4'>
               <Link
-                href='/candidate/auth/register'
+                href='/signup'
                 className="
    mb-[0px]
     flex items-center justify-center gap-[10px]

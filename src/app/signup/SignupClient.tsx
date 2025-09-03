@@ -18,36 +18,20 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [emailError, setEmailError] = useState('');
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'success' | 'error'
+  >('idle');
   const [message, setMessage] = useState('');
   const [isPending, startTransition] = useTransition();
   const [isCheckingProgress, setIsCheckingProgress] = useState(false);
 
   // Check if user has existing progress on component mount
   useEffect(() => {
-    const checkExistingProgress = async () => {
-      // Check if there's a saved email in localStorage
-      const savedEmail = localStorage.getItem('signup_email');
-      if (savedEmail) {
-        setIsCheckingProgress(true);
-        try {
-          const progress = await checkRegistrationProgress(savedEmail);
-          if (progress.exists && progress.nextStep !== '/signup') {
-            // User has incomplete registration, redirect to next step
-            router.push(progress.nextStep);
-          } else if (progress.exists && progress.completedSteps.expectationCompleted) {
-            // All steps completed, go to summary
-            router.push('/signup/summary');
-          }
-        } catch (error) {
-          console.error('Error checking registration progress:', error);
-        } finally {
-          setIsCheckingProgress(false);
-        }
-      }
-    };
-
-    checkExistingProgress();
+    // /signupページではlocalStorageのsignup_emailを削除し、進捗チェックをスキップする
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('signup_email');
+    }
+    // 進捗チェックは行わない
   }, [router]);
 
   const validateEmail = (email: string): boolean => {
@@ -66,7 +50,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
-    
+
     // リアルタイムバリデーション
     if (value && !value.includes('@')) {
       setEmailError('メールアドレスの形式が正しくありません');
@@ -77,7 +61,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
     } else {
       setEmailError('');
     }
-    
+
     if (submitStatus !== 'idle') {
       setSubmitStatus('idle');
     }
@@ -104,9 +88,18 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
       try {
         // First check if this email already has progress
         const progress = await checkRegistrationProgress(email.trim());
-        
+
+        // すでに本登録済み（全ステップ完了）の場合はエラー表示して弾く
+        if (progress.exists && progress.completedSteps.expectationCompleted) {
+          setSubmitStatus('error');
+          setMessage(
+            'このメールアドレスは既に本登録済みです。ログインしてください。'
+          );
+          return;
+        }
+
+        // 途中ステップが未完了の場合のみ途中から再開
         if (progress.exists && progress.nextStep !== '/signup') {
-          // User already exists with incomplete registration
           localStorage.setItem('signup_email', email.trim());
           router.push(progress.nextStep);
           return;
@@ -137,9 +130,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           } else if (result.error && result.error.includes('既に登録')) {
             setMessage('このメールアドレスは既に登録されています');
           } else {
-            setMessage(
-              result.error || '会員登録要求の送信に失敗しました。'
-            );
+            setMessage(result.error || '会員登録要求の送信に失敗しました。');
           }
         }
       } catch (error) {
@@ -158,7 +149,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   if (isCheckingProgress) {
     return (
       <div className='flex flex-col gap-6 items-center w-full text-center'>
-        <Loading size="lg" />
+        <Loading size='lg' />
         <p className='text-[#323232] text-[16px]'>登録状況を確認中...</p>
       </div>
     );
@@ -168,19 +159,25 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
     <>
       {/* ヘッダー - 見出し */}
       <div className='flex flex-col gap-6 items-center w-full text-center'>
-        <div className='text-[#0f9058] text-[32px] font-bold w-full' style={{
-          fontFamily: 'Noto Sans JP, sans-serif',
-          fontWeight: 700,
-          fontSize: '32px',
-          lineHeight: '1.6',
-          letterSpacing: '3.2px',
-        }}>
+        <div
+          className='text-[#0f9058] text-[32px] font-bold w-full'
+          style={{
+            fontFamily: 'Noto Sans JP, sans-serif',
+            fontWeight: 700,
+            fontSize: '32px',
+            lineHeight: '1.6',
+            letterSpacing: '3.2px',
+          }}
+        >
           <p className='block leading-[1.6]'>新規会員登録</p>
         </div>
       </div>
 
       {/* フォーム */}
-      <form onSubmit={handleSubmit} className='flex flex-col gap-[40px] items-center w-full'>
+      <form
+        onSubmit={handleSubmit}
+        className='flex flex-col gap-[40px] items-center w-full'
+      >
         {/* エラーメッセージ */}
         {submitStatus === 'error' && (
           <div className='flex items-center gap-2 text-red-600 text-sm'>
@@ -192,9 +189,12 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
         {/* メールアドレス入力 */}
         <div className='flex flex-col md:flex-row gap-4 items-start justify-start w-full'>
           <div className='flex flex-row gap-2.5 items-center justify-center pb-0 pt-[11px] px-0'>
-            <div className='font-bold text-[#323232] text-[16px] text-nowrap tracking-[1.6px]' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-            }}>
+            <div
+              className='font-bold text-[#323232] text-[16px] text-nowrap tracking-[1.6px]'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+              }}
+            >
               <p className='block leading-[2] whitespace-pre'>メールアドレス</p>
             </div>
           </div>
@@ -240,9 +240,12 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
             >
               利用規約
             </a>
-            <span className='font-bold text-[#323232] text-[14px] tracking-[1.4px] mr-1' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-            }}>
+            <span
+              className='font-bold text-[#323232] text-[14px] tracking-[1.4px] mr-1'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+              }}
+            >
               ・
             </span>
             <a
@@ -256,9 +259,12 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
             >
               個人情報の取扱い
             </a>
-            <span className='font-bold text-[#323232] text-[14px] tracking-[1.4px]' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-            }}>
+            <span
+              className='font-bold text-[#323232] text-[14px] tracking-[1.4px]'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+              }}
+            >
               に同意する
             </span>
           </div>
@@ -275,7 +281,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           >
             {isPending ? (
               <>
-                <Loading inline size="sm" variant="white" />
+                <Loading inline size='sm' variant='white' />
                 送信中...
               </>
             ) : (

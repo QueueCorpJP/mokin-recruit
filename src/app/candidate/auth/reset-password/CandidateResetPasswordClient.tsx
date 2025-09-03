@@ -61,7 +61,7 @@ export function CandidateResetPasswordClient() {
       }
 
       const result = await candidateResetPasswordRequestAction({
-        email: formData.email
+        email: formData.email,
       });
 
       if (result.success) {
@@ -96,20 +96,28 @@ export function CandidateResetPasswordClient() {
             <div className='mx-auto w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center'>
               <CheckCircle className='w-5 h-5 md:w-6 md:h-6 text-green-600' />
             </div>
-            <div className='text-[#0f9058] text-[24px] md:text-[32px] font-bold w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 700,
-              lineHeight: '1.6',
-              letterSpacing: '2.4px',
-            }}>
-              <p className='block leading-[1.6] md:tracking-[3.2px]'>送信完了</p>
+            <div
+              className='text-[#0f9058] text-[24px] md:text-[32px] font-bold w-full'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                lineHeight: '1.6',
+                letterSpacing: '2.4px',
+              }}
+            >
+              <p className='block leading-[1.6] md:tracking-[3.2px]'>
+                送信完了
+              </p>
             </div>
-            <div className='text-[#323232] text-[14px] md:text-[16px] w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 500,
-              lineHeight: '2',
-              letterSpacing: '1.4px',
-            }}>
+            <div
+              className='text-[#323232] text-[14px] md:text-[16px] w-full'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 500,
+                lineHeight: '2',
+                letterSpacing: '1.4px',
+              }}
+            >
               <p className='block mb-0 md:tracking-[1.6px]'>{message}</p>
             </div>
           </div>
@@ -123,20 +131,28 @@ export function CandidateResetPasswordClient() {
       <div className='flex flex-col gap-6 md:gap-10 items-center justify-start relative w-full mx-auto px-6 md:px-20 py-10 md:py-20'>
         {/* ヘッダー - 見出し+説明 */}
         <div className='flex flex-col gap-4 md:gap-6 items-center w-full text-center'>
-          <div className='text-[#0f9058] text-[24px] md:text-[32px] font-bold w-full' style={{
-            fontFamily: 'Noto Sans JP, sans-serif',
-            fontWeight: 700,
-            lineHeight: '1.6',
-            letterSpacing: '2.4px',
-          }}>
-            <p className='block leading-[1.6] md:tracking-[3.2px]'>パスワードの再設定</p>
+          <div
+            className='text-[#0f9058] text-[24px] md:text-[32px] font-bold w-full'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              lineHeight: '1.6',
+              letterSpacing: '2.4px',
+            }}
+          >
+            <p className='block leading-[1.6] md:tracking-[3.2px]'>
+              パスワードの再設定
+            </p>
           </div>
-          <div className='text-[#323232] text-[14px] md:text-[16px] w-full' style={{
-            fontFamily: 'Noto Sans JP, sans-serif',
-            fontWeight: 700,
-            lineHeight: '2',
-            letterSpacing: '1.4px',
-          }}>
+          <div
+            className='text-[#323232] text-[14px] md:text-[16px] w-full'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              lineHeight: '2',
+              letterSpacing: '1.4px',
+            }}
+          >
             <p className='block mb-0 md:tracking-[1.6px]'>
               サービスに登録されているメールアドレスを入力してください。
             </p>
@@ -147,7 +163,10 @@ export function CandidateResetPasswordClient() {
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className='flex flex-col gap-8 md:gap-10 items-center w-full'>
+        <form
+          onSubmit={handleSubmit}
+          className='flex flex-col gap-8 md:gap-10 items-center w-full'
+        >
           {/* エラーメッセージ */}
           {submitStatus === 'error' && (
             <div className='flex items-center gap-2 text-red-600 text-sm'>
@@ -204,7 +223,7 @@ export function CandidateResetPasswordClient() {
             >
               {isLoading ? (
                 <>
-                  <Loading inline size="sm" variant="white" />
+                  <Loading inline size='sm' variant='white' />
                   送信中
                 </>
               ) : (
