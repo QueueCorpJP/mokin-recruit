@@ -95,6 +95,10 @@ export interface SearchState extends SearchFormData {
   setKeyword: (value: string) => void;
   setExperienceJobTypes: (jobTypes: JobType[]) => void;
   setExperienceIndustries: (industries: Industry[]) => void;
+  updateExperienceJobTypeYears: (id: string, experienceYears: string) => void;
+  updateExperienceIndustryYears: (id: string, experienceYears: string) => void;
+  updateDesiredJobTypeYears: (id: string, experienceYears: string) => void;
+  updateDesiredIndustryYears: (id: string, experienceYears: string) => void;
   setJobTypeAndSearch: (value: boolean) => void;
   setIndustryAndSearch: (value: boolean) => void;
   setCurrentSalaryMin: (value: string) => void;
@@ -204,8 +208,56 @@ export const useSearchStore = create<SearchState>()(
     // Form field setters
     setSearchGroup: (value) => set({ searchGroup: value }),
     setKeyword: (value) => set({ keyword: value }),
-    setExperienceJobTypes: (jobTypes) => set({ experienceJobTypes: jobTypes }),
-    setExperienceIndustries: (industries) => set({ experienceIndustries: industries }),
+    setExperienceJobTypes: (jobTypes) => {
+      console.log('=== searchStore setExperienceJobTypes START ===');
+      console.log('searchStore: setExperienceJobTypes called with:', jobTypes);
+      console.log('searchStore: setExperienceJobTypes jobTypes type:', typeof jobTypes);
+      console.log('searchStore: setExperienceJobTypes jobTypes length:', jobTypes?.length);
+      console.log('searchStore: setExperienceJobTypes jobTypes JSON:', JSON.stringify(jobTypes, null, 2));
+      console.log('searchStore: Current experienceJobTypes before set:', get().experienceJobTypes);
+      console.log('searchStore: Current experienceJobTypes JSON before set:', JSON.stringify(get().experienceJobTypes, null, 2));
+      
+      set({ experienceJobTypes: jobTypes });
+      
+      console.log('searchStore: After set, immediate check:', get().experienceJobTypes);
+      console.log('searchStore: After set, immediate check JSON:', JSON.stringify(get().experienceJobTypes, null, 2));
+      console.log('=== searchStore setExperienceJobTypes END ===');
+    },
+    setExperienceIndustries: (industries) => {
+      console.log('=== searchStore setExperienceIndustries START ===');
+      console.log('searchStore: setExperienceIndustries called with:', industries);
+      console.log('searchStore: setExperienceIndustries industries type:', typeof industries);
+      console.log('searchStore: setExperienceIndustries industries length:', industries?.length);
+      console.log('searchStore: setExperienceIndustries industries JSON:', JSON.stringify(industries, null, 2));
+      console.log('searchStore: Current experienceIndustries before set:', get().experienceIndustries);
+      console.log('searchStore: Current experienceIndustries JSON before set:', JSON.stringify(get().experienceIndustries, null, 2));
+      
+      set({ experienceIndustries: industries });
+      
+      console.log('searchStore: After set, immediate check:', get().experienceIndustries);
+      console.log('searchStore: After set, immediate check JSON:', JSON.stringify(get().experienceIndustries, null, 2));
+      console.log('=== searchStore setExperienceIndustries END ===');
+    },
+    updateExperienceJobTypeYears: (id, experienceYears) => set((state) => ({
+      experienceJobTypes: state.experienceJobTypes.map(jobType =>
+        jobType.id === id ? { ...jobType, experienceYears } : jobType
+      )
+    })),
+    updateExperienceIndustryYears: (id, experienceYears) => set((state) => ({
+      experienceIndustries: state.experienceIndustries.map(industry =>
+        industry.id === id ? { ...industry, experienceYears } : industry
+      )
+    })),
+    updateDesiredJobTypeYears: (id, experienceYears) => set((state) => ({
+      desiredJobTypes: state.desiredJobTypes.map(jobType =>
+        jobType.id === id ? { ...jobType, experienceYears } : jobType
+      )
+    })),
+    updateDesiredIndustryYears: (id, experienceYears) => set((state) => ({
+      desiredIndustries: state.desiredIndustries.map(industry =>
+        industry.id === id ? { ...industry, experienceYears } : industry
+      )
+    })),
     setJobTypeAndSearch: (value) => set({ jobTypeAndSearch: value }),
     setIndustryAndSearch: (value) => set({ industryAndSearch: value }),
     setCurrentSalaryMin: (value) => set({ currentSalaryMin: value }),

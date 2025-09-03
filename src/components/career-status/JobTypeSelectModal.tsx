@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -27,34 +27,41 @@ export default function JobTypeSelectModal({
   );
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const selectedJobTypesRef = useRef<string[]>(initialSelected);
 
   useEffect(() => {
-    setSelectedJobTypes(initialSelected);
-  }, [initialSelected]);
+    if (isOpen && selectedJobTypes.length === 0 && initialSelected.length >= 0) {
+      setSelectedJobTypes(initialSelected);
+      selectedJobTypesRef.current = initialSelected;
+    }
+  }, [isOpen]);
 
   const handleCheckboxChange = (jobTypeName: string) => {
+    let newJobTypes: string[];
     if (selectedJobTypes.includes(jobTypeName)) {
-      // 既に選択されている場合は削除
-      const newJobTypes = selectedJobTypes.filter(j => j !== jobTypeName);
-      setSelectedJobTypes(newJobTypes);
+      newJobTypes = selectedJobTypes.filter(j => j !== jobTypeName);
     } else {
-      // 新規選択の場合は制限をチェック
       if (selectedJobTypes.length < maxSelections) {
-        const newJobTypes = [...selectedJobTypes, jobTypeName];
-        setSelectedJobTypes(newJobTypes);
+        newJobTypes = [...selectedJobTypes, jobTypeName];
+      } else {
+        return;
       }
     }
+    
+    setSelectedJobTypes(newJobTypes);
+    selectedJobTypesRef.current = newJobTypes;
   };
 
   const handleConfirm = () => {
-    console.log('JobTypeSelectModal: Confirming with selected job types:', selectedJobTypes);
-    onConfirm(selectedJobTypes);
-    onClose();
+    const currentSelected = selectedJobTypesRef.current;
+    const copyToSend = [...currentSelected];
+    onConfirm(copyToSend);
   };
 
   const selectedCategoryData = JOB_TYPE_GROUPS.find(
     category => category.name === selectedCategory
   )!;
+
 
   return (
     <Modal

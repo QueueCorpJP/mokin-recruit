@@ -1,6 +1,6 @@
 import React from 'react';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import CandidateDetailClient from './CandidateDetailClient';
+// import CandidateDetailClient from './CandidateDetailClient';
 
 export interface CandidateDetailData {
   // 基本情報

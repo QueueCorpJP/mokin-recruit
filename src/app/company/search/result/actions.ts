@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 import type { CandidateData } from '@/components/company/CandidateCard';
 
-// 候補者データを取得する関数（サーバーサイド版）
+// 候補者データを取得する関数（クライアントサイド版）
 export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createClient();
     
     const { data: candidates, error } = await supabase
       .from('candidates')
@@ -18,35 +18,36 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         birth_date,
         gender,
         current_income,
-        recent_job_company_name,
-        recent_job_department_position,
-        recent_job_types,
+        desired_salary,
+        skills,
+        experience_years,
+        desired_industries,
         desired_job_types,
         last_login_at,
-        education!left(
+        recent_job_company_name,
+        recent_job_department_position,
+        recent_job_industries,
+        recent_job_types,
+        recent_job_description,
+        education(
           final_education,
-          school_name,
-          department,
-          graduation_year,
-          graduation_month
+          school_name
         ),
-        skills!left(
-          english_level,
-          qualifications,
-          other_languages
+        work_experience(
+          industry_name,
+          experience_years
         ),
-        career_status_entries!left(
-          start_date,
-          end_date,
+        job_type_experience(
+          job_type_name,
+          experience_years
+        ),
+        career_status_entries(
           company_name,
-          position_title,
-          department
-        ),
-        selection_companies!left(
-          company_name,
-          position_details
+          industries,
+          progress_status
         )
       `)
+      .eq('status', 'ACTIVE')
       .order('last_login_at', { ascending: false });
 
     if (error) {
@@ -92,48 +93,51 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         return `${salaryRange * 100}〜${(salaryRange + 1) * 100}万円`;
       };
 
-      // キャリア履歴の変換
-      const careerHistory = candidate.career_status_entries?.map((history: any) => ({
-        period: `${history.start_date}〜${history.end_date || '現在'}`,
-        company: history.company_name || '',
-        role: `${history.department || ''}${history.position_title || ''}`,
-      })) || [];
+      // 実際のデータを活用してフィールドを設定
+      const experienceJobs = candidate.job_type_experience?.map((exp: any) => exp.job_type_name).filter(Boolean) || 
+                            (candidate.desired_job_types ? candidate.desired_job_types.slice(0, 3) : []) ||
+                            (candidate.current_position ? [candidate.current_position] : []);
 
-      // 選考中企業の変換
-      const selectionCompanies = candidate.selection_companies?.map((company: any) => ({
-        company: company.company_name || '',
-        detail: company.position_details || '',
-      })) || [];
+      const experienceIndustries = candidate.work_experience?.map((exp: any) => exp.industry_name).filter(Boolean) || 
+                                  (candidate.desired_industries ? candidate.desired_industries.slice(0, 3) : []);
 
-      // 経験職種と業界（モックデータとして設定）
-      const experienceJobs = candidate.recent_job_types?.split(',') || [];
-      const experienceIndustries = ['業種テキスト', '業種テキスト', '業種テキスト'];
+      // 選考中企業の情報を構築
+      const selectionCompanies = candidate.career_status_entries?.filter((entry: any) => entry.progress_status)
+        .map((entry: any) => ({
+          company: entry.company_name || '企業名未設定',
+          detail: Array.isArray(entry.industries) ? entry.industries.join('、') : (entry.industries || '業界情報なし')
+        })) || [];
+
+      // 職歴情報の構築
+      const careerHistory = [{
+        period: candidate.recent_job_company_name ? '直近' : '現在',
+        company: candidate.current_company || candidate.recent_job_company_name || '企業名未設定',
+        role: candidate.current_position || candidate.recent_job_department_position || '役職未設定'
+      }];
 
       return {
         id: candidate.id,
         isPickup: false,
         isHidden: false,
-        isAttention: true,
+        isAttention: false,
         badgeType: 'change' as const,
-        badgeText: 'キャリアチェンジ志向',
+        badgeText: '',
         lastLogin: getLastLoginText(candidate.last_login_at),
-        companyName: candidate.recent_job_company_name || candidate.current_company || '',
-        department: candidate.recent_job_department_position || '',
-        position: candidate.current_position || '',
-        location: candidate.prefecture || '',
+        companyName: candidate.current_company || candidate.recent_job_company_name || '企業名未設定',
+        department: candidate.recent_job_department_position || '部署名未設定',
+        position: candidate.current_position || '役職未設定',
+        location: candidate.prefecture || '未設定',
         age: calculateAge(candidate.birth_date),
-        gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '',
+        gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : '未設定',
         salary: formatSalary(candidate.current_income),
-        university: candidate.education?.school_name || '',
-        degree: candidate.education?.final_education === 'university' ? '大学卒' : 
-               candidate.education?.final_education === 'graduate_school' ? '大学院卒' : 
-               candidate.education?.final_education === 'high_school' ? '高校卒' : '',
-        language: candidate.skills?.other_languages ? '英語' : '',
-        languageLevel: candidate.skills?.english_level || '',
-        experienceJobs,
-        experienceIndustries,
+        university: candidate.education?.[0]?.school_name || '大学名未設定',
+        degree: candidate.education?.[0]?.final_education || '学歴未設定',
+        language: candidate.skills ? candidate.skills.join('、') : '言語スキル未設定',
+        languageLevel: '',
+        experienceJobs: experienceJobs.slice(0, 3),
+        experienceIndustries: experienceIndustries.slice(0, 3),
         careerHistory,
-        selectionCompanies,
+        selectionCompanies: selectionCompanies.slice(0, 3),
       };
     }) || [];
 
