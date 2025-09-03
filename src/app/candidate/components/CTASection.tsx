@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export function CTASection() {
   return (
@@ -16,7 +17,8 @@ export function CTASection() {
           {/* ボタンコンテナ */}
           <div className='flex md:flex-row flex-col gap-6 items-center '>
             {/* 新規会員登録ボタン（Figma完全準拠） */}
-            <button
+            <Link
+              href='/signup/candidate'
               className='flex flex-row items-center justify-center gap-2.5 md:px-[40px] px-[100px] md:py-[14px] py-[14px] rounded-[10px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#FFD000] to-[#FFF278] min-w-40 transition-all duration-200 hover:bg-[linear-gradient(to_right_top,#EEAB02,#E1CA11)]'
               style={{ fontFamily: 'Noto Sans JP', fontWeight: 700 }}
             >
@@ -52,7 +54,7 @@ export function CTASection() {
               >
                 新規会員登録
               </span>
-            </button>
+            </Link>
             {/* 求人を見るボタン（Figma完全準拠） */}
             <button
               className='flex flex-row items-center md:items-center justify-center gap-2.5 md:px-[40px] px-[100px] md:py-[14px] py-[14px] rounded-[10px] border-2 border-white bg-transparent min-w-40 transition-colors duration-200 hover:bg-white/30'
@@ -85,7 +87,7 @@ export function CTASection() {
               alt='circle01'
               width={80}
               height={80}
-              sizes="80px"
+              sizes='80px'
               className='absolute z-10'
               style={{ top: 30, left: -40 }}
             />
@@ -95,7 +97,7 @@ export function CTASection() {
               alt='circle02'
               width={80}
               height={80}
-              sizes="80px"
+              sizes='80px'
               className='absolute z-10'
               style={{ top: 32, right: -30 }}
             />

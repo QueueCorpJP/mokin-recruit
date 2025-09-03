@@ -19,7 +19,7 @@ const DownIcon = memo(({ className }: { className?: string }) => {
         src='/images/down.svg'
         alt='down-icon'
         fill
-        sizes="10px"
+        sizes='10px'
         className='object-contain'
       />
     </div>
@@ -175,7 +175,6 @@ interface NavigationProps {
   };
 }
 
-
 export function Navigation({
   className,
   variant = 'default',
@@ -188,10 +187,9 @@ export function Navigation({
   const router = useRouter();
   const pathname = usePathname();
 
-
   // ドロップダウンメニューの切り替え
   const toggleDropdown = useCallback((dropdown: string) => {
-    setOpenDropdown(prev => prev === dropdown ? null : dropdown);
+    setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
     setIsMenuOpen(false);
   }, []);
 
@@ -199,7 +197,7 @@ export function Navigation({
   const handleLogout = useCallback(async () => {
     try {
       const result = await logoutAction();
-      
+
       if (result.success) {
         // すべてのUIを閉じる
         setIsMenuOpen(false);
@@ -222,104 +220,110 @@ export function Navigation({
   }, [variant, router]);
 
   // メモ化されたnavigationItems
-  const candidateNavigationItems = useCallback(() => [
-    {
-      label: 'マイページ',
-      href: '/candidate/mypage',
-      icon: HomeIcon,
-      hasDropdown: false,
-      isActive: pathname === '/candidate/mypage',
-    },
-    {
-      label: 'メッセージ',
-      href: '/candidate/message',
-      icon: MessageIcon,
-      hasDropdown: true,
-      isActive: pathname.startsWith('/candidate/message'),
-      dropdownItems: [
-        { label: '受信メッセージ', href: '/candidate/message/inbox' },
-        { label: '送信メッセージ', href: '/candidate/message/sent' },
-      ],
-    },
-    {
-      label: '求人を探す',
-      href: '/candidate/search/setting',
-      icon: SearchIcon,
-      hasDropdown: false,
-      isActive: pathname.startsWith('/candidate/search/setting'),
-    },
-    {
-      label: 'やることリスト',
-      href: '/candidate/task',
-      icon: ResponseListIcon,
-      hasDropdown: false,
-      isActive: pathname.startsWith('/candidate/task'),
-    },
-    {
-      label: 'プロフィール確認・編集',
-      href: '/candidate/account',
-      icon: User,
-      hasDropdown: false,
-      isActive: pathname.startsWith('/candidate/account'),
-    },
-  ], [pathname]);
+  const candidateNavigationItems = useCallback(
+    () => [
+      {
+        label: 'マイページ',
+        href: '/candidate/mypage',
+        icon: HomeIcon,
+        hasDropdown: false,
+        isActive: pathname === '/candidate/mypage',
+      },
+      {
+        label: 'メッセージ',
+        href: '/candidate/message',
+        icon: MessageIcon,
+        hasDropdown: true,
+        isActive: pathname.startsWith('/candidate/message'),
+        dropdownItems: [
+          { label: '受信メッセージ', href: '/candidate/message/inbox' },
+          { label: '送信メッセージ', href: '/candidate/message/sent' },
+        ],
+      },
+      {
+        label: '求人を探す',
+        href: '/candidate/search/setting',
+        icon: SearchIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/search/setting'),
+      },
+      {
+        label: 'やることリスト',
+        href: '/candidate/task',
+        icon: ResponseListIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/task'),
+      },
+      {
+        label: 'プロフィール確認・編集',
+        href: '/candidate/account',
+        icon: User,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/candidate/account'),
+      },
+    ],
+    [pathname]
+  );
 
-  const companyNavigationItems = useCallback(() => [
-    {
-      label: 'マイページ',
-      href: '/company/mypage',
-      icon: HomeIcon,
-      hasDropdown: false,
-      isActive: pathname === '/company/mypage',
-    },
-    {
-      label: 'メッセージ',
-      href: '/company/message',
-      icon: MessageIcon,
-      hasDropdown: true,
-      isActive: pathname.startsWith('/company/message'),
-      dropdownItems: [
-        { label: '受信メッセージ', href: '/company/message/inbox' },
-        { label: '送信メッセージ', href: '/company/message/sent' },
-      ],
-    },
-    {
-      label: '候補者を探す',
-      href: '/company/candidates',
-      icon: SearchIcon,
-      hasDropdown: true,
-      isActive: pathname.startsWith('/company/candidates'),
-      dropdownItems: [
-        { label: '候補者検索', href: '/company/search/result' },
-        { label: 'スカウト履歴', href: '/company/candidates/scout-history' },
-      ],
-    },
-    {
-      label: '求人一覧',
-      href: '/company/job',
-      icon: JobListIcon,
-      hasDropdown: false,
-      isActive: pathname.startsWith('/company/job'),
-    },
-    {
-      label: '対応リスト',
-      href: '/company/task',
-      icon: ResponseListIcon,
-      hasDropdown: false,
-      isActive: pathname.startsWith('/company/task'),
-    },
-    {
-      label: 'ヘルプ',
-      href: '/company/help',
-      icon: HelpIcon,
-      hasDropdown: true,
-      isActive: pathname.startsWith('/company/help'),
-      dropdownItems: [
-        { label: 'よくある質問', href: '/company/help/faq' },
-        { label: 'お問い合わせ', href: '/company/help/contact' },
-      ],
-    },
-  ], [pathname]);
+  const companyNavigationItems = useCallback(
+    () => [
+      {
+        label: 'マイページ',
+        href: '/company/mypage',
+        icon: HomeIcon,
+        hasDropdown: false,
+        isActive: pathname === '/company/mypage',
+      },
+      {
+        label: 'メッセージ',
+        href: '/company/message',
+        icon: MessageIcon,
+        hasDropdown: true,
+        isActive: pathname.startsWith('/company/message'),
+        dropdownItems: [
+          { label: '受信メッセージ', href: '/company/message/inbox' },
+          { label: '送信メッセージ', href: '/company/message/sent' },
+        ],
+      },
+      {
+        label: '候補者を探す',
+        href: '/company/candidates',
+        icon: SearchIcon,
+        hasDropdown: true,
+        isActive: pathname.startsWith('/company/candidates'),
+        dropdownItems: [
+          { label: '候補者検索', href: '/company/search/result' },
+          { label: 'スカウト履歴', href: '/company/candidates/scout-history' },
+        ],
+      },
+      {
+        label: '求人一覧',
+        href: '/company/job',
+        icon: JobListIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/company/job'),
+      },
+      {
+        label: '対応リスト',
+        href: '/company/task',
+        icon: ResponseListIcon,
+        hasDropdown: false,
+        isActive: pathname.startsWith('/company/task'),
+      },
+      {
+        label: 'ヘルプ',
+        href: '/company/help',
+        icon: HelpIcon,
+        hasDropdown: true,
+        isActive: pathname.startsWith('/company/help'),
+        dropdownItems: [
+          { label: 'よくある質問', href: '/company/help/faq' },
+          { label: 'お問い合わせ', href: '/company/help/contact' },
+        ],
+      },
+    ],
+    [pathname]
+  );
 
   const toggleMenuCallback = useCallback(() => {
     setIsMenuOpen(!isMenuOpen);
@@ -339,7 +343,7 @@ export function Navigation({
     // Figma準拠: 会員登録（filled/gradient）・ログイン（outline/ghost）
     const candidateButtons = [
       {
-        href: '/candidate/auth/register',
+        href: '/signup/candidate',
         label: '会員登録',
         variant: 'green-gradient',
         size: 'lg',
@@ -384,7 +388,9 @@ export function Navigation({
                   className={btn.className}
                   asChild
                 >
-                  <Link href={btn.href} prefetch={false}>{btn.label}</Link>
+                  <Link href={btn.href} prefetch={false}>
+                    {btn.label}
+                  </Link>
                 </Button>
               ))}
             </div>
@@ -414,7 +420,7 @@ export function Navigation({
                   asChild
                 >
                   <Link
-                    href='/candidate/auth/register'
+                    href='/signup/candidate'
                     prefetch={false}
                     onClick={closeMenuCallback}
                   >
@@ -486,22 +492,24 @@ export function Navigation({
                         {/* ドロップダウンメニュー */}
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
-                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
-                              <Link
-                                key={`${dropdownItem.label}-${dropdownIndex}`}
-                                href={dropdownItem.href}
-                                prefetch={false}
-                                className={cn(
-                                  'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
-                                  pathname === dropdownItem.href
-                                    ? 'text-[#0F9058] bg-[#F3FBF7]'
-                                    : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
-                                )}
-                                onClick={closeDropdownCallback}
-                              >
-                                {dropdownItem.label}
-                              </Link>
-                            ))}
+                            {item.dropdownItems?.map(
+                              (dropdownItem, dropdownIndex) => (
+                                <Link
+                                  key={`${dropdownItem.label}-${dropdownIndex}`}
+                                  href={dropdownItem.href}
+                                  prefetch={false}
+                                  className={cn(
+                                    'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                                    pathname === dropdownItem.href
+                                      ? 'text-[#0F9058] bg-[#F3FBF7]'
+                                      : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                                  )}
+                                  onClick={closeDropdownCallback}
+                                >
+                                  {dropdownItem.label}
+                                </Link>
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -596,24 +604,31 @@ export function Navigation({
                             <item.icon className='w-5 h-5' />
                             <span>{item.label}</span>
                           </div>
-                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
+                          <DownIcon
+                            className={cn(
+                              'transform transition-transform',
+                              openDropdown === item.label && 'rotate-180'
+                            )}
+                          />
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
-                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
-                              <Link
-                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
-                                href={dropdownItem.href}
-                                prefetch={false}
-                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
-                                onClick={() => {
-                                  setIsMenuOpen(false);
-                                  setOpenDropdown(null);
-                                }}
-                              >
-                                {dropdownItem.label}
-                              </Link>
-                            ))}
+                            {item.dropdownItems?.map(
+                              (dropdownItem, dropdownIndex) => (
+                                <Link
+                                  key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                  href={dropdownItem.href}
+                                  prefetch={false}
+                                  className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                  onClick={() => {
+                                    setIsMenuOpen(false);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  {dropdownItem.label}
+                                </Link>
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -630,7 +645,7 @@ export function Navigation({
                     )}
                   </div>
                 ))}
-                
+
                 {/* モバイル用アカウント情報 */}
                 <div className='border-t border-gray-200 pt-2 mt-2'>
                   <button
@@ -643,7 +658,12 @@ export function Navigation({
                         {userInfo?.companyName || 'ユーザー名'}
                       </span>
                     </div>
-                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
+                    <DownIcon
+                      className={cn(
+                        'transform transition-transform',
+                        openDropdown === 'account' && 'rotate-180'
+                      )}
+                    />
                   </button>
                   {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
@@ -716,21 +736,23 @@ export function Navigation({
                         </button>
                         {openDropdown === item.label && (
                           <div className='absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
-                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
-                              <Link
-                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
-                                href={dropdownItem.href}
-                                className={cn(
-                                  'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
-                                  pathname === dropdownItem.href
-                                    ? 'text-[#0F9058] bg-[#F3FBF7]'
-                                    : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
-                                )}
-                                onClick={closeDropdownCallback}
-                              >
-                                {dropdownItem.label}
-                              </Link>
-                            ))}
+                            {item.dropdownItems?.map(
+                              (dropdownItem, dropdownIndex) => (
+                                <Link
+                                  key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                  href={dropdownItem.href}
+                                  className={cn(
+                                    'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
+                                    pathname === dropdownItem.href
+                                      ? 'text-[#0F9058] bg-[#F3FBF7]'
+                                      : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
+                                  )}
+                                  onClick={closeDropdownCallback}
+                                >
+                                  {dropdownItem.label}
+                                </Link>
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -823,24 +845,31 @@ export function Navigation({
                             <item.icon className='w-5 h-5' />
                             <span>{item.label}</span>
                           </div>
-                          <DownIcon className={cn('transform transition-transform', openDropdown === item.label && 'rotate-180')} />
+                          <DownIcon
+                            className={cn(
+                              'transform transition-transform',
+                              openDropdown === item.label && 'rotate-180'
+                            )}
+                          />
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
-                            {item.dropdownItems?.map((dropdownItem, dropdownIndex) => (
-                              <Link
-                                key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
-                                href={dropdownItem.href}
-                                prefetch={false}
-                                className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
-                                onClick={() => {
-                                  setIsMenuOpen(false);
-                                  setOpenDropdown(null);
-                                }}
-                              >
-                                {dropdownItem.label}
-                              </Link>
-                            ))}
+                            {item.dropdownItems?.map(
+                              (dropdownItem, dropdownIndex) => (
+                                <Link
+                                  key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
+                                  href={dropdownItem.href}
+                                  prefetch={false}
+                                  className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                  onClick={() => {
+                                    setIsMenuOpen(false);
+                                    setOpenDropdown(null);
+                                  }}
+                                >
+                                  {dropdownItem.label}
+                                </Link>
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -857,7 +886,7 @@ export function Navigation({
                     )}
                   </div>
                 ))}
-                
+
                 {/* モバイル用アカウント情報 */}
                 <div className='border-t border-gray-200 pt-2 mt-2'>
                   <button
@@ -870,7 +899,12 @@ export function Navigation({
                         {userInfo?.userName || 'ユーザー名'}
                       </span>
                     </div>
-                    <DownIcon className={cn('transform transition-transform', openDropdown === 'account' && 'rotate-180')} />
+                    <DownIcon
+                      className={cn(
+                        'transform transition-transform',
+                        openDropdown === 'account' && 'rotate-180'
+                      )}
+                    />
                   </button>
                   {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
@@ -911,7 +945,7 @@ export function Navigation({
     if (customCTAButton) {
       return customCTAButton;
     }
-    
+
     switch (variant as string) {
       case 'company':
         return {
@@ -960,7 +994,13 @@ export function Navigation({
               className='rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
               asChild
             >
-              <Link href={ctaButton.href} prefetch={false} onClick={ctaButton.onClick}>{ctaButton.label}</Link>
+              <Link
+                href={ctaButton.href}
+                prefetch={false}
+                onClick={ctaButton.onClick}
+              >
+                {ctaButton.label}
+              </Link>
             </Button>
           </div>
 
@@ -989,7 +1029,7 @@ export function Navigation({
               >
                 <Link
                   href={ctaButton.href}
-                  onClick={(e) => {
+                  onClick={e => {
                     ctaButton.onClick?.(e);
                     closeMenuCallback();
                   }}

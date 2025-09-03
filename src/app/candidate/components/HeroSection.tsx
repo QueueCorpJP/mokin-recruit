@@ -48,8 +48,8 @@ export function HeroSection() {
               src='/top.png'
               alt='hero'
               className='w-full h-auto object-cover'
-              loading="eager"
-              fetchPriority="high"
+              loading='eager'
+              fetchPriority='high'
             />
           </picture>
         </div>
@@ -86,7 +86,7 @@ export function HeroSection() {
             </div>
             <div className='flex flex-row justify-center items-center gap-4'>
               <Link
-                href='/candidate/auth/register'
+                href='/signup/candidate'
                 className="
    mb-[0px]
     flex items-center justify-center gap-[10px]
