@@ -42,18 +42,6 @@ export function HeroSection() {
       {/* Hero Section */}
       <div className='relative w-full h-auto'>
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
-<<<<<<< HEAD
-          <picture>
-            <source media='(max-width: 768px)' srcSet='/image.png' />
-            <img
-              src='/top.png'
-              alt='hero'
-              className='w-full h-auto object-cover'
-              loading='eager'
-              fetchPriority='high'
-            />
-          </picture>
-=======
           <Image
             src='/top.png'
             alt='hero'
@@ -61,10 +49,9 @@ export function HeroSection() {
             height={1080}
             className='w-full h-auto object-cover'
             priority={true}
-            sizes="100vw"
+            sizes='100vw'
             style={{ width: '100%', height: 'auto' }}
           />
->>>>>>> 8a49097016d0c6980108e3c233c037219334eb90
         </div>
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='flex flex-col items-center justify-center gap-[24px] text-center'>
@@ -99,7 +86,7 @@ export function HeroSection() {
             </div>
             <div className='flex flex-row justify-center items-center gap-4'>
               <Link
-                href='/signup/candidate'
+                href='/signup'
                 className="
    mb-[0px]
     flex items-center justify-center gap-[10px]

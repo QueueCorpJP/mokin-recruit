@@ -28,42 +28,42 @@ function PasswordFormCard({
   error,
 }: PasswordFormCardProps) {
   return (
-    <div className="bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start relative shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] shrink-0 p-6 md:p-[80px] rounded-3xl md:rounded-[40px] w-full max-w-[480px] md:w-[800px] md:min-w-[720px]">
+    <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start relative shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] shrink-0 p-6 md:p-[80px] rounded-3xl md:rounded-[40px] w-full max-w-[480px] md:w-[800px] md:min-w-[720px]'>
       <div className="box-border content-stretch flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold items-center justify-start leading-[0] p-0 relative shrink-0 text-center w-full gap-6">
-        <div className="relative shrink-0 text-[#0f9058] w-full text-[24px] md:text-[32px] tracking-[2.4px] md:tracking-[3.2px]">
-          <p className="block leading-[1.6]">パスワード</p>
+        <div className='relative shrink-0 text-[#0f9058] w-full text-[24px] md:text-[32px] tracking-[2.4px] md:tracking-[3.2px]'>
+          <p className='block leading-[1.6]'>パスワード</p>
         </div>
-        <div className="relative shrink-0 text-[#323232] text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px] w-full leading-[2]">
-          <p className="block leading-[2]">
+        <div className='relative shrink-0 text-[#323232] text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px] w-full leading-[2]'>
+          <p className='block leading-[2]'>
             半角英数字・記号のみ、8文字以上でパスワードを設定してください
           </p>
         </div>
       </div>
 
-      <div className="box-border content-stretch flex flex-col gap-6 items-end justify-center p-0 relative shrink-0 w-full">
+      <div className='box-border content-stretch flex flex-col gap-6 items-end justify-center p-0 relative shrink-0 w-full'>
         {error && (
-          <div className="flex items-center gap-2 text-red-600 text-sm w-full">
-            <AlertCircle className="w-4 h-4" />
+          <div className='flex items-center gap-2 text-red-600 text-sm w-full'>
+            <AlertCircle className='w-4 h-4' />
             <span>{error}</span>
           </div>
         )}
-        
+
         <PasswordFormField
           value={password}
           onChange={onPasswordChange}
-          label="新規パスワード"
-          placeholder="半角英数字・記号のみ、8文字以上"
-          className="justify-end"
-          inputWidth="md:w-[350px]"
+          label='新規パスワード'
+          placeholder='半角英数字・記号のみ、8文字以上'
+          className='justify-end'
+          inputWidth='md:w-[350px]'
         />
 
         <PasswordFormField
           value={confirmPassword}
           onChange={onConfirmPasswordChange}
-          label="新規パスワード再入力"
-          placeholder="確認のためもう一度入力"
-          className="justify-end"
-          inputWidth="md:w-[350px]"
+          label='新規パスワード再入力'
+          placeholder='確認のためもう一度入力'
+          className='justify-end'
+          inputWidth='md:w-[350px]'
           isConfirmField={true}
           confirmTarget={password}
         />
@@ -71,10 +71,15 @@ function PasswordFormCard({
 
       <Button
         onClick={onSubmit}
-        variant="green-gradient"
-        size="figma-default"
-        className="min-w-40 w-full md:w-auto text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px]"
-        disabled={isLoading || !password || !confirmPassword}
+        variant='green-gradient'
+        size='figma-default'
+        className='min-w-40 w-full md:w-auto text-[14px] md:text-[16px] tracking-[1.4px] md:tracking-[1.6px]'
+        disabled={
+          isLoading ||
+          !password ||
+          !confirmPassword ||
+          password !== confirmPassword
+        }
       >
         {isLoading ? '設定中...' : '設定する'}
       </Button>
@@ -149,12 +154,13 @@ export default function SignupPasswordPage() {
       }
     } catch (error) {
       console.error('Set password error:', error);
-      setError('ネットワークエラーが発生しました。しばらくしてから再度お試しください。');
+      setError(
+        'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
+      );
     } finally {
       setIsLoading(false);
     }
   }, [validatePasswords, userId, router]);
-
 
   return (
     <CandidateAuthBackground>
@@ -162,8 +168,8 @@ export default function SignupPasswordPage() {
         <PasswordFormCard
           password={password}
           confirmPassword={confirmPassword}
-          onPasswordChange={(e) => setPassword(e.target.value)}
-          onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
+          onPasswordChange={e => setPassword(e.target.value)}
+          onConfirmPasswordChange={e => setConfirmPassword(e.target.value)}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           error={error}
