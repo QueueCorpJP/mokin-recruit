@@ -30,13 +30,9 @@ export default function IndustrySelectModal({
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
-    // モーダルが開いた時のみ初期化
-    if (
-      isOpen &&
-      selectedIndustries.length === 0 &&
-      initialSelected.length >= 0
-    ) {
-      setSelectedIndustries(initialSelected);
+    // モーダルが開いた時に初期化（タグ削除との同期のため）
+    if (isOpen) {
+      setSelectedIndustries([...initialSelected]);
     }
   }, [isOpen]);
 

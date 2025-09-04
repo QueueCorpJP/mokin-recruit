@@ -29,10 +29,11 @@ export default function JobTypeSelectModal({
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const selectedJobTypesRef = useRef<string[]>(initialSelected);
 
+  // モーダルが開いた時に初期化（タグ削除との同期のため）
   useEffect(() => {
-    if (isOpen && selectedJobTypes.length === 0 && initialSelected.length >= 0) {
-      setSelectedJobTypes(initialSelected);
-      selectedJobTypesRef.current = initialSelected;
+    if (isOpen) {
+      setSelectedJobTypes([...initialSelected]);
+      selectedJobTypesRef.current = [...initialSelected];
     }
   }, [isOpen]);
 

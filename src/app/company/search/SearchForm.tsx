@@ -91,6 +91,70 @@ export default function SearchForm({ companyId }: SearchFormProps) {
   return (
     <>
       <div className="bg-white rounded-[10px]">
+        {/* 検索条件名表示エリア */}
+        <div className="flex items-center justify-between p-10 border-b border-gray-200">
+          <div className="flex-1 flex gap-6 overflow-hidden items-center">
+            <span
+              className="text-[20px] font-bold text-[#323232] tracking-[1.4px] flex-shrink-0"
+              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+            >
+              設定中の検索条件
+            </span>
+            <span
+              className="truncate"
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                maxWidth: '1020px',
+              }}
+            >
+              <span className="text-[16px] font-medium text-[#323232] tracking-[1.6px]">
+                {(() => {
+                  const conditions = [];
+                  
+                  if (searchStore.keyword && searchStore.keyword.trim() && searchStore.keyword !== 'undefined') {
+                    conditions.push(`キーワード検索：${searchStore.keyword}`);
+                  }
+                  
+                  if (searchStore.experienceJobTypes && searchStore.experienceJobTypes.length > 0) {
+                    const jobTypeTexts = searchStore.experienceJobTypes
+                      .slice(0, 3)
+                      .filter((job: any) => job && job.name && job.name !== 'undefined')
+                      .map((job: any) => `${job.name}${job.experienceYears && job.experienceYears !== 'undefined' ? ` ${job.experienceYears}年` : ''}`);
+                    if (jobTypeTexts.length > 0) {
+                      const moreText = searchStore.experienceJobTypes.length > 3 ? '/他' : '';
+                      conditions.push(`経験職種：${jobTypeTexts.join('/')}${moreText}`);
+                    }
+                  }
+                  
+                  if (searchStore.experienceIndustries && searchStore.experienceIndustries.length > 0) {
+                    const industryTexts = searchStore.experienceIndustries
+                      .slice(0, 3)
+                      .filter((industry: any) => industry && industry.name && industry.name !== 'undefined')
+                      .map((industry: any) => `${industry.name}${industry.experienceYears && industry.experienceYears !== 'undefined' ? ` ${industry.experienceYears}年` : ''}`);
+                    if (industryTexts.length > 0) {
+                      const moreText = searchStore.experienceIndustries.length > 3 ? '/他' : '';
+                      conditions.push(`経験業種：${industryTexts.join('/')}${moreText}`);
+                    }
+                  }
+                  
+                  const hasValidSalaryMin = searchStore.currentSalaryMin && searchStore.currentSalaryMin !== 'undefined' && searchStore.currentSalaryMin !== '';
+                  const hasValidSalaryMax = searchStore.currentSalaryMax && searchStore.currentSalaryMax !== 'undefined' && searchStore.currentSalaryMax !== '';
+                  if (hasValidSalaryMin || hasValidSalaryMax) {
+                    const min = hasValidSalaryMin ? `${searchStore.currentSalaryMin}万円` : '';
+                    const max = hasValidSalaryMax ? `${searchStore.currentSalaryMax}万円` : '';
+                    const separator = min && max ? '〜' : '';
+                    conditions.push(`現在の年収：${min}${separator}${max}`);
+                  }
+                  
+                  return conditions.length > 0 
+                    ? conditions.join('、') 
+                    : 'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円〜〇〇万円';
+                })()}
+              </span>
+            </span>
+          </div>
+        </div>
+        
         <div className="p-10">
           <div className="flex flex-col gap-2">
             <h3 className="text-[#323232] text-[20px] font-bold tracking-[2px] leading-[32px] mb-2">検索条件</h3>

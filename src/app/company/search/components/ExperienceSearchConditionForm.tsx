@@ -48,7 +48,7 @@ export default function ExperienceSearchConditionForm() {
           {/* 選択された職種のタグ表示 */}
           {searchStore.experienceJobTypes.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
-              {searchStore.experienceJobTypes.map((job) => (
+              {searchStore.experienceJobTypes.filter(job => job && job.id).map((job) => (
                 <SelectableTagWithYears
                   key={job.id}
                   id={job.id}
@@ -106,7 +106,7 @@ export default function ExperienceSearchConditionForm() {
           {/* 選択された業種のタグ表示 */}
           {searchStore.experienceIndustries.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
-              {searchStore.experienceIndustries.map((industry) => (
+              {searchStore.experienceIndustries.filter(industry => industry && industry.id).map((industry) => (
                 <SelectableTagWithYears
                   key={industry.id}
                   id={industry.id}
