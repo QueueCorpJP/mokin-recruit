@@ -3,7 +3,15 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { ArticleGrid } from '@/components/media/ArticleGrid';
 import { PopularArticlesSidebar } from '@/components/media/PopularArticlesSidebar';
 import { MediaHeader } from '@/components/media/MediaHeader';
-import { getArticles, getArticlesWithPagination, getSidebarData, type Article, type PopularArticle, type ArticleCategory, type ArticleTag } from './actions';
+import {
+  getArticles,
+  getArticlesWithPagination,
+  getSidebarData,
+  type Article,
+  type PopularArticle,
+  type ArticleCategory,
+  type ArticleTag,
+} from './actions';
 import { useMediaCache } from '@/contexts/MediaCacheContext';
 
 interface MediaArticle {
@@ -16,9 +24,6 @@ interface MediaArticle {
   tags?: string[];
 }
 
-
-
-
 interface FilterState {
   type: 'all' | 'category' | 'tag';
   value: string;
@@ -26,7 +31,10 @@ interface FilterState {
 }
 
 export default function MediaPage() {
-  const { sidebarData: cachedSidebarData, setSidebarData: setCachedSidebarData } = useMediaCache();
+  const {
+    sidebarData: cachedSidebarData,
+    setSidebarData: setCachedSidebarData,
+  } = useMediaCache();
   const [articles, setArticles] = useState<MediaArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<MediaArticle[]>([]);
   const [sidebarData, setSidebarData] = useState<{
@@ -36,7 +44,7 @@ export default function MediaPage() {
   }>({
     popularArticles: [],
     categories: [],
-    tags: []
+    tags: [],
   });
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -44,7 +52,7 @@ export default function MediaPage() {
   const [filter, setFilter] = useState<FilterState>({
     type: 'all',
     value: '',
-    displayName: 'メディア'
+    displayName: 'メディア',
   });
 
   useEffect(() => {
@@ -52,77 +60,105 @@ export default function MediaPage() {
       try {
         // キャッシュがあるかチェック
         let sidebarDataResult = cachedSidebarData;
-        
+
         if (!sidebarDataResult) {
           // キャッシュがない場合のみサイドバーデータを取得
           const [paginationResult, freshSidebarData] = await Promise.all([
             getArticlesWithPagination(20, 0),
-            getSidebarData()
+            getSidebarData(),
           ]);
-          
+
           sidebarDataResult = freshSidebarData;
           setCachedSidebarData(freshSidebarData);
-          
-          setArticles(paginationResult.articles.map(article => ({
-            id: article.id,
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }),
-            categories: article.categories || ['メディア'],
-            title: article.title,
-            description: article.excerpt || 'No description available',
-            imageUrl: article.thumbnail_url || null,
-            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
-          })));
-          setFilteredArticles(paginationResult.articles.map(article => ({
-            id: article.id,
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }),
-            categories: article.categories || ['メディア'],
-            title: article.title,
-            description: article.excerpt || 'No description available',
-            imageUrl: article.thumbnail_url || null,
-            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
-          })));
+
+          setArticles(
+            paginationResult.articles.map(article => ({
+              id: article.id,
+              date: new Date(
+                article.published_at || article.created_at
+              ).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }),
+              categories: article.categories || ['メディア'],
+              title: article.title,
+              description: article.excerpt || 'No description available',
+              imageUrl: article.thumbnail_url || null,
+              tags:
+                article.tags && article.tags.length > 0
+                  ? article.tags
+                  : undefined,
+            }))
+          );
+          setFilteredArticles(
+            paginationResult.articles.map(article => ({
+              id: article.id,
+              date: new Date(
+                article.published_at || article.created_at
+              ).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }),
+              categories: article.categories || ['メディア'],
+              title: article.title,
+              description: article.excerpt || 'No description available',
+              imageUrl: article.thumbnail_url || null,
+              tags:
+                article.tags && article.tags.length > 0
+                  ? article.tags
+                  : undefined,
+            }))
+          );
           setHasMore(paginationResult.hasMore);
         } else {
           // キャッシュがある場合は記事データのみ取得
           const paginationResult = await getArticlesWithPagination(20, 0);
-          
-          setArticles(paginationResult.articles.map(article => ({
-            id: article.id,
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }),
-            categories: article.categories || ['メディア'],
-            title: article.title,
-            description: article.excerpt || 'No description available',
-            imageUrl: article.thumbnail_url || null,
-            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
-          })));
-          setFilteredArticles(paginationResult.articles.map(article => ({
-            id: article.id,
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }),
-            categories: article.categories || ['メディア'],
-            title: article.title,
-            description: article.excerpt || 'No description available',
-            imageUrl: article.thumbnail_url || null,
-            tags: article.tags && article.tags.length > 0 ? article.tags : undefined
-          })));
+
+          setArticles(
+            paginationResult.articles.map(article => ({
+              id: article.id,
+              date: new Date(
+                article.published_at || article.created_at
+              ).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }),
+              categories: article.categories || ['メディア'],
+              title: article.title,
+              description: article.excerpt || 'No description available',
+              imageUrl: article.thumbnail_url || null,
+              tags:
+                article.tags && article.tags.length > 0
+                  ? article.tags
+                  : undefined,
+            }))
+          );
+          setFilteredArticles(
+            paginationResult.articles.map(article => ({
+              id: article.id,
+              date: new Date(
+                article.published_at || article.created_at
+              ).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }),
+              categories: article.categories || ['メディア'],
+              title: article.title,
+              description: article.excerpt || 'No description available',
+              imageUrl: article.thumbnail_url || null,
+              tags:
+                article.tags && article.tags.length > 0
+                  ? article.tags
+                  : undefined,
+            }))
+          );
           setHasMore(paginationResult.hasMore);
         }
-        
+
         setSidebarData(sidebarDataResult);
       } catch (error) {
         console.error('データの取得に失敗:', error);
@@ -139,25 +175,31 @@ export default function MediaPage() {
 
   const loadMoreArticles = async () => {
     if (loadingMore || !hasMore) return;
-    
+
     try {
       setLoadingMore(true);
-      const paginationResult = await getArticlesWithPagination(20, articles.length);
-      
+      const paginationResult = await getArticlesWithPagination(
+        20,
+        articles.length
+      );
+
       const newArticles = paginationResult.articles.map(article => ({
         id: article.id,
-        date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
+        date: new Date(
+          article.published_at || article.created_at
+        ).toLocaleDateString('ja-JP', {
           year: 'numeric',
           month: '2-digit',
-          day: '2-digit'
+          day: '2-digit',
         }),
         categories: article.categories || ['メディア'],
         title: article.title,
         description: article.excerpt || 'No description available',
         imageUrl: article.thumbnail_url || null,
-        tags: article.tags && article.tags.length > 0 ? article.tags : undefined
+        tags:
+          article.tags && article.tags.length > 0 ? article.tags : undefined,
       }));
-      
+
       setArticles(prev => [...prev, ...newArticles]);
       setFilteredArticles(prev => [...prev, ...newArticles]);
       setHasMore(paginationResult.hasMore);
@@ -172,11 +214,18 @@ export default function MediaPage() {
     if (filter.type === 'all') {
       setFilteredArticles(articles);
     } else if (filter.type === 'category') {
-      setFilteredArticles(articles.filter(article => article.categories && article.categories.includes(filter.value)));
+      setFilteredArticles(
+        articles.filter(
+          article =>
+            article.categories && article.categories.includes(filter.value)
+        )
+      );
     } else if (filter.type === 'tag') {
-      setFilteredArticles(articles.filter(article => 
-        article.tags && article.tags.includes(filter.value)
-      ));
+      setFilteredArticles(
+        articles.filter(
+          article => article.tags && article.tags.includes(filter.value)
+        )
+      );
     }
   }, [filter, articles]);
 
@@ -184,7 +233,7 @@ export default function MediaPage() {
     setFilter({
       type: 'category',
       value: categoryName,
-      displayName: categoryName
+      displayName: categoryName,
     });
   };
 
@@ -192,26 +241,29 @@ export default function MediaPage() {
     setFilter({
       type: 'tag',
       value: tagName,
-      displayName: tagName
+      displayName: tagName,
     });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative">
-        <MediaHeader title="メディア" showLargeCircle={true} />
-        <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%] pt-[75px]">
-          <div className="px-[16px] md:px-[80px] py-[40px] md:py-[75px]">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
+      <div className='min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative'>
+        <MediaHeader title='メディア' showLargeCircle={true} />
+        <main className='w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%] pt-[75px]'>
+          <div className='px-[16px] md:px-[80px] py-[40px] md:py-[75px]'>
+            <div className='animate-pulse'>
+              <div className='h-8 bg-gray-200 rounded mb-6'></div>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]'>
                 {[...Array(9)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-[10px] overflow-hidden">
-                    <div className="h-[200px] bg-gray-200"></div>
-                    <div className="p-6">
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                  <div
+                    key={i}
+                    className='bg-white rounded-[10px] overflow-hidden'
+                  >
+                    <div className='h-[200px] bg-gray-200'></div>
+                    <div className='p-6'>
+                      <div className='h-4 bg-gray-200 rounded mb-2'></div>
+                      <div className='h-4 bg-gray-200 rounded mb-4 w-3/4'></div>
+                      <div className='h-6 bg-gray-200 rounded w-20'></div>
                     </div>
                   </div>
                 ))}
@@ -224,21 +276,18 @@ export default function MediaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative">
+    <div className='min-h-screen bg-gradient-to-t from-[#229A4E] to-[#17856F] relative'>
       {/* ヘッダー */}
-      <MediaHeader 
-        title="メディア" 
-        showLargeCircle={true}
-      />
+      <MediaHeader title='メディア' showLargeCircle={true} />
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%]">
-        <div className="px-[16px] md:px-[80px] py-[40px] md:py-[75px]">
-          <div className="flex flex-col lg:flex-row lg:justify-between">
+      <main className='px-[16px] md:px-[80px] py-[40px] md:py-[75px] w-full bg-[#F9F9F9] rounded-t-[24px] md:rounded-t-[80px] overflow-hidden relative z-10 -top-[5%]'>
+        <div className='max-w-[1280px] mx-auto'>
+          <div className='flex flex-col lg:flex-row lg:justify-between'>
             {/* 記事グリッド - 右側のサイドバーとの間に80pxの余白を確保 */}
-            <div className="flex-1 lg:pr-[80px]">
-              <ArticleGrid 
-                articles={filteredArticles} 
+            <div className='flex-1 lg:pr-[80px]'>
+              <ArticleGrid
+                articles={filteredArticles}
                 filterType={filter.type}
                 filterValue={filter.value}
                 hasMore={hasMore}
@@ -248,9 +297,9 @@ export default function MediaPage() {
             </div>
 
             {/* サイドバー - 固定幅280px */}
-            <aside className="hidden lg:block lg:w-[280px] flex-shrink-0">
-              <PopularArticlesSidebar 
-                articles={sidebarData.popularArticles} 
+            <aside className='hidden lg:block lg:w-[280px] flex-shrink-0'>
+              <PopularArticlesSidebar
+                articles={sidebarData.popularArticles}
                 categories={sidebarData.categories}
                 tags={sidebarData.tags}
                 onCategoryClick={handleCategoryClick}
@@ -258,11 +307,11 @@ export default function MediaPage() {
               />
             </aside>
           </div>
-          
+
           {/* モバイル表示用サイドバー */}
-          <div className="lg:hidden mt-[40px]">
-            <PopularArticlesSidebar 
-              articles={sidebarData.popularArticles} 
+          <div className='lg:hidden mt-[40px]'>
+            <PopularArticlesSidebar
+              articles={sidebarData.popularArticles}
               categories={sidebarData.categories}
               tags={sidebarData.tags}
               onCategoryClick={handleCategoryClick}
