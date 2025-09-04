@@ -186,7 +186,7 @@ export function CandidateResetPasswordClient() {
                       placeholder='メールアドレスを入力'
                       value={formData.email}
                       onChange={handleEmailChange}
-                      className='grow min-w-0 bg-transparent text-[#999999] font-medium text-[14px] md:text-[16px] outline-none placeholder-[#999999]'
+                      className='grow min-w-0 bg-transparent text-[#323232] font-medium text-[14px] md:text-[16px] outline-none placeholder-[#999999]'
                       style={{
                         fontFamily: 'Noto Sans JP, sans-serif',
                         fontWeight: 500,
