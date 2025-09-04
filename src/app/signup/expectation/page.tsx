@@ -161,6 +161,7 @@ export default function SignupExpectationPage() {
           setFormData(prev => ({ ...prev, workStyles: selected }));
         }}
         initialSelected={formData.workStyles}
+        maxSelections={6}
       />
 
       <div className='min-h-screen flex flex-col'>
