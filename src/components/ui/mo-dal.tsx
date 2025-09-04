@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
     return () => window.removeEventListener('resize', checkIsMobile);
@@ -61,20 +61,22 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div
       className={`fixed inset-0 flex z-50 ${
-        isMobile ? 'items-end justify-center p-0' : 'items-center justify-center p-4'
+        isMobile
+          ? 'items-end justify-center p-0'
+          : 'items-center justify-center p-4'
       }`}
       style={{ backgroundColor: overlayBgColor }}
     >
       <div
         className={`flex flex-col items-start bg-white overflow-hidden shadow-lg ${
-          isMobile 
-            ? 'w-full rounded-t-[24px]' 
+          isMobile
+            ? 'w-full rounded-t-[24px]'
             : 'w-auto rounded-[10px] max-w-[95vw] max-h-[90vh]'
         }`}
         style={{
           width: isMobile ? '100vw' : width,
           height: isMobile ? height : height,
-          maxHeight: isMobile ? (height || '95vh') : '90vh',
+          maxHeight: isMobile ? height || '95vh' : '90vh',
         }}
       >
         {/* Header */}
@@ -107,10 +109,10 @@ export const Modal: React.FC<ModalProps> = ({
           )}
           {customHeader && (
             <div className='w-full -mx-4 md:-mx-6 p-4 pr-0 md:px-6'>
-              <h3 className="text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-2">
+              <h3 className='text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-2'>
                 {customHeader.title}
               </h3>
-              <p className="text-[#323232] text-[14px] font-medium tracking-[1.4px] border-b-2 border-[#E5E7EB] pb-3">
+              <p className='text-[#323232] text-[14px] font-medium tracking-[1.4px] border-b-2 border-[#E5E7EB] pb-3'>
                 {customHeader.description}
               </p>
             </div>
@@ -128,24 +130,24 @@ export const Modal: React.FC<ModalProps> = ({
           }}
         >
           {/* Mobile: Selection count above buttons, centered */}
-          {isMobile && selectedCount !== undefined && totalCount !== undefined && (
-            <div className='flex justify-center items-center order-1 w-full'>
-              <span className='text-[#323232] text-sm font-medium'>
-                {selectedCount}/{totalCount} 選択中
-              </span>
-            </div>
-          )}
+          {isMobile &&
+            selectedCount !== undefined &&
+            totalCount !== undefined && (
+              <div className='flex justify-center items-center order-1 w-full'>
+                <span className='text-[#323232] text-sm font-medium'>
+                  {selectedCount}/{totalCount} 選択中
+                </span>
+              </div>
+            )}
 
           {/* Desktop: Left Selection count */}
           <div className='hidden md:flex items-center order-3 md:order-1'>
             {selectedCount !== undefined && totalCount !== undefined ? (
-              <span
-                className='text-[#323232] text-sm md:text-[14px] font-medium'
-              >
+              <span className='text-[#323232] text-sm md:text-[14px] font-medium'>
                 {selectedCount}/{totalCount} 選択中
               </span>
             ) : (
-              <div className="hidden md:block"></div>
+              <div className='hidden md:block'></div>
             )}
           </div>
 
@@ -172,7 +174,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
 
           {/* Right: Empty space for balance */}
-          <div className="hidden md:block order-2 md:order-3"></div>
+          <div className='hidden md:block order-2 md:order-3'></div>
         </footer>
       </div>
     </div>
