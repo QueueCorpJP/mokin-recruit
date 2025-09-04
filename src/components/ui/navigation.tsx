@@ -1114,6 +1114,20 @@ export function Navigation({
 
   const ctaButton = getCTAButton();
 
+  // --- ここから全variant共通の「モバイルメニューが開いているときは白い画面だけを表示」 ---
+  if (isMenuOpen) {
+    return (
+      <div
+        className='lg:hidden fixed inset-0 bg-white z-50'
+        onClick={closeMenuCallback}
+        aria-label='メニューを閉じる'
+      >
+        {/* 画面全体を白く覆うだけ。クリックで閉じる。 */}
+      </div>
+    );
+  }
+  // --- ここまで追加 ---
+
   return (
     <header
       className={cn(
@@ -1166,25 +1180,12 @@ export function Navigation({
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className='lg:hidden border-t border-gray-200'>
-            <div className='px-3 pt-2 pb-3'>
-              <Button
-                variant='green-gradient'
-                size='lg'
-                className='w-full rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] transition-all duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]'
-                asChild
-              >
-                <Link
-                  href={ctaButton.href}
-                  onClick={e => {
-                    ctaButton.onClick?.(e);
-                    closeMenuCallback();
-                  }}
-                >
-                  {ctaButton.label}
-                </Link>
-              </Button>
-            </div>
+          <div
+            className='lg:hidden fixed inset-0 bg-white z-50'
+            onClick={closeMenuCallback}
+            aria-label='メニューを閉じる'
+          >
+            {/* 画面全体を白く覆うだけ。クリックで閉じる。 */}
           </div>
         )}
       </div>
