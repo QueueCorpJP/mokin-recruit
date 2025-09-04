@@ -72,7 +72,7 @@ export default function CompanyPlanChangeModal({
               <select
                 value={selectedPlan}
                 onChange={(e) => setSelectedPlan(e.target.value)}
-                className="w-[323px] h-[43px] px-3.5 py-3 bg-white border border-black text-base font-bold text-black outline-none appearance-none"
+                className="w-[323px] h-[50px] px-3.5 py-3 bg-white border border-black text-base font-bold text-black outline-none appearance-none"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <option value="">変更後のプランを選択してください。</option>

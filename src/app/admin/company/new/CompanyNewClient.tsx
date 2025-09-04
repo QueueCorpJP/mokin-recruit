@@ -1,14 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { industryCategories } from '@/app/company/job/types';
 
 // フォームデータの型定義
 interface CompanyFormData {
   companyId: string;
   plan: string;
   companyName: string;
-  companyUrl: string;
-  website: string;
+  urls: Array<{
+    title: string;
+    url: string;
+  }>;
   iconImage: File | null;
   representativePosition: string;
   representativeName: string;
@@ -43,6 +48,12 @@ const industryOptions = [
   '官公庁・公社・団体',
 ];
 
+// プランのオプション
+const planOptions = [
+  { value: 'basic', label: 'ベーシック' },
+  { value: 'standard', label: 'スタンダード' },
+];
+
 // 都道府県のオプション
 const prefectureOptions = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
@@ -65,12 +76,22 @@ const companyPhaseOptions = [
 ];
 
 export default function CompanyNewClient() {
+  const router = useRouter();
+  
+  // 企業IDの自動生成
+  const generateCompanyId = () => {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    return `COMP-${timestamp}-${random}`.toUpperCase();
+  };
+
   const [formData, setFormData] = useState<CompanyFormData>({
     companyId: '',
     plan: '',
     companyName: '',
-    companyUrl: '',
-    website: '',
+    urls: [
+      { title: '', url: '' }
+    ],
     iconImage: null,
     representativePosition: '',
     representativeName: '',
@@ -78,7 +99,7 @@ export default function CompanyNewClient() {
     capital: '',
     capitalUnit: '万円',
     employeeCount: '',
-    industries: ['コンサルティング'],
+    industries: [],
     businessContent: '',
     prefecture: '',
     address: '',
@@ -90,16 +111,22 @@ export default function CompanyNewClient() {
     ],
   });
 
-  // 業種の追加・削除
-  const addIndustry = (industry: string) => {
-    if (!formData.industries.includes(industry)) {
-      setFormData(prev => ({
-        ...prev,
-        industries: [...prev.industries, industry]
-      }));
+  // クライアント側でのみ企業IDを生成
+  useEffect(() => {
+    if (formData.companyId === '') {
+      setFormData(prev => ({ ...prev, companyId: generateCompanyId() }));
     }
+  }, []);
+
+  // 業種選択モーダルの状態管理
+  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
+
+  // 業種選択ハンドラー
+  const handleIndustryChange = (industries: string[]) => {
+    setFormData(prev => ({ ...prev, industries }));
   };
 
+  // 業種の削除（選択された業種から個別に削除）
   const removeIndustry = (industry: string) => {
     setFormData(prev => ({
       ...prev,
@@ -118,21 +145,56 @@ export default function CompanyNewClient() {
   const updateAttraction = (index: number, field: 'title' | 'description', value: string) => {
     setFormData(prev => ({
       ...prev,
-      attractions: prev.attractions.map((attraction, i) => 
+      attractions: prev.attractions.map((attraction, i) =>
         i === index ? { ...attraction, [field]: value } : attraction
       )
     }));
   };
 
+  // URLの追加
+  const addUrl = () => {
+    setFormData(prev => ({
+      ...prev,
+      urls: [...prev.urls, { title: '', url: '' }]
+    }));
+  };
+
+  // URLの削除
+  const removeUrl = (index: number) => {
+    if (formData.urls.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        urls: prev.urls.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // URLの更新
+  const updateUrl = (index: number, field: 'title' | 'url', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      urls: prev.urls.map((url, i) =>
+        i === index ? { ...url, [field]: value } : url
+      )
+    }));
+  };
+
   // 画像アップロード処理
-  const handleImageUpload = (file: File, type: 'icon' | 'images') => {
+  const handleImageUpload = (file: File, type: 'icon' | 'images', index?: number) => {
     if (type === 'icon') {
       setFormData(prev => ({ ...prev, iconImage: file }));
-    } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        images: [...prev.images, file].slice(0, 3) // 最大3枚まで
-      }));
+    } else if (type === 'images' && index !== undefined) {
+      const newImages = [...formData.images];
+      newImages[index] = file;
+      setFormData(prev => ({ ...prev, images: newImages }));
+    }
+  };
+
+  // ファイル選択ハンドラー
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: 'icon' | 'images', index?: number) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, type, index);
     }
   };
 
@@ -148,15 +210,25 @@ export default function CompanyNewClient() {
       {/* 企業ID */}
       <div className="flex items-center gap-6 py-3">
         <label className="block text-base font-bold text-black w-40">企業ID</label>
-        <div className="text-base text-black">企業IDが入ります</div>
+        <div className="text-base text-black font-mono">{formData.companyId}</div>
       </div>
 
       <hr className="border-gray-300" />
 
       {/* プラン */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">プラン</label>
-        <div className="text-base text-black">プラン名が入ります</div>
+        <label htmlFor="plan-select" className="block text-base font-bold text-black w-40">プラン</label>
+        <select
+          id="plan-select"
+          value={formData.plan}
+          onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
+          className="px-3 py-3 border border-black text-base bg-white"
+        >
+          <option value="">プランを選択してください ▼</option>
+          {planOptions.map(plan => (
+            <option key={plan.value} value={plan.value}>{plan.label}</option>
+          ))}
+        </select>
       </div>
 
       <hr className="border-gray-300" />
@@ -168,7 +240,7 @@ export default function CompanyNewClient() {
           type="text"
           value={formData.companyName}
           onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
-          placeholder="株式企業Company"
+          placeholder="株式会社サンプル企業"
           className="flex-1 px-3 py-3 border border-black text-base"
         />
       </div>
@@ -179,20 +251,49 @@ export default function CompanyNewClient() {
       <div className="flex items-start gap-6 py-3">
         <label className="block text-base font-bold text-black w-40 mt-2">URL</label>
         <div className="flex-1 space-y-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={formData.companyUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, companyUrl: e.target.value }))}
-              placeholder="タイトルを入力"
-              className="flex-1 px-3 py-3 border border-black text-base"
-            />
-            <div className="flex items-center px-3 py-3 border border-black bg-white text-base">
-              https://
+          {formData.urls.map((url, index) => (
+            <div key={index} className="flex items-center gap-3">
+              {/* 削除ボタン（2行目以降のみ表示） */}
+              {formData.urls.length > 1 && (
+                <button
+                  onClick={() => removeUrl(index)}
+                  className="text-2xl font-bold text-black hover:text-gray-600 px-2"
+                >
+                  ×
+                </button>
+              )}
+              {/* タイトル入力 */}
+              <div className="flex items-center px-3.5 py-3 bg-white border border-black w-60">
+                <input
+                  type="text"
+                  value={url.title}
+                  onChange={(e) => updateUrl(index, 'title', e.target.value)}
+                  placeholder="コーポレートサイト"
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </div>
+
+              {/* URL入力 */}
+              <div className="flex items-center px-3.5 py-3 bg-white border border-black flex-1">
+                <input
+                  type="text"
+                  value={url.url}
+                  onChange={(e) => updateUrl(index, 'url', e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </div>
             </div>
-          </div>
-          <button className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
-            <span className="text-white text-sm">+</span>
+          ))}
+
+          {/* 追加ボタン */}
+          <button
+            onClick={addUrl}
+            className="w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+          >
+            <span className="text-white text-sm font-bold">+</span>
           </button>
         </div>
       </div>
@@ -202,11 +303,31 @@ export default function CompanyNewClient() {
       {/* アイコン画像 */}
       <div className="flex items-center gap-6 py-3">
         <label className="block text-base font-bold text-black w-40">アイコン画像</label>
-        <div className="w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer">
-          <div className="text-center">
-            <div className="text-sm font-bold text-white">画像を</div>
-            <div className="text-sm font-bold text-white">変更</div>
+        <div className="relative">
+          <div
+            className="w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-500 transition-colors"
+            onClick={() => document.getElementById('icon-file-input')?.click()}
+          >
+            {formData.iconImage ? (
+              <img
+                src={URL.createObjectURL(formData.iconImage)}
+                alt="アイコン画像"
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            ) : (
+              <div className="text-center">
+                <div className="text-sm font-bold text-white">画像を</div>
+                <div className="text-sm font-bold text-white">追加</div>
+              </div>
+            )}
           </div>
+          <input
+            id="icon-file-input"
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileSelect(e, 'icon')}
+            className="hidden"
+          />
         </div>
       </div>
 
@@ -220,14 +341,14 @@ export default function CompanyNewClient() {
             type="text"
             value={formData.representativePosition}
             onChange={(e) => setFormData(prev => ({ ...prev, representativePosition: e.target.value }))}
-            placeholder="代表者役職名を入力"
+            placeholder="代表取締役社長"
             className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
           />
           <input
             type="text"
             value={formData.representativeName}
             onChange={(e) => setFormData(prev => ({ ...prev, representativeName: e.target.value }))}
-            placeholder="代表者名を入力"
+            placeholder="田中太郎"
             className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
           />
         </div>
@@ -243,7 +364,7 @@ export default function CompanyNewClient() {
             type="text"
             value={formData.establishedYear}
             onChange={(e) => setFormData(prev => ({ ...prev, establishedYear: e.target.value }))}
-            placeholder="2020"
+            placeholder="2024"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <span className="text-base text-black">年</span>
@@ -260,7 +381,7 @@ export default function CompanyNewClient() {
             type="text"
             value={formData.capital}
             onChange={(e) => setFormData(prev => ({ ...prev, capital: e.target.value }))}
-            placeholder="100"
+            placeholder="500"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <div className="flex items-center px-3 py-3 border border-black">
@@ -291,7 +412,7 @@ export default function CompanyNewClient() {
             type="text"
             value={formData.employeeCount}
             onChange={(e) => setFormData(prev => ({ ...prev, employeeCount: e.target.value }))}
-            placeholder="500"
+            placeholder="100"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <span className="text-base text-black">人</span>
@@ -306,13 +427,7 @@ export default function CompanyNewClient() {
         <div className="flex-1 space-y-3">
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => {
-                // TODO: モーダルまたはドロップダウンで業種選択
-                const selectedIndustry = prompt('業種を選択してください', 'コンサルティング');
-                if (selectedIndustry && industryOptions.includes(selectedIndustry)) {
-                  addIndustry(selectedIndustry);
-                }
-              }}
+              onClick={() => setIsIndustryModalOpen(true)}
               className="px-8 py-3 border border-black rounded-lg flex items-center gap-2 hover:bg-gray-50 text-base"
             >
               <span className="text-base font-bold">+</span>
@@ -341,7 +456,7 @@ export default function CompanyNewClient() {
         <textarea
           value={formData.businessContent}
           onChange={(e) => setFormData(prev => ({ ...prev, businessContent: e.target.value }))}
-          placeholder="テキストが入ります。&#10;テキストが入ります。&#10;テキストが入ります。"
+          placeholder="当社はテクノロジーを活用したソリューションを提供する会社です。&#10;主な事業内容として、ソフトウェア開発、システムインテグレーション、&#10;コンサルティングサービスを行っています。"
           rows={4}
           className="flex-1 px-3 py-3 border border-black text-base resize-none"
         />
@@ -371,7 +486,7 @@ export default function CompanyNewClient() {
             type="text"
             value={formData.address}
             onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            placeholder="千代田区〜〜〜〜〜〜"
+            placeholder="東京都千代田区丸の内1-1-1"
             className="w-full px-3 py-3 border border-black text-base"
           />
         </div>
@@ -402,15 +517,31 @@ export default function CompanyNewClient() {
         <label className="block text-base font-bold text-black w-40 mt-2">イメージ画像</label>
         <div className="flex gap-4">
           {[0, 1, 2].map(index => (
-            <div key={index} className="w-48 h-32 bg-gray-400 flex items-center justify-center cursor-pointer">
-              <div className="text-center">
-                <div className="text-sm font-bold text-white">
-                  {formData.images[index] ? '画像を' : '画像を'}
-                </div>
-                <div className="text-sm font-bold text-white">
-                  {formData.images[index] ? '変更' : '追加'}
-                </div>
+            <div key={index} className="relative">
+              <div
+                className="w-48 h-32 bg-gray-400 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
+                onClick={() => document.getElementById(`image-file-input-${index}`)?.click()}
+              >
+                {formData.images[index] ? (
+                  <img
+                    src={URL.createObjectURL(formData.images[index])}
+                    alt={`イメージ画像 ${index + 1}`}
+                    className="w-48 h-32 object-cover"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-white">画像を</div>
+                    <div className="text-sm font-bold text-white">追加</div>
+                  </div>
+                )}
               </div>
+              <input
+                id={`image-file-input-${index}`}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'images', index)}
+                className="hidden"
+              />
             </div>
           ))}
         </div>
@@ -428,13 +559,13 @@ export default function CompanyNewClient() {
                 type="text"
                 value={attraction.title}
                 onChange={(e) => updateAttraction(index, 'title', e.target.value)}
-                placeholder="企業の魅力テキストが入ります"
+                placeholder="スタートアップ企業"
                 className="w-full px-3 py-3 border border-black text-base"
               />
               <textarea
                 value={attraction.description}
                 onChange={(e) => updateAttraction(index, 'description', e.target.value)}
-                placeholder="企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。"
+                placeholder="私たちはベンチャー企業として、革新的なテクノロジーと柔軟な働き方で成長を続けています。&#10;代表との距離が近く、裁量を持って働ける環境で、自分のアイデアを形にできます。&#10;福利厚生も充実しており、ワークライフバランスを大切にしています。"
                 rows={5}
                 className="w-full px-3 py-3 border border-black text-base resize-none"
               />
@@ -464,6 +595,33 @@ export default function CompanyNewClient() {
           確認する
         </button>
       </div>
+
+      {/* 業種選択モーダル */}
+      {isIndustryModalOpen && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+        >
+          <div className="bg-white p-6 rounded-lg max-w-4xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">業種を選択</h2>
+              <button
+                onClick={() => setIsIndustryModalOpen(false)}
+                className="text-2xl font-bold text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+            <IndustryModal
+              selectedIndustries={formData.industries}
+              onIndustriesChange={(industries) => {
+                handleIndustryChange(industries);
+                setIsIndustryModalOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,19 +3,19 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-interface CompanyPlanChangeCompleteModalProps {
+interface CompanyScoutLimitChangeCompleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   companyName: string;
-  newPlan: string;
+  newLimit: number;
 }
 
-export default function CompanyPlanChangeCompleteModal({
+export default function CompanyScoutLimitChangeCompleteModal({
   isOpen,
   onClose,
   companyName,
-  newPlan,
-}: CompanyPlanChangeCompleteModalProps) {
+  newLimit,
+}: CompanyScoutLimitChangeCompleteModalProps) {
   const router = useRouter();
 
   const handleGoToCompanyDetail = () => {
@@ -47,13 +47,16 @@ export default function CompanyPlanChangeCompleteModal({
           {/* タイトル */}
           <div className="text-center">
             <h2 className="text-2xl font-bold text-black mb-4">
-              プラン変更完了
+              スカウト上限数変更完了
             </h2>
             <p className="text-base font-bold text-black mb-2">
               {companyName}
             </p>
+            <p className="text-base font-bold text-black mb-2">
+              スカウト上限数：{newLimit}件
+            </p>
             <p className="text-base font-bold text-black">
-              プラン変更が完了しました。
+              スカウト上限数の変更が完了しました。
             </p>
           </div>
 

@@ -8,8 +8,10 @@ interface CompanyFormData {
   companyId: string;
   plan: string;
   companyName: string;
-  companyUrl: string;
-  website: string;
+  urls: Array<{
+    title: string;
+    url: string;
+  }>;
   iconImage: File | null;
   representativePosition: string;
   representativeName: string;
@@ -101,14 +103,19 @@ export default function CompanyConfirmClient({ companyData }: CompanyConfirmClie
         <div className="flex items-start gap-6 py-3">
           <label className="block text-base font-bold text-black w-40 mt-2">URL</label>
           <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="text-base text-black">{companyData.companyUrl}</div>
-              <div className="text-base text-black">{companyData.website}</div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-base text-black">{companyData.companyUrl}</div>
-              <div className="text-base text-black">{companyData.website}</div>
-            </div>
+            {companyData.urls && companyData.urls.length > 0 ? (
+              companyData.urls.map((url, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="text-base text-black">{url.title}</div>
+                  <div className="text-base text-black">https://{url.url}</div>
+                </div>
+              ))
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="text-base text-black">タイトルテキストが入ります</div>
+                <div className="text-base text-black">https://---------</div>
+              </div>
+            )}
           </div>
         </div>
 

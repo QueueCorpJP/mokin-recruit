@@ -14,6 +14,7 @@ import CompanyWithdrawalCompleteModal from '@/components/admin/CompanyWithdrawal
 import CompanyPlanChangeModal from '@/components/admin/CompanyPlanChangeModal';
 import CompanyPlanChangeCompleteModal from '@/components/admin/CompanyPlanChangeCompleteModal';
 import CompanyScoutLimitChangeModal from '@/components/admin/CompanyScoutLimitChangeModal';
+import CompanyScoutLimitChangeCompleteModal from '@/components/admin/CompanyScoutLimitChangeCompleteModal';
 
 interface CompanyDetailClientProps {
   company: CompanyEditData;
@@ -51,6 +52,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const [planChangeCompleteModalOpen, setPlanChangeCompleteModalOpen] = useState(false);
   const [newSelectedPlan, setNewSelectedPlan] = useState('');
   const [scoutLimitChangeModalOpen, setScoutLimitChangeModalOpen] = useState(false);
+  const [scoutLimitChangeCompleteModalOpen, setScoutLimitChangeCompleteModalOpen] = useState(false);
+  const [newSelectedScoutLimit, setNewSelectedScoutLimit] = useState(0);
 
   const handleEdit = () => {
     router.push(`/admin/company/${company.id}/edit`);
@@ -240,12 +243,21 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const handleScoutLimitChangeConfirm = (newLimit: number) => {
     // TODO: 実際のスカウト上限数変更処理を実装
     console.log('Changing scout limit for company:', company.company_name, 'to', newLimit);
-    alert(`${company.company_name}のスカウト上限数を${newLimit}件に変更しました（デバッグモード）`);
+
+    // スカウト上限数変更確認モーダルを閉じて、完了モーダルを表示
+    setNewSelectedScoutLimit(newLimit);
     setScoutLimitChangeModalOpen(false);
+    setScoutLimitChangeCompleteModalOpen(true);
   };
 
   const handleScoutLimitChangeCancel = () => {
     setScoutLimitChangeModalOpen(false);
+  };
+
+  const handleScoutLimitChangeCompleteClose = () => {
+    setScoutLimitChangeCompleteModalOpen(false);
+    setNewSelectedScoutLimit(0);
+    // 完了後に現在のページに留まる（企業詳細ページ）
   };
 
   return (
@@ -579,11 +591,15 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                               handleRoleChangeClick('名前 名前', `user-${index}`, role, e.target.value);
                             }
                           }}
-                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer"
-                          style={{ fontFamily: 'Inter, sans-serif' }}
+                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundSize: '1.5rem 1.5rem'
+                          }}
                         >
-                          <option value="管理者">管理者 ▼</option>
-                          <option value="スカウト担当者">スカウト担当者 ▼</option>
+                          <option value="管理者">管理者</option>
+                          <option value="スカウト担当者">スカウト担当者</option>
                         </select>
                       )}
                       <button
@@ -640,11 +656,15 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                               handleRoleChangeClick('名前 名前', `user-${index}`, role, e.target.value);
                             }
                           }}
-                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer"
-                          style={{ fontFamily: 'Inter, sans-serif' }}
+                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundSize: '1.5rem 1.5rem'
+                          }}
                         >
-                          <option value="管理者">管理者 ▼</option>
-                          <option value="スカウト担当者">スカウト担当者 ▼</option>
+                          <option value="管理者">管理者</option>
+                          <option value="スカウト担当者">スカウト担当者</option>
                         </select>
                       )}
                       <button
@@ -849,6 +869,14 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         onClose={handleScoutLimitChangeCancel}
         onConfirm={handleScoutLimitChangeConfirm}
         currentLimit={company.contract_plan?.max_job_postings || 10}
+      />
+
+      {/* スカウト上限数変更完了モーダル */}
+      <CompanyScoutLimitChangeCompleteModal
+        isOpen={scoutLimitChangeCompleteModalOpen}
+        onClose={handleScoutLimitChangeCompleteClose}
+        companyName={company.company_name}
+        newLimit={newSelectedScoutLimit}
       />
     </div>
   );

@@ -105,6 +105,80 @@ export default function CompanyClient({ companies }: Props) {
     }
   };
 
+  const handleCsvDownload = () => {
+    // CSVヘッダー
+    const headers = [
+      '企業ID',
+      '企業名',
+      'プラン',
+      '所在地',
+      '最終ログイン日時',
+      '最新ログイン者',
+      '企業グループ',
+      '作成日時'
+    ];
+
+    // CSVデータを生成
+    const csvData = paginated.map(company => [
+      company.id,
+      company.company_name,
+      company.plan === 'standard' ? 'スタンダード' : 'ベーシック',
+      company.headquarters_address || 'N/A',
+      company.last_login
+        ? new Date(company.last_login).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).replace(/\//g, '/')
+        : 'N/A',
+      company.last_login_user || 'N/A',
+      company.group_names || 'N/A',
+      new Date(company.created_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).replace(/\//g, '/')
+    ]);
+
+    // CSV形式に変換
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row =>
+        row.map(cell => {
+          // カンマやダブルクォートを含む場合はダブルクォートで囲む
+          if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+            return `"${cell.replace(/"/g, '""')}"`;
+          }
+          return cell;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // BOMを追加してExcelで正しく表示されるようにする
+    const bom = '\uFEFF';
+    const csvWithBom = bom + csvContent;
+
+    // ダウンロード
+    const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `企業アカウント一覧_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // メモリ解放
+    URL.revokeObjectURL(url);
+  };
+
   const columns = [
     {
       key: 'last_login',
@@ -165,8 +239,8 @@ export default function CompanyClient({ companies }: Props) {
             >
               新規企業追加
             </button>
-            <button 
-              onClick={() => alert('CSVダウンロード機能は未実装です')}
+            <button
+              onClick={handleCsvDownload}
               className="px-6 py-3 bg-white text-black border border-black rounded-3xl text-sm font-bold hover:bg-gray-50 transition-colors whitespace-nowrap"
             >
               CSVダウンロード

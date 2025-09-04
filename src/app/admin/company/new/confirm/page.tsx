@@ -7,8 +7,10 @@ const dummyCompanyData = {
   companyId: '企業IDが入ります',
   plan: 'プラン名が入ります',
   companyName: '株式企業Company',
-  companyUrl: 'タイトルテキストが入ります',
-  website: 'https://---------',
+  urls: [
+    { title: 'コーポレートサイト', url: 'example.com' },
+    { title: '採用ページ', url: 'recruit.example.com' }
+  ],
   iconImage: null,
   representativePosition: '代表取締役',
   representativeName: '山田 太郎',
