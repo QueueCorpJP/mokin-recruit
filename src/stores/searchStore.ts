@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface JobType {
   id: string;
@@ -178,8 +177,7 @@ const initialState: SearchFormData = {
 };
 
 export const useSearchStore = create<SearchState>()(
-  persist(
-    subscribeWithSelector((set, get) => ({
+  subscribeWithSelector((set, get) => ({
     // Initial state
     ...initialState,
     
@@ -208,36 +206,8 @@ export const useSearchStore = create<SearchState>()(
     // Form field setters
     setSearchGroup: (value) => set({ searchGroup: value }),
     setKeyword: (value) => set({ keyword: value }),
-    setExperienceJobTypes: (jobTypes) => {
-      console.log('=== searchStore setExperienceJobTypes START ===');
-      console.log('searchStore: setExperienceJobTypes called with:', jobTypes);
-      console.log('searchStore: setExperienceJobTypes jobTypes type:', typeof jobTypes);
-      console.log('searchStore: setExperienceJobTypes jobTypes length:', jobTypes?.length);
-      console.log('searchStore: setExperienceJobTypes jobTypes JSON:', JSON.stringify(jobTypes, null, 2));
-      console.log('searchStore: Current experienceJobTypes before set:', get().experienceJobTypes);
-      console.log('searchStore: Current experienceJobTypes JSON before set:', JSON.stringify(get().experienceJobTypes, null, 2));
-      
-      set({ experienceJobTypes: jobTypes });
-      
-      console.log('searchStore: After set, immediate check:', get().experienceJobTypes);
-      console.log('searchStore: After set, immediate check JSON:', JSON.stringify(get().experienceJobTypes, null, 2));
-      console.log('=== searchStore setExperienceJobTypes END ===');
-    },
-    setExperienceIndustries: (industries) => {
-      console.log('=== searchStore setExperienceIndustries START ===');
-      console.log('searchStore: setExperienceIndustries called with:', industries);
-      console.log('searchStore: setExperienceIndustries industries type:', typeof industries);
-      console.log('searchStore: setExperienceIndustries industries length:', industries?.length);
-      console.log('searchStore: setExperienceIndustries industries JSON:', JSON.stringify(industries, null, 2));
-      console.log('searchStore: Current experienceIndustries before set:', get().experienceIndustries);
-      console.log('searchStore: Current experienceIndustries JSON before set:', JSON.stringify(get().experienceIndustries, null, 2));
-      
-      set({ experienceIndustries: industries });
-      
-      console.log('searchStore: After set, immediate check:', get().experienceIndustries);
-      console.log('searchStore: After set, immediate check JSON:', JSON.stringify(get().experienceIndustries, null, 2));
-      console.log('=== searchStore setExperienceIndustries END ===');
-    },
+    setExperienceJobTypes: (jobTypes) => set({ experienceJobTypes: jobTypes }),
+    setExperienceIndustries: (industries) => set({ experienceIndustries: industries }),
     updateExperienceJobTypeYears: (id, experienceYears) => set((state) => ({
       experienceJobTypes: state.experienceJobTypes.map(jobType =>
         jobType.id === id ? { ...jobType, experienceYears } : jobType
@@ -377,48 +347,5 @@ export const useSearchStore = create<SearchState>()(
       
       return params;
     },
-  })),
-    {
-      name: 'search-store',
-      storage: createJSONStorage(() => {
-        if (typeof window !== 'undefined') {
-          return localStorage;
-        }
-        return {
-          getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
-        };
-      }),
-      partialize: (state) => ({
-        searchGroup: state.searchGroup,
-        keyword: state.keyword,
-        experienceJobTypes: state.experienceJobTypes,
-        experienceIndustries: state.experienceIndustries,
-        jobTypeAndSearch: state.jobTypeAndSearch,
-        industryAndSearch: state.industryAndSearch,
-        currentSalaryMin: state.currentSalaryMin,
-        currentSalaryMax: state.currentSalaryMax,
-        currentCompany: state.currentCompany,
-        education: state.education,
-        englishLevel: state.englishLevel,
-        otherLanguage: state.otherLanguage,
-        otherLanguageLevel: state.otherLanguageLevel,
-        qualifications: state.qualifications,
-        ageMin: state.ageMin,
-        ageMax: state.ageMax,
-        desiredJobTypes: state.desiredJobTypes,
-        desiredIndustries: state.desiredIndustries,
-        desiredSalaryMin: state.desiredSalaryMin,
-        desiredSalaryMax: state.desiredSalaryMax,
-        desiredLocations: state.desiredLocations,
-        transferTime: state.transferTime,
-        workStyles: state.workStyles,
-        selectionStatus: state.selectionStatus,
-        similarCompanyIndustry: state.similarCompanyIndustry,
-        similarCompanyLocation: state.similarCompanyLocation,
-        lastLoginMin: state.lastLoginMin,
-      }),
-    }
-  )
+  }))
 );

@@ -24,10 +24,10 @@ export default function IndustrySelectModal({
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+  // モーダルが開かれるたびに初期化
   useEffect(() => {
-    // モーダルが開いた時のみ初期化
-    if (isOpen && selectedIndustries.length === 0 && initialSelected.length >= 0) {
-      setSelectedIndustries(initialSelected);
+    if (isOpen) {
+      setSelectedIndustries([...initialSelected]);
     }
   }, [isOpen]);
 

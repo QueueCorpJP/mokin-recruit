@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/Pagination';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
-import { getCandidatesFromDatabase, loadSearchParamsToStore } from './actions';
+import { getCandidatesFromDatabase, loadSearchParamsToStore, searchCandidatesWithConditions } from './actions';
 import { useSearchStore } from '../../../../stores/searchStore';
 import ExperienceSearchConditionForm from '../components/ExperienceSearchConditionForm';
 import SelectableTagWithYears from '../components/SelectableTagWithYears';
+import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
+import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
@@ -57,10 +60,130 @@ function formatRelativeTime(date: Date): string {
 }
 
 
+// 検索条件から表示用テキストを生成する関数
+function generateSearchConditionText(searchStore: any): { title: string; description: string } {
+  const conditions: string[] = [];
+  
+  // デバッグ用ログ
+  console.log('SearchStore values:', {
+    keyword: searchStore.keyword,
+    experienceJobTypes: searchStore.experienceJobTypes,
+    experienceIndustries: searchStore.experienceIndustries,
+    currentSalaryMin: searchStore.currentSalaryMin,
+    currentSalaryMax: searchStore.currentSalaryMax,
+    workLocations: searchStore.workLocations
+  });
+  
+  // キーワード検索
+  if (searchStore.keyword && searchStore.keyword.trim() && searchStore.keyword !== 'undefined') {
+    conditions.push(`キーワード検索：${searchStore.keyword}`);
+  }
+  
+  // 経験職種
+  if (searchStore.experienceJobTypes && searchStore.experienceJobTypes.length > 0) {
+    const jobTypeTexts = searchStore.experienceJobTypes
+      .slice(0, 3) // 最大3つまで表示
+      .filter((job: any) => job && job.name && job.name !== 'undefined')
+      .map((job: any) => `${job.name}${job.experienceYears && job.experienceYears !== 'undefined' ? ` ${job.experienceYears}年` : ''}`);
+    if (jobTypeTexts.length > 0) {
+      const moreText = searchStore.experienceJobTypes.length > 3 ? '他' : '';
+      conditions.push(`経験職種：${jobTypeTexts.join('/')}${moreText}`);
+    }
+  }
+  
+  // 経験業種
+  if (searchStore.experienceIndustries && searchStore.experienceIndustries.length > 0) {
+    const industryTexts = searchStore.experienceIndustries
+      .slice(0, 3)
+      .filter((industry: any) => industry && industry.name && industry.name !== 'undefined')
+      .map((industry: any) => `${industry.name}${industry.experienceYears && industry.experienceYears !== 'undefined' ? ` ${industry.experienceYears}年` : ''}`);
+    if (industryTexts.length > 0) {
+      const moreText = searchStore.experienceIndustries.length > 3 ? '他' : '';
+      conditions.push(`経験業種：${industryTexts.join('/')}${moreText}`);
+    }
+  }
+  
+  // 現在の年収
+  const hasValidSalaryMin = searchStore.currentSalaryMin && searchStore.currentSalaryMin !== 'undefined' && searchStore.currentSalaryMin !== '';
+  const hasValidSalaryMax = searchStore.currentSalaryMax && searchStore.currentSalaryMax !== 'undefined' && searchStore.currentSalaryMax !== '';
+  if (hasValidSalaryMin || hasValidSalaryMax) {
+    const min = hasValidSalaryMin ? `${searchStore.currentSalaryMin}万円` : '';
+    const max = hasValidSalaryMax ? `${searchStore.currentSalaryMax}万円` : '';
+    const separator = min && max ? '〜' : '';
+    conditions.push(`現在の年収：${min}${separator}${max}`);
+  }
+  
+  // 希望職種
+  if (searchStore.desiredJobTypes && searchStore.desiredJobTypes.length > 0) {
+    const jobTypeTexts = searchStore.desiredJobTypes
+      .slice(0, 3)
+      .filter((job: any) => job && job.name && job.name !== 'undefined')
+      .map((job: any) => job.name);
+    if (jobTypeTexts.length > 0) {
+      const moreText = searchStore.desiredJobTypes.length > 3 ? '他' : '';
+      conditions.push(`希望職種：${jobTypeTexts.join('/')}${moreText}`);
+    }
+  }
+  
+  // 希望業界
+  if (searchStore.desiredIndustries && searchStore.desiredIndustries.length > 0) {
+    const industryTexts = searchStore.desiredIndustries
+      .slice(0, 3)
+      .filter((industry: any) => industry && industry.name && industry.name !== 'undefined')
+      .map((industry: any) => industry.name);
+    if (industryTexts.length > 0) {
+      const moreText = searchStore.desiredIndustries.length > 3 ? '他' : '';
+      conditions.push(`希望業界：${industryTexts.join('/')}${moreText}`);
+    }
+  }
+
+  // 年齢
+  const hasValidAgeMin = searchStore.ageMin && searchStore.ageMin !== 'undefined' && searchStore.ageMin !== '';
+  const hasValidAgeMax = searchStore.ageMax && searchStore.ageMax !== 'undefined' && searchStore.ageMax !== '';
+  if (hasValidAgeMin || hasValidAgeMax) {
+    const min = hasValidAgeMin ? `${searchStore.ageMin}歳` : '';
+    const max = hasValidAgeMax ? `${searchStore.ageMax}歳` : '';
+    const separator = min && max ? '〜' : '';
+    conditions.push(`年齢：${min}${separator}${max}`);
+  }
+
+  // 勤務地
+  if (searchStore.workLocations && searchStore.workLocations.length > 0) {
+    const validLocations = searchStore.workLocations.filter((loc: any) => loc && loc !== 'undefined');
+    if (validLocations.length > 0) {
+      const locationText = validLocations.length > 2 
+        ? `${validLocations.slice(0, 2).join('/')}他`
+        : validLocations.join('/');
+      conditions.push(`勤務地：${locationText}`);
+    }
+  }
+  
+  // 条件が何もない場合
+  if (conditions.length === 0) {
+    return {
+      title: '条件を指定して検索',
+      description: '検索条件を指定してください'
+    };
+  }
+  
+  // 最初の条件をタイトル、残りを説明にする
+  return {
+    title: conditions[0],
+    description: conditions.slice(1).join('、')
+  };
+}
+
 // 候補者データを取得する関数
 
-export default function SearchClient() {
+interface SearchClientProps {
+  initialCandidates?: CandidateData[];
+  initialSearchParams?: any;
+  initialCompanyGroups?: { value: string; label: string }[];
+}
+
+export default function SearchClient({ initialCandidates = [], initialSearchParams, initialCompanyGroups = [] }: SearchClientProps = {}) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const searchStore = useSearchStore();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
@@ -75,19 +198,235 @@ export default function SearchClient() {
     lastLogin: false,
     working: false,
   });
+  const [companyGroups, setCompanyGroups] = useState<{ value: string; label: string }[]>(initialCompanyGroups);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // ページネーション関連のstate
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12); // 12件に戻す
+  
+  // フィルター処理
+  const filteredCandidates = useMemo(() => {
+    if (!candidates || candidates.length === 0) {
+      return [];
+    }
+    
+    return candidates.filter((candidate) => {
+      // ピックアップフィルター
+      if (filters.pickup && !candidate.isPickup) {
+        return false;
+      }
+      
+      // 新規ユーザーフィルター（例：1週間以内に登録）
+      if (filters.newUser) {
+        if (!candidate.lastLogin.includes('日前') && !candidate.lastLogin.includes('時間前')) {
+          return false;
+        }
+      }
+      
+      // 最終ログインフィルター（例：1日以内）
+      if (filters.lastLogin) {
+        if (!candidate.lastLogin.includes('時間前') && !candidate.lastLogin.includes('1日前')) {
+          return false;
+        }
+      }
+      
+      // 在職中フィルター
+      if (filters.working) {
+        const latestCareer = candidate.careerHistory?.[0];
+        if (!latestCareer || !latestCareer.period.includes('〜現在')) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [candidates, filters.pickup, filters.newUser, filters.lastLogin, filters.working]);
+
+  // ソート処理
+  const sortedCandidates = useMemo(() => {
+    const candidatesToSort = [...filteredCandidates];
+    
+    switch (selectedSort) {
+      case 'featured':
+        // 注目順: ピックアップ → 注目 → その他
+        return candidatesToSort.sort((a, b) => {
+          if (a.isPickup && !b.isPickup) return -1;
+          if (!a.isPickup && b.isPickup) return 1;
+          if (a.isAttention && !b.isAttention) return -1;
+          if (!a.isAttention && b.isAttention) return 1;
+          return 0;
+        });
+        
+      case 'newest':
+        // 新着順: IDが大きい（新しい）順
+        return candidatesToSort.sort((a, b) => b.id - a.id);
+        
+      case 'updated':
+        // 更新順: lastLoginが新しい順
+        return candidatesToSort.sort((a, b) => {
+          const parseLastLogin = (loginStr: string) => {
+            if (loginStr.includes('時間前')) {
+              const hours = parseInt(loginStr.replace('時間前', ''));
+              return new Date(Date.now() - hours * 60 * 60 * 1000);
+            }
+            if (loginStr.includes('日前')) {
+              const days = parseInt(loginStr.replace('日前', ''));
+              return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+            }
+            if (loginStr.includes('週間前')) {
+              const weeks = parseInt(loginStr.replace('週間前', ''));
+              return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
+            }
+            // 日本語の日付形式 "2024年1月15日" を解析
+            const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (dateMatch) {
+              return new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
+            }
+            return new Date(0); // fallback
+          };
+          
+          const dateA = parseLastLogin(a.lastLogin);
+          const dateB = parseLastLogin(b.lastLogin);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+      case 'lastLogin':
+        // 最終ログイン日順: lastLoginが新しい順
+        return candidatesToSort.sort((a, b) => {
+          const parseLastLogin = (loginStr: string) => {
+            if (loginStr.includes('時間前')) {
+              const hours = parseInt(loginStr.replace('時間前', ''));
+              return new Date(Date.now() - hours * 60 * 60 * 1000);
+            }
+            if (loginStr.includes('日前')) {
+              const days = parseInt(loginStr.replace('日前', ''));
+              return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+            }
+            if (loginStr.includes('週間前')) {
+              const weeks = parseInt(loginStr.replace('週間前', ''));
+              return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
+            }
+            // 日本語の日付形式 "2024年1月15日" を解析
+            const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (dateMatch) {
+              return new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
+            }
+            return new Date(0); // fallback
+          };
+          
+          const dateA = parseLastLogin(a.lastLogin);
+          const dateB = parseLastLogin(b.lastLogin);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+      default:
+        return candidatesToSort;
+    }
+  }, [filteredCandidates, selectedSort]);
+
+  // ページネーション計算
+  const totalPages = Math.ceil(sortedCandidates.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCandidates = sortedCandidates.slice(startIndex, endIndex);
+
+  // 検索条件表示テキスト生成 - searchStoreの値が変更されたら再計算
+  const searchConditionText = useMemo(() => {
+    return generateSearchConditionText(searchStore);
+  }, [
+    searchStore.keyword,
+    searchStore.experienceJobTypes,
+    searchStore.experienceIndustries,
+    searchStore.currentSalaryMin,
+    searchStore.currentSalaryMax,
+    searchStore.workLocations,
+    searchStore.desiredJobTypes,
+    searchStore.desiredIndustries,
+    searchStore.ageMin,
+    searchStore.ageMax,
+    searchStore.lastLoginMin,
+    searchStore.lastLoginMax
+  ]);
+
+  // 検索実行ハンドラー
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setCurrentPage(1); // ページを最初に戻す
+      
+      // 検索条件を構築
+      const searchConditions = {
+        keyword: searchStore.keyword,
+        experienceJobTypes: searchStore.experienceJobTypes,
+        experienceIndustries: searchStore.experienceIndustries,
+        currentSalaryMin: searchStore.currentSalaryMin,
+        currentSalaryMax: searchStore.currentSalaryMax,
+        ageMin: searchStore.ageMin,
+        ageMax: searchStore.ageMax,
+        desiredJobTypes: searchStore.desiredJobTypes,
+        desiredIndustries: searchStore.desiredIndustries,
+        desiredLocations: searchStore.desiredLocations,
+        education: searchStore.education,
+        englishLevel: searchStore.englishLevel,
+        qualifications: searchStore.qualifications,
+      };
+      
+      const results = await searchCandidatesWithConditions(searchConditions);
+      setCandidates(results);
+      
+      // 検索ボックスを閉じる
+      setIsSearchBoxOpen(false);
+      
+      // ページトップにスクロール
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+    } catch (err) {
+      setError('検索に失敗しました。もう一度お試しください。');
+      console.error('Search error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // Hydration完了のマーク
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // 初期検索パラメータを適用
+  useEffect(() => {
+    if (initialSearchParams && initialSearchParams.searchGroup) {
+      searchStore.setSearchGroup(initialSearchParams.searchGroup);
+    }
+  }, [initialSearchParams]);
 
   // 初期データ読み込み
   useEffect(() => {
-    const loadCandidates = async () => {
+    if (!isHydrated) return;
+    
+    const loadInitialData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getCandidatesFromDatabase();
-        setAllCandidates(data);
-        setCandidates(data);
+        
+        // 初期候補者データを設定
+        if (initialCandidates.length > 0) {
+          setAllCandidates(initialCandidates);
+          setCandidates(initialCandidates);
+        } else {
+          const candidatesData = await getCandidatesFromDatabase();
+          setAllCandidates(candidatesData);
+          setCandidates(candidatesData);
+        }
+        
+        // グループ情報は初期データで設定済み
       } catch (error) {
-        console.error('Failed to load candidates:', error);
-        setError('候補者データの読み込みに失敗しました');
+        console.error('Failed to load initial data:', error);
+        setError('データの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
@@ -95,12 +434,12 @@ export default function SearchClient() {
 
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
-    loadCandidates();
-  }, []);
+    loadInitialData();
+  }, [isHydrated]);
 
   // ストアの状態に基づいて候補者をフィルタリング
   useEffect(() => {
-    if (allCandidates.length === 0) return;
+    if (!isHydrated || allCandidates.length === 0) return;
     
     // 空文字列（「指定なし」）を除外する処理
     const filterEmptyValues = (items: Array<{name: string}>) => 
@@ -131,13 +470,15 @@ export default function SearchClient() {
     console.log('All candidates count:', allCandidates.length);
 
     if (hasSearchConditions) {
-      const filteredCandidates = filterCandidatesByConditions(allCandidates, searchConditions);
-      console.log('Filtered candidates count:', filteredCandidates.length);
-      setCandidates(filteredCandidates);
+      const filtered = filterCandidatesByConditions(allCandidates, searchConditions);
+      console.log('Filtered candidates count:', filtered.length);
+      setCandidates(filtered);
     } else {
       console.log('No search conditions, showing all candidates');
       setCandidates(allCandidates);
     }
+    // フィルタリング後はページを1に戻す
+    setCurrentPage(1);
   }, [
     allCandidates,
     searchStore.experienceJobTypes,
@@ -149,6 +490,7 @@ export default function SearchClient() {
     searchStore.ageMax,
     searchStore.education
   ]);
+
 
   const togglePickup = (id: string | number) => {
     setCandidates((prev) =>
@@ -169,6 +511,17 @@ export default function SearchClient() {
       ),
     );
   };
+
+  // hydration前は基本的なレイアウトのみ表示
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10">
+          <div className="text-white">読み込み中...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -222,11 +575,13 @@ export default function SearchClient() {
                   }}
                 >
                   <strong className="text-[16px] font-medium text-[#323232] tracking-[1.6px] ">
-                    検索条件名テキストが入ります。
+                    {searchConditionText.title}
                   </strong>
-                  <span className="text-[14px] font-medium text-[#323232] tracking-[1.4px] ">
-                    検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名
-                  </span>
+                  {searchConditionText.description && (
+                    <span className="text-[14px] font-medium text-[#323232] tracking-[1.4px] ">
+                      {searchConditionText.description}
+                    </span>
+                  )}
                 </span>
               </div>
               <button className="p-2">
@@ -282,7 +637,7 @@ export default function SearchClient() {
                       <div>
                         <SelectInput
                           value={searchStore.searchGroup}
-                          onChange={(value: string) => {
+                          onChange={(value) => {
                             searchStore.setSearchGroup(value);
                             searchStore.setSearchGroupError('');
                           }}
@@ -294,21 +649,12 @@ export default function SearchClient() {
                               );
                             }
                           }}
+                          className="w-[400px]"
+                          error={searchStore.searchGroupTouched && !!searchStore.searchGroupError}
                           options={[
                             { value: '', label: '未選択' },
-                            {
-                              value: 'group1',
-                              label: 'エンジニア採用グループ',
-                            },
-                            { value: 'group2', label: '営業職採用グループ' },
-                            {
-                              value: 'group3',
-                              label: 'デザイナー採用グループ',
-                            },
-                            { value: 'group4', label: '新卒採用グループ' },
+                            ...companyGroups
                           ]}
-                          placeholder="未選択"
-                          className="w-[400px]"
                         />
                         {searchStore.searchGroupTouched && searchStore.searchGroupError && (
                           <p className="text-[#ff0000] text-[12px] mt-2">
@@ -661,30 +1007,29 @@ export default function SearchClient() {
                           職種を選択
                         </button>
                         {searchStore.desiredJobTypes.length > 0 && (
-                          <div className="flex flex-col items-start gap-2 mt-4">
+                          <div className="flex flex-wrap gap-2 mt-4">
                             {searchStore.desiredJobTypes.map((job) => (
-                              <SelectableTagWithYears
+                              <div
                                 key={job.id}
-                                id={job.id}
-                                name={job.name}
-                                experienceYears={job.experienceYears}
-                                onYearsChange={(id, years) => {
-                                  const updatedJobTypes = searchStore.desiredJobTypes.map(j => 
-                                    j.id === id ? { ...j, experienceYears: years } : j
-                                  );
-                                  searchStore.setDesiredJobTypes(updatedJobTypes);
-                                }}
-                                onRemove={(id) => {
+                                className="inline-flex bg-[#d2f1da] gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                                onClick={() => {
                                   searchStore.setDesiredJobTypes(
                                     searchStore.desiredJobTypes.filter(
-                                      (j) => j.id !== id,
+                                      (j) => j.id !== job.id,
                                     ),
                                   );
                                 }}
-                                openSelectId={openSelectId}
-                                setOpenSelectId={setOpenSelectId}
-                                selectIdPrefix="desired-job"
-                              />
+                              >
+                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  {job.name}
+                                </span>
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                                  <path
+                                    d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                    fill="#0F9058"
+                                  />
+                                </svg>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -712,30 +1057,29 @@ export default function SearchClient() {
                           業種を選択
                         </button>
                         {searchStore.desiredIndustries.length > 0 && (
-                          <div className="flex flex-col items-start gap-2 mt-4">
+                          <div className="flex flex-wrap gap-2 mt-4">
                             {searchStore.desiredIndustries.map((industry) => (
-                              <SelectableTagWithYears
+                              <div
                                 key={industry.id}
-                                id={industry.id}
-                                name={industry.name}
-                                experienceYears={industry.experienceYears}
-                                onYearsChange={(id, years) => {
-                                  const updatedIndustries = searchStore.desiredIndustries.map(i => 
-                                    i.id === id ? { ...i, experienceYears: years } : i
-                                  );
-                                  searchStore.setDesiredIndustries(updatedIndustries);
-                                }}
-                                onRemove={(id) => {
+                                className="inline-flex bg-[#d2f1da] gap-2.5 h-10 items-center justify-center px-6 py-0 rounded-[10px] cursor-pointer"
+                                onClick={() => {
                                   searchStore.setDesiredIndustries(
                                     searchStore.desiredIndustries.filter(
-                                      (i) => i.id !== id,
+                                      (i) => i.id !== industry.id,
                                     ),
                                   );
                                 }}
-                                openSelectId={openSelectId}
-                                setOpenSelectId={setOpenSelectId}
-                                selectIdPrefix="industry"
-                              />
+                              >
+                                <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
+                                  {industry.name}
+                                </span>
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12">
+                                  <path
+                                    d="M0.207031 0.207031C0.482709 -0.0685565 0.929424 -0.0685933 1.20508 0.207031L6.00098 5.00195L10.7949 0.208984C11.0706 -0.0666642 11.5173 -0.0666642 11.793 0.208984C12.0685 0.48464 12.0686 0.931412 11.793 1.20703L6.99902 6L11.793 10.7939L11.8184 10.8203C12.0684 11.0974 12.0599 11.5251 11.793 11.792C11.5259 12.0589 11.0984 12.0667 10.8213 11.8164L10.7949 11.792L6.00098 6.99805L1.20508 11.7939L1.17871 11.8193C0.9016 12.0693 0.473949 12.0608 0.207031 11.7939C-0.0598942 11.527 -0.0683679 11.0994 0.181641 10.8223L0.207031 10.7959L5.00195 6L0.207031 1.20508C-0.0686416 0.929435 -0.0686416 0.482674 0.207031 0.207031Z"
+                                    fill="#0F9058"
+                                  />
+                                </svg>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -1157,7 +1501,7 @@ export default function SearchClient() {
                       variant="green-gradient"
                       size="figma-default"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      onClick={() => {
+                      onClick={async () => {
                         // タッチ済みにしてバリデーションをトリガー
                         searchStore.setSearchGroupTouched(true);
 
@@ -1176,6 +1520,7 @@ export default function SearchClient() {
                           }
                         } else {
                           // 検索実行処理
+                          await handleSearch();
                         }
                       }}
                     >
@@ -1228,9 +1573,10 @@ export default function SearchClient() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={filters.pickup}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, pickup: checked }))
-                    }
+                    onChange={(checked: boolean) => {
+                      setFilters((prev) => ({ ...prev, pickup: checked }));
+                      setCurrentPage(1);
+                    }}
                   />
                   <span
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
@@ -1242,9 +1588,10 @@ export default function SearchClient() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={filters.newUser}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, newUser: checked }))
-                    }
+                    onChange={(checked: boolean) => {
+                      setFilters((prev) => ({ ...prev, newUser: checked }));
+                      setCurrentPage(1);
+                    }}
                   />
                   <span
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
@@ -1256,9 +1603,10 @@ export default function SearchClient() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={filters.lastLogin}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, lastLogin: checked }))
-                    }
+                    onChange={(checked: boolean) => {
+                      setFilters((prev) => ({ ...prev, lastLogin: checked }));
+                      setCurrentPage(1);
+                    }}
                   />
                   <span
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
@@ -1270,9 +1618,10 @@ export default function SearchClient() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     checked={filters.working}
-                    onChange={(checked: boolean) =>
-                      setFilters((prev) => ({ ...prev, working: checked }))
-                    }
+                    onChange={(checked: boolean) => {
+                      setFilters((prev) => ({ ...prev, working: checked }));
+                      setCurrentPage(1);
+                    }}
                   />
                   <span
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
@@ -1293,8 +1642,14 @@ export default function SearchClient() {
                 (sort) => (
                   <button
                     key={sort}
-                    onClick={() => setSelectedSort(sort)}
-                    className={`px-4 py-1 text-[14px] font-bold tracking-[1.4px] transition-colors border solid border-[#EFEFEF] ${
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedSort(sort);
+                      setCurrentPage(1); // ソート変更時にページを最初に戻す
+                    }}
+                    className={`relative px-4 py-1 text-[14px] font-bold tracking-[1.4px] transition-colors border solid border-[#EFEFEF] cursor-pointer select-none ${
                       selectedSort === sort
                         ? 'bg-[#D2F1DA] text-[#0f9058]'
                         : 'bg-[#f9f9f9] text-[#999] hover:bg-[#efefef]'
@@ -1328,7 +1683,7 @@ export default function SearchClient() {
                     fill="#0F9058"
                   />
                 </svg>
-                1〜10件 / 1,000件
+                {sortedCandidates.length > 0 ? `${startIndex + 1}〜${Math.min(endIndex, sortedCandidates.length)}件` : '0件'} / {sortedCandidates.length}件
                 <svg
                   width="8"
                   height="8"
@@ -1351,12 +1706,12 @@ export default function SearchClient() {
               <div className="flex items-center justify-center py-20">
                 <div className="animate-pulse text-gray-500">読み込み中...</div>
               </div>
-            ) : candidates.length === 0 ? (
+            ) : sortedCandidates.length === 0 ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-gray-500">該当する候補者が見つかりませんでした</div>
               </div>
             ) : (
-              candidates.map((candidate) => (
+              paginatedCandidates.map((candidate) => (
               <div
                 key={candidate.id}
                 className={`rounded-[10px] p-6 ${
@@ -1603,7 +1958,7 @@ export default function SearchClient() {
                             className="text-[#323232] text-[12px] font-medium tracking-[1.2px]"
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {candidate.language}／{candidate.languageLevel}
+                            英語／{candidate.languageLevel}
                           </span>
                         </div>
                       </div>
@@ -1769,66 +2124,13 @@ export default function SearchClient() {
           )}
         </div>
 
-          {/* Pagination */}
-          <div className="flex justify-center items-center gap-4 mt-10">
-            {/* Previous Button */}
-            <button className="w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:bg-[#e8f5ec] transition-colors">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="rotate-180"
-              >
-                <path
-                  d="M6 12L10 8L6 4"
-                  stroke="#0f9058"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-
-            {/* Page Numbers */}
-            {[1, 9, 10, 11, 100].map((page) => (
-              <button
-                key={page}
-                className={`w-14 h-14 rounded-[32px] flex items-center justify-center transition-colors ${
-                  page === 10
-                    ? 'bg-[#0f9058] text-white'
-                    : 'border border-[#0f9058] text-[#0f9058] hover:bg-[#e8f5ec]'
-                }`}
-              >
-                <span
-                  className="text-[16px] font-bold tracking-[1.6px]"
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  {page}
-                </span>
-              </button>
-            ))}
-
-            {/* Next Button */}
-            <button className="w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:bg-[#e8f5ec] transition-colors">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M6 12L10 8L6 4"
-                  stroke="#0f9058"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
+          {/* ページネーション */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            className="mt-10"
+          />
         </div>
       </div>
 
@@ -1838,11 +2140,11 @@ export default function SearchClient() {
         onClose={() => searchStore.setIsJobTypeModalOpen(false)}
         onConfirm={(selected) => {
           searchStore.setExperienceJobTypes(
-            selected.map((j) => ({ ...j, experienceYears: '' })),
+            selected.map((name) => ({ id: name, name, experienceYears: '' })),
           );
           searchStore.setIsJobTypeModalOpen(false);
         }}
-        initialSelected={searchStore.experienceJobTypes}
+        initialSelected={searchStore.experienceJobTypes.map(j => j.name)}
         maxSelections={10}
       />
 
@@ -1851,11 +2153,11 @@ export default function SearchClient() {
         onClose={() => searchStore.setIsIndustryModalOpen(false)}
         onConfirm={(selected) => {
           searchStore.setExperienceIndustries(
-            selected.map((i) => ({ ...i, experienceYears: '' })),
+            selected.map((name) => ({ id: name, name, experienceYears: '' })),
           );
           searchStore.setIsIndustryModalOpen(false);
         }}
-        initialSelected={searchStore.experienceIndustries}
+        initialSelected={searchStore.experienceIndustries.map(i => i.name)}
         maxSelections={10}
       />
 
@@ -1863,10 +2165,12 @@ export default function SearchClient() {
         isOpen={searchStore.isDesiredJobTypeModalOpen}
         onClose={() => searchStore.setIsDesiredJobTypeModalOpen(false)}
         onConfirm={(selected) => {
-          searchStore.setDesiredJobTypes(selected);
+          searchStore.setDesiredJobTypes(
+            selected.map((name) => ({ id: name, name }))
+          );
           searchStore.setIsDesiredJobTypeModalOpen(false);
         }}
-        initialSelected={searchStore.desiredJobTypes}
+        initialSelected={searchStore.desiredJobTypes.map(j => j.name)}
         maxSelections={10}
       />
 
@@ -1874,11 +2178,13 @@ export default function SearchClient() {
         isOpen={searchStore.isDesiredIndustryModalOpen}
         onClose={() => searchStore.setIsDesiredIndustryModalOpen(false)}
         onConfirm={(selected) => {
-          searchStore.setDesiredIndustries(selected);
+          searchStore.setDesiredIndustries(
+            selected.map((name) => ({ id: name, name }))
+          );
           searchStore.setIsDesiredIndustryModalOpen(false);
         }}
-        initialSelected={searchStore.desiredIndustries}
-        maxSelections={10}い
+        initialSelected={searchStore.desiredIndustries.map(i => i.name)}
+        maxSelections={10}
       />
 
       <WorkLocationSelectModal
