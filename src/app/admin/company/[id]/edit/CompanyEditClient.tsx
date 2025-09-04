@@ -1,16 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { industryCategories } from '@/app/company/job/types';
 import type { CompanyEditData } from './page';
+import CompanyEditCompleteModal from '@/components/admin/CompanyEditCompleteModal';
+import { updateCompanyData } from './actions';
 
 // フォームデータの型定義
 interface CompanyFormData {
   companyId: string;
   plan: string;
   companyName: string;
-  companyUrl: string;
-  website: string;
+  urls: Array<{
+    title: string;
+    url: string;
+  }>;
   iconImage: File | null;
   representativePosition: string;
   representativeName: string;
@@ -30,19 +36,10 @@ interface CompanyFormData {
   }>;
 }
 
-// 業種のオプション
-const industryOptions = [
-  'IT・インターネット',
-  'コンサルティング', 
-  '製造業',
-  '金融・保険',
-  '商社・流通',
-  'メディア・広告',
-  '不動産・建設',
-  'サービス・レジャー',
-  '医療・福祉',
-  '教育',
-  '官公庁・公社・団体',
+// プランのオプション
+const planOptions = [
+  { value: 'basic', label: 'ベーシック' },
+  { value: 'standard', label: 'スタンダード' },
 ];
 
 // 都道府県のオプション
@@ -53,14 +50,14 @@ const prefectureOptions = [
   '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
   '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
   '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県',
 ];
 
 // 企業フェーズのオプション
 const companyPhaseOptions = [
-  'シード',
-  'アーリー',
-  'ミドル',
+  'スタートアップ',
+  'アーリーステージ',
+  'グロースステージ',
   'レイターステージ',
   '上場企業',
   '大手企業',
@@ -72,13 +69,23 @@ interface CompanyEditClientProps {
 
 export default function CompanyEditClient({ company }: CompanyEditClientProps) {
   const router = useRouter();
-  
+
+  // 業種選択モーダルの状態
+  const [industryModalOpen, setIndustryModalOpen] = useState(false);
+  // 保存完了モーダルの状態
+  const [saveCompleteModalOpen, setSaveCompleteModalOpen] = useState(false);
+  // 保存中の状態
+  const [isSaving, setIsSaving] = useState(false);
+  // 保存エラー
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<CompanyFormData>({
     companyId: company.id,
-    plan: company.contract_plan?.plan_name || '',
+    plan: company.plan || '',
     companyName: company.company_name,
-    companyUrl: '',
-    website: '',
+    urls: [
+      { title: '', url: '' }
+    ],
     iconImage: null,
     representativePosition: company.company_users[0]?.position_title || '',
     representativeName: company.representative_name || '',
@@ -92,10 +99,36 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
     address: company.headquarters_address || '',
     companyPhase: '',
     images: [],
-    attractions: company.appeal_points ? 
+    attractions: company.appeal_points ?
       company.appeal_points.split('\n').map(point => ({ title: point, description: '' })) :
-      [{ title: '', description: '' }, { title: '', description: '' }],
+      [{ title: '', description: '' }],
   });
+
+  // URL管理
+  const addUrl = () => {
+    setFormData(prev => ({
+      ...prev,
+      urls: [...prev.urls, { title: '', url: '' }]
+    }));
+  };
+
+  const removeUrl = (index: number) => {
+    if (formData.urls.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        urls: prev.urls.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const updateUrl = (index: number, field: 'title' | 'url', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      urls: prev.urls.map((url, i) =>
+        i === index ? { ...url, [field]: value } : url
+      )
+    }));
+  };
 
   // 業種の追加・削除
   const addIndustry = (industry: string) => {
@@ -143,14 +176,36 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
     }
   };
 
-  const handleSubmit = () => {
-    // TODO: フォームデータをセッションストレージまたはクエリパラメータで確認画面に渡す
-    console.log('Form submitted:', formData);
-    router.push('/admin/company/new/confirm');
+  const handleSubmit = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const result = await updateCompanyData(company.id, formData);
+
+      if (result.success) {
+        console.log('Company updated successfully:', result.company);
+        // 保存完了モーダルを表示
+        setSaveCompleteModalOpen(true);
+      } else {
+        setSaveError(result.error || '保存に失敗しました');
+        console.error('Company update failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveError('保存中にエラーが発生しました');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
     router.push('/admin/company');
+  };
+
+  const handleSaveCompleteClose = () => {
+    setSaveCompleteModalOpen(false);
+    // モーダルを閉じるのみ - ページ遷移はモーダルのボタンで行う
   };
 
   return (
@@ -167,7 +222,18 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
       {/* プラン */}
       <div className="flex items-center gap-6 py-3">
         <label className="block text-base font-bold text-black w-40">プラン</label>
-        <div className="text-base text-black">{formData.plan || 'プラン情報なし'}</div>
+        <select
+          value={formData.plan}
+          onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
+          className="flex-1 px-3 py-3 border border-black text-base bg-white"
+        >
+          <option value="">プランを選択してください</option>
+          {planOptions.map((plan) => (
+            <option key={plan.value} value={plan.value}>
+              {plan.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <hr className="border-gray-300" />
@@ -179,8 +245,8 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
           type="text"
           value={formData.companyName}
           onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
-          placeholder="株式企業Company"
-          className="flex-1 px-3 py-3 border border-black text-base"
+          placeholder="株式会社サンプル企業"
+          className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
         />
       </div>
 
@@ -190,19 +256,46 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
       <div className="flex items-start gap-6 py-3">
         <label className="block text-base font-bold text-black w-40 mt-2">URL</label>
         <div className="flex-1 space-y-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={formData.companyUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, companyUrl: e.target.value }))}
-              placeholder="タイトルを入力"
-              className="flex-1 px-3 py-3 border border-black text-base"
-            />
-            <div className="flex items-center px-3 py-3 border border-black bg-white text-base">
-              https://
+          {formData.urls.map((url, index) => (
+            <div key={index} className="flex items-center gap-3">
+              {/* 削除ボタン（2行目以降のみ表示） */}
+              {formData.urls.length > 1 && (
+                <button
+                  onClick={() => removeUrl(index)}
+                  className="text-2xl font-bold text-black hover:text-gray-600 px-2"
+                >
+                  ×
+                </button>
+              )}
+              {/* タイトル入力 */}
+              <div className="flex items-center px-3.5 py-3 bg-white border border-black w-60">
+                <input
+                  type="text"
+                  value={url.title}
+                  onChange={(e) => updateUrl(index, 'title', e.target.value)}
+                  placeholder="タイトルを入力"
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </div>
+
+              {/* URL入力 */}
+              <div className="flex items-center px-3.5 py-3 bg-white border border-black flex-1">
+                <input
+                  type="text"
+                  value={url.url}
+                  onChange={(e) => updateUrl(index, 'url', e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </div>
             </div>
-          </div>
-          <button className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+          ))}
+          <button
+            onClick={addUrl}
+            className="w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+          >
             <span className="text-white text-sm">+</span>
           </button>
         </div>
@@ -231,14 +324,14 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             type="text"
             value={formData.representativePosition}
             onChange={(e) => setFormData(prev => ({ ...prev, representativePosition: e.target.value }))}
-            placeholder="代表者役職名を入力"
+            placeholder="代表取締役社長"
             className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
           />
           <input
             type="text"
             value={formData.representativeName}
             onChange={(e) => setFormData(prev => ({ ...prev, representativeName: e.target.value }))}
-            placeholder="代表者名を入力"
+            placeholder="山田太郎"
             className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
           />
         </div>
@@ -254,7 +347,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             type="text"
             value={formData.establishedYear}
             onChange={(e) => setFormData(prev => ({ ...prev, establishedYear: e.target.value }))}
-            placeholder="2020"
+            placeholder="2010"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <span className="text-base text-black">年</span>
@@ -271,7 +364,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             type="text"
             value={formData.capital}
             onChange={(e) => setFormData(prev => ({ ...prev, capital: e.target.value }))}
-            placeholder="100"
+            placeholder="500"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <div className="flex items-center px-3 py-3 border border-black">
@@ -302,7 +395,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             type="text"
             value={formData.employeeCount}
             onChange={(e) => setFormData(prev => ({ ...prev, employeeCount: e.target.value }))}
-            placeholder="500"
+            placeholder="150"
             className="w-24 px-3 py-3 border border-black text-base text-center"
           />
           <span className="text-base text-black">人</span>
@@ -317,13 +410,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <div className="flex-1 space-y-3">
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => {
-                // TODO: モーダルまたはドロップダウンで業種選択
-                const selectedIndustry = prompt('業種を選択してください', 'コンサルティング');
-                if (selectedIndustry && industryOptions.includes(selectedIndustry)) {
-                  addIndustry(selectedIndustry);
-                }
-              }}
+              onClick={() => setIndustryModalOpen(true)}
               className="px-8 py-3 border border-black rounded-lg flex items-center gap-2 hover:bg-gray-50 text-base"
             >
               <span className="text-base font-bold">+</span>
@@ -352,9 +439,9 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <textarea
           value={formData.businessContent}
           onChange={(e) => setFormData(prev => ({ ...prev, businessContent: e.target.value }))}
-          placeholder="テキストが入ります。&#10;テキストが入ります。&#10;テキストが入ります。"
+          placeholder="当社では、革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。&#10;具体的には、Webアプリケーション開発、コンサルティング、システムインテグレーションなどのサービスを提供しております。"
           rows={4}
-          className="flex-1 px-3 py-3 border border-black text-base resize-none"
+          className="flex-1 px-3 py-3 border border-black text-base resize-none placeholder-gray-400"
         />
       </div>
 
@@ -372,7 +459,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
               onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
               className="px-3 py-3 border border-black text-base bg-white"
             >
-              <option value="">都道府県を選択　▼</option>
+              <option value="">都道府県を選択してください</option>
               {prefectureOptions.map(prefecture => (
                 <option key={prefecture} value={prefecture}>{prefecture}</option>
               ))}
@@ -382,8 +469,8 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             type="text"
             value={formData.address}
             onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            placeholder="千代田区〜〜〜〜〜〜"
-            className="w-full px-3 py-3 border border-black text-base"
+            placeholder="千代田区丸の内1-1-1 サンプルビル5F"
+            className="w-full px-3 py-3 border border-black text-base placeholder-gray-400"
           />
         </div>
       </div>
@@ -399,7 +486,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
           onChange={(e) => setFormData(prev => ({ ...prev, companyPhase: e.target.value }))}
           className="px-3 py-3 border border-black text-base bg-white"
         >
-          <option value="">企業フェーズを選択　▼</option>
+          <option value="">企業フェーズを選択してください</option>
           {companyPhaseOptions.map(phase => (
             <option key={phase} value={phase}>{phase}</option>
           ))}
@@ -439,15 +526,15 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
                 type="text"
                 value={attraction.title}
                 onChange={(e) => updateAttraction(index, 'title', e.target.value)}
-                placeholder="企業の魅力テキストが入ります"
-                className="w-full px-3 py-3 border border-black text-base"
+                placeholder="ワークライフバランスが充実"
+                className="w-full px-3 py-3 border border-black text-base placeholder-gray-400"
               />
               <textarea
                 value={attraction.description}
                 onChange={(e) => updateAttraction(index, 'description', e.target.value)}
-                placeholder="企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。"
+                placeholder="当社では、社員一人ひとりのワークライフバランスを大切に考えています。フレックスタイム制度やリモートワーク制度を導入しており、家庭や個人の時間を大切にしながら働ける環境を整えています。また、年間休日は125日以上と業界トップクラスの水準を確保しています。"
                 rows={5}
-                className="w-full px-3 py-3 border border-black text-base resize-none"
+                className="w-full px-3 py-3 border border-black text-base resize-none placeholder-gray-400"
               />
             </div>
           ))}
@@ -471,11 +558,40 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         </button>
         <button
           onClick={handleSubmit}
-          className="px-10 py-3 bg-black text-white rounded-3xl text-base font-bold hover:bg-gray-800 transition-colors"
+          disabled={isSaving}
+          className="px-10 py-3 bg-black text-white rounded-3xl text-base font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          更新する
+          {isSaving ? '保存中...' : '更新する'}
         </button>
       </div>
+
+      {/* エラーメッセージ */}
+      {saveError && (
+        <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {saveError}
+        </div>
+      )}
+
+      {/* 業種選択モーダル */}
+      {industryModalOpen && (
+        <IndustryModal
+          isOpen={industryModalOpen}
+          onClose={() => setIndustryModalOpen(false)}
+          selectedIndustries={formData.industries}
+          onConfirm={(selectedIndustries) => {
+            setFormData(prev => ({ ...prev, industries: selectedIndustries }));
+            setIndustryModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* 企業情報編集完了モーダル */}
+      <CompanyEditCompleteModal
+        isOpen={saveCompleteModalOpen}
+        onClose={handleSaveCompleteClose}
+        companyName={formData.companyName}
+        companyId={company.id}
+      />
     </div>
   );
 }

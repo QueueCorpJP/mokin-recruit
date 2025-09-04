@@ -199,8 +199,10 @@ export default function CompanyNewClient() {
   };
 
   const handleSubmit = () => {
-    // TODO: フォームデータをセッションストレージまたはクエリパラメータで確認画面に渡す
-    console.log('Form submitted:', formData);
+    // フォームデータをセッションストレージに保存して確認画面に渡す
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('companyFormData', JSON.stringify(formData));
+    }
     router.push('/admin/company/new/confirm');
   };
 
@@ -269,8 +271,7 @@ export default function CompanyNewClient() {
                   value={url.title}
                   onChange={(e) => updateUrl(index, 'title', e.target.value)}
                   placeholder="コーポレートサイト"
-                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA] font-['Inter']"
                 />
               </div>
 
@@ -281,8 +282,7 @@ export default function CompanyNewClient() {
                   value={url.url}
                   onChange={(e) => updateUrl(index, 'url', e.target.value)}
                   placeholder="https://example.com"
-                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA]"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
+                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA] font-['Inter']"
                 />
               </div>
             </div>
@@ -327,6 +327,7 @@ export default function CompanyNewClient() {
             accept="image/*"
             onChange={(e) => handleFileSelect(e, 'icon')}
             className="hidden"
+            aria-label="アイコン画像ファイル選択"
           />
         </div>
       </div>
@@ -541,6 +542,7 @@ export default function CompanyNewClient() {
                 accept="image/*"
                 onChange={(e) => handleFileSelect(e, 'images', index)}
                 className="hidden"
+                aria-label={`イメージ画像${index + 1}ファイル選択`}
               />
             </div>
           ))}
@@ -618,6 +620,7 @@ export default function CompanyNewClient() {
                 handleIndustryChange(industries);
                 setIsIndustryModalOpen(false);
               }}
+              onClose={() => setIsIndustryModalOpen(false)}
             />
           </div>
         </div>

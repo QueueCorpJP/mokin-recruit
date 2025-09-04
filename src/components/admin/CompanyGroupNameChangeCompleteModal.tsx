@@ -3,24 +3,37 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-interface CompanyScoutLimitChangeCompleteModalProps {
+interface CompanyGroupNameChangeCompleteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  companyName: string;
-  newLimit: number;
+  oldGroupName: string;
+  newGroupName: string;
+  companyId?: string;
 }
 
-export default function CompanyScoutLimitChangeCompleteModal({
+export default function CompanyGroupNameChangeCompleteModal({
   isOpen,
   onClose,
-  companyName,
-  newLimit,
-}: CompanyScoutLimitChangeCompleteModalProps) {
+  oldGroupName,
+  newGroupName,
+  companyId,
+}: CompanyGroupNameChangeCompleteModalProps) {
   const router = useRouter();
 
   const handleGoToCompanyDetail = () => {
-    // 現在の企業詳細ページに留まる
     onClose();
+    // 完了モーダルを閉じた後に確実にページをリロードして最新データを取得
+    setTimeout(() => {
+      if (companyId) {
+        // 同じURLにクエリパラメータを付けて強制リロード
+        const currentUrl = `/admin/company/${companyId}`;
+        const refreshUrl = `${currentUrl}?refresh=${Date.now()}`;
+        window.location.href = refreshUrl;
+      } else {
+        // companyIdがない場合は現在のページをリロード
+        window.location.reload();
+      }
+    }, 150); // モーダルが完全に閉じるまで少し待つ
   };
 
   const handleGoToAdminTop = () => {
@@ -48,16 +61,16 @@ export default function CompanyScoutLimitChangeCompleteModal({
           {/* タイトル */}
           <div className="text-center">
             <h2 className="text-2xl font-bold text-black mb-4">
-              スカウト上限数変更完了
+              グループ名変更完了
             </h2>
             <p className="text-base font-bold text-black mb-2">
-              {companyName}
+              グループ名を変更しました
             </p>
             <p className="text-base font-bold text-black mb-2">
-              スカウト上限数：{newLimit}件
+              {oldGroupName} → {newGroupName}
             </p>
             <p className="text-base font-bold text-black">
-              スカウト上限数の変更が完了しました。
+              グループ名の変更が完了しました。
             </p>
           </div>
 

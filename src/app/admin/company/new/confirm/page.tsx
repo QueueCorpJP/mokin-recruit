@@ -1,45 +1,32 @@
 import React from 'react';
 import CompanyConfirmClient from './CompanyConfirmClient';
+import { CompanyFormData } from '../actions';
 
-// URLパラメータやセッションストレージから企業データを取得する予定
-// 現在はデバッグ用のダミーデータを使用
-const dummyCompanyData = {
-  companyId: '企業IDが入ります',
-  plan: 'プラン名が入ります',
-  companyName: '株式企業Company',
-  urls: [
-    { title: 'コーポレートサイト', url: 'example.com' },
-    { title: '採用ページ', url: 'recruit.example.com' }
-  ],
+// デフォルトの空データ（セッションストレージにデータがない場合のフォールバック）
+const defaultCompanyData: CompanyFormData = {
+  companyId: '',
+  plan: '',
+  companyName: '',
+  urls: [{ title: '', url: '' }],
   iconImage: null,
-  representativePosition: '代表取締役',
-  representativeName: '山田 太郎',
-  establishedYear: '2020',
-  capital: '100',
+  representativePosition: '',
+  representativeName: '',
+  establishedYear: '',
+  capital: '',
   capitalUnit: '万円',
-  employeeCount: '500',
-  industries: ['テキストが入ります。'],
-  businessContent: 'テキストが入ります。\nテキストが入ります。\nテキストが入ります。',
-  prefecture: '東京都',
-  address: '千代田区〜〜〜〜〜〜',
-  companyPhase: '上場企業',
+  employeeCount: '',
+  industries: [],
+  businessContent: '',
+  prefecture: '',
+  address: '',
+  companyPhase: '',
   images: [],
   attractions: [
-    {
-      title: '企業の魅力テキストが入ります',
-      description: '企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。'
-    },
-    {
-      title: '企業の魅力テキストが入ります',
-      description: '企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。'
-    },
-    {
-      title: '企業の魅力テキストが入ります',
-      description: '企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。'
-    }
-  ]
+    { title: '', description: '' },
+    { title: '', description: '' }
+  ],
 };
 
 export default function CompanyNewConfirmPage() {
-  return <CompanyConfirmClient companyData={dummyCompanyData} />;
+  return <CompanyConfirmClient companyData={defaultCompanyData} />;
 }

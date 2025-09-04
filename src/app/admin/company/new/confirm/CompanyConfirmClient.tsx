@@ -1,53 +1,59 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CompanyRegistrationCompleteModal from '@/components/admin/CompanyRegistrationCompleteModal';
-
-interface CompanyFormData {
-  companyId: string;
-  plan: string;
-  companyName: string;
-  urls: Array<{
-    title: string;
-    url: string;
-  }>;
-  iconImage: File | null;
-  representativePosition: string;
-  representativeName: string;
-  establishedYear: string;
-  capital: string;
-  capitalUnit: string;
-  employeeCount: string;
-  industries: string[];
-  businessContent: string;
-  prefecture: string;
-  address: string;
-  companyPhase: string;
-  images: File[];
-  attractions: Array<{
-    title: string;
-    description: string;
-  }>;
-}
+import { createCompanyData, CompanyFormData } from '../actions';
 
 interface CompanyConfirmClientProps {
   companyData: CompanyFormData;
 }
 
-export default function CompanyConfirmClient({ companyData }: CompanyConfirmClientProps) {
+export default function CompanyConfirmClient({ companyData: initialCompanyData }: CompanyConfirmClientProps) {
   const router = useRouter();
   const [registrationCompleteModalOpen, setRegistrationCompleteModalOpen] = useState(false);
+  const [companyData, setCompanyData] = useState<CompanyFormData>(initialCompanyData);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    // TODO: 企業データの保存処理を実装
-    console.log('Saving company data:', companyData);
+  // セッションストレージからデータを取得
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedData = sessionStorage.getItem('companyFormData');
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          setCompanyData(parsedData);
+        } catch (error) {
+          console.error('Failed to parse company form data from sessionStorage:', error);
+        }
+      }
+    }
+  }, []);
 
-    // 保存処理のシミュレーション（実際の実装ではAPI呼び出し）
-    setTimeout(() => {
-      // 保存完了後に完了モーダルを表示
-      setRegistrationCompleteModalOpen(true);
-    }, 500); // 実際のAPI呼び出し時間をシミュレート
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const result = await createCompanyData(companyData);
+
+      if (result.success) {
+        // 保存成功後にセッションストレージをクリア
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('companyFormData');
+        }
+        // 保存完了後に完了モーダルを表示
+        setRegistrationCompleteModalOpen(true);
+      } else {
+        setSaveError(result.error || '保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveError('保存中にエラーが発生しました');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBack = () => {
@@ -260,19 +266,30 @@ export default function CompanyConfirmClient({ companyData }: CompanyConfirmClie
         </div>
       </div>
 
+      {/* エラーメッセージ */}
+      {saveError && (
+        <div className="flex justify-center pt-4">
+          <div className="px-4 py-2 bg-red-100 border border-red-400 text-red-700 rounded">
+            {saveError}
+          </div>
+        </div>
+      )}
+
       {/* ボタン群 */}
       <div className="flex justify-center gap-6 pt-8">
         <button
           onClick={handleBack}
-          className="px-10 py-3 border border-black rounded-3xl text-base font-bold hover:bg-gray-50 transition-colors"
+          disabled={isSaving}
+          className="px-10 py-3 border border-black rounded-3xl text-base font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           戻る
         </button>
         <button
           onClick={handleSave}
-          className="px-10 py-3 bg-black text-white rounded-3xl text-base font-bold hover:bg-gray-800 transition-colors"
+          disabled={isSaving}
+          className="px-10 py-3 bg-black text-white rounded-3xl text-base font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          保存する
+          {isSaving ? '保存中...' : '保存する'}
         </button>
       </div>
 

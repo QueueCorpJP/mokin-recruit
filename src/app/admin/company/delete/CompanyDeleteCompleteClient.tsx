@@ -21,7 +21,7 @@ export default function CompanyDeleteCompleteClient() {
         {/* 完了メッセージ */}
         <div className="text-center mb-12">
           <div className="text-base font-bold text-black mb-8">
-            企業アカウントの削除が完了しました。
+            グループの削除が完了しました。
           </div>
         </div>
 

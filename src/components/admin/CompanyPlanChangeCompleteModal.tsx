@@ -24,6 +24,7 @@ export default function CompanyPlanChangeCompleteModal({
   };
 
   const handleGoToAdminTop = () => {
+    onClose();
     router.push('/admin');
   };
 

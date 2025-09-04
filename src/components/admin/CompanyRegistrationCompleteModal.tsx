@@ -21,16 +21,15 @@ export default function CompanyRegistrationCompleteModal({
   };
 
   const handleAddGroup = () => {
-    // TODO: 企業グループ追加ページに遷移
-    router.push('/admin/company/group/new');
+    // 企業一覧ページに遷移（企業グループ追加機能は別途実装予定）
+    router.push('/admin/company');
   };
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
     >
       <div
         className="bg-white border border-black rounded-2xl w-[604px] h-[255px] relative"
@@ -49,12 +48,12 @@ export default function CompanyRegistrationCompleteModal({
 
           {/* ボタン群 */}
           <div className="flex gap-4 w-full max-w-[463px]">
-            {/* 企業グループを追加するボタン */}
+            {/* 企業一覧へボタン */}
             <button
               onClick={handleAddGroup}
               className="flex-1 h-[51px] bg-white border border-black rounded-[35px] text-base font-bold text-black hover:bg-gray-50 transition-colors"
             >
-              企業グループを追加する
+              企業一覧へ
             </button>
 
             {/* 管理画面トップボタン */}

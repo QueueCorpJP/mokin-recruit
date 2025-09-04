@@ -1,20 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CompanyEditData } from './edit/page';
 import CompanyUserDeleteModal from '@/components/admin/CompanyUserDeleteModal';
+import {
+  updateCompanyPlan,
+  updateCompanyScoutLimit,
+  suspendCompany,
+  deleteCompany,
+  updateGroupName,
+  deleteGroup,
+  inviteMembersToGroup,
+  createNewGroup
+} from './actions';
 import NewGroupModal from '@/components/admin/NewGroupModal';
 import CompanyUserRoleChangeModal from '@/components/admin/CompanyUserRoleChangeModal';
 import CompanyGroupNameChangeModal from '@/components/admin/CompanyGroupNameChangeModal';
+import CompanyGroupNameChangeCompleteModal from '@/components/admin/CompanyGroupNameChangeCompleteModal';
 import AddMemberModal from '@/components/admin/AddMemberModal';
 import InvitationCompleteModal from '@/components/admin/InvitationCompleteModal';
-import CompanyWithdrawalConfirmModal from '@/components/admin/CompanyWithdrawalConfirmModal';
-import CompanyWithdrawalCompleteModal from '@/components/admin/CompanyWithdrawalCompleteModal';
-import CompanyPlanChangeModal from '@/components/admin/CompanyPlanChangeModal';
-import CompanyPlanChangeCompleteModal from '@/components/admin/CompanyPlanChangeCompleteModal';
 import CompanyScoutLimitChangeModal from '@/components/admin/CompanyScoutLimitChangeModal';
 import CompanyScoutLimitChangeCompleteModal from '@/components/admin/CompanyScoutLimitChangeCompleteModal';
+import CompanyPlanChangeModal from '@/components/admin/CompanyPlanChangeModal';
+import CompanyPlanChangeCompleteModal from '@/components/admin/CompanyPlanChangeCompleteModal';
+import CompanyWithdrawalConfirmModal from '@/components/admin/CompanyWithdrawalConfirmModal';
+import CompanyWithdrawalCompleteModal from '@/components/admin/CompanyWithdrawalCompleteModal';
+import CompanyDeletionConfirmModal from '@/components/admin/CompanyDeletionConfirmModal';
+import CompanyDeletionCompleteModal from '@/components/admin/CompanyDeletionCompleteModal';
 
 interface CompanyDetailClientProps {
   company: CompanyEditData;
@@ -23,6 +36,13 @@ interface CompanyDetailClientProps {
 
 export default function CompanyDetailClient({ company, onUserDeleteComplete }: CompanyDetailClientProps) {
   const router = useRouter();
+
+  // デバッグ用: コンポーネントがマウントされたときの情報をログ出力
+  useEffect(() => {
+    console.log(`[Company Detail Client] Company: ${company.company_name}, Plan: ${company.plan}`);
+    console.log(`[Company Detail Client] Groups:`, company.company_groups?.map(g => `${g.group_name} (${g.id})`) || []);
+  }, [company.company_name, company.plan, company.company_groups]);
+
   const [memoText, setMemoText] = useState('自由にメモを記入できます。\n同一グループ内の方が閲覧可能です。');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{name: string, id: string} | null>(null);
@@ -35,10 +55,12 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     newRole: string;
   } | null>(null);
   const [groupNameChangeModalOpen, setGroupNameChangeModalOpen] = useState(false);
+  const [groupNameChangeCompleteModalOpen, setGroupNameChangeCompleteModalOpen] = useState(false);
   const [selectedGroupData, setSelectedGroupData] = useState<{
     groupId: string;
     currentName: string;
   } | null>(null);
+  const [updatedGroupName, setUpdatedGroupName] = useState('');
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [selectedGroupForMember, setSelectedGroupForMember] = useState<{
     groupId: string;
@@ -54,6 +76,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const [scoutLimitChangeModalOpen, setScoutLimitChangeModalOpen] = useState(false);
   const [scoutLimitChangeCompleteModalOpen, setScoutLimitChangeCompleteModalOpen] = useState(false);
   const [newSelectedScoutLimit, setNewSelectedScoutLimit] = useState(0);
+  const [deletionConfirmModalOpen, setDeletionConfirmModalOpen] = useState(false);
+  const [deletionCompleteModalOpen, setDeletionCompleteModalOpen] = useState(false);
 
   const handleEdit = () => {
     router.push(`/admin/company/${company.id}/edit`);
@@ -99,11 +123,26 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setNewGroupModalOpen(true);
   };
 
-  const handleNewGroupConfirm = (groupName: string, members: any[]) => {
-    // TODO: 実際のグループ作成処理を実装
+  const handleNewGroupConfirm = async (groupName: string, members: any[]) => {
+    try {
     console.log('Creating new group:', groupName, 'with members:', members);
-    alert(`グループ「${groupName}」を作成しました（デバッグモード）`);
+
+      const result = await createNewGroup(company.id, groupName, members);
+
+      if (result.success) {
+        console.log('New group created successfully:', result.group);
+        alert(result.message || `グループ「${groupName}」を作成しました`);
     setNewGroupModalOpen(false);
+      } else {
+        console.error('New group creation failed:', result.error);
+        alert(`グループの作成に失敗しました: ${result.error}`);
+        setNewGroupModalOpen(false);
+      }
+    } catch (error) {
+      console.error('New group creation error:', error);
+      alert('グループ作成中にエラーが発生しました');
+      setNewGroupModalOpen(false);
+    }
   };
 
   const handleNewGroupCancel = () => {
@@ -143,19 +182,43 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setGroupNameChangeModalOpen(true);
   };
 
-  const handleGroupNameChangeConfirm = (newGroupName: string) => {
+  const handleGroupNameChangeConfirm = async (newGroupName: string) => {
     if (selectedGroupData) {
-      // TODO: 実際のグループ名変更処理を実装
-      console.log('Changing group name:', selectedGroupData.groupId, 'from', selectedGroupData.currentName, 'to', newGroupName);
-      alert(`グループ名を「${newGroupName}」に変更しました（デバッグモード）`);
+      try {
+        const result = await updateGroupName(selectedGroupData.groupId, newGroupName);
+
+        if (result.success) {
+          console.log('Group name updated successfully:', result.updatedGroup);
+          console.log(`Group name changed: ${selectedGroupData?.currentName} → ${newGroupName}`);
+          // 成功したら完了モーダルを表示
+          setUpdatedGroupName(newGroupName);
+          setGroupNameChangeModalOpen(false);
+          setGroupNameChangeCompleteModalOpen(true);
+        } else {
+          console.error('Group name update failed:', result.error);
+          alert(`グループ名の変更に失敗しました: ${result.error}`);
       setGroupNameChangeModalOpen(false);
       setSelectedGroupData(null);
+        }
+      } catch (error) {
+        console.error('Group name change error:', error);
+        alert('グループ名変更中にエラーが発生しました');
+        setGroupNameChangeModalOpen(false);
+        setSelectedGroupData(null);
+      }
     }
   };
 
   const handleGroupNameChangeCancel = () => {
     setGroupNameChangeModalOpen(false);
     setSelectedGroupData(null);
+  };
+
+  const handleGroupNameChangeCompleteClose = () => {
+    setGroupNameChangeCompleteModalOpen(false);
+    setSelectedGroupData(null);
+    setUpdatedGroupName('');
+    // 完了モーダルのクローズ処理のみ - リロードはモーダルのボタンで実行
   };
 
   const handleAddMemberClick = (groupId: string, groupName: string) => {
@@ -166,15 +229,32 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setAddMemberModalOpen(true);
   };
 
-  const handleAddMemberConfirm = (members: any[]) => {
+  const handleAddMemberConfirm = async (members: any[]) => {
     if (selectedGroupForMember) {
-      // TODO: 実際のメンバー追加処理を実装
-      console.log('Adding members to group:', selectedGroupForMember.groupId, 'members:', members);
+      try {
+        console.log('Inviting members to group:', selectedGroupForMember.groupId, 'members:', members);
+
+        const result = await inviteMembersToGroup(selectedGroupForMember.groupId, members);
+
+        if (result.success) {
+          console.log('Members invited successfully:', result.invitedMembers);
 
       // 招待完了モーダルを開く
-      setInvitedMembersCount(members.length);
+          setInvitedMembersCount(result.invitedMembers.length);
       setAddMemberModalOpen(false);
       setInvitationCompleteModalOpen(true);
+        } else {
+          console.error('Member invitation failed:', result.error);
+          alert(`メンバー招待に失敗しました: ${result.error}`);
+          setAddMemberModalOpen(false);
+          setSelectedGroupForMember(null);
+        }
+      } catch (error) {
+        console.error('Member invitation error:', error);
+        alert('メンバー招待中にエラーが発生しました');
+        setAddMemberModalOpen(false);
+        setSelectedGroupForMember(null);
+      }
     }
   };
 
@@ -193,13 +273,26 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setWithdrawalConfirmModalOpen(true);
   };
 
-  const handleWithdrawalConfirm = () => {
-    // TODO: 実際の休会処理を実装
-    console.log('Withdrawing company:', company.company_name);
+  const handleWithdrawalConfirm = async () => {
+    try {
+      const result = await suspendCompany(company.id);
 
+      if (result.success) {
+        console.log('Company suspended successfully:', result.company);
+        console.log(`Company ${company.company_name} suspended with status: ${result.company.status}`);
     // 休会確認モーダルを閉じて、完了モーダルを表示
     setWithdrawalConfirmModalOpen(false);
     setWithdrawalCompleteModalOpen(true);
+      } else {
+        console.error('Company suspension failed:', result.error);
+        alert(`休会処理に失敗しました: ${result.error}`);
+        setWithdrawalConfirmModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Suspension error:', error);
+      alert('休会処理中にエラーが発生しました');
+      setWithdrawalConfirmModalOpen(false);
+    }
   };
 
   const handleWithdrawalCancel = () => {
@@ -208,22 +301,33 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
   const handleWithdrawalCompleteClose = () => {
     setWithdrawalCompleteModalOpen(false);
-    // 休会完了後にページ遷移
-    router.push('/admin/company/withdraw');
+    // 休会完了モーダルのクローズ処理のみ - ページ遷移はモーダル内のボタンで行う
   };
 
   const handlePlanChangeClick = () => {
     setPlanChangeModalOpen(true);
   };
 
-  const handlePlanChangeConfirm = (newPlan: string) => {
-    // TODO: 実際のプラン変更処理を実装
-    console.log('Changing plan for company:', company.company_name, 'from', company.contract_plan?.plan_name, 'to', newPlan);
+  const handlePlanChangeConfirm = async (newPlan: string) => {
+    try {
+      const result = await updateCompanyPlan(company.id, newPlan);
 
+      if (result.success) {
+        console.log('Company plan updated successfully:', result.company);
     // プラン変更確認モーダルを閉じて、完了モーダルを表示
     setNewSelectedPlan(newPlan);
     setPlanChangeModalOpen(false);
     setPlanChangeCompleteModalOpen(true);
+      } else {
+        console.error('Company plan update failed:', result.error);
+        alert(`プラン変更に失敗しました: ${result.error}`);
+        setPlanChangeModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Plan change error:', error);
+      alert('プラン変更中にエラーが発生しました');
+      setPlanChangeModalOpen(false);
+    }
   };
 
   const handlePlanChangeCancel = () => {
@@ -240,14 +344,26 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setScoutLimitChangeModalOpen(true);
   };
 
-  const handleScoutLimitChangeConfirm = (newLimit: number) => {
-    // TODO: 実際のスカウト上限数変更処理を実装
-    console.log('Changing scout limit for company:', company.company_name, 'to', newLimit);
+  const handleScoutLimitChangeConfirm = async (newLimit: number) => {
+    try {
+      const result = await updateCompanyScoutLimit(company.id, newLimit);
 
+      if (result.success) {
+        console.log('Company scout limit updated successfully:', result.company);
     // スカウト上限数変更確認モーダルを閉じて、完了モーダルを表示
     setNewSelectedScoutLimit(newLimit);
     setScoutLimitChangeModalOpen(false);
     setScoutLimitChangeCompleteModalOpen(true);
+      } else {
+        console.error('Company scout limit update failed:', result.error);
+        alert(`スカウト上限数変更に失敗しました: ${result.error}`);
+        setScoutLimitChangeModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Scout limit change error:', error);
+      alert('スカウト上限数変更中にエラーが発生しました');
+      setScoutLimitChangeModalOpen(false);
+    }
   };
 
   const handleScoutLimitChangeCancel = () => {
@@ -258,6 +374,40 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     setScoutLimitChangeCompleteModalOpen(false);
     setNewSelectedScoutLimit(0);
     // 完了後に現在のページに留まる（企業詳細ページ）
+  };
+
+  const handleDeletionClick = () => {
+    setDeletionConfirmModalOpen(true);
+  };
+
+  const handleDeletionConfirm = async () => {
+    try {
+      const result = await deleteCompany(company.id);
+
+      if (result.success) {
+        console.log('Company physically deleted successfully:', result.deletedCompany);
+        // 退会確認モーダルを閉じて、完了モーダルを表示
+        setDeletionConfirmModalOpen(false);
+        setDeletionCompleteModalOpen(true);
+      } else {
+        console.error('Company deletion failed:', result.error);
+        alert(`退会処理に失敗しました: ${result.error}`);
+        setDeletionConfirmModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Deletion error:', error);
+      alert('退会処理中にエラーが発生しました');
+      setDeletionConfirmModalOpen(false);
+    }
+  };
+
+  const handleDeletionCancel = () => {
+    setDeletionConfirmModalOpen(false);
+  };
+
+  const handleDeletionCompleteClose = () => {
+    setDeletionCompleteModalOpen(false);
+    // モーダルを閉じるのみ - ページ遷移はモーダル内のボタンで行う
   };
 
   return (
@@ -279,16 +429,6 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        
-        {/* プラン情報 */}
-        <div className="flex items-center gap-6 py-3">
-          <label className="block text-base font-bold text-black w-40">プラン</label>
-          <div className="text-base text-black">
-            {company.contract_plan?.plan_name || 'プラン名が入ります'}
-          </div>
-        </div>
-
-        <hr className="border-gray-300" />
 
         {/* 企業分析セクション */}
         <div className="space-y-4">
@@ -349,6 +489,16 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         {/* 企業情報セクション */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-black">企業情報</h2>
+
+          {/* プラン */}
+          <div className="flex items-center gap-6 py-3">
+            <label className="block text-base font-bold text-black w-40">プラン</label>
+            <div className="flex-1 px-3 py-3 bg-white border border-gray-300 text-base">
+              {company.plan || 'プラン名が入ります'}
+            </div>
+          </div>
+
+          <hr className="border-gray-300" />
           
           {/* 企業ID */}
           <div className="flex items-center gap-6 py-3">
@@ -541,32 +691,47 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
             </button>
           </div>
 
-          {/* グループ1 */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+          {/* グループリスト */}
+          {company.company_groups && company.company_groups.length > 0 ? (
+            company.company_groups.map((group, index) => (
+              <div key={group.id} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-black">グループ名テキスト</h3>
+                  <h3 className="text-xl font-bold text-black">{group.group_name}</h3>
               <div className="flex gap-6">
                 <button
-                  onClick={() => handleAddMemberClick('group-1', 'グループ名テキスト')}
+                      onClick={() => handleAddMemberClick(group.id, group.group_name)}
                   className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
                 >
                   メンバー追加
                 </button>
                 <button
-                  onClick={() => handleGroupNameChangeClick('group-1', 'グループ名テキスト')}
+                      onClick={() => handleGroupNameChangeClick(group.id, group.group_name)}
                   className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
                 >
                   グループ名編集
                 </button>
                 <button 
-                  onClick={() => {
-                    if (confirm('本当にこのグループを削除しますか？')) {
-                      // TODO: 実際のグループ削除処理を実装
-                      console.log('Deleting group');
-                      // グループ削除完了ページに遷移
-                      router.push('/admin/company/group');
-                    }
-                  }}
+                      onClick={async () => {
+                        if (confirm('本当にこのグループを削除しますか？\nこの操作は取り消すことができません。')) {
+                          try {
+                            const result = await deleteGroup(group.id);
+
+                            if (result.success) {
+                              console.log('Group deleted successfully:', result.deletedGroup);
+                              alert(`グループ「${group.group_name}」を削除しました`);
+
+                              // 削除成功後に /admin/company/delete に遷移
+                              router.push('/admin/company/delete');
+                            } else {
+                              console.error('Group deletion failed:', result.error);
+                              alert(`グループの削除に失敗しました: ${result.error}`);
+                            }
+                          } catch (error) {
+                            console.error('Group deletion error:', error);
+                            alert('グループ削除中にエラーが発生しました');
+                          }
+                        }
+                      }}
                   className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
                 >
                   グループを削除
@@ -576,10 +741,10 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
             <hr className="border-gray-300" />
 
-            {/* メンバーリスト */}
+                {/* メンバーリスト - 仮実装 */}
             <div className="space-y-4">
-              {['管理者', '管理者', 'スカウト担当者', 'スカウト担当者', ''].map((role, index) => (
-                <div key={index}>
+                  {['管理者', '管理者', 'スカウト担当者', 'スカウト担当者', ''].map((role, roleIndex) => (
+                    <div key={roleIndex}>
                   <div className="flex justify-between items-center py-2">
                     <div className="text-base font-bold">名前 名前</div>
                                           <div className="flex items-center gap-4">
@@ -588,7 +753,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                           value={role}
                           onChange={(e) => {
                             if (e.target.value !== role) {
-                              handleRoleChangeClick('名前 名前', `user-${index}`, role, e.target.value);
+                                  handleRoleChangeClick('名前 名前', `user-${index}-${roleIndex}`, role, e.target.value);
                             }
                           }}
                           className="text-base font-bold bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
@@ -603,83 +768,24 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                         </select>
                       )}
                       <button
-                        onClick={() => handleUserDeleteClick('名前 名前', `user-${index}`)}
+                            onClick={() => handleUserDeleteClick('名前 名前', `user-${index}-${roleIndex}`)}
                         className="text-base font-bold text-black hover:text-gray-600"
                       >
                         削除
                       </button>
                     </div>
                   </div>
-                  {index < 4 && <hr className="border-gray-300" />}
+                      {roleIndex < 4 && <hr className="border-gray-300" />}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* グループ2（同様の構造） */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-black">グループ名テキスト</h3>
-              <div className="flex gap-6">
-                <button
-                  onClick={() => handleAddMemberClick('group-2', 'グループ名テキスト')}
-                  className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-                >
-                  メンバー追加
-                </button>
-                <button
-                  onClick={() => handleGroupNameChangeClick('group-2', 'グループ名テキスト')}
-                  className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-                >
-                  グループ名編集
-                </button>
-                <button className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors">
-                  グループを削除
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <p className="text-center text-gray-500">グループがありません</p>
             </div>
-
-            <hr className="border-gray-300" />
-
-            {/* メンバーリスト */}
-            <div className="space-y-4">
-              {['管理者', '管理者', 'スカウト担当者', 'スカウト担当者', ''].map((role, index) => (
-                <div key={index}>
-                  <div className="flex justify-between items-center py-2">
-                    <div className="text-base font-bold">名前 名前</div>
-                                          <div className="flex items-center gap-4">
-                      {role && (
-                        <select
-                          value={role}
-                          onChange={(e) => {
-                            if (e.target.value !== role) {
-                              handleRoleChangeClick('名前 名前', `user-${index}`, role, e.target.value);
-                            }
-                          }}
-                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
-                          style={{
-                            fontFamily: 'Inter, sans-serif',
-                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                            backgroundSize: '1.5rem 1.5rem'
-                          }}
-                        >
-                          <option value="管理者">管理者</option>
-                          <option value="スカウト担当者">スカウト担当者</option>
-                        </select>
-                      )}
-                      <button
-                        onClick={() => handleUserDeleteClick('名前 名前', `user-${index}`)}
-                        className="text-base font-bold text-black hover:text-gray-600"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  </div>
-                  {index < 4 && <hr className="border-gray-300" />}
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* グループチケットログ1 */}
           <div className="bg-gray-300 rounded-lg p-6">
@@ -717,14 +823,17 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
             >
               プラン変更
             </button>
-            <button className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors">
-              休会
-            </button>
             <button
               onClick={handleWithdrawalClick}
               className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
             >
               休会
+            </button>
+            <button
+              onClick={handleDeletionClick}
+              className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
+            >
+              退会
             </button>
           </div>
 
@@ -817,6 +926,15 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         currentGroupName={selectedGroupData?.currentName || ''}
       />
 
+      {/* 企業グループ名変更完了モーダル */}
+      <CompanyGroupNameChangeCompleteModal
+        isOpen={groupNameChangeCompleteModalOpen}
+        onClose={handleGroupNameChangeCompleteClose}
+        oldGroupName={selectedGroupData?.currentName || ''}
+        newGroupName={updatedGroupName}
+        companyId={company.id}
+      />
+
       {/* メンバー追加モーダル */}
       <AddMemberModal
         isOpen={addMemberModalOpen}
@@ -845,6 +963,22 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         isOpen={withdrawalCompleteModalOpen}
         onClose={handleWithdrawalCompleteClose}
         companyName={company.company_name}
+        companyId={company.id}
+      />
+
+      {/* 退会確認モーダル */}
+      <CompanyDeletionConfirmModal
+        isOpen={deletionConfirmModalOpen}
+        onClose={handleDeletionCancel}
+        onConfirm={handleDeletionConfirm}
+        companyName={company.company_name}
+      />
+
+      {/* 退会完了モーダル */}
+      <CompanyDeletionCompleteModal
+        isOpen={deletionCompleteModalOpen}
+        onClose={handleDeletionCompleteClose}
+        companyName={company.company_name}
       />
 
       {/* プラン変更モーダル */}
@@ -852,7 +986,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         isOpen={planChangeModalOpen}
         onClose={handlePlanChangeCancel}
         onConfirm={handlePlanChangeConfirm}
-        currentPlan={company.contract_plan?.plan_name || ''}
+        currentPlan={company.plan || ''}
       />
 
       {/* プラン変更完了モーダル */}

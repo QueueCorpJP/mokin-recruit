@@ -14,6 +14,7 @@ export interface CompanyEditData {
   appeal_points: string | null;
   logo_image_path: string | null;
   contract_plan: any;
+  plan: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -33,7 +34,7 @@ export interface CompanyEditData {
 
 async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('company_accounts')
     .select(`
@@ -43,34 +44,35 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       representative_name,
       industry,
       company_overview,
-      appeal_points,
-      logo_image_path,
-      contract_plan,
       status,
       created_at,
       updated_at,
-      company_users (
-        id,
-        full_name,
-        position_title,
-        email,
-        last_login_at
-      ),
-      company_groups (
-        id,
-        group_name,
-        created_at
-      )
+      plan
     `)
     .eq('id', id)
     .single();
 
   if (error) {
     console.error('Error fetching company:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details
+    });
     return null;
   }
 
-  return data as CompanyEditData;
+  // 存在しないフィールドにデフォルト値を設定
+  const companyData: CompanyEditData = {
+    ...data,
+    appeal_points: null,
+    logo_image_path: null,
+    contract_plan: null,
+    company_users: [],
+    company_groups: []
+  };
+
+  return companyData;
 }
 
 interface CompanyEditPageProps {

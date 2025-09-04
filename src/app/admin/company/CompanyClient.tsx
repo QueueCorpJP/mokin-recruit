@@ -294,13 +294,13 @@ export default function CompanyClient({ companies }: Props) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => window.location.href = `/admin/company/${c.id}`}
-                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-800 transition-colors text-xs"
                     >
                       詳細
                     </button>
                     <button
                       onClick={() => window.location.href = `/admin/company/${c.id}/edit`}
-                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
+                      className="px-3 py-1 bg-white text-black border border-black rounded hover:bg-gray-50 transition-colors text-xs"
                     >
                       編集
                     </button>

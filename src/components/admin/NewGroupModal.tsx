@@ -85,7 +85,7 @@ export default function NewGroupModal({
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
     >
       <div
-        className="bg-white border border-[#BABABA] rounded-none"
+        className="bg-white border border-[#BABABA] rounded-none flex flex-col"
         style={{
           width: '812px',
           height: '700px',
@@ -106,16 +106,16 @@ export default function NewGroupModal({
         </div>
 
         {/* メインコンテンツ */}
-        <div className="flex flex-col px-10 py-20 h-full overflow-y-auto">
+        <div className="flex flex-col px-10 py-8 flex-1 overflow-y-auto">
           {/* 説明文 */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <p className="text-base font-bold text-black">
               通知や管理の負担を減らすため、グループは部署単位などでの作成をおすすめします。
             </p>
           </div>
 
           {/* グループ名入力 */}
-          <div className="mb-10">
+          <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <label className="text-base font-bold text-black w-32">
                 グループ名
@@ -132,12 +132,12 @@ export default function NewGroupModal({
           </div>
 
           {/* 招待するメンバー */}
-          <div className="mb-10">
+          <div className="mb-8 flex-1">
             <h3 className="text-2xl font-bold text-black text-center mb-6">
               招待するメンバー
             </h3>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               {members.map((member, index) => (
                 <div key={member.id} className="flex items-center gap-2">
                   {/* メールアドレス入力 */}
@@ -184,7 +184,7 @@ export default function NewGroupModal({
             </div>
 
             {/* さらに追加ボタン */}
-            <div className="text-center mt-4">
+            <div className="text-center">
               <button
                 onClick={handleAddMember}
                 className="text-base font-bold text-black hover:text-gray-600"
@@ -196,13 +196,13 @@ export default function NewGroupModal({
         </div>
 
         {/* フッター */}
-        <div className="flex justify-center px-10 py-6 border-t border-[#BABABA]">
+        <div className="flex justify-center px-10 py-6 border-t border-[#BABABA] flex-shrink-0">
           <button
             onClick={handleConfirm}
             className="px-10 py-3.5 bg-black text-white text-base font-bold hover:bg-gray-800 transition-colors"
             style={{ borderRadius: '32px' }}
           >
-            招待を送信
+            確定
           </button>
         </div>
       </div>
