@@ -55,6 +55,7 @@ export function JobPostCard({
   showLocation = true,
   showSalary = true,
   showStar = true,
+  jobId,
 }: JobPostCardProps) {
   // simple判定: variantがsimpleまたは画像サイズが小さい場合
   const isSimple =
@@ -69,7 +70,8 @@ export function JobPostCard({
     // スマホ: w-full + aspect-[3/2], デスクトップ: 150x100px
     imgClass += ' w-full aspect-[3/2] md:w-[150px] md:h-[100px] md:aspect-auto';
   } else {
-    imgClass += ' w-full aspect-[3/2] max-h-[200px] md:w-[477px] md:h-[318px] md:aspect-auto md:max-h-none';
+    imgClass +=
+      ' w-full aspect-[3/2] max-h-[200px] md:w-[477px] md:h-[318px] md:aspect-auto md:max-h-none';
   }
 
   const cardContent = (
@@ -84,14 +86,18 @@ export function JobPostCard({
       onClick={jobId && typeof jobId === 'string' ? undefined : onClick}
     >
       <div
-        className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${isSimple ? 'justify-start items-start' : 'justify-center items-center'}`}
+        className={`flex flex-col md:flex-row w-full h-full gap-4 md:gap-8 p-4 md:p-6 relative ${
+          isSimple ? 'justify-start items-start' : 'justify-center items-center'
+        }`}
         style={{ minWidth: 0, maxWidth: '100%' }}
       >
         {/* デスクトップ画面のみ右上のスターアイコン */}
         {showStar && (
           <button
             type='button'
-            className={`hidden md:block absolute top-2 right-2 z-10 p-2 ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''}`}
+            className={`hidden md:block absolute top-2 right-2 z-10 p-2 ${
+              isFavoriteLoading ? 'opacity-50 cursor-wait' : ''
+            }`}
             onClick={e => {
               e.stopPropagation(); // カードクリックとの競合を防ぐ
               onStarClick?.();
@@ -123,15 +129,27 @@ export function JobPostCard({
         <Image
           src={imageUrl}
           alt={imageAlt}
-          width={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 313 : 104) : 477}
-          height={isSimple ? (typeof window !== 'undefined' && window.innerWidth < 768 ? 208 : 69) : 318}
+          width={
+            isSimple
+              ? typeof window !== 'undefined' && window.innerWidth < 768
+                ? 313
+                : 104
+              : 477
+          }
+          height={
+            isSimple
+              ? typeof window !== 'undefined' && window.innerWidth < 768
+                ? 208
+                : 69
+              : 318
+          }
           style={{
-            height: isSimple ? undefined : (imgHeight ?? 318),
+            height: isSimple ? undefined : imgHeight ?? 318,
             objectFit: 'cover',
             borderRadius: 5,
           }}
           className={imgClass}
-          loading="lazy"
+          loading='lazy'
         />
         <div
           className='flex-1 flex flex-col items-start relative'
@@ -145,7 +163,10 @@ export function JobPostCard({
           {variant === 'mypage-simple' ? (
             <div className='flex flex-col gap-2 w-full' style={{ minWidth: 0 }}>
               {/* タグ */}
-              <div className='flex flex-row gap-2 items-start flex-wrap' style={{ minWidth: 0, maxWidth: '100%', width: '100%' }}>
+              <div
+                className='flex flex-row gap-2 items-start flex-wrap'
+                style={{ minWidth: 0, maxWidth: '100%', width: '100%' }}
+              >
                 {tags.map((tag, idx) => (
                   <span
                     key={tag + idx}
@@ -178,7 +199,8 @@ export function JobPostCard({
                     <div
                       className='w-6 h-6 rounded-full bg-center bg-cover bg-no-repeat'
                       style={{
-                        backgroundImage: 'url(http://localhost:3845/assets/18d36d60a6d56d6384c41f71d988f041713974ff.png)',
+                        backgroundImage:
+                          'url(http://localhost:3845/assets/18d36d60a6d56d6384c41f71d988f041713974ff.png)',
                       }}
                     />
                     <span
@@ -197,8 +219,14 @@ export function JobPostCard({
             </div>
           ) : (
             <>
-              <div className='flex flex-row gap-2 items-start justify-between w-full' style={{ minWidth: 0 }}>
-                <div className='flex flex-row gap-2 items-start flex-wrap flex-1' style={{ minWidth: 0, maxWidth: '100%' }}>
+              <div
+                className='flex flex-row gap-2 items-start justify-between w-full'
+                style={{ minWidth: 0 }}
+              >
+                <div
+                  className='flex flex-row gap-2 items-start flex-wrap flex-1'
+                  style={{ minWidth: 0, maxWidth: '100%' }}
+                >
                   {tags.map((tag, idx) => (
                     <span
                       key={tag + idx}
@@ -212,7 +240,9 @@ export function JobPostCard({
                 {showStar && (
                   <button
                     type='button'
-                    className={`md:hidden p-1 flex-shrink-0 ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''}`}
+                    className={`md:hidden p-1 flex-shrink-0 ${
+                      isFavoriteLoading ? 'opacity-50 cursor-wait' : ''
+                    }`}
                     onClick={e => {
                       e.stopPropagation(); // カードクリックとの競合を防ぐ
                       onStarClick?.();
@@ -303,8 +333,7 @@ export function JobPostCard({
                   </svg>
                   <span
                     className='ml-1 text-[16px] font-medium'
-                    style={
-                      { color: '#323232', lineHeight: '2' }}
+                    style={{ color: '#323232', lineHeight: '2' }}
                   >
                     {salary}
                   </span>
@@ -334,7 +363,7 @@ export function JobPostCard({
   // jobIdがある場合は詳細ページへのリンクでラップ
   if (jobId && typeof jobId === 'string' && jobId.length > 0) {
     return (
-      <Link href={`/candidate/job/${jobId}`} className="block">
+      <Link href={`/candidate/job/${jobId}`} className='block'>
         {cardContent}
       </Link>
     );

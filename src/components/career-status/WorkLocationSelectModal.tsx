@@ -16,7 +16,17 @@ const regions = [
   },
   {
     name: '中部',
-    prefectures: ['山梨', '長野', '新潟', '富山', '石川', '福井', '静岡', '愛知', '岐阜'],
+    prefectures: [
+      '山梨',
+      '長野',
+      '新潟',
+      '富山',
+      '石川',
+      '福井',
+      '静岡',
+      '愛知',
+      '岐阜',
+    ],
   },
   {
     name: '近畿',
@@ -32,7 +42,16 @@ const regions = [
   },
   {
     name: '九州・沖縄',
-    prefectures: ['福岡', '佐賀', '長崎', '熊本', '大分', '宮崎', '鹿児島', '沖縄'],
+    prefectures: [
+      '福岡',
+      '佐賀',
+      '長崎',
+      '熊本',
+      '大分',
+      '宮崎',
+      '鹿児島',
+      '沖縄',
+    ],
   },
   {
     name: '海外',
@@ -48,7 +67,7 @@ interface Prefecture {
 interface WorkLocationSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (_selectedLocations: Prefecture[]) => void;
+  onConfirm: (selectedLocations: Prefecture[]) => void;
   initialSelected?: Prefecture[];
 }
 
@@ -58,7 +77,8 @@ export default function WorkLocationSelectModal({
   onConfirm,
   initialSelected = [],
 }: WorkLocationSelectModalProps) {
-  const [selectedLocations, setSelectedLocations] = useState<Prefecture[]>(initialSelected);
+  const [selectedLocations, setSelectedLocations] =
+    useState<Prefecture[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const MAX_SELECTION = 47;
 
@@ -67,11 +87,16 @@ export default function WorkLocationSelectModal({
   }, [initialSelected]);
 
   const handleCheckboxChange = (locationName: string) => {
-    const location: Prefecture = { id: locationName.toLowerCase().replace(/[^a-z0-9]/g, ''), name: locationName };
+    const location: Prefecture = {
+      id: locationName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      name: locationName,
+    };
     const isSelected = selectedLocations.some(l => l.name === locationName);
-    
+
     if (isSelected) {
-      setSelectedLocations(selectedLocations.filter(l => l.name !== locationName));
+      setSelectedLocations(
+        selectedLocations.filter(l => l.name !== locationName)
+      );
     } else {
       if (selectedLocations.length < MAX_SELECTION) {
         setSelectedLocations([...selectedLocations, location]);
@@ -84,62 +109,76 @@ export default function WorkLocationSelectModal({
     onClose();
   };
 
-  const allPrefectures = regions.flatMap(r => r.prefectures);
-  const isAllSelected = selectedLocations.length === allPrefectures.length && allPrefectures.length > 0;
+  // 都道府県のみ（海外除外）リスト
+  const japanPrefectures = regions
+    .filter(r => r.name !== '海外')
+    .flatMap(r => r.prefectures);
+
+  // 都道府県が全て選択されているか
+  const isAllJapanSelected = japanPrefectures.every(pref =>
+    selectedLocations.some(l => l.name === pref)
+  );
 
   const handleSelectAllJapan = () => {
-    if (isAllSelected) {
-      setSelectedLocations([]);
+    if (isAllJapanSelected) {
+      // 都道府県だけを一括解除（海外はそのまま）
+      setSelectedLocations(
+        selectedLocations.filter(l => !japanPrefectures.includes(l.name))
+      );
     } else {
-      const allPrefectureObjects = allPrefectures.slice(0, MAX_SELECTION).map(name => ({
-        id: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
-        name
-      }));
-      setSelectedLocations(allPrefectureObjects);
+      // 都道府県を全て追加（海外はそのまま）
+      const newPrefectures = japanPrefectures
+        .filter(pref => !selectedLocations.some(l => l.name === pref))
+        .map(name => ({
+          id: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name,
+        }));
+      setSelectedLocations([...selectedLocations, ...newPrefectures]);
     }
   };
 
   return (
     <Modal
-      title="勤務地を選択"
+      title='勤務地を選択'
       isOpen={isOpen}
       onClose={onClose}
-      primaryButtonText="決定"
+      primaryButtonText='決定'
       onPrimaryAction={handleConfirm}
-      width={isDesktop ? "800px" : "100%"}
-      height={isDesktop ? "680px" : "90vh"}
+      width={isDesktop ? '800px' : '100%'}
+      height={isDesktop ? '680px' : '90vh'}
       selectedCount={selectedLocations.length}
       totalCount={MAX_SELECTION}
     >
-      <div className="space-y-8">
-        <div className="pb-6 border-b-2 border-[#D1D5DB]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+      <div className='space-y-8'>
+        <div className='pb-6 border-b-2 border-[#D1D5DB]'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
               <span className="font-['Noto_Sans_JP'] font-bold text-[18px] text-[#323232] mr-8">
                 日本
               </span>
               <Checkbox
-                label="日本を全て選択"
-                checked={isAllSelected}
+                label='日本を全て選択'
+                checked={isAllJapanSelected}
                 onChange={handleSelectAllJapan}
-                disabled={!isAllSelected && selectedLocations.length >= MAX_SELECTION}
               />
             </div>
           </div>
         </div>
 
         {regions.map(region => (
-          <div key={region.name} className="space-y-4">
+          <div key={region.name} className='space-y-4'>
             <h3 className="font-['Noto_Sans_JP'] font-bold text-[18px] text-[#323232]">
               {region.name}
             </h3>
-            <div className="flex flex-wrap gap-6">
+            <div className='flex flex-wrap gap-6'>
               {region.prefectures.map(prefecture => {
-                const isSelected = selectedLocations.some(l => l.name === prefecture);
-                const isDisabled = !isSelected && selectedLocations.length >= MAX_SELECTION;
+                const isSelected = selectedLocations.some(
+                  l => l.name === prefecture
+                );
+                const isDisabled = false;
 
                 return (
-                  <div key={prefecture} className="min-w-[80px]">
+                  <div key={prefecture} className='min-w-[80px]'>
                     <Checkbox
                       label={prefecture}
                       checked={isSelected}
