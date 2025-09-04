@@ -8,8 +8,10 @@ import { PasswordFormField } from '@/components/ui/password-form-field';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { candidateLoginAction } from './actions';
+import { useRouter } from 'next/navigation';
 
 export function CandidateLoginClient() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +42,8 @@ export function CandidateLoginClient() {
         });
 
         if (result.success) {
-          setSuccess('ログインに成功しました！');
-
-          // サーバーアクションでリダイレクトが処理されるため、ここでは何もしない
+          // setSuccess('ログインに成功しました！');
+          router.push('/candidate/mypage');
         } else {
           setError(result.error || 'ログインに失敗しました');
         }
@@ -76,7 +77,7 @@ export function CandidateLoginClient() {
 
         <form onSubmit={handleSubmit} className='w-full h-auto'>
           {/* エラー表示 */}
-          {error && (
+          {!isPending && error && (
             <Alert variant='destructive' className='mb-6'>
               <AlertCircle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>

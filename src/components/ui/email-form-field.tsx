@@ -43,7 +43,7 @@ export function EmailFormField({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className='w-full h-auto bg-white !border !border-[#999999] !border-solid rounded-[5px] px-[11px] py-[11px] text-[#323232] text-[14px] md:text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-bold font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-bold placeholder:leading-[2] placeholder:text-[12px] md:placeholder:text-[14px] focus:outline-none focus:!border-[#0F9058] focus:!ring-2 focus:!ring-[#0F9058]/20 transition-colors'
+            className='w-full h-auto bg-white !border !border-[#999999] !border-solid rounded-[5px] px-[11px] py-[11px] text-[#323232] text-[14px] md:text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-medium font-[family-name:var(--font-noto-sans-jp)] placeholder:text-[#999999] placeholder:font-medium placeholder:leading-[2] placeholder:text-[12px] md:placeholder:text-[14px] focus:outline-none focus:!border-[#0F9058] focus:!ring-2 focus:!ring-[#0F9058]/20 transition-colors'
           />
         </div>
         {showValidation && value && !isEmailValid && (
