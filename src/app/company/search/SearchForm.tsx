@@ -11,6 +11,8 @@ import { LocationModal } from '../job/LocationModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { useSearchStore } from '@/stores/searchStore';
 import { saveSearchConditions } from './actions';
+import { saveSearchHistory } from '@/lib/actions/search-history';
+import { generateSearchTitle } from '@/lib/utils/search-history';
 
 interface SearchFormProps {
   companyId: string;
@@ -171,12 +173,75 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                 variant="green-gradient"
                 size="figma-default"
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                onClick={() => {
+                onClick={async () => {
+                  console.log('[DEBUG SearchForm] Search button clicked');
+                  console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
+                  
                   // タッチ済みにしてバリデーションをトリガー
                   searchStore.setSearchGroupTouched(true);
 
                   // バリデーションチェック
-                  if (searchStore.validateForm()) {
+                  const isValid = searchStore.validateForm();
+                  console.log('[DEBUG SearchForm] Validation result:', isValid);
+                  if (isValid) {
+                    try {
+                      console.log('[DEBUG SearchForm] About to save search history from form');
+                      console.log('[DEBUG SearchForm] Search store values:', {
+                        searchGroup: searchStore.searchGroup,
+                        keyword: searchStore.keyword,
+                        experienceJobTypes: searchStore.experienceJobTypes,
+                        experienceIndustries: searchStore.experienceIndustries
+                      });
+                      
+                      // SearchConditions型に合わせたフォーマット
+                      const searchConditions = {
+                        keywords: searchStore.keyword ? [searchStore.keyword] : [],
+                        age_min: searchStore.ageMin ? parseInt(searchStore.ageMin) : undefined,
+                        age_max: searchStore.ageMax ? parseInt(searchStore.ageMax) : undefined,
+                        job_types: searchStore.experienceJobTypes.map(j => j.name),
+                        industries: searchStore.experienceIndustries.map(i => i.name),
+                        locations: searchStore.desiredLocations.map(l => l.name),
+                        work_styles: searchStore.workStyles.map(w => w.name),
+                        education_levels: searchStore.education ? [searchStore.education] : [],
+                        skills: searchStore.qualifications ? searchStore.qualifications.split(',').filter(Boolean) : [],
+                        salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
+                        salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
+                        language_skills: [],
+                        // その他の検索条件
+                        desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
+                        desired_industries: searchStore.desiredIndustries.map(i => i.name),
+                        desired_salary_min: searchStore.desiredSalaryMin ? parseInt(searchStore.desiredSalaryMin) : undefined,
+                        desired_salary_max: searchStore.desiredSalaryMax ? parseInt(searchStore.desiredSalaryMax) : undefined,
+                        current_company: searchStore.currentCompany,
+                        english_level: searchStore.englishLevel,
+                        other_language: searchStore.otherLanguage,
+                        other_language_level: searchStore.otherLanguageLevel,
+                        transfer_time: searchStore.transferTime,
+                        selection_status: searchStore.selectionStatus,
+                        similar_company_industry: searchStore.similarCompanyIndustry,
+                        similar_company_location: searchStore.similarCompanyLocation,
+                        last_login_min: searchStore.lastLoginMin,
+                        job_type_and_search: searchStore.jobTypeAndSearch,
+                        industry_and_search: searchStore.industryAndSearch,
+                      };
+
+                      const searchTitle = generateSearchTitle(searchConditions);
+                      console.log('[DEBUG SearchForm] Generated search title:', searchTitle);
+                      console.log('[DEBUG SearchForm] About to call saveSearchHistory');
+
+                      await saveSearchHistory({
+                        group_id: searchStore.searchGroup,
+                        search_conditions: searchConditions,
+                        search_title: searchTitle,
+                        is_saved: false
+                      });
+                      
+                      console.log('[DEBUG SearchForm] saveSearchHistory completed');
+                    } catch (error) {
+                      console.error('Failed to save search history:', error);
+                      // エラーが発生しても検索は続行
+                    }
+
                     // 検索条件をURLパラメータとして結果ページに遷移
                     const searchParams = new URLSearchParams();
                     
@@ -226,6 +291,8 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     
                     router.push(`/company/search/result?${searchParams.toString()}`);
                   } else {
+                    console.log('[DEBUG SearchForm] Validation failed - not navigating to results');
+                    console.log('[DEBUG SearchForm] searchGroup error:', searchStore.searchGroupError);
                     // エラーフィールドまでスクロール
                     const element = document.querySelector(
                       '[data-field="search-group"]',

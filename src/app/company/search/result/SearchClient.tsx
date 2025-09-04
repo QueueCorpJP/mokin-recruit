@@ -64,15 +64,6 @@ function formatRelativeTime(date: Date): string {
 function generateSearchConditionText(searchStore: any): { title: string; description: string } {
   const conditions: string[] = [];
   
-  // デバッグ用ログ
-  console.log('SearchStore values:', {
-    keyword: searchStore.keyword,
-    experienceJobTypes: searchStore.experienceJobTypes,
-    experienceIndustries: searchStore.experienceIndustries,
-    currentSalaryMin: searchStore.currentSalaryMin,
-    currentSalaryMax: searchStore.currentSalaryMax,
-    workLocations: searchStore.workLocations
-  });
   
   // キーワード検索
   if (searchStore.keyword && searchStore.keyword.trim() && searchStore.keyword !== 'undefined') {
@@ -357,6 +348,96 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
       setError(null);
       setCurrentPage(1); // ページを最初に戻す
       
+      // URLパラメータを構築
+      const params = new URLSearchParams();
+      
+      // 検索グループを必ず含める
+      if (searchStore.searchGroup) {
+        params.set('search_group', searchStore.searchGroup);
+      }
+      
+      // 検索条件をURLパラメータに追加
+      if (searchStore.keyword?.trim()) {
+        params.set('keyword', searchStore.keyword.trim());
+      }
+      
+      if (searchStore.experienceJobTypes?.length > 0) {
+        const jobTypes = searchStore.experienceJobTypes
+          .filter(jt => jt.name && jt.name !== 'undefined')
+          .map(jt => jt.name);
+        if (jobTypes.length > 0) {
+          params.set('experience_job_types', jobTypes.join(','));
+        }
+      }
+      
+      if (searchStore.experienceIndustries?.length > 0) {
+        const industries = searchStore.experienceIndustries
+          .filter(ind => ind.name && ind.name !== 'undefined')
+          .map(ind => ind.name);
+        if (industries.length > 0) {
+          params.set('experience_industries', industries.join(','));
+        }
+      }
+      
+      if (searchStore.currentSalaryMin) {
+        params.set('current_salary_min', searchStore.currentSalaryMin);
+      }
+      
+      if (searchStore.currentSalaryMax) {
+        params.set('current_salary_max', searchStore.currentSalaryMax);
+      }
+      
+      if (searchStore.ageMin) {
+        params.set('age_min', searchStore.ageMin);
+      }
+      
+      if (searchStore.ageMax) {
+        params.set('age_max', searchStore.ageMax);
+      }
+      
+      if (searchStore.desiredJobTypes?.length > 0) {
+        const desiredJobTypes = searchStore.desiredJobTypes
+          .filter(jt => jt.name && jt.name !== 'undefined')
+          .map(jt => jt.name);
+        if (desiredJobTypes.length > 0) {
+          params.set('desired_job_types', desiredJobTypes.join(','));
+        }
+      }
+      
+      if (searchStore.desiredIndustries?.length > 0) {
+        const desiredIndustries = searchStore.desiredIndustries
+          .filter(ind => ind.name && ind.name !== 'undefined')
+          .map(ind => ind.name);
+        if (desiredIndustries.length > 0) {
+          params.set('desired_industries', desiredIndustries.join(','));
+        }
+      }
+      
+      if (searchStore.desiredLocations?.length > 0) {
+        const desiredLocations = searchStore.desiredLocations
+          .filter(loc => loc.name && loc.name !== 'undefined')
+          .map(loc => loc.name);
+        if (desiredLocations.length > 0) {
+          params.set('desired_locations', desiredLocations.join(','));
+        }
+      }
+      
+      if (searchStore.education) {
+        params.set('education', searchStore.education);
+      }
+      
+      if (searchStore.englishLevel) {
+        params.set('english_level', searchStore.englishLevel);
+      }
+      
+      if (searchStore.qualifications) {
+        params.set('qualifications', searchStore.qualifications);
+      }
+      
+      // URLを更新
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      router.replace(newUrl);
+      
       // 検索条件を構築
       const searchConditions = {
         keyword: searchStore.keyword,
@@ -437,59 +518,38 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
     loadInitialData();
   }, [isHydrated]);
 
-  // ストアの状態に基づいて候補者をフィルタリング
+  // URLパラメータが変更された時の処理
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    // URLパラメータから検索条件をストアに復元
+    loadSearchParamsToStore(searchParams, searchStore);
+    console.log('[DEBUG] URL parameters changed, reloading search params');
+  }, [searchParams, isHydrated]);
+
+  // 初回のみ外部パラメータで検索実行
   useEffect(() => {
     if (!isHydrated || allCandidates.length === 0) return;
     
-    // 空文字列（「指定なし」）を除外する処理
-    const filterEmptyValues = (items: Array<{name: string}>) => 
-      items.filter(item => item.name && item.name.trim() !== '').map(item => item.name);
+    // URLパラメータに検索条件がある場合（外部ページからのリンク）のみ自動検索
+    const hasUrlParams = searchParams.get('keyword') || 
+                        searchParams.get('experience_job_types') || 
+                        searchParams.get('experience_industries') ||
+                        searchParams.get('current_salary_min') ||
+                        searchParams.get('current_salary_max') ||
+                        searchParams.get('age_min') ||
+                        searchParams.get('age_max') ||
+                        searchParams.get('education');
     
-    const searchConditions = {
-      job_types: filterEmptyValues(searchStore.experienceJobTypes),
-      industries: filterEmptyValues(searchStore.experienceIndustries),
-      locations: filterEmptyValues(searchStore.desiredLocations),
-      salary_min: searchStore.currentSalaryMin && searchStore.currentSalaryMin.trim() !== '' 
-        ? parseInt(searchStore.currentSalaryMin) : undefined,
-      salary_max: searchStore.currentSalaryMax && searchStore.currentSalaryMax.trim() !== '' 
-        ? parseInt(searchStore.currentSalaryMax) : undefined,
-      age_min: searchStore.ageMin && searchStore.ageMin.trim() !== '' 
-        ? parseInt(searchStore.ageMin) : undefined,
-      age_max: searchStore.ageMax && searchStore.ageMax.trim() !== '' 
-        ? parseInt(searchStore.ageMax) : undefined,
-      education_level: searchStore.education && searchStore.education.trim() !== '' 
-        ? [searchStore.education] : undefined,
-    };
-
-    const hasSearchConditions = Object.values(searchConditions).some(value => 
-      Array.isArray(value) ? value.length > 0 : value !== undefined && value !== ''
-    );
-
-    console.log('Search conditions:', searchConditions);
-    console.log('Has search conditions:', hasSearchConditions);
-    console.log('All candidates count:', allCandidates.length);
-
-    if (hasSearchConditions) {
-      const filtered = filterCandidatesByConditions(allCandidates, searchConditions);
-      console.log('Filtered candidates count:', filtered.length);
-      setCandidates(filtered);
+    if (hasUrlParams) {
+      // 外部パラメータがある場合は自動検索実行
+      handleSearch();
     } else {
-      console.log('No search conditions, showing all candidates');
+      // パラメータがない場合は全候補者を表示
       setCandidates(allCandidates);
+      setCurrentPage(1);
     }
-    // フィルタリング後はページを1に戻す
-    setCurrentPage(1);
-  }, [
-    allCandidates,
-    searchStore.experienceJobTypes,
-    searchStore.experienceIndustries,
-    searchStore.desiredLocations,
-    searchStore.currentSalaryMin,
-    searchStore.currentSalaryMax,
-    searchStore.ageMin,
-    searchStore.ageMax,
-    searchStore.education
-  ]);
+  }, [isHydrated, allCandidates]); // 依存関係を最小限に
 
 
   const togglePickup = (id: string | number) => {

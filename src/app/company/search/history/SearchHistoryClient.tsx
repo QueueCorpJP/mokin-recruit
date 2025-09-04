@@ -1,12 +1,17 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
 import { EditSearchConditionModal } from './EditSearchConditionModal';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
+import { 
+  updateSearchHistorySavedStatus, 
+  deleteSearchHistory,
+  type SearchHistoryItem as ServerSearchHistoryItem 
+} from '@/lib/actions/search-history';
 
 // Icons
 const SearchIcon = () => (
@@ -104,7 +109,15 @@ interface SearchHistoryItem {
   isMenuOpen?: boolean;
 }
 
-export function SearchHistoryClient() {
+interface SearchHistoryClientProps {
+  initialSearchHistory: ServerSearchHistoryItem[];
+  companyUserId: string;
+}
+
+export function SearchHistoryClient({ 
+  initialSearchHistory, 
+  companyUserId 
+}: SearchHistoryClientProps) {
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -116,28 +129,30 @@ export function SearchHistoryClient() {
   const [deletingItem, setDeletingItem] = useState<SearchHistoryItem | null>(
     null
   );
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([
-    {
-      id: '1',
-      saved: true,
-      group: 'グループ名テキスト',
-      searchCondition:
-        'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円〜〇〇万円',
-      searcher: '検索者名テキスト検索者名テキスト',
-      date: 'yyyy/mm/dd',
+  const [isPending, startTransition] = useTransition();
+
+  // ServerSearchHistoryItemをクライアント用のSearchHistoryItemに変換
+  const transformSearchHistory = (items: ServerSearchHistoryItem[]): SearchHistoryItem[] => {
+    return items.map(item => ({
+      id: item.id,
+      saved: item.is_saved,
+      group: item.group_name,
+      searchCondition: item.search_title,
+      searcher: item.searcher_name,
+      date: new Date(item.searched_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       isMenuOpen: false,
-    },
-    ...Array.from({ length: 9 }, (_, i) => ({
-      id: `${i + 2}`,
-      saved: false,
-      group: 'グループ名テキスト',
-      searchCondition:
-        '検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。',
-      searcher: '検索者名テキスト検索者名テキスト',
-      date: 'yyyy/mm/dd',
-      isMenuOpen: false,
-    })),
-  ]);
+    }));
+  };
+
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(
+    transformSearchHistory(initialSearchHistory)
+  );
 
   const toggleMenu = (id: string) => {
     setSearchHistory((prev: SearchHistoryItem[]) =>
@@ -150,11 +165,19 @@ export function SearchHistoryClient() {
   };
 
   const toggleBookmark = (id: string) => {
-    setSearchHistory((prev: SearchHistoryItem[]) =>
-      prev.map((item: SearchHistoryItem) =>
-        item.id === id ? { ...item, saved: !item.saved } : item
-      )
-    );
+    const item = searchHistory.find(h => h.id === id);
+    if (!item) return;
+
+    startTransition(async () => {
+      const result = await updateSearchHistorySavedStatus(id, !item.saved);
+      if (result.success) {
+        setSearchHistory((prev: SearchHistoryItem[]) =>
+          prev.map((prevItem: SearchHistoryItem) =>
+            prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
+          )
+        );
+      }
+    });
   };
 
   const handleEdit = (item: SearchHistoryItem) => {
@@ -191,21 +214,39 @@ export function SearchHistoryClient() {
 
   const handleConfirmDelete = () => {
     if (deletingItem) {
-      setSearchHistory((prev: SearchHistoryItem[]) =>
-        prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
-      );
+      startTransition(async () => {
+        const result = await deleteSearchHistory(deletingItem.id);
+        if (result.success) {
+          setSearchHistory((prev: SearchHistoryItem[]) =>
+            prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
+          );
+        }
+      });
     }
     setDeleteModalOpen(false);
     setDeletingItem(null);
   };
 
-  // グループ選択用のオプション
+  // グループオプションを生成（重複なし）
+  const uniqueGroups = Array.from(new Set(searchHistory.map(item => item.group)));
   const groupOptions = [
     { value: '', label: '未選択' },
-    { value: 'group1', label: 'グループ名テキスト' },
-    { value: 'group2', label: 'グループ名2' },
-    { value: 'group3', label: 'グループ名3' },
+    ...uniqueGroups.map(group => ({ value: group, label: group }))
   ];
+
+  // フィルタリング済みの検索履歴
+  const filteredSearchHistory = searchHistory.filter(item => {
+    // グループフィルタ
+    if (selectedGroup && item.group !== selectedGroup) return false;
+    
+    // キーワードフィルタ
+    if (keyword && !item.searchCondition.toLowerCase().includes(keyword.toLowerCase())) return false;
+    
+    // 保存済みフィルタ
+    if (showSavedOnly && !item.saved) return false;
+    
+    return true;
+  });
 
   return (
     <>
@@ -343,7 +384,12 @@ export function SearchHistoryClient() {
 
           {/* Search History Items */}
           <div className='flex flex-col gap-2 mt-2'>
-            {searchHistory.map((item: SearchHistoryItem) => (
+            {filteredSearchHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">検索履歴が見つかりません</p>
+              </div>
+            ) : (
+              filteredSearchHistory.map((item: SearchHistoryItem) => (
               <div
                 key={item.id}
                 className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
@@ -406,7 +452,8 @@ export function SearchHistoryClient() {
                   )}
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Pagination */}
