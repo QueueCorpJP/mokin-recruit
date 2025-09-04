@@ -127,7 +127,10 @@ export function CandidateResetPasswordClient() {
   }
 
   return (
-    <div className='w-full max-w-none md:min-w-auto flex flex-col items-center relative bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+    <div
+      data-reset-password-page
+      className='w-full max-w-none md:min-w-auto flex flex-col items-center relative bg-white rounded-[20px] md:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'
+    >
       <div className='flex flex-col gap-6 md:gap-10 items-center justify-start relative w-full mx-auto px-6 md:px-20 py-10 md:py-20'>
         {/* ヘッダー - 見出し+説明 */}
         <div className='flex flex-col gap-4 md:gap-6 items-center w-full text-center'>

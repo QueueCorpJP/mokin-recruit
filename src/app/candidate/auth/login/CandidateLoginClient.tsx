@@ -173,7 +173,7 @@ export function CandidateLoginClient() {
               会員登録がお済みでない方は
             </span>
             <Link
-              href='/candidate/auth/register'
+              href='/signup'
               className='text-[#0F9058] text-[14px] sm:text-[16px] leading-[1.6] tracking-[1.2px] md:tracking-[1.4px] font-bold font-[family-name:var(--font-noto-sans-jp)] underline decoration-solid underline-offset-auto hover:text-[#17856F] transition-colors'
             >
               こちら
