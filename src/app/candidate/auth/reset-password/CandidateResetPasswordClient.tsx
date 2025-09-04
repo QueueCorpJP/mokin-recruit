@@ -192,6 +192,7 @@ export function CandidateResetPasswordClient() {
                         fontWeight: 500,
                         lineHeight: '2',
                         letterSpacing: '1.4px',
+                        padding: 0,
                       }}
                       required
                       disabled={isLoading}
