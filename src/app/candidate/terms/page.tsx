@@ -44,7 +44,7 @@ export default function TermsPage() {
               }}
             >
               利用規約
-            </h1>
+            </h1>{' '}
             {/* 利用規約本文（新テキスト） */}
             <p
               className='w-full font-bold text-center'
@@ -62,7 +62,6 @@ export default function TermsPage() {
             <div
               style={{ width: '100%', height: '1px', background: '#DCDCDC' }}
             />
-
             {/* 第1条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2
@@ -91,7 +90,6 @@ export default function TermsPage() {
                 </li>
               </ol>
             </div>
-
             {/* 第2条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2
@@ -125,7 +123,6 @@ export default function TermsPage() {
                 </li>
               </ol>
             </div>
-
             {/* 第3条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2

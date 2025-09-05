@@ -45,31 +45,23 @@ export default function TermsPage() {
             >
               プライバシポリシー
             </h1>
-            {/* テキスト本文: フォントサイズ16px, 行間200%, 文字間隔0.1em, 幅100% */}
+            {/* プライバシーポリシー本文（新テキスト） */}
             <p
-              className='w-full'
+              className='w-full font-bold text-center'
               style={{
                 fontSize: '16px',
                 lineHeight: '200%',
                 letterSpacing: '0.1em',
               }}
             >
-              これはサンプルのプライバシポリシーテキストです。ご利用にあたっては、以下の内容をご確認ください。
-              本サービスを利用することで、利用者は本規約に同意したものとみなされます。
-              本規約は予告なく変更される場合がありますので、定期的にご確認ください。
-              サービスの利用に関するお問い合わせは、サポート窓口までご連絡ください。
-              なお、詳細な規約内容は実際の運用に合わせて適宜ご記載ください。
+              株式会社メルセネール（以下「当社」といいます）は、当社が提供するダイレクトリクルーティングサービス（以下「本サービス」といいます）において、ユーザーの個人情報の保護を重要な責務と考え、以下の方針に基づき、個人情報の適切な取得・利用・管理を行います。
             </p>
-            {/* グレーの区切り線: 高さ1px, 幅100%, 色#DCDCDC */}
+            {/* グレーの区切り線 */}
             <div
-              style={{
-                width: '100%',
-                height: '1px',
-                background: '#DCDCDC',
-              }}
+              style={{ width: '100%', height: '1px', background: '#DCDCDC' }}
             />
-            {/* 第1条〜第5条まで同じスタイルで追加 */}
-            {/* 第1条セクション */}
+
+            {/* 第1条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2
                 className='w-full font-bold'
@@ -79,7 +71,7 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                1.テキスト
+                第1条（個人情報の定義）
               </h2>
               <p
                 className='w-full'
@@ -89,10 +81,11 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                こちらは第1条のサンプルテキストです。実際の利用規約の内容に合わせてご記載ください。
+                本プライバシーポリシーにおける「個人情報」とは、個人情報保護法に定める「個人情報」をいい、氏名、生年月日、住所、電話番号、メールアドレス、職歴、スキル情報、その他特定の個人を識別できる情報を含みます。
               </p>
             </div>
-            {/* 第2条セクション */}
+
+            {/* 第2条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2
                 className='w-full font-bold'
@@ -102,7 +95,7 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                2.テキスト
+                第2条（個人情報の取得方法）
               </h2>
               <p
                 className='w-full'
@@ -112,10 +105,13 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                こちらは第2条のサンプルテキストです。サービスの利用条件や禁止事項などを記載することが一般的です。
+                当社は、ユーザーが本サービスに登録・応募・お問い合わせ等を行う際に、必要な個人情報を適正かつ公正な手段によって取得します。
+                <br />
+                また、サービス向上のため、クッキー（Cookie）やアクセス解析ツール等を使用して、利用状況に関する情報を収集することがあります。
               </p>
             </div>
-            {/* 第3条セクション */}
+
+            {/* 第3条 */}
             <div className='flex flex-col gap-4 mt-10'>
               <h2
                 className='w-full font-bold'
@@ -125,7 +121,7 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                3.テキスト
+                第3条（個人情報の利用目的）
               </h2>
               <p
                 className='w-full'
@@ -135,54 +131,24 @@ export default function TermsPage() {
                   letterSpacing: '0.1em',
                 }}
               >
-                こちらは第3条のサンプルテキストです。ユーザー登録やアカウント管理に関する内容を記載することが多いです。
+                当社は、取得した個人情報を以下の目的のために利用いたします：
               </p>
-            </div>
-            {/* 第4条セクション */}
-            <div className='flex flex-col gap-4 mt-10'>
-              <h2
-                className='w-full font-bold'
-                style={{
-                  fontSize: '24px',
-                  lineHeight: '160%',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                4.テキスト
-              </h2>
-              <p
-                className='w-full'
+              <ul
+                className='list-disc pl-6 w-full'
                 style={{
                   fontSize: '16px',
                   lineHeight: '200%',
                   letterSpacing: '0.1em',
                 }}
               >
-                こちらは第4条のサンプルテキストです。個人情報の取り扱いやプライバシーに関する事項を記載することが一般的です。
-              </p>
-            </div>
-            {/* 第5条セクション */}
-            <div className='flex flex-col gap-4 mt-10'>
-              <h2
-                className='w-full font-bold'
-                style={{
-                  fontSize: '24px',
-                  lineHeight: '160%',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                5.テキスト
-              </h2>
-              <p
-                className='w-full'
-                style={{
-                  fontSize: '16px',
-                  lineHeight: '200%',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                こちらは第5条のサンプルテキストです。免責事項やサービスの変更・終了に関する内容を記載することが多いです。
-              </p>
+                <li>本サービスの提供および運営のため</li>
+                <li>ユーザーと企業とのマッチングを実現するため</li>
+                <li>本人確認、ユーザーサポート、連絡・通知のため</li>
+                <li>
+                  サービスの改善・新機能の開発、マーケティング・分析のため
+                </li>
+                <li>法令に基づく対応や、不正利用の防止のため</li>
+              </ul>
             </div>
           </div>
         </div>
