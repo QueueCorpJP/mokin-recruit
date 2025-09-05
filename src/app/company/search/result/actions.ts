@@ -13,10 +13,10 @@ export async function getCompanyGroups() {
       return [];
     }
 
-    // company_usersテーブルから会社アカウントIDを取得
+    // company_usersテーブルから会社ユーザーIDを取得
     const { data: companyUser, error: userError } = await supabase
       .from('company_users')
-      .select('company_account_id')
+      .select('id')
       .eq('user_id', user.id)
       .single();
 
@@ -25,23 +25,30 @@ export async function getCompanyGroups() {
       return [];
     }
     
-    // 同じcompany_accountに属するユーザー一覧を取得（job/actions.tsと同じ実装）
-    const { data: groups, error } = await supabase
-      .from('company_users')
-      .select('id, email, full_name')
-      .eq('company_account_id', companyUser.company_account_id)
-      .order('created_at', { ascending: true });
+    // company_user_group_permissionsテーブルから所属するグループ一覧を取得
+    const { data: userPermissions, error } = await supabase
+      .from('company_user_group_permissions')
+      .select(`
+        company_group:company_groups (
+          id,
+          group_name
+        )
+      `)
+      .eq('company_user_id', companyUser.id);
 
     if (error) {
       console.error('Error fetching groups:', error);
       return [];
     }
 
-    // グループ形式に変換（job/actions.tsと同じ実装）
-    return (groups || []).map(user => ({
-      value: user.id,
-      label: user.full_name || user.email
-    }));
+    // グループ形式に変換
+    return (userPermissions || [])
+      .map((perm: any) => perm.company_group)
+      .filter((group: any) => group && group.id && group.group_name)
+      .map((group: any) => ({
+        value: group.id,
+        label: group.group_name
+      }));
   } catch (error) {
     console.error('Error in getCompanyGroups:', error);
     return [];
@@ -446,6 +453,7 @@ export function loadSearchParamsToStore(searchParams: URLSearchParams, searchSto
 // 検索パラメータから初期設定を取得する関数（後方互換性のため残す）
 export function parseSearchParams(searchParams: URLSearchParams) {
   return {
+    searchGroup: searchParams.get('search_group') || '',
     jobTypes: searchParams.get('job_types')?.split(',').map((name, index) => ({
       id: `job-${index}`,
       name: name.trim(),

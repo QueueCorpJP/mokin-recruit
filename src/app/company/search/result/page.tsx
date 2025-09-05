@@ -1,8 +1,7 @@
 import React from 'react';
 import SearchClient from './SearchClient';
 import { getCandidatesFromDatabase, parseSearchParams } from './actions';
-import { getCompanyGroups } from '../../job/actions';
-import { saveSearchHistory } from '@/lib/actions/search-history';
+import { saveSearchHistory, getCompanyGroups } from '@/lib/actions/search-history';
 import { generateSearchTitle } from '@/lib/utils/search-history';
 
 interface SearchPageProps {
@@ -18,7 +17,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const companyGroups = companyGroupsResult.success 
     ? companyGroupsResult.data.map(group => ({
         value: group.id,
-        label: group.group_name
+        label: group.name
       }))
     : [];
   
@@ -32,11 +31,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   });
   
-  // search_groupが指定されていない場合、ユーザーの最初のグループを使用
-  if (!urlParams.get('search_group') && companyGroups.length > 0) {
-    urlParams.set('search_group', companyGroups[0].value);
-    console.log('[DEBUG] Auto-assigned search_group:', companyGroups[0].value);
-  }
+  // search_groupは必ずユーザーが明示的に選択した場合のみ使用
   
   const initialSearchParams = parseSearchParams(urlParams);
 
@@ -89,16 +84,29 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       searchConditions.industries.length > 0 ||
       searchConditions.locations.length > 0 ||
       searchConditions.work_styles.length > 0 ||
+      searchConditions.education_levels.length > 0 ||
+      searchConditions.skills.length > 0 ||
+      searchConditions.desired_job_types?.length > 0 ||
+      searchConditions.desired_industries?.length > 0 ||
       searchConditions.age_min ||
       searchConditions.age_max ||
       searchConditions.salary_min ||
-      searchConditions.salary_max;
+      searchConditions.salary_max ||
+      searchConditions.desired_salary_min ||
+      searchConditions.desired_salary_max ||
+      searchConditions.current_company ||
+      searchConditions.english_level ||
+      searchConditions.other_language ||
+      searchConditions.transfer_time ||
+      searchConditions.selection_status;
       
 
+    console.log('[DEBUG] searchConditions:', JSON.stringify(searchConditions, null, 2));
     console.log('[DEBUG] hasValidConditions:', hasValidConditions);
+    console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
     console.log('[DEBUG] Will save history?:', urlParams.get('search_group') && hasValidConditions);
 
-    // 検索条件が存在する場合のみ履歴保存
+    // 検索条件が存在し、かつユーザーがグループを明示的に選択した場合のみ履歴保存
     if (urlParams.get('search_group') && hasValidConditions) {
       console.log('[DEBUG] Saving search history...');
       const searchTitle = generateSearchTitle(searchConditions);
@@ -117,7 +125,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       console.log('[DEBUG] Save result:', result);
       
     } else {
-      console.log('[DEBUG] Not saving search history - missing search_group or no valid conditions');
+      console.log('[DEBUG] Not saving search history - グループが選択されていないか、有効な検索条件がありません');
+      console.log('[DEBUG] search_group:', urlParams.get('search_group'));
+      console.log('[DEBUG] hasValidConditions:', hasValidConditions);
     }
   } catch (error) {
     console.error('Error processing search history:', error);

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { requireCompanyAuthForAction } from '@/lib/auth/server'
 
 export interface SavedSearchData {
   searchGroup: string

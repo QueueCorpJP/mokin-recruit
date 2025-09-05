@@ -676,7 +676,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
             </div>
 
             {isSearchBoxOpen && (
-              <div className="p-10">
+              <div className="p-10 pt-0">
                 <div className="flex flex-col gap-2">
                   {/* 検索履歴保存グループ */}
                   <div

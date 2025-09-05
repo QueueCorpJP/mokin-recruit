@@ -94,7 +94,7 @@ export default function SearchForm({ companyId }: SearchFormProps) {
     <>
       <div className="bg-white rounded-[10px]">
         {/* 検索条件名表示エリア */}
-        <div className="flex items-center justify-between p-10 border-b border-gray-200">
+        {/* <div className="flex items-center justify-between p-10 border-b border-gray-200">
           <div className="flex-1 flex gap-6 overflow-hidden items-center">
             <span
               className="text-[20px] font-bold text-[#323232] tracking-[1.4px] flex-shrink-0"
@@ -155,11 +155,11 @@ export default function SearchForm({ companyId }: SearchFormProps) {
               </span>
             </span>
           </div>
-        </div>
+        </div> */}
         
         <div className="p-10">
           <div className="flex flex-col gap-2">
-            <h3 className="text-[#323232] text-[20px] font-bold tracking-[2px] leading-[32px] mb-2">検索条件</h3>
+            {/* <h3 className="text-[#323232] text-[20px] font-bold tracking-[2px] leading-[32px] mb-2">検索条件</h3> */}
             
             {/* Search condition form */}
             <SearchConditionForm />

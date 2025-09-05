@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
@@ -8,10 +8,15 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import { useSearchStore } from '@/stores/searchStore';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { getCompanyGroups } from '@/lib/actions/search-history';
 
 export default function SearchConditionForm() {
   const searchStore = useSearchStore();
   const [openSelectId, setOpenSelectId] = React.useState<string | null>(null);
+  const [groupOptions, setGroupOptions] = useState<Array<{value: string, label: string}>>([
+    { value: '', label: '未選択' }
+  ]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   
   console.log('=== SearchConditionForm RENDER START ===');
   console.log('SearchConditionForm render - experienceJobTypes:', searchStore.experienceJobTypes);
@@ -21,6 +26,34 @@ export default function SearchConditionForm() {
   console.log('SearchConditionForm render - experienceIndustries length:', searchStore.experienceIndustries.length);
   console.log('SearchConditionForm render - experienceIndustries JSON:', JSON.stringify(searchStore.experienceIndustries, null, 2));
   console.log('=== SearchConditionForm RENDER END ===');
+
+  // グループ一覧を取得
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        setLoadingGroups(true);
+        const result = await getCompanyGroups();
+        if (result.success) {
+          const options = [
+            { value: '', label: '未選択' },
+            ...result.data.map(group => ({
+              value: group.id,
+              label: group.name
+            }))
+          ];
+          setGroupOptions(options);
+        } else {
+          console.error('Failed to fetch company groups:', result.error);
+        }
+      } catch (error) {
+        console.error('Error fetching company groups:', error);
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   return (
     <>
@@ -59,15 +92,10 @@ export default function SearchConditionForm() {
                   );
                 }
               }}
-              options={[
-                { value: '', label: '未選択' },
-                { value: 'group1', label: 'エンジニア採用グループ' },
-                { value: 'group2', label: '営業職採用グループ' },
-                { value: 'group3', label: 'デザイナー採用グループ' },
-                { value: 'group4', label: '新卒採用グループ' },
-              ]}
-              placeholder="未選択"
+              options={groupOptions}
+              placeholder={loadingGroups ? 'グループを読み込み中...' : '未選択'}
               className="w-[400px]"
+              disabled={loadingGroups}
             />
             {searchStore.searchGroupTouched && searchStore.searchGroupError && (
               <p className="text-[#ff0000] text-[12px] mt-2">
