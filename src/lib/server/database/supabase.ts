@@ -158,6 +158,28 @@ export function getSupabaseAdminClient(): SupabaseClient {
 }
 
 /**
+ * ユーザー認証付きSupabaseクライアント（RLS有効）を作成
+ */
+export function createAuthenticatedSupabaseClient(accessToken: string): SupabaseClient {
+  const config = getSupabaseConfig();
+  
+  return createClient(config.url, config.anonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Client-Info': 'mokin-recruit-server-authenticated',
+      },
+    },
+    auth: {
+      persistSession: false,
+    },
+    db: {
+      schema: 'public',
+    },
+  });
+}
+
+/**
  * Supabase接続テスト（簡素化版）
  */
 export async function testSupabaseConnection(): Promise<boolean> {

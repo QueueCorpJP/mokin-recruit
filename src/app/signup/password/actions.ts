@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
@@ -17,18 +17,25 @@ export interface SetPasswordResult {
 }
 
 // パスワード設定のバリデーションスキーマ
-const SetPasswordSchema = z.object({
-  password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
-  confirmPassword: z.string(),
-  userId: z.string().min(1, 'ユーザーIDが必要です'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "パスワードが一致しません",
-  path: ["confirmPassword"],
-});
+const SetPasswordSchema = z
+  .object({
+    password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
+    confirmPassword: z.string(),
+    userId: z.string().min(1, 'ユーザーIDが必要です'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: 'パスワードが一致しません',
+    path: ['confirmPassword'],
+  });
 
-export async function setPasswordAction(formData: SetPasswordFormData): Promise<SetPasswordResult> {
+export async function setPasswordAction(
+  formData: SetPasswordFormData
+): Promise<SetPasswordResult> {
   try {
-    logger.info('Password setting request received at:', new Date().toISOString());
+    logger.info(
+      'Password setting request received at:',
+      new Date().toISOString()
+    );
 
     // ステップ1: 環境変数の確認
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -94,8 +101,9 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
 
     try {
       // まずユーザー情報を取得してメールアドレスを確認
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      
+      const { data: userData, error: userError } =
+        await supabaseAdmin.auth.admin.getUserById(userId);
+
       if (userError || !userData.user) {
         logger.error('Failed to get user data:', userError);
         return {
@@ -114,16 +122,14 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
       }
 
       // ユーザーのパスワードを更新
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        userId,
-        {
+      const { error: updateError } =
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
           password: password,
           user_metadata: {
             signup_step: 'completed',
             password_set_at: new Date().toISOString(),
-          }
-        }
-      );
+          },
+        });
 
       if (updateError) {
         logger.error('Failed to set user password:', updateError);
@@ -147,7 +153,7 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
             id: userId,
             email: userEmail,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           });
 
         if (candidateError) {
@@ -168,10 +174,12 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
         httpOnly: false, // クライアントサイドから読み取り可能にする
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 7日間
+        maxAge: 60 * 60 * 24 * 7, // 7日間
       });
 
-      logger.info(`Password set and candidate record created successfully for user: ${userId}`);
+      logger.info(
+        `Password set and candidate record created successfully for user: ${userId}`
+      );
 
       return {
         success: true,
@@ -189,7 +197,8 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
 
     return {
       success: false,
-      message: 'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
+      message:
+        'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
     };
   }
 }

@@ -11,8 +11,8 @@
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Font Optimization - Prevent Layout Shift */
@@ -26,7 +26,8 @@
 
 /* Font loading states */
 html:not(.fonts-loaded) body {
-  font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
+  font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN',
+    'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
 }
 
 /* Prevent FOIT (Flash of Invisible Text) */
@@ -309,18 +310,24 @@ html:not(.fonts-loaded) body {
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Form elements reset - フォーム要素のデフォルトスタイルをリセット */
-  input, select, textarea, button {
+  input,
+  select,
+  textarea,
+  button {
     outline: none !important;
     box-shadow: none !important;
   }
-  
-  input:focus, select:focus, textarea:focus, button:focus {
+
+  input:focus,
+  select:focus,
+  textarea:focus,
+  button:focus {
     outline: none !important;
     box-shadow: none !important;
   }
-  
+
   /* Select要素のデフォルト矢印だけを削除 */
   select {
     appearance: none !important;
@@ -328,16 +335,16 @@ html:not(.fonts-loaded) body {
     -moz-appearance: none !important;
     background-image: none !important;
   }
-  
+
   select::-ms-expand {
     display: none !important;
   }
-  
+
   /* Prevent double scrollbars */
   html {
     overflow-x: hidden;
   }
-  
+
   body {
     overflow-x: hidden;
   }
@@ -428,7 +435,7 @@ html:not(.fonts-loaded) body {
   .ProseMirror table .selectedCell:after {
     z-index: 2;
     position: absolute;
-    content: "";
+    content: '';
     left: 0;
     right: 0;
     top: 0;
@@ -512,7 +519,16 @@ html:not(.fonts-loaded) body {
   }
 
   /* Prevent form elements from breaking layout */
-  .modal-content [class*="flex-"] > * {
+  .modal-content [class*='flex-'] > * {
     min-width: 0;
   }
+}
+
+/* ============================= */
+/* Candidate Reset Password Page */
+/* ============================= */
+
+/* reset-password ページ専用: input の border を完全に消す */
+[data-reset-password-page] input {
+  border: none !important;
 }

@@ -8,8 +8,10 @@ import { PasswordFormField } from '@/components/ui/password-form-field';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { candidateLoginAction } from './actions';
+import { useRouter } from 'next/navigation';
 
 export function CandidateLoginClient() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -36,24 +38,28 @@ export function CandidateLoginClient() {
       try {
         const result = await candidateLoginAction({
           email: email.trim(),
-          password
+          password,
         });
 
         if (result.success) {
-          setSuccess('ログインに成功しました！');
-          
-          // サーバーアクションでリダイレクトが処理されるため、ここでは何もしない
+          // setSuccess('ログインに成功しました！');
+          router.push('/candidate/mypage');
         } else {
           setError(result.error || 'ログインに失敗しました');
         }
       } catch (err) {
         // Next.jsのリダイレクトエラーは正常な処理なので無視
-        if (err instanceof Error && (err.message.includes('NEXT_REDIRECT') || (err as any).digest?.includes('NEXT_REDIRECT'))) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('NEXT_REDIRECT') ||
+            (err as any).digest?.includes('NEXT_REDIRECT'))
+        ) {
           // リダイレクト中なのでエラーを表示しない
           return;
         }
-        
-        const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました';
+
+        const errorMessage =
+          err instanceof Error ? err.message : 'ログインに失敗しました';
         setError(errorMessage);
       }
     });
@@ -71,7 +77,7 @@ export function CandidateLoginClient() {
 
         <form onSubmit={handleSubmit} className='w-full h-auto'>
           {/* エラー表示 */}
-          {error && (
+          {!isPending && error && (
             <Alert variant='destructive' className='mb-6'>
               <AlertCircle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
@@ -94,13 +100,13 @@ export function CandidateLoginClient() {
             <EmailFormField
               id='email'
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
 
             {/* パスワード入力 */}
             <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-start w-full'>
               <div className='flex flex-row items-center justify-start md:justify-end pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
-                <label 
+                <label
                   htmlFor='password'
                   className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
                 >
@@ -111,7 +117,7 @@ export function CandidateLoginClient() {
                 <PasswordFormField
                   id='password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className='[&>div:first-child]:hidden'
                   inputWidth='w-full'
                 />
@@ -143,21 +149,21 @@ export function CandidateLoginClient() {
 
           {/* SVG区切り線 */}
           <div className='flex items-center justify-center mt-8 md:mt-10 mb-8 md:mb-10'>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="100%" 
-              height="2" 
-              viewBox="0 0 640 2" 
-              fill="none"
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='100%'
+              height='2'
+              viewBox='0 0 640 2'
+              fill='none'
               className='w-full max-w-[280px] sm:max-w-[320px] md:max-w-[640px]'
-              style={{ 
-                height: '2px', 
+              style={{
+                height: '2px',
                 alignSelf: 'stretch',
                 strokeWidth: '2px',
-                stroke: '#E5E5E5'
+                stroke: '#E5E5E5',
               }}
             >
-              <path d="M0 1H640" stroke="#E5E5E5" strokeWidth="1"/>
+              <path d='M0 1H640' stroke='#E5E5E5' strokeWidth='1' />
             </svg>
           </div>
 
@@ -167,7 +173,7 @@ export function CandidateLoginClient() {
               会員登録がお済みでない方は
             </span>
             <Link
-              href='/candidate/auth/register'
+              href='/signup'
               className='text-[#0F9058] text-[14px] sm:text-[16px] leading-[1.6] tracking-[1.2px] md:tracking-[1.4px] font-bold font-[family-name:var(--font-noto-sans-jp)] underline decoration-solid underline-offset-auto hover:text-[#17856F] transition-colors'
             >
               こちら

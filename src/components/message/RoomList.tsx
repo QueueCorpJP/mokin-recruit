@@ -25,17 +25,29 @@ export function RoomList({
       <div className='relative flex flex-col h-full'>
         <div className='absolute right-[-0.5px] top-0 bottom-0 border-r border-[#efefef] pointer-events-none' />
 
-        <div className='flex-1 flex flex-col overflow-y-auto min-h-0' style={{ scrollbarWidth: 'thin', scrollbarColor: '#d1d5db transparent' }}>
-          {rooms.map((room, index) => (
-            <RoomItem
-              key={room.id}
-              {...room}
-              onClick={onRoomClick}
-              className={index === rooms.length - 1 ? 'mb-6' : ''}
-              isCandidatePage={isCandidatePage}
-              selected={selectedRoomId === room.id}
-            />
-          ))}
+        <div
+          className='flex-1 flex flex-col overflow-y-auto min-h-0'
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#d1d5db transparent',
+          }}
+        >
+          {rooms.length === 0 ? (
+            <div className='flex flex-1 items-center justify-center text-gray-400 text-base font-medium select-none'>
+              まだメッセージはありません。
+            </div>
+          ) : (
+            rooms.map((room, index) => (
+              <RoomItem
+                key={room.id}
+                {...room}
+                onClick={onRoomClick}
+                className={index === rooms.length - 1 ? 'mb-6' : ''}
+                isCandidatePage={isCandidatePage}
+                selected={selectedRoomId === room.id}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>

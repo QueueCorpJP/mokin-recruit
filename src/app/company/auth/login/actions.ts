@@ -44,9 +44,17 @@ async function createSupabaseServerClient() {
   );
 }
 
+
 export async function loginAction(formData: LoginFormData): Promise<LoginResult> {
   try {
     const { email, password, userType } = formData;
+
+    // デバッグ用ログ - パスワードは安全のためマスク
+    console.log('🔍 [COMPANY LOGIN DEBUG] Input:', {
+      email,
+      password: password ? `[${password.length}文字]` : 'undefined',
+      userType
+    });
 
     // Supabase認証
     const supabase = await createSupabaseServerClient();
@@ -74,9 +82,15 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       };
     }
 
-    // ユーザータイプの検証
-    const actualUserType = data.user.user_metadata?.user_type || 'candidate';
-    if (userType === 'company' && actualUserType !== 'company_user') {
+    // company_usersテーブルでの企業ユーザー確認
+    const { data: companyUser, error: companyUserError } = await supabase
+      .from('company_users')
+      .select('id, email, full_name, company_account_id, auth_user_id')
+      .eq('auth_user_id', data.user.id)
+      .single();
+
+    if (companyUserError || !companyUser) {
+      console.log('Company user not found for auth user:', data.user.id);
       return {
         success: false,
         error: '企業ユーザーアカウントではありません',
@@ -86,9 +100,11 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     }
 
     console.log('✅ [COMPANY LOGIN] Success:', {
-      userId: data.user.id,
+      authUserId: data.user.id,
       email: data.user.email,
-      userType: actualUserType
+      companyUserId: companyUser.id,
+      companyUserName: companyUser.full_name,
+      companyAccountId: companyUser.company_account_id
     });
 
     // 認証関連のキャッシュを完全にクリア

@@ -23,20 +23,16 @@ export function filterCandidatesByConditions(
   candidates: CandidateData[], 
   conditions: SearchConditions
 ): CandidateData[] {
-  console.log('Filtering candidates:', candidates.length, 'conditions:', conditions);
-  
   // 検索条件が何もない場合は全候補者を返す
   const hasAnyConditions = Object.values(conditions).some(value => 
     Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null
   );
   
   if (!hasAnyConditions) {
-    console.log('No conditions provided, returning all candidates');
     return candidates;
   }
   
   return candidates.filter(candidate => {
-    console.log('Checking candidate:', candidate.id, 'position:', candidate.position, 'companyName:', candidate.companyName, 'location:', candidate.location);
     
     let matchCount = 0;
     let totalConditions = 0;
@@ -53,13 +49,11 @@ export function filterCandidatesByConditions(
         );
         
         const match = positionMatch || companyMatch || experienceJobsMatch;
-        console.log(`Job matching "${jobType}": position(${positionMatch}), company(${companyMatch}), experience(${experienceJobsMatch}) = ${match}`);
         return match;
       });
       
       if (hasMatchingJobType) {
         matchCount++;
-        console.log('Job type matched');
       }
     }
 
@@ -74,13 +68,11 @@ export function filterCandidatesByConditions(
         );
         
         const match = companyMatch || experienceIndustryMatch;
-        console.log(`Industry matching "${industry}": company(${companyMatch}), experience(${experienceIndustryMatch}) = ${match}`);
         return match;
       });
       
       if (hasMatchingIndustry) {
         matchCount++;
-        console.log('Industry matched');
       }
     }
 
@@ -89,13 +81,11 @@ export function filterCandidatesByConditions(
       totalConditions++;
       const hasMatchingLocation = conditions.locations.some(location => {
         const match = candidate.location && candidate.location.toLowerCase().includes(location.toLowerCase());
-        console.log(`Location matching "${location}": ${match}`);
         return match;
       });
       
       if (hasMatchingLocation) {
         matchCount++;
-        console.log('Location matched');
       }
     }
 
@@ -109,7 +99,6 @@ export function filterCandidatesByConditions(
                           (!conditions.age_max || age <= conditions.age_max);
         if (ageInRange) {
           matchCount++;
-          console.log('Age matched');
         }
       }
     }
@@ -125,7 +114,6 @@ export function filterCandidatesByConditions(
                              (!conditions.salary_max || minSalary <= conditions.salary_max);
         if (salaryInRange) {
           matchCount++;
-          console.log('Salary matched');
         }
       }
     }
@@ -138,13 +126,11 @@ export function filterCandidatesByConditions(
       );
       if (hasMatchingEducation) {
         matchCount++;
-        console.log('Education matched');
       }
     }
 
     // OR検索：いずれかの条件にマッチすれば表示
     const shouldShow = totalConditions === 0 || matchCount > 0;
-    console.log(`Candidate ${candidate.id}: ${matchCount}/${totalConditions} conditions matched = ${shouldShow}`);
     
     return shouldShow;
   });
@@ -157,15 +143,10 @@ export function searchCandidatesWithMockData(
   conditions: SearchConditions,
   allCandidates: CandidateData[]
 ): CandidateData[] {
-  console.log('searchCandidatesWithMockData called with:', conditions, 'candidates:', allCandidates.length);
-  
   const filteredCandidates = filterCandidatesByConditions(allCandidates, conditions);
-  
-  console.log('Filtered candidates:', filteredCandidates.length);
   
   // フィルタ結果が空の場合、空の配列を返す
   if (filteredCandidates.length === 0) {
-    console.log('No filtered results, returning empty array');
     return [];
   }
   

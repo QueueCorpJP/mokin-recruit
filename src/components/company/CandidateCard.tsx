@@ -311,19 +311,31 @@ export function CandidateCard({
                 </span>
                 <div className="flex gap-2 flex-wrap">
                   {candidate.experienceJobs.map((job, index) => (
-                    <div
-                      key={index}
-                      className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
-                    >
+                    job.includes('未設定') ? (
                       <span
-                        className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                        key={index}
+                        className="text-[#999999] text-[14px] font-medium tracking-[1.4px]"
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                         }}
                       >
                         {job}
                       </span>
-                    </div>
+                    ) : (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
+                      >
+                        <span
+                          className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                        >
+                          {job}
+                        </span>
+                      </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -338,19 +350,31 @@ export function CandidateCard({
                 </span>
                 <div className="flex gap-2 flex-wrap">
                   {candidate.experienceIndustries.map((industry, index) => (
-                    <div
-                      key={index}
-                      className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
-                    >
+                    industry.includes('未設定') ? (
                       <span
-                        className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                        key={index}
+                        className="text-[#999999] text-[14px] font-medium tracking-[1.4px]"
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                         }}
                       >
                         {industry}
                       </span>
-                    </div>
+                    ) : (
+                      <div
+                        key={index}
+                        className="bg-[#d2f1da] px-4 py-1 rounded-[5px]"
+                      >
+                        <span
+                          className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                        >
+                          {industry}
+                        </span>
+                      </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -372,27 +396,39 @@ export function CandidateCard({
                 </span>
                 <div className="flex flex-col gap-2">
                   {candidate.selectionCompanies.map((selection, index) => (
-                    <div
-                      key={index}
-                      className="flex gap-4 items-start"
-                    >
+                    selection.company.includes('未設定') ? (
                       <span
-                        className="text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate"
+                        key={index}
+                        className="text-[#999999] text-[12px] font-medium tracking-[1.2px]"
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                         }}
                       >
                         {selection.company}
                       </span>
-                      <span
-                        className="text-[#323232] text-[12px] font-medium tracking-[1.2px] flex-1 truncate xl:max-w-[220px] 2xl:max-w-[300px]"
-                        style={{
-                          fontFamily: 'Noto Sans JP, sans-serif',
-                        }}
+                    ) : (
+                      <div
+                        key={index}
+                        className="flex gap-4 items-start"
                       >
-                        {selection.detail}
-                      </span>
-                    </div>
+                        <span
+                          className="text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate"
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                        >
+                          {selection.company}
+                        </span>
+                        <span
+                          className="text-[#323232] text-[12px] font-medium tracking-[1.2px] flex-1 truncate xl:max-w-[220px] 2xl:max-w-[300px]"
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                        >
+                          {selection.detail}
+                        </span>
+                      </div>
+                    )
                   ))}
                 </div>
               </div>

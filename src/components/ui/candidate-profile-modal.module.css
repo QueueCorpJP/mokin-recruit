@@ -1,0 +1,26 @@
+.profileContainer {
+  width: 316px;
+  height: 48px;
+  padding: 8px 24px;
+  border-radius: 5px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.profileContainer:hover {
+  background: #efefef;
+}
+.profileContainerInner {
+  display: flex;
+  gap: 8px;
+}
+.profileContainerText {
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 200%;
+  color: #0f9058;
+}

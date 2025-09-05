@@ -1,12 +1,20 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
 import { EditSearchConditionModal } from './EditSearchConditionModal';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
+import { 
+  updateSearchHistorySavedStatus, 
+  deleteSearchHistory,
+  updateSearchHistoryTitle,
+  type SearchHistoryItem as ServerSearchHistoryItem 
+} from '@/lib/actions/search-history';
+import { useAuth } from '@/providers/AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 // Icons
 const SearchIcon = () => (
@@ -97,14 +105,22 @@ const ChevronRightIcon = () => (
 interface SearchHistoryItem {
   id: string;
   saved: boolean;
-  group: string;
+  group: string; // group_id for filtering
+  groupName: string; // group_name for display
   searchCondition: string;
   searcher: string;
   date: string;
   isMenuOpen?: boolean;
 }
 
-export function SearchHistoryClient() {
+interface SearchHistoryClientProps {
+  initialSearchHistory: ServerSearchHistoryItem[];
+  initialError: string | null;
+  companyUserId: string;
+}
+
+export function SearchHistoryClient({ initialSearchHistory, initialError, companyUserId }: SearchHistoryClientProps) {
+  const { user, accessToken, loading: authLoading } = useAuth();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -116,28 +132,35 @@ export function SearchHistoryClient() {
   const [deletingItem, setDeletingItem] = useState<SearchHistoryItem | null>(
     null
   );
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([
-    {
-      id: '1',
-      saved: true,
-      group: 'グループ名テキスト',
-      searchCondition:
-        'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円〜〇〇万円',
-      searcher: '検索者名テキスト検索者名テキスト',
-      date: 'yyyy/mm/dd',
+  const [isPending, startTransition] = useTransition();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialError);
+
+  // ServerSearchHistoryItemをクライアント用のSearchHistoryItemに変換
+  const transformSearchHistory = (items: ServerSearchHistoryItem[]): SearchHistoryItem[] => {
+    return items.map(item => ({
+      id: item.id,
+      saved: item.is_saved,
+      group: item.group_id, // group_idを使用してフィルタリングと統一
+      groupName: item.group_name, // 表示用のgroup_name
+      searchCondition: item.search_title,
+      searcher: item.searcher_name,
+      date: new Date(item.searched_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       isMenuOpen: false,
-    },
-    ...Array.from({ length: 9 }, (_, i) => ({
-      id: `${i + 2}`,
-      saved: false,
-      group: 'グループ名テキスト',
-      searchCondition:
-        '検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。検索条件名テキストが入ります。',
-      searcher: '検索者名テキスト検索者名テキスト',
-      date: 'yyyy/mm/dd',
-      isMenuOpen: false,
-    })),
-  ]);
+    }));
+  };
+
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(
+    transformSearchHistory(initialSearchHistory)
+  );
 
   const toggleMenu = (id: string) => {
     setSearchHistory((prev: SearchHistoryItem[]) =>
@@ -150,11 +173,19 @@ export function SearchHistoryClient() {
   };
 
   const toggleBookmark = (id: string) => {
-    setSearchHistory((prev: SearchHistoryItem[]) =>
-      prev.map((item: SearchHistoryItem) =>
-        item.id === id ? { ...item, saved: !item.saved } : item
-      )
-    );
+    const item = searchHistory.find(h => h.id === id);
+    if (!item) return;
+
+    startTransition(async () => {
+      const result = await updateSearchHistorySavedStatus(id, !item.saved);
+      if (result.success) {
+        setSearchHistory((prev: SearchHistoryItem[]) =>
+          prev.map((prevItem: SearchHistoryItem) =>
+            prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
+          )
+        );
+      }
+    });
   };
 
   const handleEdit = (item: SearchHistoryItem) => {
@@ -166,15 +197,23 @@ export function SearchHistoryClient() {
     );
   };
 
-  const handleSaveEdit = (newSearchCondition: string) => {
+  const handleSaveEdit = async (newSearchCondition: string) => {
     if (editingItem) {
-      setSearchHistory((prev: SearchHistoryItem[]) =>
-        prev.map((item: SearchHistoryItem) =>
-          item.id === editingItem.id
-            ? { ...item, searchCondition: newSearchCondition }
-            : item
-        )
-      );
+      startTransition(async () => {
+        const result = await updateSearchHistoryTitle(editingItem.id, newSearchCondition);
+        if (result.success) {
+          setSearchHistory((prev: SearchHistoryItem[]) =>
+            prev.map((item: SearchHistoryItem) =>
+              item.id === editingItem.id
+                ? { ...item, searchCondition: newSearchCondition }
+                : item
+            )
+          );
+        } else {
+          console.error('Failed to update search title:', result.error);
+          // エラーハンドリング - ユーザーに通知したい場合
+        }
+      });
     }
     setEditModalOpen(false);
     setEditingItem(null);
@@ -191,21 +230,70 @@ export function SearchHistoryClient() {
 
   const handleConfirmDelete = () => {
     if (deletingItem) {
-      setSearchHistory((prev: SearchHistoryItem[]) =>
-        prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
-      );
+      startTransition(async () => {
+        const result = await deleteSearchHistory(deletingItem.id);
+        if (result.success) {
+          setSearchHistory((prev: SearchHistoryItem[]) =>
+            prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
+          );
+          setDeleteModalOpen(false);
+          setDeletingItem(null);
+        } else {
+          console.error('Failed to delete search history:', result.error);
+          // エラーハンドリング - ユーザーに通知したい場合
+          // モーダルは開いたままにして、ユーザーに再試行の機会を与える
+        }
+      });
+    } else {
+      setDeleteModalOpen(false);
+      setDeletingItem(null);
     }
-    setDeleteModalOpen(false);
-    setDeletingItem(null);
   };
 
-  // グループ選択用のオプション
+  // グループオプションを生成（重複なし）
+  const uniqueGroupsMap = new Map();
+  searchHistory.forEach(item => {
+    if (!uniqueGroupsMap.has(item.group)) {
+      uniqueGroupsMap.set(item.group, item.groupName);
+    }
+  });
+  
   const groupOptions = [
     { value: '', label: '未選択' },
-    { value: 'group1', label: 'グループ名テキスト' },
-    { value: 'group2', label: 'グループ名2' },
-    { value: 'group3', label: 'グループ名3' },
+    ...Array.from(uniqueGroupsMap.entries()).map(([groupId, groupName]) => ({
+      value: groupId,
+      label: groupName
+    }))
   ];
+
+  // フィルタリング済みの検索履歴
+  const filteredSearchHistory = searchHistory.filter(item => {
+    // グループフィルタ
+    if (selectedGroup && item.group !== selectedGroup) return false;
+    
+    // キーワードフィルタ
+    if (keyword && !item.searchCondition.toLowerCase().includes(keyword.toLowerCase())) return false;
+    
+    // 保存済みフィルタ
+    if (showSavedOnly && !item.saved) return false;
+    
+    return true;
+  });
+
+  // ページネーション計算
+  const totalItems = filteredSearchHistory.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredSearchHistory.slice(startIndex, endIndex);
+  const displayStartIndex = totalItems > 0 ? startIndex + 1 : 0;
+  const displayEndIndex = Math.min(endIndex, totalItems);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <>
@@ -260,7 +348,7 @@ export function SearchHistoryClient() {
                       setKeyword(e.target.value)
                     }
                     placeholder='キーワード検索'
-                    className='bg-white border-[#999999] flex-1 min-[1200px]:w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1'
+                    className='bg-white border-[#999999] flex-1 min-[1200px]:w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[10px]'
                   />
                   <Button
                     variant='small-green'
@@ -304,11 +392,23 @@ export function SearchHistoryClient() {
 
             {/* Pagination Info */}
             <div className='flex items-center gap-2'>
-              <ChevronLeftIcon />
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || totalItems === 0}
+                className={currentPage === 1 || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              >
+                <ChevronLeftIcon />
+              </button>
               <span className='text-[#323232] text-[12px] font-bold tracking-[1.2px]'>
-                1〜10件 / 1,000件
+                {displayStartIndex}〜{displayEndIndex}件 / {totalItems}件
               </span>
-              <ChevronRightIcon />
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || totalItems === 0}
+                className={currentPage === totalPages || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              >
+                <ChevronRightIcon />
+              </button>
             </div>
           </div>
 
@@ -343,7 +443,21 @@ export function SearchHistoryClient() {
 
           {/* Search History Items */}
           <div className='flex flex-col gap-2 mt-2'>
-            {searchHistory.map((item: SearchHistoryItem) => (
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">検索履歴を読み込んでいます...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <p className="text-red-500 mb-4">検索履歴の取得に失敗しました</p>
+                <p className="text-gray-600">{error}</p>
+              </div>
+            ) : currentItems.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">検索履歴がありません</p>
+              </div>
+            ) : (
+              currentItems.map((item: SearchHistoryItem) => (
               <div
                 key={item.id}
                 className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
@@ -359,7 +473,7 @@ export function SearchHistoryClient() {
                 {/* Group Badge */}
                 <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
                   <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
-                    {item.group}
+                    {item.groupName}
                   </span>
                 </div>
 
@@ -406,36 +520,55 @@ export function SearchHistoryClient() {
                   )}
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Pagination */}
           <div className='flex items-center justify-center gap-4 mt-10'>
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center transition-opacity duration-200 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-70'}`}
+            >
               <ChevronLeftIcon />
             </button>
 
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              1
-            </button>
+            {(() => {
+              const pages = [];
+              const maxButtons = 5;
+              const actualTotalPages = Math.max(1, totalPages); // 最低1ページは表示
+              let start = Math.max(1, currentPage - 2);
+              let end = Math.min(actualTotalPages, start + maxButtons - 1);
+              
+              if (end === actualTotalPages) {
+                start = Math.max(1, end - maxButtons + 1);
+              }
+              
+              for (let i = start; i <= end; i++) {
+                pages.push(
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    disabled={totalItems === 0} // データがない場合はクリック無効
+                    className={`w-14 h-14 rounded-[32px] flex items-center justify-center text-[16px] font-bold tracking-[1.6px] transition-opacity duration-200 ${
+                      i === currentPage
+                        ? 'bg-[#0f9058] text-white hover:opacity-80'
+                        : 'border border-[#0f9058] text-[#0f9058] hover:opacity-70'
+                    } ${totalItems === 0 ? 'cursor-not-allowed' : ''}`}
+                  >
+                    {i}
+                  </button>
+                );
+              }
+              return pages;
+            })()}
 
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              9
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] bg-[#0f9058] flex items-center justify-center text-white text-[16px] font-bold tracking-[1.6px] hover:opacity-80 transition-opacity duration-200'>
-              10
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              11
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              100
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || totalPages <= 1}
+              className={`w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center transition-opacity duration-200 ${(currentPage === totalPages || totalPages <= 1) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-70'}`}
+            >
               <ChevronRightIcon />
             </button>
           </div>
@@ -450,7 +583,7 @@ export function SearchHistoryClient() {
           setEditingItem(null);
         }}
         onSave={handleSaveEdit}
-        groupName={editingItem?.group || ''}
+        groupName={editingItem?.groupName || ''}
         initialValue={editingItem?.searchCondition || ''}
       />
 

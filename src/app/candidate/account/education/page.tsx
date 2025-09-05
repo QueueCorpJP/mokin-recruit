@@ -1,21 +1,29 @@
 import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import { getCandidateData, getEducationData } from '@/lib/server/candidate/candidateData';
+import {
+  getCandidateData,
+  getEducationData,
+} from '@/lib/server/candidate/candidateData';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
 
-
 // 最終学歴の表示名を取得
 function getFinalEducationDisplay(finalEducation?: string) {
   const educationMap = {
-    'high-school': '高校卒業',
-    'vocational-school': '専門学校卒業',
-    'junior-college': '短期大学卒業',
-    'university': '大学卒業',
-    'graduate-school': '大学院卒業'
+    中学校卒業: '中学校卒業',
+    高等学校卒業: '高等学校卒業',
+    高等専門学校卒業: '高等専門学校卒業',
+    短期大学卒業: '短期大学卒業',
+    専門学校卒業: '専門学校卒業',
+    '大学卒業（学士）': '大学卒業（学士）',
+    '大学院修士課程修了（修士）': '大学院修士課程修了（修士）',
+    '大学院博士課程修了（博士）': '大学院博士課程修了（博士）',
+    '海外大学卒業（学士）': '海外大学卒業（学士）',
+    '海外大学院修了（修士・博士含む）': '海外大学院修了（修士・博士含む）',
+    その他: 'その他',
   };
   return educationMap[finalEducation as keyof typeof educationMap] || '未設定';
 }
@@ -25,7 +33,7 @@ function formatGraduationDate(year?: number, month?: number) {
   if (!year || !month) return { year: 'yyyy', month: 'mm' };
   return {
     year: year.toString(),
-    month: month.toString().padStart(2, '0')
+    month: month.toString().padStart(2, '0'),
   };
 }
 
@@ -53,44 +61,41 @@ export default async function CandidateEducationPage() {
   );
 
   return (
-    <PageLayout 
-      breadcrumb="学歴・経験業種/職種" 
-      title="学歴・経験業種/職種"
-    >
+    <PageLayout breadcrumb='学歴・経験業種/職種' title='学歴・経験業種/職種'>
       <ContentCard>
         {/* 学歴セクション */}
-        <div className="mb-6 lg:mb-6">
-          <SectionHeader title="学歴" />
-          
-          <div className="space-y-6 lg:space-y-2">
+        <div className='mb-6 lg:mb-6'>
+          <SectionHeader title='学歴' />
+
+          <div className='space-y-6 lg:space-y-2'>
             {/* 最終学歴 */}
-            <DataRow label="最終学歴">
-              <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
+            <DataRow label='最終学歴'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
                 {getFinalEducationDisplay(educationData?.final_education)}
               </div>
             </DataRow>
 
             {/* 学校名 */}
-            <DataRow label="学校名">
-              <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
+            <DataRow label='学校名'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
                 {educationData?.school_name || '未設定'}
               </div>
             </DataRow>
 
             {/* 学部学科専攻 */}
-            <DataRow label="学部学科専攻">
-              <div className="text-[16px] text-[#323232] font-medium tracking-[1.6px]">
+            <DataRow label='学部学科専攻'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
                 {educationData?.department || '未設定'}
               </div>
             </DataRow>
 
             {/* 卒業年月 */}
-            <DataRow label="卒業年月">
-              <div className="flex flex-wrap gap-2 items-center text-[16px] text-[#323232] tracking-[1.6px]">
-                <span className="font-medium">{graduationDate.year}</span>
-                <span className="font-bold">年</span>
-                <span className="font-medium">{graduationDate.month}</span>
-                <span className="font-bold">月</span>
+            <DataRow label='卒業年月'>
+              <div className='flex flex-wrap gap-2 items-center text-[16px] text-[#323232] tracking-[1.6px]'>
+                <span className='font-medium'>{graduationDate.year}</span>
+                <span className='font-bold'>年</span>
+                <span className='font-medium'>{graduationDate.month}</span>
+                <span className='font-bold'>月</span>
               </div>
             </DataRow>
           </div>
@@ -98,23 +103,24 @@ export default async function CandidateEducationPage() {
 
         {/* 今までに経験した業種・職種セクション */}
         <div>
-          <SectionHeader title="今までに経験した業種・職種" />
-          
-          <div className="space-y-6 lg:space-y-2">
+          <SectionHeader title='今までに経験した業種・職種' />
+
+          <div className='space-y-6 lg:space-y-2'>
             {/* 業種 */}
-            <DataRow label="業種">
-              <div className="flex flex-wrap gap-2">
-                {candidateData.desired_industries && candidateData.desired_industries.length > 0 ? (
+            <DataRow label='業種'>
+              <div className='flex flex-wrap gap-2'>
+                {candidateData.desired_industries &&
+                candidateData.desired_industries.length > 0 ? (
                   candidateData.desired_industries.map((industry, index) => (
                     <span
                       key={index}
-                      className="bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                      className='bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'
                     >
                       {industry}
                     </span>
                   ))
                 ) : (
-                  <span className="text-[16px] text-[#999999] font-medium tracking-[1.6px]">
+                  <span className='text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
                     未設定
                   </span>
                 )}
@@ -122,19 +128,20 @@ export default async function CandidateEducationPage() {
             </DataRow>
 
             {/* 職種 */}
-            <DataRow label="職種">
-              <div className="flex flex-wrap gap-2">
-                {candidateData.desired_job_types && candidateData.desired_job_types.length > 0 ? (
+            <DataRow label='職種'>
+              <div className='flex flex-wrap gap-2'>
+                {candidateData.desired_job_types &&
+                candidateData.desired_job_types.length > 0 ? (
                   candidateData.desired_job_types.map((jobType, index) => (
                     <span
                       key={index}
-                      className="bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
+                      className='bg-[#d2f1da] px-3 py-1 rounded-[5px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'
                     >
                       {jobType}
                     </span>
                   ))
                 ) : (
-                  <span className="text-[16px] text-[#999999] font-medium tracking-[1.6px]">
+                  <span className='text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
                     未設定
                   </span>
                 )}
@@ -145,7 +152,7 @@ export default async function CandidateEducationPage() {
       </ContentCard>
 
       {/* 編集ボタン */}
-      <EditButton editPath="/candidate/account/education/edit" />
+      <EditButton editPath='/candidate/account/education/edit' />
     </PageLayout>
   );
 }
