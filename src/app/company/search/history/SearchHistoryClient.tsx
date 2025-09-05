@@ -507,9 +507,6 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
                       >
                         編集
                       </button>
-                      <button className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'>
-                        複製
-                      </button>
                       <button
                         onClick={() => handleDelete(item)}
                         className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'

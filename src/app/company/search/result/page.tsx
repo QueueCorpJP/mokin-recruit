@@ -106,8 +106,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
     console.log('[DEBUG] Will save history?:', urlParams.get('search_group') && hasValidConditions);
 
-    // 検索条件が存在し、かつユーザーがグループを明示的に選択した場合のみ履歴保存
-    if (urlParams.get('search_group') && hasValidConditions) {
+    // 検索条件が存在し、かつユーザーがグループを明示的に選択し、保存ボタンから来ていない場合のみ履歴保存
+    if (urlParams.get('search_group') && hasValidConditions && !urlParams.get('from_save')) {
       console.log('[DEBUG] Saving search history...');
       const searchTitle = generateSearchTitle(searchConditions);
 

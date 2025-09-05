@@ -58,19 +58,30 @@ export default function DesiredConditionForm() {
                   }
                   options={[
                     { value: '', label: '指定なし' },
-                    { value: 'chinese', label: '中国語' },
-                    { value: 'korean', label: '韓国語' },
-                    { value: 'spanish', label: 'スペイン語' },
-                    { value: 'french', label: 'フランス語' },
-                    { value: 'german', label: 'ドイツ語' },
-                    { value: 'portuguese', label: 'ポルトガル語' },
-                    { value: 'russian', label: 'ロシア語' },
-                    { value: 'italian', label: 'イタリア語' },
-                    { value: 'vietnamese', label: 'ベトナム語' },
-                    { value: 'thai', label: 'タイ語' },
-                    { value: 'indonesian', label: 'インドネシア語' },
-                    { value: 'hindi', label: 'ヒンディー語' },
-                    { value: 'japanese', label: '日本語' },
+                    { value: 'インドネシア語', label: 'インドネシア語' },
+                    { value: 'イタリア語', label: 'イタリア語' },
+                    { value: 'マレーシア語', label: 'マレーシア語' },
+                    { value: 'オランダ語', label: 'オランダ語' },
+                    { value: 'ノルウェー語', label: 'ノルウェー語' },
+                    { value: 'ポルトガル語', label: 'ポルトガル語' },
+                    { value: 'ロシア語', label: 'ロシア語' },
+                    { value: 'スウェーデン語', label: 'スウェーデン語' },
+                    { value: 'スワヒリ語', label: 'スワヒリ語' },
+                    { value: 'タイ語', label: 'タイ語' },
+                    { value: 'タガログ語', label: 'タガログ語' },
+                    { value: 'ベトナム語', label: 'ベトナム語' },
+                    { value: '日本語', label: '日本語' },
+                    { value: '北京語', label: '北京語' },
+                    { value: '韓国語・朝鮮語', label: '韓国語・朝鮮語' },
+                    { value: 'アラビア語', label: 'アラビア語' },
+                    { value: '広東語', label: '広東語' },
+                    { value: 'スペイン語', label: 'スペイン語' },
+                    { value: 'フィンランド語', label: 'フィンランド語' },
+                    { value: '台湾語', label: '台湾語' },
+                    { value: 'フランス語', label: 'フランス語' },
+                    { value: 'ドイツ語', label: 'ドイツ語' },
+                    { value: 'ヘブライ語', label: 'ヘブライ語' },
+                    { value: 'ヒンディー語', label: 'ヒンディー語' },
                   ]}
                   placeholder="指定なし"
                 />
@@ -111,7 +122,7 @@ export default function DesiredConditionForm() {
             value={searchStore.qualifications}
             onChange={(e) => searchStore.setQualifications(e.target.value)}
             placeholder="保有資格を入力"
-            className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+            className="w-[400px] font-medium px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           />
         </div>
@@ -443,7 +454,7 @@ export default function DesiredConditionForm() {
         <div className="flex-1 py-6 flex items-center">
           <SelectInput
             value={searchStore.transferTime}
-            className="w-100"
+            className="w-[400px]"
             onChange={(value: string) => searchStore.setTransferTime(value)}
             options={[
               { value: '', label: '指定なし' },
@@ -538,7 +549,7 @@ export default function DesiredConditionForm() {
         <div className="flex-1 py-6 flex items-center">
           <SelectInput
             value={searchStore.selectionStatus}
-            className="w-100"
+            className="w-[400px]"
             onChange={(value: string) => searchStore.setSelectionStatus(value)}
             options={[
               { value: '', label: '指定なし' },

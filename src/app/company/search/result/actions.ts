@@ -101,6 +101,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         recent_job_industries,
         recent_job_types,
         recent_job_description,
+        job_summary,
         education(
           final_education,
           school_name
@@ -499,6 +500,7 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
         recent_job_industries,
         recent_job_types,
         recent_job_description,
+        job_summary,
         education(
           final_education,
           school_name
@@ -518,17 +520,13 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
         )
       `);
 
-    // キーワード検索（名前、会社名、部署、職種、業界等で検索）
+    // キーワード検索（職務要約、職務経歴内、業務内容で検索）
     if (conditions.keyword && conditions.keyword.trim()) {
       const keyword = conditions.keyword.trim();
       query = query.or(`
-        last_name.ilike.%${keyword}%,
-        first_name.ilike.%${keyword}%,
-        current_company.ilike.%${keyword}%,
-        current_position.ilike.%${keyword}%,
-        recent_job_company_name.ilike.%${keyword}%,
-        recent_job_department_position.ilike.%${keyword}%,
-        recent_job_description.ilike.%${keyword}%
+        job_summary.ilike.%${keyword}%,
+        recent_job_description.ilike.%${keyword}%,
+        recent_job_department_position.ilike.%${keyword}%
       `);
     }
 
@@ -649,3 +647,4 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
     return [];
   }
 }
+

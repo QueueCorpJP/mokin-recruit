@@ -106,7 +106,6 @@ export default function SearchConditionForm() {
         </div>
       </div>
 
-      {/* キーワード検索 */}
       <div className="flex gap-6 items-strech border-t-[2px] border-[#EFEFEF] pt-6 mt-5">
         <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
           <span
@@ -116,13 +115,13 @@ export default function SearchConditionForm() {
             キーワード検索
           </span>
         </div>
-        <div className="flex-1 py-6 flex items-center text-[#999]">
+        <div className="flex-1 py-6 flex items-center">
           <input
             type="text"
             value={searchStore.keyword}
             onChange={(e) => searchStore.setKeyword(e.target.value)}
             placeholder="検索したいワードを入力"
-            className="w-100 px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+            className="w-[400px] px-4 py-3 border border-[#999] font-medium rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           />
         </div>
@@ -197,26 +196,13 @@ export default function SearchConditionForm() {
                         setOpenSelectId(null);
                       }}
                     >
-                      <option value="">経験年数：未選択</option>
-                      <option value="1年">経験年数：1年</option>
-                      <option value="2年">経験年数：2年</option>
-                      <option value="3年">経験年数：3年</option>
-                      <option value="4年">経験年数：4年</option>
-                      <option value="5年">経験年数：5年</option>
-                      <option value="6年">経験年数：6年</option>
-                      <option value="7年">経験年数：7年</option>
-                      <option value="8年">経験年数：8年</option>
-                      <option value="9年">経験年数：9年</option>
-                      <option value="10年">経験年数：10年</option>
-                      <option value="11年">経験年数：11年</option>
-                      <option value="12年">経験年数：12年</option>
-                      <option value="13年">経験年数：13年</option>
-                      <option value="14年">経験年数：14年</option>
-                      <option value="15年">経験年数：15年</option>
-                      <option value="16年">経験年数：16年</option>
-                      <option value="17年">経験年数：17年</option>
-                      <option value="18年">経験年数：18年</option>
-                      <option value="19年">経験年数：19年</option>
+                      <option value="">経験年数：指定なし</option>
+                      <option value="1年以上">経験年数：1年以上</option>
+                      <option value="3年以上">経験年数：3年以上</option>
+                      <option value="5年以上">経験年数：5年以上</option>
+                      <option value="7年以上">経験年数：7年以上</option>
+                      <option value="10年以上">経験年数：10年以上</option>
+                      <option value="15年以上">経験年数：15年以上</option>
                       <option value="20年以上">経験年数：20年以上</option>
                     </select>
                     <svg
@@ -324,26 +310,13 @@ export default function SearchConditionForm() {
                         setOpenSelectId(null);
                       }}
                     >
-                      <option value="">経験年数：未選択</option>
-                      <option value="1年">経験年数：1年</option>
-                      <option value="2年">経験年数：2年</option>
-                      <option value="3年">経験年数：3年</option>
-                      <option value="4年">経験年数：4年</option>
-                      <option value="5年">経験年数：5年</option>
-                      <option value="6年">経験年数：6年</option>
-                      <option value="7年">経験年数：7年</option>
-                      <option value="8年">経験年数：8年</option>
-                      <option value="9年">経験年数：9年</option>
-                      <option value="10年">経験年数：10年</option>
-                      <option value="11年">経験年数：11年</option>
-                      <option value="12年">経験年数：12年</option>
-                      <option value="13年">経験年数：13年</option>
-                      <option value="14年">経験年数：14年</option>
-                      <option value="15年">経験年数：15年</option>
-                      <option value="16年">経験年数：16年</option>
-                      <option value="17年">経験年数：17年</option>
-                      <option value="18年">経験年数：18年</option>
-                      <option value="19年">経験年数：19年</option>
+                      <option value="">経験年数：指定なし</option>
+                      <option value="1年以上">経験年数：1年以上</option>
+                      <option value="3年以上">経験年数：3年以上</option>
+                      <option value="5年以上">経験年数：5年以上</option>
+                      <option value="7年以上">経験年数：7年以上</option>
+                      <option value="10年以上">経験年数：10年以上</option>
+                      <option value="15年以上">経験年数：15年以上</option>
                       <option value="20年以上">経験年数：20年以上</option>
                     </select>
                     <svg
@@ -411,11 +384,8 @@ export default function SearchConditionForm() {
               }
               options={[
                 { value: '', label: '指定なし' },
-                { value: '300', label: '300万円' },
-                { value: '400', label: '400万円' },
                 { value: '500', label: '500万円' },
                 { value: '600', label: '600万円' },
-                { value: '700', label: '700万円' },
                 { value: '800', label: '800万円' },
                 { value: '1000', label: '1,000万円' },
                 { value: '1200', label: '1,200万円' },
@@ -435,11 +405,8 @@ export default function SearchConditionForm() {
               }
               options={[
                 { value: '', label: '指定なし' },
-                { value: '300', label: '300万円' },
-                { value: '400', label: '400万円' },
                 { value: '500', label: '500万円' },
                 { value: '600', label: '600万円' },
-                { value: '700', label: '700万円' },
                 { value: '800', label: '800万円' },
                 { value: '1000', label: '1,000万円' },
                 { value: '1200', label: '1,200万円' },
@@ -464,13 +431,13 @@ export default function SearchConditionForm() {
             在籍企業
           </span>
         </div>
-        <div className="flex-1 py-6 flex items-center">
+        <div className="flex-1 py-6 flex items-center w-full">
           <input
             type="text"
             value={searchStore.currentCompany}
             onChange={(e) => searchStore.setCurrentCompany(e.target.value)}
             placeholder="在籍企業を入力"
-            className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+            className="w-[400px] font-medium px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           />
         </div>
@@ -494,19 +461,21 @@ export default function SearchConditionForm() {
               onChange={(value: string) => searchStore.setEducation(value)}
               options={[
                 { value: '', label: '指定なし' },
-                { value: 'middle', label: '中学卒' },
-                { value: 'high', label: '高校卒' },
-                { value: 'vocational', label: '専門学校卒' },
-                { value: 'junior', label: '短大卒' },
-                { value: 'university', label: '大学卒' },
-                { value: 'graduate', label: '大学院卒' },
-                { value: 'mba', label: 'MBA' },
-                { value: 'doctorate', label: '博士号' },
+                { value: 'middle', label: '中学校卒業' },
+                { value: 'high', label: '高等学校卒業' },
+                { value: 'technical_college', label: '高等専門学校卒業' },
+                { value: 'junior', label: '短期大学卒業' },
+                { value: 'vocational', label: '専門学校卒業' },
+                { value: 'university', label: '大学卒業（学士）' },
+                { value: 'master', label: '大学院修士課程修了（修士）' },
+                { value: 'doctorate', label: '大学院博士課程修了（博士）' },
+                { value: 'overseas_university', label: '海外大学卒業（学士）' },
+                { value: 'overseas_master', label: '海外大学院修了（修士）' },
               ]}
               placeholder="指定なし"
             />
             <span
-              className="text-[#323232] text-[14px] font-bold tracking-[1.4px]"
+              className="text-[#323232] text-[14px] font-bold tracking-[1.6px]"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               以上

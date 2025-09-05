@@ -13,6 +13,7 @@ import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModa
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import { getCandidatesFromDatabase, loadSearchParamsToStore, searchCandidatesWithConditions } from './actions';
+import { saveCandidateAction, unsaveCandidateAction, getSavedCandidatesAction, toggleCandidateHiddenAction, getHiddenCandidatesAction } from './candidate-actions';
 import { useSearchStore } from '../../../../stores/searchStore';
 import ExperienceSearchConditionForm from '../components/ExperienceSearchConditionForm';
 import SelectableTagWithYears from '../components/SelectableTagWithYears';
@@ -188,10 +189,13 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
     newUser: false,
     lastLogin: false,
     working: false,
+    hideHidden: false,
   });
   const [companyGroups, setCompanyGroups] = useState<{ value: string; label: string }[]>(initialCompanyGroups);
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [savedCandidateIds, setSavedCandidateIds] = useState<string[]>([]);
+  const [hiddenCandidateIds, setHiddenCandidateIds] = useState<string[]>([]);
 
   // ページネーション関連のstate
   const [currentPage, setCurrentPage] = useState(1);
@@ -231,9 +235,14 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
         }
       }
       
+      // 非表示の候補者を除外するフィルター
+      if (filters.hideHidden && hiddenCandidateIds.includes(candidate.id.toString())) {
+        return false;
+      }
+      
       return true;
     });
-  }, [candidates, filters.pickup, filters.newUser, filters.lastLogin, filters.working]);
+  }, [candidates, filters.pickup, filters.newUser, filters.lastLogin, filters.working, filters.hideHidden, hiddenCandidateIds]);
 
   // ソート処理
   const sortedCandidates = useMemo(() => {
@@ -485,6 +494,65 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
     }
   }, [initialSearchParams]);
 
+  // 保存された候補者を取得
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    // グループが選択されていない場合、最初のグループを自動選択（デバッグ用）
+    if (!searchStore.searchGroup && companyGroups.length > 0) {
+      console.log('[DEBUG] Auto-selecting first group:', companyGroups[0]);
+      searchStore.setSearchGroup(companyGroups[0].value);
+      return;
+    }
+    
+    if (!searchStore.searchGroup) return;
+    
+    const loadSavedCandidates = async () => {
+      try {
+        console.log('[DEBUG] Loading saved candidates for group:', searchStore.searchGroup);
+        const result = await getSavedCandidatesAction(searchStore.searchGroup);
+        if (result.success) {
+          setSavedCandidateIds(result.data);
+          console.log('[DEBUG] Loaded saved candidate IDs:', result.data);
+        } else {
+          console.error('Failed to load saved candidates');
+        }
+      } catch (error) {
+        console.error('Error loading saved candidates:', error);
+      }
+    };
+
+    const loadHiddenCandidates = async () => {
+      try {
+        console.log('[DEBUG] Loading hidden candidates for group:', searchStore.searchGroup);
+        const result = await getHiddenCandidatesAction(searchStore.searchGroup);
+        if (result.success) {
+          setHiddenCandidateIds(result.data);
+          console.log('[DEBUG] Loaded hidden candidate IDs:', result.data);
+        } else {
+          console.error('Failed to load hidden candidates');
+        }
+      } catch (error) {
+        console.error('Error loading hidden candidates:', error);
+      }
+    };
+
+    loadSavedCandidates();
+    loadHiddenCandidates();
+  }, [isHydrated, searchStore.searchGroup, companyGroups]);
+
+  // 候補者データが変更された際に保存状態を反映
+  useEffect(() => {
+    if (savedCandidateIds.length === 0 || candidates.length === 0) return;
+    
+    setCandidates(prev => 
+      prev.map(candidate => ({
+        ...candidate,
+        isPickup: savedCandidateIds.includes(String(candidate.id))
+      }))
+    );
+  }, [savedCandidateIds]);
+
   // 初期データ読み込み
   useEffect(() => {
     if (!isHydrated) return;
@@ -552,24 +620,70 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
   }, [isHydrated, allCandidates]); // 依存関係を最小限に
 
 
-  const togglePickup = (id: string | number) => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        candidate.id === id
-          ? { ...candidate, isPickup: !candidate.isPickup }
-          : candidate,
-      ),
-    );
+  const togglePickup = async (id: string | number) => {
+    const candidateId = String(id);
+    const currentGroupId = searchStore.searchGroup;
+    
+    console.log('[DEBUG] togglePickup called with:', { candidateId, currentGroupId });
+    
+    if (!currentGroupId) {
+      console.error('No group selected');
+      return;
+    }
+
+    try {
+      const currentCandidate = candidates.find(c => c.id === candidateId);
+      const isSaved = savedCandidateIds.includes(candidateId);
+      
+      if (isSaved) {
+        const result = await unsaveCandidateAction(candidateId, currentGroupId);
+        if (result.success) {
+          setSavedCandidateIds(prev => prev.filter(id => id !== candidateId));
+        } else {
+          console.error('Failed to unsave candidate:', result.error);
+        }
+      } else {
+        const result = await saveCandidateAction(candidateId, currentGroupId);
+        if (result.success) {
+          setSavedCandidateIds(prev => [...prev, candidateId]);
+        } else {
+          console.error('Failed to save candidate:', result.error);
+        }
+      }
+
+      setCandidates((prev) =>
+        prev.map((candidate) =>
+          candidate.id === candidateId
+            ? { ...candidate, isPickup: !candidate.isPickup }
+            : candidate,
+        ),
+      );
+    } catch (error) {
+      console.error('Error toggling pickup:', error);
+    }
   };
 
-  const toggleHidden = (id: string | number) => {
-    setCandidates((prev) =>
-      prev.map((candidate) =>
-        candidate.id === id
-          ? { ...candidate, isHidden: !candidate.isHidden }
-          : candidate,
-      ),
-    );
+  const toggleHidden = async (candidateId: string) => {
+    const currentGroupId = searchStore.searchGroup;
+    if (!currentGroupId) {
+      console.error('No group selected');
+      return;
+    }
+    try {
+      const result = await toggleCandidateHiddenAction(candidateId, currentGroupId);
+      if (result.success) {
+        // 非表示状態が変更された場合、hiddenCandidateIdsを更新
+        if (result.isHidden) {
+          setHiddenCandidateIds(prev => [...prev, candidateId]);
+        } else {
+          setHiddenCandidateIds(prev => prev.filter(id => id !== candidateId));
+        }
+      } else {
+        console.error('Failed to toggle hidden status:', result.error);
+      }
+    } catch (error) {
+      console.error('Error toggling hidden:', error);
+    }
   };
 
   // hydration前は基本的なレイアウトのみ表示
@@ -741,7 +855,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                         value={searchStore.keyword}
                         onChange={(e) => searchStore.setKeyword(e.target.value)}
                         placeholder="検索したいワードを入力"
-                        className="w-100 px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+                        className="w-[400px] px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       />
                     </div>
@@ -829,7 +943,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                         value={searchStore.currentCompany}
                         onChange={(e) => searchStore.setCurrentCompany(e.target.value)}
                         placeholder="在籍企業を入力"
-                        className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+                        className="w-[400px] px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       />
                     </div>
@@ -849,18 +963,20 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                       <div className="flex items-center gap-2">
                         <SelectInput
                           value={searchStore.education}
-                          className=" w-[358px]"
+                          className="w-[358px]"
                           onChange={(value: string) => searchStore.setEducation(value)}
                           options={[
                             { value: '', label: '指定なし' },
-                            { value: 'middle', label: '中学卒' },
-                            { value: 'high', label: '高校卒' },
-                            { value: 'vocational', label: '専門学校卒' },
-                            { value: 'junior', label: '短大卒' },
-                            { value: 'university', label: '大学卒' },
-                            { value: 'graduate', label: '大学院卒' },
-                            { value: 'mba', label: 'MBA' },
-                            { value: 'doctorate', label: '博士号' },
+                            { value: 'middle', label: '中学校卒業' },
+                            { value: 'high', label: '高等学校卒業' },
+                            { value: 'technical_college', label: '高等専門学校卒業' },
+                            { value: 'junior', label: '短期大学卒業' },
+                            { value: 'vocational', label: '専門学校卒業' },
+                            { value: 'university', label: '大学卒業（学士）' },
+                            { value: 'master', label: '大学院修士課程修了（修士）' },
+                            { value: 'doctorate', label: '大学院博士課程修了（博士）' },
+                            { value: 'overseas_university', label: '海外大学卒業（学士）' },
+                            { value: 'overseas_master', label: '海外大学院修了（修士）' },
                           ]}
                           placeholder="指定なし"
                         />
@@ -979,7 +1095,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                         value={searchStore.qualifications}
                         onChange={(e) => searchStore.setQualifications(e.target.value)}
                         placeholder="保有資格を入力"
-                        className="w-100 px-4 py-3 border text-[#999] border-[#999] rounded-[4px] text-[14px] tracking-[1.4px]"
+                        className="w-[400px] font-medium px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       />
                     </div>
@@ -1289,7 +1405,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
                         value={searchStore.transferTime}
-                        className="w-100"
+                        className="w-[400px]"
                         onChange={(value: string) => searchStore.setTransferTime(value)}
                         options={[
                           { value: '', label: '指定なし' },
@@ -1384,7 +1500,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                     <div className="flex-1 py-6 flex items-center">
                       <SelectInput
                         value={searchStore.selectionStatus}
-                        className="w-100"
+                        className="w-[400px]"
                         onChange={(value: string) => searchStore.setSelectionStatus(value)}
                         options={[
                           { value: '', label: '指定なし' },
@@ -1647,6 +1763,21 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
+                    checked={filters.hideHidden}
+                    onChange={(checked: boolean) => {
+                      setFilters((prev) => ({ ...prev, hideHidden: checked }));
+                      setCurrentPage(1);
+                    }}
+                  />
+                  <span
+                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
+                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                  >
+                    非表示を除く
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
                     checked={filters.newUser}
                     onChange={(checked: boolean) => {
                       setFilters((prev) => ({ ...prev, newUser: checked }));
@@ -1657,7 +1788,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    非表示を除く
+                    新規ユーザー
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1787,7 +1918,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                       onClick={() => togglePickup(candidate.id)}
                       className="w-8 h-8 flex items-center justify-center"
                     >
-                      {candidate.isPickup ? (
+                      {savedCandidateIds.includes(candidate.id.toString()) ? (
                         <svg
                           width="32"
                           height="32"
@@ -1816,10 +1947,10 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                       )}
                     </button>
                     <button
-                      onClick={() => toggleHidden(candidate.id)}
+                      onClick={() => toggleHidden(candidate.id.toString())}
                       className="w-8 h-8 flex items-center justify-center"
                     >
-                      {candidate.isHidden ? (
+                      {hiddenCandidateIds.includes(candidate.id.toString()) ? (
                         <svg
                           width="32"
                           height="32"
