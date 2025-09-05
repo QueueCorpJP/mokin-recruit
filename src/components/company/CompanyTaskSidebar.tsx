@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers';
+import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers.client';
 import { tr } from 'zod/v4/locales';
 import { Button } from '@/components/ui/button';
 // TaskDataインターフェース（TaskListと同じ）

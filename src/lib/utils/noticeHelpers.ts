@@ -1,15 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { unstable_cache } from 'next/cache';
+import { NoticeData } from './noticeHelpers.client';
 
-export interface NoticeData {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string;
-  published_at: string;
-  created_at: string;
-}
+export type { NoticeData } from './noticeHelpers.client';
 
 /**
  * 公開されているお知らせを最新順で取得する
@@ -95,14 +88,4 @@ export const getNoticeById = unstable_cache(
   }
 );
 
-/**
- * 日付をフォーマットする
- */
-export const formatNoticeDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric'
-  });
-};
+export { formatNoticeDate } from './noticeHelpers.client';
