@@ -653,19 +653,35 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
       console.error('No group selected');
       return;
     }
+    
+    // Optimistic update - update UI immediately
+    const isCurrentlyHidden = hiddenCandidateIds.includes(candidateId);
+    const newHiddenState = !isCurrentlyHidden;
+    
+    if (newHiddenState) {
+      setHiddenCandidateIds(prev => [...prev, candidateId]);
+    } else {
+      setHiddenCandidateIds(prev => prev.filter(id => id !== candidateId));
+    }
+    
     try {
       const result = await toggleCandidateHiddenAction(candidateId, currentGroupId);
-      if (result.success) {
-        // 非表示状態が変更された場合、hiddenCandidateIdsを更新
-        if (result.isHidden) {
-          setHiddenCandidateIds(prev => [...prev, candidateId]);
-        } else {
+      if (!result.success) {
+        // Revert on failure
+        if (newHiddenState) {
           setHiddenCandidateIds(prev => prev.filter(id => id !== candidateId));
+        } else {
+          setHiddenCandidateIds(prev => [...prev, candidateId]);
         }
-      } else {
         console.error('Failed to toggle hidden status:', result.error);
       }
     } catch (error) {
+      // Revert on error
+      if (newHiddenState) {
+        setHiddenCandidateIds(prev => prev.filter(id => id !== candidateId));
+      } else {
+        setHiddenCandidateIds(prev => [...prev, candidateId]);
+      }
       console.error('Error toggling hidden:', error);
     }
   };
