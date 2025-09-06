@@ -14,8 +14,9 @@ import {
   type SearchHistoryItem as ServerSearchHistoryItem 
 } from '@/lib/actions/search-history';
 import { useAuth } from '@/providers/AuthProvider';
-import { createClient } from '@/lib/supabase/client';
-
+import { createClient } from    '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { Pagination } from '@/components/ui/Pagination';      
 // Icons
 const SearchIcon = () => (
   <svg
@@ -121,6 +122,7 @@ interface SearchHistoryClientProps {
 
 export function SearchHistoryClient({ initialSearchHistory, initialError, companyUserId }: SearchHistoryClientProps) {
   const { user, accessToken, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
@@ -386,7 +388,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
               variant='blue-gradient'
               size='figma-blue'
               className='min-w-[160px]'
-            >
+              onClick={() => {
+                // Redirect to new search page
+              router.push('/company/search');
+              }}>
               新規検索
             </Button>
 
@@ -522,53 +527,12 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
           </div>
 
           {/* Pagination */}
-          <div className='flex items-center justify-center gap-4 mt-10'>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center transition-opacity duration-200 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-70'}`}
-            >
-              <ChevronLeftIcon />
-            </button>
-
-            {(() => {
-              const pages = [];
-              const maxButtons = 5;
-              const actualTotalPages = Math.max(1, totalPages); // 最低1ページは表示
-              let start = Math.max(1, currentPage - 2);
-              let end = Math.min(actualTotalPages, start + maxButtons - 1);
-              
-              if (end === actualTotalPages) {
-                start = Math.max(1, end - maxButtons + 1);
-              }
-              
-              for (let i = start; i <= end; i++) {
-                pages.push(
-                  <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    disabled={totalItems === 0} // データがない場合はクリック無効
-                    className={`w-14 h-14 rounded-[32px] flex items-center justify-center text-[16px] font-bold tracking-[1.6px] transition-opacity duration-200 ${
-                      i === currentPage
-                        ? 'bg-[#0f9058] text-white hover:opacity-80'
-                        : 'border border-[#0f9058] text-[#0f9058] hover:opacity-70'
-                    } ${totalItems === 0 ? 'cursor-not-allowed' : ''}`}
-                  >
-                    {i}
-                  </button>
-                );
-              }
-              return pages;
-            })()}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages <= 1}
-              className={`w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center transition-opacity duration-200 ${(currentPage === totalPages || totalPages <= 1) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-70'}`}
-            >
-              <ChevronRightIcon />
-            </button>
-          </div>
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-10"
+          />
         </div>
       </div>
 
