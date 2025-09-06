@@ -1331,7 +1331,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                   </div>
 
                   {/* 興味のある働き方 */}
-                  <div className="flex gap-6 items-strech border-t-[2px] border-[#EFEFEF] pt-6 mt-5">
+                  <div className="flex gap-6 items-strech pt-6 mt-5">
                     <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                       <span
                         className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
@@ -1395,6 +1395,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                       </div>
                     </div>
                   </div>
+                  <div className="border-t-[2px] border-[#EFEFEF] mt-5 mb-5"></div>
 
                   {/* 選考状況 */}
                   <div className="flex gap-6 items-strech">
@@ -2293,7 +2294,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
           searchStore.setIsWorkStyleModalOpen(false);
         }}
         initialSelected={searchStore.workStyles}
-        maxSelections={10}
+        maxSelections={6}
       />
     </>
   );

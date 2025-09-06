@@ -416,7 +416,7 @@ export default function DesiredConditionForm() {
       </div>
 
       {/* 興味のある働き方 */}
-      <div className="flex gap-6 items-strech border-t-[2px] border-[#EFEFEF] pt-6 mt-5">
+      <div className="flex gap-6 items-strech">
         <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
           <span
             className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
@@ -480,7 +480,7 @@ export default function DesiredConditionForm() {
           </div>
         </div>
       </div>
-
+      <div className="border-t-[2px] border-[#EFEFEF] pt-6 mt-5" />
       {/* 選考状況 */}
       <div className="flex gap-6 items-strech">
         <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
