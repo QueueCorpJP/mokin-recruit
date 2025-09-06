@@ -202,14 +202,15 @@ export async function createJob(data: any) {
     const supabase = getSupabaseAdminClient();
 
     // 利用可能なグループを確認
-    const { data: availableUsers } = await supabase
-      .from('company_users')
-      .select('id, email, full_name')
+    const { data: availableGroups } = await supabase
+      .from('company_groups')
+      .select('id, group_name')
       .eq('company_account_id', companyAccountId);
 
-    let finalCompanyGroupId = actualUserId;
-    if (data.company_group_id && availableUsers?.some(user => user.id === data.company_group_id)) {
-      finalCompanyGroupId = data.company_group_id;
+    let finalCompanyGroupId = data.company_group_id;
+    if (!finalCompanyGroupId || !availableGroups?.some(group => group.id === data.company_group_id)) {
+      // デフォルトグループまたは最初のグループを使用
+      finalCompanyGroupId = availableGroups?.[0]?.id || actualUserId;
     }
 
     // 画像処理
@@ -983,10 +984,10 @@ export async function getCompanyGroups() {
       return { success: false, error: authResult.error };
     }
 
-    const { companyAccountId } = authResult.data;
+    const { companyUserId, companyAccountId } = authResult.data;
 
-    // キャッシュキーの生成
-    const cacheKey = companyAccountId;
+    // キャッシュキーの生成（ユーザー固有に）
+    const cacheKey = `${companyAccountId}-${companyUserId}`;
     const cached = groupsCache.get(cacheKey);
     
     // 期限切れキャッシュを即座に削除
@@ -1000,23 +1001,31 @@ export async function getCompanyGroups() {
     console.log('[getCompanyGroups] Cache miss - fetching new data');
     const supabase = getSupabaseAdminClient();
 
-    // 同じcompany_accountに属するユーザー一覧を取得
-    const { data: groups, error } = await supabase
-      .from('company_users')
-      .select('id, email, full_name')
-      .eq('company_account_id', companyAccountId)
-      .order('created_at', { ascending: true });
+    // ユーザーが権限を持つグループのみ取得（検索機能と統一）
+    const { data: userPermissions, error } = await supabase
+      .from('company_user_group_permissions')
+      .select(`
+        company_group:company_groups (
+          id,
+          group_name,
+          description
+        )
+      `)
+      .eq('company_user_id', companyUserId);
 
     if (error) {
       return { success: false, error: error.message };
     }
 
     // グループ形式に変換
-    const formattedGroups = (groups || []).map(user => ({
-      id: user.id,
-      group_name: user.full_name || user.email,
-      description: user.email
-    }));
+    const formattedGroups = (userPermissions || [])
+      .map((perm: any) => perm.company_group)
+      .filter((group: any) => group && group.id && group.group_name)
+      .map((group: any) => ({
+        id: group.id,
+        group_name: group.group_name,
+        description: group.description || ''
+      }));
 
     const result = { success: true, data: formattedGroups };
 

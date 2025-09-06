@@ -363,7 +363,7 @@ export function JobPostCard({
   // jobIdがある場合は詳細ページへのリンクでラップ
   if (jobId && typeof jobId === 'string' && jobId.length > 0) {
     return (
-      <Link href={`/candidate/job/${jobId}`} className='block'>
+      <Link href={`/candidate/search/setting/${jobId}`} className='block'>
         {cardContent}
       </Link>
     );
