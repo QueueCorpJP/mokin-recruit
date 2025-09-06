@@ -83,24 +83,18 @@ export default function SearchConditionForm() {
               value={searchStore.searchGroup}
               onChange={(value: string) => {
                 searchStore.setSearchGroup(value);
-                searchStore.setSearchGroupError('');
               }}
               onBlur={() => {
                 searchStore.setSearchGroupTouched(true);
-                if (!searchStore.searchGroup) {
-                  searchStore.setSearchGroupError(
-                    'グループを選択してください。',
-                  );
-                }
               }}
               options={groupOptions}
               placeholder={loadingGroups ? 'グループを読み込み中...' : '未選択'}
               className="w-[400px]"
               disabled={loadingGroups}
             />
-            {searchStore.searchGroupTouched && searchStore.searchGroupError && (
+            {searchStore.searchGroupTouched && (!searchStore.searchGroup || searchStore.searchGroup === '') && (
               <p className="text-[#ff0000] text-[12px] mt-2">
-                {searchStore.searchGroupError}
+                グループを選択してください。
               </p>
             )}
           </div>

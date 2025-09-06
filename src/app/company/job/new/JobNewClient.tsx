@@ -677,18 +677,19 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
                     type='button'
                     variant='green-outline'
                     size='lg'
-                    className="rounded-[32px] min-w-[260px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-7 bg-white text-[#198D76] font-['Noto_Sans_JP']"
                     onClick={handleBack}
                   >
                     修正する
                   </Button>
-                  <button
+                  <Button
                     type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
+                    size='lg'
+                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-7 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] font-['Noto_Sans_JP']"
                     onClick={handleSubmit}
                   >
                     この内容で掲載申請をする
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>

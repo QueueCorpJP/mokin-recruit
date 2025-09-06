@@ -2,7 +2,7 @@
 
 import React, { Suspense, useMemo } from 'react';
 import { QueryProvider } from './QueryProvider';
-import { AuthProvider } from './AuthProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/toast';
 import { MediaCacheProvider } from '@/contexts/MediaCacheContext';
 import { NewsCacheProvider } from '@/contexts/NewsCacheContext';

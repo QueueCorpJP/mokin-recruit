@@ -13,7 +13,7 @@ import {
   updateSearchHistoryTitle,
   type SearchHistoryItem as ServerSearchHistoryItem 
 } from '@/lib/actions/search-history';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from    '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';      

@@ -195,7 +195,7 @@ export function ScoutSendForm() {
   // バリデーション
   const validateForm = () => {
     const newErrors = {
-      group: formData.group === '' ? 'グループを選択してください。' : '',
+      group: (!formData.group || formData.group === '') ? 'グループを選択してください。' : '',
       recruitmentTarget:
         formData.recruitmentTarget === ''
           ? '添付する求人を選択してください。'

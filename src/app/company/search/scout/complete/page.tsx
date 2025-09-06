@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { AuthAwareNavigation } from '@/components/layout/AuthAwareNavigation';
 import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { ScoutSuccessModal } from '@/components/scout/ScoutSuccessModal';
 
 // Right Arrow Icon Component for breadcrumb

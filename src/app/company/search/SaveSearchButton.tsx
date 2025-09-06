@@ -22,7 +22,7 @@ export const SaveSearchButton: React.FC<SaveSearchButtonProps> = ({ companyId })
       return
     }
 
-    if (!searchStore.searchGroup) {
+    if (!searchStore.searchGroup || searchStore.searchGroup === '') {
       setError('グループを選択してください')
       return
     }

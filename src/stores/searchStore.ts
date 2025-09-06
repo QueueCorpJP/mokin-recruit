@@ -320,16 +320,7 @@ export const useSearchStore = create<SearchState>()(
     // Validation
     validateForm: () => {
       const { searchGroup } = get();
-      let isValid = true;
-      
-      if (!searchGroup) {
-        set({ searchGroupError: 'グループを選択してください。' });
-        isValid = false;
-      } else {
-        set({ searchGroupError: '' });
-      }
-      
-      return isValid;
+      return !!searchGroup && searchGroup !== '';
     },
     
     // Generate search params

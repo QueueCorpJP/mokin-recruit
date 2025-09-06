@@ -336,6 +336,7 @@ export default function SearchForm({ companyId }: SearchFormProps) {
             name
           }));
           searchStore.setDesiredJobTypes(jobTypes);
+          searchStore.setIsDesiredJobTypeModalOpen(false);
         }}
         initialSelected={searchStore.desiredJobTypes.map(j => j.name)}
         maxSelections={3}
@@ -351,6 +352,7 @@ export default function SearchForm({ companyId }: SearchFormProps) {
             name
           }));
           searchStore.setDesiredIndustries(industries);
+          searchStore.setIsDesiredIndustryModalOpen(false);
         }}
         initialSelected={searchStore.desiredIndustries.map(i => i.name)}
         maxSelections={3}
