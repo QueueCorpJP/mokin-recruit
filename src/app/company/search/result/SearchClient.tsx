@@ -19,6 +19,8 @@ import ExperienceSearchConditionForm from '../components/ExperienceSearchConditi
 import SelectableTagWithYears from '../components/SelectableTagWithYears';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { SALARY_OPTIONS, getFilteredMaxOptions, getFilteredMinOptions } from '@/lib/utils/salary-options';
+import { AGE_OPTIONS, getFilteredMaxAgeOptions, getFilteredMinAgeOptions } from '@/lib/utils/age-options';
 import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
@@ -248,77 +250,65 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
   const sortedCandidates = useMemo(() => {
     const candidatesToSort = [...filteredCandidates];
     
+    // 最終ログイン日時をパースする共通関数
+    const parseLastLogin = (loginStr: string) => {
+      if (loginStr.includes('時間前')) {
+        const hours = parseInt(loginStr.replace('時間前', ''));
+        return new Date(Date.now() - hours * 60 * 60 * 1000);
+      }
+      if (loginStr.includes('日前')) {
+        const days = parseInt(loginStr.replace('日前', ''));
+        return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      }
+      if (loginStr.includes('週間前')) {
+        const weeks = parseInt(loginStr.replace('週間前', ''));
+        return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
+      }
+      // 日本語の日付形式 "2024年1月15日" を解析
+      const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      if (dateMatch) {
+        return new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
+      }
+      return new Date(0); // fallback
+    };
+    
     switch (selectedSort) {
       case 'featured':
-        // 注目順: ピックアップ → 注目 → その他
+        // 注目順：注目タブがついている候補者ユーザーを優先表示
+        // いずれも上記条件内で、会員登録日時降順で表示
         return candidatesToSort.sort((a, b) => {
-          if (a.isPickup && !b.isPickup) return -1;
-          if (!a.isPickup && b.isPickup) return 1;
+          // まず注目タブで分ける
           if (a.isAttention && !b.isAttention) return -1;
           if (!a.isAttention && b.isAttention) return 1;
-          return 0;
+          // 同じカテゴリ内では会員登録日時（ID）降順
+          return b.id - a.id;
         });
         
       case 'newest':
-        // 新着順: IDが大きい（新しい）順
+        // 新着順：会員登録日時降順で候補者ユーザーを表示
         return candidatesToSort.sort((a, b) => b.id - a.id);
         
       case 'updated':
-        // 更新順: lastLoginが新しい順
+        // 更新順：会員情報の更新日時降順で候補者ユーザーを表示
+        // いずれも上記条件内で、会員登録日時降順で表示
         return candidatesToSort.sort((a, b) => {
-          const parseLastLogin = (loginStr: string) => {
-            if (loginStr.includes('時間前')) {
-              const hours = parseInt(loginStr.replace('時間前', ''));
-              return new Date(Date.now() - hours * 60 * 60 * 1000);
-            }
-            if (loginStr.includes('日前')) {
-              const days = parseInt(loginStr.replace('日前', ''));
-              return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-            }
-            if (loginStr.includes('週間前')) {
-              const weeks = parseInt(loginStr.replace('週間前', ''));
-              return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
-            }
-            // 日本語の日付形式 "2024年1月15日" を解析
-            const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-            if (dateMatch) {
-              return new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
-            }
-            return new Date(0); // fallback
-          };
-          
-          const dateA = parseLastLogin(a.lastLogin);
-          const dateB = parseLastLogin(b.lastLogin);
-          return dateB.getTime() - dateA.getTime();
+          // updatedAtがある場合はそれを使用、なければlastLoginを使用（暫定的に更新日時として扱う）
+          const dateA = a.updatedAt ? new Date(a.updatedAt) : parseLastLogin(a.lastLogin);
+          const dateB = b.updatedAt ? new Date(b.updatedAt) : parseLastLogin(b.lastLogin);
+          const timeDiff = dateB.getTime() - dateA.getTime();
+          // 更新日時が同じ場合は会員登録日時（ID）降順
+          return timeDiff !== 0 ? timeDiff : b.id - a.id;
         });
         
       case 'lastLogin':
-        // 最終ログイン日順: lastLoginが新しい順
+        // 最終ログイン日順：最終ログイン日時降順で候補者ユーザーを表示
+        // いずれも上記条件内で、会員登録日時降順で表示
         return candidatesToSort.sort((a, b) => {
-          const parseLastLogin = (loginStr: string) => {
-            if (loginStr.includes('時間前')) {
-              const hours = parseInt(loginStr.replace('時間前', ''));
-              return new Date(Date.now() - hours * 60 * 60 * 1000);
-            }
-            if (loginStr.includes('日前')) {
-              const days = parseInt(loginStr.replace('日前', ''));
-              return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-            }
-            if (loginStr.includes('週間前')) {
-              const weeks = parseInt(loginStr.replace('週間前', ''));
-              return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
-            }
-            // 日本語の日付形式 "2024年1月15日" を解析
-            const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-            if (dateMatch) {
-              return new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
-            }
-            return new Date(0); // fallback
-          };
-          
           const dateA = parseLastLogin(a.lastLogin);
           const dateB = parseLastLogin(b.lastLogin);
-          return dateB.getTime() - dateA.getTime();
+          const timeDiff = dateB.getTime() - dateA.getTime();
+          // 最終ログイン日時が同じ場合は会員登録日時（ID）降順
+          return timeDiff !== 0 ? timeDiff : b.id - a.id;
         });
         
       default:
@@ -882,21 +872,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           onChange={(value: string) =>
                             searchStore.setCurrentSalaryMin(value)
                           }
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '300', label: '300万円' },
-                            { value: '400', label: '400万円' },
-                            { value: '500', label: '500万円' },
-                            { value: '600', label: '600万円' },
-                            { value: '700', label: '700万円' },
-                            { value: '800', label: '800万円' },
-                            { value: '1000', label: '1,000万円' },
-                            { value: '1200', label: '1,200万円' },
-                            { value: '1500', label: '1,500万円' },
-                            { value: '2000', label: '2,000万円' },
-                            { value: '3000', label: '3,000万円' },
-                            { value: '5000', label: '5,000万円' },
-                          ]}
+                          options={getFilteredMinOptions(searchStore.currentSalaryMax)}
                           placeholder="指定なし"
                         />
                         <span className="text-[#323232]">〜</span>
@@ -906,21 +882,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           onChange={(value: string) =>
                             searchStore.setCurrentSalaryMax(value)
                           }
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '300', label: '300万円' },
-                            { value: '400', label: '400万円' },
-                            { value: '500', label: '500万円' },
-                            { value: '600', label: '600万円' },
-                            { value: '700', label: '700万円' },
-                            { value: '800', label: '800万円' },
-                            { value: '1000', label: '1,000万円' },
-                            { value: '1200', label: '1,200万円' },
-                            { value: '1500', label: '1,500万円' },
-                            { value: '2000', label: '2,000万円' },
-                            { value: '3000', label: '3,000万円' },
-                            { value: '5000', label: '5,000万円' },
-                          ]}
+                          options={getFilteredMaxOptions(searchStore.currentSalaryMin)}
                           placeholder="指定なし"
                         />
                       </div>
@@ -1117,21 +1079,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           value={searchStore.ageMin}
                           onChange={(value: string) => searchStore.setAgeMin(value)}
                           className="w-60"
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '18', label: '18歳' },
-                            { value: '20', label: '20歳' },
-                            { value: '22', label: '22歳' },
-                            { value: '25', label: '25歳' },
-                            { value: '30', label: '30歳' },
-                            { value: '35', label: '35歳' },
-                            { value: '40', label: '40歳' },
-                            { value: '45', label: '45歳' },
-                            { value: '50', label: '50歳' },
-                            { value: '55', label: '55歳' },
-                            { value: '60', label: '60歳' },
-                            { value: '65', label: '65歳' },
-                          ]}
+                          options={getFilteredMinAgeOptions(searchStore.ageMax)}
                           placeholder="指定なし"
                         />
                         <span className="text-[#323232]">〜</span>
@@ -1139,24 +1087,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           value={searchStore.ageMax}
                           className="w-60"
                           onChange={(value: string) => searchStore.setAgeMax(value)}
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '18', label: '18歳' },
-                            { value: '20', label: '20歳' },
-                            { value: '22', label: '22歳' },
-                            { value: '25', label: '25歳' },
-                            { value: '30', label: '30歳' },
-                            { value: '35', label: '35歳' },
-                            { value: '40', label: '40歳' },
-                            { value: '45', label: '45歳' },
-                            { value: '50', label: '50歳' },
-                            { value: '55', label: '55歳' },
-                            { value: '60', label: '60歳' },
-                            { value: '65', label: '65歳' },
-                            { value: '70', label: '70歳' },
-                            { value: '75', label: '75歳' },
-                            { value: '80', label: '80歳' },
-                          ]}
+                          options={getFilteredMaxAgeOptions(searchStore.ageMin)}
                           placeholder="指定なし"
                         />
                       </div>
@@ -1281,21 +1212,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           onChange={(value: string) =>
                             searchStore.setDesiredSalaryMin(value)
                           }
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '300', label: '300万円' },
-                            { value: '400', label: '400万円' },
-                            { value: '500', label: '500万円' },
-                            { value: '600', label: '600万円' },
-                            { value: '700', label: '700万円' },
-                            { value: '800', label: '800万円' },
-                            { value: '1000', label: '1,000万円' },
-                            { value: '1200', label: '1,200万円' },
-                            { value: '1500', label: '1,500万円' },
-                            { value: '2000', label: '2,000万円' },
-                            { value: '3000', label: '3,000万円' },
-                            { value: '5000', label: '5,000万円' },
-                          ]}
+                          options={getFilteredMinOptions(searchStore.desiredSalaryMax)}
                           placeholder="指定なし"
                         />
                         <span className="text-[#323232]">〜</span>
@@ -1305,21 +1222,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           onChange={(value: string) =>
                             searchStore.setDesiredSalaryMax(value)
                           }
-                          options={[
-                            { value: '', label: '指定なし' },
-                            { value: '300', label: '300万円' },
-                            { value: '400', label: '400万円' },
-                            { value: '500', label: '500万円' },
-                            { value: '600', label: '600万円' },
-                            { value: '700', label: '700万円' },
-                            { value: '800', label: '800万円' },
-                            { value: '1000', label: '1,000万円' },
-                            { value: '1200', label: '1,200万円' },
-                            { value: '1500', label: '1,500万円' },
-                            { value: '2000', label: '2,000万円' },
-                            { value: '3000', label: '3,000万円' },
-                            { value: '5000', label: '5,000万円' },
-                          ]}
+                          options={getFilteredMaxOptions(searchStore.desiredSalaryMin)}
                           placeholder="指定なし"
                         />
                       </div>

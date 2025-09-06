@@ -9,6 +9,7 @@ import { useSearchStore } from '@/stores/searchStore';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { getCompanyGroups } from '@/lib/actions/search-history';
+import { SALARY_OPTIONS, getFilteredMaxOptions, getFilteredMinOptions } from '@/lib/utils/salary-options';
 
 export default function SearchConditionForm() {
   const searchStore = useSearchStore();
@@ -382,18 +383,7 @@ export default function SearchConditionForm() {
               onChange={(value: string) =>
                 searchStore.setCurrentSalaryMin(value)
               }
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '500', label: '500万円' },
-                { value: '600', label: '600万円' },
-                { value: '800', label: '800万円' },
-                { value: '1000', label: '1,000万円' },
-                { value: '1200', label: '1,200万円' },
-                { value: '1500', label: '1,500万円' },
-                { value: '2000', label: '2,000万円' },
-                { value: '3000', label: '3,000万円' },
-                { value: '5000', label: '5,000万円' },
-              ]}
+              options={getFilteredMinOptions(searchStore.currentSalaryMax)}
               placeholder="指定なし"
             />
             <span className="text-[#323232]">〜</span>
@@ -403,18 +393,7 @@ export default function SearchConditionForm() {
               onChange={(value: string) =>
                 searchStore.setCurrentSalaryMax(value)
               }
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '500', label: '500万円' },
-                { value: '600', label: '600万円' },
-                { value: '800', label: '800万円' },
-                { value: '1000', label: '1,000万円' },
-                { value: '1200', label: '1,200万円' },
-                { value: '1500', label: '1,500万円' },
-                { value: '2000', label: '2,000万円' },
-                { value: '3000', label: '3,000万円' },
-                { value: '5000', label: '5,000万円' },
-              ]}
+              options={getFilteredMaxOptions(searchStore.currentSalaryMin)}
               placeholder="指定なし"
             />
           </div>

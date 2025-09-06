@@ -230,20 +230,56 @@ export const useSearchStore = create<SearchState>()(
     })),
     setJobTypeAndSearch: (value) => set({ jobTypeAndSearch: value }),
     setIndustryAndSearch: (value) => set({ industryAndSearch: value }),
-    setCurrentSalaryMin: (value) => set({ currentSalaryMin: value }),
-    setCurrentSalaryMax: (value) => set({ currentSalaryMax: value }),
+    setCurrentSalaryMin: (value) => set((state) => {
+      // 最大値が設定されていて、新しい最小値が最大値を超える場合は最大値もクリア
+      if (state.currentSalaryMax && value && parseInt(value) > parseInt(state.currentSalaryMax)) {
+        return { currentSalaryMin: value, currentSalaryMax: '' };
+      }
+      return { currentSalaryMin: value };
+    }),
+    setCurrentSalaryMax: (value) => set((state) => {
+      // 最小値が設定されていて、新しい最大値が最小値を下回る場合は設定しない
+      if (state.currentSalaryMin && value && parseInt(value) < parseInt(state.currentSalaryMin)) {
+        return state;
+      }
+      return { currentSalaryMax: value };
+    }),
     setCurrentCompany: (value) => set({ currentCompany: value }),
     setEducation: (value) => set({ education: value }),
     setEnglishLevel: (value) => set({ englishLevel: value }),
     setOtherLanguage: (value) => set({ otherLanguage: value }),
     setOtherLanguageLevel: (value) => set({ otherLanguageLevel: value }),
     setQualifications: (value) => set({ qualifications: value }),
-    setAgeMin: (value) => set({ ageMin: value }),
-    setAgeMax: (value) => set({ ageMax: value }),
+    setAgeMin: (value) => set((state) => {
+      // 最大値が設定されていて、新しい最小値が最大値を超える場合は最大値もクリア
+      if (state.ageMax && value && parseInt(value) > parseInt(state.ageMax)) {
+        return { ageMin: value, ageMax: '' };
+      }
+      return { ageMin: value };
+    }),
+    setAgeMax: (value) => set((state) => {
+      // 最小値が設定されていて、新しい最大値が最小値を下回る場合は設定しない
+      if (state.ageMin && value && parseInt(value) < parseInt(state.ageMin)) {
+        return state;
+      }
+      return { ageMax: value };
+    }),
     setDesiredJobTypes: (jobTypes) => set({ desiredJobTypes: jobTypes }),
     setDesiredIndustries: (industries) => set({ desiredIndustries: industries }),
-    setDesiredSalaryMin: (value) => set({ desiredSalaryMin: value }),
-    setDesiredSalaryMax: (value) => set({ desiredSalaryMax: value }),
+    setDesiredSalaryMin: (value) => set((state) => {
+      // 最大値が設定されていて、新しい最小値が最大値を超える場合は最大値もクリア
+      if (state.desiredSalaryMax && value && parseInt(value) > parseInt(state.desiredSalaryMax)) {
+        return { desiredSalaryMin: value, desiredSalaryMax: '' };
+      }
+      return { desiredSalaryMin: value };
+    }),
+    setDesiredSalaryMax: (value) => set((state) => {
+      // 最小値が設定されていて、新しい最大値が最小値を下回る場合は設定しない
+      if (state.desiredSalaryMin && value && parseInt(value) < parseInt(state.desiredSalaryMin)) {
+        return state;
+      }
+      return { desiredSalaryMax: value };
+    }),
     setDesiredLocations: (locations) => set({ desiredLocations: locations }),
     setTransferTime: (value) => set({ transferTime: value }),
     setWorkStyles: (styles) => set({ workStyles: styles }),

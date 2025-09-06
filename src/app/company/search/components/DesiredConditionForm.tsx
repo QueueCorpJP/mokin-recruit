@@ -3,6 +3,8 @@
 import React from 'react';
 import { SelectInput } from '@/components/ui/select-input';
 import { useSearchStore } from '@/stores/searchStore';
+import { SALARY_OPTIONS, getFilteredMaxOptions, getFilteredMinOptions } from '@/lib/utils/salary-options';
+import { AGE_OPTIONS, getFilteredMaxAgeOptions, getFilteredMinAgeOptions } from '@/lib/utils/age-options';
 
 export default function DesiredConditionForm() {
   const searchStore = useSearchStore();
@@ -144,21 +146,7 @@ export default function DesiredConditionForm() {
               value={searchStore.ageMin}
               onChange={(value: string) => searchStore.setAgeMin(value)}
               className="w-60"
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '18', label: '18歳' },
-                { value: '20', label: '20歳' },
-                { value: '22', label: '22歳' },
-                { value: '25', label: '25歳' },
-                { value: '30', label: '30歳' },
-                { value: '35', label: '35歳' },
-                { value: '40', label: '40歳' },
-                { value: '45', label: '45歳' },
-                { value: '50', label: '50歳' },
-                { value: '55', label: '55歳' },
-                { value: '60', label: '60歳' },
-                { value: '65', label: '65歳' },
-              ]}
+              options={getFilteredMinAgeOptions(searchStore.ageMax)}
               placeholder="指定なし"
             />
             <span className="text-[#323232]">〜</span>
@@ -166,24 +154,7 @@ export default function DesiredConditionForm() {
               value={searchStore.ageMax}
               className="w-60"
               onChange={(value: string) => searchStore.setAgeMax(value)}
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '18', label: '18歳' },
-                { value: '20', label: '20歳' },
-                { value: '22', label: '22歳' },
-                { value: '25', label: '25歳' },
-                { value: '30', label: '30歳' },
-                { value: '35', label: '35歳' },
-                { value: '40', label: '40歳' },
-                { value: '45', label: '45歳' },
-                { value: '50', label: '50歳' },
-                { value: '55', label: '55歳' },
-                { value: '60', label: '60歳' },
-                { value: '65', label: '65歳' },
-                { value: '70', label: '70歳' },
-                { value: '75', label: '75歳' },
-                { value: '80', label: '80歳' },
-              ]}
+              options={getFilteredMaxAgeOptions(searchStore.ageMin)}
               placeholder="指定なし"
             />
           </div>
@@ -330,21 +301,7 @@ export default function DesiredConditionForm() {
               onChange={(value: string) =>
                 searchStore.setDesiredSalaryMin(value)
               }
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '300', label: '300万円' },
-                { value: '400', label: '400万円' },
-                { value: '500', label: '500万円' },
-                { value: '600', label: '600万円' },
-                { value: '700', label: '700万円' },
-                { value: '800', label: '800万円' },
-                { value: '1000', label: '1,000万円' },
-                { value: '1200', label: '1,200万円' },
-                { value: '1500', label: '1,500万円' },
-                { value: '2000', label: '2,000万円' },
-                { value: '3000', label: '3,000万円' },
-                { value: '5000', label: '5,000万円' },
-              ]}
+              options={getFilteredMinOptions(searchStore.desiredSalaryMax)}
               placeholder="指定なし"
             />
             <span className="text-[#323232]">〜</span>
@@ -354,21 +311,7 @@ export default function DesiredConditionForm() {
               onChange={(value: string) =>
                 searchStore.setDesiredSalaryMax(value)
               }
-              options={[
-                { value: '', label: '指定なし' },
-                { value: '300', label: '300万円' },
-                { value: '400', label: '400万円' },
-                { value: '500', label: '500万円' },
-                { value: '600', label: '600万円' },
-                { value: '700', label: '700万円' },
-                { value: '800', label: '800万円' },
-                { value: '1000', label: '1,000万円' },
-                { value: '1200', label: '1,200万円' },
-                { value: '1500', label: '1,500万円' },
-                { value: '2000', label: '2,000万円' },
-                { value: '3000', label: '3,000万円' },
-                { value: '5000', label: '5,000万円' },
-              ]}
+              options={getFilteredMaxOptions(searchStore.desiredSalaryMin)}
               placeholder="指定なし"
             />
           </div>
