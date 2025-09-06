@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { SearchHistoryTable } from './components/SearchHistoryTable';
 import { SearchHistoryFilters } from './components/SearchHistoryFilters';
 

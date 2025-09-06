@@ -98,9 +98,11 @@ export default function DesiredConditionForm() {
                     { value: 'business', label: 'ビジネスレベル' },
                     { value: 'conversation', label: '日常会話' },
                     { value: 'basic', label: '基礎会話' },
-                    { value: 'none', label: 'なし' },
                   ]}
                   placeholder="レベルの指定なし"
+                  style={!searchStore.otherLanguageLevel || searchStore.otherLanguageLevel === '' 
+                    ? { backgroundColor: '#EFEFEF', color: '#999', border: 'none' } 
+                    : undefined}
                 />
               </div>
             </div>

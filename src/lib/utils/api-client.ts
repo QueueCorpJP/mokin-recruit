@@ -558,14 +558,8 @@ export async function checkFavoriteStatus(jobPostingIds: string[]): Promise<Reco
   }
 }
 
-// 新しいAPIクライアントをインポート
-import { apiClient as newApiClient } from '../api/client';
-
 // デフォルトインスタンス
 export const apiClient = new ApiClient();
-
-// 新しいAPIクライアントも利用可能にする（段階的移行用）
-export { newApiClient as modernApiClient };
 
 // 型定義のエクスポート
 export type { ApiResponse, ApiClientOptions };

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface SearchHistoryItem {
   id: string;

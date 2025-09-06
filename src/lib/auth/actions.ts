@@ -5,6 +5,19 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { revalidatePath } from 'next/cache';
 
+export interface AuthResult {
+  success: boolean;
+  error?: string;
+  message?: string;
+  user?: {
+    id: string;
+    email: string;
+    userType: 'candidate' | 'company' | 'admin';
+    name?: string;
+    profile?: any;
+  };
+}
+
 export interface LogoutResult {
   success: boolean;
   error?: string;
@@ -39,6 +52,149 @@ async function createSupabaseServerClient() {
       },
     }
   );
+}
+
+export async function signInAction(
+  email: string,
+  password: string,
+  userType?: 'candidate' | 'company' | 'admin'
+): Promise<AuthResult> {
+  try {
+    if (!email || !password) {
+      return { 
+        success: false, 
+        error: 'メールアドレスとパスワードは必須です' 
+      };
+    }
+
+    const supabase = await createSupabaseServerClient();
+    
+    // Supabaseでサインイン
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      let errorMessage = 'ログインに失敗しました';
+      
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'メールアドレスまたはパスワードが正しくありません';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'メールアドレスが確認されていません';
+      } else if (error.message.includes('Too many requests')) {
+        errorMessage = 'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください';
+      }
+
+      return { success: false, error: errorMessage };
+    }
+
+    if (!data.user) {
+      return { success: false, error: '認証に失敗しました' };
+    }
+
+    // ユーザー情報の構築
+    let userInfo: {
+      id: string;
+      email: string;
+      userType: 'candidate' | 'company' | 'admin';
+      name?: string;
+      profile?: any;
+    } = {
+      id: data.user.id,
+      email: data.user.email!,
+      userType: userType || 'candidate' as const,
+      name: data.user.email,
+    };
+
+    // ユーザータイプに基づいて追加情報を取得
+    try {
+      if (userType === 'candidate') {
+        const { data: candidateData } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('email', email)
+          .single();
+        
+        if (candidateData) {
+          userInfo = {
+            ...userInfo,
+            userType: 'candidate',
+            name: `${candidateData.last_name} ${candidateData.first_name}`,
+            profile: candidateData,
+          };
+        }
+      } else if (userType === 'company') {
+        const { data: companyData } = await supabase
+          .from('company_users')
+          .select('*')
+          .eq('email', email)
+          .single();
+        
+        if (companyData) {
+          userInfo = {
+            ...userInfo,
+            userType: 'company',
+            name: companyData.full_name || companyData.email,
+            profile: companyData,
+          };
+        }
+      } else if (userType === 'admin') {
+        const { data: adminData } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', email)
+          .single();
+        
+        if (adminData) {
+          userInfo = {
+            ...userInfo,
+            userType: 'admin',
+            name: adminData.name || adminData.email,
+            profile: adminData,
+          };
+        }
+      }
+    } catch (dbError) {
+      // データベースエラーはログイン成功を妨げない
+      console.warn('Failed to fetch user profile:', dbError);
+    }
+
+    // パスの再検証
+    revalidatePath('/', 'layout');
+
+    return { 
+      success: true, 
+      user: userInfo,
+      message: 'ログインに成功しました'
+    };
+
+  } catch (error) {
+    console.error('Sign in action error:', error);
+    return { 
+      success: false, 
+      error: 'システムエラーが発生しました' 
+    };
+  }
+}
+
+export async function getServerAuth() {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return null;
+    }
+
+    return {
+      user,
+      isAuthenticated: true,
+    };
+  } catch (error) {
+    console.error('Get server auth error:', error);
+    return null;
+  }
 }
 
 export async function logoutAction(): Promise<LogoutResult> {

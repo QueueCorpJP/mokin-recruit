@@ -488,12 +488,6 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
   useEffect(() => {
     if (!isHydrated) return;
     
-    // グループが選択されていない場合、最初のグループを自動選択（デバッグ用）
-    if (!searchStore.searchGroup && companyGroups.length > 0) {
-      console.log('[DEBUG] Auto-selecting first group:', companyGroups[0]);
-      searchStore.setSearchGroup(companyGroups[0].value);
-      return;
-    }
     
     if (!searchStore.searchGroup) return;
     
@@ -803,26 +797,20 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                           value={searchStore.searchGroup}
                           onChange={(value) => {
                             searchStore.setSearchGroup(value);
-                            searchStore.setSearchGroupError('');
                           }}
                           onBlur={() => {
                             searchStore.setSearchGroupTouched(true);
-                            if (!searchStore.searchGroup) {
-                              searchStore.setSearchGroupError(
-                                'グループを選択してください。',
-                              );
-                            }
                           }}
                           className="w-[400px]"
-                          error={searchStore.searchGroupTouched && !!searchStore.searchGroupError}
+                          error={searchStore.searchGroupTouched && (!searchStore.searchGroup || searchStore.searchGroup === '')}
                           options={[
                             { value: '', label: '未選択' },
                             ...companyGroups
                           ]}
                         />
-                        {searchStore.searchGroupTouched && searchStore.searchGroupError && (
+                        {searchStore.searchGroupTouched && (!searchStore.searchGroup || searchStore.searchGroup === '') && (
                           <p className="text-[#ff0000] text-[12px] mt-2">
-                            {searchStore.searchGroupError}
+                            グループを選択してください。
                           </p>
                         )}
                       </div>
@@ -1031,9 +1019,11 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                                 { value: 'business', label: 'ビジネスレベル' },
                                 { value: 'conversation', label: '日常会話' },
                                 { value: 'basic', label: '基礎会話' },
-                                { value: 'none', label: 'なし' },
                               ]}
                               placeholder="レベルの指定なし"
+                              style={!searchStore.otherLanguageLevel || searchStore.otherLanguageLevel === '' 
+                                ? { backgroundColor: '#EFEFEF', color: '#999', border: 'none' } 
+                                : undefined}
                             />
                           </div>
                         </div>
@@ -1585,7 +1575,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                         searchStore.setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchStore.searchGroup === '') {
+                        if (!searchStore.searchGroup || searchStore.searchGroup === '') {
                           searchStore.setSearchGroupError('グループを選択してください。');
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
@@ -1614,7 +1604,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                         searchStore.setSearchGroupTouched(true);
 
                         // バリデーションチェック
-                        if (searchStore.searchGroup === '') {
+                        if (!searchStore.searchGroup || searchStore.searchGroup === '') {
                           searchStore.setSearchGroupError('グループを選択してください。');
                           // エラーフィールドまでスクロール
                           const element = document.querySelector(
@@ -1974,19 +1964,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                             xmlns="http://www.w3.org/2000/svg"
                           >
                             <path
-                              d="M0 0V6H2V2.94118L5.52941 6.47059L6.47059 5.52941L2.94118 2H6V0H0Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M10 0V2H13.0588L9.52941 5.52941L10.4706 6.47059L14 2.94118V6H16V0H10Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M2 13.0588V10H0V16H6V14H2.94118L6.47059 10.4706L5.52941 9.52941L2 13.0588Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M13.0588 14H10V16H16V10H14V13.0588L10.4706 9.52941L9.52941 10.4706L13.0588 14Z"
+                              d="M10.75 0H15.25C15.6656 0 16 0.334375 16 0.75V5.25C16 5.55312 15.8188 5.82812 15.5375 5.94375C15.2563 6.05937 14.9344 5.99687 14.7188 5.78125L13.5 4.5625L10.7812 7.28125C10.4875 7.575 10.0125 7.575 9.72188 7.28125L8.72188 6.28125C8.42813 5.9875 8.42813 5.5125 8.72188 5.22188L11.4406 2.50312L10.2188 1.28125C10.0031 1.06562 9.94062 0.74375 10.0562 0.4625C10.1719 0.18125 10.4469 0 10.75 0ZM5.25 16H0.75C0.334375 16 0 15.6656 0 15.25V10.75C0 10.4469 0.18125 10.1719 0.4625 10.0562C0.74375 9.94062 1.06562 10.0031 1.28125 10.2188L2.5 11.4375L5.21875 8.71875C5.5125 8.425 5.9875 8.425 6.27812 8.71875L7.27812 9.71875C7.57187 10.0125 7.57187 10.4875 7.27812 10.7781L4.55937 13.4969L5.77812 14.7156C5.99375 14.9312 6.05625 15.2531 5.94063 15.5344C5.825 15.8156 5.55 15.9969 5.24687 15.9969L5.25 16Z"
                               fill="white"
                             />
                           </svg>

@@ -1,16 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/providers/AuthProvider';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function DashboardHeader() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   const logout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOut();
     router.push('/');
   };
 
