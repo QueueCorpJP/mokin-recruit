@@ -133,7 +133,7 @@ export default function DesiredConditionForm() {
       </div>
 
       {/* 年齢 */}
-      <div className="flex gap-6 items-strech border-t-[2px] border-[#EFEFEF] pt-6 mt-5">
+      <div className="flex gap-6 items-strech">
         <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
           <span
             className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
@@ -162,6 +162,7 @@ export default function DesiredConditionForm() {
           </div>
         </div>
       </div>
+                  <div className="border-t-[2px] border-[#EFEFEF] mt-5 mb-5" />
 
       {/* 希望職種 */}
       <div className="flex gap-6 items-strech">
@@ -249,41 +250,36 @@ export default function DesiredConditionForm() {
               業種を選択
             </button>
             {searchStore.desiredIndustries.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mt-4">
                 {searchStore.desiredIndustries.map((industry) => (
                   <div
                     key={industry.id}
-                    className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                    className="inline-flex items-center gap-1"
                   >
-                    <span
-                      className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]"
-                      style={{
-                        fontFamily: 'Noto Sans JP, sans-serif',
-                      }}
-                    >
-                      {industry.name}
+                    <span className="bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]">
+                      <span className="line-clamp-1 break-all">{industry.name}</span>
                     </span>
                     <button
-                      onClick={() =>
+                      type="button"
+                      onClick={() => {
                         searchStore.setDesiredIndustries(
                           searchStore.desiredIndustries.filter(
                             (i) => i.id !== industry.id,
                           ),
-                        )
-                      }
-                      className="w-3 h-3"
+                        );
+                      }}
+                      className="bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]"
                     >
                       <svg
-                        width="12"
+                        width="13"
                         height="12"
-                        viewBox="0 0 12 12"
+                        viewBox="0 0 13 12"
                         fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
-                          d="M1 1L11 11M1 11L11 1"
-                          stroke="#0f9058"
-                          strokeWidth="2"
-                          strokeLinecap="round"
+                          d="M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z"
+                          fill="#0F9058"
                         />
                       </svg>
                     </button>
@@ -492,6 +488,7 @@ export default function DesiredConditionForm() {
       </div>
       <div className="border-t-[2px] border-[#EFEFEF] pt-6 mt-5" />
       {/* 選考状況 */}
+
       <div className="flex gap-6 items-strech">
         <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
           <span
