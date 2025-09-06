@@ -369,45 +369,16 @@ export default function SearchForm({ companyId }: SearchFormProps) {
         initialSelected={searchStore.desiredLocations}
       />
 
-      {/* 働き方モーダル */}
-      {searchStore.isWorkStyleModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-screen overflow-y-auto m-4">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-bold">働き方を選択</h2>
-              <button
-                onClick={() => searchStore.setIsWorkStyleModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6">
-              <WorkStyleSelectModal
-                selectedStyles={searchStore.workStyles.map(w => w.name)}
-                onStylesChange={(styleNames) => {
-                  const styles = styleNames.map(name => ({
-                    id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-                    name
-                  }));
-                  searchStore.setWorkStyles(styles);
-                }}
-                onClose={() => searchStore.setIsWorkStyleModalOpen(false)}
-              />
-            </div>
-            <div className="flex justify-end p-6 border-t">
-              <button
-                onClick={() => searchStore.setIsWorkStyleModalOpen(false)}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                選択完了
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <WorkStyleSelectModal
+        isOpen={searchStore.isWorkStyleModalOpen}
+        onClose={() => searchStore.setIsWorkStyleModalOpen(false)}
+        onConfirm={(selected) => {
+          searchStore.setWorkStyles(selected);
+          searchStore.setIsWorkStyleModalOpen(false);
+        }}
+        initialSelected={searchStore.workStyles}
+        maxSelections={6}
+      />
     </>
   );
 }
