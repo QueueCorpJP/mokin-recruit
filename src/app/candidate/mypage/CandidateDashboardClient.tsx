@@ -570,7 +570,7 @@ export function CandidateDashboardClient({
                     height={12}
                     loading="lazy"
                     height={12}
-                    style={{ display: 'block' }}
+                    style={{ display: 'block'}}
                   />
                 </div>
               </div>

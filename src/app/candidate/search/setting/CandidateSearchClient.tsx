@@ -15,13 +15,9 @@ import { Modal } from '@/components/ui/mo-dal';
 import { X } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
-import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { TagDisplay } from '@/components/ui/TagDisplay';
-import { Tag } from '@/components/ui/Tag';
-import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { JobSearchResult, getJobSearchData } from './actions';

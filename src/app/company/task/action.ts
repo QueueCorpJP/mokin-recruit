@@ -64,12 +64,12 @@ export interface TaskData {
  * デバッグ・デザインテスト用のタスク強制表示フラグ
  * 本番環境では false にすること
  */
-const FORCE_SHOW_TASKS_FOR_DESIGN_TEST = true;
+const FORCE_SHOW_TASKS_FOR_DESIGN_TEST = false;
 
 export async function getCompanyTaskData(): Promise<TaskData> {
   const user = await getCachedCompanyUser();
   
-  if (!user || !user.user_metadata?.company_account_id) {
+  if (!user) {
     return {
       hasNoJobPostings: false,
       hasNewApplication: false,
@@ -80,9 +80,63 @@ export async function getCompanyTaskData(): Promise<TaskData> {
     };
   }
 
-  const companyAccountId = user.user_metadata.company_account_id;
-  const companyGroupIds = user.user_metadata?.company_group_ids || [];
   const supabase = createServerAdminClient();
+  
+  // Supabase Auth IDからCompany User IDと権限情報を取得
+  let companyUserId = user.id;
+  let companyAccountId = user.user_metadata?.company_account_id;
+  
+  // Company User IDとアカウント情報を正確に取得
+  const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
+  if (authUser.user) {
+    const { data: companyUser, error } = await supabase
+      .from('company_users')
+      .select('id, company_account_id')
+      .eq('email', authUser.user.email)
+      .single();
+    
+    if (companyUser && !error) {
+      companyUserId = companyUser.id;
+      companyAccountId = companyUser.company_account_id;
+    }
+  }
+  
+  if (!companyAccountId) {
+    console.error('❌ Company account ID not found');
+    return {
+      hasNoJobPostings: false,
+      hasNewApplication: false,
+      hasUnreadApplication: false,
+      hasNewMessage: false,
+      hasUnreadMessage: false,
+      hasUnregisteredInterviewResult: false,
+    };
+  }
+  
+  // ユーザーの権限に基づいてアクセス可能なグループIDを取得
+  const { data: permissions } = await supabase
+    .from('company_user_group_permissions')
+    .select('company_group_id, permission_level')
+    .eq('company_user_id', companyUserId);
+  
+  let companyGroupIds: string[] = [];
+  
+  if (permissions && permissions.length > 0) {
+    const hasAdminPermission = permissions.some(p => p.permission_level === 'ADMINISTRATOR');
+    
+    if (hasAdminPermission) {
+      // ADMINの場合は同じcompany_accountの全グループ
+      const { data: allGroups } = await supabase
+        .from('company_groups')
+        .select('id')
+        .eq('company_account_id', companyAccountId);
+      
+      companyGroupIds = allGroups?.map(g => g.id) || [];
+    } else {
+      // SCOUT_STAFFの場合は所属グループのみ
+      companyGroupIds = permissions.map(p => p.company_group_id);
+    }
+  }
   
   const taskData: TaskData = {
     hasNoJobPostings: false,

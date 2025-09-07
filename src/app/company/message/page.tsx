@@ -3,11 +3,19 @@ import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper'
 import { getCachedCompanyUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 
+interface MessagePageProps {
+  searchParams: Promise<{ room?: string }>;
+}
+
 // データ取得を行うサーバーコンポーネント
-async function MessageServerComponent() {
-  // 親レイアウト（CompanyLayoutClient）で認証処理が統一されているため、
-  // ここでは認証チェックを削除
+async function MessageServerComponent({
+  searchParams
+}: {
+  searchParams: Promise<{ room?: string }>
+}) {
   const user = await getCachedCompanyUser();
+  const params = await searchParams;
+
   if (!user) {
     return (
       <div className='flex flex-col bg-white min-h-screen items-center justify-center'>
@@ -21,12 +29,14 @@ async function MessageServerComponent() {
   console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,
+    roomId: params.room,
     userType: 'company'
   });
   
   const rooms = await getRooms(companyUserId, 'company');
   console.log('🔍 [STEP 2] Rooms returned:', { 
     roomsCount: rooms.length,
+    initialRoomId: params.room,
     rooms: rooms.map(r => ({
       id: r.id,
       candidateName: r.candidateName,
@@ -44,6 +54,7 @@ async function MessageServerComponent() {
           userId={companyUserId}
           userType="company"
           companyUserName={fullName}
+          initialRoomId={params.room}
         />
       </div>
     </div>
@@ -64,10 +75,10 @@ function LoadingSpinner() {
   );
 }
 
-export default function CompanyMessagePage() {
+export default function CompanyMessagePage({ searchParams }: MessagePageProps) {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <MessageServerComponent />
+      <MessageServerComponent searchParams={searchParams} />
     </Suspense>
   );
 }
