@@ -994,11 +994,8 @@ export async function getCompanyGroups() {
     if (cached && Date.now() - cached.timestamp >= GROUPS_CACHE_TTL) {
       groupsCache.delete(cacheKey);
     } else if (cached) {
-      console.log('[getCompanyGroups] Cache hit - returning cached data');
       return cached.data;
     }
-    
-    console.log('[getCompanyGroups] Cache miss - fetching new data');
     const supabase = getSupabaseAdminClient();
 
     // ユーザーが権限を持つグループのみ取得（検索機能と統一）

@@ -8,6 +8,7 @@ import { getCareerStatusData, updateCareerStatusData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 import {
   CURRENT_ACTIVITY_STATUS_OPTIONS,
   DECLINE_REASON_OPTIONS,
@@ -36,10 +37,32 @@ type CareerStatusFormData = z.infer<typeof careerStatusSchema>;
 
 // 候補者_転職活動状況編集ページ
 export default function CandidateCareerStatusEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(
     null
   );
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   const {
     register,

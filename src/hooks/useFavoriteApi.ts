@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { logError } from '../lib/errors/errorHandler';
 import { 
   getFavoriteListAction, 
@@ -32,126 +32,140 @@ interface FavoriteParams {
   limit?: number;
 }
 
-// Query Keys
-export const favoriteKeys = {
-  all: ['favorites'] as const,
-  lists: () => [...favoriteKeys.all, 'list'] as const,
-  list: (params: FavoriteParams) => [...favoriteKeys.lists(), params] as const,
-  status: (jobIds: string[]) => [...favoriteKeys.all, 'status', jobIds] as const,
-} as const;
-
 // お気に入り一覧を取得
 export const useFavoritesQuery = (params: FavoriteParams = {}) => {
   const { page = 1, limit = 20 } = params;
+  const [data, setData] = useState<FavoriteListResult | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  return useQuery({
-    queryKey: favoriteKeys.list({ page, limit }),
-    queryFn: async (): Promise<FavoriteListResult> => {
-      return await getFavoriteListAction({ page, limit });
-    },
-    staleTime: 30 * 1000, // 30秒間は新鮮とみなす
-    gcTime: 5 * 60 * 1000, // 5分間キャッシュを保持
-    enabled: true,
-  });
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getFavoriteListAction({ page, limit });
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch favorites'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, limit]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // お気に入りに追加
 export const useAddFavoriteMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResult> => {
-      return await addFavoriteAction(jobPostingId);
-    },
-    onSuccess: (data, jobPostingId) => {
-      // お気に入り一覧のキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
-      
-      // お気に入り状態のキャッシュも更新
-      queryClient.setQueryData(
-        favoriteKeys.status([jobPostingId]),
-        { [jobPostingId]: true }
-      );
-    },
-    onError: (error) => {
+  const mutate = async (jobPostingId: string): Promise<FavoriteActionResult> => {
+    setIsPending(true);
+    try {
+      const result = await addFavoriteAction(jobPostingId);
+      return result;
+    } catch (error) {
       logError(error as any, 'useAddFavoriteMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // お気に入りから削除
 export const useRemoveFavoriteMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (jobPostingId: string): Promise<FavoriteActionResult> => {
-      return await removeFavoriteAction(jobPostingId);
-    },
-    onSuccess: (data, jobPostingId) => {
-      // お気に入り一覧のキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
-      
-      // お気に入り状態のキャッシュも更新
-      queryClient.setQueryData(
-        favoriteKeys.status([jobPostingId]),
-        { [jobPostingId]: false }
-      );
-    },
-    onError: (error) => {
+  const mutate = async (jobPostingId: string): Promise<FavoriteActionResult> => {
+    setIsPending(true);
+    try {
+      const result = await removeFavoriteAction(jobPostingId);
+      return result;
+    } catch (error) {
       logError(error as any, 'useRemoveFavoriteMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // お気に入り状態を確認（複数の求人ID）
 export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
-  return useQuery({
-    queryKey: favoriteKeys.status(jobPostingIds),
-    queryFn: async (): Promise<Record<string, boolean>> => {
-      if (jobPostingIds.length === 0) {
-        return {};
-      }
+  const [data, setData] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
+  const refetch = useCallback(async () => {
+    if (jobPostingIds.length === 0) {
+      setData({});
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
       const result = await getFavoriteStatusAction(jobPostingIds);
       
       if (!result.success || !result.data) {
-        return {};
+        setData({});
+      } else {
+        setData(result.data);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch favorite status'));
+      setData({});
+    } finally {
+      setIsLoading(false);
+    }
+  }, [jobPostingIds.join(',')]); // 配列の内容で比較するよう変更
 
-      return result.data;
-    },
-    enabled: jobPostingIds.length > 0,
-    staleTime: 1 * 60 * 1000, // 1分間は新鮮とみなす
-    gcTime: 5 * 60 * 1000, // 5分間キャッシュを保持
-  });
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // お気に入りのトグル（追加/削除を自動判定）
 export const useFavoriteToggleMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const addFavorite = useAddFavoriteMutation();
   const removeFavorite = useRemoveFavoriteMutation();
 
-  return useMutation({
-    mutationFn: async ({ jobPostingId, isFavorite }: { 
-      jobPostingId: string; 
-      isFavorite: boolean;
-    }) => {
+  const mutate = async ({ jobPostingId, isFavorite }: { 
+    jobPostingId: string; 
+    isFavorite: boolean;
+  }) => {
+    setIsPending(true);
+    try {
       if (isFavorite) {
         return await removeFavorite.mutateAsync(jobPostingId);
       } else {
         return await addFavorite.mutateAsync(jobPostingId);
       }
-    },
-    onSuccess: (data, variables) => {
-      // 状態のキャッシュを即座に更新（楽観的更新）
-      queryClient.setQueryData(
-        favoriteKeys.status([variables.jobPostingId]),
-        { [variables.jobPostingId]: !variables.isFavorite }
-      );
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useFavoriteToggleMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };

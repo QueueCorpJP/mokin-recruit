@@ -45,14 +45,6 @@ function getSupabaseConfig(): SupabaseConfig {
     );
   }
 
-  // 本番環境ではログを簡素化
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Supabase configuration loaded', {
-      url: url.substring(0, 30) + '...',
-      hasAnonKey: !!anonKey,
-      hasServiceRoleKey: !!serviceRoleKey,
-    });
-  }
 
   return {
     url,
@@ -101,14 +93,8 @@ export function initializeSupabase(): void {
         },
       });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Supabase admin client initialized successfully');
-      }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Supabase client initialized successfully');
-    }
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
     throw error;
@@ -146,11 +132,6 @@ export function getSupabaseAdminClient(): SupabaseClient {
     }
     
     if (!supabaseAdmin) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(
-          'Supabase admin client is not initialized. Using regular client as fallback.'
-        );
-      }
       return getSupabaseClient();
     }
   }
@@ -198,9 +179,6 @@ export async function testSupabaseConnection(): Promise<boolean> {
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Supabase connection test successful');
-    }
     return true;
   } catch (error) {
     console.error('Supabase connection test error:', error);
@@ -248,13 +226,6 @@ export async function checkDatabaseSchema(): Promise<{
       table => !existingTables.includes(table)
     );
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Database schema check completed', {
-        existingTables: existingTables.length,
-        missingTables: missingTables.length,
-        missing: missingTables,
-      });
-    }
 
     return {
       tablesExist: missingTables.length === 0,
@@ -272,7 +243,4 @@ export async function checkDatabaseSchema(): Promise<{
 export function closeSupabaseConnection(): void {
   // Supabaseクライアントは自動的にクリーンアップされるため、
   // 明示的なクローズは不要だが、ログ出力のみ行う
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Supabase connection cleanup completed');
-  }
 }

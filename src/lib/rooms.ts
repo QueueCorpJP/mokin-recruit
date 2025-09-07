@@ -32,15 +32,12 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
   if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
     roomsCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getRooms] Cache hit - returning cached data');
     return cached.data;
   }
   
-  console.log('[getRooms] Cache miss - fetching new data');
   
   // RLS問題を解決するためAdmin clientを使用
   const supabase = getSupabaseAdminClient();
-  console.log('🔧 [STEP B] Using Supabase Admin client (RLS bypassed)');
 
   try {
     if (userType === 'candidate') {

@@ -12,6 +12,7 @@ import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 // フォームスキーマ定義
 const recentJobSchema = z.object({
@@ -48,6 +49,7 @@ const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => ({
 
 // 候補者_職務経歴編集ページ
 export default function CandidateRecentJobEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +65,27 @@ export default function CandidateRecentJobEditPage() {
   const [selectedJobTypesMap, setSelectedJobTypesMap] = useState<{
     [key: number]: JobType[];
   }>({});
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   const {
     register,

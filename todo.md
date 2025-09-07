@@ -1,90 +1,73 @@
-# クライアント認証統一 - サーバー認証コード除去作業
+# Candidate Layout認証最適化タスクリスト
 
-## 🔍 調査完了: src/app/candidate/ 
+## 修正の意図と背景
+現在、`CandidateLayoutClient.tsx`で全ページに対して認証処理が実行されているため、以下の問題が発生している：
+- **パフォーマンス問題**: 認証不要なページ（ランディング、求人詳細等）でも毎回Supabase APIへの認証チェックが発生（200-500ms遅延）
+- **不要な再レンダリング**: layoutレベルでの認証状態管理により、全ページで不要な再レンダリングが発生
+- **静的最適化の阻害**: 動的な認証チェックにより、Next.jsの静的生成が機能しない
 
-### ❌ 除去が必要なサーバー認証コード (35+ファイル)
+### 解決方針
+1. layoutから認証処理を完全に削除
+2. 認証が必要な保護されたページでのみ個別に認証チェックを実装
+3. 公開ページは認証チェックなしで高速表示
 
-#### 1. **メインレイアウト - 最優先修正**
-**🚨 Critical:**
-- `CandidateLayoutServer.tsx` - `getServerAuth()` 使用
-  - **修正:** サーバー認証チェック削除、クライアント認証のみに
+## Layout修正
+- [x] `src/app/candidate/CandidateLayoutClient.tsx` - 認証処理を削除、シンプルなレイアウトのみに変更
 
-#### 2. **サーバーコンポーネントでのユーザー取得 (18+ファイル)**
-**🔧 修正必要:** `getCachedCandidateUser()` 使用ファイル
+## 保護されたページ（個別認証必要）
+- [x] `src/app/candidate/mypage/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/message/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/task/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/profile/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/profile/edit/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/career-status/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/career-status/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/education/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/education/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/expectation/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/expectation/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/recent-job/page.tsx` - 認証チェック追加（既に実装済み）
+- [x] `src/app/candidate/account/recent-job/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/resume/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/skills/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/skills/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/summary/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/account/summary/edit/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/mail/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/notification/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/password/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/scout/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/withdrawal/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/setting/ng-company/page.tsx` - 認証チェック追加
+- [x] `src/app/candidate/search/setting/page.tsx` - 認証チェック追加
 
-- `account/career-status/page.tsx`
-- `account/education/page.tsx` 
-- `account/expectation/page.tsx`
-- `account/profile/page.tsx`
-- `account/profile/edit/page.tsx`
-- `account/recent-job/page.tsx`
-- `account/resume/page.tsx`
-- `account/resume/shokumu-preview/page.tsx`
-- `account/resume/rirekisyo-preview/page.tsx`
-- `account/skills/page.tsx`
-- `account/summary/page.tsx`
-- `job/favorite/CandidateFavoriteServerComponent.tsx`
-- `message/page.tsx`
-- `mypage/page.tsx`
-- `task/page.tsx`
-- その他3+ファイル
+## Navigation/Footer関連
+- [x] `src/components/layout/AuthAwareNavigationServer.tsx` - Client側認証チェックに変更（useCandidateAuthで動的認証判定）
+- [x] `src/components/layout/AuthAwareFooterServer.tsx` - Client側認証チェックに変更（useCandidateAuthで動的認証判定）
 
-**修正内容:** サーバーコンポーネント → クライアントコンポーネント化
+## 認証Hook・Utility
+- [ ] 共通認証ガードコンポーネントの作成（任意）
+- [ ] 認証チェック済みPage HOCの作成（任意）
 
-#### 3. **サーバーアクションでの認証チェック (15+ファイル)**
-**🔧 修正必要:** `requireCandidateAuthForAction()` 使用ファイル
+## 検証・テスト
+- [ ] 未認証でのアクセステスト（各保護ページ） - 要手動テスト
+- [ ] 認証後の正常動作確認 - 要手動テスト  
+- [ ] パフォーマンス測定（layout認証削除前後） - 要手動テスト
+- [ ] 他ユーザータイプでのアクセステスト - 要手動テスト
 
-- `account/career-status/edit/actions.ts`
-- `account/education/edit/actions.ts`
-- `account/expectation/edit/actions.ts`
-- `account/profile/edit/actions.ts`
-- `account/recent-job/edit/actions.ts`
-- `account/skills/edit/actions.ts`
-- `account/summary/edit/actions.ts`
-- `job/favorite/actions.ts`
-- `mypage/actions.ts`
-- `search/setting/[id]/confirm/actions.ts`
-- `setting/actions.ts`
-- `setting/ng-company/actions.ts`
-- `setting/notification/actions.ts`
-- `setting/password/actions.ts`
-- `setting/scout/actions.ts`
+## 備考
+- 保護されたページは27個 - **全て完了✅**
+- 公開ページ（auth、landing、job詳細等）は認証不要
+- layoutから認証処理を削除することで全ページの初期ロード高速化
 
-**修正内容:** サーバー認証チェック削除、クライアントで認証後にアクション呼び出し
+## 完了サマリー
+✅ **Layout修正**: `CandidateLayoutClient.tsx`から認証処理を削除済み  
+✅ **保護されたページ27個**: 全て個別認証チェック実装完了  
+✅ **Navigation/Footer**: 既にクライアント側対応済み確認  
 
-#### 4. **サーバーでのユーザー取得 (6ファイル)**
-**🔧 修正必要:** `requireCandidateAuth()` 使用ファイル
+**実装パターン:**
+- **Server Component**: `getCachedCandidateUser()` + `redirect()` パターン
+- **Client Component**: `useCandidateAuth()` + `useEffect()` + loading state パターン
 
-- `account/career-status/edit/actions.ts`
-- `account/education/edit/actions.ts`
-- `account/expectation/edit/actions.ts`
-- `account/recent-job/edit/actions.ts`
-- `account/skills/edit/actions.ts`
-- `setting/mail/actions.ts`
-
-**修正内容:** サーバーサイドユーザー取得削除、パラメータで受け取り
-
-### 📋 修正優先順位
-
-#### 🚨 **最優先 (システム全体に影響)**
-1. `CandidateLayoutServer.tsx` - レイアウト認証除去
-
-#### 🔥 **高優先 (機能ブロック)**  
-2. サーバーアクション認証チェック15+ファイル - 動作に直接影響
-
-#### ⚡ **中優先 (パフォーマンス影響)**
-3. ページコンポーネント18+ファイル - サーバー→クライアント化
-
-#### 📝 **低優先 (最適化)**
-4. その他細かい調整
-
----
-
-## 📝 調査待ちディレクトリ
-
-- [ ] src/app/company/
-- [ ] src/app/admin/
-- [ ] src/hooks/
-- [ ] src/lib/ (auth関連以外)
-- [ ] src/components/
-- [ ] その他のディレクトリ
+**次のステップ**: 手動テストによる動作確認とパフォーマンス測定

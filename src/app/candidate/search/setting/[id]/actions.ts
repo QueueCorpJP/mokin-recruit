@@ -150,7 +150,7 @@ export async function getJobDetailData(jobId: string): Promise<JobDetailData | n
         id: apiJob.id,
         title: apiJob.title || '求人タイトル未設定',
         companyName: apiJob.company_name || '企業名未設定',
-        companyLogo: apiJob.image_urls?.[0],
+        companyLogo: undefined, // 企業ロゴは求人画像とは別にすべき
         images: apiJob.image_urls || ['/company.jpg'],
         jobTypes: Array.isArray(apiJob.job_type)
           ? apiJob.job_type

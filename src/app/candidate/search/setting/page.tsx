@@ -1,19 +1,9 @@
 import React, { Suspense } from 'react';
-import CandidateSearchServerComponent from './CandidateSearchServerComponent';
+import { redirect } from 'next/navigation';
+import { getCachedCandidateUser } from '@/lib/auth/server';
+import CandidateSearchClient from './CandidateSearchClient';
 import { SpinnerIcon } from '@/components/ui/Loading';
-
-
-interface CandidateSearchPageProps {
-  searchParams?: Promise<{
-    keyword?: string;
-    location?: string;
-    salaryMin?: string;
-    industries?: string | string[];
-    jobTypes?: string | string[];
-    appealPoints?: string | string[];
-    page?: string;
-  }>;
-}
+import { getJobSearchData } from './actions';
 
 function LoadingSpinner() {
   return (
@@ -26,12 +16,50 @@ function LoadingSpinner() {
   );
 }
 
-// ✅ 関数定義が必要
-export default async function CandidateSearchPage({ searchParams }: CandidateSearchPageProps) {
-  const params = searchParams ? await searchParams : undefined;
+// 初期表示で最新求人を表示
+export default async function CandidateSearchPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  // 認証チェック
+  const user = await getCachedCandidateUser();
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
+
+  // URLパラメータから検索条件を解析
+  const searchConditions = {
+    keyword: typeof searchParams.keyword === 'string' ? searchParams.keyword : '',
+    location: typeof searchParams.location === 'string' ? searchParams.location : '',
+    salaryMin: typeof searchParams.salaryMin === 'string' ? searchParams.salaryMin : '',
+    industries: typeof searchParams.industries === 'string' ? searchParams.industries.split(',').filter(Boolean) : [],
+    jobTypes: typeof searchParams.jobTypes === 'string' ? searchParams.jobTypes.split(',').filter(Boolean) : [],
+    appealPoints: typeof searchParams.appealPoints === 'string' ? searchParams.appealPoints.split(',').filter(Boolean) : [],
+    page: typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1,
+    limit: 10
+  };
+
+  // 初期データを取得（検索条件があれば条件付き、なければ最新順全件）
+  const initialData = await getJobSearchData(searchConditions);
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <CandidateSearchServerComponent searchParams={params} />
+      <CandidateSearchClient 
+        initialJobs={initialData.success ? initialData.data?.jobs || [] : []}
+        initialPagination={initialData.success ? initialData.data?.pagination || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0
+        } : {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0
+        }}
+        initialSearchConditions={searchConditions}
+      />
     </Suspense>
   );
 }

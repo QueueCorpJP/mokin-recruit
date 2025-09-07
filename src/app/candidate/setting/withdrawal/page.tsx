@@ -1,11 +1,23 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 export default function WithdrawalPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   const handleScoutSettings = () => {
     router.push('/candidate/setting/scout');
@@ -18,6 +30,18 @@ export default function WithdrawalPage() {
   const handleWithdrawalForm = () => {
     router.push('/candidate/setting/withdrawal/reason');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">

@@ -345,12 +345,12 @@ export function CandidateDashboardClient({
                   >
                     {/* 求人カード */}
                     <div className='flex flex-col gap-4'>
-                      {jobList.map(job => (
+                      {jobList.map((job, index) => (
                         <JobPostCard
                           key={job.id}
                           imageUrl={
                             job.image_urls?.[0] ||
-                            'https://placehold.jp/300x200.png'
+                            '/images/default-job.jpg'
                           }
                           imageAlt='求人画像'
                           title={job.title}
@@ -370,6 +370,7 @@ export function CandidateDashboardClient({
                           imageHeight={69}
                           isFavoriteLoading={favoriteLoading[job.id]}
                           onStarClick={() => handleStarClick(job.id)}
+                          isFirstCard={index === 0}
                         />
                       ))}
                     </div>
@@ -582,6 +583,9 @@ export function CandidateDashboardClient({
                 height={200}
                 className='w-full h-auto block rounded-lg'
                 loading="lazy"
+                priority={false}
+                sizes="(max-width: 768px) 100vw, 320px"
+                quality={75}
               />
               {/* FAQ/QAセクション */}
               <div

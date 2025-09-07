@@ -6,14 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Radio } from '@/components/ui/radio';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { saveScoutSettings, getScoutSettings } from './actions';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 export default function ScoutSettingPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [scoutStatus, setScoutStatus] = useState<string>('receive');
   const [hasChanges, setHasChanges] = useState(false);
   const [originalStatus, setOriginalStatus] = useState<string>('receive');
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   useEffect(() => {
     const fetchCurrentSettings = async () => {
@@ -57,6 +68,18 @@ export default function ScoutSettingPage() {
   const handleBack = () => {
     router.push('/candidate/setting');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] overflow-x-hidden">

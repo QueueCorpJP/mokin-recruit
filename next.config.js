@@ -11,7 +11,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
     },
-    optimizePackageImports: ['@tanstack/react-query', '@supabase/supabase-js', '@tiptap/react'],
+    optimizePackageImports: ['@supabase/supabase-js'],
     swcPlugins: [],
   },
   distDir: '.next',
@@ -48,12 +48,6 @@ const nextConfig = {
           tiptap: {
             test: /[\\/]node_modules[\\/]@tiptap[\\/]/,
             name: 'tiptap',
-            chunks: 'async',
-            priority: 10,
-          },
-          reactQuery: {
-            test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
-            name: 'react-query',
             chunks: 'async',
             priority: 10,
           },

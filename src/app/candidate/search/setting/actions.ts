@@ -160,7 +160,6 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
       dataQuery
     ]);
     const dbEndTime = performance.now();
-    console.log(`[OPTIMIZED] Job queries with JOIN completed in ${(dbEndTime - dbStartTime).toFixed(2)}ms`);
 
     const { count, error: countError } = countResult;
     const { data: jobs, error: dataError } = dataResult;
@@ -212,7 +211,6 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
     const totalPages = Math.ceil(total / limit);
 
     const endTime = performance.now();
-    console.log(`[OPTIMIZED] Search completed in ${(endTime - startTime).toFixed(2)}ms - Jobs: ${transformedJobs.length}`);
 
     return {
       success: true,
@@ -247,11 +245,8 @@ export async function getJobSearchData(params: JobSearchParams): Promise<JobSear
   if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
     searchCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getJobSearchData] Cache hit - returning cached data');
     return cached.data;
   }
-  
-  console.log('[getJobSearchData] Cache miss - fetching new data');
   
   // 新しいデータを取得（最適化版を使用）
   const result = await searchJobsServerOptimized(params);

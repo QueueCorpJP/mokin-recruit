@@ -30,11 +30,8 @@ export async function getCompanyUserSettings(): Promise<CompanyUserSettings | nu
   if (cached && Date.now() - cached.timestamp >= COMPANY_USER_SETTINGS_CACHE_TTL) {
     companyUserSettingsCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getCompanyUserSettings] Cache hit - returning cached data');
     return cached.data;
   }
-  
-  console.log('[getCompanyUserSettings] Cache miss - fetching new data');
   console.log('Fetching company user settings for companyUserId:', companyUserId);
 
   const supabase = getSupabaseAdminClient();

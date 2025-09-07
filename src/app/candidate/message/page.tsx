@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,12 +16,7 @@ async function MessageServerComponent({
   const params = await searchParams;
 
   if (!user) {
-    // SSRレイアウトで未ログインはリダイレクト済みのため、ここに来た場合は安全にフォールバック
-    return (
-      <div className="h-full flex items-center justify-center text-gray-500">
-        ログインが必要です
-      </div>
-    );
+    redirect('/candidate/auth/login');
   }
 
   const rooms = await getRooms(user.id, 'candidate');
