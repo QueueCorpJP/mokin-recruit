@@ -31,15 +31,28 @@ const AuthAwareFooter = dynamic(
   }
 );
 
+const FontLoader = dynamic(
+  () => import('../components/FontLoader').then(mod => ({ default: mod.FontLoader })),
+  { ssr: false } // クライアントサイドでのみ実行
+);
+
 // フォント最適化 - 遅延読み込み後に適用
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
   display: 'swap', // フォールバック表示後にWebフォントに置き換え
   preload: false, // 初期読み込み高速化
   variable: '--font-noto-sans-jp',
-  weight: ['400', '700'],
-  adjustFontFallback: false, // 手動でフォールバックを制御
-  fallback: ['Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'system-ui', 'sans-serif'],
+  weight: ['400', '500', '700'],
+  adjustFontFallback: true, // メトリクス調整を有効化
+  fallback: [
+    'Hiragino Kaku Gothic ProN', 
+    'Hiragino Sans', 
+    'Yu Gothic Medium', 
+    'Meiryo', 
+    'MS PGothic',
+    'system-ui', 
+    'sans-serif'
+  ],
 });
 
 // Interは削除（システムフォントで代用）
@@ -82,21 +95,15 @@ export default function RootLayout({
         <style
           dangerouslySetInnerHTML={{
             __html: `
-            @font-face {
-              font-family: 'Noto Sans JP Fallback';
-              src: local('Noto Sans JP'), local('NotoSansJP-Regular'),
-                   local('ヒラギノ角ゴ ProN'), local('Hiragino Kaku Gothic ProN'),
-                   local('メイリオ'), local('Meiryo');
-              unicode-range: U+3000-9FFF, U+FF00-FFEF;
-              font-display: swap;
-            }
-            
+            /* システムフォントのフォールバック設定 */
             html { 
-              font-family: var(--font-noto-sans-jp), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+              font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "Meiryo", "MS PGothic", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
             }
             
-            .font-noto-sans-jp { 
-              font-family: var(--font-noto-sans-jp), system-ui, sans-serif; 
+            /* Noto Sans JPが読み込まれた後に適用 */
+            .font-loaded html,
+            .font-loaded body { 
+              font-family: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "Meiryo", "MS PGothic", system-ui, sans-serif; 
             }
             
             /* フォント読み込み中のレイアウトシフト防止 */
@@ -106,11 +113,17 @@ export default function RootLayout({
               -webkit-font-smoothing: antialiased;
               -moz-osx-font-smoothing: grayscale;
             }
+            
+            /* フォント読み込み状態の管理 */
+            .font-loading {
+              font-display: swap;
+            }
           `,
           }}
         />
       </head>
       <body className={`antialiased`}>
+        <FontLoader />
         <CombinedProviders>
           {children}
           {/* <StagewiseToolbarClient /> */}

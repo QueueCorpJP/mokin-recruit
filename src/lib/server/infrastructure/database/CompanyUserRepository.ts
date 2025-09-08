@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { logger } from '@/lib/server/utils/logger';
-import { SupabaseRepository } from './SupabaseRepository';
+import { UserSupabaseRepository } from './UserSupabaseRepository';
 
 // MVPスキーマに対応した企業ユーザーエンティティ
 export interface CompanyUserEntity {
@@ -38,17 +38,18 @@ export interface CompanyAccountEntity {
 }
 
 @injectable()
-export class CompanyUserRepository extends SupabaseRepository<CompanyUserEntity> {
+export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEntity> {
   protected tableName = 'company_users';
 
   constructor() {
     super();
   }
 
-  // メールアドレスで企業ユーザーを検索
-  async findByEmail(email: string): Promise<CompanyUserEntity | null> {
+  // signup時の重複チェック用（管理者権限で実行）
+  async findByEmailForSignup(email: string): Promise<CompanyUserEntity | null> {
     try {
-      const { data, error } = await this.client
+      const client = this.getAdminClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('email', email)
@@ -56,23 +57,22 @@ export class CompanyUserRepository extends SupabaseRepository<CompanyUserEntity>
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // レコードが見つからない場合
           logger.debug(`Company user not found with email: ${email}`);
           return null;
         }
-        logger.error('Error finding company user by email:', error);
-        throw new Error(`Failed to find company user: ${error.message}`);
+        logger.error('Error finding company user by email for signup:', error);
+        return null;
       }
 
-      logger.debug(`Found company user: ${email}`);
+      logger.debug(`Found company user for signup check: ${email}`);
       return data;
     } catch (error) {
-      logger.error('Exception in findByEmail:', error);
-      throw error;
+      logger.error('Exception in findByEmailForSignup:', error);
+      return null;
     }
   }
 
-  // 企業ユーザーの作成
+  // signup時の企業ユーザー作成（管理者権限で実行）
   async create(userData: CreateCompanyUserData): Promise<CompanyUserEntity> {
     try {
       const createData = {
@@ -81,19 +81,13 @@ export class CompanyUserRepository extends SupabaseRepository<CompanyUserEntity>
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
-        .from(this.tableName)
-        .insert(createData)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Error creating company user:', error);
-        throw new Error(`Failed to create company user: ${error.message}`);
+      const result = await this.createWithAdmin(createData);
+      if (!result) {
+        throw new Error('Failed to create company user');
       }
 
-      logger.info(`Created company user: ${data.email}`);
-      return data;
+      logger.info(`Created company user: ${result.email}`);
+      return result;
     } catch (error) {
       logger.error('Exception in create company user:', error);
       throw error;
@@ -228,17 +222,18 @@ export class CompanyUserRepository extends SupabaseRepository<CompanyUserEntity>
 }
 
 @injectable()
-export class CompanyAccountRepository extends SupabaseRepository<CompanyAccountEntity> {
+export class CompanyAccountRepository extends UserSupabaseRepository<CompanyAccountEntity> {
   protected tableName = 'company_accounts';
 
   constructor() {
     super();
   }
 
-  // IDで企業アカウントを検索
-  async findById(id: string): Promise<CompanyAccountEntity | null> {
+  // signup時のID検索用（管理者権限で実行）
+  async findByIdForSignup(id: string): Promise<CompanyAccountEntity | null> {
     try {
-      const { data, error } = await this.client
+      const client = this.getAdminClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -249,14 +244,14 @@ export class CompanyAccountRepository extends SupabaseRepository<CompanyAccountE
           logger.debug(`Company account not found with id: ${id}`);
           return null;
         }
-        logger.error('Error finding company account by id:', error);
-        throw new Error(`Failed to find company account: ${error.message}`);
+        logger.error('Error finding company account by id for signup:', error);
+        return null;
       }
 
       return data;
     } catch (error) {
-      logger.error('Exception in findById:', error);
-      throw error;
+      logger.error('Exception in findByIdForSignup:', error);
+      return null;
     }
   }
 

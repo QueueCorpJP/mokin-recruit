@@ -12,7 +12,8 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
-import { getCandidatesFromDatabase, loadSearchParamsToStore, searchCandidatesWithConditions } from './actions';
+import { loadSearchParamsToStore } from './actions';
+import { getCandidatesFromDatabase, searchCandidatesWithConditions } from './server-actions';
 import { saveCandidateAction, unsaveCandidateAction, getSavedCandidatesAction, toggleCandidateHiddenAction, getHiddenCandidatesAction } from './candidate-actions';
 import { useSearchStore } from '../../../../stores/searchStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1004,7 +1005,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
 
                   {/* 語学力 */}
                   <div className="flex gap-6 items-strech">
-                    <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[120px]">
+                    <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[150px]">
                       <span
                         className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}

@@ -80,8 +80,8 @@ export class UserRegistrationService implements IUserRegistrationService {
         };
       }
 
-      // メールアドレス重複チェック
-      const existingCandidate = await this.candidateRepository.findByEmail(
+      // メールアドレス重複チェック（signup用の管理者権限で実行）
+      const existingCandidate = await this.candidateRepository.findByEmailForSignup(
         data.email
       );
       if (existingCandidate) {
