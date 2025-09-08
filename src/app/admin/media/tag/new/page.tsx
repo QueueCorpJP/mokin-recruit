@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { createTag } from '@/app/admin/media/actions';
 
 export default function NewTagPage() {
+  const { isAdmin, loading: authLoading } = useAdminAuth();
   const router = useRouter();
   const [tagName, setTagName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,18 @@ export default function NewTagPage() {
     setShowSuccessModal(false);
     router.push('/admin/media/tag');
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

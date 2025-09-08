@@ -347,6 +347,47 @@ export async function requireCompanyAuthForAction(): Promise<
 }
 
 /**
+ * RLS対応のSupabaseクライアントを取得（サーバーコンポーネント用）
+ * 認証されたユーザーのクライアントを返すため、RLSポリシーが適用される
+ */
+export async function getAuthenticatedSupabaseClient() {
+  const auth = await getCachedServerAuth();
+  
+  if (!auth.isAuthenticated) {
+    throw new Error('認証が必要です');
+  }
+
+  // 認証されたユーザーのクライアントを作成
+  return await createSupabaseServerClientReadOnly(true);
+}
+
+/**
+ * 候補者専用の認証済みSupabaseクライアントを取得
+ */
+export async function getCandidateSupabaseClient() {
+  const user = await getCachedCandidateUser();
+  
+  if (!user) {
+    throw new Error('候補者としての認証が必要です');
+  }
+
+  return await createSupabaseServerClientReadOnly(true);
+}
+
+/**
+ * 企業ユーザー専用の認証済みSupabaseクライアントを取得
+ */
+export async function getCompanySupabaseClient() {
+  const user = await getCachedCompanyUser();
+  
+  if (!user) {
+    throw new Error('企業ユーザーとしての認証が必要です');
+  }
+
+  return await createSupabaseServerClientReadOnly(true);
+}
+
+/**
  * Supabaseユーザー認証を要求するヘルパー関数 (API用)
  */
 export async function requireCandidateAuthForAPI(request?: Request): Promise<

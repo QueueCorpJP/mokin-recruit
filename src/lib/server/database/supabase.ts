@@ -15,8 +15,8 @@ let supabaseAdmin: SupabaseClient;
  * 環境変数から直接Supabase設定を取得（循環参照回避）
  */
 function getSupabaseConfig(): SupabaseConfig {
-  const url = process.env.SUPABASE_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   // ビルド時は環境変数チェックをスキップ

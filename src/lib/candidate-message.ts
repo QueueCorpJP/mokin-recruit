@@ -1,40 +1,22 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { requireCandidateAuth } from '@/lib/auth/server';
 import { CandidateRoom, CandidateMessage } from '@/types/candidate-message';
-
-// 候補者用のSupabaseクライアント取得
-async function getCandidateSupabase() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch (error) {
-            // Ignore cookie setting errors
-          }
-        },
-      },
-    }
-  );
-}
 
 /**
  * 候補者のルーム一覧を取得（簡素化版）
  */
 export async function getCandidateRooms(candidateId: string): Promise<CandidateRoom[]> {
   try {
-    const supabase = await getCandidateSupabase();
+    // 候補者認証チェック
+    const user = await requireCandidateAuth();
+    if (!user || user.id !== candidateId) {
+      console.error('Unauthorized access or candidate ID mismatch');
+      return [];
+    }
+
+    const supabase = getSupabaseAdminClient();
 
     // 候補者のNG企業リストを取得
     const { data: blockedCompanies, error: blockedError } = await supabase
@@ -184,7 +166,14 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
  */
 export async function getCandidateRoomMessages(roomId: string, candidateId: string): Promise<CandidateMessage[]> {
   try {
-    const supabase = await getCandidateSupabase();
+    // 候補者認証チェック
+    const user = await requireCandidateAuth();
+    if (!user || user.id !== candidateId) {
+      console.error('Unauthorized access or candidate ID mismatch');
+      return [];
+    }
+
+    const supabase = getSupabaseAdminClient();
 
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
@@ -258,7 +247,14 @@ export async function sendCandidateMessage(
   content: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await getCandidateSupabase();
+    // 候補者認証チェック
+    const user = await requireCandidateAuth();
+    if (!user || user.id !== candidateId) {
+      console.error('Unauthorized access or candidate ID mismatch');
+      return { success: false, error: 'Unauthorized access' };
+    }
+
+    const supabase = getSupabaseAdminClient();
 
     const { error: messageError } = await supabase
       .from('messages')

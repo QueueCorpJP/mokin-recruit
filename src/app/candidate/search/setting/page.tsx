@@ -16,17 +16,14 @@ function LoadingSpinner() {
   );
 }
 
-// 初期表示で最新求人を表示
+// 初期表示で最新求人を表示（匿名ユーザー対応）
 export default async function CandidateSearchPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  // 認証チェック
+  // 認証チェック（オプショナル - 匿名ユーザーも可）
   const user = await getCachedCandidateUser();
-  if (!user) {
-    redirect('/candidate/auth/login');
-  }
 
   // URLパラメータから検索条件を解析
   const searchConditions = {

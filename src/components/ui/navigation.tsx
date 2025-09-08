@@ -982,10 +982,10 @@ export function Navigation({
                     {openDropdown === 'account' && (
                       <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                         <Link
-                          href='/candidate/settings'
+                          href='/candidate/setting'
                           className={cn(
                             'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
-                            pathname === '/candidate/settings'
+                            pathname === '/candidate/setting'
                               ? 'text-[#0F9058] bg-[#F3FBF7]'
                               : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                           )}
@@ -1095,7 +1095,7 @@ export function Navigation({
                     {openDropdown === 'account' && (
                       <div className='ml-6 mt-1 space-y-1'>
                         <Link
-                          href='/candidate/settings'
+                          href='/candidate/setting'
                           className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                           onClick={() => {
                             setIsMenuOpen(false);

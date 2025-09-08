@@ -5,6 +5,8 @@ import { CandidateSlideMenu } from './CandidateSlideMenu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
 import { CandidateData } from '@/lib/server/candidate/recruitment-queries';
+import { getCandidateDetailAction } from '@/lib/actions/candidate-detail';
+import { Pagination } from '@/components/ui/Pagination';
 
 // Icons
 const BoardIcon = () => (
@@ -325,6 +327,8 @@ export function RecruitmentPageClient({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] =
     useState<CandidateData | null>(null);
+  const [candidateDetailData, setCandidateDetailData] = useState<any>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusTabs, setStatusTabs] = useState<StatusTab[]>([
     { id: 'all', label: 'すべて', active: true },
     { id: 'not_sent', label: 'スカウト未送信', active: false },
@@ -337,6 +341,10 @@ export function RecruitmentPageClient({
     { id: 'offer', label: '内定', active: false },
   ]);
   const [sortOrder, setSortOrder] = useState<'progress' | 'date'>('progress');
+  
+  // ページネーション関連のstate
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // 1ページあたりの表示件数
 
   const handleStatusTabClick = (tabId: string) => {
     setStatusTabs(tabs =>
@@ -352,13 +360,35 @@ export function RecruitmentPageClient({
     // 検索処理: keyword, selectedGroup, selectedJob, excludeDeclined
   };
 
-  const handleCandidateClick = (candidate: CandidateData) => {
+  const handleCandidateClick = async (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
     setIsMenuOpen(true);
+    setIsLoadingDetail(true);
+    
+    try {
+      const detailData = await getCandidateDetailAction(candidate.id);
+      setCandidateDetailData(detailData);
+    } catch (error) {
+      console.error('候補者詳細データの取得に失敗:', error);
+      setCandidateDetailData(null);
+    } finally {
+      setIsLoadingDetail(false);
+    }
   };
 
   const handleCloseMenu = () => {
     setIsMenuOpen(false);
+    setCandidateDetailData(null);
+  };
+
+  // ページング処理
+  const totalPages = Math.max(1, Math.ceil(candidates.length / itemsPerPage)); // 0件でも最低1ページ表示
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCandidates = candidates.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -529,7 +559,7 @@ export function RecruitmentPageClient({
                 className='text-[#323232] text-[12px] font-bold tracking-[1.2px]'
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
               >
-                1〜10件 / 1,000件
+                {candidates.length > 0 ? `${startIndex + 1}〜${Math.min(endIndex, candidates.length)}件 / ${candidates.length}件` : '0件 / 0件'}
               </span>
               <ChevronRightIcon />
             </div>
@@ -537,7 +567,7 @@ export function RecruitmentPageClient({
 
           {/* Candidate Cards */}
           <div className='flex flex-col gap-4'>
-            {candidates.map(candidate => (
+            {paginatedCandidates.map(candidate => (
               <CandidateCard
                 key={candidate.id}
                 candidate={candidate}
@@ -547,35 +577,12 @@ export function RecruitmentPageClient({
           </div>
 
           {/* Pagination */}
-          <div className='flex items-center justify-center gap-4 mt-10 mb-10'>
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
-              <ChevronLeftIcon />
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              1
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              2
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] bg-[#0f9058] flex items-center justify-center text-white text-[16px] font-bold tracking-[1.6px] hover:opacity-80 transition-opacity duration-200'>
-              3
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              4
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center text-[#0f9058] text-[16px] font-bold tracking-[1.6px] hover:opacity-70 transition-opacity duration-200'>
-              5
-            </button>
-
-            <button className='w-14 h-14 rounded-[32px] border border-[#0f9058] flex items-center justify-center hover:opacity-70 transition-opacity duration-200'>
-              <ChevronRightIcon />
-            </button>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-10 mb-10"
+          />
         </div>
       </div>
 
@@ -584,26 +591,7 @@ export function RecruitmentPageClient({
         isOpen={isMenuOpen}
         onClose={handleCloseMenu}
         candidateId={selectedCandidate?.id}
-        candidateData={
-          selectedCandidate
-            ? {
-                id: selectedCandidate.id,
-                name: selectedCandidate.name,
-                company: selectedCandidate.company,
-                location: selectedCandidate.location,
-                age: selectedCandidate.age,
-                gender: selectedCandidate.gender,
-                income: '500〜600万円',
-                lastLogin: '2024/03/15',
-                lastUpdate: '2024/03/10',
-                registrationDate: '2024/01/01',
-                tags: {
-                  isHighlighted: true,
-                  isCareerChange: true,
-                },
-              }
-            : undefined
-        }
+        candidateData={candidateDetailData}
       />
     </>
   );

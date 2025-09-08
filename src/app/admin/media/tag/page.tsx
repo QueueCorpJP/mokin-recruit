@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
@@ -17,10 +19,11 @@ interface Tag extends ArticleTag {
 }
 
 export default function TagPage() {
+  const { isAdmin, loading } = useAdminAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -36,14 +39,16 @@ export default function TagPage() {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchTags();
-    
-    // URLパラメーターでモーダル開閉を制御
-    const modalParam = searchParams.get('modal');
-    if (modalParam === 'add') {
-      setShowModal(true);
+    if (isAdmin) {
+      fetchTags();
+      
+      // URLパラメーターでモーダル開閉を制御
+      const modalParam = searchParams.get('modal');
+      if (modalParam === 'add') {
+        setShowModal(true);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, isAdmin]);
 
   useEffect(() => {
     const handleAddTagEvent = () => {
@@ -59,7 +64,7 @@ export default function TagPage() {
 
   const fetchTags = async () => {
     try {
-      setLoading(true);
+      setDataLoading(true);
       const tagData = await getTags();
       
       const tagsWithCount = await Promise.all(
@@ -77,7 +82,7 @@ export default function TagPage() {
       console.error('タグの取得に失敗:', err);
       setError(err instanceof Error ? err.message : 'タグの取得に失敗しました');
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
   
@@ -252,6 +257,18 @@ export default function TagPage() {
   const totalPages = Math.ceil(sortedTags.length / itemsPerPage);
 
   if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
+
+  if (dataLoading) {
     return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
   }
 
