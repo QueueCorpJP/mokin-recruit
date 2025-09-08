@@ -13,7 +13,7 @@ export default function DesiredConditionForm() {
     <div className="flex flex-col gap-2">
       {/* 語学力 */}
       <div className="flex gap-6 items-strech">
-        <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+        <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[150px]">
           <span
             className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}

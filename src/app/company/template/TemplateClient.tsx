@@ -3,42 +3,30 @@
 import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
-import { EditSearchConditionModal } from './EditSearchConditionModal';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { 
-  updateScoutTemplateName, 
-  deleteScoutTemplate,
-  updateScoutTemplateSavedStatus,
-  type ScoutTemplate as ServerScoutTemplate 
+  updateMessageTemplateName, 
+  updateMessageTemplateSavedStatus,
+  type MessageTemplate as ServerMessageTemplate 
 } from './actions';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from    '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';      
+
 // Icons
-const SearchIcon = () => (
+const MailIcon = () => (
   <svg
-    width='32'
-    height='32'
-    viewBox='0 0 32 32'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      d='M14.5 25C20.299 25 25 20.299 25 14.5C25 8.70101 20.299 4 14.5 4C8.70101 4 4 8.70101 4 14.5C4 20.299 8.70101 25 14.5 25Z'
-      stroke='white'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    />
-    <path
-      d='M21.925 21.925L28 28'
-      stroke='white'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
+      d="M13.4625 6H9H6.7375H6V6.55V9V11.525V17.0875L0.0125 12.6563C0.1125 11.525 0.69375 10.475 1.61875 9.79375L3 8.76875V6C3 4.34375 4.34375 3 6 3H10.7875L13.9063 0.69375C14.5125 0.24375 15.2438 0 16 0C16.7563 0 17.4875 0.24375 18.0938 0.6875L21.2125 3H26C27.6563 3 29 4.34375 29 6V8.76875L30.3813 9.79375C31.3063 10.475 31.8875 11.525 31.9875 12.6563L26 17.0875V11.525V9V6.55V6H25.2625H23H18.5375H13.4563H13.4625ZM0 28V15.1313L13.6 25.2063C14.2938 25.7188 15.1375 26 16 26C16.8625 26 17.7063 25.725 18.4 25.2063L32 15.1313V28C32 30.2063 30.2063 32 28 32H4C1.79375 32 0 30.2063 0 28ZM11 10H21C21.55 10 22 10.45 22 11C22 11.55 21.55 12 21 12H11C10.45 12 10 11.55 10 11C10 10.45 10.45 10 11 10ZM11 14H21C21.55 14 22 14.45 22 15C22 15.55 21.55 16 21 16H11C10.45 16 10 15.55 10 15C10 14.45 10.45 14 11 14Z"
+      fill="white"
     />
   </svg>
 );
@@ -103,53 +91,53 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-interface ScoutTemplateItem {
+interface MessageTemplateItem {
   id: string;
   saved: boolean;
   group: string; // group_id for filtering
   groupName: string; // group_name for display
   templateName: string;
-  searcher: string;
+  body: string;
   date: string;
+  updatedAt: string;
   isMenuOpen?: boolean;
 }
 
-interface ScoutTemplateClientProps {
-  initialScoutTemplates: ServerScoutTemplate[];
+interface TemplateClientProps {
+  initialMessageTemplates: ServerMessageTemplate[];
   initialError: string | null;
   companyUserId: string;
 }
 
-export function ScoutTemplateClient({ initialScoutTemplates, initialError, companyUserId }: ScoutTemplateClientProps) {
+export function TemplateClient({ initialMessageTemplates, initialError, companyUserId }: TemplateClientProps) {
   const { user, accessToken, loading: authLoading } = useAuth();
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
   const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ScoutTemplateItem | null>(
-    null
-  );
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<ScoutTemplateItem | null>(
-    null
-  );
   const [isPending, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
 
-  // ServerSearchHistoryItemをクライアント用のSearchHistoryItemに変換
-  const transformScoutTemplates = (items: ServerScoutTemplate[]): ScoutTemplateItem[] => {
+  // ServerMessageTemplateをクライアント用のMessageTemplateItemに変換
+  const transformMessageTemplates = (items: ServerMessageTemplate[]): MessageTemplateItem[] => {
     return items.map(item => ({
       id: item.id,
       saved: item.is_saved,
       group: item.group_id, // group_idを使用してフィルタリングと統一
       groupName: item.group_name, // 表示用のgroup_name
       templateName: item.template_name,
-      searcher: item.searcher_name,
+      body: item.body,
       date: new Date(item.created_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      updatedAt: new Date(item.updated_at).toLocaleString('ja-JP', {
         year: 'numeric',
         month: '2-digit', 
         day: '2-digit',
@@ -160,13 +148,13 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
     }));
   };
 
-  const [scoutTemplates, setScoutTemplates] = useState<ScoutTemplateItem[]>(
-    transformScoutTemplates(initialScoutTemplates)
+  const [messageTemplates, setMessageTemplates] = useState<MessageTemplateItem[]>(
+    transformMessageTemplates(initialMessageTemplates)
   );
 
   const toggleMenu = (id: string) => {
-    setScoutTemplates((prev: ScoutTemplateItem[]) =>
-      prev.map((item: ScoutTemplateItem) =>
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((item: MessageTemplateItem) =>
         item.id === id
           ? { ...item, isMenuOpen: !item.isMenuOpen }
           : { ...item, isMenuOpen: false }
@@ -175,14 +163,14 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
   };
 
   const toggleBookmark = (id: string) => {
-    const item = scoutTemplates.find(h => h.id === id);
+    const item = messageTemplates.find(h => h.id === id);
     if (!item) return;
 
     startTransition(async () => {
-      const result = await updateScoutTemplateSavedStatus(id, !item.saved);
+      const result = await updateMessageTemplateSavedStatus(id, !item.saved);
       if (result.success) {
-        setScoutTemplates((prev: ScoutTemplateItem[]) =>
-          prev.map((prevItem: ScoutTemplateItem) =>
+        setMessageTemplates((prev: MessageTemplateItem[]) =>
+          prev.map((prevItem: MessageTemplateItem) =>
             prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
           )
         );
@@ -190,71 +178,29 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
     });
   };
 
-  const handleEdit = (item: ScoutTemplateItem) => {
-    setEditingItem(item);
-    setEditModalOpen(true);
+  const handleEdit = (item: MessageTemplateItem) => {
+    // editページに遷移し、テンプレート情報をクエリパラメータで渡す
+    router.push(`/company/template/edit?id=${item.id}`);
     // Close the dropdown menu
-    setScoutTemplates((prev: ScoutTemplateItem[]) =>
-      prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
     );
   };
 
-  const handleSaveEdit = async (newTemplateName: string) => {
-    if (editingItem) {
-      startTransition(async () => {
-        const result = await updateScoutTemplateName(editingItem.id, newTemplateName);
-        if (result.success) {
-          setScoutTemplates((prev: ScoutTemplateItem[]) =>
-            prev.map((item: ScoutTemplateItem) =>
-              item.id === editingItem.id
-                ? { ...item, templateName: newTemplateName }
-                : item
-            )
-          );
-        } else {
-          console.error('Failed to update template name:', result.error);
-          // エラーハンドリング - ユーザーに通知したい場合
-        }
-      });
-    }
-    setEditModalOpen(false);
-    setEditingItem(null);
-  };
 
-  const handleDelete = (item: ScoutTemplateItem) => {
-    setDeletingItem(item);
-    setDeleteModalOpen(true);
+  const handleDelete = (item: MessageTemplateItem) => {
+    // editページに遷移し、テンプレート情報をクエリパラメータで渡す（編集と同じ処理）
+    router.push(`/company/template/edit?id=${item.id}`);
     // Close the dropdown menu
-    setScoutTemplates((prev: ScoutTemplateItem[]) =>
-      prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
     );
   };
 
-  const handleConfirmDelete = () => {
-    if (deletingItem) {
-      startTransition(async () => {
-        const result = await deleteScoutTemplate(deletingItem.id);
-        if (result.success) {
-          setScoutTemplates((prev: ScoutTemplateItem[]) =>
-            prev.filter((item: ScoutTemplateItem) => item.id !== deletingItem.id)
-          );
-          setDeleteModalOpen(false);
-          setDeletingItem(null);
-        } else {
-          console.error('Failed to delete scout template:', result.error);
-          // エラーハンドリング - ユーザーに通知したい場合
-          // モーダルは開いたままにして、ユーザーに再試行の機会を与える
-        }
-      });
-    } else {
-      setDeleteModalOpen(false);
-      setDeletingItem(null);
-    }
-  };
 
   // グループオプションを生成（重複なし）
   const uniqueGroupsMap = new Map();
-  scoutTemplates.forEach(item => {
+  messageTemplates.forEach(item => {
     if (!uniqueGroupsMap.has(item.group)) {
       uniqueGroupsMap.set(item.group, item.groupName);
     }
@@ -268,8 +214,8 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
     }))
   ];
 
-  // フィルタリング済みの検索履歴
-  const filteredScoutTemplates = scoutTemplates.filter(item => {
+  // フィルタリング済みのメッセージテンプレート
+  const filteredMessageTemplates = messageTemplates.filter(item => {
     // グループフィルタ
     if (selectedGroup && item.group !== selectedGroup) return false;
     
@@ -283,11 +229,11 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
   });
 
   // ページネーション計算
-  const totalItems = filteredScoutTemplates.length;
+  const totalItems = filteredMessageTemplates.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = filteredScoutTemplates.slice(startIndex, endIndex);
+  const currentItems = filteredMessageTemplates.slice(startIndex, endIndex);
   const displayStartIndex = totalItems > 0 ? startIndex + 1 : 0;
   const displayEndIndex = Math.min(endIndex, totalItems);
 
@@ -309,12 +255,12 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
         <div className='w-full max-w-[1200px] mx-auto'>
           {/* Page Title */}
           <div className='flex items-center gap-4'>
-            <SearchIcon />
+            <MailIcon />
             <h1
               className='text-white text-[24px] font-bold tracking-[2.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              スカウトテンプレート
+              メッセージテンプレート
             </h1>
           </div>
         </div>
@@ -340,7 +286,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
               {/* Keyword Search */}
               <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
                 <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
-                  検索条件名から検索
+                  テンプレート名から検索
                 </span>
                 <div className='flex gap-2 w-full min-[1200px]:w-auto'>
                   <Input
@@ -389,10 +335,10 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
               size='figma-blue'
               className='min-w-[160px]'
               onClick={() => {
-                // Redirect to new search page
-                router.push('/company/scout-template/new');
+                // Redirect to new template page
+                router.push('/company/template/new');
               }}>
-              新規作成
+              新規メッセージテンプレート作成
             </Button>
 
             {/* Pagination Info */}
@@ -427,42 +373,47 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
               グループ
             </div>
 
-            {/* Search Condition column */}
-            <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px] truncate'>
-              検索条件名
+            {/* Template Name column */}
+            <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px] truncate'>
+              テンプレート名
             </div>
 
-            {/* Searcher column */}
-            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-              検索者
+            {/* Body column */}
+            <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              本文
             </div>
 
             {/* Date column */}
             <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-              検索日
+              作成日
+            </div>
+
+            {/* Updated Date column */}
+            <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              最終更新日
             </div>
 
             {/* Spacer for menu button */}
             <div className='w-[24px] ml-4 min-[1200px]:ml-6'></div>
           </div>
 
-          {/* Search History Items */}
+          {/* Template Items */}
           <div className='flex flex-col gap-2 mt-2'>
             {loading ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴を読み込んでいます...</p>
+                <p className="text-gray-500">メッセージテンプレートを読み込んでいます...</p>
               </div>
             ) : error ? (
               <div className="text-center py-8">
-                <p className="text-red-500 mb-4">検索履歴の取得に失敗しました</p>
+                <p className="text-red-500 mb-4">メッセージテンプレートの取得に失敗しました</p>
                 <p className="text-gray-600">{error}</p>
               </div>
             ) : currentItems.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴がありません</p>
+                <p className="text-gray-500">メッセージテンプレートがありません</p>
               </div>
             ) : (
-              currentItems.map((item: ScoutTemplateItem) => (
+              currentItems.map((item: MessageTemplateItem) => (
               <div
                 key={item.id}
                 className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
@@ -482,19 +433,24 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                   </span>
                 </div>
 
-                {/* Search Condition */}
-                <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                {/* Template Name */}
+                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
                   {item.templateName}
                 </div>
 
-                {/* Searcher */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.searcher}
+                {/* Body */}
+                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.body.length > 18 ? `${item.body.substring(0, 18)}...` : item.body}
                 </div>
 
                 {/* Date */}
                 <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
                   {item.date}
+                </div>
+
+                {/* Updated Date */}
+                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                  {item.updatedAt}
                 </div>
 
                 {/* Menu Button */}
@@ -536,28 +492,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
         </div>
       </div>
 
-      {/* Edit Modal */}
-      <EditSearchConditionModal
-        isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setEditingItem(null);
-        }}
-        onSave={handleSaveEdit}
-        groupName={editingItem?.groupName || ''}
-        initialValue={editingItem?.templateName || ''}
-      />
 
-      {/* Delete Modal */}
-      <DeleteSearchConditionModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setDeletingItem(null);
-        }}
-        onDelete={handleConfirmDelete}
-        searchConditionName={deletingItem?.templateName || ''}
-      />
     </>
   );
 }

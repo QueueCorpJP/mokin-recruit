@@ -1,23 +1,35 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
-import { createMessageTemplate, type GroupOption, type MessageTemplateData } from './actions';
+import { type GroupOption, type MessageTemplateData } from '../new/actions';
+import { updateMessageTemplate, deleteMessageTemplate } from '../actions';
 
-interface TemplateNewClientProps {
+interface TemplateEditClientProps {
   initialGroupOptions: GroupOption[];
+  templateData: MessageTemplateData | null;
+  templateId: string;
 }
 
-export default function TemplateNewClient({ initialGroupOptions }: TemplateNewClientProps) {
+export default function TemplateEditClient({ initialGroupOptions, templateData, templateId }: TemplateEditClientProps) {
   const router = useRouter();
 
   // フォームの状態管理
   const [group, setGroup] = useState('');
   const [templateName, setTemplateName] = useState('');
   const [body, setBody] = useState('');
+
+  // 初期値を設定
+  useEffect(() => {
+    if (templateData) {
+      setGroup(templateData.groupId || '');
+      setTemplateName(templateData.templateName || '');
+      setBody(templateData.body || '');
+    }
+  }, [templateData]);
 
   // エラー状態管理
   const [errors, setErrors] = useState({
@@ -35,6 +47,9 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
 
   // 保存中の状態管理
   const [isSaving, setIsSaving] = useState(false);
+
+  // 削除中の状態管理
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // テキストエリアへの参照
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -153,8 +168,8 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
       // 保存開始
       setIsSaving(true);
 
-      // メッセージテンプレートを保存
-      const result = await createMessageTemplate({
+      // メッセージテンプレートを更新
+      const result = await updateMessageTemplate(templateId, {
         groupId: group,
         templateName,
         body,
@@ -165,8 +180,8 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
         router.push('/company/template');
       } else {
         // エラーメッセージを表示
-        console.error('Failed to create message template:', result.error);
-        alert(result.error || 'テンプレートの作成に失敗しました');
+        console.error('Failed to update message template:', result.error);
+        alert(result.error || 'テンプレートの更新に失敗しました');
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -174,6 +189,37 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
     } finally {
       // 保存終了
       setIsSaving(false);
+    }
+  };
+
+  // 削除ハンドラー
+  const handleDelete = async () => {
+    // 削除中の場合は処理を中断
+    if (isDeleting) {
+      return;
+    }
+
+    try {
+      // 削除開始
+      setIsDeleting(true);
+
+      // メッセージテンプレートを削除
+      const result = await deleteMessageTemplate(templateId);
+
+      if (result.success) {
+        // 成功後、一覧画面へ遷移
+        router.push('/company/template');
+      } else {
+        // エラーメッセージを表示
+        console.error('Failed to delete message template:', result.error);
+        alert(result.error || 'テンプレートの削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('予期しないエラーが発生しました');
+    } finally {
+      // 削除終了
+      setIsDeleting(false);
     }
   };
 
@@ -239,25 +285,39 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
               className="text-white text-[14px] font-bold tracking-[1.4px]"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              新規メッセージテンプレート作成
+              メッセージテンプレート編集
             </span>
           </div>
 
           {/* Page Title */}
-          <div className="flex items-center gap-4">
-            <MailIcon />
-            <h1
-              className="text-white text-[24px] font-bold tracking-[2.4px]"
-              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-            >
-              新規メッセージテンプレート作成
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <MailIcon />
+              <h1
+                className="text-white text-[24px] font-bold tracking-[2.4px]"
+                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+              >
+                メッセージテンプレート編集
+              </h1>
+            </div>
+                       
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20">
+        <div className="flex justify-end">
+      <Button
+              variant="destructive"
+              size="figma-default"
+              onClick={handleDelete}
+              className="min-w-[120px]"
+              disabled={isDeleting}
+            >
+              {isDeleting ? '削除中...' : '削除する'}
+            </Button>
+            </div>
         <div className="w-full max-w-[1200px] mx-auto">
           {/* Form Card */}
           <div className="bg-white rounded-[10px] p-10">
@@ -425,7 +485,7 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
               className="min-w-[160px]"
               disabled={!isFormValid || isSaving}
             >
-              {isSaving ? '保存中...' : '保存する'}
+              {isSaving ? '更新中...' : '更新する'}
             </Button>
           </div>
         </div>

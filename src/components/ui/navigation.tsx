@@ -349,7 +349,7 @@ export function Navigation({
         dropdownItems: [
           {
             label: '受信メッセージ',
-            href: '/company/message/inbox',
+            href: '/company/message',
             prefetch: false,
           },
           {

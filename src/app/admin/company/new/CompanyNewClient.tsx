@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
 import { industryCategories } from '@/app/company/job/types';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { ActionButton } from '@/components/admin/ui/ActionButton';
 
 // フォームデータの型定義
 interface CompanyFormData {
@@ -211,20 +213,20 @@ export default function CompanyNewClient() {
       
       {/* 企業ID */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">企業ID</label>
-        <div className="text-base text-black font-mono">{formData.companyId}</div>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">企業ID</label>
+        <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px] font-mono">{formData.companyId}</div>
       </div>
 
       <hr className="border-gray-300" />
 
       {/* プラン */}
       <div className="flex items-center gap-6 py-3">
-        <label htmlFor="plan-select" className="block text-base font-bold text-black w-40">プラン</label>
+        <label htmlFor="plan-select" className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">プラン</label>
         <select
           id="plan-select"
           value={formData.plan}
           onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
-          className="px-3 py-3 border border-black text-base bg-white"
+          className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
         >
           <option value="">プランを選択してください ▼</option>
           {planOptions.map(plan => (
@@ -237,13 +239,13 @@ export default function CompanyNewClient() {
 
       {/* 企業名 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">企業名</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">企業名</label>
         <input
           type="text"
           value={formData.companyName}
           onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
           placeholder="株式会社サンプル企業"
-          className="flex-1 px-3 py-3 border border-black text-base"
+          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
         />
       </div>
 
@@ -251,50 +253,50 @@ export default function CompanyNewClient() {
 
       {/* URL */}
       <div className="flex items-start gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40 mt-2">URL</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">URL</label>
         <div className="flex-1 space-y-3">
           {formData.urls.map((url, index) => (
             <div key={index} className="flex items-center gap-3">
               {/* 削除ボタン（2行目以降のみ表示） */}
               {formData.urls.length > 1 && (
-                <button
+                <ActionButton
                   onClick={() => removeUrl(index)}
-                  className="text-2xl font-bold text-black hover:text-gray-600 px-2"
-                >
-                  ×
-                </button>
+                  text="×"
+                  variant="delete"
+                  size="small"
+                />
               )}
               {/* タイトル入力 */}
-              <div className="flex items-center px-3.5 py-3 bg-white border border-black w-60">
+              <div className="flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] w-60">
                 <input
                   type="text"
                   value={url.title}
                   onChange={(e) => updateUrl(index, 'title', e.target.value)}
                   placeholder="コーポレートサイト"
-                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA] font-['Inter']"
+                  className="flex-1 text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] outline-none placeholder:text-[#999999]"
                 />
               </div>
 
               {/* URL入力 */}
-              <div className="flex items-center px-3.5 py-3 bg-white border border-black flex-1">
+              <div className="flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] flex-1">
                 <input
                   type="text"
                   value={url.url}
                   onChange={(e) => updateUrl(index, 'url', e.target.value)}
                   placeholder="https://example.com"
-                  className="flex-1 text-base font-bold outline-none placeholder:text-[#BABABA] font-['Inter']"
+                  className="flex-1 text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] outline-none placeholder:text-[#999999]"
                 />
               </div>
             </div>
           ))}
 
           {/* 追加ボタン */}
-          <button
+          <AdminButton
             onClick={addUrl}
-            className="w-6 h-6 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
-          >
-            <span className="text-white text-sm font-bold">+</span>
-          </button>
+            text="+"
+            variant="green-gradient"
+            size="figma-small"
+          />
         </div>
       </div>
 
@@ -302,7 +304,7 @@ export default function CompanyNewClient() {
 
       {/* アイコン画像 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">アイコン画像</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">アイコン画像</label>
         <div className="relative">
           <div
             className="w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-500 transition-colors"
@@ -336,21 +338,21 @@ export default function CompanyNewClient() {
 
       {/* 代表者 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">代表者</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">代表者</label>
         <div className="flex-1 flex gap-3">
           <input
             type="text"
             value={formData.representativePosition}
             onChange={(e) => setFormData(prev => ({ ...prev, representativePosition: e.target.value }))}
             placeholder="代表取締役社長"
-            className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
+            className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
           />
           <input
             type="text"
             value={formData.representativeName}
             onChange={(e) => setFormData(prev => ({ ...prev, representativeName: e.target.value }))}
             placeholder="田中太郎"
-            className="flex-1 px-3 py-3 border border-black text-base placeholder-gray-400"
+            className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
           />
         </div>
       </div>
@@ -359,16 +361,16 @@ export default function CompanyNewClient() {
 
       {/* 設立 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">設立</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">設立</label>
         <div className="flex items-center gap-2">
           <input
             type="text"
             value={formData.establishedYear}
             onChange={(e) => setFormData(prev => ({ ...prev, establishedYear: e.target.value }))}
             placeholder="2024"
-            className="w-24 px-3 py-3 border border-black text-base text-center"
+            className="w-24 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] text-center focus:outline-none focus:border-[#0F9058]"
           />
-          <span className="text-base text-black">年</span>
+          <span className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">年</span>
         </div>
       </div>
 
@@ -376,22 +378,22 @@ export default function CompanyNewClient() {
 
       {/* 資本金 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">資本金</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">資本金</label>
         <div className="flex items-center gap-2">
           <input
             type="text"
             value={formData.capital}
             onChange={(e) => setFormData(prev => ({ ...prev, capital: e.target.value }))}
             placeholder="500"
-            className="w-24 px-3 py-3 border border-black text-base text-center"
+            className="w-24 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] text-center focus:outline-none focus:border-[#0F9058]"
           />
-          <div className="flex items-center px-3 py-3 border border-black">
+          <div className="flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px]">
             <label htmlFor="capital-unit" className="sr-only">資本金単位</label>
             <select
               id="capital-unit"
               value={formData.capitalUnit}
               onChange={(e) => setFormData(prev => ({ ...prev, capitalUnit: e.target.value }))}
-              className="text-base bg-transparent border-none outline-none"
+              className="text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] bg-transparent border-none outline-none focus:outline-none"
             >
               <option value="万円">万円</option>
               <option value="円">円</option>
@@ -407,16 +409,16 @@ export default function CompanyNewClient() {
 
       {/* 従業員数 */}
       <div className="flex items-center gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40">従業員数</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">従業員数</label>
         <div className="flex items-center gap-2">
           <input
             type="text"
             value={formData.employeeCount}
             onChange={(e) => setFormData(prev => ({ ...prev, employeeCount: e.target.value }))}
             placeholder="100"
-            className="w-24 px-3 py-3 border border-black text-base text-center"
+            className="w-24 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] text-center focus:outline-none focus:border-[#0F9058]"
           />
-          <span className="text-base text-black">人</span>
+          <span className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">人</span>
         </div>
       </div>
 
@@ -424,25 +426,23 @@ export default function CompanyNewClient() {
 
       {/* 業種 */}
       <div className="flex items-start gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40 mt-2">業種</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">業種</label>
         <div className="flex-1 space-y-3">
           <div className="flex flex-wrap gap-3">
-            <button
+            <AdminButton
               onClick={() => setIsIndustryModalOpen(true)}
-              className="px-8 py-3 border border-black rounded-lg flex items-center gap-2 hover:bg-gray-50 text-base"
-            >
-              <span className="text-base font-bold">+</span>
-              <span className="text-base font-bold">業種を追加</span>
-            </button>
+              text="+ 業種を追加"
+              variant="green-outline"
+            />
             {formData.industries.map((industry, index) => (
               <div key={index} className="px-6 py-2 bg-gray-100 rounded-full flex items-center gap-2">
-                <span className="text-base font-bold">{industry}</span>
-                <button
+                <span className="font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px]">{industry}</span>
+                <ActionButton
                   onClick={() => removeIndustry(industry)}
-                  className="text-base font-bold text-black hover:text-red-500"
-                >
-                  ×
-                </button>
+                  text="×"
+                  variant="delete"
+                  size="small"
+                />
               </div>
             ))}
           </div>
@@ -453,13 +453,13 @@ export default function CompanyNewClient() {
 
       {/* 事業内容 */}
       <div className="flex items-start gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40 mt-2">事業内容</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">事業内容</label>
         <textarea
           value={formData.businessContent}
           onChange={(e) => setFormData(prev => ({ ...prev, businessContent: e.target.value }))}
           placeholder="当社はテクノロジーを活用したソリューションを提供する会社です。&#10;主な事業内容として、ソフトウェア開発、システムインテグレーション、&#10;コンサルティングサービスを行っています。"
           rows={4}
-          className="flex-1 px-3 py-3 border border-black text-base resize-none"
+          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
         />
       </div>
 
@@ -467,7 +467,7 @@ export default function CompanyNewClient() {
 
       {/* 所在地 */}
       <div className="flex items-start gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40 mt-2">所在地</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">所在地</label>
         <div className="flex-1 space-y-3">
           <div className="flex items-center">
             <label htmlFor="prefecture-select" className="sr-only">都道府県選択</label>
@@ -475,7 +475,7 @@ export default function CompanyNewClient() {
               id="prefecture-select"
               value={formData.prefecture}
               onChange={(e) => setFormData(prev => ({ ...prev, prefecture: e.target.value }))}
-              className="px-3 py-3 border border-black text-base bg-white"
+              className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
             >
               <option value="">都道府県を選択　▼</option>
               {prefectureOptions.map(prefecture => (
@@ -488,7 +488,7 @@ export default function CompanyNewClient() {
             value={formData.address}
             onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
             placeholder="東京都千代田区丸の内1-1-1"
-            className="w-full px-3 py-3 border border-black text-base"
+            className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
           />
         </div>
       </div>
@@ -497,12 +497,12 @@ export default function CompanyNewClient() {
 
       {/* 企業フェーズ */}
       <div className="flex items-center gap-6 py-3">
-        <label htmlFor="company-phase" className="block text-base font-bold text-black w-40">企業フェーズ</label>
+        <label htmlFor="company-phase" className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">企業フェーズ</label>
         <select
           id="company-phase"
           value={formData.companyPhase}
           onChange={(e) => setFormData(prev => ({ ...prev, companyPhase: e.target.value }))}
-          className="px-3 py-3 border border-black text-base bg-white"
+          className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
         >
           <option value="">企業フェーズを選択　▼</option>
           {companyPhaseOptions.map(phase => (
@@ -515,7 +515,7 @@ export default function CompanyNewClient() {
 
       {/* イメージ画像 */}
       <div className="flex items-start gap-6 py-3">
-        <label className="block text-base font-bold text-black w-40 mt-2">イメージ画像</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">イメージ画像</label>
         <div className="flex gap-4">
           {[0, 1, 2].map(index => (
             <div key={index} className="relative">
@@ -553,7 +553,7 @@ export default function CompanyNewClient() {
 
       {/* 企業の魅力 */}
       <div className="py-3">
-        <label className="block text-base font-bold text-black mb-4">企業の魅力</label>
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] mb-4">企業の魅力</label>
         <div className="space-y-6">
           {formData.attractions.map((attraction, index) => (
             <div key={index} className="space-y-4">
@@ -562,40 +562,36 @@ export default function CompanyNewClient() {
                 value={attraction.title}
                 onChange={(e) => updateAttraction(index, 'title', e.target.value)}
                 placeholder="スタートアップ企業"
-                className="w-full px-3 py-3 border border-black text-base"
+                className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               />
               <textarea
                 value={attraction.description}
                 onChange={(e) => updateAttraction(index, 'description', e.target.value)}
                 placeholder="私たちはベンチャー企業として、革新的なテクノロジーと柔軟な働き方で成長を続けています。&#10;代表との距離が近く、裁量を持って働ける環境で、自分のアイデアを形にできます。&#10;福利厚生も充実しており、ワークライフバランスを大切にしています。"
                 rows={5}
-                className="w-full px-3 py-3 border border-black text-base resize-none"
+                className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               />
             </div>
           ))}
-          <button
+          <AdminButton
             onClick={addAttraction}
-            className="px-6 py-3 border border-green-600 rounded-3xl flex items-center gap-2 text-green-600 hover:bg-green-50 text-sm font-bold"
-          >
-            <span className="text-base font-bold">+</span>
-            <span className="text-sm font-bold">企業の魅力を追加</span>
-          </button>
+            text="+ 企業の魅力を追加"
+            variant="green-outline"
+          />
         </div>
       </div>
 
       {/* ボタン群 */}
       <div className="flex justify-center gap-6 pt-8">
-        <button
-          className="px-10 py-3 border border-black rounded-3xl text-base font-bold hover:bg-gray-50 transition-colors"
-        >
-          キャンセル
-        </button>
-        <button
+        <AdminButton
+          text="キャンセル"
+          variant="green-outline"
+        />
+        <AdminButton
           onClick={handleSubmit}
-          className="px-10 py-3 bg-black text-white rounded-3xl text-base font-bold hover:bg-gray-800 transition-colors"
-        >
-          確認する
-        </button>
+          text="確認する"
+          variant="green-gradient"
+        />
       </div>
 
       {/* 業種選択モーダル */}

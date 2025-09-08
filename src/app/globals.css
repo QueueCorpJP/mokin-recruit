@@ -15,7 +15,21 @@
   scrollbar-width: none; /* Firefox */
 }
 
-/* Font Optimization - Prevent Layout Shift */
+/* Font Optimization - Webフォント遅延適用 */
+html {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+}
+
+/* Noto Sans JP が読み込まれた後に適用 */
+.font-noto-sans-jp {
+  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+}
+
+/* フォント読み込み時のスムーズな切り替え */
+* {
+  font-display: swap;
+}
+
 .fonts-loading {
   opacity: 1;
 }

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CompanyEditData } from './edit/page';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { ActionButton } from '@/components/admin/ui/ActionButton';
 import CompanyUserDeleteModal from '@/components/admin/CompanyUserDeleteModal';
 import {
   updateCompanyPlan,
@@ -414,59 +416,57 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
     <div className="bg-white min-h-screen">
       {/* ヘッダーボタン */}
       <div className="flex justify-end gap-4 p-6 pb-0">
-        <button
+        <AdminButton
           onClick={handleEdit}
-          className="px-8 py-3 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors"
-        >
-          企業情報を編集
-        </button>
-        <button
+          text="企業情報を編集"
+          variant="green-gradient"
+        />
+        <AdminButton
           onClick={handleDelete}
-          className="px-8 py-3 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors"
-        >
-          企業を削除
-        </button>
+          text="企業を削除"
+          variant="green-gradient"
+        />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
         {/* 企業分析セクション */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-black">企業分析</h2>
+          <h2 className="text-2xl font-bold text-[#323232]">企業分析</h2>
           
           {/* 分析テーブル */}
           <div className="border border-gray-300 rounded">
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300"></th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">スカウト送信数</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">開封数（開封率）</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">返信数（返信率）</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black">応募数（応募率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300"></th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">スカウト送信数</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">開封数（開封率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">返信数（返信率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232]">応募数（応募率）</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">過去7日合計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">過去7日合計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">過去30日間合計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">過去30日間合計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">累計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">累計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
               </tbody>
             </table>
@@ -474,11 +474,11 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* 運営メモ */}
           <div className="mt-8">
-            <label className="block text-base font-bold text-black mb-2">運営メモ</label>
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] mb-2">運営メモ</label>
             <textarea
               value={memoText}
               onChange={(e) => setMemoText(e.target.value)}
-              className="w-full h-32 p-3 border border-gray-300 rounded resize-none text-sm text-gray-600"
+              className="w-full h-32 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] resize-none text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               placeholder="自由にメモを記入できます。同一グループ内の方が閲覧可能です。"
             />
           </div>
@@ -492,8 +492,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* プラン */}
           <div className="flex items-center gap-6 py-3">
-            <label className="block text-base font-bold text-black w-40">プラン</label>
-            <div className="flex-1 px-3 py-3 bg-white border border-gray-300 text-base">
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">プラン</label>
+            <div className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP']">
               {company.plan || 'プラン名が入ります'}
             </div>
           </div>
@@ -502,8 +502,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
           
           {/* 企業ID */}
           <div className="flex items-center gap-6 py-3">
-            <label className="block text-base font-bold text-black w-40">企業ID</label>
-            <div className="flex-1 px-3 py-3 bg-white border border-gray-300 text-base">
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">企業ID</label>
+            <div className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP']">
               {company.id}
             </div>
           </div>
@@ -512,8 +512,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* 企業名 */}
           <div className="flex items-center gap-6 py-3">
-            <label className="block text-base font-bold text-black w-40">企業名</label>
-            <div className="flex-1 px-3 py-3 bg-white border border-gray-300 text-base">
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">企業名</label>
+            <div className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP']">
               {company.company_name}
             </div>
           </div>
@@ -522,15 +522,15 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* URL */}
           <div className="flex items-start gap-6 py-3">
-            <label className="block text-base font-bold text-black w-40 mt-2">URL</label>
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">URL</label>
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-4">
-                <div className="text-base text-black">タイトルテキストが入ります</div>
-                <div className="text-base text-black">https://---------</div>
+                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">タイトルテキストが入ります</div>
+                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">https://---------</div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="text-base text-black">タイトルテキストが入ります</div>
-                <div className="text-base text-black">https://---------</div>
+                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">タイトルテキストが入ります</div>
+                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">https://---------</div>
               </div>
             </div>
           </div>
@@ -539,7 +539,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* アイコン画像 */}
           <div className="flex items-center gap-6 py-3">
-            <label className="block text-base font-bold text-black w-40">アイコン画像</label>
+            <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">アイコン画像</label>
             <div className="w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center">
               <div className="text-center">
                 <div className="text-sm font-bold text-white">画像を</div>
@@ -682,13 +682,12 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         {/* 企業グループセクション */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-black">企業グループ</h2>
-            <button
+            <h2 className="text-2xl font-bold text-[#323232]">企業グループ</h2>
+            <AdminButton
               onClick={handleNewGroupClick}
-              className="px-6 py-3 bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors"
-            >
-              新規グループ追加
-            </button>
+              text="新規グループ追加"
+              variant="green-gradient"
+            />
           </div>
 
           {/* グループリスト */}
@@ -696,21 +695,19 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
             company.company_groups.map((group, index) => (
               <div key={group.id} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
             <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-black">{group.group_name}</h3>
+                  <h3 className="text-xl font-bold text-[#323232]">{group.group_name}</h3>
               <div className="flex gap-6">
-                <button
+                <AdminButton
                       onClick={() => handleAddMemberClick(group.id, group.group_name)}
-                  className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-                >
-                  メンバー追加
-                </button>
-                <button
+                  text="メンバー追加"
+                  variant="green-outline"
+                />
+                <AdminButton
                       onClick={() => handleGroupNameChangeClick(group.id, group.group_name)}
-                  className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-                >
-                  グループ名編集
-                </button>
-                <button 
+                  text="グループ名編集"
+                  variant="green-outline"
+                />
+                <AdminButton 
                       onClick={async () => {
                         if (confirm('本当にこのグループを削除しますか？\nこの操作は取り消すことができません。')) {
                           try {
@@ -732,10 +729,9 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                           }
                         }
                       }}
-                  className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-                >
-                  グループを削除
-                </button>
+                  text="グループを削除"
+                  variant="green-outline"
+                />
               </div>
             </div>
 
@@ -756,10 +752,9 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                                   handleRoleChangeClick('名前 名前', `user-${index}-${roleIndex}`, role, e.target.value);
                             }
                           }}
-                          className="text-base font-bold bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
+                          className="font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 bg-right bg-no-repeat"
                           style={{
-                            fontFamily: 'Inter, sans-serif',
-                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23323232' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundSize: '1.5rem 1.5rem'
                           }}
                         >
@@ -767,12 +762,12 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                           <option value="スカウト担当者">スカウト担当者</option>
                         </select>
                       )}
-                      <button
+                      <ActionButton
                             onClick={() => handleUserDeleteClick('名前 名前', `user-${index}-${roleIndex}`)}
-                        className="text-base font-bold text-black hover:text-gray-600"
-                      >
-                        削除
-                      </button>
+                        text="削除"
+                        variant="delete"
+                        size="small"
+                      />
                     </div>
                   </div>
                       {roleIndex < 4 && <hr className="border-gray-300" />}
@@ -789,7 +784,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* グループチケットログ1 */}
           <div className="bg-gray-300 rounded-lg p-6">
-            <h3 className="text-xl font-bold text-black text-center mb-6">グループチケットログ</h3>
+            <h3 className="text-xl font-bold text-[#323232] text-center mb-6">グループチケットログ</h3>
             
             <div className="bg-white rounded-lg p-6 space-y-4">
               <div className="space-y-2">
@@ -811,30 +806,26 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* アクションボタン群 */}
           <div className="flex gap-6 justify-center">
-            <button
+            <AdminButton
               onClick={handleScoutLimitChangeClick}
-              className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-            >
-              スカウト上限数変更
-            </button>
-            <button
+              text="スカウト上限数変更"
+              variant="green-outline"
+            />
+            <AdminButton
               onClick={handlePlanChangeClick}
-              className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-            >
-              プラン変更
-            </button>
-            <button
+              text="プラン変更"
+              variant="green-outline"
+            />
+            <AdminButton
               onClick={handleWithdrawalClick}
-              className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-            >
-              休会
-            </button>
-            <button
+              text="休会"
+              variant="green-outline"
+            />
+            <AdminButton
               onClick={handleDeletionClick}
-              className="px-6 py-3 border border-black rounded-full font-bold hover:bg-gray-50 transition-colors"
-            >
-              退会
-            </button>
+              text="退会"
+              variant="green-outline"
+            />
           </div>
 
           {/* チケット管理セクション */}
@@ -867,7 +858,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
           {/* グループチケットログ2 */}
           <div className="bg-gray-300 rounded-lg p-6">
-            <h3 className="text-xl font-bold text-black text-center mb-6">グループチケットログ</h3>
+            <h3 className="text-xl font-bold text-[#323232] text-center mb-6">グループチケットログ</h3>
             
             <div className="bg-white rounded-lg p-6 space-y-4">
               <div className="space-y-2">

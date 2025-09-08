@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
 
 export default function CompanyDeleteCompleteClient() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function CompanyDeleteCompleteClient() {
         
         {/* 完了メッセージ */}
         <div className="text-center mb-12">
-          <div className="text-base font-bold text-black mb-8">
+          <div className="font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] mb-8">
             グループの削除が完了しました。
           </div>
         </div>
@@ -28,20 +29,17 @@ export default function CompanyDeleteCompleteClient() {
         {/* ボタン群 */}
         <div className="flex justify-center gap-6">
           {/* 管理画面トップボタン */}
-          <button
+          <AdminButton
             onClick={handleGoToAdminTop}
-            className="px-8 py-3 bg-white border border-black rounded-full text-base font-bold text-black hover:bg-gray-50 transition-colors"
-          >
-            管理画面トップ
-          </button>
+            text="管理画面トップ"
+            variant="green-outline"
+          />
           
-          {/* 企業一覧ボタン */}
-          <button
+          <AdminButton
             onClick={handleGoToCompanyList}
-            className="px-8 py-3 bg-black text-white rounded-full text-base font-bold hover:bg-gray-800 transition-colors"
-          >
-            企業一覧
-          </button>
+            text="企業一覧"
+            variant="green-gradient"
+          />
         </div>
       </div>
     </div>

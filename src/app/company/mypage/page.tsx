@@ -17,9 +17,19 @@ import { getRooms } from '@/lib/rooms';
 
 // キャッシュ付きの候補者データ取得関数
 const getCandidatesData = unstable_cache(
-  async (): Promise<CandidateData[]> => {
+  async (url: string, anonKey: string, cookiesData: any): Promise<CandidateData[]> => {
     try {
-      const supabase = await createClient();
+      const { createServerClient } = await import('@supabase/ssr');
+      const supabase = createServerClient(url, anonKey, {
+        cookies: {
+          getAll() {
+            return cookiesData;
+          },
+          setAll() {
+            // キャッシュ内では何もしない
+          },
+        },
+      });
     
     // 複数のテーブルから必要なデータを1回のクエリで効率的に取得
     // N+1問題を防ぐため、関連テーブルのJOINを活用
@@ -243,9 +253,19 @@ function formatRelativeTime(date: Date): string {
 
 // キャッシュ付きのメッセージデータ取得関数
 const getRecentMessages = unstable_cache(
-  async (companyUserId: string): Promise<Message[]> => {
+  async (companyUserId: string, url: string, anonKey: string, cookiesData: any): Promise<Message[]> => {
     try {
-      const supabase = await createClient();
+      const { createServerClient } = await import('@supabase/ssr');
+      const supabase = createServerClient(url, anonKey, {
+        cookies: {
+          getAll() {
+            return cookiesData;
+          },
+          setAll() {
+            // キャッシュ内では何もしない
+          },
+        },
+      });
       
       // まず、企業ユーザーがアクセス権限を持つルームIDを取得
       const rooms = await getRooms(companyUserId, 'company');
@@ -343,10 +363,17 @@ export default async function CompanyMypage() {
 
   const { companyUserId } = authResult.data;
 
+  // cookiesを外部で取得
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const cookiesData = cookieStore.getAll();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   const [candidates, messages, notices] = await Promise.all([
-    getCandidatesData(),
-    getRecentMessages(companyUserId),
-    getPublishedNotices(3) // 最新3件まで取得
+    getCandidatesData(supabaseUrl, supabaseAnonKey, cookiesData),
+    getRecentMessages(companyUserId, supabaseUrl, supabaseAnonKey, cookiesData),
+    getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData) // 最新3件まで取得
   ]);
 
   // おすすめ候補者データの生成
