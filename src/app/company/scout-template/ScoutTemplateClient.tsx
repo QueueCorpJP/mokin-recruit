@@ -545,7 +545,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
         }}
         onSave={handleSaveEdit}
         groupName={editingItem?.groupName || ''}
-        initialValue={editingItem?.searchCondition || ''}
+        initialValue={editingItem?.templateName || ''}
       />
 
       {/* Delete Modal */}
@@ -556,7 +556,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
           setDeletingItem(null);
         }}
         onDelete={handleConfirmDelete}
-        searchConditionName={deletingItem?.searchCondition || ''}
+        searchConditionName={deletingItem?.templateName || ''}
       />
     </>
   );

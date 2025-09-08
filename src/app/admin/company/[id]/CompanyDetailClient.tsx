@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CompanyEditData } from './edit/page';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { ActionButton } from '@/components/admin/ui/ActionButton';
 import CompanyUserDeleteModal from '@/components/admin/CompanyUserDeleteModal';
 import {
   updateCompanyPlan,
@@ -432,41 +434,41 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
         {/* 企業分析セクション */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-black">企業分析</h2>
+          <h2 className="text-2xl font-bold text-[#323232]">企業分析</h2>
           
           {/* 分析テーブル */}
           <div className="border border-gray-300 rounded">
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300"></th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">スカウト送信数</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">開封数（開封率）</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black border-r border-gray-300">返信数（返信率）</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-black">応募数（応募率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300"></th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">スカウト送信数</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">開封数（開封率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232] border-r border-gray-300">返信数（返信率）</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-[#323232]">応募数（応募率）</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">過去7日合計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">過去7日合計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">過去30日間合計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">過去30日間合計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
                 <tr className="border-t border-gray-300">
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">累計</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black border-r border-gray-300">0</td>
-                  <td className="px-3 py-2 text-xs text-black">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">累計</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232] border-r border-gray-300">0</td>
+                  <td className="px-3 py-2 text-xs text-[#323232]">0</td>
                 </tr>
               </tbody>
             </table>

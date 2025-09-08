@@ -9,10 +9,10 @@ import { createClient } from '@/lib/supabase/server';
 export interface ScoutTemplate {
   id: string;
   template_name: string;
-  subject: string;
-  body: string;
+  is_saved: boolean;
+  group_id: string;
   group_name: string;
-  job_title: string;
+  searcher_name: string;
   created_at: string;
   updated_at: string;
 }
@@ -37,12 +37,13 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
       .select(`
         id,
         template_name,
-        subject,
-        body,
+        is_saved,
+        group_id,
         created_at,
         updated_at,
-        company_groups!inner(group_name),
-        job_postings(title)
+        created_by,
+        company_groups!inner(id, group_name),
+        company_users!search_templates_created_by_fkey(name)
       `)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -64,11 +65,11 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
 
     const formattedTemplates: ScoutTemplate[] = templates?.map(template => ({
       id: template.id,
-      template_name: template.template_name,
-      subject: template.subject,
-      body: template.body,
+      template_name: template.template_name || '',
+      is_saved: template.is_saved || false,
+      group_id: template.group_id || (template.company_groups as any)?.id || '',
       group_name: (template.company_groups as any)?.group_name || '',
-      job_title: (template.job_postings as any)?.title || '',
+      searcher_name: (template.company_users as any)?.name || '',
       created_at: template.created_at,
       updated_at: template.updated_at,
     })) || [];
@@ -91,7 +92,7 @@ export async function deleteScoutTemplate(templateId: string) {
       return { success: false, error: '認証が必要です' };
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // テンプレートが企業のものかチェック
     const { data: template, error: checkError } = await supabase
@@ -138,7 +139,7 @@ export async function updateScoutTemplateName(templateId: string, newName: strin
       return { success: false, error: 'テンプレート名を入力してください' };
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // テンプレートが企業のものかチェック
     const { data: template, error: checkError } = await supabase
@@ -184,7 +185,7 @@ export async function updateScoutTemplateSavedStatus(templateId: string, isSaved
       return { success: false, error: '認証が必要です' };
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // テンプレートが企業のものかチェック
     const { data: template, error: checkError } = await supabase
