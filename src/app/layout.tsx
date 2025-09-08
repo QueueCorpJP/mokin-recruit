@@ -31,15 +31,15 @@ const AuthAwareFooter = dynamic(
   }
 );
 
-// フォント最適化 - 遅延読み込み戦略
+// フォント最適化 - 遅延読み込み後に適用
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
-  display: 'swap',
-  preload: false, // 初回読み込み高速化
+  display: 'swap', // フォールバック表示後にWebフォントに置き換え
+  preload: false, // 初期読み込み高速化
   variable: '--font-noto-sans-jp',
-  weight: ['400', '700'], // 重要な重みのみ
-  adjustFontFallback: true,
-  fallback: ['system-ui', 'arial', 'sans-serif'],
+  weight: ['400', '700'],
+  adjustFontFallback: false, // 手動でフォールバックを制御
+  fallback: ['Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'system-ui', 'sans-serif'],
 });
 
 // Interは削除（システムフォントで代用）

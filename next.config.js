@@ -13,12 +13,32 @@ const nextConfig = {
     },
     optimizePackageImports: ['@supabase/supabase-js'],
     swcPlugins: [],
+    // 開発時の最適化
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+    // 開発時のコンパイル最適化
+    esmExternals: 'loose',
+    // SWCミニファイヤーを使用
+    swcMinify: true,
   },
   distDir: '.next',
   compiler: {
     // SWC compiler options for JSX
     styledComponents: false,
     reactRemoveProperties: false,
+  },
+  // 開発時のパフォーマンス最適化
+  onDemandEntries: {
+    // ページが60秒間アクセスされない場合、メモリから削除
+    maxInactiveAge: 60 * 1000,
+    // 同時に保持するページ数
+    pagesBufferLength: 5,
   },
   // Code splitting最適化
   webpack: (config, { isServer }) => {

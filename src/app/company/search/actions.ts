@@ -41,7 +41,7 @@ export async function saveSearchConditions(
   searchData: SavedSearchData
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { error } = await supabase
       .from('saved_searches')
@@ -67,7 +67,7 @@ export async function saveSearchConditions(
 
 export async function getSavedSearches(companyId: string, groupId: string) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data, error } = await supabase
       .from('saved_searches')
@@ -90,7 +90,7 @@ export async function getSavedSearches(companyId: string, groupId: string) {
 
 export async function deleteSavedSearch(searchId: string, companyId: string) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { error } = await supabase
       .from('saved_searches')
@@ -113,7 +113,7 @@ export async function deleteSavedSearch(searchId: string, companyId: string) {
 
 export async function loadSearchConditions(searchId: string, companyId: string) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     const { data, error } = await supabase
       .from('saved_searches')

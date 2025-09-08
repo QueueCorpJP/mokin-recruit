@@ -1,0 +1,498 @@
+'use client';
+
+import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { SelectInput } from '@/components/ui/select-input';
+import { 
+  updateMessageTemplateName, 
+  updateMessageTemplateSavedStatus,
+  type MessageTemplate as ServerMessageTemplate 
+} from './actions';
+import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from    '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { Pagination } from '@/components/ui/Pagination';      
+
+// Icons
+const MailIcon = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M13.4625 6H9H6.7375H6V6.55V9V11.525V17.0875L0.0125 12.6563C0.1125 11.525 0.69375 10.475 1.61875 9.79375L3 8.76875V6C3 4.34375 4.34375 3 6 3H10.7875L13.9063 0.69375C14.5125 0.24375 15.2438 0 16 0C16.7563 0 17.4875 0.24375 18.0938 0.6875L21.2125 3H26C27.6563 3 29 4.34375 29 6V8.76875L30.3813 9.79375C31.3063 10.475 31.8875 11.525 31.9875 12.6563L26 17.0875V11.525V9V6.55V6H25.2625H23H18.5375H13.4563H13.4625ZM0 28V15.1313L13.6 25.2063C14.2938 25.7188 15.1375 26 16 26C16.8625 26 17.7063 25.725 18.4 25.2063L32 15.1313V28C32 30.2063 30.2063 32 28 32H4C1.79375 32 0 30.2063 0 28ZM11 10H21C21.55 10 22 10.45 22 11C22 11.55 21.55 12 21 12H11C10.45 12 10 11.55 10 11C10 10.45 10.45 10 11 10ZM11 14H21C21.55 14 22 14.45 22 15C22 15.55 21.55 16 21 16H11C10.45 16 10 15.55 10 15C10 14.45 10.45 14 11 14Z"
+      fill="white"
+    />
+  </svg>
+);
+
+const BookmarkIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='18'
+    height='24'
+    viewBox='0 0 18 24'
+    fill='none'
+  >
+    <path
+      d='M0 2.25V22.8609C0 23.4891 0.510937 24 1.13906 24C1.37344 24 1.60312 23.9297 1.79531 23.7938L9 18.75L16.2047 23.7938C16.3969 23.9297 16.6266 24 16.8609 24C17.4891 24 18 23.4891 18 22.8609V2.25C18 1.00781 16.9922 0 15.75 0H2.25C1.00781 0 0 1.00781 0 2.25Z'
+      fill={filled ? '#FFDA5F' : '#DCDCDC'}
+    />
+  </svg>
+);
+
+const DotsMenuIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='24'
+    height='8'
+    viewBox='0 0 24 8'
+    fill='none'
+  >
+    <path
+      d='M0 3.99997C0 3.17485 0.327777 2.38353 0.911223 1.80008C1.49467 1.21663 2.28599 0.888855 3.11111 0.888855C3.93623 0.888855 4.72755 1.21663 5.311 1.80008C5.89445 2.38353 6.22222 3.17485 6.22222 3.99997C6.22222 4.82508 5.89445 5.61641 5.311 6.19985C4.72755 6.7833 3.93623 7.11108 3.11111 7.11108C2.28599 7.11108 1.49467 6.7833 0.911223 6.19985C0.327777 5.61641 0 4.82508 0 3.99997ZM8.88889 3.99997C8.88889 3.17485 9.21667 2.38353 9.80011 1.80008C10.3836 1.21663 11.1749 0.888855 12 0.888855C12.8251 0.888855 13.6164 1.21663 14.1999 1.80008C14.7833 2.38353 15.1111 3.17485 15.1111 3.99997C15.1111 4.82508 14.7833 5.61641 14.1999 6.19985C13.6164 6.7833 12.8251 7.11108 12 7.11108C11.1749 7.11108 10.3836 6.7833 9.80011 6.19985C9.21667 5.61641 8.88889 4.82508 8.88889 3.99997ZM20.8889 0.888855C21.714 0.888855 22.5053 1.21663 23.0888 1.80008C23.6722 2.38353 24 3.17485 24 3.99997C24 4.82508 23.6722 5.61641 23.0888 6.19985C22.5053 6.7833 21.714 7.11108 20.8889 7.11108C20.0638 7.11108 19.2724 6.7833 18.689 6.19985C18.1056 5.61641 17.7778 4.82508 17.7778 3.99997C17.7778 3.17485 18.1056 2.38353 18.689 1.80008C19.2724 1.21663 20.0638 0.888855 20.8889 0.888855Z'
+      fill='#DCDCDC'
+    />
+  </svg>
+);
+
+const ChevronLeftIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='10'
+    height='16'
+    viewBox='0 0 10 16'
+    fill='none'
+  >
+    <path
+      d='M0.763927 7.19313C0.317649 7.63941 0.317649 8.36416 0.763927 8.81044L7.61878 15.6653C8.06506 16.1116 8.78981 16.1116 9.23609 15.6653C9.68237 15.219 9.68237 14.4943 9.23609 14.048L3.18812 8L9.23252 1.95202C9.6788 1.50575 9.6788 0.780988 9.23252 0.334709C8.78624 -0.11157 8.06148 -0.11157 7.61521 0.334709L0.760357 7.18956L0.763927 7.19313Z'
+      fill='#0F9058'
+    />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='10'
+    height='16'
+    viewBox='0 0 10 16'
+    fill='none'
+  >
+    <path
+      d='M9.23607 7.19313C9.68235 7.63941 9.68235 8.36416 9.23607 8.81044L2.38122 15.6653C1.93494 16.1116 1.21019 16.1116 0.763909 15.6653C0.317629 15.219 0.317629 14.4943 0.763909 14.048L6.81188 8L0.767479 1.95202C0.3212 1.50575 0.3212 0.780988 0.767479 0.334709C1.21376 -0.11157 1.93852 -0.11157 2.38479 0.334709L9.23964 7.18956L9.23607 7.19313Z'
+      fill='#0F9058'
+    />
+  </svg>
+);
+
+interface MessageTemplateItem {
+  id: string;
+  saved: boolean;
+  group: string; // group_id for filtering
+  groupName: string; // group_name for display
+  templateName: string;
+  body: string;
+  date: string;
+  updatedAt: string;
+  isMenuOpen?: boolean;
+}
+
+interface TemplateClientProps {
+  initialMessageTemplates: ServerMessageTemplate[];
+  initialError: string | null;
+  companyUserId: string;
+}
+
+export function TemplateClient({ initialMessageTemplates, initialError, companyUserId }: TemplateClientProps) {
+  const { user, accessToken, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [keyword, setKeyword] = useState<string>('');
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialError);
+
+  // ServerMessageTemplateをクライアント用のMessageTemplateItemに変換
+  const transformMessageTemplates = (items: ServerMessageTemplate[]): MessageTemplateItem[] => {
+    return items.map(item => ({
+      id: item.id,
+      saved: item.is_saved,
+      group: item.group_id, // group_idを使用してフィルタリングと統一
+      groupName: item.group_name, // 表示用のgroup_name
+      templateName: item.template_name,
+      body: item.body,
+      date: new Date(item.created_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      updatedAt: new Date(item.updated_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      isMenuOpen: false,
+    }));
+  };
+
+  const [messageTemplates, setMessageTemplates] = useState<MessageTemplateItem[]>(
+    transformMessageTemplates(initialMessageTemplates)
+  );
+
+  const toggleMenu = (id: string) => {
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((item: MessageTemplateItem) =>
+        item.id === id
+          ? { ...item, isMenuOpen: !item.isMenuOpen }
+          : { ...item, isMenuOpen: false }
+      )
+    );
+  };
+
+  const toggleBookmark = (id: string) => {
+    const item = messageTemplates.find(h => h.id === id);
+    if (!item) return;
+
+    startTransition(async () => {
+      const result = await updateMessageTemplateSavedStatus(id, !item.saved);
+      if (result.success) {
+        setMessageTemplates((prev: MessageTemplateItem[]) =>
+          prev.map((prevItem: MessageTemplateItem) =>
+            prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
+          )
+        );
+      }
+    });
+  };
+
+  const handleEdit = (item: MessageTemplateItem) => {
+    // editページに遷移し、テンプレート情報をクエリパラメータで渡す
+    router.push(`/company/template/edit?id=${item.id}`);
+    // Close the dropdown menu
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
+    );
+  };
+
+
+  const handleDelete = (item: MessageTemplateItem) => {
+    // editページに遷移し、テンプレート情報をクエリパラメータで渡す（編集と同じ処理）
+    router.push(`/company/template/edit?id=${item.id}`);
+    // Close the dropdown menu
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
+    );
+  };
+
+
+  // グループオプションを生成（重複なし）
+  const uniqueGroupsMap = new Map();
+  messageTemplates.forEach(item => {
+    if (!uniqueGroupsMap.has(item.group)) {
+      uniqueGroupsMap.set(item.group, item.groupName);
+    }
+  });
+  
+  const groupOptions = [
+    { value: '', label: '未選択' },
+    ...Array.from(uniqueGroupsMap.entries()).map(([groupId, groupName]) => ({
+      value: groupId,
+      label: groupName
+    }))
+  ];
+
+  // フィルタリング済みのメッセージテンプレート
+  const filteredMessageTemplates = messageTemplates.filter(item => {
+    // グループフィルタ
+    if (selectedGroup && item.group !== selectedGroup) return false;
+    
+    // キーワードフィルタ
+    if (keyword && !item.templateName.toLowerCase().includes(keyword.toLowerCase())) return false;
+    
+    // 保存済みフィルタ
+    if (showSavedOnly && !item.saved) return false;
+    
+    return true;
+  });
+
+  // ページネーション計算
+  const totalItems = filteredMessageTemplates.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredMessageTemplates.slice(startIndex, endIndex);
+  const displayStartIndex = totalItems > 0 ? startIndex + 1 : 0;
+  const displayEndIndex = Math.min(endIndex, totalItems);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  return (
+    <>
+      {/* Hero Section with Gradient Background */}
+      <div
+        className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10'
+        style={{
+          background: 'linear-gradient(to top, #17856f, #229a4e)',
+        }}
+      >
+        <div className='w-full max-w-[1200px] mx-auto'>
+          {/* Page Title */}
+          <div className='flex items-center gap-4'>
+            <MailIcon />
+            <h1
+              className='text-white text-[24px] font-bold tracking-[2.4px]'
+              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+            >
+              メッセージテンプレート
+            </h1>
+          </div>
+        </div>
+
+        {/* Search Filters */}
+        <div className='w-full max-w-[1200px] mx-auto mt-10'>
+          <div className='bg-white rounded-[10px] p-6 min-[1200px]:p-10'>
+            <div className='flex flex-col min-[1200px]:flex-row gap-6 min-[1200px]:gap-10 items-start'>
+              {/* Group Select */}
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
+                  グループ
+                </span>
+                <SelectInput
+                  options={groupOptions}
+                  value={selectedGroup}
+                  onChange={setSelectedGroup}
+                  placeholder='未選択'
+                  className='w-full min-[1200px]:w-60'
+                />
+              </div>
+
+              {/* Keyword Search */}
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
+                  テンプレート名から検索
+                </span>
+                <div className='flex gap-2 w-full min-[1200px]:w-auto'>
+                  <Input
+                    type='text'
+                    value={keyword}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setKeyword(e.target.value)
+                    }
+                    placeholder='キーワード検索'
+                    className='bg-white border-[#999999] flex-1 min-[1200px]:w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[10px]'
+                  />
+                  <Button
+                    variant='small-green'
+                    size='figma-small'
+                    className='px-6 py-2'
+                  >
+                    検索
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Saved Only Checkbox */}
+            <div className='mt-6'>
+              <Checkbox
+                checked={showSavedOnly}
+                onChange={setShowSavedOnly}
+                label={
+                  <span className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                    保存済のみ表示
+                  </span>
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className='bg-[#f9f9f9] px-20 pt-10 pb-20 min-h-[577px]'>
+        <div className='w-full max-w-[1200px] mx-auto'>
+          {/* Top Actions */}
+          <div className='flex justify-between items-center mb-10'>
+            <Button
+              variant='blue-gradient'
+              size='figma-blue'
+              className='min-w-[160px]'
+              onClick={() => {
+                // Redirect to new template page
+                router.push('/company/template/new');
+              }}>
+              新規メッセージテンプレート作成
+            </Button>
+
+            {/* Pagination Info */}
+            <div className='flex items-center gap-2'>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || totalItems === 0}
+                className={currentPage === 1 || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              >
+                <ChevronLeftIcon />
+              </button>
+              <span className='text-[#323232] text-[12px] font-bold tracking-[1.2px]'>
+                {displayStartIndex}〜{displayEndIndex}件 / {totalItems}件
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || totalItems === 0}
+                className={currentPage === totalPages || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              >
+                <ChevronRightIcon />
+              </button>
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className='flex items-center px-10 pb-2 border-b border-[#dcdcdc]'>
+            {/* Spacer for bookmark icon */}
+            <div className='w-[18px]'></div>
+
+            {/* Group column */}
+            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              グループ
+            </div>
+
+            {/* Template Name column */}
+            <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px] truncate'>
+              テンプレート名
+            </div>
+
+            {/* Body column */}
+            <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              本文
+            </div>
+
+            {/* Date column */}
+            <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              作成日
+            </div>
+
+            {/* Updated Date column */}
+            <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+              最終更新日
+            </div>
+
+            {/* Spacer for menu button */}
+            <div className='w-[24px] ml-4 min-[1200px]:ml-6'></div>
+          </div>
+
+          {/* Template Items */}
+          <div className='flex flex-col gap-2 mt-2'>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">メッセージテンプレートを読み込んでいます...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <p className="text-red-500 mb-4">メッセージテンプレートの取得に失敗しました</p>
+                <p className="text-gray-600">{error}</p>
+              </div>
+            ) : currentItems.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">メッセージテンプレートがありません</p>
+              </div>
+            ) : (
+              currentItems.map((item: MessageTemplateItem) => (
+              <div
+                key={item.id}
+                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
+              >
+                {/* Bookmark Icon */}
+                <button
+                  className='w-[18px] flex-shrink-0'
+                  onClick={() => toggleBookmark(item.id)}
+                >
+                  <BookmarkIcon filled={item.saved} />
+                </button>
+
+                {/* Group Badge */}
+                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                  <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
+                    {item.groupName}
+                  </span>
+                </div>
+
+                {/* Template Name */}
+                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.templateName}
+                </div>
+
+                {/* Body */}
+                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.body.length > 18 ? `${item.body.substring(0, 18)}...` : item.body}
+                </div>
+
+                {/* Date */}
+                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                  {item.date}
+                </div>
+
+                {/* Updated Date */}
+                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                  {item.updatedAt}
+                </div>
+
+                {/* Menu Button */}
+                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
+                  <button onClick={() => toggleMenu(item.id)}>
+                    <DotsMenuIcon />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {item.isMenuOpen && (
+                    <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item)}
+                        className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        削除
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-10"
+          />
+        </div>
+      </div>
+
+
+    </>
+  );
+}

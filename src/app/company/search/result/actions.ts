@@ -74,9 +74,34 @@ interface SearchConditions {
 
 // 候補者データを取得する関数（クライアントサイド版）
 export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
+  console.log('🔍 [getCandidatesFromDatabase] 開始');
   try {
     const supabase = createClient();
+    console.log('📡 [getCandidatesFromDatabase] Supabaseクライアント作成完了');
     
+    // 認証状態を確認
+    console.log('🔐 [getCandidatesFromDatabase] 認証状態を確認中...');
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('❌ [getCandidatesFromDatabase] 認証エラー:', authError);
+      return [];
+    }
+    
+    if (!user) {
+      console.error('❌ [getCandidatesFromDatabase] ユーザーが存在しません');
+      return [];
+    }
+    
+    console.log('✅ [getCandidatesFromDatabase] 認証成功 - User ID:', user.id);
+    console.log('👤 [getCandidatesFromDatabase] User詳細:', { 
+      id: user.id, 
+      email: user.email,
+      role: user.role,
+      aud: user.aud 
+    });
+    
+    console.log('📊 [getCandidatesFromDatabase] candidatesクエリを実行中...');
     const { data: candidates, error } = await supabase
       .from('candidates')
       .select(`
@@ -124,8 +149,25 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
       .order('last_login_at', { ascending: false });
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('❌ [getCandidatesFromDatabase] Supabaseクエリエラー:', error);
+      console.error('❌ [getCandidatesFromDatabase] エラー詳細:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return [];
+    }
+
+    console.log('✅ [getCandidatesFromDatabase] candidatesクエリ成功');
+    console.log('📊 [getCandidatesFromDatabase] 取得した候補者数:', candidates?.length || 0);
+    
+    if (candidates && candidates.length > 0) {
+      console.log('👥 [getCandidatesFromDatabase] 最初の候補者サンプル:', {
+        id: candidates[0].id,
+        name: `${candidates[0].last_name} ${candidates[0].first_name}`,
+        company: candidates[0].current_company
+      });
     }
 
     // 候補者のスキル情報を別途取得
@@ -473,8 +515,34 @@ export function parseSearchParams(searchParams: URLSearchParams) {
 
 // 検索条件に基づいて候補者を検索する関数
 export async function searchCandidatesWithConditions(conditions: SearchConditions): Promise<CandidateData[]> {
+  console.log('🔍 [searchCandidatesWithConditions] 開始');
+  console.log('🔍 [searchCandidatesWithConditions] 検索条件:', conditions);
+  
   try {
     const supabase = createClient();
+    console.log('📡 [searchCandidatesWithConditions] Supabaseクライアント作成完了');
+    
+    // 認証状態を確認
+    console.log('🔐 [searchCandidatesWithConditions] 認証状態を確認中...');
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('❌ [searchCandidatesWithConditions] 認証エラー:', authError);
+      return [];
+    }
+    
+    if (!user) {
+      console.error('❌ [searchCandidatesWithConditions] ユーザーが存在しません');
+      return [];
+    }
+    
+    console.log('✅ [searchCandidatesWithConditions] 認証成功 - User ID:', user.id);
+    console.log('👤 [searchCandidatesWithConditions] User詳細:', { 
+      id: user.id, 
+      email: user.email,
+      role: user.role,
+      aud: user.aud 
+    });
     
     let query = supabase
       .from('candidates')
@@ -539,22 +607,35 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
       }
     }
 
+    console.log('📊 [searchCandidatesWithConditions] データベースクエリを実行中...');
     const { data: candidates, error } = await query;
 
     if (error) {
-      console.error('Search error:', error);
+      console.error('❌ [searchCandidatesWithConditions] Supabaseクエリエラー:', error);
+      console.error('❌ [searchCandidatesWithConditions] エラー詳細:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return [];
     }
 
+    console.log('✅ [searchCandidatesWithConditions] クエリ成功');
+    console.log('📊 [searchCandidatesWithConditions] 取得した候補者数 (フィルタリング前):', candidates?.length || 0);
+
     if (!candidates) {
+      console.log('⚠️ [searchCandidatesWithConditions] 候補者データがnullです');
       return [];
     }
 
     // クライアントサイドでの詳細フィルタリング
+    console.log('🔧 [searchCandidatesWithConditions] クライアントサイドフィルタリング開始');
     let filteredCandidates = candidates;
 
     // 経験職種フィルタ
     if (conditions.experienceJobTypes && conditions.experienceJobTypes.length > 0) {
+      console.log('🏢 [searchCandidatesWithConditions] 経験職種フィルタを適用:', conditions.experienceJobTypes);
       const targetJobTypes = conditions.experienceJobTypes.map(jt => jt.name.toLowerCase());
       filteredCandidates = filteredCandidates.filter((candidate: any) => {
         const candidateJobTypes = [
@@ -570,10 +651,12 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
           )
         );
       });
+      console.log('📊 [searchCandidatesWithConditions] 経験職種フィルタ適用後の候補者数:', filteredCandidates.length);
     }
 
     // 経験業種フィルタ
     if (conditions.experienceIndustries && conditions.experienceIndustries.length > 0) {
+      console.log('🏭 [searchCandidatesWithConditions] 経験業種フィルタを適用:', conditions.experienceIndustries);
       const targetIndustries = conditions.experienceIndustries.map(ind => ind.name.toLowerCase());
       filteredCandidates = filteredCandidates.filter((candidate: any) => {
         const candidateIndustries = [
@@ -588,10 +671,15 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
           )
         );
       });
+      console.log('📊 [searchCandidatesWithConditions] 経験業種フィルタ適用後の候補者数:', filteredCandidates.length);
     }
 
     // 年収フィルタ（クライアントサイド）
     if (conditions.currentSalaryMin || conditions.currentSalaryMax) {
+      console.log('💰 [searchCandidatesWithConditions] 年収フィルタを適用:', {
+        min: conditions.currentSalaryMin,
+        max: conditions.currentSalaryMax
+      });
       filteredCandidates = filteredCandidates.filter((candidate: any) => {
         const salaryStr = candidate.current_salary || candidate.current_income || '';
         const salaryMatch = salaryStr.match(/(\d+)/);
@@ -608,10 +696,15 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
         
         return true;
       });
+      console.log('📊 [searchCandidatesWithConditions] 年収フィルタ適用後の候補者数:', filteredCandidates.length);
     }
 
     // 年齢フィルタ
     if (conditions.ageMin || conditions.ageMax) {
+      console.log('👶 [searchCandidatesWithConditions] 年齢フィルタを適用:', {
+        min: conditions.ageMin,
+        max: conditions.ageMax
+      });
       filteredCandidates = filteredCandidates.filter((candidate: any) => {
         if (!candidate.birth_date) return false;
         
@@ -633,17 +726,35 @@ export async function searchCandidatesWithConditions(conditions: SearchCondition
         
         return true;
       });
+      console.log('📊 [searchCandidatesWithConditions] 年齢フィルタ適用後の候補者数:', filteredCandidates.length);
     }
 
+    console.log('✅ [searchCandidatesWithConditions] 全フィルタ適用完了 - 最終候補者数:', filteredCandidates.length);
+    
     // 同じ変換処理を適用
-    return getCandidatesFromDatabase().then(allCandidates => 
-      allCandidates.filter(candidate => 
+    console.log('🔄 [searchCandidatesWithConditions] getCandidatesFromDatabase()を呼び出してデータ変換中...');
+    return getCandidatesFromDatabase().then(allCandidates => {
+      console.log('📊 [searchCandidatesWithConditions] 変換された全候補者数:', allCandidates.length);
+      
+      const finalResults = allCandidates.filter(candidate => 
         filteredCandidates.some(filtered => filtered.id === candidate.id)
-      )
-    );
+      );
+      
+      console.log('🎯 [searchCandidatesWithConditions] 最終結果:', finalResults.length, '件');
+      
+      if (finalResults.length > 0) {
+        console.log('👥 [searchCandidatesWithConditions] 最終結果サンプル:', {
+          id: finalResults[0].id,
+          companyName: finalResults[0].companyName,
+          position: finalResults[0].position
+        });
+      }
+      
+      return finalResults;
+    });
 
   } catch (error) {
-    console.error('Search failed:', error);
+    console.error('❌ [searchCandidatesWithConditions] 関数実行エラー:', error);
     return [];
   }
 }
