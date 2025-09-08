@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { getJobDetails } from './actions';
 import CandidateApplicationClient from './CandidateApplicationClient';
 
@@ -5,40 +8,78 @@ interface CandidateApplicationServerComponentProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function CandidateApplicationServerComponent({
+export default function CandidateApplicationServerComponent({
   params
 }: CandidateApplicationServerComponentProps) {
-  const { id: jobId } = await params;
+  const [jobId, setJobId] = useState<string>('');
+  const [jobData, setJobData] = useState<any>(null);
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 認証はLayoutで実行済み、求人情報のみ取得
-  const jobResponse = await getJobDetails(jobId);
+  // パラメータを取得
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setJobId(resolvedParams.id);
+    };
+    getParams();
+  }, [params]);
 
-  if (!jobResponse.success || !jobResponse.data) {
+  // 求人情報を取得
+  useEffect(() => {
+    if (!jobId) return;
+
+    const fetchJobData = async () => {
+      try {
+        const jobResponse = await getJobDetails(jobId);
+        
+        if (!jobResponse.success || !jobResponse.data) {
+          setError(jobResponse.error || '求人情報が見つかりませんでした');
+          return;
+        }
+
+        const job = jobResponse.data;
+        
+        // 求人が応募可能な状態かチェック
+        if (job.status !== 'PUBLISHED') {
+          setError('この求人は現在応募できません。');
+          return;
+        }
+
+        setJobData(job);
+      } catch (error) {
+        setError('システムエラーが発生しました');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobData();
+  }, [jobId]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md">
           <h1 className="text-xl font-bold text-red-600 mb-4">エラー</h1>
-          <p className="text-gray-700">{jobResponse.error || '求人情報が見つかりませんでした'}</p>
+          <p className="text-gray-700">{error}</p>
         </div>
       </div>
     );
   }
 
-  const jobData = jobResponse.data;
-
-  // サーバーから取得したデータを直接使用（URLパラメータは不要）
-  const jobTitle = jobData.title;
-  const companyName = jobData.companyName;
-  const requiredDocuments = jobData.requiredDocuments;
-
-  // 求人が応募可能な状態かチェック
-  if (jobData.status !== 'PUBLISHED') {
+  if (!jobData) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-xl font-bold text-yellow-600 mb-4">お知らせ</h1>
-          <p className="text-gray-700">この求人は現在応募できません。</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
       </div>
     );
   }
@@ -46,9 +87,9 @@ export default async function CandidateApplicationServerComponent({
   return (
     <CandidateApplicationClient
       jobId={jobId}
-      jobTitle={jobTitle}
-      companyName={companyName}
-      requiredDocuments={requiredDocuments}
+      jobTitle={jobData.title}
+      companyName={jobData.companyName}
+      requiredDocuments={jobData.requiredDocuments}
     />
   );
 }

@@ -1,5 +1,4 @@
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useMessageStore } from '@/stores/messageStore';
 import type { Message } from '@/components/message/MessageList';
 
@@ -76,73 +75,97 @@ const messageAPI = {
 };
 
 export const useMessages = (userId?: string, userType?: string) => {
-  const queryClient = useQueryClient();
   const { setMessages, setLoading, setError } = useMessageStore();
+  const [messages, setMessagesState] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setErrorState] = useState<Error | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
 
   // メッセージ一覧取得
-  const messagesQuery = useQuery({
-    queryKey: ['messages', userId, userType],
-    queryFn: () => messageAPI.getMessages(userId, userType),
-    enabled: !!(userId && userType), // userIdとuserTypeがある場合のみクエリを実行
-  });
+  const refetch = useCallback(async () => {
+    if (!userId || !userType) return;
+    
+    setIsLoading(true);
+    setErrorState(null);
+    try {
+      const data = await messageAPI.getMessages(userId, userType);
+      setMessagesState(data);
+      setMessages(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'メッセージの取得に失敗しました';
+      setErrorState(err instanceof Error ? err : new Error(errorMessage));
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+      setLoading(false);
+    }
+  }, [userId, userType, setMessages, setLoading, setError]);
 
-  // React Queryの状態変更時にストアを更新
-  React.useEffect(() => {
-    if (messagesQuery.data) {
-      setMessages(messagesQuery.data);
+  useEffect(() => {
+    if (userId && userType) {
+      refetch();
     }
-    setLoading(messagesQuery.isLoading);
-    if (messagesQuery.error) {
-      setError(messagesQuery.error instanceof Error ? messagesQuery.error.message : 'メッセージの取得に失敗しました');
-    } else {
-      setError(null);
-    }
-  }, [messagesQuery.data, messagesQuery.isLoading, messagesQuery.error, setMessages, setLoading, setError]);
+  }, [refetch, userId, userType]);
 
   // メッセージ送信
-  const sendMessageMutation = useMutation({
-    mutationFn: messageAPI.sendMessage,
-    onSuccess: (newMessage) => {
-      queryClient.setQueryData(['messages', userId, userType], (oldData: Message[] | undefined) => {
-        return oldData ? [...oldData, newMessage] : [newMessage];
-      });
+  const sendMessage = async (messageData: {
+    content: string;
+    conversationId: string;
+    senderType: string;
+    senderId: string;
+  }) => {
+    setIsSending(true);
+    try {
+      const newMessage = await messageAPI.sendMessage(messageData);
+      const updatedMessages = [...messages, newMessage];
+      setMessagesState(updatedMessages);
+      setMessages(updatedMessages);
       // ストアも更新
       useMessageStore.getState().addMessage(newMessage);
-    },
-    onError: (error) => {
-      setError(error instanceof Error ? error.message : 'メッセージの送信に失敗しました');
-    },
-  });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'メッセージの送信に失敗しました';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // メッセージ既読マーク
-  const markAsReadMutation = useMutation({
-    mutationFn: ({ messageId, userId, userType }: { messageId: string; userId: string; userType: string }) =>
-      messageAPI.markAsRead(messageId, userId, userType),
-    onSuccess: (_, { messageId }) => {
-      queryClient.setQueryData(['messages', userId, userType], (oldData: Message[] | undefined) => {
-        return oldData?.map(msg => 
-          msg.id === messageId ? { ...msg, isUnread: false } : msg
-        );
-      });
+  const markAsRead = async (messageId: string) => {
+    if (!userId || !userType) return;
+    
+    setIsMarkingAsRead(true);
+    try {
+      await messageAPI.markAsRead(messageId, userId, userType);
+      const updatedMessages = messages.map(msg => 
+        msg.id === messageId ? { ...msg, isUnread: false } : msg
+      );
+      setMessagesState(updatedMessages);
+      setMessages(updatedMessages);
       // ストアも更新
       useMessageStore.getState().markAsRead(messageId);
-    },
-  });
+    } catch (err) {
+      // エラーは無視（既読マークは重要度が低い）
+    } finally {
+      setIsMarkingAsRead(false);
+    }
+  };
 
   return {
     // データ
-    messages: messagesQuery.data || [],
-    isLoading: messagesQuery.isLoading,
-    error: messagesQuery.error,
+    messages,
+    isLoading,
+    error,
     
     // 操作
-    sendMessage: sendMessageMutation.mutate,
-    markAsRead: (messageId: string) => 
-      markAsReadMutation.mutate({ messageId, userId: userId!, userType: userType! }),
-    refetch: messagesQuery.refetch,
+    sendMessage,
+    markAsRead,
+    refetch,
     
     // 状態
-    isSending: sendMessageMutation.isPending,
-    isMarkingAsRead: markAsReadMutation.isPending,
+    isSending,
+    isMarkingAsRead,
   };
 };

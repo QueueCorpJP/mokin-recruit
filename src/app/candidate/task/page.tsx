@@ -6,6 +6,7 @@ import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import TaskList from './TaskList';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
 
 
 interface Room {
@@ -89,6 +90,10 @@ async function getTaskData(): Promise<TaskData> {
 
 export default async function CandidateTaskPage() {
   const user = await getCachedCandidateUser();
+  
+  if (!user) {
+    redirect('/candidate/auth/login');
+  }
   
   const taskData = await getTaskData();
 

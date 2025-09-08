@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getSummaryData, updateSummaryData } from './actions';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 // フォームスキーマ定義
 const summarySchema = z.object({
@@ -19,6 +20,7 @@ type SummaryFormData = z.infer<typeof summarySchema>;
 
 // 候補者_職務要約編集ページ
 export default function CandidateSummaryEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,6 +33,15 @@ export default function CandidateSummaryEditPage() {
       selfPR: '',
     },
   });
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   // 初期データを取得してフォームに設定
   useEffect(() => {
@@ -80,6 +91,18 @@ export default function CandidateSummaryEditPage() {
   const handleCancel = () => {
     router.push('/candidate/account/summary');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <>

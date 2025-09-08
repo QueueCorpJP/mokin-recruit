@@ -890,7 +890,8 @@ export default function CandidateSearchSettingClient({
                 </button>
 
                 <button
-                  onClick={handleApply}
+                  onClick={
+                    handleApply}
                   className='bg-gradient-to-r from-[#26AF94] to-[#3A93CB] flex flex-row gap-1 sm:gap-1.5 lg:gap-2 items-center justify-center w-full lg:w-[228px] px-3 sm:px-4 lg:px-10 py-3 lg:py-3.5 rounded-[32px] transition-all duration-200 ease-in-out min-h-[44px] sm:min-h-[50px] lg:min-h-[56px]'
                   style={{
                     background:

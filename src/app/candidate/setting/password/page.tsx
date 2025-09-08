@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -8,8 +8,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { changePassword } from './actions';
 import { Button } from '@/components/ui/button';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 export default function PasswordChangePage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,6 +21,15 @@ export default function PasswordChangePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +66,18 @@ export default function PasswordChangePage() {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">

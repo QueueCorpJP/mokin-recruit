@@ -294,8 +294,41 @@ export async function requireCompanyAuthForAction(): Promise<
   }
 
   const user = auth.user!;
-  const companyAccountId = user.user_metadata?.company_account_id;
-  const companyUserId = user.user_metadata?.company_user_id || user.id;
+  let companyAccountId = user.user_metadata?.company_account_id;
+  let companyUserId = user.user_metadata?.company_user_id || user.id;
+
+  // Supabase Auth IDからCompany User IDへの変換が必要な場合
+  try {
+    const supabase = await createSupabaseServerClientReadOnly(true);
+    
+    // 直接company_usersテーブルで確認
+    const { data: directUser } = await supabase
+      .from('company_users')
+      .select('id, company_account_id')
+      .eq('id', companyUserId)
+      .single();
+    
+    if (!directUser) {
+      // Auth IDの場合、メールで検索
+      const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
+      if (authUser.user) {
+        const { data: companyUser } = await supabase
+          .from('company_users')
+          .select('id, company_account_id')
+          .eq('email', authUser.user.email)
+          .single();
+        
+        if (companyUser) {
+          companyUserId = companyUser.id;
+          companyAccountId = companyUser.company_account_id;
+        }
+      }
+    } else {
+      companyAccountId = directUser.company_account_id;
+    }
+  } catch (error) {
+    console.warn('ID mapping failed, using original:', error);
+  }
 
   if (!companyAccountId) {
     return {

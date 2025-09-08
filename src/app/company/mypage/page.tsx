@@ -13,6 +13,7 @@ import { unstable_cache } from 'next/cache';
 import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
 import searchConditionsData from '@/data/mockSearchConditions.json';
 import { getPublishedNotices } from '@/lib/utils/noticeHelpers';
+import { getRooms } from '@/lib/rooms';
 
 // キャッシュ付きの候補者データ取得関数
 const getCandidatesData = unstable_cache(
@@ -242,34 +243,80 @@ function formatRelativeTime(date: Date): string {
 
 // キャッシュ付きのメッセージデータ取得関数
 const getRecentMessages = unstable_cache(
-  async (): Promise<Message[]> => {
-    // モックデータを返す
-    return [
-      {
-        id: 'mock-1',
-        date: '2024/09/01',
-        group: 'IT・エンジニア',
-        user: '株式会社テックソリューション',
-        content: '貴社の求人に興味を持つ優秀な候補者が応募されました。ぜひご確認ください。',
-        room_id: 'room-tech-001'
-      },
-      {
-        id: 'mock-2',
-        date: '2024/08/31',
-        group: 'マーケティング',
-        user: '株式会社クリエイティブ',
-        content: 'マーケティング担当者の候補者との面談が完了しました。評価レポートをお送りします。',
-        room_id: 'room-creative-002'
-      },
-      {
-        id: 'mock-3',
-        date: '2024/08/30',
-        group: '営業・企画',
-        user: '株式会社ビジネスパートナー',
-        content: '営業職の求人について、追加の要件をお聞かせください。より適切な候補者をご紹介できます。',
-        room_id: 'room-business-003'
+  async (companyUserId: string): Promise<Message[]> => {
+    try {
+      const supabase = await createClient();
+      
+      // まず、企業ユーザーがアクセス権限を持つルームIDを取得
+      const rooms = await getRooms(companyUserId, 'company');
+      const accessibleRoomIds = rooms.map(room => room.id);
+      
+      if (accessibleRoomIds.length === 0) {
+        console.log('No accessible rooms found for user:', companyUserId);
+        return [];
       }
-    ];
+      
+      // アクセス権限のあるルームの未読メッセージのみ取得
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          sent_at,
+          room_id,
+          status,
+          rooms!room_id (
+            id,
+            candidate_id,
+            related_job_posting_id,
+            candidates!candidate_id (
+              first_name,
+              last_name
+            ),
+            job_postings!related_job_posting_id (
+              title
+            ),
+            company_groups!company_group_id (
+              group_name,
+              company_accounts!company_account_id (
+                company_name
+              )
+            )
+          )
+        `)
+        .eq('sender_type', 'CANDIDATE')
+        .eq('status', 'SENT') // 未読メッセージのみ（SENTは未読、READは既読）
+        .in('room_id', accessibleRoomIds) // アクセス権限のあるルームのみ
+        .order('sent_at', { ascending: false })
+        .limit(3);
+
+      if (error || !messages) {
+        console.error('Error fetching messages:', error);
+        return [];
+      }
+
+      console.log('Recent unread messages fetched:', {
+        companyUserId,
+        accessibleRoomsCount: accessibleRoomIds.length,
+        unreadMessagesCount: messages.length
+      });
+
+      return messages.map(msg => ({
+        id: msg.id,
+        date: new Date(msg.sent_at).toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }),
+        group: msg.rooms?.company_groups?.group_name || '不明なグループ',
+        user: `${msg.rooms?.candidates?.last_name || ''} ${msg.rooms?.candidates?.first_name || ''}`.trim() || '候補者',
+        content: msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content,
+        room_id: msg.room_id
+      }));
+    } catch (error) {
+      console.error('Error in getRecentMessages:', error);
+      return [];
+    }
   },
   ['messages-mypage'], // キャッシュキー
   {
@@ -279,9 +326,26 @@ const getRecentMessages = unstable_cache(
 );
 
 export default async function CompanyMypage() {
+  // 企業ユーザー認証情報を取得
+  const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
+  const authResult = await requireCompanyAuthForAction();
+  
+  if (!authResult.success) {
+    // 認証エラーの場合は空のデータを返す（レイアウトでリダイレクト処理される）
+    return (
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
+  }
+
+  const { companyUserId } = authResult.data;
+
   const [candidates, messages, notices] = await Promise.all([
     getCandidatesData(),
-    getRecentMessages(),
+    getRecentMessages(companyUserId),
     getPublishedNotices(3) // 最新3件まで取得
   ]);
 

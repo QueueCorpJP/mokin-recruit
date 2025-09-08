@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { getSkillsData, updateSkillsData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 // フォームスキーマ定義
 const skillsSchema = z.object({
@@ -64,6 +65,7 @@ const LANGUAGE_OPTIONS = [
 
 // 候補者_資格・語学・スキル編集ページ
 export default function CandidateSkillsEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +81,15 @@ export default function CandidateSkillsEditPage() {
         qualifications: '',
       },
     });
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   // 初期データを取得してフォームに設定
   useEffect(() => {
@@ -180,6 +191,18 @@ export default function CandidateSkillsEditPage() {
 
   const otherLanguages = watch('otherLanguages');
   const selectedSkills = watch('skills');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <>

@@ -41,11 +41,8 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   if (cached && Date.now() - cached.timestamp >= USER_SETTINGS_CACHE_TTL) {
     userSettingsCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getUserSettings] Cache hit - returning cached data');
     return cached.data;
   }
-  
-  console.log('[getUserSettings] Cache miss - fetching new data');
   console.log('Fetching user settings for candidateId:', candidateId);
 
   const supabase = getSupabaseAdminClient();

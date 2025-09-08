@@ -6,15 +6,28 @@ import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getBlockedCompanies } from './ng-company/actions';
 import { getUserSettings, UserSettings } from './actions';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
+import { useRouter } from 'next/navigation';
 
 interface BlockedCompany {
   name: string;
 }
 
 export default function SettingsPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
+  const router = useRouter();
   const [showTooltip, setShowTooltip] = useState(false);
   const [blockedCompanies, setBlockedCompanies] = useState<BlockedCompany[]>([]);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +53,18 @@ export default function SettingsPage() {
 
     fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">

@@ -31,11 +31,8 @@ export async function getCandidateTasks() {
   if (cached && Date.now() - cached.timestamp >= TASKS_CACHE_TTL) {
     candidateTasksCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getCandidateTasks] Cache hit - returning cached data');
     return cached.data;
   }
-  
-  console.log('[getCandidateTasks] Cache miss - fetching new data');
 
   const supabase = await getSupabaseServerClient();
   
@@ -81,11 +78,8 @@ export async function getCandidateMessages() {
   if (cached && Date.now() - cached.timestamp >= MESSAGES_CACHE_TTL) {
     candidateMessagesCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getCandidateMessages] Cache hit - returning cached data');
     return cached.data;
   }
-  
-  console.log('[getCandidateMessages] Cache miss - fetching new data');
 
   const supabase = await getSupabaseServerClient();
   

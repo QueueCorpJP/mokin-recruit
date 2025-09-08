@@ -1,32 +1,37 @@
-import { Footer } from '@/components/ui/footer';
+'use client';
 
-interface UserInfo {
-  name: string;
-  email: string;
-  userType: string | null;
-}
+import { Footer } from '@/components/ui/footer';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 interface AuthAwareFooterServerProps {
   variant?: 'default' | 'candidate' | 'company';
-  isLoggedIn?: boolean;
-  userInfo?: UserInfo;
 }
 
 export function AuthAwareFooterServer({ 
-  variant = 'default',
-  isLoggedIn = false,
-  userInfo
+  variant = 'default'
 }: AuthAwareFooterServerProps) {
-  // Transform userInfo to match Footer's expected format
-  const footerUserInfo = userInfo ? {
-    userName: userInfo.name,
-    companyName: userInfo.userType === 'company_user' ? userInfo.name : undefined
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
+
+  // ローディング中は認証なしで表示
+  if (loading) {
+    return (
+      <Footer
+        variant={variant}
+        isLoggedIn={false}
+      />
+    );
+  }
+
+  // Transform candidateUser to match Footer's expected format
+  const footerUserInfo = candidateUser ? {
+    userName: candidateUser.name || candidateUser.email,
+    companyName: undefined // 候補者の場合は会社名なし
   } : undefined;
 
   return (
     <Footer
       variant={variant}
-      isLoggedIn={isLoggedIn}
+      isLoggedIn={isAuthenticated}
       userInfo={footerUserInfo}
     />
   );

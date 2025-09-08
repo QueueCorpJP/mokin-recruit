@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
 import type { UserType } from '../lib/auth/server';
@@ -43,79 +43,91 @@ interface SessionResponse {
   error?: string;
 }
 
-// Query Keys
-export const authKeys = {
-  all: ['auth'] as const,
-  session: () => [...authKeys.all, 'session'] as const,
-  user: () => [...authKeys.all, 'user'] as const,
-} as const;
-
 // セッション情報を取得するクエリ（ストア更新は外部で行う）
 export const useSessionQuery = (enabled = true) => {
-  return useQuery({
-    queryKey: authKeys.session(),
-    queryFn: async (): Promise<SessionResponse> => {
+  const [data, setData] = useState<SessionResponse | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    if (!enabled) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
       const response = await apiClient.get<SessionResponse>('/auth/session');
-      return response;
-    },
-    enabled,
-    staleTime: 5 * 60 * 1000, // 5分間は新鮮とみなす
-    gcTime: 10 * 60 * 1000, // 10分間キャッシュを保持
-    retry: false, // セッション確認は失敗時にリトライしない
-    refetchOnWindowFocus: false, // ウィンドウフォーカス時の自動再確認を無効
-    refetchOnMount: false, // マウント時の自動再確認を無効
-  });
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch session'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    if (enabled) {
+      refetch();
+    }
+  }, [refetch, enabled]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // ログイン
 export const useLoginMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: LoginData) => {
+  const mutate = async (data: LoginData) => {
+    setIsPending(true);
+    try {
       const response = await apiClient.post('/auth/login', data);
-      return response;
-    },
-    onSuccess: async () => {
-      // ログイン成功後にセッション情報を再取得
-      await queryClient.invalidateQueries({ queryKey: authKeys.session() });
       // Page refresh to update server-side auth state
       window.location.reload();
-    },
-    onError: (error) => {
+      return response;
+    } catch (error) {
       logError(error as any, 'useLoginMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // ログアウト
 export const useLogoutMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async () => {
+  const mutate = async () => {
+    setIsPending(true);
+    try {
       await apiClient.post('/auth/logout');
-    },
-    onSuccess: () => {
-      // 全てのキャッシュをクリア
-      queryClient.clear();
       // Page refresh to update server-side auth state
       window.location.reload();
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useLogoutMutation');
       // エラーが発生してもページをリロード
       window.location.reload();
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // 会員登録
 export const useRegisterMutation = (userType: UserType) => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: Omit<RegisterData, 'userType'>) => {
+  const mutate = async (data: Omit<RegisterData, 'userType'>) => {
+    setIsPending(true);
+    try {
       const endpoint = userType === 'candidate' 
         ? '/auth/register/candidate' 
         : '/auth/register/company';
@@ -125,57 +137,69 @@ export const useRegisterMutation = (userType: UserType) => {
         userType,
       });
       return response;
-    },
-    onSuccess: () => {
-      // 登録成功後にセッション情報を再取得
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useRegisterMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // パスワードリセット申請
 export const useResetPasswordMutation = () => {
-  return useMutation({
-    mutationFn: async (data: ResetPasswordData) => {
+  const [isPending, setIsPending] = useState(false);
+
+  const mutate = async (data: ResetPasswordData) => {
+    setIsPending(true);
+    try {
       const response = await apiClient.post('/auth/reset-password/request', data);
       return response;
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useResetPasswordMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // 新しいパスワード設定
 export const useNewPasswordMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: NewPasswordData) => {
+  const mutate = async (data: NewPasswordData) => {
+    setIsPending(true);
+    try {
       const response = await apiClient.post('/auth/reset-password', data);
       return response;
-    },
-    onSuccess: () => {
-      // パスワード更新後にセッション情報を再取得
-      queryClient.invalidateQueries({ queryKey: authKeys.session() });
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useNewPasswordMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // 認証状態の更新（手動でセッションを再取得）
 export const useRefreshAuth = () => {
-  const queryClient = useQueryClient();
-
   return async () => {
     try {
-      await queryClient.invalidateQueries({ queryKey: authKeys.session() });
-      await queryClient.refetchQueries({ queryKey: authKeys.session() });
+      // Simple refresh by reloading the page
+      window.location.reload();
     } catch (error) {
       logError(error as any, 'useRefreshAuth');
     }

@@ -236,6 +236,7 @@ export function Navigation({
   const router = useRouter();
   const pathname = usePathname();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // ドロップダウンメニューの切り替え
   const toggleDropdown = useCallback((dropdown: string) => {
@@ -558,12 +559,23 @@ export function Navigation({
                   <div
                     key={`${item.label}-${index}`}
                     className='relative group'
-                    onMouseEnter={() =>
-                      item.hasDropdown && setOpenDropdown(item.label)
-                    }
-                    onMouseLeave={() =>
-                      item.hasDropdown && setOpenDropdown(null)
-                    }
+                    onMouseEnter={() => {
+                      if (item.hasDropdown) {
+                        if (hoverTimeout) {
+                          clearTimeout(hoverTimeout);
+                          setHoverTimeout(null);
+                        }
+                        setOpenDropdown(item.label);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (item.hasDropdown) {
+                        const timeout = setTimeout(() => {
+                          setOpenDropdown(null);
+                        }, 400);
+                        setHoverTimeout(timeout);
+                      }
+                    }}
                   >
                     {item.hasDropdown ? (
                       <div>
@@ -631,8 +643,19 @@ export function Navigation({
                 {/* アカウント情報も他のメニュー項目と同様に配置 */}
                 <div
                   className='relative group'
-                  onMouseEnter={() => setOpenDropdown('account')}
-                  onMouseLeave={() => setOpenDropdown(null)}
+                  onMouseEnter={() => {
+                    if (hoverTimeout) {
+                      clearTimeout(hoverTimeout);
+                      setHoverTimeout(null);
+                    }
+                    setOpenDropdown('account');
+                  }}
+                  onMouseLeave={() => {
+                    const timeout = setTimeout(() => {
+                      setOpenDropdown(null);
+                    }, 400);
+                    setHoverTimeout(timeout);
+                  }}
                 >
                   <button
                     className={cn(
@@ -823,12 +846,23 @@ export function Navigation({
                       <div
                         key={item.label}
                         className='relative group'
-                        onMouseEnter={() =>
-                          item.hasDropdown && setOpenDropdown(item.label)
-                        }
-                        onMouseLeave={() =>
-                          item.hasDropdown && setOpenDropdown(null)
-                        }
+                        onMouseEnter={() => {
+                          if (item.hasDropdown) {
+                            if (hoverTimeout) {
+                              clearTimeout(hoverTimeout);
+                              setHoverTimeout(null);
+                            }
+                            setOpenDropdown(item.label);
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (item.hasDropdown) {
+                            const timeout = setTimeout(() => {
+                              setOpenDropdown(null);
+                            }, 400);
+                            setHoverTimeout(timeout);
+                          }
+                        }}
                       >
                         {item.label === 'プロフィール確認・編集' ? (
                           <button
@@ -913,8 +947,19 @@ export function Navigation({
                   {/* アカウント情報 */}
                   <div
                     className='relative group'
-                    onMouseEnter={() => setOpenDropdown('account')}
-                    onMouseLeave={() => setOpenDropdown(null)}
+                    onMouseEnter={() => {
+                      if (hoverTimeout) {
+                        clearTimeout(hoverTimeout);
+                        setHoverTimeout(null);
+                      }
+                      setOpenDropdown('account');
+                    }}
+                    onMouseLeave={() => {
+                      const timeout = setTimeout(() => {
+                        setOpenDropdown(null);
+                      }, 600);
+                      setHoverTimeout(timeout);
+                    }}
                   >
                     <button
                       className={cn(

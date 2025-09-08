@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { submitApplication } from './actions';
 import { AlignJustify } from 'lucide-react';
 import Image from 'next/image';
-import { useRequireAuth } from '@/contexts/UserContext';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 interface CandidateApplicationClientProps {
   jobId: string;
@@ -43,7 +43,7 @@ export default function CandidateApplicationClient({
   requiredDocuments
 }: CandidateApplicationClientProps) {
   const router = useRouter();
-  const user = useRequireAuth(); // UserContextから認証済みユーザー取得
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resumeFiles, setResumeFiles] = useState<File[]>([]);
@@ -56,6 +56,15 @@ export default function CandidateApplicationClient({
   
   // モバイル判定
   const isMobile = useMediaQuery('(max-width: 767px)');
+
+  // 認証チェック
+  React.useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   // 必須書類チェック機能
   const isResumeRequired = requiredDocuments.includes('履歴書の提出が必須');
@@ -178,7 +187,7 @@ export default function CandidateApplicationClient({
 
   // 応募処理
   const handleApplication = async () => {
-    if (!user) {
+    if (!candidateUser) {
       router.push('/candidate/auth/login');
       return;
     }
@@ -239,6 +248,11 @@ export default function CandidateApplicationClient({
     }
     return fileName.substring(0, maxChars) + '...';
   };
+
+  // 認証されていない場合は何も表示しない（リダイレクト中）
+  if (loading || !isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div>

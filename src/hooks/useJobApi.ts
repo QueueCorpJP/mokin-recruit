@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
 
@@ -62,17 +62,6 @@ interface JobUpdateData extends Partial<JobCreateData> {
   id: string;
 }
 
-// Query Keys
-export const jobKeys = {
-  all: ['jobs'] as const,
-  lists: () => [...jobKeys.all, 'list'] as const,
-  list: (params: JobSearchParams) => [...jobKeys.lists(), params] as const,
-  details: () => [...jobKeys.all, 'detail'] as const,
-  detail: (id: string) => [...jobKeys.details(), id] as const,
-  company: () => [...jobKeys.all, 'company'] as const,
-  companyJobs: (companyId?: string) => [...jobKeys.company(), companyId] as const,
-} as const;
-
 // 求人検索
 export const useJobSearchQuery = (params: JobSearchParams = {}) => {
   const {
@@ -85,9 +74,14 @@ export const useJobSearchQuery = (params: JobSearchParams = {}) => {
     limit = 20,
   } = params;
 
-  return useQuery({
-    queryKey: jobKeys.list(params),
-    queryFn: async (): Promise<JobSearchResponse> => {
+  const [data, setData] = useState<JobSearchResponse | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
       const searchParams = new URLSearchParams();
       
       if (keyword) searchParams.append('keyword', keyword);
@@ -101,115 +95,148 @@ export const useJobSearchQuery = (params: JobSearchParams = {}) => {
       const response = await apiClient.get<JobSearchResponse>(
         `/candidate/job/search?${searchParams.toString()}`
       );
-      return response;
-    },
-    staleTime: 2 * 60 * 1000, // 2分間は新鮮とみなす
-    gcTime: 10 * 60 * 1000, // 10分間キャッシュを保持
-    enabled: true,
-  });
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to search jobs'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [keyword, location, salaryMin, industries, jobTypes, page, limit]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // 求人詳細取得
 export const useJobDetailQuery = (jobId: string, enabled = true) => {
-  return useQuery({
-    queryKey: jobKeys.detail(jobId),
-    queryFn: async (): Promise<JobPosting> => {
+  const [data, setData] = useState<JobPosting | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    if (!jobId || !enabled) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
       const response = await apiClient.get<JobPosting>(`/company/job/${jobId}`);
-      return response;
-    },
-    enabled: enabled && !!jobId,
-    staleTime: 5 * 60 * 1000, // 5分間は新鮮とみなす
-    gcTime: 30 * 60 * 1000, // 30分間キャッシュを保持
-  });
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch job detail'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [jobId, enabled]);
+
+  useEffect(() => {
+    if (enabled && jobId) {
+      refetch();
+    }
+  }, [refetch, enabled, jobId]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // 企業の求人一覧取得
 export const useCompanyJobsQuery = (companyId?: string) => {
-  return useQuery({
-    queryKey: jobKeys.companyJobs(companyId),
-    queryFn: async (): Promise<JobSearchResponse> => {
+  const [data, setData] = useState<JobSearchResponse | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refetch = useCallback(async () => {
+    if (!companyId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
       const response = await apiClient.get<JobSearchResponse>('/company/job');
-      return response;
-    },
-    enabled: !!companyId,
-    staleTime: 1 * 60 * 1000, // 1分間は新鮮とみなす
-    gcTime: 5 * 60 * 1000, // 5分間キャッシュを保持
-  });
+      setData(response);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch company jobs'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId]);
+
+  useEffect(() => {
+    if (companyId) {
+      refetch();
+    }
+  }, [refetch, companyId]);
+
+  return { data, isLoading, error, refetch };
 };
 
 // 求人作成
 export const useJobCreateMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: JobCreateData): Promise<JobPosting> => {
+  const mutate = async (data: JobCreateData): Promise<JobPosting> => {
+    setIsPending(true);
+    try {
       const response = await apiClient.post<JobPosting>('/company/job/new', data);
       return response;
-    },
-    onSuccess: (data) => {
-      // 企業の求人一覧のキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: jobKeys.company() });
-      
-      // 作成した求人の詳細をキャッシュに追加
-      queryClient.setQueryData(jobKeys.detail(data.id), data);
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useJobCreateMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // 求人更新
 export const useJobUpdateMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (data: JobUpdateData): Promise<JobPosting> => {
+  const mutate = async (data: JobUpdateData): Promise<JobPosting> => {
+    setIsPending(true);
+    try {
       const { id, ...updateData } = data;
       const response = await apiClient.put<JobPosting>(`/company/job/edit`, {
         id,
         ...updateData,
       });
       return response;
-    },
-    onSuccess: (data) => {
-      // 該当する求人の詳細キャッシュを更新
-      queryClient.setQueryData(jobKeys.detail(data.id), data);
-      
-      // 企業の求人一覧のキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: jobKeys.company() });
-      
-      // 検索結果のキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() });
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useJobUpdateMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };
 
 // 求人削除
 export const useJobDeleteMutation = () => {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: async (jobId: string): Promise<void> => {
+  const mutate = async (jobId: string): Promise<void> => {
+    setIsPending(true);
+    try {
       await apiClient.delete(`/company/job/delete`, {
         body: JSON.stringify({ id: jobId }),
       });
-    },
-    onSuccess: (data, jobId) => {
-      // 削除した求人の詳細キャッシュを削除
-      queryClient.removeQueries({ queryKey: jobKeys.detail(jobId) });
-      
-      // 企業の求人一覧のキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: jobKeys.company() });
-      
-      // 検索結果のキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: jobKeys.lists() });
-    },
-    onError: (error) => {
+    } catch (error) {
       logError(error as any, 'useJobDeleteMutation');
-    },
-  });
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const mutateAsync = mutate;
+
+  return { mutate, mutateAsync, isPending };
 };

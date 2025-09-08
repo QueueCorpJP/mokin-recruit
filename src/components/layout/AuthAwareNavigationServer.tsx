@@ -1,15 +1,10 @@
-import { Navigation } from '@/components/ui/navigation';
+'use client';
 
-interface UserInfo {
-  name: string;
-  email: string;
-  userType: string | null;
-}
+import { Navigation } from '@/components/ui/navigation';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 interface AuthAwareNavigationServerProps {
   variant?: 'default' | 'candidate' | 'company';
-  isLoggedIn?: boolean;
-  userInfo?: UserInfo;
   customCTAButton?: {
     label: string;
     href: string;
@@ -19,20 +14,31 @@ interface AuthAwareNavigationServerProps {
 
 export function AuthAwareNavigationServer({ 
   variant = 'default',
-  isLoggedIn = false,
-  userInfo,
   customCTAButton
 }: AuthAwareNavigationServerProps) {
-  // Transform userInfo to match Navigation's expected format
-  const navigationUserInfo = userInfo ? {
-    userName: userInfo.name,
-    companyName: userInfo.userType === 'company_user' ? userInfo.name : undefined
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
+
+  // ローディング中は認証なしで表示
+  if (loading) {
+    return (
+      <Navigation
+        variant={variant}
+        isLoggedIn={false}
+        customCTAButton={customCTAButton}
+      />
+    );
+  }
+
+  // Transform candidateUser to match Navigation's expected format
+  const navigationUserInfo = candidateUser ? {
+    userName: candidateUser.name || candidateUser.email,
+    companyName: undefined // 候補者の場合は会社名なし
   } : undefined;
 
   return (
     <Navigation
       variant={variant}
-      isLoggedIn={isLoggedIn}
+      isLoggedIn={isAuthenticated}
       userInfo={navigationUserInfo}
       customCTAButton={customCTAButton}
     />

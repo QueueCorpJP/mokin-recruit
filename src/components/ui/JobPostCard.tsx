@@ -149,7 +149,10 @@ export function JobPostCard({
             borderRadius: 5,
           }}
           className={imgClass}
-          loading='lazy'
+          priority={true}
+          loading='eager'
+          sizes={isSimple ? "(max-width: 768px) 100vw, 150px" : "(max-width: 768px) 100vw, 477px"}
+          quality={85}
         />
         <div
           className='flex-1 flex flex-col items-start relative'

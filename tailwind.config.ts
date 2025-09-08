@@ -38,10 +38,10 @@ const config: Config = {
         'noto-sans-jp': 'var(--font-noto-sans-jp), sans-serif',
       },
       borderRadius: {
-        sm: 'var(--radius-sm)',
-        md: 'var(--radius-md)',
-        lg: 'var(--radius-lg)',
-        xl: 'var(--radius-xl)',
+        sm: '0.5rem',
+        md: '0.625rem',
+        lg: '0.75rem',
+        xl: '1rem',
       },
       colors: {
         // カスタムプロパティを参照する色

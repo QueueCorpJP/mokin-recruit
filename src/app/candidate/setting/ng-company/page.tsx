@@ -10,6 +10,7 @@ import { useServerCompanyAutocomplete } from '@/hooks/useServerCompanyAutocomple
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { addBlockedCompany, removeBlockedCompany, getBlockedCompanies } from './actions';
 import Image from 'next/image';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 const closeIcon = "http://localhost:3845/assets/a0396fedb26c10cbda7f34a7019f04ee792845d6.svg";
 const modalCloseIcon = "http://localhost:3845/assets/ca527250688df149a478765bdeb765225fed4f49.svg";
@@ -161,9 +162,19 @@ function CompanyTag({ company, onRemove }: CompanyTagProps) {
 }
 
 export default function NgCompanyPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [blockedCompanies, setBlockedCompanies] = useState<BlockedCompany[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   useEffect(() => {
     const fetchBlockedCompanies = async () => {
@@ -211,6 +222,18 @@ export default function NgCompanyPage() {
       // エラーハンドリング
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">

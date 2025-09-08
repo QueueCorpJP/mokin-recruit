@@ -13,6 +13,7 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 // フォームスキーマ定義
 const expectationSchema = z.object({
@@ -72,11 +73,33 @@ const SALARY_OPTIONS = [
 
 // 候補者_希望条件編集ページ
 export default function CandidateExpectationEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
 

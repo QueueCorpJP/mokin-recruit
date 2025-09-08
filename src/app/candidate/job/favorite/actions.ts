@@ -36,17 +36,10 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
   const startTime = performance.now();
   
   try {
-    console.log('[DEBUG] Favorite page - starting auth check');
     // 統一的な認証チェック
     const authResult = await requireCandidateAuthForAction();
-    console.log('[DEBUG] Favorite page - auth result:', { 
-      success: authResult.success, 
-      error: authResult.success ? undefined : authResult.error,
-      hasData: authResult.success ? !!authResult.data : false
-    });
     
     if (!authResult.success) {
-      console.log('[DEBUG] Favorite page - auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error
@@ -63,11 +56,9 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     if (cached && Date.now() - cached.timestamp >= FAVORITES_CACHE_TTL) {
       favoritesCache.delete(cacheKey);
     } else if (cached) {
-      console.log('[getFavoriteList] Cache hit - returning cached data');
       return cached.data;
     }
     
-    console.log('[getFavoriteList] Cache miss - fetching new data');
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(50, Math.max(1, params.limit || 20));
     const offset = (page - 1) * limit;
@@ -139,7 +130,6 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const totalPages = Math.ceil(totalCount / limit);
 
     const endTime = performance.now();
-    console.log(`[OPTIMIZED] Favorites list with JOIN completed in ${(endTime - startTime).toFixed(2)}ms - Favorites: ${favoritesWithCompanyNames?.length || 0}, Total: ${totalCount}`);
 
     const result = {
       success: true,

@@ -3,11 +3,9 @@
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
 import { addFavoriteAction, removeFavoriteAction } from '@/lib/actions/favoriteActions';
 import { useFavoriteStatusQuery } from '@/hooks/useFavoriteApi';
-import { useQueryClient } from '@tanstack/react-query';
-import { favoriteKeys } from '@/hooks/useFavoriteApi';
 
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/job/LocationModal';
@@ -15,13 +13,9 @@ import { Modal } from '@/components/ui/mo-dal';
 import { X } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
-import { Button } from '@/components/ui/button';
 import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { TagDisplay } from '@/components/ui/TagDisplay';
-import { Tag } from '@/components/ui/Tag';
-import { MapPinIcon, CurrencyYenIcon } from '@heroicons/react/24/solid';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { JobSearchResult, getJobSearchData } from './actions';
@@ -54,7 +48,6 @@ export default function CandidateSearchClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
   
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -66,32 +59,87 @@ export default function CandidateSearchClient({
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialSearchConditions.industries);
   const [searchKeyword, setSearchKeyword] = useState(initialSearchConditions.keyword);
   
+  // 年収とアピールポイントの状態
+  const [selectedSalary, setSelectedSalary] = useState(initialSearchConditions.salaryMin || '');
+  const [selectedAppealPoint, setSelectedAppealPoint] = useState(
+    initialSearchConditions.appealPoints[0] || ''
+  );
+  
   // 求人データとローディング状態
   const [jobCards, setJobCards] = useState<JobSearchResult[]>(initialJobs);
   const [loading, setLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
   const [pagination, setPagination] = useState(initialPagination);
 
-  // お気に入り状態を取得
-  const jobIds = jobCards.map(job => job.id);
-  const { data: favoriteStatus } = useFavoriteStatusQuery(jobIds);
+  // お気に入り状態を取得（メモ化で無限レンダリングを防止）
+  const jobIds = useMemo(() => jobCards.map(job => job.id), [jobCards]);
+  const { data: favoriteStatus, refetch: refetchFavoriteStatus } = useFavoriteStatusQuery(jobIds);
 
-  // propsが変更されたら状態を更新
+  // 初期化とURLパラメータの読み取り
+  const [initialized, setInitialized] = useState(false);
+  
   useEffect(() => {
-    setJobCards(initialJobs);
-    setPagination(initialPagination);
-    // 検索条件も同期
-    setSelectedJobTypes(initialSearchConditions.jobTypes);
-    setSelectedLocations(
-      initialSearchConditions.location ? initialSearchConditions.location.split(',').filter(Boolean) : []
-    );
-    setSelectedIndustries(initialSearchConditions.industries);
-    setSearchKeyword(initialSearchConditions.keyword);
-    setSelectedSalary(initialSearchConditions.salaryMin || '');
-    setSelectedAppealPoint(initialSearchConditions.appealPoints[0] || '');
-  }, [initialJobs, initialPagination, initialSearchConditions]);
+    if (!initialized && typeof window !== 'undefined') {
+      setInitialized(true);
+      
+      // URLパラメータを直接読み取り（状態の同期のため）
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // URLパラメータがある場合のみ状態を更新（初期データと重複を避ける）
+      if (urlParams.toString()) {
+        const parsedConditions = {
+          keyword: urlParams.get('keyword') || '',
+          location: urlParams.get('location') || '',
+          salaryMin: urlParams.get('salaryMin') || '',
+          industries: urlParams.get('industries')?.split(',').filter(Boolean) || [],
+          jobTypes: urlParams.get('jobTypes')?.split(',').filter(Boolean) || [],
+          appealPoints: urlParams.get('appealPoints')?.split(',').filter(Boolean) || [],
+          page: parseInt(urlParams.get('page') || '1'),
+          limit: 10
+        };
+        
+        // 状態を初期化（URLパラメータに基づく）
+        setSelectedJobTypes(parsedConditions.jobTypes);
+        setSelectedLocations(parsedConditions.location ? parsedConditions.location.split(',').filter(Boolean) : []);
+        setSelectedIndustries(parsedConditions.industries);
+        setSearchKeyword(parsedConditions.keyword);
+        setSelectedSalary(parsedConditions.salaryMin);
+        setSelectedAppealPoint(parsedConditions.appealPoints[0] || '');
+        
+        // URLパラメータがあり、初期データと異なる場合のみ検索実行
+        const hasUrlParams = urlParams.toString();
+        const isDifferentFromInitial = (
+          parsedConditions.keyword !== initialSearchConditions.keyword ||
+          parsedConditions.location !== initialSearchConditions.location ||
+          parsedConditions.salaryMin !== initialSearchConditions.salaryMin ||
+          JSON.stringify(parsedConditions.industries) !== JSON.stringify(initialSearchConditions.industries) ||
+          JSON.stringify(parsedConditions.jobTypes) !== JSON.stringify(initialSearchConditions.jobTypes) ||
+          JSON.stringify(parsedConditions.appealPoints) !== JSON.stringify(initialSearchConditions.appealPoints) ||
+          parsedConditions.page !== initialSearchConditions.page
+        );
+        
+        if (hasUrlParams && isDifferentFromInitial) {
+          // 直接実行（useCallbackを避ける）
+          (async () => {
+            setLoading(true);
+            try {
+              const result = await getJobSearchData(parsedConditions);
+              if (result.success && result.data) {
+                setJobCards(result.data.jobs);
+                setPagination(result.data.pagination);
+              }
+            } catch (error) {
+              console.error('Initial search error:', error);
+            } finally {
+              setLoading(false);
+            }
+          })();
+        }
+      }
+    }
+  }, [initialized, initialSearchConditions]);
 
-  // 検索条件をURLに反映
+  // 検索条件をURLに反映（サーバーレンダリングを避ける）
   const updateURL = (newConditions: any) => {
     const params = new URLSearchParams();
     
@@ -106,11 +154,35 @@ export default function CandidateSearchClient({
     const queryString = params.toString();
     const newUrl = queryString ? `?${queryString}` : '';
     
-    router.push(`/candidate/search/setting${newUrl}`);
+    // URLの更新をHistory APIで直接行い、Reactのrouterを使わない
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `/candidate/search/setting${newUrl}`);
+    }
   };
 
-  // URLベースの検索を実行
-  const fetchJobs = (page: number = 1) => {
+  // 検索条件を使って検索を実行（useCallbackで安定化）
+  const fetchJobsWithConditions = useCallback(async (conditions: any) => {
+    setLoading(true);
+    
+    try {
+      const result = await getJobSearchData(conditions);
+      
+      if (result.success && result.data) {
+        setJobCards(result.data.jobs);
+        setPagination(result.data.pagination);
+        
+        // URLも更新する
+        updateURL(conditions);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 現在の状態を使って検索を実行
+  const fetchJobs = useCallback(async (page: number = 1) => {
     const searchConditions = {
       keyword: searchKeyword,
       location: selectedLocations.join(','),
@@ -119,15 +191,11 @@ export default function CandidateSearchClient({
       jobTypes: selectedJobTypes,
       appealPoints: selectedAppealPoint ? [selectedAppealPoint] : [],
       page: page,
-      limit: pagination.limit
+      limit: pagination.limit || 10
     };
     
-    // URLを更新してサーバーサイドで再取得
-    updateURL({
-      ...searchConditions,
-      page: page
-    });
-  };
+    await fetchJobsWithConditions(searchConditions);
+  }, [searchKeyword, selectedLocations, selectedSalary, selectedIndustries, selectedJobTypes, selectedAppealPoint, pagination.limit, fetchJobsWithConditions]);
 
   // 検索実行（条件変更時）
   const handleSearch = () => {
@@ -152,9 +220,8 @@ export default function CandidateSearchClient({
       }
 
       if (response.success) {
-        // React Queryキャッシュを無効化して最新データを取得
-        queryClient.invalidateQueries({ queryKey: favoriteKeys.status(jobIds) });
-        queryClient.invalidateQueries({ queryKey: favoriteKeys.lists() });
+        // お気に入り状態を再取得
+        await refetchFavoriteStatus();
       } else {
         console.error('お気に入り操作エラー:', response.error);
         alert(response.error || 'お気に入り操作に失敗しました');
@@ -199,7 +266,6 @@ export default function CandidateSearchClient({
     '4000万円以上',
     '5000万円以上',
   ].map(v => ({ value: v, label: v }));
-  const [selectedSalary, setSelectedSalary] = useState(initialSearchConditions.salaryMin || '');
 
   // アピールポイントセレクト用
   const appealPointOptions = [
@@ -223,9 +289,6 @@ export default function CandidateSearchClient({
     '残業少なめ',
     '育児／介護と両立しやすい',
   ].map(v => ({ value: v, label: v }));
-  const [selectedAppealPoint, setSelectedAppealPoint] = useState(
-    initialSearchConditions.appealPoints[0] || ''
-  );
   const [isSearchConditionActive, setIsSearchConditionActive] = useState(false);
 
   // タグ展開状態の管理

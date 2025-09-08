@@ -32,15 +32,12 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
   if (cached && Date.now() - cached.timestamp >= CACHE_TTL) {
     roomsCache.delete(cacheKey);
   } else if (cached) {
-    console.log('[getRooms] Cache hit - returning cached data');
     return cached.data;
   }
   
-  console.log('[getRooms] Cache miss - fetching new data');
   
   // RLS問題を解決するためAdmin clientを使用
   const supabase = getSupabaseAdminClient();
-  console.log('🔧 [STEP B] Using Supabase Admin client (RLS bypassed)');
 
   try {
     if (userType === 'candidate') {
@@ -106,8 +103,32 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
       // 企業ユーザーの場合: 権限レベルに応じてアクセス可能なグループを決定
       console.log('🏢 [STEP C] Company user - checking permissions for:', userId);
       
-      // userIdはrequireCompanyAuthForActionで正しいcompany_user_idが返される
-      const companyUserId = userId;
+      // userIdがSupabase Auth IDの場合、company_usersテーブルから正しいIDを取得
+      let companyUserId = userId;
+      
+      // まずuserIdがcompany_usersテーブルに存在するかチェック
+      const { data: directUser, error: directError } = await supabase
+        .from('company_users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      if (directError || !directUser) {
+        // 存在しない場合は、Supabase Auth IDとしてメールで検索
+        const { data: authUsers } = await supabase.auth.admin.getUserById(userId);
+        if (authUsers.user) {
+          const { data: companyUser, error: companyUserError } = await supabase
+            .from('company_users')
+            .select('id')
+            .eq('email', authUsers.user.email)
+            .single();
+          
+          if (companyUser && !companyUserError) {
+            companyUserId = companyUser.id;
+            console.log('🔄 [ID MAPPING] Supabase Auth ID -> Company User ID:', { from: userId, to: companyUserId });
+          }
+        }
+      }
       
       console.log('🔍 [DEBUG] Using company_user_id for permissions:', companyUserId);
       

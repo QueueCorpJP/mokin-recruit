@@ -13,6 +13,7 @@ import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 const educationSchema = z.object({
   finalEducation: z.string(),
@@ -99,11 +100,33 @@ const experienceYearOptions = [
 
 // 候補者_学歴・経験業種/職種編集ページ
 export default function CandidateEducationEditPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   const {
     register,

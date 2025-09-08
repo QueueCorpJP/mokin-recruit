@@ -7,6 +7,7 @@ import { Radio } from '@/components/ui/radio';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import Image from 'next/image';
 import { saveNotificationSettings, getNotificationSettings } from './actions';
+import { useCandidateAuth } from '@/hooks/useClientAuth';
 
 interface NotificationSetting {
   scoutNotification: string;
@@ -15,6 +16,7 @@ interface NotificationSetting {
 }
 
 export default function NotificationSettingPage() {
+  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +31,15 @@ export default function NotificationSettingPage() {
     recommendationNotification: 'receive'
   });
   const [hasChanges, setHasChanges] = useState(false);
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   useEffect(() => {
     const fetchCurrentSettings = async () => {
@@ -88,6 +99,18 @@ export default function NotificationSettingPage() {
   const handleBack = () => {
     router.push('/candidate/setting');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] overflow-x-hidden">

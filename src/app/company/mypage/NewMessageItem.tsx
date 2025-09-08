@@ -1,5 +1,6 @@
+'use client';
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export interface Message {
   id: string;
@@ -14,9 +15,20 @@ interface NewMessageItemProps {
   message: Message;
 }
 
-export const NewMessageItem: React.FC<NewMessageItemProps> = ({ message }) => (
-  <Link href={`/company/message/${message.room_id}`} className="block w-full">
-    <div className='w-full bg-white px-6 py-4 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-200' style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}>
+export const NewMessageItem: React.FC<NewMessageItemProps> = ({ message }) => {
+  const router = useRouter();
+  
+  const handleClick = () => {
+    // 候補者側と同じくクエリパラメータ room を使用
+    router.push(`/company/message?room=${message.room_id}`);
+  };
+
+  return (
+    <div 
+      onClick={handleClick}
+      className='w-full bg-white px-6 py-4 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-200' 
+      style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
+    >
       <div className='flex items-center gap-6'>
         <span className='text-xs text-gray-400' style={{ lineHeight: '160%' }}>
           {message.date}
@@ -43,5 +55,5 @@ export const NewMessageItem: React.FC<NewMessageItemProps> = ({ message }) => (
         </span>
       </div>
     </div>
-  </Link>
-);
+  );
+};
