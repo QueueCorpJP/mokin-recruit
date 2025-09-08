@@ -1,10 +1,8 @@
 import dynamic from 'next/dynamic';
 
 // Tiptap関連を遅延読み込み（記事作成・編集時のみ必要）
-export const TiptapEditor = dynamic(
-  () => import('@tiptap/react').then(mod => ({ default: mod.useEditor })),
-  { ssr: false }
-);
+// Note: useEditor is a hook and cannot be dynamically imported
+export { useEditor } from '@tiptap/react';
 
 export const TiptapEditorContent = dynamic(
   () => import('@tiptap/react').then(mod => ({ default: mod.EditorContent })),
@@ -55,5 +53,15 @@ export const TiptapCore = dynamic(
 // RichTextEditor自体も動的インポート
 export const RichTextEditor = dynamic(
   () => import('@/components/admin/RichTextEditorDynamic').then(mod => ({ default: mod.RichTextEditorDynamic })),
-  { ssr: false, loading: () => <div className="h-96 bg-gray-100 animate-pulse rounded flex items-center justify-center"><span className="text-gray-500">エディタを読み込み中...</span></div> }
+  { 
+    ssr: false, 
+    loading: () => {
+      const React = require('react');
+      return React.createElement('div', {
+        className: 'h-96 bg-gray-100 animate-pulse rounded flex items-center justify-center'
+      }, React.createElement('span', {
+        className: 'text-gray-500'
+      }, 'エディタを読み込み中...'));
+    }
+  }
 );

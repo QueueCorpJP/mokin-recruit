@@ -2,14 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useState, useTransition, lazy, Suspense } from 'react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { FaqBox } from '@/components/ui/FaqBox';
-import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
-import { MessageListCard } from '@/components/ui/MessageListCard';
-import { JobPostCard } from '@/components/ui/JobPostCard';
-import { useState, useTransition } from 'react';
 import { addToFavoritesServer, removeFromFavoritesServer } from '../search/setting/actions';
+
+// Dynamic imports for heavy components
+const FaqBox = lazy(() => import('@/components/ui/FaqBox').then(mod => ({ default: mod.FaqBox })));
+const MessageListCard = lazy(() => import('@/components/ui/MessageListCard').then(mod => ({ default: mod.MessageListCard })));
+const JobPostCard = lazy(() => import('@/components/ui/JobPostCard').then(mod => ({ default: mod.JobPostCard })));
 
 interface User {
   id: string;
@@ -275,7 +276,9 @@ export function CandidateDashboardClient({
                     現在新着メッセージはありません。
                   </div>
                 ) : (
-                  <MessageListCard messages={messages} />
+                  <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>読み込み中...</div>}>
+                    <MessageListCard messages={messages} />
+                  </Suspense>
                 )}
                 <div
                   style={{
@@ -345,34 +348,36 @@ export function CandidateDashboardClient({
                   >
                     {/* 求人カード */}
                     <div className='flex flex-col gap-4'>
-                      {jobList.map((job, index) => (
-                        <JobPostCard
-                          key={job.id}
-                          imageUrl={
-                            job.image_urls?.[0] ||
-                            '/images/default-job.jpg'
-                          }
-                          imageAlt='求人画像'
-                          title={job.title}
-                          tags={job.appeal_points || []}
-                          companyName={job.company_name || ''}
-                          location={Array.isArray(job.work_location) ? job.work_location.join('、') : job.work_location || ''}
-                          salary={job.salary_min && job.salary_max ? `${job.salary_min}万円〜${job.salary_max}万円` : '給与応相談'}
-                          starred={job.starred || false}
-                          apell={[]}
-                          variant="mypage-simple"
-                          showStar={true}
-                          showCompanyName={true}
-                          showLocation={false}
-                          showSalary={false}
-                          showApell={false}
-                          imageWidth={103.5}
-                          imageHeight={69}
-                          isFavoriteLoading={favoriteLoading[job.id]}
-                          onStarClick={() => handleStarClick(job.id)}
-                          isFirstCard={index === 0}
-                        />
-                      ))}
+                      <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>求人を読み込み中...</div>}>
+                        {jobList.map((job, index) => (
+                          <JobPostCard
+                            key={job.id}
+                            imageUrl={
+                              job.image_urls?.[0] ||
+                              '/images/default-job.jpg'
+                            }
+                            imageAlt='求人画像'
+                            title={job.title}
+                            tags={job.appeal_points || []}
+                            companyName={job.company_name || ''}
+                            location={Array.isArray(job.work_location) ? job.work_location.join('、') : job.work_location || ''}
+                            salary={job.salary_min && job.salary_max ? `${job.salary_min}万円〜${job.salary_max}万円` : '給与応相談'}
+                            starred={job.starred || false}
+                            apell={[]}
+                            variant="mypage-simple"
+                            showStar={true}
+                            showCompanyName={true}
+                            showLocation={false}
+                            showSalary={false}
+                            showApell={false}
+                            imageWidth={103.5}
+                            imageHeight={69}
+                            isFavoriteLoading={favoriteLoading[job.id]}
+                            onStarClick={() => handleStarClick(job.id)}
+                            isFirstCard={index === 0}
+                          />
+                        ))}
+                      </Suspense>
                     </div>
                   </div>
                 )}
@@ -598,14 +603,16 @@ export function CandidateDashboardClient({
                   よくある質問
                 </SectionHeading>
                 {/* FAQボックス（ダミー） */}
-                <FaqBox
-                  title='退会したい場合はどうすればいいですか？'
-                  body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
-                />
-                <FaqBox
-                  title='パスワードを忘れた場合はどうすればいいですか？'
-                  body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
-                />
+                <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>FAQ読み込み中...</div>}>
+                  <FaqBox
+                    title='退会したい場合はどうすればいいですか？'
+                    body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
+                  />
+                  <FaqBox
+                    title='パスワードを忘れた場合はどうすればいいですか？'
+                    body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
+                  />
+                </Suspense>
                 {/* QA一覧を見るリンクボックス（ダミー） */}
                 <div
                   style={{

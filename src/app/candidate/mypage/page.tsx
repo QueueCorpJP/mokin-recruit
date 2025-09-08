@@ -1,10 +1,19 @@
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import { CandidateDashboardClient } from './CandidateDashboardClient';
-// 追加: サーバーサイドで求人を取得するためのリポジトリとSupabaseクライアント
 import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
+import dynamicImport from 'next/dynamic';
+import { unstable_cache } from 'next/cache';
+
+// Client component を dynamic import で遅延読み込み
+const CandidateDashboardClient = dynamicImport(
+  () => import('./CandidateDashboardClient').then(mod => mod.CandidateDashboardClient),
+  { 
+    ssr: true,
+    loading: () => <div style={{ padding: '40px', textAlign: 'center' }}>読み込み中...</div>
+  }
+);
 
 
 // やることリスト取得用の関数（candidate/taskと同じロジック）
@@ -63,8 +72,15 @@ async function getRecentMessages(candidateId: string) {
   }
 }
 
-// おすすめ求人取得用の関数（search/settingと同様のロジック）
-async function getRecommendedJobs(candidateId: string) {
+// キャッシュ付きおすすめ求人取得
+const getCachedRecommendedJobs = unstable_cache(
+  async (candidateId: string) => getRecommendedJobsInternal(candidateId),
+  ['recommended-jobs'],
+  { revalidate: 300, tags: ['jobs'] } // 5分間キャッシュ
+);
+
+// おすすめ求人取得用の関数（最適化版）
+async function getRecommendedJobsInternal(candidateId: string) {
   try {
     const candidateRepo = new CandidateRepository();
     const candidate = await candidateRepo.findById(candidateId);
@@ -73,7 +89,7 @@ async function getRecommendedJobs(candidateId: string) {
 
     const client = getSupabaseAdminClient();
     
-    // JOINで企業情報も一緒に取得
+    // 必要最小限のフィールドのみ取得
     let query: any = client
       .from('job_postings')
       .select(`
@@ -81,67 +97,55 @@ async function getRecommendedJobs(candidateId: string) {
         title,
         salary_min,
         salary_max,
-        salary_note,
         work_location,
-        job_type,
-        industry,
         appeal_points,
-        created_at,
         image_urls,
-        company_account_id,
-        company_accounts (
-          id,
+        company_accounts!inner (
           company_name
         )
       `)
       .eq('status', 'PUBLISHED')
       .in('publication_type', ['public', 'members']);
 
-    // 候補者の希望条件でフィルタリング
-    if (candidate.desired_job_types && candidate.desired_job_types.length > 0) {
-      const jobTypeConditions = candidate.desired_job_types.map((jobType: string) => `job_type.cs.{${jobType}}`).join(',');
-      query = query.or(jobTypeConditions);
+    // 候補者の希望条件でフィルタリング（最適化）
+    const conditions = [];
+    if (candidate.desired_job_types?.length > 0) {
+      conditions.push(candidate.desired_job_types.map((jobType: string) => `job_type.cs.{${jobType}}`).join(','));
     }
     
-    if (candidate.desired_locations && candidate.desired_locations.length > 0) {
-      const locationConditions = candidate.desired_locations.map((location: string) => `work_location.cs.{${location}}`).join(',');
-      query = query.or(locationConditions);
+    if (candidate.desired_locations?.length > 0) {
+      conditions.push(candidate.desired_locations.map((location: string) => `work_location.cs.{${location}}`).join(','));
     }
     
-    if (candidate.desired_industries && candidate.desired_industries.length > 0) {
-      const industryConditions = candidate.desired_industries.map((industry: string) => `industry.cs.{${industry}}`).join(',');
-      query = query.or(industryConditions);
+    if (candidate.desired_industries?.length > 0) {
+      conditions.push(candidate.desired_industries.map((industry: string) => `industry.cs.{${industry}}`).join(','));
+    }
+
+    if (conditions.length > 0) {
+      query = query.or(conditions.join(','));
     }
 
     const { data: jobs, error } = await query
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(5); // 5件に減らして初期ロードを高速化
 
     if (error || !jobs) {
       console.error('Failed to get recommended jobs:', error);
       return [];
     }
 
-    // search/settingと同様のデータ変換
-    const transformedJobs = jobs.map((job: any, index: number) => {
-      const companyName = job.company_accounts?.company_name || `企業名未設定 #${index + 1}`;
-      
-      return {
-        id: job.id,
-        title: job.title || `求人タイトル未設定 #${index + 1}`,
-        company_name: companyName,
-        image_urls: job.image_urls || [],
-        appeal_points: Array.isArray(job.appeal_points) && job.appeal_points.length > 0 
-          ? job.appeal_points.slice(0, 3) 
-          : ['アピールポイントなし'],
-        work_location: Array.isArray(job.work_location) ? job.work_location : [job.work_location || '勤務地未設定'],
-        salary_min: job.salary_min,
-        salary_max: job.salary_max,
-        job_type: Array.isArray(job.job_type) ? job.job_type : [job.job_type].filter(Boolean),
-        industry: job.industry,
-        created_at: job.created_at
-      };
-    });
+    // 最適化されたデータ変換
+    const transformedJobs = jobs.map((job: any) => ({
+      id: job.id,
+      title: job.title || '求人タイトル未設定',
+      company_name: job.company_accounts?.company_name || '企業名未設定',
+      image_urls: job.image_urls?.slice(0, 1) || [], // 最初の画像のみ取得して転送量削減
+      appeal_points: job.appeal_points?.slice(0, 3) || [],
+      work_location: Array.isArray(job.work_location) ? job.work_location : [job.work_location || '勤務地未設定'],
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+      starred: false
+    }));
 
     return transformedJobs;
   } catch (error) {
@@ -195,11 +199,11 @@ export default async function CandidateDashboard() {
     redirect('/candidate/auth/login');
   }
 
-  // サーバーサイドで全データを取得
+  // サーバーサイドで全データを取得（最適化版）
   const [tasks, messages, jobs] = await Promise.all([
     getTaskData(user.id),
     getRecentMessages(user.id),
-    getRecommendedJobs(user.id)
+    getCachedRecommendedJobs(user.id)
   ]);
 
   return <CandidateDashboardClient user={user as any} tasks={tasks} messages={messages} jobs={jobs} />;
