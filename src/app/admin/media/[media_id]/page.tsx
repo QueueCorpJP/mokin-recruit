@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { getArticle, type Article } from '@/app/admin/media/actions';
 import Image from 'next/image';
 
 
 export default function AdminMediaDetailPage() {
+  const { isAdmin, loading: authLoading } = useAdminAuth();
   const params = useParams();
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
@@ -14,6 +17,7 @@ export default function AdminMediaDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAdmin) return;
     const fetchArticle = async () => {
       try {
         setLoading(true);
@@ -42,7 +46,19 @@ export default function AdminMediaDetailPage() {
     };
 
     fetchArticle();
-  }, [params.media_id]);
+  }, [params.media_id, isAdmin]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
 
   if (loading) {
     return (

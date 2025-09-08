@@ -247,7 +247,7 @@ export function CandidateSlideMenu({
                       className='text-[#323232] text-[24px] font-bold tracking-[2.4px] mb-1'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {candidateData?.name || '候補者名（もしくはID）テキスト'}
+                      {String(candidateData?.name || '候補者名（もしくはID）テキスト')}
                     </h1>
 
                     {/* 基本情報 */}
@@ -255,10 +255,10 @@ export function CandidateSlideMenu({
                       className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {candidateData?.location || '東京'}／
-                      {candidateData?.age || 28}
-                      歳／{candidateData?.gender || '男性'}／
-                      {candidateData?.income || '500〜600万円'}
+                      {String(candidateData?.location || '東京')}／
+                      {String(candidateData?.age || 28)}
+                      歳／{String(candidateData?.gender || '男性')}／
+                      {String(candidateData?.income || '500〜600万円')}
                     </p>
                   </div>
                 </div>
@@ -269,19 +269,19 @@ export function CandidateSlideMenu({
                     className='text-[#999999] text-[14px] font-bold tracking-[1.4px] text-right w-full'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    最終ログイン：{candidateData?.lastLogin || 'yyyy/mm/dd'}
+                    最終ログイン：{String(candidateData?.lastLogin || 'yyyy/mm/dd')}
                   </p>
                   <p
                     className='text-[#999999] text-[14px] font-bold tracking-[1.4px] text-right'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    最終更新：{candidateData?.lastUpdate || 'yyyy/mm/dd'}
+                    最終更新：{String(candidateData?.lastUpdate || 'yyyy/mm/dd')}
                   </p>
                   <p
                     className='text-[#999999] text-[14px] font-bold tracking-[1.4px] text-right'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    登録：{candidateData?.registrationDate || 'yyyy/mm/dd'}
+                    登録：{String(candidateData?.registrationDate || 'yyyy/mm/dd')}
                   </p>
                 </div>
               </div>
@@ -410,7 +410,7 @@ export function CandidateSlideMenu({
                       </div>
                       <div className='flex-1 flex flex-col gap-2'>
                         <ul className='list-disc ml-6 space-y-0'>
-                          {candidateData?.experienceJobs &&
+                          {Array.isArray(candidateData?.experienceJobs) &&
                           candidateData.experienceJobs.length > 0 ? (
                             candidateData.experienceJobs.map((job, index) => (
                               <li
@@ -420,7 +420,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                {job.title}（{job.years}年）
+                                {String(job.title || '')}（{String(job.years || 0)}年）
                               </li>
                             ))
                           ) : (
@@ -465,7 +465,7 @@ export function CandidateSlideMenu({
                       </div>
                       <div className='flex-1 flex flex-col gap-2'>
                         <ul className='list-disc ml-6 space-y-0'>
-                          {candidateData?.experienceIndustries &&
+                          {Array.isArray(candidateData?.experienceIndustries) &&
                           candidateData.experienceIndustries.length > 0 ? (
                             candidateData.experienceIndustries.map(
                               (industry, index) => (
@@ -476,7 +476,7 @@ export function CandidateSlideMenu({
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {industry.title}（{industry.years}年）
+                                  {String(industry.title || '')}（{String(industry.years || 0)}年）
                                 </li>
                               )
                             )
@@ -528,7 +528,7 @@ export function CandidateSlideMenu({
 
                   {/* 職務経歴リスト */}
                   <div className='flex flex-col gap-4'>
-                    {candidateData?.workHistory &&
+                    {Array.isArray(candidateData?.workHistory) &&
                     candidateData.workHistory.length > 0 ? (
                       candidateData.workHistory.map((work, index) => (
                         <div
@@ -541,13 +541,13 @@ export function CandidateSlideMenu({
                               className='text-[#0f9058] text-[20px] font-bold tracking-[2px] leading-[1.6]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {work.companyName}
+                              {String(work.companyName || '')}
                             </h3>
                             <span
                               className='text-[#999999] text-[16px] font-medium tracking-[1.6px] leading-[2]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {work.period}
+                              {String(work.period || '')}
                             </span>
                           </div>
 
@@ -561,8 +561,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                業種
-                                <span className='font-bold'>{industry}</span>
+                                {String(industry || '')}
                               </span>
                             ))}
                           </div>
@@ -573,14 +572,14 @@ export function CandidateSlideMenu({
                               className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[2]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {work.department}・{work.position}
+                              {String(work.department || '')}・{String(work.position || '')}
                             </span>
                             <div className='w-px h-7 bg-[#dcdcdc]' />
                             <span
                               className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[2]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {work.jobType}
+                              {String(work.jobType || '')}
                             </span>
                           </div>
 
@@ -592,7 +591,7 @@ export function CandidateSlideMenu({
                             className='text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2] whitespace-pre-wrap'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {work.description}
+                            {String(work.description || '')}
                           </p>
                         </div>
                       ))
@@ -701,7 +700,7 @@ export function CandidateSlideMenu({
                         className='text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2] flex-1'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {candidateData?.desiredConditions?.annualIncome || '○○'}
+                        {String(candidateData?.desiredConditions?.annualIncome || '○○')}
                         万円 （直近年収：
                         {candidateData?.desiredConditions?.currentIncome ||
                           '○○'}
@@ -721,7 +720,7 @@ export function CandidateSlideMenu({
                         </div>
                         <div className='flex-1'>
                           <ul className='list-disc ml-6 space-y-0'>
-                            {candidateData?.desiredConditions?.jobTypes &&
+                            {Array.isArray(candidateData?.desiredConditions?.jobTypes) &&
                             candidateData.desiredConditions.jobTypes.length >
                               0 ? (
                               candidateData.desiredConditions.jobTypes.map(
@@ -733,7 +732,7 @@ export function CandidateSlideMenu({
                                       fontFamily: 'Noto Sans JP, sans-serif',
                                     }}
                                   >
-                                    {jobType}
+                                    {String(jobType || '')}
                                   </li>
                                 )
                               )
@@ -779,7 +778,7 @@ export function CandidateSlideMenu({
                         </div>
                         <div className='flex-1'>
                           <ul className='list-disc ml-6 space-y-0'>
-                            {candidateData?.desiredConditions?.industries &&
+                            {Array.isArray(candidateData?.desiredConditions?.industries) &&
                             candidateData.desiredConditions.industries.length >
                               0 ? (
                               candidateData.desiredConditions.industries.map(
@@ -791,7 +790,7 @@ export function CandidateSlideMenu({
                                       fontFamily: 'Noto Sans JP, sans-serif',
                                     }}
                                   >
-                                    {industry}
+                                    {String(industry || '')}
                                   </li>
                                 )
                               )
@@ -875,7 +874,7 @@ export function CandidateSlideMenu({
                       </div>
                       <div className='flex-1'>
                         <ul className='list-disc ml-6 space-y-0'>
-                          {candidateData?.desiredConditions?.workStyles &&
+                          {Array.isArray(candidateData?.desiredConditions?.workStyles) &&
                           candidateData.desiredConditions.workStyles.length >
                             0 ? (
                             candidateData.desiredConditions.workStyles.map(
@@ -887,7 +886,7 @@ export function CandidateSlideMenu({
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {style}
+                                  {String(style || '')}
                                 </li>
                               )
                             )
@@ -939,7 +938,7 @@ export function CandidateSlideMenu({
 
                   {/* 選考状況リスト */}
                   <div className='flex flex-col gap-6'>
-                    {candidateData?.selectionStatus &&
+                          {Array.isArray(candidateData?.selectionStatus) &&
                     candidateData.selectionStatus.length > 0 ? (
                       candidateData.selectionStatus.map((selection, index) => (
                         <div key={index} className='flex gap-4 items-start'>
@@ -949,7 +948,7 @@ export function CandidateSlideMenu({
                             className='text-[#0f9058] text-[14px] font-bold tracking-[1.4px] leading-[1.6] underline w-[200px] truncate'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {selection.companyName}
+                            {String(selection.companyName || '')}
                           </a>
 
                           {/* 業種タグ */}
@@ -962,7 +961,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                {industry}
+                                {String(industry || '')}
                               </span>
                             ))}
                           </div>
@@ -972,7 +971,7 @@ export function CandidateSlideMenu({
                             className='text-[#323232] text-[14px] font-medium tracking-[1.4px] leading-[1.6] w-[200px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {selection.jobTypes}
+                            {String(selection.jobTypes || '')}
                           </span>
 
                           {/* ステータスバッジ */}
@@ -984,7 +983,7 @@ export function CandidateSlideMenu({
                             }`}
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {selection.status}
+                            {String(selection.status || '')}
                           </span>
 
                           {/* 辞退理由（辞退の場合のみ） */}
@@ -996,7 +995,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                辞退理由：{selection.declineReason}
+                                辞退理由：{String(selection.declineReason || '')}
                               </span>
                             )}
                         </div>
@@ -1134,7 +1133,7 @@ export function CandidateSlideMenu({
                         スキル
                       </div>
                       <div className='flex flex-wrap gap-2 items-center flex-1'>
-                        {candidateData?.skills &&
+                        {Array.isArray(candidateData?.skills) &&
                         candidateData.skills.length > 0 ? (
                           candidateData.skills.map((skill, index) => (
                             <span
@@ -1142,7 +1141,7 @@ export function CandidateSlideMenu({
                               className='bg-[#d2f1da] text-[#0f9058] px-4 py-0 rounded-[8px] text-[14px] font-medium tracking-[1.4px] leading-[2]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {skill}
+                              {String(skill || '')}
                             </span>
                           ))
                         ) : (
@@ -1182,7 +1181,7 @@ export function CandidateSlideMenu({
                         </div>
                         <div className='flex-1'>
                           <ul className='list-disc ml-6 space-y-0'>
-                            {candidateData?.languages &&
+                            {Array.isArray(candidateData?.languages) &&
                             candidateData.languages.length > 0 ? (
                               candidateData.languages.map((lang, index) => (
                                 <li
@@ -1192,7 +1191,7 @@ export function CandidateSlideMenu({
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {lang.language}／{lang.level}
+                                  {typeof lang.language === 'string' ? lang.language : (lang.language || '')}／{typeof lang.level === 'string' ? lang.level : (lang.level || '')}
                                 </li>
                               ))
                             ) : (
@@ -1236,7 +1235,7 @@ export function CandidateSlideMenu({
 
                   {/* 学歴コンテンツ */}
                   <div className='flex flex-col gap-2'>
-                    {candidateData?.education &&
+                    {Array.isArray(candidateData?.education) &&
                     candidateData.education.length > 0 ? (
                       candidateData.education.map((edu, index) => (
                         <div key={index} className='flex gap-4 items-start'>
@@ -1244,13 +1243,13 @@ export function CandidateSlideMenu({
                             className='text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2] whitespace-nowrap'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {edu.schoolName}／{edu.department}
+                            {String(edu.schoolName || '')}／{String(edu.department || '')}
                           </span>
                           <span
                             className='text-[#999999] text-[16px] font-medium tracking-[1.6px] leading-[2] whitespace-nowrap'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {edu.graduationDate}
+                            {String(edu.graduationDate || '')}
                           </span>
                         </div>
                       ))

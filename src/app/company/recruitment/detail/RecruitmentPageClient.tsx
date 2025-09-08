@@ -5,6 +5,7 @@ import { CandidateSlideMenu } from './CandidateSlideMenu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
 import { CandidateData } from '@/lib/server/candidate/recruitment-queries';
+import { getCandidateDetailAction } from '@/lib/actions/candidate-detail';
 import { Pagination } from '@/components/ui/Pagination';
 
 // Icons
@@ -326,6 +327,8 @@ export function RecruitmentPageClient({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] =
     useState<CandidateData | null>(null);
+  const [candidateDetailData, setCandidateDetailData] = useState<any>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusTabs, setStatusTabs] = useState<StatusTab[]>([
     { id: 'all', label: 'すべて', active: true },
     { id: 'not_sent', label: 'スカウト未送信', active: false },
@@ -357,13 +360,25 @@ export function RecruitmentPageClient({
     // 検索処理: keyword, selectedGroup, selectedJob, excludeDeclined
   };
 
-  const handleCandidateClick = (candidate: CandidateData) => {
+  const handleCandidateClick = async (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
     setIsMenuOpen(true);
+    setIsLoadingDetail(true);
+    
+    try {
+      const detailData = await getCandidateDetailAction(candidate.id);
+      setCandidateDetailData(detailData);
+    } catch (error) {
+      console.error('候補者詳細データの取得に失敗:', error);
+      setCandidateDetailData(null);
+    } finally {
+      setIsLoadingDetail(false);
+    }
   };
 
   const handleCloseMenu = () => {
     setIsMenuOpen(false);
+    setCandidateDetailData(null);
   };
 
   // ページング処理
@@ -576,26 +591,7 @@ export function RecruitmentPageClient({
         isOpen={isMenuOpen}
         onClose={handleCloseMenu}
         candidateId={selectedCandidate?.id}
-        candidateData={
-          selectedCandidate
-            ? {
-                id: selectedCandidate.id,
-                name: selectedCandidate.name,
-                company: selectedCandidate.company,
-                location: selectedCandidate.location,
-                age: selectedCandidate.age,
-                gender: selectedCandidate.gender,
-                income: '500〜600万円',
-                lastLogin: '2024/03/15',
-                lastUpdate: '2024/03/10',
-                registrationDate: '2024/01/01',
-                tags: {
-                  isHighlighted: true,
-                  isCareerChange: true,
-                },
-              }
-            : undefined
-        }
+        candidateData={candidateDetailData}
       />
     </>
   );

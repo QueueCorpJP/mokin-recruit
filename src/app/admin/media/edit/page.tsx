@@ -1,6 +1,35 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 import EditMediaForm from './EditMediaForm';
 import { saveArticle } from './actions';
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+}
+
+interface ArticleData {
+  id: string;
+  title: string;
+  content: string;
+  status: string;
+  thumbnail_url?: string;
+  created_at: string;
+  updated_at: string;
+  article_categories: { id: string; name: string; }[];
+  article_tags: { id: string; name: string; }[];
+}
 
 // 画像URL変数を実際のURLに変換する関数
 function replaceImageVariables(content: string): string {
@@ -31,15 +60,12 @@ function replaceImageVariables(content: string): string {
   return processedContent;
 }
 
-interface EditMediaPageProps {
-  searchParams: Promise<{ id?: string }>;
-}
-
-export default async function EditMediaPage({ searchParams }: EditMediaPageProps) {
+async function fetchDataForEdit(articleId?: string): Promise<{
+  categories: Category[];
+  tags: Tag[];
+  articleData: ArticleData | null;
+}> {
   const supabase = createServerAdminClient();
-  
-  // searchParamsをawait
-  const params = await searchParams;
   
   // カテゴリとタグを取得
   const [categoriesResult, tagsResult] = await Promise.all([
@@ -57,12 +83,12 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
 
   // 記事IDがある場合は記事データを取得
   let articleData = null;
-  if (params.id) {
+  if (articleId) {
     // まず記事本体を取得
     const { data: article, error: articleError } = await supabase
       .from('articles')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', articleId)
       .single();
 
     if (articleError) {
@@ -73,11 +99,11 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
         supabase
           .from('article_category_relations')
           .select('category_id, article_categories(id, name)')
-          .eq('article_id', params.id),
+          .eq('article_id', articleId),
         supabase
           .from('article_tag_relations')
           .select('tag_id, article_tags(id, name)')
-          .eq('article_id', params.id)
+          .eq('article_id', articleId)
       ]);
       
       const categoryRelations = categoryRelationsResult.data;
@@ -96,10 +122,60 @@ export default async function EditMediaPage({ searchParams }: EditMediaPageProps
     }
   }
 
+  return {
+    categories: categoriesResult.data || [],
+    tags: tagsResult.data || [],
+    articleData
+  };
+}
+
+export default function EditMediaPage() {
+  const { isAdmin, loading } = useAdminAuth();
+  const searchParams = useSearchParams();
+  const articleId = searchParams.get('id');
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [articleData, setArticleData] = useState<ArticleData | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchDataForEdit(articleId || undefined)
+        .then(({ categories, tags, articleData }) => {
+          setCategories(categories);
+          setTags(tags);
+          setArticleData(articleData);
+        })
+        .catch(console.error)
+        .finally(() => setDataLoading(false));
+    }
+  }, [isAdmin, articleId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">データを読み込み中...</div>
+      </div>
+    );
+  }
+
   return (
     <EditMediaForm 
-      categories={categoriesResult.data || []} 
-      tags={tagsResult.data || []}
+      categories={categories} 
+      tags={tags}
       saveArticle={saveArticle}
       initialArticle={articleData}
     />

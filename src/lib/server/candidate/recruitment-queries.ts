@@ -40,22 +40,12 @@ function calculateAge(birthDate: string): number {
 async function getCurrentCompanyAccountId(): Promise<string | null> {
   try {
     // 環境変数の確認
-    console.log('🔍 Environment check:', {
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET',
-    });
+    
     
     const supabase = await getSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    console.log('🔍 Auth User:', { 
-      userId: user?.id, 
-      email: user?.email, 
-      metadata: user?.user_metadata,
-      authError 
-    });
+   
     
     if (!user) {
       console.log('🔍 No authenticated user found');
@@ -69,8 +59,7 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
       return companyAccountId;
     }
     
-    // fallback: emailからcompany_usersテーブルを検索
-    console.log('🔍 Fallback: Searching company_users table for email:', user.email);
+    
     
     // RLS対応: 認証済みクライアントでクエリを実行
     const authenticatedSupabase = await getSupabaseServerClient();
@@ -87,7 +76,6 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
       .eq('email', user.email)
       .single();
       
-    console.log('🔍 Company User Query Result:', { companyUser, companyUserError });
     
     // 追加のフォールバック: auth_user_idで検索
     if (!companyUser && user.id) {
@@ -332,5 +320,151 @@ export async function getJobOptions(): Promise<Array<{ value: string; label: str
   } catch (error) {
     console.error('求人選択肢取得中にエラーが発生:', error);
     return [{ value: '', label: 'すべて' }];
+  }
+}
+
+// 候補者詳細データを取得する関数
+export async function getCandidateDetailData(candidateId: string, supabase?: any) {
+  try {
+    // 認証済みクライアントが渡されない場合は取得（後方互換性のため）
+    const client = supabase || await getSupabaseServerClient();
+    
+    // 基本情報を取得
+    const { data: candidate } = await client
+      .from('candidates')
+      .select('*')
+      .eq('id', candidateId)
+      .single();
+    
+    if (!candidate) {
+      return null;
+    }
+    
+    // 関連データを並列取得
+    const [
+      jobExperience,
+      workExperience,
+      careerStatus,
+      education,
+      skills,
+      expectations,
+      jobSummary
+    ] = await Promise.all([
+      client.from('job_type_experience').select('*').eq('candidate_id', candidateId),
+      client.from('work_experience').select('*').eq('candidate_id', candidateId),
+      client.from('career_status_entries').select('*').eq('candidate_id', candidateId),
+      client.from('education').select('*').eq('candidate_id', candidateId),
+      client.from('skills').select('*').eq('candidate_id', candidateId).single(),
+      client.from('expectations').select('*').eq('candidate_id', candidateId).single(),
+      client.from('job_summary').select('*').eq('candidate_id', candidateId).single()
+    ]);
+    
+    const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+    
+    // データを整形して返す
+    return {
+      id: candidate.id,
+      name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim(),
+      company: candidate.current_company || '',
+      location: candidate.prefecture || '',
+      age,
+      gender: candidate.gender || '',
+      income: candidate.current_income || '',
+      lastLogin: candidate.last_login_at ? new Date(candidate.last_login_at).toLocaleDateString('ja-JP') : '',
+      lastUpdate: candidate.updated_at ? new Date(candidate.updated_at).toLocaleDateString('ja-JP') : '',
+      registrationDate: candidate.created_at ? new Date(candidate.created_at).toLocaleDateString('ja-JP') : '',
+      jobSummary: jobSummary.data?.job_summary || candidate.job_summary || '',
+      experienceJobs: jobExperience.data?.map(exp => ({
+        title: exp.job_type_name,
+        years: exp.experience_years || 0
+      })) || [],
+      experienceIndustries: workExperience.data?.map(work => ({
+        title: work.industry_name,
+        years: work.experience_years || 0
+      })) || [],
+      workHistory: [{
+        companyName: candidate.recent_job_company_name || candidate.current_company || '',
+        period: candidate.recent_job_start_year && candidate.recent_job_start_month 
+          ? `${candidate.recent_job_start_year}/${candidate.recent_job_start_month}〜${candidate.recent_job_is_currently_working ? '現在' : `${candidate.recent_job_end_year}/${candidate.recent_job_end_month}`}`
+          : '',
+        industries: Array.isArray(candidate.recent_job_industries) 
+          ? candidate.recent_job_industries.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (candidate.recent_job_industries ? [candidate.recent_job_industries] : []),
+        department: candidate.recent_job_department_position || '',
+        position: candidate.recent_job_department_position || '',
+        jobType: candidate.recent_job_types ? 
+          (Array.isArray(candidate.recent_job_types) ? candidate.recent_job_types.join('、') : candidate.recent_job_types) : '',
+        description: candidate.recent_job_description || ''
+      }].filter(work => work.companyName), // 空のデータは除外
+      desiredConditions: {
+        annualIncome: expectations.data?.desired_income || '',
+        currentIncome: candidate.current_income || '',
+        jobTypes: Array.isArray(expectations.data?.desired_job_types) 
+          ? expectations.data.desired_job_types.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (expectations.data?.desired_job_types ? [expectations.data.desired_job_types] : []),
+        industries: Array.isArray(expectations.data?.desired_industries) 
+          ? expectations.data.desired_industries.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (expectations.data?.desired_industries ? [expectations.data.desired_industries] : []),
+        workLocations: Array.isArray(expectations.data?.desired_work_locations) 
+          ? expectations.data.desired_work_locations.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (expectations.data?.desired_work_locations ? [expectations.data.desired_work_locations] : []),
+        jobChangeTiming: candidate.job_change_timing || '',
+        workStyles: Array.isArray(expectations.data?.desired_work_styles) 
+          ? expectations.data.desired_work_styles.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (expectations.data?.desired_work_styles ? [expectations.data.desired_work_styles] : [])
+      },
+      selectionStatus: careerStatus.data?.map(status => ({
+        companyName: status.company_name || '',
+        industries: Array.isArray(status.industries) 
+          ? status.industries.map(item => 
+              typeof item === 'object' && item?.name ? item.name : String(item || '')
+            )
+          : (status.industries ? [status.industries] : []),
+        jobTypes: '',
+        status: status.progress_status || '',
+        statusType: status.decline_reason ? 'decline' : 'pass',
+        declineReason: status.decline_reason || ''
+      })) || [],
+      selfPR: jobSummary.data?.self_pr || candidate.self_pr || '',
+      qualifications: skills.data?.qualifications || '',
+      skills: Array.isArray(skills.data?.skills_list) 
+        ? skills.data.skills_list.map(item => 
+            typeof item === 'object' && item?.name ? item.name : String(item || '')
+          )
+        : (skills.data?.skills_list ? [skills.data.skills_list] : []),
+      languages: skills.data?.other_languages ? 
+        (Array.isArray(skills.data.other_languages) ? 
+          skills.data.other_languages.map((lang: any) => ({
+            language: typeof lang === 'object' && lang.language 
+              ? String(lang.language) 
+              : String(lang || ''),
+            level: typeof lang === 'object' && lang.level 
+              ? String(lang.level) 
+              : ''
+          })) : []) : [],
+      education: education.data?.map(edu => ({
+        schoolName: edu.school_name || '',
+        department: edu.department || '',
+        graduationDate: edu.graduation_year && edu.graduation_month ? 
+          `${edu.graduation_year}年${edu.graduation_month}月 卒業` : ''
+      })) || [],
+      tags: {
+        isHighlighted: false, // 実際のデータに基づいて設定
+        isCareerChange: candidate.has_career_change === 'yes'
+      }
+    };
+  } catch (error) {
+    console.error('候補者詳細データ取得エラー:', error);
+    return null;
   }
 }

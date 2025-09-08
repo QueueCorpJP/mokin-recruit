@@ -1,3 +1,8 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { Article } from '@/app/admin/media/actions';
 import MediaPageClient from './MediaPageClient';
@@ -33,7 +38,39 @@ async function fetchMediaArticles(): Promise<Article[]> {
   })) as Article[];
 }
 
-export default async function MediaPage() {
-  const articles = await fetchMediaArticles();
+export default function MediaPage() {
+  const { isAdmin, loading } = useAdminAuth();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(true);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchMediaArticles()
+        .then(setArticles)
+        .catch(console.error)
+        .finally(() => setArticlesLoading(false));
+    }
+  }, [isAdmin]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
+
+  if (articlesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">記事を読み込み中...</div>
+      </div>
+    );
+  }
+
   return <MediaPageClient articles={articles} />;
 }
