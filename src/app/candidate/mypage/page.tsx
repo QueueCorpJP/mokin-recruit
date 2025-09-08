@@ -5,6 +5,7 @@ import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import { unstable_cache } from 'next/cache';
+import { getCandidateNotices } from './actions';
 
 // Client component を dynamic import で遅延読み込み
 const CandidateDashboardClient = dynamicImport(
@@ -200,13 +201,14 @@ export default async function CandidateDashboard() {
   }
 
   // サーバーサイドで全データを取得（最適化版）
-  const [tasks, messages, jobs] = await Promise.all([
+  const [tasks, messages, jobs, notices] = await Promise.all([
     getTaskData(user.id),
     getRecentMessages(user.id),
-    getCachedRecommendedJobs(user.id)
+    getCachedRecommendedJobs(user.id),
+    getCandidateNotices()
   ]);
 
-  return <CandidateDashboardClient user={user as any} tasks={tasks} messages={messages} jobs={jobs} />;
+  return <CandidateDashboardClient user={user as any} tasks={tasks} messages={messages} jobs={jobs} notices={notices.notices} />;
 }
 
 export const dynamic = 'force-dynamic';

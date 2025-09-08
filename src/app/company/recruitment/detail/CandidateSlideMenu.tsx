@@ -732,7 +732,16 @@ export function CandidateSlideMenu({
                                       fontFamily: 'Noto Sans JP, sans-serif',
                                     }}
                                   >
-                                    {String(jobType || '')}
+                                    {(() => {
+                                      try {
+                                        if (jobType !== null && jobType !== undefined && typeof jobType === 'object' && jobType && 'name' in jobType) {
+                                          return (jobType as any).name;
+                                        }
+                                        return String(jobType || '');
+                                      } catch {
+                                        return String(jobType || '');
+                                      }
+                                    })()}
                                   </li>
                                 )
                               )
@@ -790,7 +799,16 @@ export function CandidateSlideMenu({
                                       fontFamily: 'Noto Sans JP, sans-serif',
                                     }}
                                   >
-                                    {String(industry || '')}
+                                    {(() => {
+                                      try {
+                                        if (industry !== null && industry !== undefined && typeof industry === 'object' && industry && 'name' in industry) {
+                                          return (industry as any).name;
+                                        }
+                                        return String(industry || '');
+                                      } catch {
+                                        return String(industry || '');
+                                      }
+                                    })()}
                                   </li>
                                 )
                               )

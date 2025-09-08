@@ -50,11 +50,19 @@ interface Message {
   date: string;
 }
 
+interface Notice {
+  id: string;
+  title: string;
+  published_at: string;
+  created_at: string;
+}
+
 interface CandidateDashboardClientProps {
   user: User;
   tasks: Task[];
   messages: Message[];
   jobs: JobPosting[];
+  notices: Notice[];
 }
 
 export function CandidateDashboardClient({
@@ -62,6 +70,7 @@ export function CandidateDashboardClient({
   tasks,
   messages,
   jobs,
+  notices,
 }: CandidateDashboardClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -459,80 +468,53 @@ export function CandidateDashboardClient({
                 >
                   お知らせ一覧
                 </SectionHeading>
-                {/* お知らせ1 */}
-                <div
-                  style={{
-                    background: '#fff',
-                    padding: '15px 24px',
-                    borderRadius: '8px',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      lineHeight: '160%',
-                      color: '#999999',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                      display: 'block',
-                      marginBottom: 4,
-                    }}
-                  >
-                    2025/4/19
-                  </span>
+                {notices.length === 0 ? (
                   <div
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#323232',
-                      lineHeight: '200%',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                    }}
+                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
                   >
-                    システムメンテナンスのお知らせ
+                    現在お知らせはありません。
                   </div>
-                </div>
-                {/* お知らせ2 */}
-                <div
-                  style={{
-                    background: '#fff',
-                    padding: '15px 24px',
-                    borderRadius: '8px',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      lineHeight: '160%',
-                      color: '#999999',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                      display: 'block',
-                      marginBottom: 4,
-                    }}
-                  >
-                    2025/4/19
-                  </span>
-                  <div
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: '#323232',
-                      lineHeight: '200%',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                    }}
-                  >
-                    新機能リリースのお知らせ
-                  </div>
-                </div>
+                ) : (
+                  notices.map(notice => (
+                    <div
+                      key={notice.id}
+                      style={{
+                        background: '#fff',
+                        padding: '15px 24px',
+                        borderRadius: '8px',
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          lineHeight: '160%',
+                          color: '#999999',
+                          fontFamily:
+                            'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                          display: 'block',
+                          marginBottom: 4,
+                        }}
+                      >
+                        {new Date(notice.published_at || notice.created_at).toLocaleDateString('ja-JP')}
+                      </span>
+                      <div
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          color: '#323232',
+                          lineHeight: '200%',
+                          fontFamily:
+                            'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                        }}
+                      >
+                        {notice.title}
+                      </div>
+                    </div>
+                  ))
+                )}
                 {/* お知らせ一覧を見るリンクボックス */}
                 <div
                   style={{
@@ -549,6 +531,7 @@ export function CandidateDashboardClient({
                     boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
                     gap: 8,
                   }}
+                  onClick={() => router.push('/candidate/news')}
                 >
                   <span
                     style={{

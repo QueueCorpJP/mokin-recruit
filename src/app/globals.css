@@ -328,6 +328,11 @@ html:not(.fonts-loaded) body {
     box-shadow: none !important;
   }
 
+  /* Textarea default border reset - テキストエリアのデフォルトボーダーを削除 */
+  textarea {
+    border: none !important;
+  }
+
   /* Select要素のデフォルト矢印だけを削除 */
   select {
     appearance: none !important;

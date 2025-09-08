@@ -117,6 +117,20 @@ export async function markRoomMessagesAsRead(roomId: string): Promise<{ success:
       return { success: false, error: readUpdateError.message };
     }
 
+    // unread_notificationsテーブルのread_atを更新
+    const { error: notificationUpdateError } = await supabase
+      .from('unread_notifications')
+      .update({
+        read_at: new Date().toISOString()
+      })
+      .eq('message_id', (await supabase.from('messages').select('id').eq('room_id', roomId).eq('status', 'SENT').eq('sender_type', 'CANDIDATE')).data?.map(m => m.id) || []);
+
+    if (notificationUpdateError) {
+      console.warn('❌ [markRoomMessagesAsRead] Failed to update notification read status:', notificationUpdateError);
+    } else {
+      console.log('✅ [markRoomMessagesAsRead] Successfully updated notification read status for room:', roomId);
+    }
+
     console.log('✅ [markRoomMessagesAsRead] Successfully updated read status for room:', roomId);
     return { success: true };
 
@@ -201,6 +215,23 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
     }
 
     console.log('✅ [sendCompanyMessage] Message inserted:', message.id);
+
+    // unread_notificationsテーブルに未読通知を挿入
+    const { data: notification, error: notificationError } = await supabase
+      .from('unread_notifications')
+      .insert({
+        candidate_id: room.candidate_id,
+        message_id: message.id,
+        task_type: message.message_type === 'SCOUT' ? 'SCOUT_MESSAGE_UNREAD' : 'GENERAL_MESSAGE_UNREAD',
+      })
+      .select('*')
+      .single();
+
+    if (notificationError) {
+      console.error('❌ [sendCompanyMessage] Unread notification insert error:', notificationError);
+    } else {
+      console.log('✅ [sendCompanyMessage] Unread notification inserted:', notification.id);
+    }
 
     // roomのupdated_atを更新
     await supabase

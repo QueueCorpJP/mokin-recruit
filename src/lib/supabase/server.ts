@@ -3,7 +3,7 @@ import { getSupabaseClient } from '@/lib/server/database/supabase';
 
 let cachedClient: ReturnType<typeof getSupabaseClient> | null = null;
 
-export async function createClient() {
+async function createClient() {
   if (cachedClient) {
     return cachedClient;
   }
@@ -11,3 +11,5 @@ export async function createClient() {
   cachedClient = getSupabaseClient();
   return cachedClient;
 }
+
+export { createClient };
