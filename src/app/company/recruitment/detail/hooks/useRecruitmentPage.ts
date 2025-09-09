@@ -61,45 +61,42 @@ export function useRecruitmentPage({
     );
   }
   if (excludeDeclined) {
-    // declinedプロパティが存在する場合のみ除外
+    // declinedプロパティが存在する場合のみ除外（型定義にない場合は拡張型で対応）
     filteredCandidates = filteredCandidates.filter(
       c =>
-        typeof (c as CandidateData & { declined?: boolean }).declined ===
-          'undefined' || !(c as CandidateData & { declined?: boolean }).declined
+        typeof (c as { declined?: boolean }).declined === 'undefined' ||
+        !(c as { declined?: boolean }).declined
     );
   }
   // ステータスタブによる絞り込み
   const activeStatusTab = statusTabs.find(tab => tab.active);
   if (activeStatusTab && activeStatusTab.id !== 'all') {
-    filteredCandidates = filteredCandidates.filter((c: CandidateData) => {
+    filteredCandidates = filteredCandidates.filter(c => {
       switch (activeStatusTab.id) {
         case 'not_sent':
-          // スカウト未送信: 例として applicationDate が未設定
+          // スカウト未送信: applicationDate が未設定
           return !c.applicationDate;
         case 'waiting':
-          // 応募待ち: 例として applicationDate が設定されていて、firstScreening などが未設定
+          // 応募待ち: applicationDate が設定されていて、firstScreening などが未設定
           return !!c.applicationDate && !c.firstScreening;
         case 'applied':
-          // 応募受付: 例として applicationDate が設定されている
+          // 応募受付: applicationDate が設定されている
           return !!c.applicationDate;
         case 'document_passed':
-          // 書類選考通過: 例として firstScreening が true
+          // 書類選考通過: firstScreening が設定されている
           return !!c.firstScreening;
         case 'first_interview':
-          // 一次面接通過: 例として firstInterview が true
-          return !!(c as CandidateData & { firstInterview?: boolean })
-            .firstInterview;
+          // 一次面接通過: secondScreening が設定されている
+          return !!c.secondScreening;
         case 'second_interview':
-          // 二次面接通過: 例として secondInterview が true
-          return !!(c as CandidateData & { secondInterview?: boolean })
-            .secondInterview;
+          // 二次面接通過: finalScreening が設定されている
+          return !!c.finalScreening;
         case 'final_interview':
-          // 最終面接通過: 例として finalInterview が true
-          return !!(c as CandidateData & { finalInterview?: boolean })
-            .finalInterview;
+          // 最終面接通過: offer が設定されている
+          return !!c.offer;
         case 'offer':
-          // 内定: 例として offer が true
-          return !!(c as CandidateData & { offer?: boolean }).offer;
+          // 内定: offer が設定されている
+          return !!c.offer;
         default:
           return true;
       }
@@ -111,6 +108,24 @@ export function useRecruitmentPage({
       if (!a.applicationDate || !b.applicationDate) return 0;
       return b.applicationDate.localeCompare(a.applicationDate);
     });
+  } else if (sortOrder === 'progress') {
+    // 進行度を数値化して降順ソート
+    const getProgressScore = (
+      c: (typeof filteredCandidates)[number]
+    ): number => {
+      // 入社 > 内定 > 最終面接通過 > 二次面接通過 > 一次面接通過 > 書類選考通過 > 応募受付 > スカウト未送信
+      // ※型定義に入社・辞退などがなければ offer まで
+      if ((c as { joined?: boolean }).joined) return 7;
+      if (c.offer) return 6;
+      if (c.finalScreening) return 5;
+      if (c.secondScreening) return 4;
+      if (c.firstScreening) return 3;
+      if (c.applicationDate) return 1;
+      return 0;
+    };
+    filteredCandidates = [...filteredCandidates].sort(
+      (a, b) => getProgressScore(b) - getProgressScore(a)
+    );
   }
   // ページネーション
   const totalPages = Math.max(
