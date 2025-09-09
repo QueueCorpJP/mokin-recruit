@@ -130,7 +130,7 @@ export function RecruitmentFilterBar({
             value={keyword}
             onChange={e => onKeywordChange(e.target.value)}
             placeholder='キーワード検索'
-            className='bg-white border border-[#999999] rounded-[5px] px-[11px] py-1 w-60 text-[#999999] text-[16px] tracking-[1.6px] placeholder:text-[#999999]'
+            className='bg-white border border-[#999999] rounded-[5px] px-[11px] py-1 w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999]'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           />
           <Button

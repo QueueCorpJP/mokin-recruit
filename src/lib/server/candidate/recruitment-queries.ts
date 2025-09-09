@@ -24,6 +24,13 @@ export interface CandidateData {
   offer?: string;
   assignedUsers: string[];
   type?: 'application' | 'scout'; // 応募かスカウトかを区別
+  selectionProgress?: {
+    document_screening_result?: string;
+    first_interview_result?: string;
+    secondary_interview_result?: string;
+    final_interview_result?: string;
+    offer_result?: string;
+  } | null;
 }
 
 // 年齢を計算する関数
@@ -324,6 +331,14 @@ export async function getCandidatesDataWithQuery(
         app.company_group_id
       );
       
+      // 選考進捗を取得
+      const { data: selectionProgress } = await supabase
+        .from('selection_progress')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', app.company_group_id)
+        .single();
+      
       return {
         id: candidateId,
         name: `${candidate.first_name} ${candidate.last_name}`,
@@ -352,6 +367,7 @@ export async function getCandidatesDataWithQuery(
         offer: app.status === 'offer' ? 'ready' : undefined,
         assignedUsers,
         type: app.type || 'application',
+        selectionProgress: selectionProgress || null,
       };
     })
   );
@@ -631,6 +647,14 @@ async function getCandidatesDataFallback(
           app.company_group_id
         );
 
+        // 選考進捗を取得
+        const { data: selectionProgress } = await supabase
+          .from('selection_progress')
+          .select('*')
+          .eq('candidate_id', candidateId)
+          .eq('company_group_id', app.company_group_id)
+          .single();
+
         return {
           id: candidateId,
           name: `${candidate.first_name} ${candidate.last_name}`,
@@ -658,6 +682,7 @@ async function getCandidatesDataFallback(
           offer: app.status === 'offer' ? 'ready' : undefined,
           assignedUsers,
           type: app.type || 'application',
+          selectionProgress: selectionProgress || null,
         };
       })
     );

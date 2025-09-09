@@ -191,18 +191,16 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
           </div>
         </div>
 
-        <div className='flex gap-6 w-full min-[1440px]:w-[356px] h-auto min-[1440px]:h-[52px]'>
+        <div className='flex gap-6 w-full min-[1440px]:w-[356px] h-auto min-[1440px]:h-[22px] items-center'>
           <span
             className='text-[#999999] text-[14px] font-bold leading-[160%] tracking-[1.4px] w-[76px] h-[22px] whitespace-nowrap flex-shrink-0'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           >
             選考中企業
           </span>
-          <div className='flex flex-col gap-2 flex-1 min-[1440px]:w-[256px] h-auto min-[1440px]:h-[52px] justify-center'>
-            <span className='text-[#323232] text-[14px] font-bold leading-[160%] tracking-[1.4px] underline w-full min-[1440px]:w-[256px] h-[22px] truncate'>
-              {candidate.targetCompany || '未設定'}
-            </span>
-          </div>
+          <span className='text-[#323232] text-[14px] font-bold leading-[160%] tracking-[1.4px] underline flex-1 min-[1440px]:w-[256px] h-[22px] truncate'>
+            {candidate.targetCompany || '未設定'}
+          </span>
         </div>
       </div>
 
@@ -255,13 +253,13 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               const progress = selectionProgress;
               if (progress?.document_screening_result === 'pass') {
                 return (
-                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     通過
                   </div>
                 );
               } else if (progress?.document_screening_result === 'fail') {
                 return (
-                  <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     見送り
                   </div>
                 );
@@ -305,13 +303,13 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               const progress = selectionProgress;
               if (progress?.first_interview_result === 'pass') {
                 return (
-                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     通過
                   </div>
                 );
               } else if (progress?.first_interview_result === 'fail') {
                 return (
-                  <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     見送り
                   </div>
                 );
@@ -355,13 +353,13 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               const progress = selectionProgress;
               if (progress?.secondary_interview_result === 'pass') {
                 return (
-                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     通過
                   </div>
                 );
               } else if (progress?.secondary_interview_result === 'fail') {
                 return (
-                  <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     見送り
                   </div>
                 );
@@ -405,13 +403,13 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               const progress = selectionProgress;
               if (progress?.final_interview_result === 'pass') {
                 return (
-                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     通過
                   </div>
                 );
               } else if (progress?.final_interview_result === 'fail') {
                 return (
-                  <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     見送り
                   </div>
                 );
@@ -455,13 +453,13 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               const progress = selectionProgress;
               if (progress?.offer_result === 'accepted') {
                 return (
-                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     通過
                   </div>
                 );
               } else if (progress?.offer_result === 'declined') {
                 return (
-                  <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                     見送り
                   </div>
                 );
