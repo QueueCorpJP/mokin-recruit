@@ -306,8 +306,8 @@ export default function TemplateEditClient({ initialGroupOptions, templateData, 
       </div>
 
       {/* Main Content */}
-      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20">
-        <div className="flex justify-end">
+      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10">
+        <div className="flex justify-end  pb-10">
       <Button
               variant="destructive"
               size="figma-default"

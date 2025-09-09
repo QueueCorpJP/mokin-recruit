@@ -4,7 +4,7 @@
 .prose h2,
 .media-content-editor h2 {
   color: #0F9058 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 24px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -19,7 +19,7 @@
 .prose h3,
 .media-content-editor h3 {
   color: #0F9058 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 20px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -34,7 +34,7 @@
 .prose li,
 .media-content-editor li {
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -98,7 +98,7 @@
 .prose .table-of-contents .toc-title,
 .media-content-editor .table-of-contents .toc-title {
   color: #0F9058 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 18px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -110,7 +110,7 @@
 .prose .table-of-contents .toc-item,
 .media-content-editor .table-of-contents .toc-item {
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -124,7 +124,7 @@
 .prose p,
 .media-content-editor p {
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -177,7 +177,7 @@
   border: 1px solid #DCDCDC !important;
   background: #EFEFEF !important;
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -196,7 +196,7 @@
   vertical-align: middle !important;
   border: 1px solid #DCDCDC !important;
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -246,7 +246,7 @@
 .prose .author-container p,
 .media-content-editor .author-container p {
   color: #323232 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -259,7 +259,7 @@
 .prose .quote-container,
 .media-content-editor .quote-container {
   color: #666666 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: italic !important;
   font-weight: 500 !important;
@@ -281,7 +281,7 @@
 .prose .quote-container p,
 .media-content-editor .quote-container p {
   color: #666666 !important;
-  font-family: "Noto Sans JP" !important;
+  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
   font-size: 16px !important;
   font-style: italic !important;
   font-weight: 500 !important;

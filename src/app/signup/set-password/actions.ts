@@ -184,47 +184,53 @@ export async function setPasswordAction(formData: SetPasswordFormData): Promise<
 
       logger.info(`Password set successfully for user: ${userId}`);
 
-      // パスワード設定完了後、マイページ遷移時の自動ログイン用にcookieに保存
+      // パスワード設定完了後、即座にログインセッションを確立
+      const { createServerClient } = await import('@supabase/ssr');
       const cookieStore = await cookies();
       
-      const cookieDebugInfo = {
-        userId: userId.substring(0, 8) + '***',
-        passwordLength: password.length,
-        environment: process.env.NODE_ENV
-      };
-      
-      logger.info('Setting cookies for auto-login:', cookieDebugInfo);
-      console.log('🍪 SETTING COOKIES:', cookieDebugInfo);
-      
-      cookieStore.set('signup_user_id', userId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 // 1時間
+      const supabaseAuth = createServerClient(
+        supabaseUrl, 
+        process.env.SUPABASE_ANON_KEY!, 
+        {
+          cookies: {
+            getAll() { 
+              return cookieStore.getAll()
+            },
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) => 
+                  cookieStore.set(name, value, options)
+                )
+              } catch {
+                // Server component では ignore
+              }
+            },
+          },
+        }
+      );
+
+      // ユーザーのメールアドレスを取得
+      const userEmail = user.user.email;
+      if (!userEmail) {
+        logger.error('User email not found for login');
+        return {
+          success: false,
+          error: 'ユーザー情報の取得に失敗しました。',
+        };
+      }
+
+      // 即座にログインセッションを確立
+      const { data: loginData, error: loginError } = await supabaseAuth.auth.signInWithPassword({
+        email: userEmail,
+        password: password,
       });
-      
-      // パスワードも一時的に保存（自動ログイン用）
-      cookieStore.set('signup_password', password, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 // 1時間
-      });
-      
-      // Cookie設定後の確認
-      const verifyUserId = cookieStore.get('signup_user_id')?.value;
-      const verifyPassword = cookieStore.get('signup_password')?.value;
-      const verificationInfo = {
-        userIdSet: !!verifyUserId,
-        passwordSet: !!verifyPassword,
-        userIdMatch: verifyUserId === userId,
-        passwordMatch: verifyPassword === password
-      };
-      
-      logger.info('Cookie verification after setting:', verificationInfo);
-      console.log('✅ COOKIE VERIFICATION:', verificationInfo);
+
+      if (loginError || !loginData.session) {
+        logger.error('Failed to create login session:', loginError);
+        // セッション作成に失敗しても、パスワード設定は成功しているので完了ページへ
+      } else {
+        logger.info('Login session created successfully for user:', userId);
+      }
 
       // 成功時は会員登録完了ページにリダイレクト
       redirect('/signup/complete');

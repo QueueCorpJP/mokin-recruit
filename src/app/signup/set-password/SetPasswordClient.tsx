@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState, useEffect, useTransition } from 'react';
 import { SetPasswordForm } from '@/components/auth/SetPasswordForm';
 import { setPasswordAction, SetPasswordResult } from './actions';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface SetPasswordClientProps {
   userType?: 'candidate' | 'company';
@@ -189,8 +188,9 @@ export function SetPasswordClient({ userType: initialUserType }: SetPasswordClie
   if (!isParametersReady || !userId) {
     return (
       <div className='w-full max-w-md text-center space-y-4'>
-        <SpinnerIcon size="lg" variant="primary" className="mx-auto" />
-        <p className='text-[#323232] font-medium'>パラメータを確認中...</p>
+        <div className='opacity-50'>
+          <p className='text-[#323232] font-medium'>パラメータを確認中...</p>
+        </div>
       </div>
     );
   }

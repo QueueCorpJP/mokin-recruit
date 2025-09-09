@@ -2,7 +2,11 @@ import React from 'react';
 
 import { ScoutSendForm } from './ScoutSendForm';
 
-export default async function CompanyScoutPage() {
+interface CompanyScoutPageProps {
+  params: { id: string };
+}
+
+export default async function CompanyScoutPage({ params }: CompanyScoutPageProps) {
   // サーバーサイドで認証状態を確認
   // const auth = await getServerAuth();
 
@@ -31,7 +35,7 @@ export default async function CompanyScoutPage() {
   return (
     <>
      
-      <ScoutSendForm />
+      <ScoutSendForm candidateId={params.id} />
       
     </>
   );

@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
   imageUrl: string;
@@ -105,14 +104,8 @@ export function JobPostCard({
             aria-label='お気に入り'
             disabled={isFavoriteLoading}
           >
-            {isFavoriteLoading ? (
-              // ローディングスピナー
-              <div className='w-8 h-8 flex items-center justify-center'>
-                <SpinnerIcon size='sm' />
-              </div>
-            ) : (
-              <svg
-                width='32'
+            <svg
+              width='32'
                 height='32'
                 viewBox='0 0 32 32'
                 fill='none'
@@ -123,7 +116,6 @@ export function JobPostCard({
                   fill={starred ? '#FFDA5F' : '#DCDCDC'}
                 />
               </svg>
-            )}
           </button>
         )}
         <Image
@@ -253,12 +245,6 @@ export function JobPostCard({
                     aria-label='お気に入り'
                     disabled={isFavoriteLoading}
                   >
-                    {isFavoriteLoading ? (
-                      // ローディングスピナー
-                      <div className='w-6 h-6 flex items-center justify-center'>
-                        <SpinnerIcon size='sm' className='w-3 h-3' />
-                      </div>
-                    ) : (
                       <svg
                         width='24'
                         height='24'
@@ -271,7 +257,6 @@ export function JobPostCard({
                           fill={starred ? '#FFDA5F' : '#DCDCDC'}
                         />
                       </svg>
-                    )}
                   </button>
                 )}
               </div>

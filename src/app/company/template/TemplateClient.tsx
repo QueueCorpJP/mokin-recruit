@@ -197,6 +197,22 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
     );
   };
 
+  const handleDuplicate = (item: MessageTemplateItem) => {
+    // 新規作成ページに遷移し、テンプレート情報をクエリパラメータで渡す
+    const params = new URLSearchParams({
+      duplicate: 'true',
+      groupId: item.group,
+      groupName: item.groupName,
+      templateName: item.templateName,
+      body: item.body
+    });
+    router.push(`/company/template/new?${params.toString()}`);
+    // Close the dropdown menu
+    setMessageTemplates((prev: MessageTemplateItem[]) =>
+      prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
+    );
+  };
+
 
   // グループオプションを生成（重複なし）
   const uniqueGroupsMap = new Map();
@@ -310,17 +326,7 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
             </div>
 
             {/* Saved Only Checkbox */}
-            <div className='mt-6'>
-              <Checkbox
-                checked={showSavedOnly}
-                onChange={setShowSavedOnly}
-                label={
-                  <span className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
-                    保存済のみ表示
-                  </span>
-                }
-              />
-            </div>
+          
           </div>
         </div>
       </div>
@@ -410,7 +416,7 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
               </div>
             ) : currentItems.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">メッセージテンプレートがありません</p>
+                <p className="text-gray-500">まだ作成したメッセージテンプレートはありません。</p>
               </div>
             ) : (
               currentItems.map((item: MessageTemplateItem) => (
@@ -467,6 +473,12 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
                         className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
                       >
                         編集
+                      </button>
+                      <button
+                        onClick={() => handleDuplicate(item)}
+                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        複製
                       </button>
                       <button
                         onClick={() => handleDelete(item)}

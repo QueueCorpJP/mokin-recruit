@@ -1,6 +1,5 @@
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FaqBox } from '@/components/ui/FaqBox';
-import { Pagination } from '@/components/ui/Pagination';
 import { Button } from '@/components/ui/button';
 import { MessageListCard } from '@/components/ui/MessageListCard';
 import { JobPostCard } from '@/components/ui/JobPostCard';

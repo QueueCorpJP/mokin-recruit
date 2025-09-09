@@ -2,21 +2,35 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { loginAction } from '@/app/admin/auth/login/actions';
 
 export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ログイン処理をここに実装
-    console.log('Login attempted with:', { email, password });
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('userType', 'admin');
+      
+      await loginAction(formData);
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 flex-col items-start justify-start">
       <div className="w-full">
-        <div className="text-center mb-[40px] mt-[100px]">
+        <div className="text-center mb-[40px] mt-0">
           <h1 className="text-[32px] font-bold text-[#323232] mb-[16px] Noto_Sans_JP">
             管理画面ログイン
           </h1>
@@ -50,7 +64,14 @@ export default function Home() {
           </div>
 
           <div className="pt-2">
-            <Button variant="green-gradient" className="px-[40px] h-[48px] text-[16px] font-bold rounded-[100px]">ログインする</Button>
+            <Button 
+              variant="green-gradient" 
+              className="px-[40px] h-[48px] text-[16px] font-bold rounded-[100px]"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? 'ログイン中...' : 'ログインする'}
+            </Button>
           </div>
         </form>
       </div>

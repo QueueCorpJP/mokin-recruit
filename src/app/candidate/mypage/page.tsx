@@ -4,7 +4,6 @@ import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
-import { unstable_cache } from 'next/cache';
 import { getCandidateNotices } from './actions';
 
 // Client component を dynamic import で遅延読み込み
@@ -26,25 +25,27 @@ async function getTaskData(candidateId: string) {
     const tasks: any[] = [];
     if (unreadRooms.length > 0) {
       const firstUnreadRoom = unreadRooms[0];
-      const messageTime = firstUnreadRoom.lastMessageTime 
-        ? new Date(firstUnreadRoom.lastMessageTime) 
-        : new Date();
-      
-      const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
-      const isWithin72Hours = Date.now() - messageTime.getTime() < seventyTwoHoursInMs;
-      
-      if (isWithin72Hours) {
-        tasks.push({
-          id: `new-message-${firstUnreadRoom.id}`,
-          title: '新着メッセージがあります',
-          description: `${firstUnreadRoom.companyName}から新しいメッセージが届いています`
-        });
-      } else {
-        tasks.push({
-          id: `unread-message-${firstUnreadRoom.id}`,
-          title: '未読メッセージがあります', 
-          description: `${firstUnreadRoom.companyName}からのメッセージを確認してください`
-        });
+      if (firstUnreadRoom) {
+        const messageTime = firstUnreadRoom.lastMessageTime 
+          ? new Date(firstUnreadRoom.lastMessageTime) 
+          : new Date();
+        
+        const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
+        const isWithin72Hours = Date.now() - messageTime.getTime() < seventyTwoHoursInMs;
+        
+        if (isWithin72Hours) {
+          tasks.push({
+            id: `new-message-${firstUnreadRoom.id}`,
+            title: '新着メッセージがあります',
+            description: `${firstUnreadRoom.companyName}から新しいメッセージが届いています`
+          });
+        } else {
+          tasks.push({
+            id: `unread-message-${firstUnreadRoom.id}`,
+            title: '未読メッセージがあります', 
+            description: `${firstUnreadRoom.companyName}からのメッセージを確認してください`
+          });
+        }
       }
     }
     
@@ -73,12 +74,6 @@ async function getRecentMessages(candidateId: string) {
   }
 }
 
-// キャッシュ付きおすすめ求人取得
-const getCachedRecommendedJobs = unstable_cache(
-  async (candidateId: string) => getRecommendedJobsInternal(candidateId),
-  ['recommended-jobs'],
-  { revalidate: 1, tags: ['jobs'] } // デバッグ用：1秒キャッシュ
-);
 
 // おすすめ求人取得用の関数（最適化版）
 async function getRecommendedJobsInternal(candidateId: string) {
@@ -170,45 +165,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
 }
 
 export default async function CandidateDashboard() {
-  let user = await getCachedCandidateUser();
-
-  // サインアップ完了直後ユーザーの場合、signup_user_idクッキーをチェックして自動ログイン
-  if (!user) {
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const signupUserId = cookieStore.get('signup_user_id')?.value;
-    
-    if (signupUserId) {
-      const { createServerClient } = await import('@supabase/ssr');
-      
-      const supabaseAdmin = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {
-            getAll() { return []; },
-            setAll() {},
-          },
-        }
-      );
-
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(signupUserId);
-      
-      if (!userError && userData.user) {
-        user = {
-          id: userData.user.id,
-          email: userData.user.email || '',
-          userType: 'candidate' as const,
-          name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.name,
-          emailConfirmed: userData.user.email_confirmed_at != null,
-          lastSignIn: userData.user.last_sign_in_at || undefined,
-          user_metadata: userData.user.user_metadata,
-        } as any;
-        
-        cookieStore.delete('signup_user_id');
-      }
-    }
-  }
+  const user = await getCachedCandidateUser();
 
   if (!user) {
     redirect('/candidate/auth/login');

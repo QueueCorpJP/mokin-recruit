@@ -108,13 +108,13 @@ const getCandidatesData = unstable_cache(
 
       // 選考中企業の実データを反映
       const selectionCompanies = candidate.career_status_entries
-        ?.filter(entry => entry.progress_status && !entry.is_private)
+        ?.filter(entry => entry.progress_status)
         .map(entry => ({
           company: entry.company_name || '企業名未設定',
           detail: Array.isArray(entry.industries) 
             ? entry.industries.join('、') 
             : '業界情報なし',
-          jobTypes: entry.job_types || []
+          jobTypes: [] // job_typesプロパティが存在しないため空配列にする
         })) || [{
           company: '選考状況未登録',
           detail: '選考詳細未登録',
@@ -141,7 +141,11 @@ const getCandidatesData = unstable_cache(
       const selectionJobTypes = new Set<string>();
       selectionCompanies.forEach(company => {
         if (company.jobTypes && Array.isArray(company.jobTypes)) {
-          company.jobTypes.forEach(jobType => selectionJobTypes.add(jobType));
+          company.jobTypes.forEach((jobType: string | unknown) => {
+            if (typeof jobType === 'string') {
+              selectionJobTypes.add(jobType);
+            }
+          });
         }
       });
 
@@ -158,8 +162,8 @@ const getCandidatesData = unstable_cache(
         currentJobTypes.length > 0 && 
         selectionJobTypes.size > 0 &&
         Array.from(selectionJobTypes).every(jobType => 
-          currentJobTypes.some(currentJob => 
-            currentJob.toLowerCase() === jobType.toLowerCase()
+          currentJobTypes.some((currentJob: string | unknown) => 
+            String(currentJob).toLowerCase() === String(jobType).toLowerCase()
           )
         )
       ) {
@@ -170,9 +174,9 @@ const getCandidatesData = unstable_cache(
       else if (
         currentJobTypes.length > 0 &&
         desiredJobTypes.length > 0 &&
-        desiredJobTypes.some(desiredJob => 
-          !currentJobTypes.some(currentJob => 
-            currentJob.toLowerCase() === desiredJob.toLowerCase()
+        desiredJobTypes.some((desiredJob: string | unknown) => 
+          !currentJobTypes.some((currentJob: string | unknown) => 
+            String(currentJob).toLowerCase() === String(desiredJob).toLowerCase()
           )
         )
       ) {
@@ -251,99 +255,82 @@ function formatRelativeTime(date: Date): string {
   }
 }
 
-// キャッシュ付きのメッセージデータ取得関数
-const getRecentMessages = unstable_cache(
-  async (companyUserId: string, url: string, anonKey: string, cookiesData: any): Promise<Message[]> => {
-    try {
-      const { createServerClient } = await import('@supabase/ssr');
-      const supabase = createServerClient(url, anonKey, {
-        cookies: {
-          getAll() {
-            return cookiesData;
-          },
-          setAll() {
-            // キャッシュ内では何もしない
-          },
-        },
-      });
-      
-      // まず、企業ユーザーがアクセス権限を持つルームIDを取得
-      const rooms = await getRooms(companyUserId, 'company');
-      const accessibleRoomIds = rooms.map(room => room.id);
-      
-      if (accessibleRoomIds.length === 0) {
-        console.log('No accessible rooms found for user:', companyUserId);
-        return [];
-      }
-      
-      // アクセス権限のあるルームの未読メッセージのみ取得
-      const { data: messages, error } = await supabase
-        .from('messages')
-        .select(`
-          id,
-          content,
-          sent_at,
-          room_id,
-          status,
-          rooms!room_id (
-            id,
-            candidate_id,
-            related_job_posting_id,
-            candidates!candidate_id (
-              first_name,
-              last_name
-            ),
-            job_postings!related_job_posting_id (
-              title
-            ),
-            company_groups!company_group_id (
-              group_name,
-              company_accounts!company_account_id (
-                company_name
-              )
-            )
-          )
-        `)
-        .eq('sender_type', 'CANDIDATE')
-        .eq('status', 'SENT') // 未読メッセージのみ（SENTは未読、READは既読）
-        .in('room_id', accessibleRoomIds) // アクセス権限のあるルームのみ
-        .order('sent_at', { ascending: false })
-        .limit(3);
-
-      if (error || !messages) {
-        console.error('Error fetching messages:', error);
-        return [];
-      }
-
-      console.log('Recent unread messages fetched:', {
-        companyUserId,
-        accessibleRoomsCount: accessibleRoomIds.length,
-        unreadMessagesCount: messages.length
-      });
-
-      return messages.map(msg => ({
-        id: msg.id,
-        date: new Date(msg.sent_at).toLocaleDateString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }),
-        group: msg.rooms?.company_groups?.group_name || '不明なグループ',
-        user: `${msg.rooms?.candidates?.last_name || ''} ${msg.rooms?.candidates?.first_name || ''}`.trim() || '候補者',
-        content: msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content,
-        room_id: msg.room_id
-      }));
-    } catch (error) {
-      console.error('Error in getRecentMessages:', error);
+// キャッシュなしのメッセージデータ取得関数
+async function getRecentMessagesUncached(companyUserId: string): Promise<Message[]> {
+  try {
+    const supabase = await createClient();
+    
+    // まず、企業ユーザーがアクセス権限を持つルームIDを取得
+    const rooms = await getRooms(companyUserId, 'company');
+    const accessibleRoomIds = rooms.map(room => room.id);
+    
+    if (accessibleRoomIds.length === 0) {
+      console.log('No accessible rooms found for user:', companyUserId);
       return [];
     }
-  },
-  ['messages-mypage'], // キャッシュキー
-  {
-    revalidate: 60, // 1分間キャッシュ（メッセージは頻繁に更新される）
-    tags: ['messages', 'mypage']
+    
+    // アクセス権限のあるルームの未読メッセージのみ取得
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select(`
+        id,
+        content,
+        sent_at,
+        room_id,
+        status,
+        rooms!room_id (
+          id,
+          candidate_id,
+          related_job_posting_id,
+          candidates!candidate_id (
+            first_name,
+            last_name
+          ),
+          job_postings!related_job_posting_id (
+            title
+          ),
+          company_groups!company_group_id (
+            group_name,
+            company_accounts!company_account_id (
+              company_name
+            )
+          )
+        )
+      `)
+      .eq('sender_type', 'CANDIDATE')
+      .eq('status', 'SENT') 
+      .in('room_id', accessibleRoomIds) 
+      .order('sent_at', { ascending: false })
+      .limit(3);
+
+    if (error || !messages) {
+      console.error('Error fetching messages:', error);
+      return [];
+    }
+
+    console.log('Recent unread messages fetched:', {
+      companyUserId,
+      accessibleRoomsCount: accessibleRoomIds.length,
+      unreadMessagesCount: messages.length
+    });
+
+    return messages.map((msg) => ({
+      id: msg.id,
+      date: new Date(msg.sent_at).toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }),
+      group: (msg.rooms as { company_groups?: { group_name?: string } })?.company_groups?.group_name || '不明なグループ',
+      user: `${(msg.rooms as { candidates?: { last_name?: string; first_name?: string } })?.candidates?.last_name || ''} ${(msg.rooms as { candidates?: { last_name?: string; first_name?: string } })?.candidates?.first_name || ''}`.trim() || '候補者',
+      content: msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content || '',
+      room_id: msg.room_id
+    }));
+  } catch (error) {
+    console.error('Error in getRecentMessages:', error);
+    return [];
   }
-);
+}
 
 export default async function CompanyMypage() {
   // 企業ユーザー認証情報を取得
@@ -372,7 +359,7 @@ export default async function CompanyMypage() {
 
   const [candidates, messages, notices] = await Promise.all([
     getCandidatesData(supabaseUrl, supabaseAnonKey, cookiesData),
-    getRecentMessages(companyUserId, supabaseUrl, supabaseAnonKey, cookiesData),
+    getRecentMessagesUncached(companyUserId),
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData) // 最新3件まで取得
   ]);
 
