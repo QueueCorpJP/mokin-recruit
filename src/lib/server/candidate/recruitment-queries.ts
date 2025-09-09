@@ -13,13 +13,17 @@ export interface CandidateData {
   industry: string[];
   targetCompany: string;
   targetJob: string;
+  jobPostingId: string;
+  jobPostingTitle: string;
   group: string;
+  groupId: string;
   applicationDate?: string;
   firstScreening?: string;
   secondScreening?: string;
   finalScreening?: string;
   offer?: string;
   assignedUsers: string[];
+  type?: 'application' | 'scout'; // 応募かスカウトかを区別
 }
 
 // 年齢を計算する関数
@@ -166,36 +170,93 @@ export async function getCandidatesDataWithQuery(
   if (groupError || !companyGroups || companyGroups.length === 0) return [];
   const groupIds = companyGroups.map((g: any) => g.id);
 
-  // 3. applicationテーブルのクエリ組み立て
-  let query = supabase
-    .from('application')
-    .select(
-      `
-      id,
-      candidate_id,
-      company_group_id,
-      job_posting_id,
-      status,
-      created_at,
-      candidates!inner (
+  // 3. applicationとscout_sendsの両方を並列取得
+  const [applicationResult, scoutSendsResult] = await Promise.all([
+    // 応募データ取得
+    supabase
+      .from('application')
+      .select(
+        `
         id,
-        first_name,
-        last_name,
-        current_company,
-        prefecture,
-        birth_date,
-        gender
-      ),
-      company_groups!inner (
-        group_name
-      ),
-      job_postings (
-        title,
-        job_type
+        candidate_id,
+        company_group_id,
+        job_posting_id,
+        status,
+        created_at,
+        candidates!inner (
+          id,
+          first_name,
+          last_name,
+          current_company,
+          recent_job_company_name,
+          prefecture,
+          birth_date,
+          gender
+        ),
+        company_groups!inner (
+          group_name
+        ),
+        job_postings (
+          title,
+          job_type
+        )
+      `
       )
-    `
-    )
-    .in('company_group_id', groupIds);
+      .in('company_group_id', groupIds),
+    
+    // スカウトデータ取得
+    supabase
+      .from('scout_sends')
+      .select(
+        `
+        id,
+        candidate_id,
+        company_group_id,
+        job_posting_id,
+        status,
+        sent_at,
+        candidates!inner (
+          id,
+          first_name,
+          last_name,
+          current_company,
+          recent_job_company_name,
+          prefecture,
+          birth_date,
+          gender
+        ),
+        company_groups!inner (
+          group_name
+        ),
+        job_postings (
+          title,
+          job_type
+        )
+      `
+      )
+      .in('company_group_id', groupIds)
+  ]);
+
+  const { data: applicationsData, error: applicationsError } = applicationResult;
+  const { data: scoutSendsData, error: scoutSendsError } = scoutSendsResult;
+
+  if (applicationsError && scoutSendsError) return [];
+
+  // 4. 両方のデータを統合
+  const allCandidatesData = [
+    ...(applicationsData || []).map((app: any) => ({
+      ...app,
+      type: 'application',
+      created_at: app.created_at
+    })),
+    ...(scoutSendsData || []).map((scout: any) => ({
+      ...scout,
+      type: 'scout',
+      created_at: scout.sent_at
+    }))
+  ];
+
+  let query = allCandidatesData;
 
   // 4. パラメータによるフィルタ
   if (params.groupId) {
@@ -255,6 +316,14 @@ export async function getCandidatesDataWithQuery(
       ]);
       const candidate = app.candidates;
       const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+      
+      // 担当者を取得
+      const assignedUsers = await getAssignedUsersForCandidate(
+        supabase,
+        candidateId,
+        app.company_group_id
+      );
+      
       return {
         id: candidateId,
         name: `${candidate.first_name} ${candidate.last_name}`,
@@ -268,7 +337,10 @@ export async function getCandidatesDataWithQuery(
           workExperience.data?.map((ind: any) => ind.industry_name) || [],
         targetCompany: careerStatus.data?.[0]?.company_name || '',
         targetJob: app.job_postings?.job_type || '',
+        jobPostingId: app.job_posting_id || '',
+        jobPostingTitle: app.job_postings?.title || '',
         group: app.company_groups?.group_name || '',
+        groupId: app.company_group_id || '',
         applicationDate: app.created_at
           ? new Date(app.created_at).toLocaleDateString('ja-JP')
           : '',
@@ -278,11 +350,64 @@ export async function getCandidatesDataWithQuery(
           app.status === 'second_interview' ? 'ready' : undefined,
         finalScreening: app.status === 'final_interview' ? 'ready' : undefined,
         offer: app.status === 'offer' ? 'ready' : undefined,
-        assignedUsers: [],
+        assignedUsers,
+        type: app.type || 'application',
       };
     })
   );
   return candidatesWithDetails;
+}
+
+// 候補者とメッセージをやり取りしている企業担当者を取得（元に戻す）
+async function getAssignedUsersForCandidate(
+  supabase: any,
+  candidateId: string,
+  companyGroupId: string
+): Promise<string[]> {
+  try {
+    console.log('🔍 [担当者取得] 開始:', { candidateId, companyGroupId });
+    
+    // スカウトの場合：scout_sendsから担当者名を取得
+    const { data: scoutSends, error: scoutSendsError } = await supabase
+      .from('scout_sends')
+      .select('sender_name')
+      .eq('candidate_id', candidateId)
+      .eq('company_group_id', companyGroupId);
+
+    if (!scoutSendsError && scoutSends && scoutSends.length > 0) {
+      const uniqueSenders = new Set<string>();
+      scoutSends.forEach(scout => {
+        if (scout.sender_name) {
+          uniqueSenders.add(scout.sender_name);
+        }
+      });
+      
+      if (uniqueSenders.size > 0) {
+        const result = Array.from(uniqueSenders);
+        console.log('✅ [担当者取得] スカウト担当者:', result);
+        return result;
+      }
+    }
+
+    // 応募の場合：グループ名を返す
+    const { data: companyGroup, error: groupError } = await supabase
+      .from('company_groups')
+      .select('group_name')
+      .eq('id', companyGroupId)
+      .single();
+
+    if (!groupError && companyGroup) {
+      const result = [`${companyGroup.group_name}グループ`];
+      console.log('✅ [担当者取得] 応募グループ:', result);
+      return result;
+    }
+
+    console.log('❌ [担当者取得] スカウトも応募グループも見つかりません');
+    return [];
+  } catch (error) {
+    console.error('❌ [担当者取得エラー]:', error);
+    return [];
+  }
 }
 
 // 候補者データを取得する関数
@@ -337,45 +462,115 @@ async function getCandidatesDataFallback(
   groupIds: string[]
 ): Promise<CandidateData[]> {
   try {
-    console.log('🔍 Querying applications with group IDs:', groupIds);
-    const { data: candidatesData, error: candidatesError } = await supabase
-      .from('application')
-      .select(
-        `
-        id,
-        candidate_id,
-        company_group_id,
-        job_posting_id,
-        status,
-        created_at,
-        candidates!inner (
+    console.log('🔍 Querying applications and scout_sends with group IDs:', groupIds);
+    
+    // applicationとscout_sendsの両方を並列取得
+    const [applicationResult, scoutSendsResult] = await Promise.all([
+      // 応募データ取得
+      supabase
+        .from('application')
+        .select(
+          `
           id,
-          first_name,
-          last_name,
-          current_company,
-          prefecture,
-          birth_date,
-          gender
-        ),
-        company_groups!inner (
-          group_name
-        ),
-        job_postings (
-          title,
-          job_type
+          candidate_id,
+          company_group_id,
+          job_posting_id,
+          status,
+          created_at,
+          candidates!inner (
+            id,
+            first_name,
+            last_name,
+            current_company,
+            recent_job_company_name,
+            prefecture,
+            birth_date,
+            gender
+          ),
+          company_groups!inner (
+            group_name
+          ),
+          job_postings (
+            title,
+            job_type
+          )
+        `
         )
-      `
-      )
-      .in('company_group_id', groupIds);
+        .in('company_group_id', groupIds),
+      
+      // スカウトデータ取得
+      supabase
+        .from('scout_sends')
+        .select(
+          `
+          id,
+          candidate_id,
+          company_group_id,
+          job_posting_id,
+          status,
+          sent_at,
+          candidates!inner (
+            id,
+            first_name,
+            last_name,
+            current_company,
+            recent_job_company_name,
+            prefecture,
+            birth_date,
+            gender
+          ),
+          company_groups!inner (
+            group_name
+          ),
+          job_postings (
+            title,
+            job_type
+          )
+        `
+        )
+        .in('company_group_id', groupIds)
+    ]);
 
-    console.log('🔍 Applications Query Result:', {
+    const { data: applicationsData, error: applicationsError } = applicationResult;
+    const { data: scoutSendsData, error: scoutSendsError } = scoutSendsResult;
+
+    console.log('🔍 Applications and Scout Sends Query Result:', {
+      applicationsCount: applicationsData?.length || 0,
+      applicationsError,
+      scoutSendsCount: scoutSendsData?.length || 0,
+      scoutSendsError
+    });
+
+    if (applicationsError && scoutSendsError) {
+      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
+      return [];
+    }
+
+    // 両方のデータを統合
+    const allCandidatesData = [
+      ...(applicationsData || []).map((app: any) => ({
+        ...app,
+        type: 'application',
+        created_at: app.created_at
+      })),
+      ...(scoutSendsData || []).map((scout: any) => ({
+        ...scout,
+        type: 'scout', 
+        created_at: scout.sent_at
+      }))
+    ];
+
+    const candidatesData = allCandidatesData;
+
+    console.log('🔍 Combined Applications and Scout Sends Result:', {
       count: candidatesData?.length || 0,
-      error: candidatesError,
+      applicationsError,
+      scoutSendsError,
       sampleData: candidatesData?.slice(0, 2), // 最初の2件だけログ出力
     });
 
-    if (candidatesError) {
-      console.error('Applications query error:', candidatesError);
+    if (applicationsError && scoutSendsError) {
+      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
       return [];
     }
 
@@ -429,6 +624,13 @@ async function getCandidatesDataFallback(
           ? calculateAge(candidate.birth_date)
           : 0;
 
+        // 担当者を取得
+        const assignedUsers = await getAssignedUsersForCandidate(
+          supabase,
+          candidateId,
+          app.company_group_id
+        );
+
         return {
           id: candidateId,
           name: `${candidate.first_name} ${candidate.last_name}`,
@@ -440,7 +642,10 @@ async function getCandidatesDataFallback(
           industry: workExperience.data?.map(ind => ind.industry_name) || [],
           targetCompany: careerStatus.data?.[0]?.company_name || '',
           targetJob: app.job_postings?.job_type || '',
+          jobPostingId: app.job_posting_id || '',
+          jobPostingTitle: app.job_postings?.title || '',
           group: app.company_groups?.group_name || '',
+          groupId: app.company_group_id || '',
           applicationDate: app.created_at
             ? new Date(app.created_at).toLocaleDateString('ja-JP')
             : '',
@@ -451,7 +656,8 @@ async function getCandidatesDataFallback(
           finalScreening:
             app.status === 'final_interview' ? 'ready' : undefined,
           offer: app.status === 'offer' ? 'ready' : undefined,
-          assignedUsers: [], // 簡易版では担当者情報は省略
+          assignedUsers,
+          type: app.type || 'application',
         };
       })
     );
@@ -505,7 +711,7 @@ export async function getGroupOptions(): Promise<
 
 // 求人選択肢を取得する関数
 export async function getJobOptions(): Promise<
-  Array<{ value: string; label: string }>
+  Array<{ value: string; label: string; groupId?: string }>
 > {
   // RLS対応: 認証済みクライアントを使用
   const supabase = await getSupabaseServerClient();
@@ -531,9 +737,9 @@ export async function getJobOptions(): Promise<
 
     const { data, error } = await supabase
       .from('job_postings')
-      .select('id, title, job_type')
+      .select('id, title, job_type, company_group_id, created_at')
       .in('company_group_id', groupIds)
-      .order('title');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('求人選択肢の取得に失敗:', error);
@@ -542,8 +748,11 @@ export async function getJobOptions(): Promise<
 
     const options = [
       { value: '', label: 'すべて' },
-      ...(data?.map(job => ({ value: job.id.toString(), label: job.title })) ||
-        []),
+      ...(data?.map(job => ({ 
+        value: job.id.toString(), 
+        label: job.title,
+        groupId: job.company_group_id 
+      })) || []),
     ];
 
     return options;
@@ -614,10 +823,12 @@ export interface CandidateDetailData {
  * 候補者詳細データを取得する
  * @param candidateId
  * @param supabase
+ * @param companyGroupId - 自分の会社グループIDを指定して進捗状況を限定
  */
 export async function getCandidateDetailData(
   candidateId: string,
-  supabase: any
+  supabase: any,
+  companyGroupId?: string
 ): Promise<CandidateDetailData | null> {
   // 1. 基本情報
   const { data: candidate, error: candidateError } = await supabase
@@ -641,13 +852,20 @@ export async function getCandidateDetailData(
     .select('industry_name, experience_years')
     .eq('candidate_id', candidateId);
 
-  // 4. 選考状況
-  const { data: selectionStatus } = await supabase
+  // 4. 選考状況 - 自分の会社グループのもののみ取得
+  let selectionStatusQuery = supabase
     .from('career_status_entries')
     .select(
       'company_name, industries, progress_status, decline_reason'
     )
     .eq('candidate_id', candidateId);
+    
+  // companyGroupIdが指定されている場合はそのグループの進捗のみ取得
+  if (companyGroupId) {
+    selectionStatusQuery = selectionStatusQuery.eq('company_group_id', companyGroupId);
+  }
+  
+  const { data: selectionStatus } = await selectionStatusQuery;
 
   // 5. スキル情報
   const { data: skillsData } = await supabase
@@ -664,6 +882,14 @@ export async function getCandidateDetailData(
 
   // 年齢計算
   const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+  
+  // デバッグ: 希望勤務地データを確認
+  console.log('🔍 [希望勤務地デバッグ]:', {
+    candidateId,
+    desired_locations: candidate.desired_locations,
+    type: typeof candidate.desired_locations,
+    isArray: Array.isArray(candidate.desired_locations)
+  });
 
   // 日付フォーマット関数
   const formatDate = (dateString: string) => {
@@ -739,7 +965,9 @@ export async function getCandidateDetailData(
       currentIncome: candidate.current_income || candidate.current_salary || '',
       jobTypes: Array.isArray(candidate.desired_job_types) ? candidate.desired_job_types : [],
       industries: Array.isArray(candidate.desired_industries) ? candidate.desired_industries : [],
-      workLocations: Array.isArray(candidate.desired_locations) ? candidate.desired_locations : [],
+      workLocations: Array.isArray(candidate.desired_locations) 
+        ? candidate.desired_locations.filter(location => location && location.trim() !== '') 
+        : [],
       jobChangeTiming: candidate.job_change_timing || '',
       workStyles: Array.isArray(candidate.interested_work_styles) ? candidate.interested_work_styles : [],
     },

@@ -42,12 +42,12 @@ export function useRecruitmentPage({
   let filteredCandidates = initialCandidates;
   if (selectedGroup) {
     filteredCandidates = filteredCandidates.filter(
-      c => c.group === selectedGroup
+      c => c.groupId === selectedGroup
     );
   }
   if (selectedJob) {
     filteredCandidates = filteredCandidates.filter(
-      c => c.targetJob === selectedJob
+      c => c.jobPostingId === selectedJob
     );
   }
   if (keyword) {
@@ -154,6 +154,14 @@ export function useRecruitmentPage({
     setCurrentPage(page);
   };
 
+  const handleJobChange = (candidateId: string, jobId: string) => {
+    // TODO: ここで実際のAPIを呼び出して候補者の求人を変更する
+    console.log('🔄 求人変更:', { candidateId, jobId });
+    // 実装例:
+    // - applicationテーブルのjob_posting_idを更新
+    // - 成功したら候補者データを再取得
+  };
+
   return {
     selectedGroup,
     setSelectedGroup,
@@ -183,6 +191,7 @@ export function useRecruitmentPage({
     handleCandidateClick,
     handleCloseMenu,
     handlePageChange,
+    handleJobChange,
     groupOptions,
     jobOptions,
   };

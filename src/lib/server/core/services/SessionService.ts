@@ -25,7 +25,7 @@ export interface SessionResult {
  * Supabase専用セッション管理サービス
  */
 export class SessionService {
-  private readonly REFRESH_THRESHOLD = 15 * 60 * 1000; // 15分前にリフレッシュ
+  private readonly REFRESH_THRESHOLD = 3 * 24 * 60 * 60 * 1000; // 3日前にリフレッシュ
 
   constructor() {
     // Supabaseのセッション管理のみを使用
