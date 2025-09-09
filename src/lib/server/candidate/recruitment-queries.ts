@@ -974,6 +974,13 @@ export async function getCandidateDetailData(
     .select('school_name, department, graduation_year, graduation_month')
     .eq('candidate_id', candidateId);
 
+  // 7. 担当者情報を取得
+  const assignedUsers = companyGroupId ? await getAssignedUsersForCandidate(
+    supabase,
+    candidateId,
+    companyGroupId
+  ) : [];
+
   // 年齢計算
   const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
   
@@ -1124,5 +1131,7 @@ export async function getCandidateDetailData(
     jobPostingTitle,
     group,
     groupId,
+    // 担当者情報を追加
+    assignedUsers,
   };
 }
