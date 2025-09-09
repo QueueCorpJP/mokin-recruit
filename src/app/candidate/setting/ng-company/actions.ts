@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
@@ -9,7 +9,7 @@ export interface BlockedCompanySettings {
 }
 
 export async function saveBlockedCompanies(companyNames: string[]) {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
 
   // Allow empty array for deletion scenarios
   if (!companyNames) {
@@ -122,7 +122,7 @@ export async function removeBlockedCompany(companyName: string) {
 }
 
 export async function getBlockedCompanies(): Promise<BlockedCompanySettings | null> {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {

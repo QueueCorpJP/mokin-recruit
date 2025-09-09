@@ -1050,6 +1050,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                               onChange={(value: string) =>
                                 searchStore.setOtherLanguage(value)
                               }
+                              className="w-48"
                               options={[
                                 { value: '', label: '指定なし' },
                                 { value: 'chinese', label: '中国語' },
@@ -1076,6 +1077,7 @@ export default function SearchClient({ initialCandidates = [], initialSearchPara
                               onChange={(value: string) =>
                                 searchStore.setOtherLanguageLevel(value)
                               }
+                              className="w-52"
                               options={[
                                 { value: '', label: 'レベルの指定なし' },
                                 { value: 'native', label: 'ネイティブ' },

@@ -18,9 +18,12 @@ interface SearchHistoryTableProps {
 function buildSearchUrl(searchConditions: any, groupId: string): string {
   const params = new URLSearchParams();
   
+  // グループIDを設定
+  params.set('search_group', groupId);
+  
   // 基本パラメータ
-  if (searchConditions.keywords?.length > 0) {
-    params.set('keyword', searchConditions.keywords[0]);
+  if (searchConditions.keyword) {
+    params.set('keyword', searchConditions.keyword);
   }
   
   // 年齢
@@ -32,11 +35,11 @@ function buildSearchUrl(searchConditions: any, groupId: string): string {
   }
   
   // 現在の年収
-  if (searchConditions.salary_min !== undefined) {
-    params.set('current_salary_min', searchConditions.salary_min.toString());
+  if (searchConditions.current_salary_min !== undefined) {
+    params.set('current_salary_min', searchConditions.current_salary_min.toString());
   }
-  if (searchConditions.salary_max !== undefined) {
-    params.set('current_salary_max', searchConditions.salary_max.toString());
+  if (searchConditions.current_salary_max !== undefined) {
+    params.set('current_salary_max', searchConditions.current_salary_max.toString());
   }
   
   // 希望年収
@@ -47,30 +50,52 @@ function buildSearchUrl(searchConditions: any, groupId: string): string {
     params.set('desired_salary_max', searchConditions.desired_salary_max.toString());
   }
   
-  // 配列形式の条件
-  if (searchConditions.job_types?.length > 0) {
-    params.set('experience_job_types', searchConditions.job_types.join(','));
+  // 経験職種・業界（配列形式で直接名前が格納される）
+  if (searchConditions.experience_job_types?.length > 0) {
+    const jobTypeNames = Array.isArray(searchConditions.experience_job_types[0]) 
+      ? searchConditions.experience_job_types.flat()
+      : searchConditions.experience_job_types;
+    params.set('experience_job_types', jobTypeNames.join(','));
   }
-  if (searchConditions.industries?.length > 0) {
-    params.set('experience_industries', searchConditions.industries.join(','));
+  if (searchConditions.experience_industries?.length > 0) {
+    const industryNames = Array.isArray(searchConditions.experience_industries[0])
+      ? searchConditions.experience_industries.flat() 
+      : searchConditions.experience_industries;
+    params.set('experience_industries', industryNames.join(','));
   }
+  
+  // 希望職種・業界
   if (searchConditions.desired_job_types?.length > 0) {
-    params.set('desired_job_types', searchConditions.desired_job_types.join(','));
+    const jobTypeNames = Array.isArray(searchConditions.desired_job_types[0])
+      ? searchConditions.desired_job_types.flat()
+      : searchConditions.desired_job_types;  
+    params.set('desired_job_types', jobTypeNames.join(','));
   }
   if (searchConditions.desired_industries?.length > 0) {
-    params.set('desired_industries', searchConditions.desired_industries.join(','));
+    const industryNames = Array.isArray(searchConditions.desired_industries[0])
+      ? searchConditions.desired_industries.flat()
+      : searchConditions.desired_industries;
+    params.set('desired_industries', industryNames.join(','));
   }
-  if (searchConditions.locations?.length > 0) {
-    params.set('desired_locations', searchConditions.locations.join(','));
+  
+  // 希望勤務地
+  if (searchConditions.desired_locations?.length > 0) {
+    params.set('desired_locations', searchConditions.desired_locations.join(','));
   }
+  
+  // 働き方
   if (searchConditions.work_styles?.length > 0) {
     params.set('work_styles', searchConditions.work_styles.join(','));
   }
-  if (searchConditions.education_levels?.length > 0) {
-    params.set('education', searchConditions.education_levels[0]);
+  
+  // 学歴
+  if (searchConditions.education) {
+    params.set('education', searchConditions.education);
   }
-  if (searchConditions.skills?.length > 0) {
-    params.set('qualifications', searchConditions.skills.join(','));
+  
+  // 資格
+  if (searchConditions.qualifications?.length > 0) {
+    params.set('qualifications', searchConditions.qualifications.join(','));
   }
   
   // その他の条件
@@ -101,9 +126,12 @@ function buildSearchUrl(searchConditions: any, groupId: string): string {
   if (searchConditions.last_login_min) {
     params.set('last_login_min', searchConditions.last_login_min);
   }
-  
-  // グループIDを設定
-  params.set('search_group', groupId);
+  if (searchConditions.job_type_and_search) {
+    params.set('job_type_and_search', searchConditions.job_type_and_search);
+  }
+  if (searchConditions.industry_and_search) {
+    params.set('industry_and_search', searchConditions.industry_and_search);
+  }
   
   return `/company/search/result?${params.toString()}`;
 }

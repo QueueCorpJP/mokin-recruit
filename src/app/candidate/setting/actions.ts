@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
 // 簡単なメモリキャッシュ
@@ -45,7 +45,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   }
   console.log('Fetching user settings for candidateId:', candidateId);
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
 
   // Get user email and scout_reception_enabled from candidates table
   const { data: candidateData, error: candidateError } = await supabase

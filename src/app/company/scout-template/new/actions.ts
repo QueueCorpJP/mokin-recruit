@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -35,7 +34,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
     }
 
     const { companyUserId } = authResult.data;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // ユーザーが権限を持つグループのみ取得
     const { data: userPermissions, error } = await supabase
@@ -84,7 +83,7 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
       throw new Error('認証が必要です');
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     
     const { data: jobPostings, error } = await supabase
       .from('job_postings')
@@ -144,7 +143,7 @@ export async function createScoutTemplate(data: ScoutTemplateData) {
       return { success: false, error: '本文を入力してください' };
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // グループが企業のものかチェック
     const { data: group, error: groupError } = await supabase

@@ -2,7 +2,7 @@
 
 import { getCachedCandidateUser, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export async function getSummaryData() {
   try {
@@ -46,7 +46,7 @@ export async function updateSummaryData(formData: FormData) {
       selfPr
     });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // candidatesテーブルを更新
     const { error: candidateError } = await supabase

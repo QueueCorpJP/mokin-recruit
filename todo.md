@@ -1,73 +1,79 @@
-# Candidate Layout認証最適化タスクリスト
+# TODO
 
-## 修正の意図と背景
-現在、`CandidateLayoutClient.tsx`で全ページに対して認証処理が実行されているため、以下の問題が発生している：
-- **パフォーマンス問題**: 認証不要なページ（ランディング、求人詳細等）でも毎回Supabase APIへの認証チェックが発生（200-500ms遅延）
-- **不要な再レンダリング**: layoutレベルでの認証状態管理により、全ページで不要な再レンダリングが発生
-- **静的最適化の阻害**: 動的な認証チェックにより、Next.jsの静的生成が機能しない
+## Candidate側でservice role keyを使用している問題のあるページ (RLS無効化) - 緊急対応必要
 
-### 解決方針
-1. layoutから認証処理を完全に削除
-2. 認証が必要な保護されたページでのみ個別に認証チェックを実装
-3. 公開ページは認証チェックなしで高速表示
+**26個のファイル**で`getSupabaseAdminClient()`を使用してRLSをバイパスしている:
 
-## Layout修正
-- [x] `src/app/candidate/CandidateLayoutClient.tsx` - 認証処理を削除、シンプルなレイアウトのみに変更
+1. **src/app/candidate/mypage/page.tsx** - 91行目
+2. **src/app/candidate/search/setting/[id]/actions.ts** - 53行目
+3. **src/app/candidate/setting/actions.ts** - 48行目
+4. **src/app/candidate/job/favorite/actions.ts** - 66, 181, 264行目
+5. **src/app/candidate/setting/withdrawal/reason/actions.ts**
+6. **src/app/candidate/setting/scout/actions.ts**
+7. **src/app/candidate/setting/password/actions.ts** - 21行目
+8. **src/app/candidate/setting/notification/actions.ts**
+9. **src/app/candidate/setting/ng-company/actions.ts** - 12, 125行目
+10. **src/app/candidate/setting/mail/actions.ts** - 55, 196行目
+11. **src/app/candidate/search/setting/[id]/confirm/actions.ts**
+12. **src/app/candidate/media/[media_id]/page.tsx**
+13. **src/app/candidate/job/[job_id]/page.tsx** - 57行目
+14. **src/app/candidate/account/summary/edit/actions.ts**
+15. **src/app/candidate/account/skills/edit/actions.ts** - 80行目
+16. **src/app/candidate/account/recent-job/edit/actions.ts**
+17. **src/app/candidate/account/profile/edit/page.tsx** - 26行目
+18. **src/app/candidate/account/profile/page.tsx** - 26行目
+19. **src/app/candidate/account/profile/edit/actions.ts** - 81行目
+20. **src/app/candidate/account/expectation/page.tsx** - 40行目
+21. **src/app/candidate/account/expectation/edit/actions.ts** - 14, 155行目
+22. **src/app/candidate/account/education/edit/actions.ts** - 139行目
+23. **src/app/candidate/account/career-status/page.tsx** - 20行目
+24. **src/app/candidate/account/career-status/edit/actions.ts** - 36, 116行目
+25. **src/app/candidate/media/actions.ts** - 40, 58, 94, 130, 171, 223行目
+26. **src/app/candidate/company/[company_id]/actions.ts** - 110, 195行目
 
-## 保護されたページ（個別認証必要）
-- [x] `src/app/candidate/mypage/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/message/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/task/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/profile/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/profile/edit/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/career-status/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/career-status/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/education/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/education/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/expectation/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/expectation/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/recent-job/page.tsx` - 認証チェック追加（既に実装済み）
-- [x] `src/app/candidate/account/recent-job/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/resume/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/skills/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/skills/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/summary/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/account/summary/edit/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/mail/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/notification/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/password/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/scout/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/withdrawal/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/setting/ng-company/page.tsx` - 認証チェック追加
-- [x] `src/app/candidate/search/setting/page.tsx` - 認証チェック追加
+### 問題点
+- **候補者が他の候補者のデータにアクセス可能**
+- **候補者が企業データにアクセス可能**
+- **RLS (Row Level Security) が完全にバイパス**される致命的セキュリティ脆弱性
 
-## Navigation/Footer関連
-- [x] `src/components/layout/AuthAwareNavigationServer.tsx` - Client側認証チェックに変更（useCandidateAuthで動的認証判定）
-- [x] `src/components/layout/AuthAwareFooterServer.tsx` - Client側認証チェックに変更（useCandidateAuthで動的認証判定）
+## Company側でservice role keyを使用している問題のあるページ (RLS無効化)
 
-## 認証Hook・Utility
-- [ ] 共通認証ガードコンポーネントの作成（任意）
-- [ ] 認証チェック済みPage HOCの作成（任意）
+以下のファイルで`getSupabaseAdminClient()`を使用してRLSをバイパスしている:
 
-## 検証・テスト
-- [ ] 未認証でのアクセステスト（各保護ページ） - 要手動テスト
-- [ ] 認証後の正常動作確認 - 要手動テスト  
-- [ ] パフォーマンス測定（layout認証削除前後） - 要手動テスト
-- [ ] 他ユーザータイプでのアクセステスト - 要手動テスト
+### 修正が必要なファイル
 
-## 備考
-- 保護されたページは27個 - **全て完了✅**
-- 公開ページ（auth、landing、job詳細等）は認証不要
-- layoutから認証処理を削除することで全ページの初期ロード高速化
+1. **src/app/company/contact/actions.ts**
+   - 24行目: `getSupabaseAdminClient()`使用
 
-## 完了サマリー
-✅ **Layout修正**: `CandidateLayoutClient.tsx`から認証処理を削除済み  
-✅ **保護されたページ27個**: 全て個別認証チェック実装完了  
-✅ **Navigation/Footer**: 既にクライアント側対応済み確認  
+2. **src/app/company/contact/page.tsx**
+   - 32行目: `getSupabaseAdminClient()`使用
 
-**実装パターン:**
-- **Server Component**: `getCachedCandidateUser()` + `redirect()` パターン
-- **Client Component**: `useCandidateAuth()` + `useEffect()` + loading state パターン
+3. **src/app/company/job/actions.ts**
+   - 36, 202, 360, 392, 468, 999行目: `getSupabaseAdminClient()`使用
 
-**次のステップ**: 手動テストによる動作確認とパフォーマンス測定
+4. **src/app/company/setting/actions.ts**
+   - 37, 87, 142, 187行目: `getSupabaseAdminClient()`使用
+
+5. **src/app/company/setting/mail/actions.ts**
+   - 56, 196行目: `
+   getSupabaseAdminClient()`使用
+
+6. **src/app/company/setting/password/actions.ts**
+   - 21行目: `getSupabaseAdminClient()`使用
+
+7. **src/app/company/search/result/candidate-actions.ts**
+   - 26, 84, 129, 176, 218行目: `getSupabaseAdminClient()`使用
+
+8. **src/app/company/search/scout/actions.ts**
+   - 25, 224, 269, 295, 328行目: `getSupabaseAdminClient()`使用
+
+9. **src/app/company/scout-template/new/actions.ts**
+   - 38, 87, 147行目: `getSupabaseAdminClient()`使用
+
+### 問題点
+- RLS (Row Level Security) がバイパスされるため、セキュリティリスクが高い
+- 企業が他社のデータにアクセスできる可能性がある
+
+### 推奨対応
+- `@/lib/supabase/server`の`createClient()`を使用してanon keyで動作させる
+- RLSポリシーを有効にして適切なアクセス制御を実装する

@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { redirect } from 'next/navigation';
 
@@ -14,7 +14,7 @@ export async function processWithdrawal(withdrawalReason: string) {
     throw new Error('退会理由が選択されていません。');
   }
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   // 認証確認
   const authResult = await requireCandidateAuthForAction();

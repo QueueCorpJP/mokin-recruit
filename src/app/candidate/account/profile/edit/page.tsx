@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import ProfileEditForm from './ProfileEditForm';
 
 
@@ -23,7 +23,7 @@ interface CandidateData {
 // 候補者データを取得する関数
 async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     
     const { data, error } = await supabase
       .from('candidates')

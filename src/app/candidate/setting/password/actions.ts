@@ -1,7 +1,7 @@
 'use server';
 
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import bcrypt from 'bcryptjs';
 
 export async function changePassword(currentPassword: string, newPassword: string) {
@@ -18,7 +18,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
     const { candidateId } = authResult.data;
     console.log('認証成功 - CandidateId:', candidateId);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     
     // candidateIdから候補者のメールアドレスを取得
     const { data: candidate, error: candidateError } = await supabase

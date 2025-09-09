@@ -7,6 +7,65 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   output: 'standalone',
+  // セキュリティヘッダー設定
+  async headers() {
+    return [
+      {
+        // すべてのルートに適用
+        source: '/(.*)',
+        headers: [
+          // Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https: http:",
+              "connect-src 'self' https://mjhqeagxibsklugikyma.supabase.co https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          },
+          // HTTP Strict Transport Security
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          // X-Frame-Options (CSP frame-ancestorsと併用)
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          // X-Content-Type-Options
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          // Referrer Policy
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          // Permissions Policy
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+          },
+          // X-DNS-Prefetch-Control
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'off'
+          }
+        ]
+      }
+    ]
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定

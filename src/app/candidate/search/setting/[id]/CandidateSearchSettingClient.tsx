@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useFavoriteApi';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { JobDetailData } from './actions';
+import { useCompanyDetail } from '@/hooks/useCompanyDetail';
 import Image from 'next/image';
 
 interface CandidateSearchSettingClientProps {
@@ -126,6 +127,13 @@ export default function CandidateSearchSettingClient({
   const params = useParams();
   const [jobData] = useState<JobDetailData | null>(initialJobData);
 
+  // 企業データを非同期で取得
+  const companyId = jobData?.companyId;
+  
+  
+  const { data: companyData, loading: companyDataLoading, error: companyDataError } = useCompanyDetail(companyId || '');
+  
+
   // 画像カルーセル用のstate
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -214,7 +222,14 @@ export default function CandidateSearchSettingClient({
 
             {/* 企業情報 */}
             <div className='flex flex-row gap-4 items-center justify-start w-full'>
-              <div className='relative rounded-full shrink-0 w-10 h-10 overflow-hidden'>
+              <div 
+                className='relative rounded-full shrink-0 w-10 h-10 overflow-hidden cursor-pointer'
+                onClick={() => {
+                  if (jobData.companyId) {
+                    router.push(`/candidate/company/${jobData.companyId}`);
+                  }
+                }}
+              >
                 <Image
                   src={jobData.companyLogo || '/company.jpg'}
                   alt={jobData.companyName}
@@ -337,10 +352,16 @@ export default function CandidateSearchSettingClient({
                         </div>
                       </div>
                       <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                        <TagDisplay
-                          items={jobData.jobTypes}
-                          borderRadius='5px'
-                        />
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-10 bg-gray-200 rounded w-32"></div>
+                          </div>
+                        ) : (
+                          <TagDisplay
+                            items={companyData?.jobTypes || jobData.jobTypes}
+                            borderRadius='5px'
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -354,10 +375,16 @@ export default function CandidateSearchSettingClient({
                         </div>
                       </div>
                       <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
-                        <TagDisplay
-                          items={jobData.industries}
-                          borderRadius='5px'
-                        />
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-10 bg-gray-200 rounded w-40"></div>
+                          </div>
+                        ) : (
+                          <TagDisplay
+                            items={companyData?.industries || jobData.industries}
+                            borderRadius='5px'
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -378,19 +405,29 @@ export default function CandidateSearchSettingClient({
                           </div>
                           <div className='box-border content-stretch flex flex-row gap-6 items-center justify-start p-0 relative shrink-0'>
                             <div className='box-border content-stretch flex flex-row gap-2 items-center justify-start leading-[0] not-italic p-0 relative shrink-0 text-[#323232] text-[16px] text-left text-nowrap tracking-[1.6px]'>
-                              <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                                {jobData.salaryMin
-                                  ? `${jobData.salaryMin}万`
-                                  : '選択済項目が入ります'}
-                              </div>
-                              <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                                〜
-                              </div>
-                              <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                                {jobData.salaryMax
-                                  ? `${jobData.salaryMax}万`
-                                  : '選択済項目が入ります'}
-                              </div>
+                              {companyDataLoading ? (
+                                <div className="animate-pulse flex flex-row gap-2 items-center">
+                                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                                  <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">〜</div>
+                                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
+                                    {(companyData?.salaryMin ?? jobData.salaryMin)
+                                      ? `${companyData?.salaryMin ?? jobData.salaryMin}万`
+                                      : '選択済項目が入ります'}
+                                  </div>
+                                  <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                                    〜
+                                  </div>
+                                  <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
+                                    {(companyData?.salaryMax ?? jobData.salaryMax)
+                                      ? `${companyData?.salaryMax ?? jobData.salaryMax}万`
+                                      : '選択済項目が入ります'}
+                                  </div>
+                                </>
+                              )}
                             </div>
                             <div className='box-border content-stretch flex flex-row gap-2 items-start justify-start p-0 relative shrink-0'>
                               <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -407,7 +444,13 @@ export default function CandidateSearchSettingClient({
                           </div>
                           <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.salaryNote}
+                              {companyDataLoading ? (
+                                <div className="animate-pulse">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                </div>
+                              ) : (
+                                companyData?.salaryNote || jobData.salaryNote
+                              )}
                             </div>
                           </div>
                         </div>
@@ -432,9 +475,15 @@ export default function CandidateSearchSettingClient({
                             勤務地
                           </div>
                           <div className='min-w-0 flex-1 gap-2'>
-                            <SingleRowLocationTags
-                              locations={jobData.locations}
-                            />
+                            {companyDataLoading ? (
+                              <div className="animate-pulse">
+                                <div className="h-10 bg-gray-200 rounded w-24"></div>
+                              </div>
+                            ) : (
+                              <SingleRowLocationTags
+                                locations={companyData?.locations || jobData.locations}
+                              />
+                            )}
                           </div>
                         </div>
 
@@ -444,7 +493,13 @@ export default function CandidateSearchSettingClient({
                             勤務地補足
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
-                            {jobData.locationNote}
+                            {companyDataLoading ? (
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                              </div>
+                            ) : (
+                              companyData?.locationNote || jobData.locationNote
+                            )}
                           </div>
                         </div>
 
@@ -469,8 +524,14 @@ export default function CandidateSearchSettingClient({
                           </div>
                           <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0 w-full'>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {getEmploymentTypeInJapanese(
-                                jobData.employmentType
+                              {companyDataLoading ? (
+                                <div className="animate-pulse">
+                                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                </div>
+                              ) : (
+                                getEmploymentTypeInJapanese(
+                                  companyData?.employmentType || jobData.employmentType
+                                )
                               )}
                             </div>
                           </div>
@@ -483,7 +544,13 @@ export default function CandidateSearchSettingClient({
                           </div>
                           <div className='box-border content-stretch flex flex-col gap-1 items-start justify-start p-0 relative shrink-0'>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.employmentTypeNote}
+                              {companyDataLoading ? (
+                                <div className="animate-pulse">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                </div>
+                              ) : (
+                                companyData?.employmentTypeNote || jobData.employmentTypeNote
+                              )}
                             </div>
                           </div>
                         </div>
@@ -508,7 +575,13 @@ export default function CandidateSearchSettingClient({
                             就業時間
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                            {jobData.workingHours}
+                            {companyDataLoading ? (
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                              </div>
+                            ) : (
+                              companyData?.workingHours || jobData.workingHours
+                            )}
                           </div>
                         </div>
 
@@ -518,22 +591,34 @@ export default function CandidateSearchSettingClient({
                             所定外労働の有無
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                            {jobData.overtime
-                              ? jobData.overtime.trim() === ''
-                                ? 'あり'
-                                : jobData.overtime
-                              : 'あり'}
+                            {companyDataLoading ? (
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                              </div>
+                            ) : (
+                              (companyData?.overtime || jobData.overtime)
+                                ? (companyData?.overtime || jobData.overtime).trim() === ''
+                                  ? 'あり'
+                                  : (companyData?.overtime || jobData.overtime)
+                                : 'あり'
+                            )}
                           </div>
                         </div>
 
                         {/* 備考 */}
-                        {jobData.overtimeMemo && (
+                        {(companyData?.overtimeMemo || jobData.overtimeMemo) && (
                           <div className='flex flex-col gap-2 items-start justify-start w-full'>
                             <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                               備考
                             </div>
                             <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full break-words overflow-wrap-break-word line-break-auto max-w-full">
-                              {jobData.overtimeMemo}
+                              {companyDataLoading ? (
+                                <div className="animate-pulse">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                </div>
+                              ) : (
+                                companyData?.overtimeMemo || jobData.overtimeMemo
+                              )}
                             </div>
                           </div>
                         )}
@@ -544,7 +629,13 @@ export default function CandidateSearchSettingClient({
                             休日・休暇
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] w-full whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                            {jobData.holidays}
+                            {companyDataLoading ? (
+                              <div className="animate-pulse">
+                                <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+                              </div>
+                            ) : (
+                              companyData?.holidays || jobData.holidays
+                            )}
                           </div>
                         </div>
                       </div>
@@ -561,7 +652,14 @@ export default function CandidateSearchSettingClient({
                       </div>
                       <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                          {jobData.selectionProcess}
+                          {companyDataLoading ? (
+                            <div className="animate-pulse space-y-1">
+                              <div className="h-4 bg-gray-200 rounded w-full"></div>
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                          ) : (
+                            companyData?.selectionProcess || jobData.selectionProcess
+                          )}
                         </div>
                       </div>
                     </div>
@@ -647,7 +745,18 @@ export default function CandidateSearchSettingClient({
                       </div>
                       <div className='bg-white p-6 w-full rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
                         <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word w-full max-w-full">
-                          {jobData.resumeRequired.join('、')}
+                          {companyDataLoading ? (
+                            <div className="animate-pulse">
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                          ) : (
+                            (() => {
+                              const resumeRequired = companyData?.resumeRequired || jobData.resumeRequired;
+                              return resumeRequired && resumeRequired.length > 0 
+                                ? resumeRequired.join('、') 
+                                : '提出書類の指定なし';
+                            })()
+                          )}
                         </div>
                       </div>
                     </div>
@@ -657,8 +766,29 @@ export default function CandidateSearchSettingClient({
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
               <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6 max-w-full overflow-hidden'>
                 <div className='flex flex-col gap-6 items-start justify-start max-w-full overflow-hidden'>
+                  {/* エラーメッセージ（企業データ取得失敗時） */}
+                  {companyDataError && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 w-full">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-2">
+                          <p className="text-sm text-yellow-700">企業情報の一部を読み込めませんでした</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <h2 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                    {jobData.companyName}
+                    {companyDataLoading ? (
+                      <div className="animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded w-32"></div>
+                      </div>
+                    ) : (
+                      companyData?.companyName || jobData?.companyName || '企業名未設定'
+                    )}
                   </h2>
 
                   {/* 代表者 */}
@@ -676,7 +806,13 @@ export default function CandidateSearchSettingClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                      {jobData.representative}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                      ) : (
+                        companyData?.representative || jobData?.representative || '代表者名未設定'
+                      )}
                     </div>
                   </div>
 
@@ -696,7 +832,13 @@ export default function CandidateSearchSettingClient({
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                        {jobData.establishedYear}
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        ) : (
+                          companyData?.establishedYear || jobData?.establishedYear || '未設定'
+                        )}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         年
@@ -720,7 +862,13 @@ export default function CandidateSearchSettingClient({
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                        {jobData.capital}
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        ) : (
+                          companyData?.capital || jobData?.capital || '未設定'
+                        )}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         万円
@@ -744,7 +892,13 @@ export default function CandidateSearchSettingClient({
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                        {jobData.employeeCount}
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        ) : (
+                          companyData?.employeeCount || jobData?.employeeCount || '未設定'
+                        )}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         人
@@ -768,8 +922,17 @@ export default function CandidateSearchSettingClient({
                     </div>
                     <div className='min-w-0 max-w-full overflow-hidden'>
                       <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto">
-                        {jobData.industry.split('、').slice(0, 2).join('、')}
-                        {jobData.industry.split('、').length > 2 && '...'}
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                        ) : (
+                          (() => {
+                            const industry = companyData?.industry || jobData?.industry || '業種未設定';
+                            const industries = industry.split('、');
+                            return industries.slice(0, 2).join('、') + (industries.length > 2 ? '...' : '');
+                          })()
+                        )}
                       </div>
                     </div>
                   </div>
@@ -789,7 +952,15 @@ export default function CandidateSearchSettingClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {jobData.businessContent}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse space-y-2">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                          <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                        </div>
+                      ) : (
+                        companyData?.businessContent || jobData?.businessContent || '事業内容未設定'
+                      )}
                     </div>
                   </div>
 
@@ -808,7 +979,14 @@ export default function CandidateSearchSettingClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {jobData.address}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse space-y-1">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      ) : (
+                        companyData?.address || jobData?.address || '所在地未設定'
+                      )}
                     </div>
                   </div>
 

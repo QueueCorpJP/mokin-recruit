@@ -1,12 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { getSidebarData, getRelatedArticles } from '@/app/candidate/media/actions';
 import MediaDetailClient from './MediaDetailClient';
 import type { Metadata } from 'next';
 
 // 記事詳細を取得する関数
 async function getArticleData(mediaId: string) {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const { data, error } = await supabase
     .from('articles')

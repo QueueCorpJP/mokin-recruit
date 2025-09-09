@@ -1,6 +1,5 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
 
 export type LoadingVariant = 'primary' | 'white' | 'gray' | 'inline';
 export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -36,16 +35,7 @@ export function Loading({
   fullScreen = false,
   inline = false,
 }: LoadingProps) {
-  const spinner = (
-    <Loader2
-      className={cn(
-        'animate-spin',
-        sizeClasses[size],
-        variantClasses[variant],
-        className
-      )}
-    />
-  );
+  const spinner = <SpinnerIcon variant={variant} size={size} className={className} />;
 
   if (inline) {
     return (
@@ -61,10 +51,7 @@ export function Loading({
       <div className="min-h-screen bg-gradient-to-br from-[#17856F] to-[#229A4E] flex items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
-            <div className="w-16 h-16 bg-gradient-to-r from-[#17856F] to-[#229A4E] rounded-full animate-pulse" />
-          </div>
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+            <SpinnerIcon variant="white" size="xl" />
           </div>
           <div className="text-center">
             <p className="text-white text-xl font-bold mb-2">

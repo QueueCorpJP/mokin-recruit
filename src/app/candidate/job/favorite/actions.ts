@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 
 // 簡単なメモリキャッシュ
@@ -63,7 +63,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const limit = Math.min(50, Math.max(1, params.limit || 20));
     const offset = (page - 1) * limit;
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // データクエリ（企業情報もJOINで一緒に取得）
     const favoritesDataQuery = supabase
@@ -178,7 +178,7 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
     }
 
     const candidateId = authResult.data.candidateId;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 求人の存在チェックと既存のお気に入りチェックを並列実行
     const [jobResult, favoriteResult] = await Promise.all([
@@ -261,7 +261,7 @@ export async function removeFavorite(jobPostingId: string): Promise<FavoriteActi
     }
 
     const candidateId = authResult.data.candidateId;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // お気に入りが存在するかチェック
     const { data: existingFavorite, error: checkError } = await supabase

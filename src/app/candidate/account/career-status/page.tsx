@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
@@ -17,7 +17,7 @@ import {
 // 選考状況データを取得
 async function getCareerStatusEntries(candidateId: string) {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('career_status_entries')
       .select('*')

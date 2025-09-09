@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
@@ -9,7 +9,7 @@ export interface ScoutSettings {
 }
 
 export async function saveScoutSettings(formData: FormData) {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const scoutStatus = formData.get('scoutStatus') as string;
 
@@ -67,7 +67,7 @@ export async function saveScoutSettings(formData: FormData) {
 }
 
 export async function getScoutSettings(): Promise<ScoutSettings | null> {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {

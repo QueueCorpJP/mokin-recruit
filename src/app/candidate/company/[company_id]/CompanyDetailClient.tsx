@@ -9,6 +9,7 @@ import { Star } from 'lucide-react';
 // } from '@/hooks/useFavoriteApi';
 import { TagDisplay } from '@/components/ui/TagDisplay';
 import { CompanyDetailData, JobPostingData } from './actions';
+import { useCompanyDetail } from '@/hooks/useCompanyDetail';
 import Image from 'next/image';
 
 interface CompanyDetailClientProps {
@@ -130,13 +131,17 @@ export default function CompanyDetailClient({
 }: CompanyDetailClientProps) {
   const router = useRouter();
   const params = useParams();
-  const [companyData] = useState<CompanyDetailData | null>(initialCompanyData);
+  const companyId = params?.company_id as string;
+  
+  // クライアントサイドで企業データを非同期で取得
+  const { data: asyncCompanyData, loading: companyDataLoading, error: companyDataError } = useCompanyDetail(companyId);
+  
+  // 初期データがある場合はそれを使用、なければ非同期で取得したデータを使用
+  const companyData = initialCompanyData || asyncCompanyData;
+  
 
   // 画像カルーセル用のstate
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  // お気に入り機能（企業用）
-  const companyId = params?.company_id as string;
   // TODO: 企業用のお気に入り機能のhookを実装
   // const { data: favoriteStatus } = useCompanyFavoriteStatusQuery([companyId]);
   // const favoriteToggleMutation = useCompanyFavoriteToggleMutation();
@@ -198,11 +203,13 @@ export default function CompanyDetailClient({
     router.push('/company/search');
   };
 
-  if (!companyData) {
+  // エラー状態の場合はエラーメッセージを表示
+  if (companyDataError && !initialCompanyData) {
     return (
       <div className='w-full h-screen flex items-center justify-center bg-[#f9f9f9]'>
         <div className='text-center'>
-          <p className='text-gray-500'>企業情報が見つかりませんでした</p>
+          <p className='text-gray-500'>企業情報を読み込めませんでした</p>
+          <p className='text-sm text-gray-400 mt-2'>{companyDataError}</p>
           <button
             onClick={() => router.back()}
             className='mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
@@ -214,6 +221,9 @@ export default function CompanyDetailClient({
     );
   }
 
+  // データがないが読み込み中でもエラーでもない場合は、初期データなしでページを表示
+  // サイドバーは読み込み状態を表示する
+
   return (
     <>
       <div className='bg-[#F9F9F9] min-h-screen pb-20 pt-6 px-4 lg:pt-10 lg:px-20'>
@@ -223,8 +233,8 @@ export default function CompanyDetailClient({
             <div className='flex flex-row gap-4 items-center justify-start w-full mb-10'>
               <div className='relative rounded-full shrink-0 w-10 h-10 overflow-hidden'>
                 <Image
-                  src={companyData.companyLogo || '/company.jpg'}
-                  alt={companyData.companyName}
+                  src={companyData?.companyLogo || '/company.jpg'}
+                  alt={companyData?.companyName || '企業ロゴ'}
                   fill
                   sizes='40px'
                   priority
@@ -233,7 +243,13 @@ export default function CompanyDetailClient({
               </div>
               <div className='flex-1'>
                 <span className="font-['Noto_Sans_JP'] font-bold text-[20px] md:text-[32px] leading-[1.6] tracking-[2.4px] text-[#0f9058] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                  {companyData.companyName}
+                  {companyDataLoading ? (
+                    <div className="animate-pulse">
+                      <div className="h-8 md:h-10 bg-gray-200 rounded w-48"></div>
+                    </div>
+                  ) : (
+                    companyData?.companyName || '企業名未設定'
+                  )}
                 </span>
               </div>
             </div>
@@ -248,8 +264,8 @@ export default function CompanyDetailClient({
                   {/* 画像 */}
                   <div className='relative aspect-[3/2] rounded-[10px] md:rounded-3xl w-full overflow-hidden'>
                     <Image
-                      src={companyData.images[currentImageIndex] || '/company.jpg'}
-                      alt={`${companyData.companyName} - 画像${currentImageIndex + 1}`}
+                      src={companyData?.images?.[currentImageIndex] || '/company.jpg'}
+                      alt={`${companyData?.companyName || '企業'} - 画像${currentImageIndex + 1}`}
                       fill
                       className='object-cover transition-all ease-in-out'
                       style={{ transitionDuration: '0.6s' }}
@@ -257,7 +273,7 @@ export default function CompanyDetailClient({
                   </div>
 
                   {/* プログレスバー */}
-                  {companyData.images && companyData.images.length > 1 && (
+                  {companyData?.images && companyData.images.length > 1 && (
                     <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
                       {companyData.images.map((_, index) => (
                         <div
@@ -285,7 +301,7 @@ export default function CompanyDetailClient({
                   {/* 業務内容 */}
                   <div className='flex flex-col items-start justify-start w-full'>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {companyData.jobDescription}
+                      {companyData?.jobDescription || '企業説明文を読み込み中...'}
                     </div>
                   </div>
                 </div>
@@ -301,7 +317,7 @@ export default function CompanyDetailClient({
                   {/* 業務内容 */}
                   <div className='flex flex-col items-start justify-start w-full'>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {companyData.positionSummary}
+                      {companyData?.positionSummary || 'ポジション説明を読み込み中...'}
                     </div>
                   </div>
                 </div>
@@ -327,7 +343,13 @@ export default function CompanyDetailClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                      {companyData.representative}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                      ) : (
+                        companyData?.representative || '代表者名未設定'
+                      )}
                     </div>
                   </div>
 
@@ -347,7 +369,13 @@ export default function CompanyDetailClient({
                     </div>
                     <div className='flex flex-row gap-2 items-start justify-start'>
                       <span className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
-                        {companyData.establishedYear}
+                        {companyDataLoading ? (
+                          <div className="animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        ) : (
+                          companyData?.establishedYear || '未設定'
+                        )}
                       </span>
                       <span className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                         年
@@ -453,7 +481,15 @@ export default function CompanyDetailClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {companyData.businessContent}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse space-y-2">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                          <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                        </div>
+                      ) : (
+                        companyData?.businessContent || '事業内容未設定'
+                      )}
                     </div>
                   </div>
 
@@ -472,7 +508,14 @@ export default function CompanyDetailClient({
                       </div>
                     </div>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word max-w-full">
-                      {companyData.address}
+                      {companyDataLoading ? (
+                        <div className="animate-pulse space-y-1">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      ) : (
+                        companyData?.address || '所在地未設定'
+                      )}
                     </div>
                   </div>
 

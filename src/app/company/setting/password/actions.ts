@@ -1,7 +1,7 @@
 'use server';
 
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 import bcrypt from 'bcryptjs';
 
 export async function changePassword(currentPassword: string, newPassword: string) {
@@ -18,7 +18,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
     const { companyUserId } = authResult.data;
     console.log('認証成功 - CompanyUserId:', companyUserId);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     
     // companyUserIdから企業ユーザー情報を取得
     const { data: companyUser, error: companyUserError } = await supabase

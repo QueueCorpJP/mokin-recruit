@@ -2,7 +2,7 @@
 
 import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export async function getExpectationData() {
   try {
@@ -11,7 +11,7 @@ export async function getExpectationData() {
       throw new Error('認証が必要です');
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     
     const { data: expectationData, error } = await supabase
       .from('expectations')
@@ -152,7 +152,7 @@ export async function updateExpectationData(formData: FormData) {
       workStyles
     });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // expectationsテーブルを更新（まず更新を試し、存在しなければ挿入）
     const { data: updateData, error: updateError } = await supabase
