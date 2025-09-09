@@ -116,8 +116,20 @@ export function CandidateSlideMenu({
   // 同じグループの求人のみをフィルタリング（CandidateCardと同じロジック）
   const filteredJobOptions = jobOptions.filter(job => 
     job.value === '' || // "すべて"オプションは常に表示
-    job.groupId === candidateData?.groupId // 同じグループの求人のみ
+    !job.groupId || // groupIdが未設定の求人は常に表示
+    job.groupId === candidateData?.groupId || // 同じグループの求人
+    job.groupId === companyGroupId || // 現在のcompanyGroupIdと一致する求人
+    job.value === candidateData?.jobPostingId // 候補者の現在の求人は常に表示
   );
+  
+  console.log('🔍 [CandidateSlideMenu] Job filtering debug:', {
+    allJobOptions: jobOptions,
+    filteredJobOptions,
+    candidateGroupId: candidateData?.groupId,
+    companyGroupId,
+    candidateJobPostingId: candidateData?.jobPostingId,
+    selectedOption: filteredJobOptions.find(job => job.value === candidateData?.jobPostingId)
+  });
 
   // CandidateCardと同じselectionProgress取得ロジック
   useEffect(() => {
@@ -179,6 +191,10 @@ export function CandidateSlideMenu({
         getSelectionProgressAction(candidateId, companyGroupId)
       ])
         .then(([candidateDetail, savedResult, hiddenResult, roomIdResult, progressResult]) => {
+          console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
+          console.log('🔍 [CandidateSlideMenu] experienceJobs:', candidateDetail?.experienceJobs);
+          console.log('🔍 [CandidateSlideMenu] experienceIndustries:', candidateDetail?.experienceIndustries);
+          console.log('🔍 [CandidateSlideMenu] jobPostingId:', candidateDetail?.jobPostingId);
           setCandidateData(candidateDetail);
           
           // roomの存在状況を設定
@@ -412,6 +428,108 @@ export function CandidateSlideMenu({
                     )}
                   </div>
                   <div>
+                    {/* 志向タグ */}
+                    <div className='flex items-center gap-2 mb-2'>
+                      {candidateData?.isAttention && (
+                        <div className='bg-[#ff9d00] px-5 py-0 h-8 rounded-[100px] flex items-center justify-center'>
+                          <span
+                            className='text-white text-[12px] font-bold tracking-[1.2px]'
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            注目
+                          </span>
+                        </div>
+                      )}
+                      {candidateData?.badgeType === 'change' && (
+                        <div className='bg-[#44b0ef] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
+                          <svg
+                            width='16'
+                            height='16'
+                            viewBox='0 0 16 16'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M2.97062 6.24841C3.22734 5.53293 3.64409 4.86011 4.23088 4.28575C6.31465 2.23448 9.69202 2.23448 11.7758 4.28575L12.3459 4.85026H11.2023C10.6122 4.85026 10.1354 5.3196 10.1354 5.90052C10.1354 6.48144 10.6122 6.95077 11.2023 6.95077H14.9198H14.9331C15.5232 6.95077 16 6.48144 16 5.90052V2.22464C16 1.64372 15.5232 1.17438 14.9331 1.17438C14.343 1.17438 13.8662 1.64372 13.8662 2.22464V3.37991L13.2828 2.80227C10.3655 -0.0695081 5.63784 -0.0695081 2.72057 2.80227C1.90706 3.60309 1.32028 4.54503 0.9602 5.55262C0.763492 6.10072 1.05689 6.69805 1.61034 6.89169C2.16378 7.08533 2.77391 6.79651 2.97062 6.25169V6.24841ZM0.766826 9.09394C0.600125 9.14317 0.440092 9.23178 0.310065 9.36307C0.176703 9.49435 0.0866848 9.65188 0.0400084 9.82255C0.0300063 9.86193 0.0200042 9.9046 0.0133361 9.94727C0.00333401 10.0031 0 10.0589 0 10.1147V13.7774C0 14.3583 0.476766 14.8277 1.06689 14.8277C1.65701 14.8277 2.13378 14.3583 2.13378 13.7774V12.6254L2.72057 13.1998C5.63784 16.0683 10.3655 16.0683 13.2794 13.1998C14.0929 12.3989 14.6831 11.457 15.0431 10.4494C15.2398 9.90132 14.9464 9.30399 14.393 9.11035C13.8396 8.91671 13.2294 9.20553 13.0327 9.75034C12.776 10.4658 12.3592 11.1386 11.7725 11.713C9.68869 13.7643 6.31132 13.7643 4.22755 11.713L4.22421 11.7097L3.65409 11.1518H4.801C5.39112 11.1518 5.86789 10.6824 5.86789 10.1015C5.86789 9.5206 5.39112 9.05127 4.801 9.05127H1.08023C1.02688 9.05127 0.973536 9.05455 0.920192 9.06112C0.866847 9.06768 0.816837 9.07753 0.766826 9.09394Z'
+                              fill='white'
+                            />
+                          </svg>
+                          <span
+                            className='text-white text-[12px] font-bold tracking-[1.2px]'
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            {candidateData?.badgeText}
+                          </span>
+                        </div>
+                      )}
+                      {candidateData?.badgeType === 'professional' && (
+                        <div className='bg-[#b687e8] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
+                          <svg
+                            width='16'
+                            height='16'
+                            viewBox='0 0 16 16'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z'
+                              fill='white'
+                            />
+                            <path
+                              fillRule='evenodd'
+                              clipRule='evenodd'
+                              d='M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8ZM8 1.33333C4.31803 1.33333 1.33333 4.31803 1.33333 8C1.33333 11.682 4.31803 14.6667 8 14.6667C11.682 14.6667 14.6667 11.682 14.6667 8C14.6667 4.31803 11.682 1.33333 8 1.33333Z'
+                              fill='white'
+                            />
+                            <path d='M7.33333 2V4H8.66667V2H7.33333Z' fill='white' />
+                            <path d='M7.33333 12V14H8.66667V12H7.33333Z' fill='white' />
+                            <path d='M2 7.33333H4V8.66667H2V7.33333Z' fill='white' />
+                            <path d='M12 7.33333H14V8.66667H12V7.33333Z' fill='white' />
+                          </svg>
+                          <span
+                            className='text-white text-[12px] font-bold tracking-[1.2px]'
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            {candidateData?.badgeText}
+                          </span>
+                        </div>
+                      )}
+                      {candidateData?.badgeType === 'multiple' && (
+                        <div className='bg-[#f182b4] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
+                          <svg
+                            width='16'
+                            height='16'
+                            viewBox='0 0 16 16'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M0 0V6H2V2.94118L5.52941 6.47059L6.47059 5.52941L2.94118 2H6V0H0Z'
+                              fill='white'
+                            />
+                            <path
+                              d='M10 0V2H13.0588L9.52941 5.52941L10.4706 6.47059L14 2.94118V6H16V0H10Z'
+                              fill='white'
+                            />
+                            <path
+                              d='M2 13.0588V10H0V16H6V14H2.94118L6.47059 10.4706L5.52941 9.52941L2 13.0588Z'
+                              fill='white'
+                            />
+                            <path
+                              d='M13.0588 14H10V16H16V10H14V13.0588L10.4706 9.52941L9.52941 10.4706L13.0588 14Z'
+                              fill='white'
+                            />
+                          </svg>
+                          <span
+                            className='text-white text-[12px] font-bold tracking-[1.2px]'
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            {candidateData?.badgeText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
                     {/* 候補者名 */}
                     <h1
                       className='text-[#323232] text-[24px] font-bold tracking-[2.4px] mb-1'
@@ -611,7 +729,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                {String(job.title || '')}（{String(job.years || 0)}年）
+                                {typeof job === 'object' ? `${job.title || ''}（${job.years || 0}年）` : String(job)}
                               </li>
                             ))
                           ) : (
@@ -649,7 +767,7 @@ export function CandidateSlideMenu({
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {String(industry.title || '')}（{String(industry.years || 0)}年）
+                                  {typeof industry === 'object' ? `${industry.title || ''}（${industry.years || 0}年）` : String(industry)}
                                 </li>
                               )
                             )
@@ -1340,7 +1458,7 @@ export function CandidateSlideMenu({
                           >
                             <SelectInput
                               options={filteredJobOptions}
-                              value={candidateData.jobPostingId || ''}
+                              value={candidateData?.jobPostingId || ''}
                               onChange={(value) => onJobChange && onJobChange(candidateData.id, value)}
                               placeholder="求人を選択"
                               className="w-full h-[38px]"
@@ -1371,13 +1489,13 @@ export function CandidateSlideMenu({
                                 const progress = selectionProgress;
                                 if (progress?.document_screening_result === 'pass') {
                                   return (
-                                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       通過
                                     </div>
                                   );
                                 } else if (progress?.document_screening_result === 'fail') {
                                   return (
-                                    <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       見送り
                                     </div>
                                   );
@@ -1474,13 +1592,13 @@ export function CandidateSlideMenu({
                                 const progress = selectionProgress;
                                 if (progress?.secondary_interview_result === 'pass') {
                                   return (
-                                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       通過
                                     </div>
                                   );
                                 } else if (progress?.secondary_interview_result === 'fail') {
                                   return (
-                                    <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       見送り
                                     </div>
                                   );
@@ -1520,13 +1638,13 @@ export function CandidateSlideMenu({
                                 const progress = selectionProgress;
                                 if (progress?.final_interview_result === 'pass') {
                                   return (
-                                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       通過
                                     </div>
                                   );
                                 } else if (progress?.final_interview_result === 'fail') {
                                   return (
-                                    <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       見送り
                                     </div>
                                   );
@@ -1566,13 +1684,13 @@ export function CandidateSlideMenu({
                                 const progress = selectionProgress;
                                 if (progress?.offer_result === 'accepted') {
                                   return (
-                                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       通過
                                     </div>
                                   );
                                 } else if (progress?.offer_result === 'declined') {
                                   return (
-                                    <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       見送り
                                     </div>
                                   );
@@ -1813,11 +1931,16 @@ export function CandidateSlideMenu({
                   </div>
 
                   {/* 社内メモコンテンツ */}
+                  <div className='w-full border border-[#dcdcdc] rounded-[5px]'>
                   <textarea
                     className='w-full h-32 p-3 border border-[#dcdcdc] rounded-[5px] resize-none text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     placeholder='社内メモを入力してください...'
                   />
+                  </div>
+                  <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'>
+                    社内メモは候補者に共有されません。
+                  </p>
                 </div>
               </div>
             )}
