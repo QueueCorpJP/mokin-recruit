@@ -1734,7 +1734,7 @@ export function CandidateSlideMenu({
                           <p className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
                             やりとりしている担当者：{candidateData?.assignedUsers && candidateData.assignedUsers.length > 0 
                               ? candidateData.assignedUsers.join('、') 
-                              : '未設定'}
+                              : '設定なし'}
                           </p>
                           <button 
                             className='border border-[#0f9058] rounded-[32px] px-6 py-2.5 min-w-[120px] hover:bg-gray-50 transition-colors'
@@ -1897,7 +1897,7 @@ export function CandidateSlideMenu({
                           <p className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
                             やりとりしている担当者：{candidateData?.assignedUsers && candidateData.assignedUsers.length > 0 
                               ? candidateData.assignedUsers.join('、') 
-                              : '未設定'}
+                              : '設定なし'}
                           </p>
                           <button 
                             className='border border-[#0f9058] rounded-[32px] px-6 py-2.5 min-w-[120px] hover:bg-gray-50 transition-colors'
