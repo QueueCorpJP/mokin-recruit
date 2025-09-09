@@ -55,7 +55,11 @@ export const SelectionResultModal: React.FC<SelectionResultModalProps> = ({
             variant="green-gradient"
             size="figma-default"
             className="min-w-40 shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)]"
-            onClick={onPass}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onPass?.();
+            }}
           >
             通過
           </Button>
@@ -63,7 +67,11 @@ export const SelectionResultModal: React.FC<SelectionResultModalProps> = ({
             variant="destructive"
             size="figma-default"
             className="bg-[#ff5b5b] hover:bg-[#e54949] min-w-40 shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] font-bold"
-            onClick={onReject}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onReject?.();
+            }}
           >
             見送り
           </Button>

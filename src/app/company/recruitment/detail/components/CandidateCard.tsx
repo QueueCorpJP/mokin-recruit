@@ -277,6 +277,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('書類選考');
                     }}
@@ -326,6 +327,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('一次面接');
                     }}
@@ -375,6 +377,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('二次以降');
                     }}
@@ -424,6 +427,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('最終面接');
                     }}
@@ -473,6 +477,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('内定');
                     }}

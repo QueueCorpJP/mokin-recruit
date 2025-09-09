@@ -119,6 +119,17 @@ export function CandidateSlideMenu({
     job.groupId === candidateData?.groupId // 同じグループの求人のみ
   );
 
+  // CandidateCardと同じselectionProgress取得ロジック
+  useEffect(() => {
+    if (candidateId && companyGroupId) {
+      getSelectionProgressAction(candidateId, companyGroupId).then(result => {
+        if (result.success) {
+          setSelectionProgress(result.data);
+        }
+      });
+    }
+  }, [candidateId, companyGroupId]);
+
   // メッセージを確認ボタンのハンドラー
   const handleCheckMessage = async () => {
     if (!candidateId || !companyGroupId) {
@@ -280,67 +291,67 @@ export function CandidateSlideMenu({
     }
   };
 
-  // 合否登録モーダルを開く関数
-  const handleSelectionResult = (stage: string) => {
+  // CandidateCardと同じモーダル処理
+  const handleModalOpen = (stage: string) => {
     setSelectedStage(stage);
     setShowSelectionModal(true);
   };
 
-  // 合否登録処理
-  const handlePass = async () => {
-    if (!candidateId || !companyGroupId) return;
-    
-    try {
-      const result = await updateSelectionProgressAction({
-        candidateId,
-        companyGroupId,
-        stage: 'document_screening',
-        result: 'pass',
-        jobPostingId: candidateData?.jobPostingId,
-      });
-      
-      if (result.success) {
-        // 進捗データを更新
-        setSelectionProgress(result.data);
-        console.log('合格処理完了:', result.data);
-      } else {
-        console.error('合格処理エラー:', result.error);
-        alert('進捗の更新に失敗しました: ' + result.error);
-      }
-    } catch (error) {
-      console.error('合格処理エラー:', error);
-      alert('進捗の更新に失敗しました');
-    }
-    
+  const handleModalClose = () => {
     setShowSelectionModal(false);
+    setSelectedStage('');
   };
 
-  const handleReject = async () => {
-    if (!candidateId || !companyGroupId) return;
-    
-    try {
-      const result = await updateSelectionProgressAction({
-        candidateId,
-        companyGroupId,
-        stage: 'document_screening',
-        result: 'fail',
-        jobPostingId: candidateData?.jobPostingId,
-      });
-      
-      if (result.success) {
-        // 進捗データを更新
-        setSelectionProgress(result.data);
-        console.log('見送り処理完了:', result.data);
-      } else {
-        console.error('見送り処理エラー:', result.error);
-        alert('進捗の更新に失敗しました: ' + result.error);
-      }
-    } catch (error) {
-      console.error('見送り処理エラー:', error);
-      alert('進捗の更新に失敗しました');
+  // CandidateCardと全く同じhandlePass
+  const handlePass = async () => {
+    if (!candidateId || !companyGroupId || !selectedStage) return;
+
+    const stageMapping: Record<string, any> = {
+      '書類選考': 'document_screening',
+      '一次面接': 'first_interview', 
+      '二次以降': 'secondary_interview',
+      '最終面接': 'final_interview',
+      '内定': 'offer'
+    };
+
+    const result = await updateSelectionProgressAction({
+      candidateId: candidateId,
+      companyGroupId: companyGroupId,
+      jobPostingId: candidateData?.jobPostingId,
+      stage: stageMapping[selectedStage],
+      result: 'pass',
+    });
+
+    if (result.success) {
+      setSelectionProgress(result.data);
     }
-    
-    setShowSelectionModal(false);
+    handleModalClose();
+  };
+
+  // CandidateCardと全く同じhandleReject
+  const handleReject = async () => {
+    if (!candidateId || !companyGroupId || !selectedStage) return;
+
+    const stageMapping: Record<string, any> = {
+      '書類選考': 'document_screening',
+      '一次面接': 'first_interview',
+      '二次以降': 'secondary_interview', 
+      '最終面接': 'final_interview',
+      '内定': 'offer'
+    };
+
+    const result = await updateSelectionProgressAction({
+      candidateId: candidateId,
+      companyGroupId: companyGroupId,
+      jobPostingId: candidateData?.jobPostingId,
+      stage: stageMapping[selectedStage],
+      result: 'fail',
+    });
+
+    if (result.success) {
+      setSelectionProgress(result.data);
+    }
+    handleModalClose();
   };
 
   if (!isOpen) return null;
@@ -1375,12 +1386,15 @@ export function CandidateSlideMenu({
                                 if (candidateData.applicationDate) {
                                   return (
                                     <button
-                                      onClick={() => handleSelectionResult('書類選考')}
                                       className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
                                       style={{
                                         background:
                                           'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                                         fontFamily: 'Noto Sans JP, sans-serif',
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleModalOpen('書類選考');
                                       }}
                                     >
                                       合否登録
@@ -1833,7 +1847,7 @@ export function CandidateSlideMenu({
       {/* 合否登録モーダル */}
       <SelectionResultModal
         isOpen={showSelectionModal}
-        onClose={() => setShowSelectionModal(false)}
+        onClose={handleModalClose}
         candidateName={candidateData?.name || '候補者テキスト'}
         selectionStage={selectedStage}
         onPass={handlePass}
