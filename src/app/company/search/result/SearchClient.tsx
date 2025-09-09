@@ -13,9 +13,9 @@ import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModa
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import {
-  getCandidatesFromDatabase,
+  // getCandidatesFromDatabase, // 削除
   loadSearchParamsToStore,
-  searchCandidatesWithConditions,
+  // searchCandidatesWithConditions, // 削除
 } from './actions';
 import {
   saveCandidateAction,
@@ -45,10 +45,6 @@ import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
 import Image from 'next/image'; // 追加
 import CandidateDetailModal from '@/components/company/CandidateDetailModal';
-import {
-  getCandidatesFromDatabase,
-  searchCandidatesWithConditions,
-} from './server-actions';
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
