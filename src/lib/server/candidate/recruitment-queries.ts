@@ -536,3 +536,235 @@ export async function getJobOptions(): Promise<
     return [{ value: '', label: 'すべて' }];
   }
 }
+
+// --- ここから候補者詳細取得用の型と関数を追加 ---
+
+export interface CandidateDetailData {
+  id: string;
+  name: string;
+  company: string;
+  location: string;
+  age: number;
+  gender: string;
+  income?: string;
+  lastLogin?: string;
+  lastUpdate?: string;
+  registrationDate?: string;
+  jobSummary?: string;
+  experienceJobs?: Array<{ title: string; years: number }>;
+  experienceIndustries?: Array<{ title: string; years: number }>;
+  workHistory?: Array<{
+    companyName: string;
+    period: string;
+    industries: string[];
+    department: string;
+    position: string;
+    jobType: string;
+    description: string;
+  }>;
+  desiredConditions?: {
+    annualIncome?: string;
+    currentIncome?: string;
+    jobTypes?: string[];
+    industries?: string[];
+    workLocations?: string[];
+    jobChangeTiming?: string;
+    workStyles?: string[];
+  };
+  selectionStatus?: Array<{
+    companyName: string;
+    industries: string[];
+    jobTypes: string;
+    status: string;
+    statusType?: 'pass' | 'decline' | 'offer';
+    declineReason?: string;
+  }>;
+  selfPR?: string;
+  qualifications?: string;
+  skills?: string[];
+  languages?: Array<{ language: string; level: string }>;
+  education?: Array<{
+    schoolName: string;
+    department: string;
+    graduationDate: string;
+  }>;
+  tags?: {
+    isHighlighted?: boolean;
+    isCareerChange?: boolean;
+  };
+}
+
+/**
+ * 候補者詳細データを取得する
+ * @param candidateId
+ * @param supabase
+ */
+export async function getCandidateDetailData(
+  candidateId: string,
+  supabase: any
+): Promise<CandidateDetailData | null> {
+  // 1. 基本情報
+  const { data: candidate, error: candidateError } = await supabase
+    .from('candidates')
+    .select(
+      `id, first_name, last_name, current_company, prefecture, birth_date, gender, income, last_login, updated_at, created_at, job_summary, self_pr, qualifications, tags, is_highlighted, is_career_change`
+    )
+    .eq('id', candidateId)
+    .single();
+  if (candidateError || !candidate) return null;
+
+  // 2. 職種経験
+  const { data: jobExp } = await supabase
+    .from('job_type_experience')
+    .select('job_type_name, years')
+    .eq('candidate_id', candidateId);
+
+  // 3. 業種経験
+  const { data: industryExp } = await supabase
+    .from('work_experience')
+    .select('industry_name, years')
+    .eq('candidate_id', candidateId);
+
+  // 4. 職務経歴
+  const { data: workHistory } = await supabase
+    .from('work_history')
+    .select(
+      'company_name, period, industries, department, position, job_type, description'
+    )
+    .eq('candidate_id', candidateId);
+
+  // 5. 希望条件
+  const { data: desired } = await supabase
+    .from('desired_conditions')
+    .select(
+      'annual_income, current_income, job_types, industries, work_locations, job_change_timing, work_styles'
+    )
+    .eq('candidate_id', candidateId)
+    .single();
+
+  // 6. 選考状況
+  const { data: selectionStatus } = await supabase
+    .from('selection_status')
+    .select(
+      'company_name, industries, job_types, status, status_type, decline_reason'
+    )
+    .eq('candidate_id', candidateId);
+
+  // 7. スキル
+  const { data: skills } = await supabase
+    .from('skills')
+    .select('skill_name')
+    .eq('candidate_id', candidateId);
+
+  // 8. 語学
+  const { data: languages } = await supabase
+    .from('languages')
+    .select('language, level')
+    .eq('candidate_id', candidateId);
+
+  // 9. 学歴
+  const { data: education } = await supabase
+    .from('education')
+    .select('school_name, department, graduation_date')
+    .eq('candidate_id', candidateId);
+
+  // 年齢計算
+  const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+
+  return {
+    id: candidate.id,
+    name: `${candidate.first_name} ${candidate.last_name}`,
+    company: candidate.current_company || '',
+    location: candidate.prefecture || '',
+    age,
+    gender: candidate.gender || '',
+    income: candidate.income || '',
+    lastLogin: candidate.last_login || '',
+    lastUpdate: candidate.updated_at || '',
+    registrationDate: candidate.created_at || '',
+    jobSummary: candidate.job_summary || '',
+    experienceJobs: (jobExp || []).map(
+      (j: { job_type_name: string; years: number }) => ({
+        title: j.job_type_name,
+        years: j.years,
+      })
+    ),
+    experienceIndustries: (industryExp || []).map(
+      (i: { industry_name: string; years: number }) => ({
+        title: i.industry_name,
+        years: i.years,
+      })
+    ),
+    workHistory: (workHistory || []).map(
+      (w: {
+        company_name: string;
+        period: string;
+        industries: string[];
+        department: string;
+        position: string;
+        job_type: string;
+        description: string;
+      }) => ({
+        companyName: w.company_name,
+        period: w.period,
+        industries: w.industries || [],
+        department: w.department,
+        position: w.position,
+        jobType: w.job_type,
+        description: w.description,
+      })
+    ),
+    desiredConditions: desired
+      ? {
+          annualIncome: desired.annual_income || '',
+          currentIncome: desired.current_income || '',
+          jobTypes: desired.job_types || [],
+          industries: desired.industries || [],
+          workLocations: desired.work_locations || [],
+          jobChangeTiming: desired.job_change_timing || '',
+          workStyles: desired.work_styles || [],
+        }
+      : undefined,
+    selectionStatus: (selectionStatus || []).map(
+      (s: {
+        company_name: string;
+        industries: string[];
+        job_types: string;
+        status: string;
+        status_type?: 'pass' | 'decline' | 'offer';
+        decline_reason?: string;
+      }) => ({
+        companyName: s.company_name,
+        industries: s.industries || [],
+        jobTypes: s.job_types || '',
+        status: s.status || '',
+        statusType: s.status_type || undefined,
+        declineReason: s.decline_reason || undefined,
+      })
+    ),
+    selfPR: candidate.self_pr || '',
+    qualifications: candidate.qualifications || '',
+    skills: (skills || []).map((s: { skill_name: string }) => s.skill_name),
+    languages: (languages || []).map(
+      (l: { language: string; level: string }) => ({
+        language: l.language,
+        level: l.level,
+      })
+    ),
+    education: (education || []).map(
+      (e: {
+        school_name: string;
+        department: string;
+        graduation_date: string;
+      }) => ({
+        schoolName: e.school_name,
+        department: e.department,
+        graduationDate: e.graduation_date,
+      })
+    ),
+    tags: {
+      isHighlighted: !!candidate.is_highlighted,
+      isCareerChange: !!candidate.is_career_change,
+    },
+  };
+}
