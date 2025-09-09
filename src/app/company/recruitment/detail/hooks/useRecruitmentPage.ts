@@ -63,8 +63,47 @@ export function useRecruitmentPage({
   if (excludeDeclined) {
     // declinedプロパティが存在する場合のみ除外
     filteredCandidates = filteredCandidates.filter(
-      c => typeof (c as any).declined === 'undefined' || !(c as any).declined
+      c =>
+        typeof (c as CandidateData & { declined?: boolean }).declined ===
+          'undefined' || !(c as CandidateData & { declined?: boolean }).declined
     );
+  }
+  // ステータスタブによる絞り込み
+  const activeStatusTab = statusTabs.find(tab => tab.active);
+  if (activeStatusTab && activeStatusTab.id !== 'all') {
+    filteredCandidates = filteredCandidates.filter((c: CandidateData) => {
+      switch (activeStatusTab.id) {
+        case 'not_sent':
+          // スカウト未送信: 例として applicationDate が未設定
+          return !c.applicationDate;
+        case 'waiting':
+          // 応募待ち: 例として applicationDate が設定されていて、firstScreening などが未設定
+          return !!c.applicationDate && !c.firstScreening;
+        case 'applied':
+          // 応募受付: 例として applicationDate が設定されている
+          return !!c.applicationDate;
+        case 'document_passed':
+          // 書類選考通過: 例として firstScreening が true
+          return !!c.firstScreening;
+        case 'first_interview':
+          // 一次面接通過: 例として firstInterview が true
+          return !!(c as CandidateData & { firstInterview?: boolean })
+            .firstInterview;
+        case 'second_interview':
+          // 二次面接通過: 例として secondInterview が true
+          return !!(c as CandidateData & { secondInterview?: boolean })
+            .secondInterview;
+        case 'final_interview':
+          // 最終面接通過: 例として finalInterview が true
+          return !!(c as CandidateData & { finalInterview?: boolean })
+            .finalInterview;
+        case 'offer':
+          // 内定: 例として offer が true
+          return !!(c as CandidateData & { offer?: boolean }).offer;
+        default:
+          return true;
+      }
+    });
   }
   // ソート（仮: progress/date）
   if (sortOrder === 'date') {
