@@ -28,14 +28,14 @@ interface BasicAuthResult {
 
 /**
  * Supabase サーバークライアントを作成 (読み取り専用 - サーバーコンポーネント用)
- * 静的レンダリング対応: cookiesを使わない場合はService Role Keyでアクセス
+ * RLS対応: anon keyを使用してセッション情報を含める
  */
 async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
   if (!useCookies) {
-    // Static rendering用: Service Role Keyのみ使用（認証なし）
+    // Static rendering用: anon keyのみ使用（認証なし）
     return createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() { return []; },
@@ -49,7 +49,7 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
   
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -65,8 +65,38 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
 
 /**
  * Supabase サーバークライアントを作成 (書き込み可能 - Server Actions用)
+ * RLS対応: anon keyを使用してセッション情報を含める
  */
 async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            console.warn('Cookie setting error:', error);
+          }
+        },
+      },
+    }
+  );
+}
+
+/**
+ * 管理者権限用のSupabase サーバークライアントを作成 (Service Role Key使用)
+ * RLSをバイパスして全データにアクセス可能
+ */
+async function createSupabaseAdminClient() {
   const cookieStore = await cookies();
   
   return createServerClient(
@@ -385,6 +415,16 @@ export async function getCompanySupabaseClient() {
   }
 
   return await createSupabaseServerClientReadOnly(true);
+}
+
+/**
+ * 管理者権限が必要な操作用のSupabaseクライアントを取得
+ * RLSをバイパスしてすべてのデータにアクセス可能
+ * 注意: この関数は管理者権限が必要な操作でのみ使用すること
+ */
+export async function getAdminSupabaseClient() {
+  // 管理者認証チェックは呼び出し側で行う
+  return await createSupabaseAdminClient();
 }
 
 /**

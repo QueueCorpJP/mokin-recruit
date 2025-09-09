@@ -124,12 +124,13 @@ export class CandidateRepository
     updates: Partial<CandidateEntity>
   ): Promise<CandidateEntity> {
     try {
+      const client = await this.getAuthenticatedClient();
       const updateData = {
         ...updates,
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
+      const { data, error } = await client
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -152,7 +153,8 @@ export class CandidateRepository
   // 最終ログイン時刻の更新
   async updateLastLogin(id: string): Promise<boolean> {
     try {
-      const { error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { error } = await client
         .from(this.tableName)
         .update({
           last_login_at: new Date().toISOString(),
@@ -176,7 +178,8 @@ export class CandidateRepository
   // IDで候補者を検索
   async findById(id: string): Promise<CandidateEntity | null> {
     try {
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -201,7 +204,8 @@ export class CandidateRepository
   // 候補者の削除
   async delete(id: string): Promise<boolean> {
     try {
-      const { error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { error } = await client
         .from(this.tableName)
         .delete()
         .eq('id', id);
@@ -230,7 +234,8 @@ export class CandidateRepository
     offset?: number;
   }): Promise<CandidateEntity[]> {
     try {
-      let query = this.client.from(this.tableName).select('*');
+      const client = await this.getAuthenticatedClient();
+      let query = client.from(this.tableName).select('*');
 
       // フィルタリング条件の適用
       if (filters.skills && filters.skills.length > 0) {

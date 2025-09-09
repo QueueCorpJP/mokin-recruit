@@ -1,10 +1,9 @@
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
-import { unstable_cache } from 'next/cache';
 import { getCandidateNotices } from './actions';
 
 // Client component を dynamic import で遅延読み込み
@@ -26,25 +25,27 @@ async function getTaskData(candidateId: string) {
     const tasks: any[] = [];
     if (unreadRooms.length > 0) {
       const firstUnreadRoom = unreadRooms[0];
-      const messageTime = firstUnreadRoom.lastMessageTime 
-        ? new Date(firstUnreadRoom.lastMessageTime) 
-        : new Date();
-      
-      const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
-      const isWithin72Hours = Date.now() - messageTime.getTime() < seventyTwoHoursInMs;
-      
-      if (isWithin72Hours) {
-        tasks.push({
-          id: `new-message-${firstUnreadRoom.id}`,
-          title: '新着メッセージがあります',
-          description: `${firstUnreadRoom.companyName}から新しいメッセージが届いています`
-        });
-      } else {
-        tasks.push({
-          id: `unread-message-${firstUnreadRoom.id}`,
-          title: '未読メッセージがあります', 
-          description: `${firstUnreadRoom.companyName}からのメッセージを確認してください`
-        });
+      if (firstUnreadRoom) {
+        const messageTime = firstUnreadRoom.lastMessageTime 
+          ? new Date(firstUnreadRoom.lastMessageTime) 
+          : new Date();
+        
+        const seventyTwoHoursInMs = 72 * 60 * 60 * 1000;
+        const isWithin72Hours = Date.now() - messageTime.getTime() < seventyTwoHoursInMs;
+        
+        if (isWithin72Hours) {
+          tasks.push({
+            id: `new-message-${firstUnreadRoom.id}`,
+            title: '新着メッセージがあります',
+            description: `${firstUnreadRoom.companyName}から新しいメッセージが届いています`
+          });
+        } else {
+          tasks.push({
+            id: `unread-message-${firstUnreadRoom.id}`,
+            title: '未読メッセージがあります', 
+            description: `${firstUnreadRoom.companyName}からのメッセージを確認してください`
+          });
+        }
       }
     }
     
@@ -73,22 +74,23 @@ async function getRecentMessages(candidateId: string) {
   }
 }
 
-// キャッシュ付きおすすめ求人取得
-const getCachedRecommendedJobs = unstable_cache(
-  async (candidateId: string) => getRecommendedJobsInternal(candidateId),
-  ['recommended-jobs'],
-  { revalidate: 300, tags: ['jobs'] } // 5分間キャッシュ
-);
 
 // おすすめ求人取得用の関数（最適化版）
 async function getRecommendedJobsInternal(candidateId: string) {
+  console.log('🎯 [RECOMMENDED JOBS] Starting getRecommendedJobsInternal for candidate:', candidateId);
+  
   try {
     const candidateRepo = new CandidateRepository();
     const candidate = await candidateRepo.findById(candidateId);
 
-    if (!candidate) return [];
+    if (!candidate) {
+      console.log('❌ [RECOMMENDED JOBS] Candidate not found:', candidateId);
+      return [];
+    }
 
-    const client = getSupabaseAdminClient();
+    console.log('✅ [RECOMMENDED JOBS] Candidate found:', candidate.id);
+    const client = await getSupabaseServerClient();
+    console.log('✅ [RECOMMENDED JOBS] Supabase client created');
     
     // 必要最小限のフィールドのみ取得
     let query: any = client
@@ -130,8 +132,14 @@ async function getRecommendedJobsInternal(candidateId: string) {
       .order('created_at', { ascending: false })
       .limit(5); // 5件に減らして初期ロードを高速化
 
+    console.log('📊 [RECOMMENDED JOBS] Query result:', { 
+      jobsCount: jobs?.length || 0, 
+      error: error?.message,
+      conditions: conditions.length
+    });
+
     if (error || !jobs) {
-      console.error('Failed to get recommended jobs:', error);
+      console.error('❌ [RECOMMENDED JOBS] Failed to get jobs:', error);
       return [];
     }
 
@@ -148,53 +156,16 @@ async function getRecommendedJobsInternal(candidateId: string) {
       starred: false
     }));
 
+    console.log('🎉 [RECOMMENDED JOBS] Success! Transformed jobs:', transformedJobs.length);
     return transformedJobs;
   } catch (error) {
-    console.error('Error in getRecommendedJobs:', error);
+    console.error('❌ [RECOMMENDED JOBS] Error in getRecommendedJobs:', error);
     return [];
   }
 }
 
 export default async function CandidateDashboard() {
-  let user = await getCachedCandidateUser();
-
-  // サインアップ完了直後ユーザーの場合、signup_user_idクッキーをチェックして自動ログイン
-  if (!user) {
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const signupUserId = cookieStore.get('signup_user_id')?.value;
-    
-    if (signupUserId) {
-      const { createServerClient } = await import('@supabase/ssr');
-      
-      const supabaseAdmin = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {
-            getAll() { return []; },
-            setAll() {},
-          },
-        }
-      );
-
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(signupUserId);
-      
-      if (!userError && userData.user) {
-        user = {
-          id: userData.user.id,
-          email: userData.user.email || '',
-          userType: 'candidate' as const,
-          name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.name,
-          emailConfirmed: userData.user.email_confirmed_at != null,
-          lastSignIn: userData.user.last_sign_in_at || undefined,
-          user_metadata: userData.user.user_metadata,
-        } as any;
-        
-        cookieStore.delete('signup_user_id');
-      }
-    }
-  }
+  const user = await getCachedCandidateUser();
 
   if (!user) {
     redirect('/candidate/auth/login');
@@ -204,7 +175,7 @@ export default async function CandidateDashboard() {
   const [tasks, messages, jobs, notices] = await Promise.all([
     getTaskData(user.id),
     getRecentMessages(user.id),
-    getCachedRecommendedJobs(user.id),
+    getRecommendedJobsInternal(user.id), // キャッシュを使わず直接呼び出し
     getCandidateNotices()
   ]);
 

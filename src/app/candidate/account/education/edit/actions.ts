@@ -2,7 +2,7 @@
 
 import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getEducationData as getEducationFromDB, getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 interface EducationFormData {
   final_education?: string;
@@ -136,7 +136,7 @@ export async function updateEducationData(formData: FormData) {
       ...data
     });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // educationテーブルを更新（まず更新を試し、存在しなければ挿入）
     const { data: updateData, error: updateError } = await supabase

@@ -66,14 +66,13 @@ interface CandidateDashboardClientProps {
 }
 
 export function CandidateDashboardClient({
-  user,
   tasks,
   messages,
   jobs,
   notices,
 }: CandidateDashboardClientProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const [jobList, setJobList] = useState<JobPosting[]>(jobs);
   const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
 
@@ -358,7 +357,7 @@ export function CandidateDashboardClient({
                     {/* 求人カード */}
                     <div className='flex flex-col gap-4'>
                       <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>求人を読み込み中...</div>}>
-                        {jobList.map((job, index) => (
+                        {jobList.map((job) => (
                           <JobPostCard
                             key={job.id}
                             imageUrl={
@@ -381,9 +380,8 @@ export function CandidateDashboardClient({
                             showApell={false}
                             imageWidth={103.5}
                             imageHeight={69}
-                            isFavoriteLoading={favoriteLoading[job.id]}
+                            isFavoriteLoading={favoriteLoading[job.id] || false}
                             onStarClick={() => handleStarClick(job.id)}
-                            isFirstCard={index === 0}
                           />
                         ))}
                       </Suspense>
@@ -558,7 +556,6 @@ export function CandidateDashboardClient({
                     width={12}
                     height={12}
                     loading="lazy"
-                    height={12}
                     style={{ display: 'block'}}
                   />
                 </div>
@@ -638,7 +635,6 @@ export function CandidateDashboardClient({
                     width={12}
                     height={12}
                     loading="lazy"
-                    height={12}
                     style={{ display: 'block' }}
                   />
                 </div>

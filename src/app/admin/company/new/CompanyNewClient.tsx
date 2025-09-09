@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
-import { industryCategories } from '@/app/company/job/types';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 
@@ -267,26 +266,23 @@ export default function CompanyNewClient() {
                 />
               )}
               {/* タイトル入力 */}
-              <div className="flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] w-60">
                 <input
                   type="text"
                   value={url.title}
                   onChange={(e) => updateUrl(index, 'title', e.target.value)}
                   placeholder="コーポレートサイト"
-                  className="flex-1 text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] outline-none placeholder:text-[#999999]"
+                  className="flex-1 py-[11px] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] placeholder:text-[#999999]"
                 />
-              </div>
+            
 
               {/* URL入力 */}
-              <div className="flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] flex-1">
                 <input
                   type="text"
                   value={url.url}
                   onChange={(e) => updateUrl(index, 'url', e.target.value)}
                   placeholder="https://example.com"
-                  className="flex-1 text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] outline-none placeholder:text-[#999999]"
+                  className="flex-1 py-[11px]  rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] placeholder:text-[#999999]"
                 />
-              </div>
             </div>
           ))}
 

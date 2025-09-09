@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { unstable_cache, revalidateTag } from 'next/cache';
 
@@ -24,16 +24,15 @@ interface JobPosting {
   internalMemo: string;
 }
 
-// 求人一覧取得の内部実装
+// 求人一覧取得の内部実装（キャッシュ可能版）
 async function _getCompanyJobs(params: {
   status?: string;
   groupId?: string;
   scope?: string;
   search?: string;
-}, companyAccountId: string) {
+}, companyAccountId: string, supabase: any) {
   try {
     console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
-    const supabase = getSupabaseAdminClient();
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
     let query = supabase
@@ -199,7 +198,7 @@ export async function createJob(data: any) {
       companyUserId: actualUserId, 
       companyAccountId: companyAccountId 
     } = authResult.data;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // 利用可能なグループを確認
     const { data: availableGroups } = await supabase
@@ -357,7 +356,7 @@ export async function getJobForEdit(jobId: string) {
       return { success: false, error: authResult.error };
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('job_postings')
@@ -389,7 +388,7 @@ export async function getJobDetail(jobId: string) {
     }
 
     const { companyAccountId: companyAccountId } = authResult.data;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('job_postings')
@@ -465,7 +464,7 @@ export async function updateJob(jobId: string, updateData: any) {
       return { success: false, error: authResult.error };
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // 画像処理
     let imageUrls: string[] | undefined = undefined;
@@ -929,17 +928,20 @@ export async function getCompanyJobs(params: {
   search?: string;
 }) {
   try {
-    // 認証チェック
+    // 認証チェック（キャッシュ外で実行）
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { success: false, error: authResult.error };
     }
 
     const { companyAccountId } = authResult.data;
+    
+    // Supabaseクライアントを作成（キャッシュ外で実行）
+    const supabase = await createClient();
 
-    // キャッシュ付きで内部関数を呼び出し
+    // キャッシュ付きで内部関数を呼び出し（認証済みのcompanyAccountIdとsupabaseクライアントを渡す）
     const getCachedJobs = unstable_cache(
-      _getCompanyJobs,
+      (params: any, companyAccountId: string, supabase: any) => _getCompanyJobs(params, companyAccountId, supabase),
       [`company-jobs-${companyAccountId}`, JSON.stringify(params)],
       {
         tags: [`company-jobs-${companyAccountId}`],
@@ -947,7 +949,7 @@ export async function getCompanyJobs(params: {
       }
     );
 
-    return await getCachedJobs(params, companyAccountId);
+    return await getCachedJobs(params, companyAccountId, supabase);
   } catch (error: any) {
     console.error('getCompanyJobs error:', error);
     return { success: false, error: error.message };
@@ -996,7 +998,7 @@ export async function getCompanyGroups() {
     } else if (cached) {
       return cached.data;
     }
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // ユーザーが権限を持つグループのみ取得（検索機能と統一）
     const { data: userPermissions, error } = await supabase

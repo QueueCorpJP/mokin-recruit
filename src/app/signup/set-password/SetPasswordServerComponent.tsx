@@ -1,6 +1,5 @@
 import { SetPasswordClient } from './SetPasswordClient';
 import { CandidateAuthBackground } from '@/components/ui/candidate-auth-background';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface SetPasswordServerComponentProps {
   searchParams?: { [key: string]: string | string[] | undefined };

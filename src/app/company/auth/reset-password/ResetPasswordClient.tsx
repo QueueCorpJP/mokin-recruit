@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
-import { Loading } from '@/components/ui/Loading';
 import { resetPasswordRequestAction, ResetPasswordResult } from './actions';
 
 interface ResetPasswordClientProps {
@@ -204,8 +203,9 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
             >
               {isPending ? (
                 <>
-                  <Loading inline size="sm" variant="white" />
+                  <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
                   送信中...
+                  </p>
                 </>
               ) : (
                 <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>

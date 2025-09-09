@@ -40,7 +40,7 @@ interface CandidateSearchClientProps {
   };
 }
 
-export default function CandidateSearchClient({ 
+function CandidateSearchClient({ 
   initialJobs,
   initialPagination,
   initialSearchConditions
@@ -784,3 +784,5 @@ export default function CandidateSearchClient({
     </>
   );
 }
+
+export default CandidateSearchClient;

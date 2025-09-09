@@ -3,7 +3,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { requireCandidateAuth } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import nodemailer from 'nodemailer';
 
 // メールアドレス変更完了後の認証状態リフレッシュ用
@@ -52,7 +52,7 @@ export async function sendVerificationCode(email: string) {
     }
     console.log('認証成功 - ユーザーID:', user.id);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 現在のメールアドレスを取得
     console.log('現在のメールアドレスを取得中...');
@@ -193,7 +193,7 @@ export async function verifyCode(code: string) {
     }
     console.log('認証成功 - ユーザーID:', user.id);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     
     console.log('認証コードをデータベースから検索中...');
     const { data: verification, error: fetchError } = await supabase

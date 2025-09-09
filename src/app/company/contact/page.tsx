@@ -2,7 +2,7 @@ import React from 'react';
 import { ContactFormClient } from './ContactFormClient';
 import CtaGuideSection from '@/components/cta/CtaGuideSection';
 import { getCachedCompanyUser } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +29,7 @@ export default async function ContactPage() {
     );
   }
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await createClient();
   
   // company_usersとcompany_accountsをJOINして企業情報を取得
   const companyUserId = user.user_metadata?.company_user_id || user.id;

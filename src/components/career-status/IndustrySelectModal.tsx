@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { INDUSTRY_GROUPS } from '@/constants/industry-data';
+import { industryCategories } from '@/app/company/job/types';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,7 +25,7 @@ export default function IndustrySelectModal({
     useState<string[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [selectedCategory, setSelectedCategory] = useState(
-    INDUSTRY_GROUPS[0]?.name || ''
+    industryCategories[0]?.name || ''
   );
   const [showAllCategories, setShowAllCategories] = useState(false);
 
@@ -56,16 +56,16 @@ export default function IndustrySelectModal({
   };
 
   // カテゴリごとに業種を整理
-  const allIndustries = INDUSTRY_GROUPS.flatMap(group =>
+  const allIndustries = industryCategories.flatMap(group =>
     group.industries.map(industry => ({
-      key: `${group.name}-${industry.id}`, // 一意のキー
-      id: industry.id, // 業種ID
-      name: industry.name, // 表示用の名前
+      key: `${group.name}-${industry}`, // 一意のキー
+      id: industry, // 業種ID
+      name: industry, // 表示用の名前
       category: group.name,
     }))
   );
 
-  const selectedCategoryData = INDUSTRY_GROUPS.find(
+  const selectedCategoryData = industryCategories.find(
     group => group.name === selectedCategory
   );
 
@@ -86,7 +86,7 @@ export default function IndustrySelectModal({
         {isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {INDUSTRY_GROUPS.map((category, index) => (
+              {industryCategories.map((category, index) => (
                 <React.Fragment key={category.name}>
                   <button
                     className={`py-2 px-2 transition-colors ${
@@ -106,7 +106,7 @@ export default function IndustrySelectModal({
                   >
                     {category.name}
                   </button>
-                  {index < INDUSTRY_GROUPS.length - 1 && (
+                  {index < industryCategories.length - 1 && (
                     <div className='mx-2'>
                       <svg width='2' height='24' viewBox='0 0 2 24' fill='none'>
                         <path
@@ -127,9 +127,9 @@ export default function IndustrySelectModal({
         {!isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {INDUSTRY_GROUPS.slice(
+              {industryCategories.slice(
                 0,
-                showAllCategories ? INDUSTRY_GROUPS.length : 6
+                showAllCategories ? industryCategories.length : 6
               ).map((category, index) => (
                 <React.Fragment key={category.name}>
                   <button
@@ -151,7 +151,7 @@ export default function IndustrySelectModal({
                     {category.name}
                   </button>
                   {index <
-                    (showAllCategories ? INDUSTRY_GROUPS.length - 1 : 5) && (
+                    (showAllCategories ? industryCategories.length - 1 : 5) && (
                     <div className='mx-2'>
                       <svg width='2' height='24' viewBox='0 0 2 24' fill='none'>
                         <path
@@ -165,7 +165,7 @@ export default function IndustrySelectModal({
                   )}
                 </React.Fragment>
               ))}
-              {!showAllCategories && INDUSTRY_GROUPS.length > 6 && (
+              {!showAllCategories && industryCategories.length > 6 && (
                 <>
                   <div className='mx-2'>
                     <svg width='2' height='24' viewBox='0 0 2 24' fill='none'>
@@ -213,16 +213,16 @@ export default function IndustrySelectModal({
         {/* 業種リスト（カテゴリごとに切り替え） */}
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
           {selectedCategoryData &&
-            selectedCategoryData.industries.map(industryItem => {
-              const isSelected = selectedIndustries.includes(industryItem.name);
+            selectedCategoryData.industries.map(industry => {
+              const isSelected = selectedIndustries.includes(industry);
               const isDisabled =
                 !isSelected && selectedIndustries.length >= maxSelections;
               return (
-                <div key={industryItem.id} className='flex items-center'>
+                <div key={industry} className='flex items-center'>
                   <Checkbox
-                    label={industryItem.name}
+                    label={industry}
                     checked={isSelected}
-                    onChange={() => handleCheckboxChange(industryItem.name)}
+                    onChange={() => handleCheckboxChange(industry)}
                     disabled={isDisabled}
                   />
                 </div>

@@ -65,9 +65,25 @@ export const getPublishedNotices = unstable_cache(
  * 特定のお知らせを取得する
  */
 export const getNoticeById = unstable_cache(
-  async (id: string): Promise<NoticeData | null> => {
+  async (id: string, url?: string, anonKey?: string, cookiesData?: any): Promise<NoticeData | null> => {
     try {
-      const supabase = await createClient();
+      let supabase;
+      if (url && anonKey && cookiesData) {
+        const { createServerClient } = await import('@supabase/ssr');
+        supabase = createServerClient(url, anonKey, {
+          cookies: {
+            getAll() {
+              return cookiesData;
+            },
+            setAll() {
+              // キャッシュ内では何もしない
+            },
+          },
+        });
+      } else {
+        // fallback: この場合はキャッシュを使わない
+        throw new Error('Cookie data is required for cached notice retrieval');
+      }
       
       const { data: notice, error } = await supabase
         .from('notices')

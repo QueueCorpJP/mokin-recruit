@@ -1,10 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
 import Link from 'next/link';
+import {
+  sendScout,
+  getCompanyGroupOptions,
+  getJobPostingOptions,
+  getCompanyUserOptions,
+  getScoutTemplateOptions,
+  type ScoutSendFormData,
+} from './actions';
 
 // Mail Icon Component
 const MailIcon = () => (
@@ -38,13 +46,23 @@ const RightArrowIcon = () => (
   </svg>
 );
 
-export function ScoutSendForm() {
+interface ScoutSendFormProps {
+  candidateId: string;
+}
+
+export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
+  const candidateIdFromProps = candidateId || 'CND-2024-00123';
+  const searchQuery = searchParams.get('query');
+  
   const [formData, setFormData] = useState({
     group: '',
     recruitmentTarget: '',
     scoutSenderName: '',
-    candidateId: 'CND-2024-00123', // 候補者詳細画面から遷移した場合に自動設定される想定
+    candidateId: candidateIdFromProps,
     scoutTemplate: '',
     title: '',
     message: '',
@@ -68,91 +86,69 @@ export function ScoutSendForm() {
     message: false,
   });
 
+  // 動的データ管理
+  const [isLoading, setIsLoading] = useState(false);
+  const [groupOptions, setGroupOptions] = useState([{ value: '', label: '未選択' }]);
+  const [jobPostingOptions, setJobPostingOptions] = useState([{ value: '', label: '未選択' }]);
+  const [companyUserOptions, setCompanyUserOptions] = useState([{ value: '', label: '未選択' }]);
+  const [templateOptions, setTemplateOptions] = useState([{ value: '', label: '未選択' }]);
+
   // 現在のユーザー情報（実際はContextやAPIから取得）
   const currentUserName = '山田 太郎'; // デフォルトのユーザー名
 
-  // サンプルのセレクト選択肢（実際はAPIから取得）
-  const groupOptions = [
-    { value: '', label: '未選択' },
-    { value: 'group1', label: '新卒採用グループ' },
-    { value: 'group2', label: '中途採用グループ' },
-    { value: 'group3', label: 'エンジニア採用グループ' },
-  ];
-
-  // グループに応じた求人（実際はAPIから動的に取得）
-  const getRecruitmentTargetOptions = (groupId: string) => {
-    if (!groupId) return [{ value: '', label: '未選択' }];
-
-    // グループごとの求人マッピング（実際のAPIレスポンスを想定）
-    const recruitmentByGroup: Record<
-      string,
-      Array<{ value: string; label: string }>
-    > = {
-      group1: [
-        { value: '', label: '未選択' },
-        { value: 'job1', label: 'フロントエンドエンジニア（新卒）' },
-        { value: 'job2', label: 'バックエンドエンジニア（新卒）' },
-      ],
-      group2: [
-        { value: '', label: '未選択' },
-        { value: 'job3', label: 'シニアエンジニア' },
-        { value: 'job4', label: 'プロダクトマネージャー' },
-      ],
-      group3: [
-        { value: '', label: '未選択' },
-        { value: 'job5', label: 'テックリード' },
-        { value: 'job6', label: 'SRE' },
-      ],
+  // 初期データロード
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        // グループオプションを取得（認証されたユーザーのアクセス可能なグループのみ）
+        const groups = await getCompanyGroupOptions();
+        setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
+      } catch (error) {
+        console.error('初期データの読み込みに失敗:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    return recruitmentByGroup[groupId] || [{ value: '', label: '未選択' }];
-  };
+    loadInitialData();
+  }, []);
 
-  // グループに応じたユーザー（実際はAPIから動的に取得）
-  const getScoutSenderOptions = (groupId: string) => {
-    if (!groupId) return [{ value: currentUserName, label: currentUserName }];
+  // 候補者IDが変更された場合にフォームデータを更新
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      candidateId: candidateIdFromProps
+    }));
+  }, [candidateIdFromProps]);
 
-    // グループごとのユーザーマッピング（実際のAPIレスポンスを想定）
-    const usersByGroup: Record<
-      string,
-      Array<{ value: string; label: string }>
-    > = {
-      group1: [
-        { value: currentUserName, label: currentUserName },
-        { value: 'user1', label: '佐藤 花子' },
-        { value: 'user2', label: '鈴木 一郎' },
-      ],
-      group2: [
-        { value: currentUserName, label: currentUserName },
-        { value: 'user3', label: '田中 美咲' },
-        { value: 'user4', label: '高橋 健太' },
-      ],
-      group3: [
-        { value: currentUserName, label: currentUserName },
-        { value: 'user5', label: '伊藤 翔' },
-        { value: 'user6', label: '渡辺 真理' },
-      ],
+  // グループ選択時の動的データ更新
+  useEffect(() => {
+    const loadGroupRelatedData = async () => {
+      if (!formData.group) {
+        setJobPostingOptions([{ value: '', label: '未選択' }]);
+        setCompanyUserOptions([{ value: '', label: '未選択' }]);
+        setTemplateOptions([{ value: '', label: '未選択' }]);
+        return;
+      }
+
+      try {
+        const [jobs, users, templates] = await Promise.all([
+          getJobPostingOptions(formData.group),
+          getCompanyUserOptions(formData.group),
+          getScoutTemplateOptions(formData.group),
+        ]);
+
+        setJobPostingOptions([{ value: '', label: '未選択' }, ...jobs]);
+        setCompanyUserOptions([{ value: currentUserName, label: currentUserName }, ...users]);
+        setTemplateOptions([{ value: '', label: '未選択' }, ...templates]);
+      } catch (error) {
+        console.error('グループ関連データの読み込みに失敗:', error);
+      }
     };
 
-    return (
-      usersByGroup[groupId] || [
-        { value: currentUserName, label: currentUserName },
-      ]
-    );
-  };
-
-  // グループとユーザーに応じたテンプレート（実際はAPIから動的に取得）
-  const getScoutTemplateOptions = (groupId: string, senderName: string) => {
-    if (!groupId || !senderName) return [{ value: '', label: '未選択' }];
-
-    // テンプレートのサンプルデータ
-    return [
-      { value: '', label: '未選択' },
-      { value: 'template1', label: 'エンジニア向けカジュアル面談' },
-      { value: 'template2', label: 'エンジニア向け本選考' },
-      { value: 'template3', label: 'デザイナー向けテンプレート' },
-    ];
-  };
+    loadGroupRelatedData();
+  }, [formData.group, currentUserName]);
 
   // フィールド変更時の処理
   const handleSelectChange = (field: string) => (value: string) => {
@@ -224,7 +220,7 @@ export function ScoutSendForm() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // 全フィールドをタッチ済みにする
     setTouched({
       group: true,
@@ -234,49 +230,52 @@ export function ScoutSendForm() {
       message: true,
     });
 
-    if (validateForm()) {
-      // 確認画面へ遷移
-      router.push('/company/search/scout/complete');
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+      
+      const scoutData: ScoutSendFormData = {
+        group: formData.group,
+        recruitmentTarget: formData.recruitmentTarget,
+        scoutSenderName: formData.scoutSenderName,
+        candidateId: formData.candidateId,
+        scoutTemplate: formData.scoutTemplate,
+        title: formData.title,
+        message: formData.message,
+        searchQuery: searchQuery || undefined,
+      };
+
+      const result = await sendScout(scoutData);
+      
+      if (result.success) {
+        // 確認画面へ遷移（成功時）
+        router.push('/company/search/scout/complete?success=true');
+      } else {
+        // エラーメッセージを表示
+        alert(result.error || 'スカウト送信に失敗しました');
+      }
+    } catch (error) {
+      console.error('スカウト送信エラー:', error);
+      alert('スカウト送信中にエラーが発生しました');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // テンプレート選択時の処理
   useEffect(() => {
-    if (formData.scoutTemplate) {
-      // テンプレートが選択されたら、件名と本文を設定（実際はAPIから取得）
-      const templates: Record<string, { title: string; message: string }> = {
-        template1: {
-          title: '【CuePoint】カジュアル面談のお誘い',
-          message: `はじめまして。株式会社CuePointの採用担当です。
-あなたのプロフィールを拝見させていただき、ぜひ当社についてお話しさせていただきたくご連絡いたしました。
+    if (formData.scoutTemplate && templateOptions.length > 1) {
+      // 選択されたテンプレートを見つける
+      const selectedTemplate = templateOptions.find(
+        template => template.value === formData.scoutTemplate
+      );
 
-まずはカジュアルにお話しできればと思います。
-ご興味をお持ちいただけましたら、メッセージにてご返信ください。`,
-        },
-        template2: {
-          title: '【CuePoint】エンジニア採用のご案内',
-          message: `はじめまして。株式会社CuePointの採用担当です。
-あなたのプロフィールを拝見させていただき、ぜひ当社のエンジニアポジションについてお話しさせていただきたくご連絡いたしました。
-
-当社では、最新のWeb技術を活用した開発を行っており、あなたのスキルと経験が活かせる環境があります。
-ぜひ一度、お話しできればと思います。`,
-        },
-        template3: {
-          title: '【CuePoint】デザイナー募集のご案内',
-          message: `はじめまして。株式会社CuePointの採用担当です。
-あなたのポートフォリオを拝見させていただき、ぜひ当社のデザイナーポジションについてお話しさせていただきたくご連絡いたしました。
-
-私たちのプロダクトチームで、あなたの創造性を発揮していただければと考えています。
-ご興味をお持ちいただけましたら、ぜひご連絡ください。`,
-        },
-      };
-
-      const template = templates[formData.scoutTemplate];
-      if (template) {
+      if (selectedTemplate && 'subject' in selectedTemplate && 'body' in selectedTemplate) {
         setFormData((prev) => ({
           ...prev,
-          title: template.title,
-          message: template.message,
+          title: selectedTemplate.subject || '',
+          message: selectedTemplate.body || '',
         }));
         // テンプレート適用時はエラーをクリア
         setErrors((prev) => ({
@@ -286,7 +285,7 @@ export function ScoutSendForm() {
         }));
       }
     }
-  }, [formData.scoutTemplate]);
+  }, [formData.scoutTemplate, templateOptions]);
 
   // グループ選択時に送信者名をデフォルト設定
   useEffect(() => {
@@ -397,7 +396,7 @@ export function ScoutSendForm() {
                 </div>
                 <div className="flex-1">
                   <SelectInput
-                    options={getRecruitmentTargetOptions(formData.group)}
+                    options={jobPostingOptions}
                     value={formData.recruitmentTarget}
                     placeholder="未選択"
                     onChange={handleSelectChange('recruitmentTarget')}
@@ -425,7 +424,7 @@ export function ScoutSendForm() {
                 </div>
                 <div className="flex-1">
                   <SelectInput
-                    options={getScoutSenderOptions(formData.group)}
+                    options={companyUserOptions}
                     value={formData.scoutSenderName}
                     placeholder="未選択"
                     onChange={handleSelectChange('scoutSenderName')}
@@ -473,10 +472,7 @@ export function ScoutSendForm() {
                 </div>
                 <div className="flex-1">
                   <SelectInput
-                    options={getScoutTemplateOptions(
-                      formData.group,
-                      formData.scoutSenderName,
-                    )}
+                    options={templateOptions}
                     value={formData.scoutTemplate}
                     placeholder="未選択"
                     onChange={handleSelectChange('scoutTemplate')}
@@ -523,6 +519,7 @@ export function ScoutSendForm() {
                   </span>
                 </div>
                 <div className="flex-1">
+                  <div className="border border-[#999999] rounded-[5px] focus-within:border-[#4FC3A1] focus-within:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]">
                   <textarea
                     value={formData.message}
                     onChange={handleTextareaChange}
@@ -531,6 +528,7 @@ export function ScoutSendForm() {
                     className="w-full h-[300px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] resize-none"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   />
+                  </div>
                   {touched.message && errors.message && (
                     <p className="mt-2 text-red-500 text-sm">
                       {errors.message}
@@ -548,9 +546,9 @@ export function ScoutSendForm() {
               variant="green-gradient"
               size="figma-default"
               className="min-w-[160px]"
-              disabled={isSubmitDisabled}
+              disabled={isSubmitDisabled || isLoading}
             >
-              送信内容の確認
+              {isLoading ? '送信中...' : '送信内容の確認'}
             </Button>
           </div>
         </div>

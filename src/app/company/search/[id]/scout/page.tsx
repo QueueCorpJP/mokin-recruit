@@ -1,10 +1,12 @@
 import React from 'react';
-// import { getServerAuth } from '@/lib/auth/server';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+
 import { ScoutSendForm } from './ScoutSendForm';
 
-export default async function CompanyScoutPage() {
+interface CompanyScoutPageProps {
+  params: { id: string };
+}
+
+export default async function CompanyScoutPage({ params }: CompanyScoutPageProps) {
   // サーバーサイドで認証状態を確認
   // const auth = await getServerAuth();
 
@@ -32,17 +34,9 @@ export default async function CompanyScoutPage() {
 
   return (
     <>
-      <AuthAwareNavigationServer
-        variant="company"
-        isLoggedIn={true} // テンプレート確認用に強制的にtrue
-        userInfo={testUserInfo}
-      />
-      <ScoutSendForm />
-      <AuthAwareFooterServer
-        variant="company"
-        isLoggedIn={true} // テンプレート確認用に強制的にtrue
-        userInfo={testUserInfo}
-      />
+     
+      <ScoutSendForm candidateId={params.id} />
+      
     </>
   );
 }

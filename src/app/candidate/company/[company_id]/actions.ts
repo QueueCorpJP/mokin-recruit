@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export interface CompanyDetailData {
   id: string;
@@ -107,7 +107,7 @@ function getDefaultCompanyData(company_id: string): CompanyDetailData {
 
 export async function getCompanyDetailData(company_id: string): Promise<CompanyDetailData | null> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 企業情報を取得
     const { data: company, error: companyError } = await supabase
@@ -170,13 +170,13 @@ export async function getCompanyDetailData(company_id: string): Promise<CompanyD
       },
       smoke: '全面禁煙',
       resumeRequired: ['履歴書', '職務経歴書'],
-      representative: company.representative_name || '田中 太郎',
+      representative: company.representative_name || '代表者名未設定',
       establishedYear: '2015', // TODO: 実際の設立年を保存できるようにテーブル拡張が必要
       capital: '1000', // TODO: 実際の資本金を保存できるようにテーブル拡張が必要
       employeeCount: '50', // TODO: 実際の従業員数を保存できるようにテーブル拡張が必要
       industry: company.industry || 'IT・通信、ソフトウェア',
       businessContent: company.company_overview || 'Webアプリケーション開発、システム開発、IT コンサルティング事業を展開しています。',
-      address: company.headquarters_address || '東京都渋谷区渋谷1-1-1 渋谷ビル10F',
+      address: company.headquarters_address || '本社所在地未設定',
       companyPhase: '成長期', // TODO: 実際の企業フェーズを保存できるようにテーブル拡張が必要
       website: 'https://example-company.com', // TODO: 実際のウェブサイトURLを保存できるようにテーブル拡張が必要
     };
@@ -192,7 +192,7 @@ export async function getCompanyDetailData(company_id: string): Promise<CompanyD
 // 企業が投稿した求人情報を取得する関数
 export async function getCompanyJobPostings(company_id: string): Promise<JobPostingData[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 企業の求人情報を取得
     const { data: jobs, error } = await supabase

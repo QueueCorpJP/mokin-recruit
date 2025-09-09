@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -12,7 +12,7 @@ export interface NotificationSettings {
 }
 
 export async function saveNotificationSettings(formData: FormData) {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const scoutNotification = formData.get('scoutNotification') as string;
   const messageNotification = formData.get('messageNotification') as string;
@@ -75,7 +75,7 @@ export async function saveNotificationSettings(formData: FormData) {
 }
 
 export async function getNotificationSettings(): Promise<NotificationSettings | null> {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {

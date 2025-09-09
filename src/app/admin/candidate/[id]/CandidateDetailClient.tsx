@@ -355,8 +355,8 @@ export default function CandidateDetailClient({ candidate }: Props) {
             <AdminButton
               onClick={handleSaveMemo}
               text={isSavingMemo ? '保存中...' : 'メモを保存'}
-              variant="blue"
-              size="small"
+              variant="primary"
+              size="sm"
               disabled={isSavingMemo}
             />
           </div>

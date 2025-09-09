@@ -13,7 +13,6 @@ import { type Room } from '@/lib/rooms';
 import { getRoomMessages, sendCompanyMessage, markRoomMessagesAsRead } from '@/lib/actions/messages';
 import { sendMessage, markCandidateRoomMessagesAsRead } from '@/lib/actions/message-actions';
 import { ChatMessage } from '@/types/message';
-import { MessageLoading } from '@/components/ui/Loading';
 import { useToast } from '@/components/ui/toast';
 
 export interface MessageLayoutServerProps {
@@ -45,7 +44,6 @@ export function MessageLayoutServer({
   const [searchTarget, setSearchTarget] = useState<'company' | 'job'>('company');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'company'>('date');
   const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [rooms, setRooms] = useState<Room[]>(initialRooms); // roomsを状態管理
   
   // モバイル判定 - 初期ルーム設定より前に定義
@@ -73,7 +71,6 @@ export function MessageLayoutServer({
   useEffect(() => {
     if (selectedRoomId) {
       const loadMessages = async () => {
-        setIsLoadingMessages(true);
         try {
           const messages = await getRoomMessages(selectedRoomId);
           setRoomMessages(messages);
@@ -102,8 +99,6 @@ export function MessageLayoutServer({
         } catch (error) {
           console.error('Failed to load messages:', error);
           setRoomMessages([]);
-        } finally {
-          setIsLoadingMessages(false);
         }
       };
 
@@ -322,18 +317,14 @@ export function MessageLayoutServer({
             isCandidatePage={isCandidatePage}
           />
           <div className='flex-1 overflow-y-auto scrollbar-hide'>
-            {isLoadingMessages ? (
-              <MessageLoading />
-            ) : (
-              <MessageDetailContent
-                messages={roomMessages}
-                isCandidatePage={isCandidatePage}
-                candidateId={userId}
-                candidateName={selectedRoom?.candidateName}
-                companyName={selectedRoom?.companyName}
-                isMobile={true}
-              />
-            )}
+            <MessageDetailContent
+              messages={roomMessages}
+              isCandidatePage={isCandidatePage}
+              candidateId={userId}
+              candidateName={selectedRoom?.candidateName}
+              companyName={selectedRoom?.companyName}
+              isMobile={true}
+            />
           </div>
           <MessageInputBox 
             isCandidatePage={isCandidatePage} 
@@ -452,18 +443,14 @@ export function MessageLayoutServer({
               isCandidatePage={isCandidatePage}
             />
             <div className='flex-1 overflow-y-auto scrollbar-hide'>
-              {isLoadingMessages ? (
-                <MessageLoading />
-              ) : (
-                <MessageDetailContent
-                  messages={roomMessages}
-                  isCandidatePage={isCandidatePage}
-                  candidateId={userId}
-                  candidateName={selectedRoom?.candidateName}
-                  companyName={selectedRoom?.companyName}
-                  isMobile={false}
-                />
-              )}
+              <MessageDetailContent
+                messages={roomMessages}
+                isCandidatePage={isCandidatePage}
+                candidateId={userId}
+                candidateName={selectedRoom?.candidateName}
+                companyName={selectedRoom?.companyName}
+                isMobile={false}
+              />
             </div>
             <MessageInputBox 
               isCandidatePage={isCandidatePage} 

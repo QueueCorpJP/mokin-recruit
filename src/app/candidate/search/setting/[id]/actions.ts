@@ -1,11 +1,12 @@
 'use server'
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/client';
 
 export interface JobDetailData {
   id: string;
   title: string;
   companyName: string;
+  companyId: string;
   companyLogo?: string;
   images: string[];
   jobTypes: string[];
@@ -50,7 +51,7 @@ export interface JobDetailData {
 // Server Component用のgetJobDetail実装（直接データベースアクセス）
 async function getJobDetailServer(jobId: string) {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = createClient();
     
     // 求人詳細を取得（必要フィールドのみ）
     const { data: job, error: jobError } = await supabase
@@ -150,6 +151,7 @@ export async function getJobDetailData(jobId: string): Promise<JobDetailData | n
         id: apiJob.id,
         title: apiJob.title || '求人タイトル未設定',
         companyName: apiJob.company_name || '企業名未設定',
+        companyId: apiJob.company_account_id,
         companyLogo: undefined, // 企業ロゴは求人画像とは別にすべき
         images: apiJob.image_urls || ['/company.jpg'],
         jobTypes: Array.isArray(apiJob.job_type)

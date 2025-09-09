@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
+import { jobCategories } from '@/app/company/job/types';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,7 +23,7 @@ export default function JobTypeSelectModal({
 }: JobTypeSelectModalProps) {
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(initialSelected);
   const [selectedCategory, setSelectedCategory] = useState(
-    JOB_TYPE_GROUPS[0].name
+    jobCategories[0].name
   );
   const [showAllCategories, setShowAllCategories] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -59,7 +59,7 @@ export default function JobTypeSelectModal({
     onConfirm(copyToSend);
   };
 
-  const selectedCategoryData = JOB_TYPE_GROUPS.find(
+  const selectedCategoryData = jobCategories.find(
     category => category.name === selectedCategory
   )!;
 
@@ -81,7 +81,7 @@ export default function JobTypeSelectModal({
         {isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {JOB_TYPE_GROUPS.map((category, index) => (
+              {jobCategories.map((category, index) => (
                 <React.Fragment key={category.name}>
                   <button
                     className={`py-2 px-2 transition-colors ${
@@ -100,7 +100,7 @@ export default function JobTypeSelectModal({
                   >
                     {category.name}
                   </button>
-                  {index < JOB_TYPE_GROUPS.length - 1 && (
+                  {index < jobCategories.length - 1 && (
                     <div className='mx-2'>
                       <svg
                         width='2'
@@ -128,7 +128,7 @@ export default function JobTypeSelectModal({
         {!isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {JOB_TYPE_GROUPS.slice(0, showAllCategories ? JOB_TYPE_GROUPS.length : 6).map((category, index) => (
+              {jobCategories.slice(0, showAllCategories ? jobCategories.length : 6).map((category, index) => (
                 <React.Fragment key={category.name}>
                   <button
                     className={`py-2 px-2 transition-colors ${
@@ -147,7 +147,7 @@ export default function JobTypeSelectModal({
                   >
                     {category.name}
                   </button>
-                  {index < (showAllCategories ? JOB_TYPE_GROUPS.length - 1 : 5) && (
+                  {index < (showAllCategories ? jobCategories.length - 1 : 5) && (
                     <div className='mx-2'>
                       <svg
                         width='2'
@@ -167,7 +167,7 @@ export default function JobTypeSelectModal({
                   )}
                 </React.Fragment>
               ))}
-              {!showAllCategories && JOB_TYPE_GROUPS.length > 6 && (
+              {!showAllCategories && jobCategories.length > 6 && (
                 <>
                   <div className='mx-2'>
                     <svg
@@ -224,17 +224,17 @@ export default function JobTypeSelectModal({
 
           {/* 職種チェックボックスリスト（2列グリッド） */}
           <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
-            {selectedCategoryData.jobTypes.map(jobType => {
-              const isSelected = selectedJobTypes.includes(jobType.name);
+            {selectedCategoryData.jobs.map(job => {
+              const isSelected = selectedJobTypes.includes(job);
               const isDisabled =
                 !isSelected && selectedJobTypes.length >= maxSelections;
 
               return (
-                <div key={jobType.id} className='flex items-center'>
+                <div key={job} className='flex items-center'>
                   <Checkbox
-                    label={jobType.name}
+                    label={job}
                     checked={isSelected}
-                    onChange={() => handleCheckboxChange(jobType.name)}
+                    onChange={() => handleCheckboxChange(job)}
                     disabled={isDisabled}
                   />
                 </div>

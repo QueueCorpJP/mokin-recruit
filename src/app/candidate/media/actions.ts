@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export interface PopularArticle {
   id: string;
@@ -37,7 +37,7 @@ export interface Article {
 
 export async function getPopularArticles(limit: number = 5): Promise<PopularArticle[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('articles')
       .select('id, title, views_count, published_at, created_at, excerpt, content, thumbnail_url')
@@ -55,7 +55,7 @@ export async function getPopularArticles(limit: number = 5): Promise<PopularArti
 
 export async function getMediaCategories(): Promise<ArticleCategory[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('article_categories')
       .select(`
@@ -91,7 +91,7 @@ export async function getMediaCategories(): Promise<ArticleCategory[]> {
 
 export async function getMediaTags(): Promise<ArticleTag[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('article_tags')
       .select(`
@@ -127,7 +127,7 @@ export async function getMediaTags(): Promise<ArticleTag[]> {
 
 export async function getArticles(limit: number = 20, offset: number = 0): Promise<Article[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('articles')
       .select(`
@@ -168,7 +168,7 @@ export async function getArticlesWithPagination(limit: number = 20, offset: numb
   total: number;
 }> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { count } = await supabase
       .from('articles')
       .select('id', { count: 'exact' })
@@ -220,7 +220,7 @@ export async function getSidebarData(): Promise<{
 
 export async function getRelatedArticles(currentArticleId: string, limit: number = 6): Promise<Article[]> {
   try {
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data, error } = await supabase
       .from('articles')
       .select(`

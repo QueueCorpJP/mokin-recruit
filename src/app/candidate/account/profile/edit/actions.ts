@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 // フォームデータの型定義
 export interface ProfileUpdateData {
@@ -78,7 +78,7 @@ export async function updateCandidateProfile(
     }
 
     // データベースを更新
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { error } = await supabase
       .from('candidates')
       .update({

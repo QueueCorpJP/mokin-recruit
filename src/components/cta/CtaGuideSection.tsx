@@ -113,14 +113,19 @@ export default function CtaGuideSection() {
               cursor: 'pointer',
             }}
           >
-            <img
-              src='/images/book-solid.svg'
-              alt='ご利用ガイド'
-              width={22}
-              height={24}
+            <svg
+              width="22"
+              height="24"
+              viewBox="0 0 22 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
               style={{ display: 'inline', marginRight: 8 }}
-              loading="lazy"
-            />
+            >
+              <path
+                d="M2 3C2 2.44772 2.44772 2 3 2H7.41421C7.67713 2 7.92926 2.10536 8.12132 2.29289L10.2929 4.46447C10.4804 4.65198 10.7322 4.75734 10.9951 4.75734H19C19.5523 4.75734 20 5.20505 20 5.75734V20C20 20.5523 19.5523 21 19 21H3C2.44772 21 2 20.5523 2 20V3Z"
+                fill="currentColor"
+              />
+            </svg>
             ご利用ガイド
           </button>
           <button
