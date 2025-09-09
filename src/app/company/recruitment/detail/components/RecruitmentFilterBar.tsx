@@ -1,6 +1,7 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
+import { Button } from '@/components/ui/button';
 
 interface StatusTab {
   id: string;
@@ -132,13 +133,14 @@ export function RecruitmentFilterBar({
             className='bg-white border border-[#999999] rounded-[5px] px-[11px] py-1 w-60 text-[#999999] text-[16px] tracking-[1.6px] placeholder:text-[#999999]'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           />
-          <button
-            type='button'
-            className='px-6 py-2 bg-gradient-to-r from-[#26AF94] to-[#3A93CB] text-white rounded-[5px] text-[14px] font-bold tracking-[1.4px]'
+          <Button
+            variant="green-gradient"
+            size="default"
+            className="rounded-full"
             onClick={onSearch}
           >
             検索
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -12,10 +12,16 @@ export default async function CandidateLayoutServer({
   const auth = await getServerAuth();
 
   // 候補者で未ログイン（または候補者ではない）ならログインへ
-  if (!auth.isAuthenticated || auth.userType !== 'candidate') {
+ if (!auth.isAuthenticated) {
     redirect('/candidate/auth/login');
+  } else if (auth.userType !== 'candidate') {
+    // ユーザータイプに応じて適切なページにリダイレクト
+    if (auth.userType === 'company_user') {
+      redirect('/company');
+    } else if (auth.userType === 'admin') {
+      redirect('/admin');
+    }
   }
-
   // 認証情報を整理
   const userInfo = auth.isAuthenticated && auth.user ? {
     name: auth.user.name || auth.user.email || '',

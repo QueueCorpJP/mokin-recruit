@@ -106,6 +106,9 @@ export function RecruitmentPageClient({
                 key={candidate.id}
                 candidate={candidate}
                 onClick={() => page.handleCandidateClick(candidate)}
+                jobOptions={page.jobOptions}
+                onJobChange={page.handleJobChange}
+                companyGroupId={companyGroups[0]?.value}
               />
             ))}
           </div>
@@ -126,6 +129,8 @@ export function RecruitmentPageClient({
         onClose={page.handleCloseMenu}
         candidateId={page.selectedCandidate?.id}
         companyGroupId={companyGroups[0]?.value}
+        jobOptions={page.jobOptions}
+        onJobChange={page.handleJobChange}
       />
     </>
   );
