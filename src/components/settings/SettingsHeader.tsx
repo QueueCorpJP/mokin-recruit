@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbItem {
@@ -23,9 +24,18 @@ export function SettingsHeader({ breadcrumbs, title, icon }: SettingsHeaderProps
             {index > 0 && (
               <ChevronRight className="w-3 h-3 text-white" />
             )}
-            <span className="text-white text-xs md:text-sm font-bold tracking-[1.2px] md:tracking-[1.4px]">
-              {item.label}
-            </span>
+            {item.href ? (
+              <Link 
+                href={item.href}
+                className="text-white text-xs md:text-sm font-bold tracking-[1.2px] md:tracking-[1.4px] hover:text-white/80 transition-colors cursor-pointer"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <span className="text-white text-xs md:text-sm font-bold tracking-[1.2px] md:tracking-[1.4px]">
+                {item.label}
+              </span>
+            )}
           </React.Fragment>
         ))}
       </div>

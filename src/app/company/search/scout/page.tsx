@@ -1,7 +1,5 @@
 import React from 'react';
-// import { getServerAuth } from '@/lib/auth/server';
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+
 import { ScoutSendForm } from './ScoutSendForm';
 
 export default async function CompanyScoutPage() {
@@ -32,17 +30,9 @@ export default async function CompanyScoutPage() {
 
   return (
     <>
-      <AuthAwareNavigationServer
-        variant="company"
-        isLoggedIn={true} // テンプレート確認用に強制的にtrue
-        userInfo={testUserInfo}
-      />
+     
       <ScoutSendForm />
-      <AuthAwareFooterServer
-        variant="company"
-        isLoggedIn={true} // テンプレート確認用に強制的にtrue
-        userInfo={testUserInfo}
-      />
+      
     </>
   );
 }

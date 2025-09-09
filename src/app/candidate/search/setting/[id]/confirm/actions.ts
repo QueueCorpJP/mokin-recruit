@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { logger } from '@/lib/server/utils/logger';
 
@@ -84,7 +84,7 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
     const fileName = `${candidateId}/${type}_${timestamp}${fileExtension}`;
 
     // Supabase Storageにアップロード
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const fileBuffer = await file.arrayBuffer();
     
     const { data, error } = await supabase.storage
@@ -207,7 +207,7 @@ export async function submitApplication(formData: FormData): Promise<Application
     const candidateId = authResult.data.candidateId;
     logger.info(`Application attempt by candidate: ${candidateId}`);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 求人情報取得と応募済みチェックを並列実行
     const [
@@ -462,7 +462,7 @@ export async function submitApplication(formData: FormData): Promise<Application
 export async function getJobDetails(jobId: string) {
   try {
     logger.info(`=== Getting job details for jobId: ${jobId} ===`);
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // デバッグ: jobIdの型と値を確認
     logger.info(`Job ID type: ${typeof jobId}, value: "${jobId}", length: ${jobId?.length}`);

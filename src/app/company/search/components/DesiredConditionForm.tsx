@@ -58,6 +58,7 @@ export default function DesiredConditionForm() {
                   onChange={(value: string) =>
                     searchStore.setOtherLanguage(value)
                   }
+                  className="w-48"
                   options={[
                     { value: '', label: '指定なし' },
                     { value: 'インドネシア語', label: 'インドネシア語' },
@@ -92,6 +93,7 @@ export default function DesiredConditionForm() {
                   onChange={(value: string) =>
                     searchStore.setOtherLanguageLevel(value)
                   }
+                  className="w-52"
                   options={[
                     { value: '', label: 'レベルの指定なし' },
                     { value: 'native', label: 'ネイティブ' },

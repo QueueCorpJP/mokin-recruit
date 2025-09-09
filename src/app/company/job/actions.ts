@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { unstable_cache, revalidateTag } from 'next/cache';
 
@@ -33,7 +33,7 @@ async function _getCompanyJobs(params: {
 }, companyAccountId: string) {
   try {
     console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
     let query = supabase
@@ -199,7 +199,7 @@ export async function createJob(data: any) {
       companyUserId: actualUserId, 
       companyAccountId: companyAccountId 
     } = authResult.data;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // 利用可能なグループを確認
     const { data: availableGroups } = await supabase
@@ -357,7 +357,7 @@ export async function getJobForEdit(jobId: string) {
       return { success: false, error: authResult.error };
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('job_postings')
@@ -389,7 +389,7 @@ export async function getJobDetail(jobId: string) {
     }
 
     const { companyAccountId: companyAccountId } = authResult.data;
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('job_postings')
@@ -465,7 +465,7 @@ export async function updateJob(jobId: string, updateData: any) {
       return { success: false, error: authResult.error };
     }
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // 画像処理
     let imageUrls: string[] | undefined = undefined;
@@ -996,7 +996,7 @@ export async function getCompanyGroups() {
     } else if (cached) {
       return cached.data;
     }
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
 
     // ユーザーが権限を持つグループのみ取得（検索機能と統一）
     const { data: userPermissions, error } = await supabase

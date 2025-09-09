@@ -2,7 +2,7 @@
 
 import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 
@@ -121,7 +121,7 @@ export async function updateRecentJobData(formData: FormData) {
       jobHistories: processedJobHistories
     });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // 複数職歴を既存フィールドに保存する方法：
     // - 最初の職歴の基本情報を既存のフィールドに保存（互換性維持）

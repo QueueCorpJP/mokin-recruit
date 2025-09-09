@@ -1,6 +1,7 @@
 'use server';
 
-import { getSupabaseServerClient, getSupabaseAdminClient } from '@/lib/supabase/server-client';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { createClient } from '@/lib/supabase/server';
 
 export async function toggleCandidateHiddenAction(candidateId: string, companyGroupId: string) {
   try {
@@ -23,7 +24,7 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
       return { success: false, error: 'Company user not found' };
     }
 
-    const adminSupabase = getSupabaseAdminClient();
+    const adminSupabase = await createClient();
     
     // 既存の非表示設定を確認
     const { data: existingHidden, error: fetchError } = await adminSupabase
@@ -81,7 +82,7 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
 
 export async function getHiddenCandidatesAction(companyGroupId: string) {
   try {
-    const adminSupabase = getSupabaseAdminClient();
+    const adminSupabase = await createClient();
 
     const { data, error } = await adminSupabase
       .from('hidden_candidates')
@@ -126,7 +127,7 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
       return { success: false, error: 'Company user not found' };
     }
 
-    const adminSupabase = getSupabaseAdminClient();
+    const adminSupabase = await createClient();
     
     const { error: insertError } = await adminSupabase
       .from('saved_candidates')
@@ -173,7 +174,7 @@ export async function unsaveCandidateAction(candidateId: string, companyGroupId:
       return { success: false, error: 'Company user not found' };
     }
 
-    const adminSupabase = getSupabaseAdminClient();
+    const adminSupabase = await createClient();
     
     const { error: deleteError } = await adminSupabase
       .from('saved_candidates')
@@ -215,7 +216,7 @@ export async function getSavedCandidatesAction(companyGroupId: string) {
       return { success: false, data: [] };
     }
 
-    const adminSupabase = getSupabaseAdminClient();
+    const adminSupabase = await createClient();
     
     const { data: savedCandidates, error: fetchError } = await adminSupabase
       .from('saved_candidates')

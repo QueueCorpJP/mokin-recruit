@@ -1,7 +1,7 @@
 'use server';
 
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 import nodemailer from 'nodemailer';
 
 export async function sendContactForm(formData: {
@@ -21,7 +21,7 @@ export async function sendContactForm(formData: {
     }
     console.log('認証成功 - ユーザーID:', authResult.data.companyUserId);
     
-    const supabase = getSupabaseAdminClient();
+    const supabase = await createClient();
     
     // 企業ユーザー情報を取得
     console.log('企業ユーザー情報を取得中...');

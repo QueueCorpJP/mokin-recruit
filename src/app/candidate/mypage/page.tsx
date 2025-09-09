@@ -1,6 +1,6 @@
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { CandidateRepository } from '@/lib/server/infrastructure/database/CandidateRepository';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
@@ -77,18 +77,25 @@ async function getRecentMessages(candidateId: string) {
 const getCachedRecommendedJobs = unstable_cache(
   async (candidateId: string) => getRecommendedJobsInternal(candidateId),
   ['recommended-jobs'],
-  { revalidate: 300, tags: ['jobs'] } // 5分間キャッシュ
+  { revalidate: 1, tags: ['jobs'] } // デバッグ用：1秒キャッシュ
 );
 
 // おすすめ求人取得用の関数（最適化版）
 async function getRecommendedJobsInternal(candidateId: string) {
+  console.log('🎯 [RECOMMENDED JOBS] Starting getRecommendedJobsInternal for candidate:', candidateId);
+  
   try {
     const candidateRepo = new CandidateRepository();
     const candidate = await candidateRepo.findById(candidateId);
 
-    if (!candidate) return [];
+    if (!candidate) {
+      console.log('❌ [RECOMMENDED JOBS] Candidate not found:', candidateId);
+      return [];
+    }
 
-    const client = getSupabaseAdminClient();
+    console.log('✅ [RECOMMENDED JOBS] Candidate found:', candidate.id);
+    const client = await getSupabaseServerClient();
+    console.log('✅ [RECOMMENDED JOBS] Supabase client created');
     
     // 必要最小限のフィールドのみ取得
     let query: any = client
@@ -130,8 +137,14 @@ async function getRecommendedJobsInternal(candidateId: string) {
       .order('created_at', { ascending: false })
       .limit(5); // 5件に減らして初期ロードを高速化
 
+    console.log('📊 [RECOMMENDED JOBS] Query result:', { 
+      jobsCount: jobs?.length || 0, 
+      error: error?.message,
+      conditions: conditions.length
+    });
+
     if (error || !jobs) {
-      console.error('Failed to get recommended jobs:', error);
+      console.error('❌ [RECOMMENDED JOBS] Failed to get jobs:', error);
       return [];
     }
 
@@ -148,9 +161,10 @@ async function getRecommendedJobsInternal(candidateId: string) {
       starred: false
     }));
 
+    console.log('🎉 [RECOMMENDED JOBS] Success! Transformed jobs:', transformedJobs.length);
     return transformedJobs;
   } catch (error) {
-    console.error('Error in getRecommendedJobs:', error);
+    console.error('❌ [RECOMMENDED JOBS] Error in getRecommendedJobs:', error);
     return [];
   }
 }
@@ -204,7 +218,7 @@ export default async function CandidateDashboard() {
   const [tasks, messages, jobs, notices] = await Promise.all([
     getTaskData(user.id),
     getRecentMessages(user.id),
-    getCachedRecommendedJobs(user.id),
+    getRecommendedJobsInternal(user.id), // キャッシュを使わず直接呼び出し
     getCandidateNotices()
   ]);
 

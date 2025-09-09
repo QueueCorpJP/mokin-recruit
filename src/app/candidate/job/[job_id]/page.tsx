@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { Metadata } from 'next';
 import { JobDetailView } from './JobDetailView';
 
@@ -54,7 +54,7 @@ interface JobPostingDetail {
 }
 
 async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
 
   try {
     const { data, error } = await supabase

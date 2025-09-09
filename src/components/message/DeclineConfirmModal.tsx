@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
 import { X } from 'lucide-react';
+import { submitDeclineReason } from '@/app/message/decline/actions';
 
 interface DeclineConfirmModalProps {
   isOpen: boolean;
@@ -70,33 +71,21 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/message/decline', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reason: selectedDeclineReason,
-          companyUserId,
-          jobPostingId,
-          roomId,
-        }),
+      const result = await submitDeclineReason({
+        reason: selectedDeclineReason,
+        companyUserId,
+        jobPostingId,
+        roomId,
       });
-
-      if (!response.ok) {
-        throw new Error('辞退理由の送信に失敗しました');
-      }
-
-      const data = await response.json();
       
-      if (data.success) {
+      if (result.success) {
         onConfirm();
         setSelectedReasons([]);
         setSelectedDeclineReason('');
         setShowValidationError(false);
         setIsSelectOpen(false);
       } else {
-        throw new Error(data.error || '辞退理由の送信に失敗しました');
+        throw new Error(result.error || '辞退理由の送信に失敗しました');
       }
     } catch (error) {
       console.error('辞退理由の送信エラー:', error);

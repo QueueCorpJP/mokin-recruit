@@ -1,6 +1,6 @@
 'use server'
 
-import { getCandidateSupabaseClient } from '@/lib/auth/server';
+import { createClient } from '@/lib/supabase/client';
 
 export interface JobSearchResult {
   id: string;
@@ -110,7 +110,7 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
   const startTime = performance.now();
   
   try {
-    const supabase = await getCandidateSupabaseClient();
+    const supabase = createClient();
     
     // ページネーション設定
     const page = params.page || 1;

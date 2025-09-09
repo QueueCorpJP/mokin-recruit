@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 
 // 簡単なメモリキャッシュ
@@ -34,7 +34,7 @@ export async function getCompanyUserSettings(): Promise<CompanyUserSettings | nu
   }
   console.log('Fetching company user settings for companyUserId:', companyUserId);
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await createClient();
 
   // Get company user data from company_users table
   const { data: companyUserData, error: companyUserError } = await supabase
@@ -84,7 +84,7 @@ export interface CompanyNotificationSettings {
 }
 
 export async function saveCompanyNotificationSettings(formData: FormData) {
-  const supabase = getSupabaseAdminClient();
+  const supabase = await createClient();
   
   const applicationNotification = formData.get('applicationNotification') as string;
   const messageNotification = formData.get('messageNotification') as string;
@@ -139,7 +139,7 @@ export async function getCompanyNotificationSettings(): Promise<CompanyNotificat
 
   console.log('Getting notification settings for company_user_id:', authResult.data.companyUserId);
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await createClient();
 
   // company_notification_settingsテーブルから企業の通知設定を取得
   const { data, error } = await supabase
@@ -184,7 +184,7 @@ export async function updateCompanyProfile(fullName: string, positionTitle: stri
   }
 
   const companyUserId = authResult.data.companyUserId;
-  const supabase = getSupabaseAdminClient();
+  const supabase = await createClient();
 
   try {
     const { error } = await supabase

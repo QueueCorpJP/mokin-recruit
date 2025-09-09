@@ -20,6 +20,7 @@ export default function NotificationSettingPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationSetting>({
     scoutNotification: 'receive',
     messageNotification: 'receive',
@@ -43,6 +44,9 @@ export default function NotificationSettingPage() {
 
   useEffect(() => {
     const fetchCurrentSettings = async () => {
+      if (!isAuthenticated || !candidateUser || loading) return;
+      
+      setSettingsLoading(true);
       try {
         const settings = await getNotificationSettings();
         if (settings) {
@@ -56,11 +60,14 @@ export default function NotificationSettingPage() {
         }
       } catch (error) {
         console.error('設定の取得に失敗しました:', error);
+        setError('設定の取得に失敗しました');
+      } finally {
+        setSettingsLoading(false);
       }
     };
 
     fetchCurrentSettings();
-  }, []);
+  }, [isAuthenticated, candidateUser, loading]);
 
   useEffect(() => {
     const hasChanged = Object.keys(notifications).some(
@@ -100,7 +107,7 @@ export default function NotificationSettingPage() {
     router.push('/candidate/setting');
   };
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse">Loading...</div>

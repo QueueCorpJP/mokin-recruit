@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import PageLayout from '@/components/candidate/account/PageLayout';
 import ContentCard from '@/components/candidate/account/ContentCard';
 import DataRow from '@/components/candidate/account/DataRow';
@@ -37,7 +37,7 @@ export default async function CandidateExpectationPage() {
   }
 
   // expectationsテーブルからデータを取得
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
   const { data: expectationData } = await supabase
     .from('expectations')
     .select(`

@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { any } from 'zod';
 
 interface CareerStatusFormData {
@@ -33,7 +33,7 @@ export async function getCareerStatusData() {
     }
 
     // 選考状況エントリを取得
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
     const { data: careerEntries, error: careerError } = await supabase
       .from('career_status_entries')
       .select('*')
@@ -113,7 +113,7 @@ export async function updateCareerStatusData(formData: FormData) {
       selectionCompanies
     });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // candidatesテーブルを更新
     const { data, error: candidateError } = await supabase
