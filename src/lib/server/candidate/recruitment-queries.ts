@@ -801,6 +801,9 @@ export interface CandidateDetailData {
   lastUpdate?: string;
   registrationDate?: string;
   jobSummary?: string;
+  badgeType?: 'change' | 'professional' | 'multiple';
+  badgeText?: string;
+  isAttention?: boolean;
   experienceJobs?: Array<{ title: string; years: number }>;
   experienceIndustries?: Array<{ title: string; years: number }>;
   workHistory?: Array<{
@@ -1036,5 +1039,19 @@ export async function getCandidateDetailData(
       isHighlighted: false,
       isCareerChange: false,
     },
+    // バッジ情報（CandidateCardと同じロジック）
+    badgeType: candidate.desired_job_types && 
+      Array.isArray(candidate.desired_job_types) && 
+      candidate.desired_job_types.length > 1 ? 'multiple' : 
+      (candidate.desired_job_types && 
+       Array.isArray(candidate.desired_job_types) && 
+       candidate.desired_job_types.length === 1 ? 'professional' : 'change'),
+    badgeText: candidate.desired_job_types && 
+      Array.isArray(candidate.desired_job_types) && 
+      candidate.desired_job_types.length > 1 ? 'マルチキャリア志向' : 
+      (candidate.desired_job_types && 
+       Array.isArray(candidate.desired_job_types) && 
+       candidate.desired_job_types.length === 1 ? 'プロフェッショナル志向' : '転職志向'),
+    isAttention: false, // TODO: 注目候補者のロジックを実装
   };
 }
