@@ -31,6 +31,12 @@ export interface CandidateData {
     final_interview_result?: string;
     offer_result?: string;
   } | null;
+  badgeType?: 'change' | 'professional' | 'multiple';
+  isAttention?: boolean;
+  tags?: {
+    isHighlighted?: boolean;
+    isCareerChange?: boolean;
+  };
 }
 
 // 年齢を計算する関数
@@ -804,6 +810,10 @@ export interface CandidateDetailData {
   badgeType?: 'change' | 'professional' | 'multiple';
   badgeText?: string;
   isAttention?: boolean;
+  jobPostingId?: string;
+  jobPostingTitle?: string;
+  group?: string;
+  groupId?: string;
   experienceJobs?: Array<{ title: string; years: number }>;
   experienceIndustries?: Array<{ title: string; years: number }>;
   workHistory?: Array<{
@@ -867,6 +877,62 @@ export async function getCandidateDetailData(
     .eq('id', candidateId)
     .single();
   if (candidateError || !candidate) return null;
+
+  // 1.5. 求人情報とグループ情報を取得（CandidateCardと同じ情報を取得）
+  let jobPostingId = '';
+  let jobPostingTitle = '';
+  let group = '';
+  let groupId = '';
+
+  if (companyGroupId) {
+    // applicationテーブルから求人情報を取得
+    const { data: applicationData } = await supabase
+      .from('application')
+      .select(`
+        job_posting_id,
+        company_group_id,
+        job_postings (
+          title
+        ),
+        company_groups (
+          group_name
+        )
+      `)
+      .eq('candidate_id', candidateId)
+      .eq('company_group_id', companyGroupId)
+      .single();
+
+    if (applicationData) {
+      jobPostingId = applicationData.job_posting_id || '';
+      jobPostingTitle = applicationData.job_postings?.title || '';
+      group = applicationData.company_groups?.group_name || '';
+      groupId = applicationData.company_group_id || '';
+    } else {
+      // scout_sendsテーブルからも確認
+      const { data: scoutData } = await supabase
+        .from('scout_sends')
+        .select(`
+          job_posting_id,
+          company_group_id,
+          job_postings (
+            title
+          ),
+          company_groups (
+            group_name
+          )
+        `)
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', companyGroupId)
+        .single();
+
+      if (scoutData) {
+        jobPostingId = scoutData.job_posting_id || '';
+        jobPostingTitle = scoutData.job_postings?.title || '';
+        group = scoutData.company_groups?.group_name || '';
+        groupId = scoutData.company_group_id || '';
+      }
+    }
+  }
 
   // 2. 職種経験
   const { data: jobExp } = await supabase
@@ -1053,5 +1119,10 @@ export async function getCandidateDetailData(
        Array.isArray(candidate.desired_job_types) && 
        candidate.desired_job_types.length === 1 ? 'プロフェッショナル志向' : '転職志向'),
     isAttention: false, // TODO: 注目候補者のロジックを実装
+    // 求人・グループ情報（CandidateCardと同じ情報）
+    jobPostingId,
+    jobPostingTitle,
+    group,
+    groupId,
   };
 }
