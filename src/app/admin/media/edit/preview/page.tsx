@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/useClientAuth';
+import { AccessRestricted } from '@/components/AccessRestricted';
 import { Button } from '@/components/ui/button';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
@@ -28,6 +30,7 @@ interface ArticleCategory {
 }
 
 export default function EditPreviewPage() {
+  const { isAdmin, loading } = useAdminAuth();
   const router = useRouter();
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
@@ -39,6 +42,8 @@ export default function EditPreviewPage() {
   const [savedArticleId, setSavedArticleId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAdmin) return;
+    
     const fetchData = async () => {
       const storedData = sessionStorage.getItem('previewArticle');
       if (storedData) {
@@ -95,7 +100,7 @@ export default function EditPreviewPage() {
       window.removeEventListener('save-article', handleSaveArticle);
       window.removeEventListener('save-article-direct', handleSaveArticleDirect);
     };
-  }, [router]);
+  }, [router, isAdmin]);
 
   const handleSave = async (status?: 'DRAFT' | 'PUBLISHED') => {
     if (!previewData) return;
@@ -180,6 +185,18 @@ export default function EditPreviewPage() {
       router.push('/admin/media');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">認証状態を確認中...</div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <AccessRestricted userType="admin" />;
+  }
 
   if (!previewData) {
     return (

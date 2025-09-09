@@ -8,9 +8,24 @@ export type { NoticeData } from './noticeHelpers.client';
  * 公開されているお知らせを最新順で取得する
  */
 export const getPublishedNotices = unstable_cache(
-  async (limit: number = 10): Promise<NoticeData[]> => {
+  async (limit: number = 10, url?: string, anonKey?: string, cookiesData?: any): Promise<NoticeData[]> => {
     try {
-      const supabase = await createClient();
+      let supabase;
+      if (url && anonKey && cookiesData) {
+        const { createServerClient } = await import('@supabase/ssr');
+        supabase = createServerClient(url, anonKey, {
+          cookies: {
+            getAll() {
+              return cookiesData;
+            },
+            setAll() {
+              // キャッシュ内では何もしない
+            },
+          },
+        });
+      } else {
+        supabase = await createClient();
+      }
       
       const { data: notices, error } = await supabase
         .from('notices')

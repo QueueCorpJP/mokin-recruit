@@ -38,7 +38,7 @@ export async function getCandidateTasks() {
   
   // タスクデータを取得（実際の実装に合わせて調整）
   const { data: tasks, error } = await supabase
-    .from('candidate_tasks')
+    .from('unread_notifications')
     .select('*')
     .eq('candidate_id', candidateId)
     .order('created_at', { ascending: false });
@@ -127,4 +127,23 @@ export async function getCandidateMessages() {
   }
 
   return result;
+}
+
+export async function getCandidateNotices() {
+  const supabase = await getSupabaseServerClient();
+  
+  const { data: notices, error } = await supabase
+    .from('notices')
+    .select('*')
+    .eq('status', 'PUBLISHED')
+    .not('published_at', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(2);
+
+  if (error) {
+    console.error('Error fetching notices:', error);
+    return { notices: [] };
+  }
+
+  return { notices: notices || [] };
 }

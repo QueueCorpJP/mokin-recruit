@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { logger } from '@/lib/server/utils/logger';
-import { SupabaseRepository } from './SupabaseRepository';
+import { UserSupabaseRepository } from './UserSupabaseRepository';
 import { ICandidateRepository } from '@/lib/server/core/interfaces/IDomainRepository';
 
 // MVPスキーマに対応したシンプルな候補者エンティティ
@@ -53,7 +53,7 @@ export interface CreateCandidateData {
 
 @injectable()
 export class CandidateRepository
-  extends SupabaseRepository<CandidateEntity>
+  extends UserSupabaseRepository<CandidateEntity>
   implements ICandidateRepository
 {
   protected tableName = 'candidates';
@@ -62,10 +62,11 @@ export class CandidateRepository
     super();
   }
 
-  // メールアドレスで候補者を検索
-  async findByEmail(email: string): Promise<CandidateEntity | null> {
+  // signup時の重複チェック用（管理者権限で実行）
+  async findByEmailForSignup(email: string): Promise<CandidateEntity | null> {
     try {
-      const { data, error } = await this.client
+      const client = this.getAdminClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('email', email)
@@ -73,23 +74,22 @@ export class CandidateRepository
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // レコードが見つからない場合
           logger.debug(`Candidate not found with email: ${email}`);
           return null;
         }
-        logger.error('Error finding candidate by email:', error);
-        throw new Error(`Failed to find candidate: ${error.message}`);
+        logger.error('Error finding candidate by email for signup:', error);
+        return null;
       }
 
-      logger.debug(`Found candidate: ${email}`);
+      logger.debug(`Found candidate for signup check: ${email}`);
       return data;
     } catch (error) {
-      logger.error('Exception in findByEmail:', error);
-      throw error;
+      logger.error('Exception in findByEmailForSignup:', error);
+      return null;
     }
   }
 
-  // 候補者の作成
+  // signup時の候補者作成（管理者権限で実行）
   async create(candidateData: CreateCandidateData): Promise<CandidateEntity> {
     try {
       const createData = {
@@ -105,19 +105,13 @@ export class CandidateRepository
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
-        .from(this.tableName)
-        .insert(createData)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Error creating candidate:', error);
-        throw new Error(`Failed to create candidate: ${error.message}`);
+      const result = await this.createWithAdmin(createData);
+      if (!result) {
+        throw new Error('Failed to create candidate');
       }
 
-      logger.info(`Created candidate: ${data.email}`);
-      return data;
+      logger.info(`Created candidate: ${result.email}`);
+      return result;
     } catch (error) {
       logger.error('Exception in create candidate:', error);
       throw error;

@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+import { getCompanyGroups, getJobPostingsByGroup, createScoutTemplate, type GroupOption, type JobOption, type ScoutTemplateData } from './actions';
 
-export default function ScoutTemplateNewClient() {
+interface ScoutTemplateNewClientProps {
+  initialGroupOptions: GroupOption[];
+}
+
+export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTemplateNewClientProps) {
   const router = useRouter();
 
   // フォームの状態管理
@@ -15,6 +20,9 @@ export default function ScoutTemplateNewClient() {
   const [templateName, setTemplateName] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  
+  // 求人オプションの状態管理
+  const [jobOptions, setJobOptions] = useState<JobOption[]>([{ value: '', label: '未選択' }]);
 
   // エラー状態管理
   const [errors, setErrors] = useState({
@@ -34,13 +42,37 @@ export default function ScoutTemplateNewClient() {
     body: false,
   });
 
+  // 保存中の状態管理
+  const [isSaving, setIsSaving] = useState(false);
+
   // テキストエリアへの参照
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // グループ選択時の処理
   useEffect(() => {
+    console.log('🔍 Group changed to:', group);
+    
     if (group === '') {
       setTargetJob('');
+      setJobOptions([{ value: '', label: '未選択' }]);
+      console.log('🔍 Reset job options to default');
+    } else {
+      // グループが変更されたら対象の求人をリセット
+      setTargetJob('');
+      
+      // サーバーアクションを使用して求人一覧を取得
+      const fetchJobOptions = async () => {
+        try {
+          console.log('🔍 Fetching job options for group:', group);
+          const jobs = await getJobPostingsByGroup(group);
+          console.log('🔍 Received job options:', jobs);
+          setJobOptions(jobs);
+        } catch (error) {
+          console.error('Failed to fetch job options:', error);
+          setJobOptions([{ value: '', label: '未選択' }]);
+        }
+      };
+      fetchJobOptions();
     }
   }, [group]);
 
@@ -139,7 +171,12 @@ export default function ScoutTemplateNewClient() {
   };
 
   // 保存ハンドラー
-  const handleSave = () => {
+  const handleSave = async () => {
+    // 保存中の場合は処理を中断
+    if (isSaving) {
+      return;
+    }
+
     // 全フィールドをタッチ済みに
     setTouched({
       group: true,
@@ -165,8 +202,34 @@ export default function ScoutTemplateNewClient() {
       return;
     }
 
-    // 成功後、一覧画面へ遷移
-    router.push('/company/scout-template');
+    try {
+      // 保存開始
+      setIsSaving(true);
+
+      // スカウトテンプレートを保存
+      const result = await createScoutTemplate({
+        groupId: group,
+        targetJobPostingId: targetJob,
+        templateName,
+        subject,
+        body,
+      });
+
+      if (result.success) {
+        // 成功後、一覧画面へ遷移
+        router.push('/company/scout-template');
+      } else {
+        // エラーメッセージを表示
+        console.error('Failed to create scout template:', result.error);
+        alert(result.error || 'テンプレートの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('予期しないエラーが発生しました');
+    } finally {
+      // 保存終了
+      setIsSaving(false);
+    }
   };
 
   // Right Arrow Icon Component
@@ -201,48 +264,6 @@ export default function ScoutTemplateNewClient() {
     </svg>
   );
 
-  // Select options - 実際はAPIから取得
-  const groupOptions = [
-    { value: '', label: '未選択' },
-    { value: 'group1', label: '新卒採用グループ' },
-    { value: 'group2', label: '中途採用グループ' },
-    { value: 'group3', label: 'エンジニア採用グループ' },
-  ];
-
-  // グループに応じた求人を取得（実際はAPIから動的に取得）
-  const getJobOptions = (selectedGroup: string) => {
-    if (!selectedGroup || selectedGroup === '') {
-      return [{ value: '', label: '未選択' }];
-    }
-
-    const jobsByGroup: Record<
-      string,
-      Array<{ value: string; label: string }>
-    > = {
-      group1: [
-        { value: '', label: '未選択' },
-        { value: 'job1', label: 'フロントエンドエンジニア（新卒）' },
-        { value: 'job2', label: 'バックエンドエンジニア（新卒）' },
-        { value: 'job3', label: 'データサイエンティスト（新卒）' },
-      ],
-      group2: [
-        { value: '', label: '未選択' },
-        { value: 'job4', label: 'シニアエンジニア' },
-        { value: 'job5', label: 'プロダクトマネージャー' },
-        { value: 'job6', label: 'テクニカルリード' },
-      ],
-      group3: [
-        { value: '', label: '未選択' },
-        { value: 'job7', label: 'フルスタックエンジニア' },
-        { value: 'job8', label: 'インフラエンジニア' },
-        { value: 'job9', label: 'セキュリティエンジニア' },
-      ],
-    };
-
-    return jobsByGroup[selectedGroup] || [{ value: '', label: '未選択' }];
-  };
-
-  const jobOptions = getJobOptions(group);
 
   return (
     <>
@@ -304,7 +325,7 @@ export default function ScoutTemplateNewClient() {
                 <div className="flex-1">
                   <div className="max-w-[400px]">
                     <SelectInput
-                      options={groupOptions}
+                      options={initialGroupOptions}
                       value={group}
                       placeholder="未選択"
                       onChange={(value) => handleFieldChange('group', value)}
@@ -513,9 +534,10 @@ export default function ScoutTemplateNewClient() {
               variant="green-gradient"
               size="figma-default"
               onClick={handleSave}
+              disabled={isSaving}
               className="min-w-[160px]"
             >
-              保存する
+              {isSaving ? '保存中...' : '保存する'}
             </Button>
           </div>
         </div>

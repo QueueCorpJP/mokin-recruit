@@ -1,6 +1,7 @@
 import React from 'react';
 import SearchClient from './SearchClient';
-import { getCandidatesFromDatabase, parseSearchParams } from './actions';
+import { parseSearchParams } from './actions';
+import { getCandidatesFromDatabase } from './server-actions';
 import { saveSearchHistory, getCompanyGroups } from '@/lib/actions/search-history';
 import { generateSearchTitle } from '@/lib/utils/search-history';
 

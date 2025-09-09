@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+import { createMessageTemplate, type GroupOption, type MessageTemplateData } from './actions';
 
-export default function TemplateNewClient() {
+interface TemplateNewClientProps {
+  initialGroupOptions: GroupOption[];
+}
+
+export default function TemplateNewClient({ initialGroupOptions }: TemplateNewClientProps) {
   const router = useRouter();
 
   // フォームの状態管理
@@ -27,6 +32,9 @@ export default function TemplateNewClient() {
     templateName: false,
     body: false,
   });
+
+  // 保存中の状態管理
+  const [isSaving, setIsSaving] = useState(false);
 
   // テキストエリアへの参照
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -114,7 +122,12 @@ export default function TemplateNewClient() {
   };
 
   // 保存ハンドラー
-  const handleSave = () => {
+  const handleSave = async () => {
+    // 保存中の場合は処理を中断
+    if (isSaving) {
+      return;
+    }
+
     // 全フィールドをタッチ済みに
     setTouched({
       group: true,
@@ -136,8 +149,32 @@ export default function TemplateNewClient() {
       return;
     }
 
-    // 成功後、一覧画面へ遷移
-    router.push('/company/template');
+    try {
+      // 保存開始
+      setIsSaving(true);
+
+      // メッセージテンプレートを保存
+      const result = await createMessageTemplate({
+        groupId: group,
+        templateName,
+        body,
+      });
+
+      if (result.success) {
+        // 成功後、一覧画面へ遷移
+        router.push('/company/template');
+      } else {
+        // エラーメッセージを表示
+        console.error('Failed to create message template:', result.error);
+        alert(result.error || 'テンプレートの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('予期しないエラーが発生しました');
+    } finally {
+      // 保存終了
+      setIsSaving(false);
+    }
   };
 
   // Right Arrow Icon Component
@@ -172,13 +209,8 @@ export default function TemplateNewClient() {
     </svg>
   );
 
-  // Select options - 実際はAPIから取得
-  const groupOptions = [
-    { value: '', label: '未選択' },
-    { value: 'group1', label: '新卒採用グループ' },
-    { value: 'group2', label: '中途採用グループ' },
-    { value: 'group3', label: 'エンジニア採用グループ' },
-  ];
+  // グループオプションは親コンポーネントから受け取る
+  const groupOptions = initialGroupOptions;
 
   // フォームの全フィールドが有効かチェック
   const isFormValid = group !== '' && templateName !== '' && body !== '';
@@ -247,6 +279,7 @@ export default function TemplateNewClient() {
                       value={group}
                       placeholder="未選択"
                       onChange={(value) => handleFieldChange('group', value)}
+                      onBlur={() => handleFieldBlur('group')}
                       className="w-full"
                     />
                     {touched.group && errors.group && (
@@ -390,9 +423,9 @@ export default function TemplateNewClient() {
               size="figma-default"
               onClick={handleSave}
               className="min-w-[160px]"
-              disabled={!isFormValid}
+              disabled={!isFormValid || isSaving}
             >
-              保存する
+              {isSaving ? '保存中...' : '保存する'}
             </Button>
           </div>
         </div>

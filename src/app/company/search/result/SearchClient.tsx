@@ -25,6 +25,7 @@ import {
   getHiddenCandidatesAction,
 } from './candidate-actions';
 import { useSearchStore } from '../../../../stores/searchStore';
+import { useAuth } from '@/contexts/AuthContext';
 import ExperienceSearchConditionForm from '../components/ExperienceSearchConditionForm';
 import SelectableTagWithYears from '../components/SelectableTagWithYears';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
@@ -44,6 +45,10 @@ import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
 import Image from 'next/image'; // 追加
 import CandidateDetailModal from '@/components/company/CandidateDetailModal';
+import {
+  getCandidatesFromDatabase,
+  searchCandidatesWithConditions,
+} from './server-actions';
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
@@ -251,6 +256,7 @@ export default function SearchClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const searchStore = useSearchStore();
+  const { user, accessToken, loading: authLoading } = useAuth();
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortType>('featured');
   const [openSelectId, setOpenSelectId] = useState<string | null>(null);
@@ -442,6 +448,14 @@ export default function SearchClient({
 
   // 検索実行ハンドラー
   const handleSearch = async () => {
+    console.log('🔍 [SearchClient] 検索実行を開始');
+
+    if (!user) {
+      console.log('⚠️ [SearchClient] 認証されたユーザーが存在しません');
+      setError('認証が必要です。ページを更新してください。');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -554,7 +568,25 @@ export default function SearchClient({
         qualifications: searchStore.qualifications,
       };
 
+      console.log('🔍 [SearchClient] 検索条件:', searchConditions);
+      console.log(
+        '📡 [SearchClient] searchCandidatesWithConditionsを呼び出し中...'
+      );
+
       const results = await searchCandidatesWithConditions(searchConditions);
+
+      console.log('✅ [SearchClient] 検索結果を受信:', results.length, '件');
+
+      if (results.length > 0) {
+        console.log('👥 [SearchClient] 検索結果サンプル:', {
+          id: results[0].id,
+          companyName: results[0].companyName,
+          position: results[0].position,
+        });
+      } else {
+        console.log('⚠️ [SearchClient] 検索結果が0件です');
+      }
+
       setCandidates(results);
 
       // 検索ボックスを閉じる
@@ -564,7 +596,7 @@ export default function SearchClient({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError('検索に失敗しました。もう一度お試しください。');
-      console.error('Search error:', err);
+      console.error('❌ [SearchClient] 検索エラー:', err);
     } finally {
       setLoading(false);
     }
@@ -642,7 +674,16 @@ export default function SearchClient({
 
   // 初期データ読み込み
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || authLoading) return;
+
+    // 認証が必要だが、ユーザーが存在しない場合は処理を停止
+    if (!user) {
+      console.log('⚠️ [SearchClient] 認証されたユーザーが存在しません');
+      setLoading(false);
+      return;
+    }
+
+    console.log('✅ [SearchClient] 認証済みユーザーを確認:', user.id);
 
     const loadInitialData = async () => {
       try {
@@ -654,7 +695,24 @@ export default function SearchClient({
           setAllCandidates(initialCandidates);
           setCandidates(initialCandidates);
         } else {
+          console.log(
+            '📊 [SearchClient] 初期データがないため、getCandidatesFromDatabaseを呼び出し中...'
+          );
           const candidatesData = await getCandidatesFromDatabase();
+          console.log(
+            '✅ [SearchClient] 初期候補者データを取得:',
+            candidatesData.length,
+            '件'
+          );
+
+          if (candidatesData.length > 0) {
+            console.log('👥 [SearchClient] 初期データサンプル:', {
+              id: candidatesData[0].id,
+              companyName: candidatesData[0].companyName,
+              position: candidatesData[0].position,
+            });
+          }
+
           setAllCandidates(candidatesData);
           setCandidates(candidatesData);
         }
@@ -671,7 +729,7 @@ export default function SearchClient({
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
     loadInitialData();
-  }, [isHydrated]);
+  }, [isHydrated, authLoading, user]);
 
   // URLパラメータが変更された時の処理
   useEffect(() => {
@@ -1096,7 +1154,7 @@ export default function SearchClient({
 
                   {/* 語学力 */}
                   <div className='flex gap-6 items-strech'>
-                    <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
+                    <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[150px]'>
                       <span
                         className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
