@@ -128,6 +128,7 @@ export function RecruitmentPageClient({
         isOpen={page.isMenuOpen}
         onClose={page.handleCloseMenu}
         candidateId={page.selectedCandidate?.id}
+        candidateData={page.selectedCandidate}
         companyGroupId={companyGroups[0]?.value}
         jobOptions={page.jobOptions}
         onJobChange={page.handleJobChange}
