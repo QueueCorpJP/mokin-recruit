@@ -116,10 +116,7 @@ export function CandidateSlideMenu({
   // 同じグループの求人のみをフィルタリング（CandidateCardと同じロジック）
   const filteredJobOptions = jobOptions.filter(job => 
     job.value === '' || // "すべて"オプションは常に表示
-    !job.groupId || // groupIdが未設定の求人は常に表示
-    job.groupId === candidateData?.groupId || // 同じグループの求人
-    job.groupId === companyGroupId || // 現在のcompanyGroupIdと一致する求人
-    job.value === candidateData?.jobPostingId // 候補者の現在の求人は常に表示
+    job.groupId === companyGroupId // 同じグループの求人のみ
   );
   
   console.log('🔍 [CandidateSlideMenu] Job filtering debug:', {

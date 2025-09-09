@@ -4,6 +4,24 @@ import { SelectInput } from '@/components/ui/select-input';
 import { SelectionResultModal } from '@/components/ui/selection-result-modal';
 import { getSelectionProgressAction, updateSelectionProgressAction } from '@/lib/actions/selection-progress';
 
+const CareerChangeIcon = () => (
+  <svg
+    width='16'
+    height='16'
+    viewBox='0 0 16 16'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+  >
+    <path
+      d='M3 8H13M13 8L10 5M13 8L10 11'
+      stroke='white'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  </svg>
+);
+
 interface CandidateCardProps {
   candidate: CandidateData;
   onClick: (candidate: CandidateData) => void;
@@ -124,6 +142,53 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
           >
             {candidate.name || '未設定'}
           </div>
+          
+          {/* タグ表示 */}
+          <div className='flex gap-1 flex-wrap mb-2'>
+            {candidate?.tags?.isHighlighted && (
+              <div className='bg-[#ff9d00] px-5 py-1 rounded-full flex items-center gap-2.5'>
+                <span
+                  className='text-white text-[14px] font-bold tracking-[1.4px]'
+                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                >
+                  注目
+                </span>
+              </div>
+            )}
+            {candidate?.tags?.isCareerChange && (
+              <div className='bg-[#44b0ef] px-5 py-1 rounded-[8px] flex items-center gap-2'>
+                <CareerChangeIcon />
+                <span
+                  className='text-white text-[14px] font-bold tracking-[1.4px]'
+                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                >
+                  キャリアチェンジ志向
+                </span>
+              </div>
+            )}
+            {candidate?.isAttention && (
+              <div className='bg-[#ff9d00] px-5 py-0 h-8 rounded-[100px] flex items-center justify-center'>
+                <span
+                  className='text-white text-[12px] font-bold tracking-[1.2px]'
+                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                >
+                  注目
+                </span>
+              </div>
+            )}
+            {candidate?.badgeType === 'change' && (
+              <div className='bg-[#44b0ef] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
+                <CareerChangeIcon />
+                <span
+                  className='text-white text-[12px] font-bold tracking-[1.2px]'
+                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                >
+                  キャリアチェンジ志向
+                </span>
+              </div>
+            )}
+          </div>
+
           <div
             className='text-[#323232] text-[14px] font-medium leading-[160%] tracking-[1.4px] w-full min-[1440px]:w-[356px] h-[22px]'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
