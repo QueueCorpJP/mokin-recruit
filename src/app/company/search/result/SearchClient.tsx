@@ -13,9 +13,7 @@ import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModa
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import {
-  // getCandidatesFromDatabase, // 削除
   loadSearchParamsToStore,
-  // searchCandidatesWithConditions, // 削除
 } from './actions';
 import {
   saveCandidateAction,
@@ -45,6 +43,10 @@ import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
 import Image from 'next/image'; // 追加
 import CandidateDetailModal from '@/components/company/CandidateDetailModal';
+import {
+  getCandidatesFromDatabase,
+  searchCandidatesWithConditions,
+} from './server-actions';
 
 type SortType = 'featured' | 'newest' | 'updated' | 'lastLogin';
 
@@ -224,8 +226,8 @@ function generateSearchConditionText(searchStore: any): {
   // 条件が何もない場合
   if (conditions.length === 0) {
     return {
-      title: '条件を指定して検索',
-      description: '検索条件を指定してください',
+      title: 'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円',
+      description: '',
     };
   }
 
@@ -749,10 +751,30 @@ export default function SearchClient({
       searchParams.get('current_salary_max') ||
       searchParams.get('age_min') ||
       searchParams.get('age_max') ||
-      searchParams.get('education');
+      searchParams.get('education') ||
+      searchParams.get('desired_salary_min') ||
+      searchParams.get('desired_salary_max') ||
+      searchParams.get('desired_job_types') ||
+      searchParams.get('desired_industries') ||
+      searchParams.get('desired_locations') ||
+      searchParams.get('work_styles') ||
+      searchParams.get('qualifications') ||
+      searchParams.get('current_company') ||
+      searchParams.get('english_level') ||
+      searchParams.get('other_language') ||
+      searchParams.get('other_language_level') ||
+      searchParams.get('transfer_time') ||
+      searchParams.get('selection_status') ||
+      searchParams.get('similar_company_industry') ||
+      searchParams.get('similar_company_location') ||
+      searchParams.get('last_login_min') ||
+      searchParams.get('job_type_and_search') ||
+      searchParams.get('industry_and_search') ||
+      searchParams.get('search_group'); // 検索履歴からの遷移を判定
 
     if (hasUrlParams) {
       // 外部パラメータがある場合は自動検索実行
+      console.log('[DEBUG] URLパラメータを検出、自動検索を実行します');
       handleSearch();
     } else {
       // パラメータがない場合は全候補者を表示
@@ -792,6 +814,7 @@ export default function SearchClient({
           setSavedCandidateIds(prev => [...prev, candidateId]);
         } else {
           console.error('Failed to save candidate:', result.error);
+          console.log('[DEBUG] Full save result:', result);
         }
       }
 

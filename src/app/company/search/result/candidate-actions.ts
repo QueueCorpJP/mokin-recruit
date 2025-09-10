@@ -115,6 +115,7 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
       console.error('Auth error:', authError);
       return { success: false, error: 'Authentication required' };
     }
+    console.log('[DEBUG] Auth user ID:', user.id);
 
     const { data: companyUser, error: userError } = await supabase
       .from('company_users')
@@ -124,26 +125,39 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
 
     if (userError || !companyUser) {
       console.error('Error fetching company user:', userError);
+      console.log('[DEBUG] User ID from auth:', user.id);
       return { success: false, error: 'Company user not found' };
     }
+    console.log('[DEBUG] Found company user:', companyUser);
 
     const adminSupabase = await createClient();
     
+    const insertData = {
+      company_user_id: companyUser.id,
+      company_group_id: companyGroupId,
+      candidate_id: candidateId,
+    };
+    console.log('[DEBUG] Inserting saved_candidates with data:', insertData);
+    
     const { error: insertError } = await adminSupabase
       .from('saved_candidates')
-      .insert({
-        company_user_id: companyUser.id,
-        company_group_id: companyGroupId,
-        candidate_id: candidateId,
-      });
+      .insert(insertData);
 
     if (insertError) {
       if (insertError.code === '23505') {
+        console.log('[DEBUG] Candidate already saved (duplicate key)');
         return { success: false, error: 'Candidate already saved' };
       }
       console.error('Error saving candidate:', insertError);
-      return { success: false, error: 'Failed to save candidate' };
+      console.log('[DEBUG] Insert error details:', {
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint
+      });
+      return { success: false, error: `Failed to save candidate: ${insertError.message}` };
     }
+    console.log('[DEBUG] Successfully saved candidate');
 
     return { success: true };
   } catch (error) {

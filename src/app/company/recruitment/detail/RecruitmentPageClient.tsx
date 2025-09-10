@@ -1,12 +1,8 @@
 'use client';
 import React, { ChangeEvent, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { CandidateSlideMenu } from './CandidateSlideMenu';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SelectInput } from '@/components/ui/select-input';
 import { CandidateData } from '@/lib/server/candidate/recruitment-queries';
 import { useRecruitmentPage } from './hooks/useRecruitmentPage';
-import { getCandidateDetailAction } from '@/lib/actions/candidate-detail';
 import { Pagination } from '@/components/ui/Pagination';
 import { CandidateCard } from './components/CandidateCard';
 import { BoardIcon } from './components/icons/BoardIcon';
@@ -25,12 +21,14 @@ interface RecruitmentPageClientProps {
   candidates: CandidateData[];
   groupOptions: Array<{ value: string; label: string }>;
   jobOptions: Array<{ value: string; label: string }>;
+  companyGroups: Array<{ value: string; label: string }>;
 }
 
 export function RecruitmentPageClient({
   candidates,
   groupOptions,
   jobOptions,
+  companyGroups,
 }: RecruitmentPageClientProps) {
   const page = useRecruitmentPage({
     initialCandidates: candidates,
@@ -107,9 +105,10 @@ export function RecruitmentPageClient({
               <CandidateCard
                 key={candidate.id}
                 candidate={candidate}
-                onClick={() =>
-                  page.handleCandidateClick(candidate, getCandidateDetailAction)
-                }
+                onClick={() => page.handleCandidateClick(candidate)}
+                jobOptions={page.jobOptions}
+                onJobChange={page.handleJobChange}
+                companyGroupId={companyGroups[0]?.value}
               />
             ))}
           </div>
@@ -129,7 +128,10 @@ export function RecruitmentPageClient({
         isOpen={page.isMenuOpen}
         onClose={page.handleCloseMenu}
         candidateId={page.selectedCandidate?.id}
-        candidateData={page.candidateDetailData}
+        candidateData={page.selectedCandidate}
+        companyGroupId={companyGroups[0]?.value}
+        jobOptions={page.jobOptions}
+        onJobChange={page.handleJobChange}
       />
     </>
   );

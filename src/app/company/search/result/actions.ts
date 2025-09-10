@@ -101,12 +101,20 @@ export function loadSearchParamsToStore(searchParams: URLSearchParams, searchSto
     searchStore.setExperienceIndustries(industries);
   }
   
-  // Salary
+  // Current Salary
   if (searchParams.get('current_salary_min')) {
     searchStore.setCurrentSalaryMin(searchParams.get('current_salary_min'));
   }
   if (searchParams.get('current_salary_max')) {
     searchStore.setCurrentSalaryMax(searchParams.get('current_salary_max'));
+  }
+  
+  // Desired Salary
+  if (searchParams.get('desired_salary_min')) {
+    searchStore.setDesiredSalaryMin(searchParams.get('desired_salary_min'));
+  }
+  if (searchParams.get('desired_salary_max')) {
+    searchStore.setDesiredSalaryMax(searchParams.get('desired_salary_max'));
   }
   
   // Company and education
@@ -170,6 +178,35 @@ export function loadSearchParamsToStore(searchParams: URLSearchParams, searchSto
   }
   if (searchParams.get('last_login_min')) {
     searchStore.setLastLoginMin(searchParams.get('last_login_min'));
+  }
+  
+  // 資格
+  if (searchParams.get('qualifications')) {
+    searchStore.setQualifications(searchParams.get('qualifications'));
+  }
+  
+  // その他の言語
+  if (searchParams.get('other_language')) {
+    searchStore.setOtherLanguage(searchParams.get('other_language'));
+  }
+  if (searchParams.get('other_language_level')) {
+    searchStore.setOtherLanguageLevel(searchParams.get('other_language_level'));
+  }
+  
+  // 類似企業条件
+  if (searchParams.get('similar_company_industry')) {
+    searchStore.setSimilarCompanyIndustry(searchParams.get('similar_company_industry'));
+  }
+  if (searchParams.get('similar_company_location')) {
+    searchStore.setSimilarCompanyLocation(searchParams.get('similar_company_location'));
+  }
+  
+  // 職種・業界のAND検索
+  if (searchParams.get('job_type_and_search')) {
+    searchStore.setJobTypeAndSearch(searchParams.get('job_type_and_search'));
+  }
+  if (searchParams.get('industry_and_search')) {
+    searchStore.setIndustryAndSearch(searchParams.get('industry_and_search'));
   }
 }
 

@@ -23,8 +23,6 @@ export function useRecruitmentPage({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] =
     useState<CandidateData | null>(null);
-  const [candidateDetailData, setCandidateDetailData] = useState<unknown>(null);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusTabs, setStatusTabs] = useState<StatusTab[]>([
     { id: 'all', label: 'すべて', active: true },
     { id: 'not_sent', label: 'スカウト未送信', active: false },
@@ -44,12 +42,12 @@ export function useRecruitmentPage({
   let filteredCandidates = initialCandidates;
   if (selectedGroup) {
     filteredCandidates = filteredCandidates.filter(
-      c => c.group === selectedGroup
+      c => c.groupId === selectedGroup
     );
   }
   if (selectedJob) {
     filteredCandidates = filteredCandidates.filter(
-      c => c.targetJob === selectedJob
+      c => c.jobPostingId === selectedJob
     );
   }
   if (keyword) {
@@ -61,42 +59,53 @@ export function useRecruitmentPage({
     );
   }
   if (excludeDeclined) {
-    // declinedプロパティが存在する場合のみ除外（型定義にない場合は拡張型で対応）
-    filteredCandidates = filteredCandidates.filter(
-      c =>
-        typeof (c as { declined?: boolean }).declined === 'undefined' ||
-        !(c as { declined?: boolean }).declined
-    );
+    // 見送り・辞退された候補者を除外 (selectionProgressに基づいて判定)
+    filteredCandidates = filteredCandidates.filter(c => {
+      const progress = c.selectionProgress;
+      
+      if (!progress) return true; // 進捗データがない場合は表示
+      
+      // 各段階でfailになっている、またはoffer_resultがdeclinedの場合は除外
+      return !(
+        progress.document_screening_result === 'fail' ||
+        progress.first_interview_result === 'fail' ||
+        progress.secondary_interview_result === 'fail' ||
+        progress.final_interview_result === 'fail' ||
+        progress.offer_result === 'declined'
+      );
+    });
   }
   // ステータスタブによる絞り込み
   const activeStatusTab = statusTabs.find(tab => tab.active);
   if (activeStatusTab && activeStatusTab.id !== 'all') {
     filteredCandidates = filteredCandidates.filter(c => {
+      const progress = c.selectionProgress;
+      
       switch (activeStatusTab.id) {
         case 'not_sent':
           // スカウト未送信: applicationDate が未設定
           return !c.applicationDate;
         case 'waiting':
-          // 応募待ち: applicationDate が設定されていて、firstScreening などが未設定
-          return !!c.applicationDate && !c.firstScreening;
+          // 応募待ち: applicationDate が設定されているが書類選考結果がない
+          return !!c.applicationDate && !progress?.document_screening_result;
         case 'applied':
           // 応募受付: applicationDate が設定されている
           return !!c.applicationDate;
         case 'document_passed':
-          // 書類選考通過: firstScreening が設定されている
-          return !!c.firstScreening;
+          // 書類選考通過: document_screening_result が 'pass'
+          return progress?.document_screening_result === 'pass';
         case 'first_interview':
-          // 一次面接通過: secondScreening が設定されている
-          return !!c.secondScreening;
+          // 一次面接通過: first_interview_result が 'pass'
+          return progress?.first_interview_result === 'pass';
         case 'second_interview':
-          // 二次面接通過: finalScreening が設定されている
-          return !!c.finalScreening;
+          // 二次面接通過: secondary_interview_result が 'pass'
+          return progress?.secondary_interview_result === 'pass';
         case 'final_interview':
-          // 最終面接通過: offer が設定されている
-          return !!c.offer;
+          // 最終面接通過: final_interview_result が 'pass'
+          return progress?.final_interview_result === 'pass';
         case 'offer':
-          // 内定: offer が設定されている
-          return !!c.offer;
+          // 内定: offer_result が 'accepted'
+          return progress?.offer_result === 'accepted';
         default:
           return true;
       }
@@ -113,13 +122,14 @@ export function useRecruitmentPage({
     const getProgressScore = (
       c: (typeof filteredCandidates)[number]
     ): number => {
-      // 入社 > 内定 > 最終面接通過 > 二次面接通過 > 一次面接通過 > 書類選考通過 > 応募受付 > スカウト未送信
-      // ※型定義に入社・辞退などがなければ offer まで
-      if ((c as { joined?: boolean }).joined) return 7;
-      if (c.offer) return 6;
-      if (c.finalScreening) return 5;
-      if (c.secondScreening) return 4;
-      if (c.firstScreening) return 3;
+      const progress = c.selectionProgress;
+      
+      // 内定 > 最終面接通過 > 二次面接通過 > 一次面接通過 > 書類選考通過 > 応募受付 > スカウト未送信
+      if (progress?.offer_result === 'accepted') return 6;
+      if (progress?.final_interview_result === 'pass') return 5;
+      if (progress?.secondary_interview_result === 'pass') return 4;
+      if (progress?.first_interview_result === 'pass') return 3;
+      if (progress?.document_screening_result === 'pass') return 2;
       if (c.applicationDate) return 1;
       return 0;
     };
@@ -145,26 +155,23 @@ export function useRecruitmentPage({
   const handleSearch = () => {
     setCurrentPage(1); // 検索時は1ページ目に戻す
   };
-  const handleCandidateClick = async (
-    candidate: CandidateData,
-    getCandidateDetailAction: (id: string) => Promise<unknown>
-  ) => {
+  const handleCandidateClick = (candidate: CandidateData) => {
     setSelectedCandidate(candidate);
     setIsMenuOpen(true);
-    setIsLoadingDetail(true);
-    try {
-      const detailData = await getCandidateDetailAction(candidate.id);
-      setCandidateDetailData(detailData);
-    } finally {
-      setIsLoadingDetail(false);
-    }
   };
   const handleCloseMenu = () => {
     setIsMenuOpen(false);
-    setCandidateDetailData(null);
   };
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleJobChange = (candidateId: string, jobId: string) => {
+    // TODO: ここで実際のAPIを呼び出して候補者の求人を変更する
+    console.log('🔄 求人変更:', { candidateId, jobId });
+    // 実装例:
+    // - applicationテーブルのjob_posting_idを更新
+    // - 成功したら候補者データを再取得
   };
 
   return {
@@ -180,10 +187,6 @@ export function useRecruitmentPage({
     setIsMenuOpen,
     selectedCandidate,
     setSelectedCandidate,
-    candidateDetailData,
-    setCandidateDetailData,
-    isLoadingDetail,
-    setIsLoadingDetail,
     statusTabs,
     setStatusTabs,
     sortOrder,
@@ -200,6 +203,7 @@ export function useRecruitmentPage({
     handleCandidateClick,
     handleCloseMenu,
     handlePageChange,
+    handleJobChange,
     groupOptions,
     jobOptions,
   };

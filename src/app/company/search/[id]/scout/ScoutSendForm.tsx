@@ -46,19 +46,23 @@ const RightArrowIcon = () => (
   </svg>
 );
 
-export function ScoutSendForm() {
+interface ScoutSendFormProps {
+  candidateId: string;
+}
+
+export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // URLクエリパラメータから候補者IDと検索クエリを取得
-  const candidateIdFromQuery = searchParams.get('candidateId') || 'CND-2024-00123';
+  // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
+  const candidateIdFromProps = candidateId || 'CND-2024-00123';
   const searchQuery = searchParams.get('query');
   
   const [formData, setFormData] = useState({
     group: '',
     recruitmentTarget: '',
     scoutSenderName: '',
-    candidateId: candidateIdFromQuery,
+    candidateId: candidateIdFromProps,
     scoutTemplate: '',
     title: '',
     message: '',
@@ -109,6 +113,14 @@ export function ScoutSendForm() {
 
     loadInitialData();
   }, []);
+
+  // 候補者IDが変更された場合にフォームデータを更新
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      candidateId: candidateIdFromProps
+    }));
+  }, [candidateIdFromProps]);
 
   // グループ選択時の動的データ更新
   useEffect(() => {
@@ -507,6 +519,7 @@ export function ScoutSendForm() {
                   </span>
                 </div>
                 <div className="flex-1">
+                  <div className="border border-[#999999] rounded-[5px] focus-within:border-[#4FC3A1] focus-within:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]">
                   <textarea
                     value={formData.message}
                     onChange={handleTextareaChange}
@@ -515,6 +528,7 @@ export function ScoutSendForm() {
                     className="w-full h-[300px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] resize-none"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   />
+                  </div>
                   {touched.message && errors.message && (
                     <p className="mt-2 text-red-500 text-sm">
                       {errors.message}

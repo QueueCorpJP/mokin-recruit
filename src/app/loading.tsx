@@ -1,5 +1,3 @@
-import { Loading } from '@/components/ui/Loading';
-
 export default function AppLoading() {
-  return <Loading fullScreen />;
+  return null; // No loading screen - show content immediately
 }

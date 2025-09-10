@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
@@ -13,11 +13,25 @@ interface TemplateNewClientProps {
 
 export default function TemplateNewClient({ initialGroupOptions }: TemplateNewClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // フォームの状態管理
   const [group, setGroup] = useState('');
   const [templateName, setTemplateName] = useState('');
   const [body, setBody] = useState('');
+
+  // 複製元の情報を初期値に設定
+  useEffect(() => {
+    if (searchParams.get('duplicate') === 'true') {
+      const groupId = searchParams.get('groupId') || '';
+      const duplicateTemplateName = searchParams.get('templateName') || '';
+      const duplicateBody = searchParams.get('body') || '';
+
+      setGroup(groupId);
+      setTemplateName(duplicateTemplateName + ' のコピー');
+      setBody(duplicateBody);
+    }
+  }, [searchParams]);
 
   // エラー状態管理
   const [errors, setErrors] = useState({

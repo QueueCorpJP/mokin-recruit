@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from 'next/image';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface JobPostCardProps {
   imageUrl: string;
@@ -14,7 +13,6 @@ interface JobPostCardProps {
   starred: boolean;
   onStarClick?: () => void;
   apell: string[];
-  isFavoriteLoading?: boolean;
   jobId?: string;
   onClick?: () => void;
   variant?: string;
@@ -42,7 +40,6 @@ export function JobPostCard({
   starred,
   apell,
   onStarClick,
-  isFavoriteLoading = false,
   onClick,
   variant,
   rightColumnHeight,
@@ -95,33 +92,25 @@ export function JobPostCard({
         {showStar && (
           <button
             type='button'
-            className={`hidden md:block absolute top-2 right-2 z-10 p-2 ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''}`}
+            className="hidden md:block absolute top-2 right-2 z-10 p-2"
             onClick={e => {
               e.stopPropagation(); // カードクリックとの競合を防ぐ
               onStarClick?.();
             }}
             aria-label='お気に入り'
-            disabled={isFavoriteLoading}
           >
-            {isFavoriteLoading ? (
-              // ローディングスピナー
-              <div className='w-8 h-8 flex items-center justify-center'>
-                <SpinnerIcon size='sm' />
-              </div>
-            ) : (
-              <svg
-                width='32'
-                height='32'
-                viewBox='0 0 32 32'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
-                  fill={starred ? '#FFDA5F' : '#DCDCDC'}
-                />
-              </svg>
-            )}
+            <svg
+              width='32'
+              height='32'
+              viewBox='0 0 32 32'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+            >
+              <path
+                d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
+                fill={starred ? '#FFDA5F' : '#DCDCDC'}
+              />
+            </svg>
           </button>
         )}
         <Image
@@ -216,33 +205,25 @@ export function JobPostCard({
                 {showStar && (
                   <button
                     type='button'
-                    className={`md:hidden p-1 flex-shrink-0 ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''}`}
+                    className="md:hidden p-1 flex-shrink-0"
                     onClick={e => {
                       e.stopPropagation(); // カードクリックとの競合を防ぐ
                       onStarClick?.();
                     }}
                     aria-label='お気に入り'
-                    disabled={isFavoriteLoading}
-                  >
-                    {isFavoriteLoading ? (
-                      // ローディングスピナー
-                      <div className='w-6 h-6 flex items-center justify-center'>
-                        <SpinnerIcon size='sm' className='w-3 h-3' />
-                      </div>
-                    ) : (
-                      <svg
-                        width='24'
-                        height='24'
-                        viewBox='0 0 32 32'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <path
-                          d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
-                          fill={starred ? '#FFDA5F' : '#DCDCDC'}
-                        />
-                      </svg>
-                    )}
+                          >
+                    <svg
+                      width='24'
+                      height='24'
+                      viewBox='0 0 32 32'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
+                        fill={starred ? '#FFDA5F' : '#DCDCDC'}
+                      />
+                    </svg>
                   </button>
                 )}
               </div>

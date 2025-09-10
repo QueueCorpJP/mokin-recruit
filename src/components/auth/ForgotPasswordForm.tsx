@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, AlertCircle } from 'lucide-react';
-import { Loading } from '@/components/ui/Loading';
 
 interface ForgotPasswordFormData {
   email: string;
@@ -26,7 +25,6 @@ export default function ForgotPasswordForm({
   const [formData, setFormData] = useState<ForgotPasswordFormData>({
     email: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
     'idle' | 'success' | 'error'
   >('idle');
@@ -64,7 +62,6 @@ export default function ForgotPasswordForm({
       return;
     }
 
-    setIsLoading(true);
     setSubmitStatus('idle');
 
     try {
@@ -104,8 +101,6 @@ export default function ForgotPasswordForm({
       setMessage(
         'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -202,7 +197,6 @@ export default function ForgotPasswordForm({
                         letterSpacing: '1.6px',
                       }}
                       required
-                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -220,7 +214,7 @@ export default function ForgotPasswordForm({
           <div className='flex justify-center w-full'>
             <button
               type='submit'
-              disabled={isLoading || !formData.email}
+              disabled={!formData.email}
               className='flex items-center justify-center min-w-40 px-10 py-3.5 rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-[16px] disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 gap-2.5'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',
@@ -230,16 +224,9 @@ export default function ForgotPasswordForm({
                 letterSpacing: '1.6px',
               }}
             >
-              {isLoading ? (
-                <>
-                  <Loading inline size="sm" variant="white" />
-                  送信中...
-                </>
-              ) : (
-                <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
-                  送信する
-                </p>
-              )}
+              <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
+                送信する
+              </p>
             </button>
           </div>
         </form>

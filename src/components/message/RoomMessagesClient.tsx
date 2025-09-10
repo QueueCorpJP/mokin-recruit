@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { MessageDetailBody } from './MessageDetailBody';
-import { MessageLoading } from '@/components/ui/Loading';
 
 interface RoomMessage {
   id: string;
@@ -28,18 +27,14 @@ interface RoomMessagesClientProps {
 
 export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesClientProps) {
   const [messages, setMessages] = useState<RoomMessage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMessages = async () => {
       if (!roomId) {
         setMessages([]);
-        setLoading(false);
         return;
       }
-
-      setLoading(true);
       setError(null);
       
       try {
@@ -65,21 +60,12 @@ export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesCli
         console.error('Error fetching room messages:', err);
         setError(err instanceof Error ? err.message : 'メッセージの取得に失敗しました');
         setMessages([]);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchMessages();
   }, [roomId]);
 
-  if (loading) {
-    return (
-      <MessageDetailBody>
-        <MessageLoading />
-      </MessageDetailBody>
-    );
-  }
 
   if (error) {
     return (

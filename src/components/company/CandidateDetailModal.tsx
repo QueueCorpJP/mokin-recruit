@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { CandidateData } from '@/components/company/CandidateCard';
+import type { CandidateData as RecruitmentCandidateData } from '@/lib/server/candidate/recruitment-queries';
 import { Button } from '@/components/ui/button';
 import CandidateDetailTabDetail from './CandidateDetailTabDetail';
 import CandidateDetailTabProgress from './CandidateDetailTabProgress';
 
 interface CandidateDetailModalProps {
-  candidate: CandidateData;
+  candidate: RecruitmentCandidateData;
   onClose: () => void;
 }
 
@@ -15,6 +15,53 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
   candidate,
   onClose,
 }) => {
+  // データベース構造に基づいて値を取得、未設定の場合はデフォルト値を使用
+  const getDisplayValue = (value: string | null | undefined, defaultValue: string = '未設定') => {
+    return value && value.trim() !== '' ? value : defaultValue;
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '未設定';
+    try {
+      return new Date(dateString).toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '/');
+    } catch {
+      return '未設定';
+    }
+  };
+
+  const formatAge = (birthDate: string | null | undefined) => {
+    if (!birthDate) return '未設定';
+    try {
+      const birth = new Date(birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return `${age}歳`;
+    } catch {
+      return '未設定';
+    }
+  };
+
+  const formatGender = (gender: string | null | undefined) => {
+    switch (gender) {
+      case 'male': return '男性';
+      case 'female': return '女性';
+      case 'unspecified': return '未指定';
+      default: return '未設定';
+    }
+  };
+
+  const formatArray = (arr: string[] | null | undefined) => {
+    if (!arr || arr.length === 0) return ['未設定'];
+    return arr.filter(item => item && item.trim() !== '');
+  };
   const [isPickupActive, setIsPickupActive] = useState(false);
   const [activeTab, setActiveTab] = useState<'detail' | 'progress'>('detail');
   return (
@@ -82,28 +129,60 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
             <div className='flex-1'>
               {/* Badges */}
               <div className='flex items-center gap-2 mb-2'>
-                {candidate.isAttention && (
-                  <div className='bg-[#ff9d00] px-5 py-0 h-8 rounded-[100px] flex items-center justify-center'>
-                    <span
-                      className='text-white text-[12px] font-bold tracking-[1.2px]'
-                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                    >
-                      注目
-                    </span>
-                  </div>
-                )}
-                {candidate.badgeType === 'change' && (
+                {candidate.hasCareerChange === 'あり' && (
                   <div className='bg-[#44b0ef] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
-                    {/* ...SVG省略... */}
+                    <svg
+                      width='16'
+                      height='16'
+                      viewBox='0 0 16 16'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M2.97062 6.24841C3.22734 5.53293 3.64409 4.86011 4.23088 4.28575C6.31465 2.23448 9.69202 2.23448 11.7758 4.28575L12.3459 4.85026H11.2023C10.6122 4.85026 10.1354 5.3196 10.1354 5.90052C10.1354 6.48144 10.6122 6.95077 11.2023 6.95077H14.9198H14.9331C15.5232 6.95077 16 6.48144 16 5.90052V2.22464C16 1.64372 15.5232 1.17438 14.9331 1.17438C14.343 1.17438 13.8662 1.64372 13.8662 2.22464V3.37991L13.2828 2.80227C10.3655 -0.0695081 5.63784 -0.0695081 2.72057 2.80227C1.90706 3.60309 1.32028 4.54503 0.9602 5.55262C0.763492 6.10072 1.05689 6.69805 1.61034 6.89169C2.16378 7.08533 2.77391 6.79651 2.97062 6.25169V6.24841Z'
+                        fill='white'
+                      />
+                    </svg>
                     <span
                       className='text-white text-[12px] font-bold tracking-[1.2px]'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {candidate.badgeText}
+                      転職検討中
                     </span>
                   </div>
                 )}
-                {/* ...他のバッジも同様に移植... */}
+                {candidate.managementExperienceCount && candidate.managementExperienceCount > 0 && (
+                  <div className='bg-[#b687e8] px-5 py-0 h-8 rounded-[8px] flex items-center gap-2'>
+                    <svg
+                      width='16'
+                      height='16'
+                      viewBox='0 0 16 16'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M10 8C10 9.10457 9.10457 10 8 10C6.89543 10 6 9.10457 6 8C6 6.89543 6.89543 6 8 6C9.10457 6 10 6.89543 10 8Z'
+                        fill='white'
+                      />
+                      <path
+                        fillRule='evenodd'
+                        clipRule='evenodd'
+                        d='M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8ZM8 1.33333C4.31803 1.33333 1.33333 4.31803 1.33333 8C1.33333 11.682 4.31803 14.6667 8 14.6667C11.682 14.6667 14.6667 11.682 14.6667 8C14.6667 4.31803 11.682 1.33333 8 1.33333Z'
+                        fill='white'
+                      />
+                      <path d='M7.33333 2V4H8.66667V2H7.33333Z' fill='white' />
+                      <path d='M7.33333 12V14H8.66667V12H7.33333Z' fill='white' />
+                      <path d='M2 7.33333H4V8.66667H2V7.33333Z' fill='white' />
+                      <path d='M12 7.33333H14V8.66667H12V7.33333Z' fill='white' />
+                    </svg>
+                    <span
+                      className='text-white text-[12px] font-bold tracking-[1.2px]'
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      マネジメント経験あり
+                    </span>
+                  </div>
+                )}
               </div>
               {/* Main Info */}
               <div className='flex gap-10'>
@@ -116,7 +195,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                         maxWidth: '323px',
                       }}
                     >
-                      {candidate.companyName}
+                      {getDisplayValue(candidate.currentCompany)}
                     </h3>
                     <div className='border-l border-[#dcdcdc] h-7'></div>
                     <span
@@ -126,7 +205,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                         maxWidth: '200px',
                       }}
                     >
-                      {candidate.department}
+                      {getDisplayValue(candidate.recentJobDepartmentPosition)}
                     </span>
                     <div className='border-l border-[#dcdcdc] h-7'></div>
                     <span
@@ -136,7 +215,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                         maxWidth: '300px',
                       }}
                     >
-                      {candidate.position}
+                      {getDisplayValue(candidate.currentPosition)}
                     </span>
                   </div>
                   <div className='flex gap-10 mt-2'>
@@ -144,8 +223,8 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                       className='text-[#323232] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {candidate.location}／{candidate.age}／{candidate.gender}
-                      ／{candidate.salary}
+                      {getDisplayValue(candidate.prefecture)}／{formatAge(candidate.birthDate)}／{formatGender(candidate.gender)}
+                      ／{getDisplayValue(candidate.currentIncome)}
                     </span>
                   </div>
                 </div>
@@ -162,19 +241,19 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                     className='text-[#999999] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    最終ログイン：{candidate.lastLogin}
+                    最終ログイン：{formatDate(candidate.lastLoginAt)}
                   </div>
                   <div
                     className='text-[#999999] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    最終更新：{candidate.updatedAt || '-'}
+                    最終更新：{formatDate(candidate.updatedAt)}
                   </div>
                   <div
                     className='text-[#999999] text-[12px] font-medium tracking-[1.2px] whitespace-nowrap'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    登録：{candidate.createdAt || '-'}
+                    登録：{formatDate(candidate.createdAt)}
                   </div>
                 </div>
               </div>

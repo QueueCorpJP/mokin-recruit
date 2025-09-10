@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { getCandidateRoomMessages } from '@/lib/candidate-message';
 import { CandidateMessage } from '@/types/candidate-message';
 import { MessageDetailBody } from '@/components/message/MessageDetailBody';
-import { MessageLoading } from '@/components/ui/Loading';
 
 interface CandidateRoomMessagesProps {
   roomId: string;
@@ -18,19 +17,15 @@ export function CandidateRoomMessages({
   isMobile = false 
 }: CandidateRoomMessagesProps) {
   const [messages, setMessages] = useState<CandidateMessage[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        setLoading(true);
         const roomMessages = await getCandidateRoomMessages(roomId, candidateId);
         setMessages(roomMessages);
       } catch (error) {
         console.error('Failed to fetch candidate messages:', error);
         setMessages([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -45,13 +40,6 @@ export function CandidateRoomMessages({
     setMessages(roomMessages);
   };
 
-  if (loading) {
-    return (
-      <MessageDetailBody>
-        <MessageLoading />
-      </MessageDetailBody>
-    );
-  }
 
   if (messages.length === 0) {
     return (

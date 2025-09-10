@@ -14,7 +14,6 @@ import { MessageDetailContent } from './MessageDetailContent';
 import { MessageInputBox } from './MessageInputBox';
 import { ChatMessage } from '@/types/message';
 import { useRealTimeMessages } from '@/hooks/useRealTimeMessages';
-import { MessageLoading } from '@/components/ui/Loading';
 
 export interface MessageLayoutProps {
   className?: string;
@@ -51,7 +50,7 @@ export function MessageLayout({
   const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
   
   // リアルタイムメッセージ機能
-  const { messages: chatMessages, isLoading, sendRealTimeMessage } = useRealTimeMessages(
+  const { messages: chatMessages, sendRealTimeMessage } = useRealTimeMessages(
     selectedMessageId,
     candidateId
   );
@@ -160,14 +159,11 @@ export function MessageLayout({
             isCandidatePage={isCandidatePage}
           />
           <div className='flex-1 overflow-y-auto scrollbar-hide'>
-            {isLoading ? (
-              <MessageLoading />
-            ) : (() => {
+            {(() => {
               console.log('MessageLayout debug:', {
                 selectedMessageId,
                 chatMessagesLength: chatMessages?.length || 0,
-                chatMessages: chatMessages,
-                isLoading
+                chatMessages: chatMessages
               });
               return selectedMessageId && chatMessages && chatMessages.length > 0;
             })() ? (
@@ -516,14 +512,11 @@ export function MessageLayout({
               isCandidatePage={isCandidatePage}
             />
             <div className='flex-1 overflow-y-auto scrollbar-hide'>
-              {isLoading ? (
-                <MessageLoading />
-              ) : (() => {
+              {(() => {
                 console.log('PC MessageLayout debug:', {
                   selectedMessageId,
                   chatMessagesLength: chatMessages?.length || 0,
-                  chatMessages: chatMessages,
-                  isLoading
+                  chatMessages: chatMessages
                 });
                 return selectedMessageId && chatMessages && chatMessages.length > 0;
               })() ? (

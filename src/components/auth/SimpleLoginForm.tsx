@@ -13,18 +13,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loading } from '@/components/ui/Loading';
 
 export function SimpleLoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     try {
@@ -54,8 +51,6 @@ export function SimpleLoginForm() {
       }
     } catch {
       setError('ログインに失敗しました');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -89,7 +84,6 @@ export function SimpleLoginForm() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -102,23 +96,15 @@ export function SimpleLoginForm() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
           <Button
             type='submit'
             className='w-full'
-            disabled={!isFormValid || isLoading}
+            disabled={!isFormValid}
           >
-            {isLoading ? (
-              <>
-                <Loading inline size="sm" variant="white" />
-                ログイン中...
-              </>
-            ) : (
-              'ログイン'
-            )}
+            ログイン
           </Button>
 
           <div className='text-center text-sm'>

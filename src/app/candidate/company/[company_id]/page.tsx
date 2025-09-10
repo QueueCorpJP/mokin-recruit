@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import { getCompanyDetailData, getCompanyJobPostings } from './actions';
 import CompanyDetailClient from './CompanyDetailClient';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 interface CompanyDetailPageProps {
   params: Promise<{ company_id: string }>;
@@ -11,7 +10,6 @@ function LoadingSpinner() {
   return (
     <div className='w-full h-screen flex items-center justify-center bg-[#f9f9f9]'>
       <div className='text-center'>
-        <SpinnerIcon size="lg" className="mx-auto mb-4" />
         <p className='text-gray-500'>読み込み中...</p>
       </div>
     </div>

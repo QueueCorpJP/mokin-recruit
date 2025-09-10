@@ -766,21 +766,6 @@ export default function CandidateSearchSettingClient({
               {/* スマホ時は記事の下に移動、PC時は右側サイドバー */}
               <div className='order-2 lg:order-1 w-full lg:w-[320px] bg-white rounded-[10px] p-6 max-w-full overflow-hidden'>
                 <div className='flex flex-col gap-6 items-start justify-start max-w-full overflow-hidden'>
-                  {/* エラーメッセージ（企業データ取得失敗時） */}
-                  {companyDataError && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 w-full">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-2">
-                          <p className="text-sm text-yellow-700">企業情報の一部を読み込めませんでした</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   <h2 className="font-['Noto_Sans_JP'] font-bold text-[18px] leading-[1.6] tracking-[1.8px] text-[#323232] break-words overflow-wrap-break-word line-break-auto max-w-full">
                     {companyDataLoading ? (
                       <div className="animate-pulse">

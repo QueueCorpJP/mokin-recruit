@@ -252,6 +252,129 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
     }
   };
 
+  // 検索条件をURLパラメータに変換する関数
+  const buildSearchUrl = (searchConditions: any, groupId: string): string => {
+    const params = new URLSearchParams();
+    
+    // グループIDを設定
+    params.set('search_group', groupId);
+    
+    // キーワード（データベースではkeywords配列だが単体として扱う）
+    if (searchConditions.keywords?.length > 0) {
+      params.set('keyword', searchConditions.keywords.join(' '));
+    }
+    
+    // 年齢
+    if (searchConditions.age_min !== undefined && searchConditions.age_min !== null && searchConditions.age_min !== '') {
+      params.set('age_min', searchConditions.age_min.toString());
+    }
+    if (searchConditions.age_max !== undefined && searchConditions.age_max !== null && searchConditions.age_max !== '') {
+      params.set('age_max', searchConditions.age_max.toString());
+    }
+    
+    // 現在の年収
+    if (searchConditions.current_salary_min !== undefined && searchConditions.current_salary_min !== null && searchConditions.current_salary_min !== '') {
+      params.set('current_salary_min', searchConditions.current_salary_min.toString());
+    }
+    if (searchConditions.current_salary_max !== undefined && searchConditions.current_salary_max !== null && searchConditions.current_salary_max !== '') {
+      params.set('current_salary_max', searchConditions.current_salary_max.toString());
+    }
+    
+    // 希望年収
+    if (searchConditions.desired_salary_min !== undefined && searchConditions.desired_salary_min !== null && searchConditions.desired_salary_min !== '') {
+      params.set('desired_salary_min', searchConditions.desired_salary_min.toString());
+    }
+    if (searchConditions.desired_salary_max !== undefined && searchConditions.desired_salary_max !== null && searchConditions.desired_salary_max !== '') {
+      params.set('desired_salary_max', searchConditions.desired_salary_max.toString());
+    }
+    
+    // 経験職種（データベースではjob_types）
+    if (searchConditions.job_types?.length > 0) {
+      params.set('experience_job_types', searchConditions.job_types.join(','));
+    }
+    
+    // 経験業界（データベースではindustries）
+    if (searchConditions.industries?.length > 0) {
+      params.set('experience_industries', searchConditions.industries.join(','));
+    }
+    
+    // 希望職種
+    if (searchConditions.desired_job_types?.length > 0) {
+      params.set('desired_job_types', searchConditions.desired_job_types.join(','));
+    }
+    
+    // 希望業界
+    if (searchConditions.desired_industries?.length > 0) {
+      params.set('desired_industries', searchConditions.desired_industries.join(','));
+    }
+    
+    // 希望勤務地（データベースではlocations）
+    if (searchConditions.locations?.length > 0) {
+      params.set('desired_locations', searchConditions.locations.join(','));
+    }
+    
+    // 働き方
+    if (searchConditions.work_styles?.length > 0) {
+      params.set('work_styles', searchConditions.work_styles.join(','));
+    }
+    
+    // 学歴（データベースではeducation_levels配列だが単体として扱う）
+    if (searchConditions.education_levels?.length > 0) {
+      params.set('education', searchConditions.education_levels[0]);
+    }
+    
+    // スキル
+    if (searchConditions.skills?.length > 0) {
+      params.set('qualifications', searchConditions.skills.join(','));
+    }
+    
+    // その他の条件
+    if (searchConditions.current_company) {
+      params.set('current_company', searchConditions.current_company);
+    }
+    if (searchConditions.english_level) {
+      params.set('english_level', searchConditions.english_level);
+    }
+    if (searchConditions.other_language) {
+      params.set('other_language', searchConditions.other_language);
+    }
+    if (searchConditions.other_language_level) {
+      params.set('other_language_level', searchConditions.other_language_level);
+    }
+    if (searchConditions.transfer_time) {
+      params.set('transfer_time', searchConditions.transfer_time);
+    }
+    if (searchConditions.selection_status) {
+      params.set('selection_status', searchConditions.selection_status);
+    }
+    if (searchConditions.similar_company_industry) {
+      params.set('similar_company_industry', searchConditions.similar_company_industry);
+    }
+    if (searchConditions.similar_company_location) {
+      params.set('similar_company_location', searchConditions.similar_company_location);
+    }
+    if (searchConditions.last_login_min) {
+      params.set('last_login_min', searchConditions.last_login_min);
+    }
+    if (searchConditions.job_type_and_search) {
+      params.set('job_type_and_search', searchConditions.job_type_and_search);
+    }
+    if (searchConditions.industry_and_search) {
+      params.set('industry_and_search', searchConditions.industry_and_search);
+    }
+    
+    return `/company/search/result?${params.toString()}`;
+  };
+
+  const handleHistoryClick = (item: SearchHistoryItem) => {
+    // SearchHistoryItemからServerSearchHistoryItemを取得
+    const serverItem = initialSearchHistory.find(h => h.id === item.id);
+    if (serverItem) {
+      const searchUrl = buildSearchUrl(serverItem.search_conditions, serverItem.group_id);
+      router.push(searchUrl);
+    }
+  };
+
   // グループオプションを生成（重複なし）
   const uniqueGroupsMap = new Map();
   searchHistory.forEach(item => {
@@ -465,12 +588,16 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
               currentItems.map((item: SearchHistoryItem) => (
               <div
                 key={item.id}
-                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
+                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative hover:bg-gray-50 cursor-pointer transition-colors duration-150'
+                onClick={() => handleHistoryClick(item)}
               >
                 {/* Bookmark Icon */}
                 <button
                   className='w-[18px] flex-shrink-0'
-                  onClick={() => toggleBookmark(item.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBookmark(item.id);
+                  }}
                 >
                   <BookmarkIcon filled={item.saved} />
                 </button>
@@ -499,7 +626,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
 
                 {/* Menu Button */}
                 <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
-                  <button onClick={() => toggleMenu(item.id)}>
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMenu(item.id);
+                  }}>
                     <DotsMenuIcon />
                   </button>
 

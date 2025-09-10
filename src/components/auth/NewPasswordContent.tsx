@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState, useEffect } from 'react';
 import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
-import { SpinnerIcon } from '@/components/ui/Loading';
 
 /**
  * URLフラグメント（#以降）からパラメータを解析する関数
@@ -268,8 +267,9 @@ export function NewPasswordContent() {
   if (!isParametersReady) {
     return (
               <div className='w-full max-w-md text-center space-y-4'>
-        <SpinnerIcon size="lg" variant="primary" className="mx-auto" />
-        <p className='text-[#323232] font-medium'>パラメータを確認中...</p>
+        <div className='opacity-50'>
+          <p className='text-[#323232] font-medium'>パラメータを確認中...</p>
+        </div>
       </div>
     );
   }

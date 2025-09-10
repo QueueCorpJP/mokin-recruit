@@ -24,16 +24,15 @@ interface JobPosting {
   internalMemo: string;
 }
 
-// 求人一覧取得の内部実装
+// 求人一覧取得の内部実装（キャッシュ可能版）
 async function _getCompanyJobs(params: {
   status?: string;
   groupId?: string;
   scope?: string;
   search?: string;
-}, companyAccountId: string) {
+}, companyAccountId: string, supabase: any) {
   try {
     console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
-    const supabase = await createClient();
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
     let query = supabase
@@ -929,17 +928,20 @@ export async function getCompanyJobs(params: {
   search?: string;
 }) {
   try {
-    // 認証チェック
+    // 認証チェック（キャッシュ外で実行）
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
       return { success: false, error: authResult.error };
     }
 
     const { companyAccountId } = authResult.data;
+    
+    // Supabaseクライアントを作成（キャッシュ外で実行）
+    const supabase = await createClient();
 
-    // キャッシュ付きで内部関数を呼び出し
+    // キャッシュ付きで内部関数を呼び出し（認証済みのcompanyAccountIdとsupabaseクライアントを渡す）
     const getCachedJobs = unstable_cache(
-      _getCompanyJobs,
+      (params: any, companyAccountId: string, supabase: any) => _getCompanyJobs(params, companyAccountId, supabase),
       [`company-jobs-${companyAccountId}`, JSON.stringify(params)],
       {
         tags: [`company-jobs-${companyAccountId}`],
@@ -947,7 +949,7 @@ export async function getCompanyJobs(params: {
       }
     );
 
-    return await getCachedJobs(params, companyAccountId);
+    return await getCachedJobs(params, companyAccountId, supabase);
   } catch (error: any) {
     console.error('getCompanyJobs error:', error);
     return { success: false, error: error.message };
