@@ -107,27 +107,6 @@ export default function CandidateEducationEditPage() {
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
 
-  // 認証チェック
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isAuthenticated || !candidateUser) {
-      router.push('/candidate/auth/login');
-    }
-  }, [isAuthenticated, candidateUser, loading, router]);
-
-  if (loading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !candidateUser) {
-    return null;
-  }
-
   const {
     register,
     handleSubmit,
@@ -149,18 +128,14 @@ export default function CandidateEducationEditPage() {
     },
   });
 
-  const selectedIndustries = watch('industries');
-  const selectedJobTypes = watch('jobTypes');
   const watchedSchoolName = watch('schoolName');
   const watchedFinalEducation = watch('finalEducation');
-
-  // School suggestion hook
   const { suggestions: schoolSuggestions } = useSchoolAutocomplete(
     watchedSchoolName,
     watchedFinalEducation
   );
 
-  // 年の選択肢を生成（1970年から2025年まで）
+  // useMemo hooks must also be at the top level
   const yearOptions = useMemo(() => {
     const years = [];
     for (let year = 2025; year >= 1970; year--) {
@@ -169,8 +144,19 @@ export default function CandidateEducationEditPage() {
     return years;
   }, []);
 
-  // 月の選択肢を生成（1〜12月）
-  const monthOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+  const monthOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, i) => (i + 1).toString()),
+    []
+  );
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
 
   // 初期データを取得してフォームに設定
   useEffect(() => {
@@ -197,6 +183,21 @@ export default function CandidateEducationEditPage() {
 
     fetchInitialData();
   }, [reset]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-pulse'>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
+
+  const selectedIndustries = watch('industries');
+  const selectedJobTypes = watch('jobTypes');
 
   const onSubmit = async (data: EducationFormData) => {
     setIsSubmitting(true);
