@@ -321,6 +321,7 @@ export default function CandidateCareerStatusEditPage() {
                     removeCompany={removeCompany}
                     getSelectedIndustries={getSelectedIndustries}
                     removeIndustry={removeIndustry}
+                    setCurrentModalIndex={setCurrentModalIndex}
                   />
                 ))}
                 {/* 企業を追加ボタン */}

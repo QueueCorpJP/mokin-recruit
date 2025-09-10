@@ -12,6 +12,7 @@ interface CompanyStatusEditRowProps {
   setValue: any;
   removeCompany: (index: number) => void;
   getSelectedIndustries: (index: number) => string[];
+  setCurrentModalIndex: (index: number) => void;
   removeIndustry: (index: number, industryName: string) => void;
 }
 
@@ -23,6 +24,7 @@ const CompanyStatusEditRow: React.FC<CompanyStatusEditRowProps> = ({
   removeCompany,
   getSelectedIndustries,
   removeIndustry,
+  setCurrentModalIndex,
 }) => {
   return (
     <div className='relative border border-[#dcdcdc] rounded-[10px] p-4 lg:p-6 mb-6'>
@@ -76,7 +78,7 @@ const CompanyStatusEditRow: React.FC<CompanyStatusEditRowProps> = ({
       <FormRow label='業種'>
         <button
           type='button'
-          onClick={() => setValue('currentModalIndex', index)}
+          onClick={() => setCurrentModalIndex(index)}
           className='px-10 h-[50px] border border-[#999999] rounded-[32px] text-[#323232] text-[16px] font-bold tracking-[1.6px] bg-white w-full lg:w-fit'
         >
           業種を選択
