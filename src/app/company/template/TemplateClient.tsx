@@ -1,34 +1,27 @@
 'use client';
 
-import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
+import React, { ChangeEvent, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { 
-  updateMessageTemplateName, 
+   
   updateMessageTemplateSavedStatus,
   type MessageTemplate as ServerMessageTemplate 
 } from './actions';
 import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from    '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';      
 
 // Icons
 const MailIcon = () => (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 32 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M13.4625 6H9H6.7375H6V6.55V9V11.525V17.0875L0.0125 12.6563C0.1125 11.525 0.69375 10.475 1.61875 9.79375L3 8.76875V6C3 4.34375 4.34375 3 6 3H10.7875L13.9063 0.69375C14.5125 0.24375 15.2438 0 16 0C16.7563 0 17.4875 0.24375 18.0938 0.6875L21.2125 3H26C27.6563 3 29 4.34375 29 6V8.76875L30.3813 9.79375C31.3063 10.475 31.8875 11.525 31.9875 12.6563L26 17.0875V11.525V9V6.55V6H25.2625H23H18.5375H13.4563H13.4625ZM0 28V15.1313L13.6 25.2063C14.2938 25.7188 15.1375 26 16 26C16.8625 26 17.7063 25.725 18.4 25.2063L32 15.1313V28C32 30.2063 30.2063 32 28 32H4C1.79375 32 0 30.2063 0 28ZM11 10H21C21.55 10 22 10.45 22 11C22 11.55 21.55 12 21 12H11C10.45 12 10 11.55 10 11C10 10.45 10.45 10 11 10ZM11 14H21C21.55 14 22 14.45 22 15C22 15.55 21.55 16 21 16H11C10.45 16 10 15.55 10 15C10 14.45 10.45 14 11 14Z"
-      fill="white"
-    />
-  </svg>
+  <img
+    src='/images/mail.svg'
+    alt='メッセージテンプレートアイコン'
+    width={32}
+    height={32}
+    style={{ filter: 'brightness(0) invert(1)' }}
+  />
 );
 
 const BookmarkIcon = ({ filled = false }: { filled?: boolean }) => (

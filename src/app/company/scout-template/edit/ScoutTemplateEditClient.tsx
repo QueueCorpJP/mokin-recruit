@@ -1,55 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
-import { getJobPostingsByGroup, createScoutTemplate, type GroupOption, type JobOption } from './actions';
+import { getJobPostingsByGroup, type GroupOption, type JobOption } from '../new/actions';
+import { updateScoutTemplate, deleteScoutTemplate, type ScoutTemplateData } from './actions';
 
-interface ScoutTemplateNewClientProps {
+interface ScoutTemplateEditClientProps {
   initialGroupOptions: GroupOption[];
+  templateData: ScoutTemplateData | null;
+  templateId: string;
 }
 
-export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTemplateNewClientProps) {
+export default function ScoutTemplateEditClient({ initialGroupOptions, templateData, templateId }: ScoutTemplateEditClientProps) {
   const router = useRouter();
-
-  // URL パラメータから複製データを取得
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isDuplicate = urlParams.get('duplicate') === 'true';
-    
-    if (isDuplicate) {
-      const duplicateTemplateId = urlParams.get('templateId');
-      const duplicateGroupId = urlParams.get('groupId');
-      const duplicateTemplateName = urlParams.get('templateName');
-      
-      // 基本情報を設定
-      if (duplicateGroupId) setGroup(duplicateGroupId);
-      if (duplicateTemplateName) setTemplateName(`${duplicateTemplateName}のコピー`);
-      
-      // テンプレートIDがある場合は詳細データを取得
-      if (duplicateTemplateId) {
-        const fetchTemplateData = async () => {
-          try {
-            // 既存のアクションを使用してテンプレート詳細を取得
-            const { getScoutTemplateById } = await import('../edit/actions');
-            const result = await getScoutTemplateById(duplicateTemplateId);
-            
-            if (result.success && result.data) {
-              setSubject(result.data.subject || '');
-              setBody(result.data.body || '');
-              setTargetJob(result.data.targetJobPostingId || '');
-            }
-          } catch (error) {
-            console.error('Failed to fetch template data for duplication:', error);
-          }
-        };
-        
-        fetchTemplateData();
-      }
-    }
-  }, []);
 
   // フォームの状態管理
   const [group, setGroup] = useState('');
@@ -60,6 +26,17 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
   
   // 求人オプションの状態管理
   const [jobOptions, setJobOptions] = useState<JobOption[]>([{ value: '', label: '未選択' }]);
+
+  // 初期値を設定
+  useEffect(() => {
+    if (templateData) {
+      setGroup(templateData.groupId || '');
+      setTargetJob(templateData.targetJobPostingId || '');
+      setTemplateName(templateData.templateName || '');
+      setSubject(templateData.subject || '');
+      setBody(templateData.body || '');
+    }
+  }, [templateData]);
 
   // エラー状態管理
   const [errors, setErrors] = useState({
@@ -82,6 +59,9 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
   // 保存中の状態管理
   const [isSaving, setIsSaving] = useState(false);
 
+  // 削除中の状態管理
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // テキストエリアへの参照
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,12 +70,17 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
     console.log('🔍 Group changed to:', group);
     
     if (group === '') {
-      setTargetJob('');
+      // 初期化時以外は求人をリセット
+      if (templateData && group !== templateData.groupId) {
+        setTargetJob('');
+      }
       setJobOptions([{ value: '', label: '未選択' }]);
       console.log('🔍 Reset job options to default');
     } else {
-      // グループが変更されたら対象の求人をリセット
-      setTargetJob('');
+      // 初期化時以外は対象の求人をリセット
+      if (templateData && group !== templateData.groupId) {
+        setTargetJob('');
+      }
       
       // サーバーアクションを使用して求人一覧を取得
       const fetchJobOptions = async () => {
@@ -111,7 +96,7 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
       };
       fetchJobOptions();
     }
-  }, [group]);
+  }, [group, templateData]);
 
   // バリデーション
   const validateField = (fieldName: string, value: string) => {
@@ -243,8 +228,8 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
       // 保存開始
       setIsSaving(true);
 
-      // スカウトテンプレートを保存
-      const result = await createScoutTemplate({
+      // スカウトテンプレートを更新
+      const result = await updateScoutTemplate(templateId, {
         groupId: group,
         targetJobPostingId: targetJob,
         templateName,
@@ -257,8 +242,8 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
         router.push('/company/scout-template');
       } else {
         // エラーメッセージを表示
-        console.error('Failed to create scout template:', result.error);
-        alert(result.error || 'テンプレートの作成に失敗しました');
+        console.error('Failed to update scout template:', result.error);
+        alert(result.error || 'テンプレートの更新に失敗しました');
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -266,6 +251,36 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
     } finally {
       // 保存終了
       setIsSaving(false);
+    }
+  };
+
+  // 削除ハンドラー
+  const handleDelete = async () => {
+    if (isDeleting) {
+      return;
+    }
+
+    if (!confirm('このテンプレートを削除してよろしいですか？')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+
+      const result = await deleteScoutTemplate(templateId);
+
+      if (result.success) {
+        // 成功後、一覧画面へ遷移
+        router.push('/company/scout-template');
+      } else {
+        console.error('Failed to delete scout template:', result.error);
+        alert(result.error || 'テンプレートの削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('予期しないエラーが発生しました');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -301,7 +316,6 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
     </svg>
   );
 
-
   return (
     <>
       {/* Hero Section with Gradient Background */}
@@ -326,7 +340,7 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
               className="text-white text-[14px] font-bold tracking-[1.4px]"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              新規スカウトテンプレート作成
+              スカウトテンプレート編集
             </span>
           </div>
 
@@ -337,7 +351,7 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
               className="text-white text-[24px] font-bold tracking-[2.4px]"
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              新規スカウトテンプレート作成
+              スカウトテンプレート編集
             </h1>
           </div>
         </div>
@@ -557,6 +571,7 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
               </div>
             </div>
           </div>
+          
           {/* Submit Buttons */}
           <div className="flex justify-center gap-4 mt-10">
             <Button
@@ -566,6 +581,15 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
               className="min-w-[160px]"
             >
               キャンセル
+            </Button>
+            <Button
+              variant="destructive"
+              size="figma-default"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="min-w-[160px]"
+            >
+              {isDeleting ? '削除中...' : '削除'}
             </Button>
             <Button
               variant="green-gradient"

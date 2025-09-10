@@ -2,45 +2,25 @@
 
 import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
-import { EditSearchConditionModal } from './EditSearchConditionModal';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { 
-  updateScoutTemplateName, 
-  deleteScoutTemplate,
   updateScoutTemplateSavedStatus,
-  type ScoutTemplate as ServerScoutTemplate 
+  type ScoutTemplate as ServerScoutTemplate,
+  type JobPosting 
 } from './actions';
-import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from    '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';      
+
 // Icons
-const SearchIcon = () => (
-  <svg
-    width='32'
-    height='32'
-    viewBox='0 0 32 32'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <path
-      d='M14.5 25C20.299 25 25 20.299 25 14.5C25 8.70101 20.299 4 14.5 4C8.70101 4 4 8.70101 4 14.5C4 20.299 8.70101 25 14.5 25Z'
-      stroke='white'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    />
-    <path
-      d='M21.925 21.925L28 28'
-      stroke='white'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    />
-  </svg>
+const MailIcon = () => (
+  <img
+    src='/images/mail.svg'
+    alt='メッセージテンプレートアイコン'
+    width={32}
+    height={32}
+    style={{ filter: 'brightness(0) invert(1)' }}
+  />
 );
 
 const BookmarkIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -103,44 +83,101 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
+const SortUpIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='12'
+    height='8'
+    viewBox='0 0 12 8'
+    fill='none'
+  >
+    <path
+      d='M6 0L11.1962 7.5H0.803847L6 0Z'
+      fill='#666666'
+    />
+  </svg>
+);
+
+const SortDownIcon = () => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width='12'
+    height='8'
+    viewBox='0 0 12 8'
+    fill='none'
+  >
+    <path
+      d='M6 8L0.803847 0.5H11.1962L6 8Z'
+      fill='#666666'
+    />
+  </svg>
+);
+
 interface ScoutTemplateItem {
   id: string;
   saved: boolean;
   group: string; // group_id for filtering
   groupName: string; // group_name for display
   templateName: string;
-  searcher: string;
+  subject: string;
+  targetJobId: string;
+  targetJobTitle: string;
   date: string;
   isMenuOpen?: boolean;
 }
 
 interface ScoutTemplateClientProps {
   initialScoutTemplates: ServerScoutTemplate[];
+  initialJobPostings: JobPosting[];
   initialError: string | null;
-  companyUserId: string;
 }
 
-export function ScoutTemplateClient({ initialScoutTemplates, initialError, companyUserId }: ScoutTemplateClientProps) {
-  const { user, accessToken, loading: authLoading } = useAuth();
+type SortField = 'groupName' | 'templateName' | 'subject' | 'targetJobTitle' | 'date';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
+export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings, initialError }: ScoutTemplateClientProps) {
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [selectedJob, setSelectedJob] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ScoutTemplateItem | null>(
-    null
-  );
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<ScoutTemplateItem | null>(
-    null
-  );
-  const [isPending, startTransition] = useTransition();
+  
+  // クライアントサイドでの認証状態確認
+  useEffect(() => {
+    const checkClientAuth = async () => {
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        console.log('🖥️ Client-side auth check:', {
+          user: user ? { id: user.id, email: user.email, user_metadata: user.user_metadata } : null,
+          error: error?.message
+        });
+        
+        // セッション状態も確認
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🖥️ Client-side session:', session ? 'exists' : 'none');
+        
+      } catch (error) {
+        console.error('🖥️ Client auth check error:', error);
+      }
+    };
+    
+    checkClientAuth();
+  }, []);
+  const [, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(initialError);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(initialError);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
-  // ServerSearchHistoryItemをクライアント用のSearchHistoryItemに変換
+  // ServerScoutTemplateをクライアント用のScoutTemplateItemに変換
   const transformScoutTemplates = (items: ServerScoutTemplate[]): ScoutTemplateItem[] => {
     return items.map(item => ({
       id: item.id,
@@ -148,7 +185,9 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
       group: item.group_id, // group_idを使用してフィルタリングと統一
       groupName: item.group_name, // 表示用のgroup_name
       templateName: item.template_name,
-      searcher: item.searcher_name,
+      subject: item.subject,
+      targetJobId: item.target_job_posting_id,
+      targetJobTitle: item.target_job_title,
       date: new Date(item.created_at).toLocaleString('ja-JP', {
         year: 'numeric',
         month: '2-digit', 
@@ -191,65 +230,109 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
   };
 
   const handleEdit = (item: ScoutTemplateItem) => {
-    setEditingItem(item);
-    setEditModalOpen(true);
-    // Close the dropdown menu
-    setScoutTemplates((prev: ScoutTemplateItem[]) =>
-      prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
-    );
+    try {
+      console.log('Editing template:', item.id);
+      // editページに遷移し、テンプレート情報をクエリパラメータで渡す
+      router.push(`/company/scout-template/edit?id=${item.id}`);
+      // Close the dropdown menu
+      setScoutTemplates((prev: ScoutTemplateItem[]) =>
+        prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
+      );
+    } catch (error) {
+      console.error('Failed to navigate to edit page:', error);
+      alert('編集ページへの遷移に失敗しました');
+    }
   };
 
-  const handleSaveEdit = async (newTemplateName: string) => {
-    if (editingItem) {
-      startTransition(async () => {
-        const result = await updateScoutTemplateName(editingItem.id, newTemplateName);
-        if (result.success) {
-          setScoutTemplates((prev: ScoutTemplateItem[]) =>
-            prev.map((item: ScoutTemplateItem) =>
-              item.id === editingItem.id
-                ? { ...item, templateName: newTemplateName }
-                : item
-            )
-          );
-        } else {
-          console.error('Failed to update template name:', result.error);
-          // エラーハンドリング - ユーザーに通知したい場合
-        }
+  const handleDuplicate = (item: ScoutTemplateItem) => {
+    try {
+      console.log('Duplicating template:', item.id);
+      // 新規作成ページに遷移し、テンプレート情報をクエリパラメータで渡す
+      const params = new URLSearchParams({
+        duplicate: 'true',
+        templateId: item.id,
+        groupId: item.group,
+        groupName: item.groupName,
+        templateName: item.templateName
       });
+      router.push(`/company/scout-template/new?${params.toString()}`);
+      
+      // Close the dropdown menu
+      setScoutTemplates((prev: ScoutTemplateItem[]) =>
+        prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
+      );
+    } catch (error) {
+      console.error('Failed to navigate to new page for duplication:', error);
+      alert('複製ページへの遷移に失敗しました');
     }
-    setEditModalOpen(false);
-    setEditingItem(null);
   };
 
   const handleDelete = (item: ScoutTemplateItem) => {
-    setDeletingItem(item);
-    setDeleteModalOpen(true);
-    // Close the dropdown menu
-    setScoutTemplates((prev: ScoutTemplateItem[]) =>
-      prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
-    );
+    try {
+      console.log('Deleting template:', item.id);
+      // editページに遷移し、テンプレート情報をクエリパラメータで渡す（編集と同じ処理）
+      router.push(`/company/scout-template/edit?id=${item.id}`);
+      // Close the dropdown menu
+      setScoutTemplates((prev: ScoutTemplateItem[]) =>
+        prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
+      );
+    } catch (error) {
+      console.error('Failed to navigate to edit page for deletion:', error);
+      alert('削除ページへの遷移に失敗しました');
+    }
   };
 
-  const handleConfirmDelete = () => {
-    if (deletingItem) {
-      startTransition(async () => {
-        const result = await deleteScoutTemplate(deletingItem.id);
-        if (result.success) {
-          setScoutTemplates((prev: ScoutTemplateItem[]) =>
-            prev.filter((item: ScoutTemplateItem) => item.id !== deletingItem.id)
-          );
-          setDeleteModalOpen(false);
-          setDeletingItem(null);
-        } else {
-          console.error('Failed to delete scout template:', result.error);
-          // エラーハンドリング - ユーザーに通知したい場合
-          // モーダルは開いたままにして、ユーザーに再試行の機会を与える
-        }
-      });
-    } else {
-      setDeleteModalOpen(false);
-      setDeletingItem(null);
+  // ソート機能
+  const handleSort = (field: SortField) => {
+    let direction: SortDirection = 'asc';
+    if (sortConfig && sortConfig.field === field && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
+    setSortConfig({ field, direction });
+    setCurrentPage(1); // ソート時は最初のページに戻る
+  };
+
+  const getSortedData = (data: ScoutTemplateItem[]): ScoutTemplateItem[] => {
+    if (!sortConfig) return data;
+
+    return [...data].sort((a, b) => {
+      const { field, direction } = sortConfig;
+      let aValue: string | Date;
+      let bValue: string | Date;
+
+      switch (field) {
+        case 'groupName':
+          aValue = a.groupName;
+          bValue = b.groupName;
+          break;
+        case 'templateName':
+          aValue = a.templateName;
+          bValue = b.templateName;
+          break;
+        case 'subject':
+          aValue = a.subject;
+          bValue = b.subject;
+          break;
+        case 'targetJobTitle':
+          aValue = a.targetJobTitle;
+          bValue = b.targetJobTitle;
+          break;
+        case 'date':
+          aValue = new Date(a.date);
+          bValue = new Date(b.date);
+          break;
+        default:
+          return 0;
+      }
+
+      if (field === 'date') {
+        const result = (aValue as Date).getTime() - (bValue as Date).getTime();
+        return direction === 'asc' ? result : -result;
+      } else {
+        const result = (aValue as string).localeCompare(bValue as string);
+        return direction === 'asc' ? result : -result;
+      }
+    });
   };
 
   // グループオプションを生成（重複なし）
@@ -268,26 +351,43 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
     }))
   ];
 
-  // フィルタリング済みの検索履歴
+  // 求人オプションを生成
+  const jobOptions = [
+    { value: '', label: 'すべて' },
+    ...initialJobPostings.map(job => ({
+      value: job.id,
+      label: job.title
+    }))
+  ];
+
+  // フィルタリング済みのスカウトテンプレート
   const filteredScoutTemplates = scoutTemplates.filter(item => {
     // グループフィルタ
     if (selectedGroup && item.group !== selectedGroup) return false;
     
-    // キーワードフィルタ
-    if (keyword && !item.templateName.toLowerCase().includes(keyword.toLowerCase())) return false;
+    // 求人フィルタ
+    if (selectedJob && item.targetJobId !== selectedJob) return false;
     
-    // 保存済みフィルタ
-    if (showSavedOnly && !item.saved) return false;
+    // キーワードフィルタ（テンプレート名と求人タイトルで検索）
+    if (keyword) {
+      const keywordLower = keyword.toLowerCase();
+      const templateNameMatch = item.templateName.toLowerCase().includes(keywordLower);
+      const jobTitleMatch = item.targetJobTitle.toLowerCase().includes(keywordLower);
+      if (!templateNameMatch && !jobTitleMatch) return false;
+    }
     
     return true;
   });
 
+  // ソートを適用
+  const sortedScoutTemplates = getSortedData(filteredScoutTemplates);
+
   // ページネーション計算
-  const totalItems = filteredScoutTemplates.length;
+  const totalItems = sortedScoutTemplates.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = filteredScoutTemplates.slice(startIndex, endIndex);
+  const currentItems = sortedScoutTemplates.slice(startIndex, endIndex);
   const displayStartIndex = totalItems > 0 ? startIndex + 1 : 0;
   const displayEndIndex = Math.min(endIndex, totalItems);
 
@@ -309,19 +409,19 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
         <div className='w-full max-w-[1200px] mx-auto'>
           {/* Page Title */}
           <div className='flex items-center gap-4'>
-            <SearchIcon />
+            <MailIcon />
             <h1
               className='text-white text-[24px] font-bold tracking-[2.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
-              スカウトテンプレート
+              スカウトテンプレート一覧
             </h1>
           </div>
         </div>
 
         {/* Search Filters */}
         <div className='w-full max-w-[1200px] mx-auto mt-10'>
-          <div className='bg-white rounded-[10px] p-6 min-[1200px]:p-10'>
+          <div className='flex flex-col bg-white rounded-[10px] p-6 min-[1200px]:p-10 gap-4'>
             <div className='flex flex-col min-[1200px]:flex-row gap-6 min-[1200px]:gap-10 items-start'>
               {/* Group Select */}
               <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
@@ -332,17 +432,30 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                   options={groupOptions}
                   value={selectedGroup}
                   onChange={setSelectedGroup}
-                  placeholder='未選択'
+                  placeholder='すべて'
                   className='w-full min-[1200px]:w-60'
                 />
               </div>
 
-              {/* Keyword Search */}
+              {/* Job Search */}
               <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
                 <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
-                  検索条件名から検索
+                  対象の求人
                 </span>
-                <div className='flex gap-2 w-full min-[1200px]:w-auto'>
+               <SelectInput
+                  options={jobOptions}
+                  value={selectedJob}
+                  onChange={setSelectedJob}
+                  placeholder='すべて'
+                  className='w-full min-[1200px]:w-60'
+                />
+              </div>
+               
+            </div>
+            <div className='flex gap-4 w-[700px]'>
+                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap flex items-center'>
+                  テンプレート名、求人タイトルから検索
+                </span>
                   <Input
                     type='text'
                     value={keyword}
@@ -350,7 +463,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                       setKeyword(e.target.value)
                     }
                     placeholder='キーワード検索'
-                    className='bg-white border-[#999999] flex-1 min-[1200px]:w-60 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[10px]'
+                    className='bg-white border-[#999999] flex-1 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[8px]'
                   />
                   <Button
                     variant='small-green'
@@ -360,21 +473,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                     検索
                   </Button>
                 </div>
-              </div>
-            </div>
-
-            {/* Saved Only Checkbox */}
-            <div className='mt-6'>
-              <Checkbox
-                checked={showSavedOnly}
-                onChange={setShowSavedOnly}
-                label={
-                  <span className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
-                    保存済のみ表示
-                  </span>
-                }
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -392,7 +490,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                 // Redirect to new search page
                 router.push('/company/scout-template/new');
               }}>
-              新規作成
+              新規スカウトテンプレート作成
             </Button>
 
             {/* Pagination Info */}
@@ -423,27 +521,42 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
             <div className='w-[18px]'></div>
 
             {/* Group column */}
-            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-              グループ
+            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                グループ
+              </span>
             </div>
 
-            {/* Search Condition column */}
-            <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px] truncate'>
-              検索条件名
+            {/* Template Name column */}
+            <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                テンプレート名
+              </span>
             </div>
 
-            {/* Searcher column */}
-            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-              検索者
+            {/* Subject column */}
+            <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                件名
+              </span>
+            </div>
+
+            {/* Target Job column */}
+            <div className='w-[160px] min-[1200px]:w-[180px] min-[1300px]:w-[200px] ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                対象の求人
+              </span>
             </div>
 
             {/* Date column */}
-            <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-              検索日
+            <div className='flex-1 ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                検索日
+              </span>
             </div>
 
             {/* Spacer for menu button */}
-            <div className='w-[24px] ml-4 min-[1200px]:ml-6'></div>
+            <div className='w-[24px]'></div>
           </div>
 
           {/* Search History Items */}
@@ -482,23 +595,28 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                   </span>
                 </div>
 
-                {/* Search Condition */}
-                <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                {/* Template Name */}
+                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
                   {item.templateName}
                 </div>
 
-                {/* Searcher */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.searcher}
+                {/* Subject */}
+                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.subject}
+                </div>
+
+                {/* Target Job */}
+                <div className='w-[160px] min-[1200px]:w-[180px] min-[1300px]:w-[200px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                  {item.targetJobTitle}
                 </div>
 
                 {/* Date */}
-                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                <div className='flex-1 ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
                   {item.date}
                 </div>
 
                 {/* Menu Button */}
-                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
+                <div className='w-[24px] flex-shrink-0 relative'>
                   <button onClick={() => toggleMenu(item.id)}>
                     <DotsMenuIcon />
                   </button>
@@ -511,6 +629,12 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
                         className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
                       >
                         編集
+                      </button>
+                      <button
+                        onClick={() => handleDuplicate(item)}
+                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                      >
+                        複製
                       </button>
                       <button
                         onClick={() => handleDelete(item)}
@@ -535,29 +659,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialError, compa
           />
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <EditSearchConditionModal
-        isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setEditingItem(null);
-        }}
-        onSave={handleSaveEdit}
-        groupName={editingItem?.groupName || ''}
-        initialValue={editingItem?.templateName || ''}
-      />
-
-      {/* Delete Modal */}
-      <DeleteSearchConditionModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setDeletingItem(null);
-        }}
-        onDelete={handleConfirmDelete}
-        searchConditionName={deletingItem?.templateName || ''}
-      />
     </>
   );
 }

@@ -244,12 +244,12 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
     const existingUsers = Array.isArray(currentRoom.participating_company_users) 
       ? currentRoom.participating_company_users 
       : [];
-    
-    const userExists = existingUsers.some((user: any) => user.id === companyUser.id);
-    
+
+    const userExists = existingUsers.some((user: string) => user === companyUser.full_name);
+
     if (!userExists) {
       // 新しい参加者を追加
-      const updatedUsers = [...existingUsers, userRecord];
+      const updatedUsers = [...existingUsers, companyUser.full_name];
       
       const { error: updateRoomError } = await supabase
         .from('rooms')

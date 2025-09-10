@@ -423,7 +423,7 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
             </div>
           </div>
           {/* Submit Buttons */}
-          <div className="flex justify-center gap-4 mt-10">
+          <div className="flex justify-center gap-4 mt-10 mb-10">
             <Button
               variant="green-outline"
               size="figma-outline"

@@ -8,11 +8,13 @@ export function FontLoader() {
       // フォントの読み込み状態を監視
       const loadFonts = async () => {
         try {
-          // Noto Sans JPフォントの読み込みを監視
+          // Noto Sans JPフォントの読み込みを監視（重要なウェイトを優先）
           await Promise.all([
             document.fonts.load('400 16px var(--font-noto-sans-jp)'),
             document.fonts.load('500 16px var(--font-noto-sans-jp)'),
-            document.fonts.load('700 16px var(--font-noto-sans-jp)')
+            document.fonts.load('600 16px var(--font-noto-sans-jp)'),
+            document.fonts.load('700 16px var(--font-noto-sans-jp)'),
+            document.fonts.load('800 16px var(--font-noto-sans-jp)')
           ]);
           
           // フォント読み込み完了後にクラスを追加

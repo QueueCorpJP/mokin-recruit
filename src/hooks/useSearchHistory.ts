@@ -65,26 +65,38 @@ export function useSearchHistory(groupId?: string) {
 
   const updateSavedStatus = async (historyId: string, isSaved: boolean) => {
     try {
-      const { error } = await supabase
+      console.log('[updateSavedStatus] 開始:', { historyId, isSaved, type: typeof isSaved });
+      
+      const updateResult = await supabase
         .from('search_history')
         .update({ 
           is_saved: isSaved,
           updated_at: new Date().toISOString()
         })
-        .eq('id', historyId);
+        .eq('id', historyId)
+        .select('*');
 
-      if (error) {
-        console.error('Update saved status error:', error);
+      console.log('[updateSavedStatus] Update結果:', updateResult);
+
+      if (updateResult.error) {
+        console.error('Update saved status error:', updateResult.error);
         throw new Error('保存状態の更新に失敗しました');
       }
 
+      console.log('[updateSavedStatus] 更新されたデータ:', updateResult.data);
+
       // ローカル状態を更新
-      setSearchHistory(prev => 
-        prev.map(item => 
+      setSearchHistory(prev => {
+        const updated = prev.map(item => 
           item.id === historyId ? { ...item, is_saved: isSaved } : item
-        )
-      );
+        );
+        console.log('[updateSavedStatus] ローカル状態更新後:', updated.find(item => item.id === historyId));
+        return updated;
+      });
+      
+      console.log('[updateSavedStatus] 完了');
     } catch (err) {
+      console.error('[updateSavedStatus] エラー:', err);
       throw err;
     }
   };

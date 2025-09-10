@@ -40,9 +40,9 @@ const FontLoader = dynamic(
 const notoSansJP = Noto_Sans_JP({
   subsets: ['latin'],
   display: 'swap', // フォールバック表示後にWebフォントに置き換え
-  preload: false, // 初期読み込み高速化
+  preload: true, // 重要なフォントなので事前読み込みを有効化
   variable: '--font-noto-sans-jp',
-  weight: ['400', '500', '700'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'], // より多くのウェイトを追加
   adjustFontFallback: true, // メトリクス調整を有効化
   fallback: [
     'Hiragino Kaku Gothic ProN', 

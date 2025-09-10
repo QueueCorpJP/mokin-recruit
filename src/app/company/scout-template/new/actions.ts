@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerActionClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -26,15 +26,18 @@ export interface JobOption {
 // 企業のグループ一覧を取得
 export async function getCompanyGroups(): Promise<GroupOption[]> {
   try {
+    console.log('📋 Getting company groups...');
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
+    console.log('👤 Auth result for getCompanyGroups:', authResult.success ? 'success' : 'failed');
+    
     if (!authResult.success) {
       console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
       throw new Error('認証が必要です');
     }
 
     const { companyUserId } = authResult.data;
-    const supabase = await createClient();
+    const supabase = createServerActionClient();
 
     // ユーザーが権限を持つグループのみ取得
     const { data: userPermissions, error } = await supabase
@@ -80,10 +83,11 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
+      console.log('❌ getJobPostingsByGroup - Auth failed:', authResult.error);
       throw new Error('認証が必要です');
     }
 
-    const supabase = await createClient();
+    const supabase = createServerActionClient();
     
     const { data: jobPostings, error } = await supabase
       .from('job_postings')
@@ -143,7 +147,7 @@ export async function createScoutTemplate(data: ScoutTemplateData) {
       return { success: false, error: '本文を入力してください' };
     }
 
-    const supabase = await createClient();
+    const supabase = createServerActionClient();
 
     // グループが企業のものかチェック
     const { data: group, error: groupError } = await supabase

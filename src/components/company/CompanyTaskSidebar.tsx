@@ -58,14 +58,21 @@ interface TaskItem {
   navigateTo?: string;
 }
 
+interface CompanyAccountData {
+  plan: string;
+  scoutLimit: number;
+  nextUpdateDate: string;
+}
+
 interface CompanyTaskSidebarProps {
   className?: string;
   showTodoAndNews?: boolean;
   taskData?: TaskData;
   notices?: NoticeData[];
+  companyAccountData?: CompanyAccountData | null;
 }
 
-export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskData, notices = [] }: CompanyTaskSidebarProps) {
+export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskData, notices = [], companyAccountData }: CompanyTaskSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -417,18 +424,23 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
         {/* Upper Block - Plan Information (Figma design) */}
         <div style={upperBlockStyle}>
           <div style={{ width: '100%', textAlign: 'center' }}>
-            <div style={planTitleStyle}>スタンダードプラン</div>
+            <div style={planTitleStyle}>
+              {companyAccountData?.plan === 'standard' ? 'スタンダードプラン' : 'ベーシックプラン'}
+            </div>
             <div style={planInfoStyle}>
               <div>
                 <span style={remainingTextStyle}>残数：</span>
-                <span style={remainingNumberStyle}>100</span>
+                <span style={remainingNumberStyle}>{companyAccountData?.scoutLimit || 10}</span>
               </div>
-              <div style={nextUpdateStyle}>次回更新日：2024/12/31</div>
+              <div style={nextUpdateStyle}>
+                次回更新日：{companyAccountData?.nextUpdateDate || '未設定'}
+              </div>
             </div>
           </div>
           <Button
                           variant='green-outline'
                           size='lg'
+                          onClick={() => router.push('/company/contact')}
                           style={{
                             width: '100%',
                             paddingLeft: 40,

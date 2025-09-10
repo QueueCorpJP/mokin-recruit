@@ -116,7 +116,7 @@ CREATE POLICY "Company users can manage their job postings"
       SELECT 1 FROM public.company_users cu
       JOIN public.company_accounts ca ON cu.company_account_id = ca.id
       WHERE cu.id::text = auth.uid()::text
-      AND ca.id = job_postings.company_id
+      AND ca.id = job_postings.company_account_id
     )
   )
   WITH CHECK (
@@ -124,7 +124,7 @@ CREATE POLICY "Company users can manage their job postings"
       SELECT 1 FROM public.company_users cu
       JOIN public.company_accounts ca ON cu.company_account_id = ca.id
       WHERE cu.id::text = auth.uid()::text
-      AND ca.id = job_postings.company_id
+      AND ca.id = job_postings.company_account_id
     )
   );
 
@@ -209,7 +209,7 @@ CREATE POLICY "Participants can view applications"
     candidate_id::text = auth.uid()::text OR
     EXISTS (
       SELECT 1 FROM public.job_postings jp
-      JOIN public.company_users cu ON jp.company_id = cu.company_account_id
+      JOIN public.company_users cu ON jp.company_account_id = cu.company_account_id
       WHERE cu.id::text = auth.uid()::text
       AND jp.id = applications.job_posting_id
     )

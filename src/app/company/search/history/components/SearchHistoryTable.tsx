@@ -153,17 +153,27 @@ export function SearchHistoryTable({
   });
 
   const handleSaveToggle = async (item: SearchHistoryItem) => {
+    console.log('[SearchHistoryTable] handleSaveToggle開始:', { 
+      itemId: item.id, 
+      currentIsSaved: item.is_saved, 
+      newIsSaved: !item.is_saved,
+      item: item 
+    });
+    
     setLoadingItems(prev => new Set([...prev, item.id]));
     try {
+      console.log('[SearchHistoryTable] onUpdateSavedStatus実行前');
       await onUpdateSavedStatus(item.id, !item.is_saved);
+      console.log('[SearchHistoryTable] onUpdateSavedStatus実行後 - 成功');
     } catch (error) {
-      console.error('Failed to update saved status:', error);
+      console.error('[SearchHistoryTable] Failed to update saved status:', error);
     } finally {
       setLoadingItems(prev => {
         const newSet = new Set(prev);
         newSet.delete(item.id);
         return newSet;
       });
+      console.log('[SearchHistoryTable] handleSaveToggle完了');
     }
   };
 

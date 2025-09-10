@@ -30,6 +30,29 @@ html {
   font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
 }
 
+/* Company配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-company-section] *,
+body [data-company-page] *,
+.company-layout *,
+.company-page * {
+  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif !important;
+}
+
+/* フォントボールド表示の強化 */
+.font-bold,
+[class*="font-bold"] {
+  font-weight: 700 !important;
+  /* フォント読み込み中はより太いシステムフォントを使用 */
+  font-synthesis: weight;
+}
+
+/* より強いボールドが必要な場合 */
+.font-extrabold,
+[class*="font-extrabold"] {
+  font-weight: 800 !important;
+  font-synthesis: weight;
+}
+
 /* フォント読み込み時のスムーズな切り替え */
 * {
   font-display: swap;
