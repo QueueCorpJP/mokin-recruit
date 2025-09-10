@@ -21,7 +21,8 @@ export const MessageDetailBody: React.FC<MessageDetailBodyProps> = ({
         className
       )}
       style={{ 
-        maxHeight: 'calc(100vh - 300px)', 
+        maxHeight: 'calc(100vh - 300px)',
+        minHeight: '100%', // 親要素の高さいっぱいまで背景色を表示
         scrollBehavior: 'smooth',
         msOverflowStyle: 'none',  // IE and Edge
         scrollbarWidth: 'none',    // Firefox

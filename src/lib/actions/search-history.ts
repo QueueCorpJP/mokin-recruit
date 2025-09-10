@@ -538,6 +538,85 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
 }
 
 /**
+ * ユーザーのデフォルトグループIDを取得する
+ */
+export async function getUserDefaultGroupId() {
+  console.log('[getUserDefaultGroupId] Called');
+  
+  try {
+    // 企業ユーザー認証の確認
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      console.error('[getUserDefaultGroupId] Company auth failed:', authResult.error);
+      return {
+        success: false,
+        error: authResult.error,
+        data: null
+      };
+    }
+
+    const { companyUserId } = authResult.data;
+    console.log('[getUserDefaultGroupId] Company auth successful, user ID:', companyUserId);
+
+    // Supabase管理者クライアントを使用
+    const supabase = getSupabaseAdminClient();
+    
+    // company_usersから現在のユーザーの最初のグループを取得（デフォルトとして使用）
+    const { data: userPermissions, error: userError } = await supabase
+      .from('company_user_group_permissions')
+      .select(`
+        company_group:company_groups (
+          id,
+          group_name
+        )
+      `)
+      .eq('company_user_id', companyUserId)
+      .limit(1)
+      .single();
+
+    if (userError || !userPermissions) {
+      console.error('[getUserDefaultGroupId] Failed to get user permissions:', userError);
+      return {
+        success: false,
+        error: '企業ユーザー情報の取得に失敗しました',
+        data: null
+      };
+    }
+
+    const group = userPermissions.company_group;
+    if (!group || !group.id) {
+      console.error('[getUserDefaultGroupId] No group found for user');
+      return {
+        success: false,
+        error: 'ユーザーにグループが割り当てられていません',
+        data: null
+      };
+    }
+
+    console.log('[getUserDefaultGroupId] Successfully retrieved default group:', group);
+    return {
+      success: true,
+      data: {
+        id: group.id,
+        name: group.group_name
+      }
+    };
+
+  } catch (error) {
+    console.error('[getUserDefaultGroupId] Unexpected error:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    });
+    return {
+      success: false,
+      error: 'サーバーエラーが発生しました',
+      data: null
+    };
+  }
+}
+
+/**
  * 検索履歴を削除する（サーバーサイドでWHEREによる手動フィルタリング）
  */
 export async function deleteSearchHistory(historyId: string) {

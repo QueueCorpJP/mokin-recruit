@@ -117,7 +117,7 @@ export const AdminSidebar = React.memo((): React.JSX.Element => {
             className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity duration-150"
           >
             {section.icon}
-            <span className="font-bold Noto_Sans_JP text-[#323232] tracking-[1.6px] leading-[200%] whitespace-nowrap">
+            <span className="font-bold font-noto-sans-jp text-[#323232] tracking-[1.6px] leading-[200%] whitespace-nowrap">
               {section.title}
             </span>
           </Link>
@@ -132,7 +132,7 @@ export const AdminSidebar = React.memo((): React.JSX.Element => {
                   className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity duration-150"
                 >
                   <span className="text-[#323232] text-[12px] leading-[200%]">•</span>
-                  <span className="font-bold Noto_Sans_JP text-[#323232] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">
+                  <span className="font-bold font-noto-sans-jp text-[#323232] text-[16px] tracking-[1.6px] leading-[200%] whitespace-nowrap">
                     {item.title}
                   </span>
                 </Link>

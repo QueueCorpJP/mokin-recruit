@@ -84,6 +84,35 @@ export async function loginAction(formData: FormData) {
       userType: actualUserType
     });
 
+    // 管理者認証用のクッキーを設定
+    const { cookies } = await import('next/headers');
+    const cookieStore = cookies();
+    
+    // セキュアなクッキー設定
+    cookieStore.set('auth_token', data.session?.access_token || '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7日間
+      path: '/'
+    });
+    
+    cookieStore.set('admin_user', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7日間
+      path: '/'
+    });
+
+    cookieStore.set('user_id', data.user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7日間
+      path: '/'
+    });
+
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
     
@@ -91,12 +120,18 @@ export async function loginAction(formData: FormData) {
     redirect('/admin');
 
   } catch (error) {
-    console.error('Admin login action error:', error);
-    
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      // Next.jsのredirectは内部的にエラーを投げるため、これは正常な動作
+    // Next.jsのredirectは内部的にエラーを投げるため、これをまず確認
+    if (error instanceof Error && (
+      error.message === 'NEXT_REDIRECT' || 
+      error.message.includes('NEXT_REDIRECT') ||
+      'digest' in error && String(error.digest).includes('NEXT_REDIRECT')
+    )) {
+      // これは正常な動作（リダイレクト成功）なので、エラーログを出力せずに再スロー
       throw error;
     }
+    
+    // 実際のエラーの場合のみログ出力
+    console.error('Admin login action error:', error);
 
     // 失敗時はエラー内容をURLパラメータに載せてリダイレクト
     const query = encodeQuery({

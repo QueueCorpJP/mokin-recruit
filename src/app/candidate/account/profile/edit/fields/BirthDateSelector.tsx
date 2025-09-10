@@ -66,9 +66,7 @@ const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
                 errors?.birthYear || errors?.birthMonth || errors?.birthDay
                   ? 'border-red-500'
                   : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${
-                selectedYear ? 'text-[#323232]' : 'text-[#323232]'
-              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+              } rounded-[5px] text-[16px] ${selectedYear ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
             >
               {yearOptions.map(year => (
                 <option key={year.value} value={year.value}>
@@ -97,9 +95,7 @@ const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
                 errors?.birthYear || errors?.birthMonth || errors?.birthDay
                   ? 'border-red-500'
                   : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${
-                selectedMonth ? 'text-[#323232]' : 'text-[#323232]'
-              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+              } rounded-[5px] text-[16px] ${selectedMonth ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
             >
               <option value=''>未選択</option>
               {monthOptions.map(month => (
@@ -129,9 +125,7 @@ const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
                 errors?.birthYear || errors?.birthMonth || errors?.birthDay
                   ? 'border-red-500'
                   : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${
-                selectedDay ? 'text-[#323232]' : 'text-[#323232]'
-              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+              } rounded-[5px] text-[16px] ${selectedDay ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
             >
               <option value=''>未選択</option>
               {dayOptions.map(day => (

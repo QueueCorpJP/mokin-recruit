@@ -42,7 +42,7 @@ import type { JobType } from '@/constants/job-type-data';
 import type { Industry } from '@/constants/industry-data';
 import type { CandidateData } from '@/components/company/CandidateCard';
 import Image from 'next/image'; // 追加
-import CandidateDetailModal from '@/components/company/CandidateDetailModal';
+import { CandidateSlideMenu } from '../../recruitment/detail/CandidateSlideMenu';
 import {
   getCandidatesFromDatabase,
   searchCandidatesWithConditions,
@@ -279,8 +279,8 @@ export default function SearchClient({
   // ページネーション関連のstate
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12); // 12件に戻す
-  const [selectedCandidate, setSelectedCandidate] =
-    useState<CandidateData | null>(null); // 追加: モーダル用
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [isSlidePanelOpen, setIsSlidePanelOpen] = useState(false);
 
   // フィルター処理
   const filteredCandidates = useMemo(() => {
@@ -713,6 +713,24 @@ export default function SearchClient({
 
           setAllCandidates(candidatesData);
           setCandidates(candidatesData);
+        }
+
+        // グループIDが設定されていない場合、ユーザーのデフォルトグループIDを取得
+        if (!searchStore.searchGroup) {
+          console.log('🔍 [SearchClient] グループIDが未設定のため、デフォルトグループIDを取得中...');
+          try {
+            const { getUserDefaultGroupId } = await import('@/lib/actions/search-history');
+            const defaultGroupResult = await getUserDefaultGroupId();
+            
+            if (defaultGroupResult.success && defaultGroupResult.data) {
+              console.log('✅ [SearchClient] デフォルトグループIDを取得:', defaultGroupResult.data.id);
+              searchStore.setSearchGroup(defaultGroupResult.data.id);
+            } else {
+              console.error('❌ [SearchClient] デフォルトグループIDの取得に失敗:', defaultGroupResult.error);
+            }
+          } catch (error) {
+            console.error('❌ [SearchClient] デフォルトグループID取得時エラー:', error);
+          }
         }
 
         // グループ情報は初期データで設定済み
@@ -2099,7 +2117,8 @@ export default function SearchClient({
                   onClick={e => {
                     // アクションボタンのクリックは伝播させない
                     if ((e.target as HTMLElement).closest('button')) return;
-                    setSelectedCandidate(candidate); // ここでモーダルを開く
+                    setSelectedCandidateId(String(candidate.id));
+                    setIsSlidePanelOpen(true);
                   }}
                 >
                   <div className='flex gap-6'>
@@ -2580,13 +2599,16 @@ export default function SearchClient({
         maxSelections={6}
       />
 
-      {/* モーダル表示 */}
-      {selectedCandidate && (
-        <CandidateDetailModal
-          candidate={selectedCandidate}
-          onClose={() => setSelectedCandidate(null)}
-        />
-      )}
+      {/* サイドバー表示 */}
+      <CandidateSlideMenu
+        isOpen={isSlidePanelOpen}
+        onClose={() => {
+          setIsSlidePanelOpen(false);
+          setSelectedCandidateId(null);
+        }}
+        candidateId={selectedCandidateId || undefined}
+        companyGroupId={searchStore.searchGroup}
+      />
     </>
   );
 }

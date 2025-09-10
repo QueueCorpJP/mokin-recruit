@@ -1,8 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getCareerStatusData, updateCareerStatusData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,14 +11,10 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import { useCandidateAuth } from '@/hooks/useClientAuth';
 import {
   CURRENT_ACTIVITY_STATUS_OPTIONS,
+  DECLINE_REASON_OPTIONS,
   JOB_CHANGE_TIMING_OPTIONS,
+  PROGRESS_STATUS_OPTIONS,
 } from '@/constants/career-status';
-import Section from '@/components/education/common/Section';
-import SectionCard from '@/components/education/common/SectionCard';
-import FormRow from '@/components/education/common/FormRow';
-import Breadcrumbs from '@/components/education/common/Breadcrumbs';
-import FormActions from '@/components/education/common/FormActions';
-import CompanyStatusEditRow from './CompanyStatusEditRow';
 
 // フォームスキーマ定義
 const careerStatusSchema = z.object({
@@ -45,6 +42,27 @@ export default function CandidateCareerStatusEditPage() {
   const [currentModalIndex, setCurrentModalIndex] = useState<number | null>(
     null
   );
+
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   const {
     register,
@@ -78,49 +96,36 @@ export default function CandidateCareerStatusEditPage() {
     const fetchInitialData = async () => {
       try {
         const data = await getCareerStatusData();
-        reset({
-          transferDesiredTime: data?.transferDesiredTime || '',
-          currentActivityStatus: data?.currentActivityStatus || '',
-          selectionCompanies:
-            data?.selectionCompanies && data.selectionCompanies.length > 0
-              ? data.selectionCompanies
-              : [
-                  {
-                    privacyScope: '',
-                    isPrivate: false,
-                    industries: [],
-                    companyName: '',
-                    department: '',
-                    progressStatus: '',
-                    declineReason: '',
-                  },
-                ],
-        });
+        if (data) {
+          // フォームの値を設定
+          reset({
+            transferDesiredTime: data.transferDesiredTime || '',
+            currentActivityStatus: data.currentActivityStatus || '',
+            selectionCompanies:
+              data.selectionCompanies && data.selectionCompanies.length > 0
+                ? data.selectionCompanies
+                : [
+                    {
+                      privacyScope: '',
+                      isPrivate: false,
+                      industries: [],
+                      companyName: '',
+                      department: '',
+                      progressStatus: '',
+                      declineReason: '',
+                    },
+                  ],
+          });
+        }
       } catch (error) {
         globalThis.console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        // setIsLoading(false); // isLoading自体未使用なので削除
       }
     };
+
     fetchInitialData();
   }, [reset]);
-
-  // 認証チェック
-  useEffect(() => {
-    if (loading) return;
-    if (!isAuthenticated || !candidateUser) {
-      router.push('/candidate/auth/login');
-    }
-  }, [isAuthenticated, candidateUser, loading, router]);
-
-  if (loading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
-      </div>
-    );
-  }
-  if (!isAuthenticated || !candidateUser) {
-    return null;
-  }
 
   const onSubmit = async (data: CareerStatusFormData) => {
     // setIsSubmitting(true); // isSubmitting自体未使用なので削除
@@ -178,6 +183,10 @@ export default function CandidateCareerStatusEditPage() {
     );
   };
 
+  const openIndustryModal = (index: number) => {
+    setCurrentModalIndex(index);
+  };
+
   const closeIndustryModal = () => {
     setCurrentModalIndex(null);
   };
@@ -222,13 +231,50 @@ export default function CandidateCareerStatusEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <Breadcrumbs
-            items={[
-              { label: 'プロフィール確認・編集' },
-              { label: '転職活動状況' },
-              { label: '転職活動状況編集', isCurrent: true },
-            ]}
-          />
+          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              プロフィール確認・編集
+            </span>
+            <svg
+              width='8'
+              height='8'
+              viewBox='0 0 8 8'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='flex-shrink-0'
+            >
+              <path
+                d='M3 1L6 4L3 7'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              転職活動状況
+            </span>
+            <svg
+              width='8'
+              height='8'
+              viewBox='0 0 8 8'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='flex-shrink-0'
+            >
+              <path
+                d='M3 1L6 4L3 7'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              転職活動状況編集
+            </span>
+          </div>
+
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
             <div className='w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center'>
@@ -271,90 +317,465 @@ export default function CandidateCareerStatusEditPage() {
             </h1>
           </div>
         </div>
+
         {/* フォーム部分 */}
         <div className='bg-[#f9f9f9] px-4 lg:px-20 py-6 lg:py-10 min-h-[730px]'>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col items-center gap-6 lg:gap-10'
           >
-            <SectionCard>
-              <Section title='転職活動状況'>
-                <FormRow
-                  label='転職希望時期'
-                  error={errors.transferDesiredTime?.message || ''}
-                >
-                  <select
-                    {...register('transferDesiredTime')}
-                    className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                  >
-                    {JOB_CHANGE_TIMING_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </FormRow>
-                <FormRow
-                  label='現在の活動状況'
-                  error={errors.currentActivityStatus?.message || ''}
-                >
-                  <select
-                    {...register('currentActivityStatus')}
-                    className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                  >
-                    {CURRENT_ACTIVITY_STATUS_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </FormRow>
-              </Section>
-              <Section title='選考状況'>
-                {(selectionCompanies || []).map((_, index) => (
-                  <CompanyStatusEditRow
-                    key={index}
-                    index={index}
-                    register={register}
-                    watch={watch}
-                    setValue={setValue}
-                    removeCompany={removeCompany}
-                    getSelectedIndustries={getSelectedIndustries}
-                    removeIndustry={removeIndustry}
-                  />
-                ))}
-                {/* 企業を追加ボタン */}
-                <div className='flex justify-center'>
-                  <button
-                    type='button'
-                    onClick={addCompany}
-                    className='border border-[#0f9058] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
-                  >
-                    <svg
-                      width='16'
-                      height='16'
-                      viewBox='0 0 16 16'
-                      fill='none'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path
-                        d='M8 3V13M3 8H13'
-                        stroke='#0f9058'
-                        strokeWidth='2'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                      />
-                    </svg>
-                    企業を追加
-                  </button>
+            <div className='bg-white rounded-3xl lg:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 pb-6 pt-10 lg:p-10 w-full max-w-[728px]'>
+              {/* 説明文セクション */}
+              <div className='mb-6'>
+                <p className='text-[#323232] text-[16px] font-bold tracking-[1.4px] leading-8 text-left'>
+                  転職活動状況を編集できます。
+                  <br />
+                  興味がある企業や、進捗をアップデートしておくと、スカウトの質が高まります。
+                  <br />
+                  選考状況や志向が変わったときはぜひ更新してみてください。
+                </p>
+              </div>
+
+              {/* 転職活動状況セクション */}
+              <div className='mb-6 lg:mb-6'>
+                <div className='mb-2'>
+                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
+                    転職活動状況
+                  </h2>
                 </div>
-              </Section>
-            </SectionCard>
+                <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                <div className='space-y-6 lg:space-y-2'>
+                  {/* 転職希望時期 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        転職希望時期
+                      </div>
+                    </div>
+                    <div className='flex-1 py-2 lg:py-6'>
+                      <div className='relative'>
+                        <select
+                          {...register('transferDesiredTime')}
+                          className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
+                        >
+                          {JOB_CHANGE_TIMING_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      {errors.transferDesiredTime && (
+                        <p className='text-red-500 text-[14px] mt-1'>
+                          {errors.transferDesiredTime.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 現在の活動状況 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        現在の活動状況
+                      </div>
+                    </div>
+                    <div className='flex-1 py-2 lg:py-6'>
+                      <div className='relative'>
+                        <select
+                          {...register('currentActivityStatus')}
+                          className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
+                        >
+                          {CURRENT_ACTIVITY_STATUS_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      {errors.currentActivityStatus && (
+                        <p className='text-red-500 text-[14px] mt-1'>
+                          {errors.currentActivityStatus.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 選考状況セクション */}
+              <div>
+                <div className='mb-2'>
+                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
+                    選考状況
+                  </h2>
+                </div>
+                <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                <div className='space-y-4'>
+                  {(selectionCompanies || []).map((company, index) => (
+                    <div
+                      key={index}
+                      className='relative border border-[#dcdcdc] rounded-[10px] p-4 lg:p-6'
+                    >
+                      {/* 削除ボタン - 2個目以降のみ表示 */}
+                      {index > 0 && (
+                        <button
+                          type='button'
+                          onClick={() => removeCompany(index)}
+                          className='absolute top-4 right-4 w-6 h-6 flex items-center justify-center'
+                        >
+                          <svg
+                            width='14'
+                            height='14'
+                            viewBox='0 0 14 14'
+                            fill='none'
+                            xmlns='http://www.w3.org/2000/svg'
+                          >
+                            <path
+                              d='M1 1L13 13M1 13L13 1'
+                              stroke='#999999'
+                              strokeWidth='2'
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                            />
+                          </svg>
+                        </button>
+                      )}
+
+                      <div className='space-y-6 lg:space-y-2'>
+                        {/* 公開範囲 */}
+                        <div className='flex flex-col lg:flex-row lg:gap-6'>
+                          <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                            <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                              公開範囲
+                            </div>
+                          </div>
+                          <div className='flex-1 py-2 lg:py-6'>
+                            <div className='flex items-start gap-2'>
+                              <div
+                                className='w-5 h-5 mt-1 cursor-pointer'
+                                onClick={() => {
+                                  const currentValue = watch(
+                                    `selectionCompanies.${index}.isPrivate`
+                                  );
+                                  setValue(
+                                    `selectionCompanies.${index}.isPrivate`,
+                                    !currentValue,
+                                    {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    }
+                                  );
+                                }}
+                              >
+                                <svg
+                                  width='20'
+                                  height='20'
+                                  viewBox='0 0 20 20'
+                                  fill='none'
+                                  xmlns='http://www.w3.org/2000/svg'
+                                >
+                                  <path
+                                    d='M2.85714 0C1.28125 0 0 1.28125 0 2.85714V17.1429C0 18.7188 1.28125 20 2.85714 20H17.1429C18.7188 20 20 18.7188 20 17.1429V2.85714C20 1.28125 18.7188 0 17.1429 0H2.85714ZM15.0446 7.90179L9.33036 13.6161C8.91071 14.0357 8.23214 14.0357 7.81696 13.6161L4.95982 10.7589C4.54018 10.3393 4.54018 9.66071 4.95982 9.24554C5.37946 8.83036 6.05804 8.82589 6.47321 9.24554L8.57143 11.3438L13.5268 6.38393C13.9464 5.96429 14.625 5.96429 15.0402 6.38393C15.4554 6.80357 15.4598 7.48214 15.0402 7.89732L15.0446 7.90179Z'
+                                    fill={
+                                      watch(
+                                        `selectionCompanies.${index}.isPrivate`
+                                      )
+                                        ? '#0F9058'
+                                        : '#DCDCDC'
+                                    }
+                                  />
+                                </svg>
+                              </div>
+                              <div className='flex-1'>
+                                <span className='block text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
+                                  企業名を非公開（業種・進捗のみ公開）
+                                </span>
+                                <span className='block text-[14px] text-[#999999] font-medium tracking-[1.4px] mt-1'>
+                                  企業に選考状況を伝えることで、
+                                  <br className='hidden lg:block' />
+                                  スカウトの質やあなたへの興味度が高まりやすくなります。
+                                  <br className='hidden lg:block' />
+                                  ※選考中の企業には自動で非公開になります。
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 業種 */}
+                        <div className='flex flex-col lg:flex-row lg:gap-6'>
+                          <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                            <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                              業種
+                            </div>
+                          </div>
+                          <div className='flex-1 py-2 lg:py-6'>
+                            <div className='flex flex-col gap-2'>
+                              <button
+                                type='button'
+                                onClick={() => openIndustryModal(index)}
+                                className='px-10 h-[50px] border border-[#999999] rounded-[32px] text-[#323232] text-[16px] font-bold tracking-[1.6px] bg-white w-full lg:w-fit'
+                              >
+                                業種を選択
+                              </button>
+                              <div className='flex flex-wrap gap-2'>
+                                {getSelectedIndustries(index)?.map(
+                                  industryName => (
+                                    <div
+                                      key={industryName}
+                                      className='bg-[#d2f1da] px-6 py-2 rounded-[10px] flex items-center gap-2'
+                                    >
+                                      <span className='text-[#0f9058] text-[14px] font-bold tracking-[1.4px]'>
+                                        {industryName}
+                                      </span>
+                                      <button
+                                        type='button'
+                                        onClick={() =>
+                                          removeIndustry(index, industryName)
+                                        }
+                                      >
+                                        <svg
+                                          width='12'
+                                          height='12'
+                                          viewBox='0 0 12 12'
+                                          fill='none'
+                                        >
+                                          <path
+                                            d='M1 1L11 11M1 11L11 1'
+                                            stroke='#0f9058'
+                                            strokeWidth='1.5'
+                                            strokeLinecap='round'
+                                          />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 企業名 */}
+                        <div className='flex flex-col lg:flex-row lg:gap-6'>
+                          <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                            <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                              企業名
+                            </div>
+                          </div>
+                          <div className='flex-1 py-2 lg:py-6'>
+                            <input
+                              type='text'
+                              {...register(
+                                `selectionCompanies.${index}.companyName`
+                              )}
+                              placeholder='企業名を入力'
+                              className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]'
+                            />
+                          </div>
+                        </div>
+
+                        {/* 部署名・役職名 */}
+                        <div className='flex flex-col lg:flex-row lg:gap-6'>
+                          <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                            <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                              部署名・役職名
+                            </div>
+                          </div>
+                          <div className='flex-1 py-2 lg:py-6'>
+                            <input
+                              type='text'
+                              {...register(
+                                `selectionCompanies.${index}.department`
+                              )}
+                              placeholder='部署名・役職名を入力'
+                              className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]'
+                            />
+                          </div>
+                        </div>
+
+                        {/* 進捗状況 */}
+                        <div className='flex flex-col lg:flex-row lg:gap-6'>
+                          <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                            <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                              進捗状況
+                            </div>
+                          </div>
+                          <div className='flex-1 py-2 lg:py-6'>
+                            <div className='relative'>
+                              <select
+                                {...register(
+                                  `selectionCompanies.${index}.progressStatus`
+                                )}
+                                className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
+                              >
+                                <option value=''>未選択</option>
+                                {PROGRESS_STATUS_OPTIONS.map(option => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                                <svg
+                                  width='14'
+                                  height='10'
+                                  viewBox='0 0 14 10'
+                                  fill='none'
+                                  xmlns='http://www.w3.org/2000/svg'
+                                >
+                                  <path
+                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                    fill='#0F9058'
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 辞退理由 - 辞退選択時のみ表示 */}
+                        {(watch(
+                          `selectionCompanies.${index}.progressStatus`
+                        ) === '辞退' ||
+                          watch(
+                            `selectionCompanies.${index}.progressStatus`
+                          ) === '不合格') && (
+                          <div className='flex flex-col lg:flex-row lg:gap-6'>
+                            <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center'>
+                              <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                                辞退理由
+                              </div>
+                            </div>
+                            <div className='flex-1 py-2 lg:py-6'>
+                              <div className='relative'>
+                                <select
+                                  {...register(
+                                    `selectionCompanies.${index}.declineReason`
+                                  )}
+                                  className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
+                                >
+                                  <option value=''>未選択</option>
+                                  {DECLINE_REASON_OPTIONS.map(option => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                                  <svg
+                                    width='14'
+                                    height='10'
+                                    viewBox='0 0 14 10'
+                                    fill='none'
+                                    xmlns='http://www.w3.org/2000/svg'
+                                  >
+                                    <path
+                                      d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                      fill='#0F9058'
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* 企業を追加ボタン */}
+                  <div className='flex justify-center'>
+                    <button
+                      type='button'
+                      onClick={addCompany}
+                      className='border border-[#0f9058] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
+                    >
+                      <svg
+                        width='16'
+                        height='16'
+                        viewBox='0 0 16 16'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M8 3V13M3 8H13'
+                          stroke='#0f9058'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                        />
+                      </svg>
+                      企業を追加
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ボタン */}
-            <FormActions onCancel={handleCancel} isSubmitting={false} />
+            <div className='flex gap-4 w-full lg:w-auto'>
+              <Button
+                type='button'
+                variant='green-outline'
+                size='figma-default'
+                onClick={handleCancel}
+                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
+              >
+                キャンセル
+              </Button>
+              <Button
+                type='submit'
+                variant='green-gradient'
+                size='figma-default'
+                // disabled={isSubmitting} // isSubmitting自体未使用なので削除
+                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
+              >
+                {/* {isSubmitting ? '保存中...' : '保存する'} */}
+                保存する
+              </Button>
+            </div>
           </form>
         </div>
       </main>
+
       {/* 業種選択モーダル */}
       {currentModalIndex !== null && (
         <IndustrySelectModal

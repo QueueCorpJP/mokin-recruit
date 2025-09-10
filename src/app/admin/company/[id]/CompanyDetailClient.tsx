@@ -242,7 +242,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
           console.log('Members invited successfully:', result.invitedMembers);
 
       // 招待完了モーダルを開く
-          setInvitedMembersCount(result.invitedMembers.length);
+          setInvitedMembersCount(result.invitedMembers?.length || 0);
       setAddMemberModalOpen(false);
       setInvitationCompleteModalOpen(true);
         } else {
@@ -281,7 +281,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
       if (result.success) {
         console.log('Company suspended successfully:', result.company);
-        console.log(`Company ${company.company_name} suspended with status: ${result.company.status}`);
+        console.log(`Company ${company.company_name} suspended with status: ${result.company?.status}`);
     // 休会確認モーダルを閉じて、完了モーダルを表示
     setWithdrawalConfirmModalOpen(false);
     setWithdrawalCompleteModalOpen(true);
@@ -739,7 +739,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
                 {/* メンバーリスト - 仮実装 */}
             <div className="space-y-4">
-                  {['管理者', '管理者', 'スカウト担当者', 'スカウト担当者', ''].map((role, roleIndex) => (
+                  {['管理者', '管理者', 'スカウト担当者', '採用担当者', ''].map((role, roleIndex) => (
                     <div key={roleIndex}>
                   <div className="flex justify-between items-center py-2">
                     <div className="text-base font-bold">名前 名前</div>
@@ -760,6 +760,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                         >
                           <option value="管理者">管理者</option>
                           <option value="スカウト担当者">スカウト担当者</option>
+                          <option value="採用担当者">採用担当者</option>
                         </select>
                       )}
                       <ActionButton
@@ -993,7 +994,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         isOpen={scoutLimitChangeModalOpen}
         onClose={handleScoutLimitChangeCancel}
         onConfirm={handleScoutLimitChangeConfirm}
-        currentLimit={company.contract_plan?.max_job_postings || 10}
+        currentLimit={company.scout_limit || 10}
       />
 
       {/* スカウト上限数変更完了モーダル */}

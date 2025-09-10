@@ -46,9 +46,7 @@ const IncomeSelect: React.FC<IncomeSelectProps> = ({
             onChange={e => onChange && onChange(e.target.value)}
             className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
               errors?.currentIncome ? 'border-red-500' : 'border-[#999999]'
-            } rounded-[5px] text-[16px] ${
-              selectedIncome ? 'text-[#323232]' : 'text-[#323232]'
-            } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+            } rounded-[5px] text-[16px] ${selectedIncome ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
           >
             {options.map(option => (
               <option key={option.value} value={option.value}>

@@ -1,92 +1,153 @@
 'use client';
 
 // Header/Footer はレイアウトで提供されるため本フォームでは描画しない
+import { Button } from '@/components/ui/button';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useState, useEffect, useMemo } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import { useEducationForm } from './useEducationForm';
-import EducationEditFormPC from './EducationEditFormPC';
-import EducationEditFormSP from './EducationEditFormSP';
+import type { Industry } from '@/constants/industry-data';
+import type { JobType } from '@/constants/job-type-data';
+
+const educationSchema = z.object({
+  finalEducation: z.string().min(1, '最終学歴を選択してください。'),
+  schoolName: z.string().min(1, '学校名を入力してください。'),
+  department: z.string().min(1, '学部学科専攻を入力してください。'),
+  graduationYear: z.string().min(1, '卒業年月を選択してください。'),
+  graduationMonth: z.string().min(1, '卒業年月を選択してください。'),
+  industries: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        experienceYears: z.string().optional(),
+      })
+    )
+    .min(1, '業種を1つ以上選択してください。')
+    .max(3)
+    .refine(
+      items =>
+        items.every(
+          item => item.experienceYears && item.experienceYears !== ''
+        ),
+      '経験年数を選択してください。'
+    ),
+  jobTypes: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        experienceYears: z.string().optional(),
+      })
+    )
+    .min(1, '職種を1つ以上選択してください。')
+    .max(3)
+    .refine(
+      items =>
+        items.every(
+          item => item.experienceYears && item.experienceYears !== ''
+        ),
+      '経験年数を選択してください。'
+    ),
+});
+
+type EducationFormData = z.infer<typeof educationSchema>;
 
 // 最終学歴の選択肢
-// const educationOptions = [
-//   '中学校卒業',
-//   '高等学校卒業',
-//   '高等専門学校卒業',
-//   '短期大学卒業',
-//   '専門学校卒業',
-//   '大学卒業（学士）',
-//   '大学院修士課程修了（修士）',
-//   '大学院博士課程修了（博士）',
-//   '海外大学卒業（学士）',
-//   '海外大学院修了（修士・博士含む）',
-//   'その他',
-// ];
+const educationOptions = [
+  '中学校卒業',
+  '高等学校卒業',
+  '高等専門学校卒業',
+  '短期大学卒業',
+  '専門学校卒業',
+  '大学卒業（学士）',
+  '大学院修士課程修了（修士）',
+  '大学院博士課程修了（博士）',
+  '海外大学卒業（学士）',
+  '海外大学院修了（修士・博士含む）',
+  'その他',
+];
 
 // 経験年数の選択肢
-// const experienceYearOptions = [
-//   '1年',
-//   '2年',
-//   '3年',
-//   '4年',
-//   '5年',
-//   '6年',
-//   '7年',
-//   '8年',
-//   '9年',
-//   '10年',
-//   '11年',
-//   '12年',
-//   '13年',
-//   '14年',
-//   '15年',
-//   '16年',
-//   '17年',
-//   '18年',
-//   '19年',
-//   '20年以上',
-// ];
+const experienceYearOptions = [
+  '1年',
+  '2年',
+  '3年',
+  '4年',
+  '5年',
+  '6年',
+  '7年',
+  '8年',
+  '9年',
+  '10年',
+  '11年',
+  '12年',
+  '13年',
+  '14年',
+  '15年',
+  '16年',
+  '17年',
+  '18年',
+  '19年',
+  '20年以上',
+];
 
 export default function CandidateEducationEditPage() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
+  const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // useEducationFormからすべてのロジック・状態・ハンドラを受け取る
   const {
     register,
     handleSubmit,
-    errors,
+    formState: { errors, isValid },
     watch,
     setValue,
-    isSubmitting,
-    setIsSubmitting,
-    isIndustryModalOpen,
-    setIsIndustryModalOpen,
-    isJobTypeModalOpen,
-    setIsJobTypeModalOpen,
-    selectedIndustries,
-    selectedJobTypes,
-    yearOptions,
-    monthOptions,
-    handleIndustryConfirm,
-    removeIndustry,
-    updateIndustryExperience,
-    handleJobTypeConfirm,
-    removeJobType,
-    updateJobTypeExperience,
-  } = useEducationForm();
+  } = useForm<EducationFormData>({
+    resolver: zodResolver(educationSchema),
+    mode: 'onChange',
+    defaultValues: {
+      finalEducation: '',
+      schoolName: '',
+      department: '',
+      graduationYear: '',
+      graduationMonth: '',
+      industries: [],
+      jobTypes: [],
+    },
+  });
+
+  const selectedIndustries = watch('industries');
+  const selectedJobTypes = watch('jobTypes');
+
+  // 年の選択肢を生成（1970年から2025年まで）
+  const yearOptions = useMemo(() => {
+    const years = [];
+    for (let year = 2025; year >= 1970; year--) {
+      years.push(year.toString());
+    }
+    return years;
+  }, []);
+
+  // 月の選択肢を生成（1〜12月）
+  const monthOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
 
   useEffect(() => {
     // TODO: APIから既存のデータを取得
     // データが存在しない場合はデフォルト値を設定
   }, [setValue]);
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: EducationFormData) => {
     setIsSubmitting(true);
     try {
       // TODO: APIを通じてデータを保存
+      console.log('Saving education data:', data);
       router.push('/account/education');
     } catch {
       setIsSubmitting(false);
@@ -97,64 +158,1022 @@ export default function CandidateEducationEditPage() {
     router.back();
   };
 
+  const handleIndustryConfirm = (industries: string[]) => {
+    const industriesWithExperience = industries.map(industryId => {
+      const existing = selectedIndustries.find(i => i.id === industryId);
+      return {
+        id: industryId,
+        name: industryId, // TODO: Get proper name from industry data
+        experienceYears: existing?.experienceYears || '',
+      };
+    });
+    setValue('industries', industriesWithExperience, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setIsIndustryModalOpen(false);
+  };
+
+  const removeIndustry = (industryId: string) => {
+    const updated = selectedIndustries.filter(i => i.id !== industryId);
+    setValue('industries', updated, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const updateIndustryExperience = (
+    industryId: string,
+    experienceYears: string
+  ) => {
+    const updated = selectedIndustries.map(industry =>
+      industry.id === industryId ? { ...industry, experienceYears } : industry
+    );
+    setValue('industries', updated, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const handleJobTypeConfirm = (jobTypes: string[]) => {
+    const jobTypesWithExperience = jobTypes.map(jobTypeId => {
+      const existing = selectedJobTypes.find(jt => jt.id === jobTypeId);
+      return {
+        id: jobTypeId,
+        name: jobTypeId, // TODO: Get proper name from job type data
+        experienceYears: existing?.experienceYears || '',
+      };
+    });
+    setValue('jobTypes', jobTypesWithExperience, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setIsJobTypeModalOpen(false);
+  };
+
+  const removeJobType = (jobTypeId: string) => {
+    const updated = selectedJobTypes.filter(jt => jt.id !== jobTypeId);
+    setValue('jobTypes', updated, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const updateJobTypeExperience = (
+    jobTypeId: string,
+    experienceYears: string
+  ) => {
+    const updated = selectedJobTypes.map(jobType =>
+      jobType.id === jobTypeId ? { ...jobType, experienceYears } : jobType
+    );
+    setValue('jobTypes', updated, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
   return (
     <div className='min-h-screen flex flex-col'>
       <form onSubmit={handleSubmit(onSubmit)}>
         {isDesktop ? (
-          <EducationEditFormPC
-            register={register}
-            handleSubmit={handleSubmit}
-            errors={errors}
-            watch={watch}
-            setValue={setValue}
-            isSubmitting={isSubmitting}
-            setIsSubmitting={setIsSubmitting}
-            isIndustryModalOpen={isIndustryModalOpen}
-            setIsIndustryModalOpen={setIsIndustryModalOpen}
-            isJobTypeModalOpen={isJobTypeModalOpen}
-            setIsJobTypeModalOpen={setIsJobTypeModalOpen}
-            selectedIndustries={selectedIndustries}
-            selectedJobTypes={selectedJobTypes}
-            yearOptions={yearOptions}
-            monthOptions={monthOptions}
-            handleIndustryConfirm={handleIndustryConfirm}
-            removeIndustry={removeIndustry}
-            updateIndustryExperience={updateIndustryExperience}
-            handleJobTypeConfirm={handleJobTypeConfirm}
-            removeJobType={removeJobType}
-            updateJobTypeExperience={updateJobTypeExperience}
-            onSubmit={onSubmit}
-            handleCancel={handleCancel}
-          />
+          /* PC Version */
+          <main className='flex flex-col'>
+            {/* Hero Section with Gradient */}
+            <div className='bg-gradient-to-b from-[#229a4e] to-[#17856f] px-20 py-10'>
+              {/* Breadcrumb */}
+              <div className='flex items-center gap-2 mb-4'>
+                <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+                  プロフィール確認・編集
+                </span>
+                <svg width='8' height='14' viewBox='0 0 8 14' fill='none'>
+                  <path d='M1 1L7 7L1 13' stroke='#FFFFFF' strokeWidth='2' />
+                </svg>
+                <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+                  学歴・経験業種/職種 編集
+                </span>
+              </div>
+
+              {/* Title */}
+              <div className='flex items-center gap-4'>
+                <div className='w-8 h-8 flex items-center justify-center'>
+                  <svg
+                    width='32'
+                    height='32'
+                    viewBox='0 0 32 32'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M8.34868 0H18.9813H19.8047L20.3871 0.581312L28.4372 8.63138L29.0186 9.21319V10.0366V26.6313C29.0186 29.5911 26.6102 32 23.6498 32H8.34862C5.38936 32 2.98099 29.5911 2.98099 26.6313V5.36763C2.98105 2.40775 5.38937 0 8.34868 0ZM4.96874 26.6313C4.96874 28.4984 6.48199 30.0123 8.34862 30.0123H23.6498C25.517 30.0123 27.0308 28.4984 27.0308 26.6313V10.0367H21.7984C20.2432 10.0367 18.9813 8.77525 18.9813 7.21956V1.98763H8.34862C6.48199 1.98763 4.96874 3.5015 4.96874 5.36756V26.6313Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M10.5803 9.96484C11.0595 10.3003 11.643 10.4984 12.271 10.4984C12.8995 10.4984 13.4825 10.3003 13.9624 9.96484C14.801 10.3258 15.3161 10.9587 15.6304 11.5178C16.0478 12.2593 15.7205 13.309 14.9996 13.309C14.2777 13.309 12.271 13.309 12.271 13.309C12.271 13.309 10.2649 13.309 9.54298 13.309C8.8216 13.309 8.49379 12.2593 8.91173 11.5178C9.22604 10.9587 9.74117 10.3258 10.5803 9.96484Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M12.2711 9.79659C11.0384 9.79659 10.0402 8.79841 10.0402 7.56628V7.03166C10.0402 5.80066 11.0384 4.80078 12.2711 4.80078C13.5032 4.80078 14.5024 5.80066 14.5024 7.03166V7.56628C14.5024 8.79841 13.5031 9.79659 12.2711 9.79659Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M8.87283 16.2734H23.2725V17.6716H8.87283V16.2734Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M8.80008 20.4688H23.1997V21.8675H8.80008V20.4688Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M8.85304 24.6641H18.9331V26.0618H8.85304V24.6641Z'
+                      fill='white'
+                    />
+                  </svg>
+                </div>
+                <h1 className='text-white text-[24px] font-bold tracking-[2.4px]'>
+                  学歴・経験業種/職種 編集
+                </h1>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <div className='bg-[#f9f9f9] px-20 py-10 flex flex-col items-center gap-10 min-h-[730px]'>
+              <div className='bg-white rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-10 w-[728px]'>
+                {/* Description */}
+                <div className='mb-6'>
+                  <p className='text-[#323232] text-[16px] leading-8 tracking-[1.6px] font-bold'>
+                    学歴・経験業種/職種を編集できます。
+                  </p>
+                </div>
+
+                {/* 学歴 Section */}
+                <div className='mb-8'>
+                  <h2 className='text-[#323232] text-[20px] font-bold tracking-[2px] mb-2'>
+                    学歴
+                  </h2>
+                  <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                  <div className='flex flex-col gap-2'>
+                    {/* 最終学歴 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          最終学歴
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='w-[400px] relative'>
+                          <select
+                            {...register('finalEducation')}
+                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                              errors.finalEducation
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] text-[16px] ${
+                              watch('finalEducation')
+                                ? 'text-[#323232]'
+                                : 'text-[#323232]'
+                            } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          >
+                            <option value=''>未選択</option>
+                            {educationOptions.map(option => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
+                            >
+                              <path
+                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                fill='#0F9058'
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 学校名 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          学校名
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='w-[400px]'>
+                          <input
+                            type='text'
+                            placeholder='学校名を入力'
+                            {...register('schoolName')}
+                            className={`w-full px-[11px] py-[11px] bg-white border ${
+                              errors.schoolName
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 学部学科専攻 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          学部学科専攻
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='w-[400px]'>
+                          <input
+                            type='text'
+                            placeholder='学部学科専攻を入力'
+                            {...register('department')}
+                            className={`w-full px-[11px] py-[11px] bg-white border ${
+                              errors.department
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 卒業年月 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          卒業年月
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='flex gap-2 items-center w-[400px]'>
+                          <div className='relative flex-1'>
+                            <select
+                              {...register('graduationYear')}
+                              className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                                errors.graduationYear || errors.graduationMonth
+                                  ? 'border-red-500'
+                                  : 'border-[#999999]'
+                              } rounded-[5px] text-[16px] ${
+                                watch('graduationYear')
+                                  ? 'text-[#323232]'
+                                  : 'text-[#323232]'
+                              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            >
+                              <option value=''>未選択</option>
+                              {yearOptions.map(year => (
+                                <option key={year} value={year}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                              <svg
+                                width='14'
+                                height='10'
+                                viewBox='0 0 14 10'
+                                fill='none'
+                              >
+                                <path
+                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                  fill='#0F9058'
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                            年
+                          </span>
+                          <div className='relative flex-1'>
+                            <select
+                              {...register('graduationMonth')}
+                              className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                                errors.graduationYear || errors.graduationMonth
+                                  ? 'border-red-500'
+                                  : 'border-[#999999]'
+                              } rounded-[5px] text-[16px] ${
+                                watch('graduationMonth')
+                                  ? 'text-[#323232]'
+                                  : 'text-[#323232]'
+                              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            >
+                              <option value=''>未選択</option>
+                              {monthOptions.map(month => (
+                                <option key={month} value={month}>
+                                  {month}
+                                </option>
+                              ))}
+                            </select>
+                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                              <svg
+                                width='14'
+                                height='10'
+                                viewBox='0 0 14 10'
+                                fill='none'
+                              >
+                                <path
+                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                  fill='#0F9058'
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                            月
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 今までに経験した業種・職種 Section */}
+                <div>
+                  <h2 className='text-[#323232] text-[20px] font-bold tracking-[2px] mb-2'>
+                    今までに経験した業種・職種
+                  </h2>
+                  <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                  <div className='flex flex-col gap-2'>
+                    {/* 業種 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          業種
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='w-[400px]'>
+                          <div className='flex flex-col gap-2'>
+                            <button
+                              type='button'
+                              onClick={() => setIsIndustryModalOpen(true)}
+                              className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
+                            >
+                              業種を選択
+                            </button>
+                            <div className='flex flex-wrap gap-2'>
+                              {selectedIndustries.map(industry => {
+                                return (
+                                  <div
+                                    key={industry.id}
+                                    className='inline-flex items-center gap-1'
+                                  >
+                                    <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]'>
+                                      {industry.name}
+                                    </span>
+                                    <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative'>
+                                      <select
+                                        className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
+                                        value={industry.experienceYears || ''}
+                                        onChange={e =>
+                                          updateIndustryExperience(
+                                            industry.id,
+                                            e.target.value
+                                          )
+                                        }
+                                      >
+                                        <option value=''>
+                                          経験年数：未選択
+                                        </option>
+                                        {experienceYearOptions.map(year => (
+                                          <option key={year} value={year}>
+                                            経験年数：{year}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <svg
+                                        xmlns='http://www.w3.org/2000/svg'
+                                        width='14'
+                                        height='10'
+                                        viewBox='0 0 14 10'
+                                        fill='none'
+                                        className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
+                                      >
+                                        <path
+                                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                          fill='#0F9058'
+                                        />
+                                      </svg>
+                                    </div>
+                                    <button
+                                      type='button'
+                                      onClick={() =>
+                                        removeIndustry(industry.id)
+                                      }
+                                      className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
+                                    >
+                                      <svg
+                                        width='13'
+                                        height='12'
+                                        viewBox='0 0 13 12'
+                                        fill='none'
+                                        xmlns='http://www.w3.org/2000/svg'
+                                      >
+                                        <path
+                                          d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                                          fill='#0F9058'
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {errors.industries && (
+                            <p className='text-red-500 text-sm mt-1'>
+                              {errors.industries.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 職種 */}
+                    <div className='flex gap-6'>
+                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          職種
+                        </label>
+                      </div>
+                      <div className='flex-1 py-6'>
+                        <div className='w-[400px]'>
+                          <div className='flex flex-col gap-2'>
+                            <button
+                              type='button'
+                              onClick={() => setIsJobTypeModalOpen(true)}
+                              className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
+                            >
+                              職種を選択
+                            </button>
+                            <div className='flex flex-wrap gap-2'>
+                              {selectedJobTypes.map(jobType => {
+                                return (
+                                  <div
+                                    key={jobType.id}
+                                    className='inline-flex items-center gap-1'
+                                  >
+                                    <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]'>
+                                      {jobType.name}
+                                    </span>
+                                    <div className='bg-[#d2f1da] h-[40px] flex items-center px-4'>
+                                      <select
+                                        className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
+                                        value={jobType.experienceYears || ''}
+                                        onChange={e =>
+                                          updateJobTypeExperience(
+                                            jobType.id,
+                                            e.target.value
+                                          )
+                                        }
+                                      >
+                                        <option value=''>
+                                          経験年数：未選択
+                                        </option>
+                                        {experienceYearOptions.map(year => (
+                                          <option key={year} value={year}>
+                                            経験年数：{year}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <svg
+                                        xmlns='http://www.w3.org/2000/svg'
+                                        width='14'
+                                        height='10'
+                                        viewBox='0 0 14 10'
+                                        fill='none'
+                                        className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
+                                      >
+                                        <path
+                                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                          fill='#0F9058'
+                                        />
+                                      </svg>
+                                    </div>
+                                    <button
+                                      type='button'
+                                      onClick={() => removeJobType(jobType.id)}
+                                      className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
+                                    >
+                                      <svg
+                                        width='13'
+                                        height='12'
+                                        viewBox='0 0 13 12'
+                                        fill='none'
+                                        xmlns='http://www.w3.org/2000/svg'
+                                      >
+                                        <path
+                                          d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                                          fill='#0F9058'
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {errors.jobTypes && (
+                            <p className='text-red-500 text-sm mt-1'>
+                              {errors.jobTypes.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className='flex justify-center gap-4'>
+                <Button
+                  type='button'
+                  variant='green-outline'
+                  size='figma-default'
+                  onClick={handleCancel}
+                  className='min-w-[160px] text-[16px] tracking-[1.6px]'
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  type='submit'
+                  variant='green-gradient'
+                  size='figma-default'
+                  disabled={isSubmitting}
+                  className='min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {isSubmitting ? '保存中...' : '保存する'}
+                </Button>
+              </div>
+            </div>
+          </main>
         ) : (
-          <EducationEditFormSP
-            register={register}
-            handleSubmit={handleSubmit}
-            errors={errors}
-            watch={watch}
-            setValue={setValue}
-            isSubmitting={isSubmitting}
-            setIsSubmitting={setIsSubmitting}
-            isIndustryModalOpen={isIndustryModalOpen}
-            setIsIndustryModalOpen={setIsIndustryModalOpen}
-            isJobTypeModalOpen={isJobTypeModalOpen}
-            setIsJobTypeModalOpen={setIsJobTypeModalOpen}
-            selectedIndustries={selectedIndustries}
-            selectedJobTypes={selectedJobTypes}
-            yearOptions={yearOptions}
-            monthOptions={monthOptions}
-            handleIndustryConfirm={handleIndustryConfirm}
-            removeIndustry={removeIndustry}
-            updateIndustryExperience={updateIndustryExperience}
-            handleJobTypeConfirm={handleJobTypeConfirm}
-            removeJobType={removeJobType}
-            updateJobTypeExperience={updateJobTypeExperience}
-            onSubmit={onSubmit}
-            handleCancel={handleCancel}
-          />
+          /* SP (Mobile) Version */
+          <main className='flex flex-col'>
+            {/* Hero Section with Gradient */}
+            <div className='bg-gradient-to-b from-[#229a4e] to-[#17856f] px-4 py-6'>
+              {/* Breadcrumb */}
+              <div className='flex items-center gap-2 mb-2'>
+                <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+                  プロフィール確認・編集
+                </span>
+                <svg width='8' height='14' viewBox='0 0 8 14' fill='none'>
+                  <path d='M1 1L7 7L1 13' stroke='#FFFFFF' strokeWidth='2' />
+                </svg>
+                <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+                  学歴・経験業種/職種 編集
+                </span>
+              </div>
+
+              {/* Title */}
+              <div className='flex items-center gap-2'>
+                <div className='w-6 h-6 flex items-center justify-center'>
+                  <svg
+                    width='24'
+                    height='24'
+                    viewBox='0 0 24 24'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M6.26127 0H14.2357H14.8533L15.2901 0.435984L21.3277 6.47353L21.7637 6.90989V7.52747V19.9734C21.7637 22.1933 19.9574 24 17.7371 24H6.26122C4.04178 24 2.2355 22.1933 2.2355 19.9734V4.02572C2.23555 1.80581 4.04178 0 6.26127 0ZM3.72631 19.9734C3.72631 21.3738 4.86125 22.5092 6.26122 22.5092H17.7371C19.1375 22.5092 20.2729 21.3738 20.2729 19.9734V7.52752H16.3485C15.1822 7.52752 14.2357 6.58144 14.2357 5.41467V1.49072H6.26122C4.86125 1.49072 3.72631 2.62612 3.72631 4.02567V19.9734Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M7.93473 7.47266C8.29417 7.72423 8.73179 7.87283 9.20279 7.87283C9.67417 7.87283 10.1114 7.72423 10.4713 7.47266C11.1002 7.74336 11.4866 8.21806 11.7223 8.63736C12.0354 9.19348 11.7899 9.98075 11.2492 9.98075C10.7078 9.98075 9.20279 9.98075 9.20279 9.98075C9.20279 9.98075 7.6982 9.98075 7.15675 9.98075C6.61572 9.98075 6.36986 9.19348 6.68331 8.63736C6.91904 8.21802 7.30539 7.74336 7.93473 7.47266Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M9.20245 7.34452C8.27793 7.34452 7.52929 6.59588 7.52929 5.67178V5.27081C7.52929 4.34756 8.27793 3.59766 9.20245 3.59766C10.1265 3.59766 10.876 4.34756 10.876 5.27081V5.67178C10.876 6.59588 10.1265 7.34452 9.20245 7.34452Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M6.65438 12.2031H17.4541V13.2518H6.65438V12.2031Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M6.5997 15.3516H17.3994V16.4006H6.5997V15.3516Z'
+                      fill='white'
+                    />
+                    <path
+                      d='M6.63917 18.4961H14.1992V19.5444H6.63917V18.4961Z'
+                      fill='white'
+                    />
+                  </svg>
+                </div>
+                <h1 className='text-white text-[20px] font-bold tracking-[2px]'>
+                  学歴・経験業種/職種 編集
+                </h1>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <div className='bg-[#f9f9f9] px-4 py-6 flex flex-col items-center gap-6 min-h-[730px]'>
+              <div className='bg-white rounded-3xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-6 pb-6 pt-10 w-full'>
+                {/* Description */}
+                <div className='mb-10'>
+                  <p className='text-[#323232] text-[16px] leading-8 tracking-[1.6px] font-bold'>
+                    学歴・経験業種/職種を編集できます。
+                  </p>
+                </div>
+
+                {/* 学歴 Section */}
+                <div className='mb-10'>
+                  <h2 className='text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-2'>
+                    学歴
+                  </h2>
+
+                  <div className='flex flex-col gap-6'>
+                    {/* 最終学歴 */}
+                    <div className='flex flex-col gap-2'>
+                      <div className='bg-[#f9f9f9] rounded-[5px] px-4 py-2'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          最終学歴
+                        </label>
+                      </div>
+                      <div className='relative'>
+                        <select
+                          {...register('finalEducation')}
+                          className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                            errors.finalEducation
+                              ? 'border-red-500'
+                              : 'border-[#999999]'
+                          } rounded-[5px] text-[16px] ${
+                            watch('finalEducation')
+                              ? 'text-[#323232]'
+                              : 'text-[#323232]'
+                          } font-bold tracking-[1.6px] appearance-none`}
+                        >
+                          <option value=''>未選択</option>
+                          {educationOptions.map(option => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 学校名 */}
+                    <div className='flex flex-col gap-2'>
+                      <div className='bg-[#f9f9f9] rounded-[5px] px-4 py-2'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          学校名
+                        </label>
+                      </div>
+                      <input
+                        type='text'
+                        placeholder='学校名を入力'
+                        {...register('schoolName')}
+                        className={`w-full px-[11px] py-[11px] bg-white border ${
+                          errors.schoolName
+                            ? 'border-red-500'
+                            : 'border-[#999999]'
+                        } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                      />
+                    </div>
+
+                    {/* 学部学科専攻 */}
+                    <div className='flex flex-col gap-2'>
+                      <div className='bg-[#f9f9f9] rounded-[5px] px-4 py-2'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          学部学科専攻
+                        </label>
+                      </div>
+                      <input
+                        type='text'
+                        placeholder='学部学科専攻を入力'
+                        {...register('department')}
+                        className={`w-full px-[11px] py-[11px] bg-white border ${
+                          errors.department
+                            ? 'border-red-500'
+                            : 'border-[#999999]'
+                        } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                      />
+                    </div>
+
+                    {/* 卒業年月 */}
+                    <div className='flex flex-col gap-2'>
+                      <div className='bg-[#f9f9f9] rounded-[5px] px-4 py-2'>
+                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          卒業年月
+                        </label>
+                      </div>
+                      <div className='flex gap-2 items-center'>
+                        <div className='relative flex-1'>
+                          <select
+                            {...register('graduationYear')}
+                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                              errors.graduationYear || errors.graduationMonth
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] text-[16px] ${
+                              watch('graduationYear')
+                                ? 'text-[#323232]'
+                                : 'text-[#323232]'
+                            } font-bold tracking-[1.6px] appearance-none`}
+                          >
+                            <option value=''>未選択</option>
+                            {yearOptions.map(year => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
+                            >
+                              <path
+                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                fill='#0F9058'
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          年
+                        </span>
+                      </div>
+                      <div className='flex gap-2 items-center'>
+                        <div className='relative flex-1'>
+                          <select
+                            {...register('graduationMonth')}
+                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                              errors.graduationYear || errors.graduationMonth
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] text-[16px] ${
+                              watch('graduationMonth')
+                                ? 'text-[#323232]'
+                                : 'text-[#323232]'
+                            } font-bold tracking-[1.6px] appearance-none`}
+                          >
+                            <option value=''>未選択</option>
+                            {monthOptions.map(month => (
+                              <option key={month} value={month}>
+                                {month}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
+                            >
+                              <path
+                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                fill='#0F9058'
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          月
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 今までに経験した業種・職種 Section */}
+                <div>
+                  <h2 className='text-[#323232] text-[18px] font-bold tracking-[1.8px] mb-4'>
+                    今までに経験した業種・職種
+                  </h2>
+
+                  <div className='flex flex-col gap-6'>
+                    {/* 業種 */}
+                    <div className='flex flex-col gap-2'>
+                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                        業種
+                      </label>
+                      <button
+                        type='button'
+                        onClick={() => setIsIndustryModalOpen(true)}
+                        className='w-full px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
+                      >
+                        業種を選択
+                      </button>
+                      {selectedIndustries && selectedIndustries.length > 0 ? (
+                        <div className='flex flex-col gap-0.5'>
+                          {selectedIndustries.map(industry => {
+                            return (
+                              <div
+                                key={industry.id}
+                                className='flex flex-row gap-0.5'
+                              >
+                                <div className='flex-1 flex flex-col gap-0.5'>
+                                  <div className='bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                                    {industry.name}
+                                  </div>
+                                  <div className='bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between'>
+                                    <select
+                                      value={industry.experienceYears || ''}
+                                      onChange={e =>
+                                        updateIndustryExperience(
+                                          industry.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
+                                    >
+                                      <option value=''>経験年数：未選択</option>
+                                      {experienceYearOptions.map(year => (
+                                        <option key={year} value={year}>
+                                          経験年数：{year}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='14'
+                                      height='10'
+                                      viewBox='0 0 14 10'
+                                      fill='none'
+                                    >
+                                      <path
+                                        d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                        fill='#0F9058'
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <button
+                                  type='button'
+                                  onClick={() => removeIndustry(industry.id)}
+                                  className='bg-[#d2f1da] p-[14px] rounded-br-[10px] rounded-tr-[10px] flex items-center'
+                                >
+                                  <svg
+                                    width='12'
+                                    height='12'
+                                    viewBox='0 0 12 12'
+                                    fill='none'
+                                  >
+                                    <path
+                                      d='M1 1L11 11M1 11L11 1'
+                                      stroke='#0f9058'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                      {errors.industries && (
+                        <p className='text-red-500 text-sm'>
+                          {errors.industries.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 職種 */}
+                    <div className='flex flex-col gap-2'>
+                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                        職種
+                      </label>
+                      <button
+                        type='button'
+                        onClick={() => setIsJobTypeModalOpen(true)}
+                        className='w-full px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
+                      >
+                        職種を選択
+                      </button>
+                      {selectedJobTypes && selectedJobTypes.length > 0 ? (
+                        <div className='flex flex-col gap-0.5'>
+                          {selectedJobTypes.map(jobType => {
+                            return (
+                              <div
+                                key={jobType.id}
+                                className='flex flex-row gap-0.5'
+                              >
+                                <div className='flex-1 flex flex-col gap-0.5'>
+                                  <div className='bg-[#d2f1da] px-6 py-[10px] rounded-tl-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                                    {jobType.name}
+                                  </div>
+                                  <div className='bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between'>
+                                    <select
+                                      value={jobType.experienceYears || ''}
+                                      onChange={e =>
+                                        updateJobTypeExperience(
+                                          jobType.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
+                                    >
+                                      <option value=''>経験年数：未選択</option>
+                                      {experienceYearOptions.map(year => (
+                                        <option key={year} value={year}>
+                                          経験年数：{year}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='14'
+                                      height='10'
+                                      viewBox='0 0 14 10'
+                                      fill='none'
+                                    >
+                                      <path
+                                        d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                        fill='#0F9058'
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <button
+                                  type='button'
+                                  onClick={() => removeJobType(jobType.id)}
+                                  className='bg-[#d2f1da] p-[14px] rounded-br-[10px] rounded-tr-[10px] flex items-center'
+                                >
+                                  <svg
+                                    width='12'
+                                    height='12'
+                                    viewBox='0 0 12 12'
+                                    fill='none'
+                                  >
+                                    <path
+                                      d='M1 1L11 11M1 11L11 1'
+                                      stroke='#0f9058'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                      {errors.jobTypes && (
+                        <p className='text-red-500 text-sm'>
+                          {errors.jobTypes.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className='flex gap-4 w-full justify-center'>
+                <Button
+                  type='button'
+                  variant='green-outline'
+                  size='figma-default'
+                  onClick={handleCancel}
+                  className='basis-0 grow min-w-40 text-[16px] tracking-[1.6px] text-center'
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  type='submit'
+                  variant='green-gradient'
+                  size='figma-default'
+                  disabled={isSubmitting}
+                  className='basis-0 grow min-w-40 text-[16px] tracking-[1.6px] text-center disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {isSubmitting ? '保存中...' : '保存する'}
+                </Button>
+              </div>
+            </div>
+          </main>
         )}
       </form>
+
       {/* Footer はレイアウトで描画済み */}
+
       {/* Modals */}
       <IndustrySelectModal
         isOpen={isIndustryModalOpen}
@@ -163,6 +1182,7 @@ export default function CandidateEducationEditPage() {
         initialSelected={selectedIndustries.map(i => i.id)}
         maxSelections={3}
       />
+
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
         onClose={() => setIsJobTypeModalOpen(false)}

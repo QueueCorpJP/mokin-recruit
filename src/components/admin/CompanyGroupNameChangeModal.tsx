@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CompanyGroupNameChangeModalProps {
   isOpen: boolean;
@@ -57,12 +58,14 @@ export default function CompanyGroupNameChangeModal({
           <h2 className="text-2xl font-bold text-black">
             グループ名変更
           </h2>
-          <button
+          <Button
             onClick={handleClose}
-            className="flex items-center justify-center w-6 h-6 hover:bg-gray-100 rounded transition-colors"
+            variant="ghost"
+            size="icon"
+            className="w-6 h-6 hover:bg-gray-100 rounded transition-colors"
           >
             <X className="w-6 h-6 text-gray-400 hover:text-gray-600" />
-          </button>
+          </Button>
         </div>
 
         {/* メインコンテンツ */}
@@ -88,14 +91,23 @@ export default function CompanyGroupNameChangeModal({
         </div>
 
         {/* フッター */}
-        <div className="flex justify-center px-10 py-6 border-t border-[#BABABA]">
-          <button
+        <div className="flex justify-center gap-4 px-10 py-6 border-t border-[#BABABA]">
+          <Button
+            onClick={handleClose}
+            variant="outline"
+            size="figma-default"
+            className="px-10"
+          >
+            キャンセル
+          </Button>
+          <Button
             onClick={handleConfirm}
-            className="px-10 py-3.5 bg-black text-white text-base font-bold hover:bg-gray-800 transition-colors"
-            style={{ borderRadius: '32px' }}
+            variant="green-gradient"
+            size="figma-default"
+            className="px-10"
           >
             保存
-          </button>
+          </Button>
         </div>
       </div>
     </div>

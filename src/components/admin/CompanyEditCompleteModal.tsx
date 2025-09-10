@@ -38,7 +38,7 @@ export default function CompanyEditCompleteModal({
     >
       <div className="bg-white border border-black rounded-2xl w-[604px] h-[320px] relative">
         {/* コンテンツ */}
-        <div className="flex flex-col items-center justify-center h-full px-8">
+        <div className="flex flex-col items-center justify-center w-full h-full px-8">
           {/* タイトル */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-black mb-4">

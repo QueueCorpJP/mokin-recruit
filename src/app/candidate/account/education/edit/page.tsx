@@ -1,26 +1,19 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect, useMemo } from 'react';
-import { updateEducationData } from './actions';
+import { getEducationData, updateEducationData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import type { Industry } from '@/constants/industry-data';
+import type { JobType } from '@/constants/job-type-data';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
-import { FormLabel } from '@/components/education/common/FormLabel';
-import { FormInput } from '@/components/education/common/FormInput';
-import { FormSelect } from '@/components/education/common/FormSelect';
-import { FormErrorMessage } from '@/components/education/common/FormErrorMessage';
-import { TagList } from '@/components/ui/TagList';
-import FormRow from '@/components/education/common/FormRow';
-import Section from '@/components/education/common/Section';
-import SectionCard from '@/components/education/common/SectionCard';
-import Breadcrumbs from '@/components/education/common/Breadcrumbs';
-import FormActions from '@/components/education/common/FormActions';
-import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 
 const educationSchema = z.object({
   finalEducation: z.string(),
@@ -114,12 +107,34 @@ export default function CandidateEducationEditPage() {
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
 
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
     setValue,
+    getValues,
     reset,
   } = useForm<EducationFormData>({
     resolver: zodResolver(educationSchema),
@@ -134,14 +149,18 @@ export default function CandidateEducationEditPage() {
     },
   });
 
+  const selectedIndustries = watch('industries');
+  const selectedJobTypes = watch('jobTypes');
   const watchedSchoolName = watch('schoolName');
   const watchedFinalEducation = watch('finalEducation');
+
+  // School suggestion hook
   const { suggestions: schoolSuggestions } = useSchoolAutocomplete(
     watchedSchoolName,
     watchedFinalEducation
   );
 
-  // useMemo hooks must also be at the top level
+  // 年の選択肢を生成（1970年から2025年まで）
   const yearOptions = useMemo(() => {
     const years = [];
     for (let year = 2025; year >= 1970; year--) {
@@ -150,36 +169,25 @@ export default function CandidateEducationEditPage() {
     return years;
   }, []);
 
-  const monthOptions = useMemo(
-    () => Array.from({ length: 12 }, (_, i) => (i + 1).toString()),
-    []
-  );
-
-  // 認証チェック
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isAuthenticated || !candidateUser) {
-      router.push('/candidate/auth/login');
-    }
-  }, [isAuthenticated, candidateUser, loading, router]);
+  // 月の選択肢を生成（1〜12月）
+  const monthOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
 
   // 初期データを取得してフォームに設定
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // const data = await getEducationData(); // getEducationData is no longer imported
-        // if (data) {
-        //   reset({
-        //     finalEducation: data.finalEducation || '',
-        //     schoolName: data.schoolName || '',
-        //     department: data.department || '',
-        //     graduationYear: data.graduationYear || '',
-        //     graduationMonth: data.graduationMonth || '',
-        //     industries: data.industries || [],
-        //     jobTypes: data.jobTypes || [],
-        //   });
-        // }
+        const data = await getEducationData();
+        if (data) {
+          reset({
+            finalEducation: data.finalEducation || '',
+            schoolName: data.schoolName || '',
+            department: data.department || '',
+            graduationYear: data.graduationYear || '',
+            graduationMonth: data.graduationMonth || '',
+            industries: data.industries || [],
+            jobTypes: data.jobTypes || [],
+          });
+        }
       } catch (error) {
         console.error('初期データの取得に失敗しました:', error);
       } finally {
@@ -189,21 +197,6 @@ export default function CandidateEducationEditPage() {
 
     fetchInitialData();
   }, [reset]);
-
-  if (loading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !candidateUser) {
-    return null;
-  }
-
-  const selectedIndustries = watch('industries');
-  const selectedJobTypes = watch('jobTypes');
 
   const onSubmit = async (data: EducationFormData) => {
     setIsSubmitting(true);
@@ -336,13 +329,50 @@ export default function CandidateEducationEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <Breadcrumbs
-            items={[
-              { label: 'プロフィール確認・編集' },
-              { label: '学歴・経験業種/職種' },
-              { label: '学歴・経験業種/職種 編集', isCurrent: true },
-            ]}
-          />
+          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              プロフィール確認・編集
+            </span>
+            <svg
+              width='8'
+              height='8'
+              viewBox='0 0 8 8'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='flex-shrink-0'
+            >
+              <path
+                d='M3 1L6 4L3 7'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              学歴・経験業種/職種
+            </span>
+            <svg
+              width='8'
+              height='8'
+              viewBox='0 0 8 8'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+              className='flex-shrink-0'
+            >
+              <path
+                d='M3 1L6 4L3 7'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
+            </svg>
+            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
+              学歴・経験業種/職種 編集
+            </span>
+          </div>
+
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
             <div className='w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center'>
@@ -392,164 +422,430 @@ export default function CandidateEducationEditPage() {
             onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col items-center gap-6 lg:gap-10'
           >
-            <SectionCard>
-              <Section
-                title='学歴'
-                description='学歴・経験業種/職種を編集できます。\n内容は履歴書・職務経歴書にも反映されます。'
-              >
-                <FormRow
-                  label='最終学歴'
-                  htmlFor='finalEducation'
-                  error={errors.finalEducation?.message || ''}
-                >
-                  <FormLabel htmlFor='finalEducation'>最終学歴</FormLabel>
-                  <FormSelect
-                    id='finalEducation'
-                    {...register('finalEducation')}
-                    className={errors.finalEducation ? 'border-red-500' : ''}
-                  >
-                    <option value=''>未選択</option>
-                    {educationOptions.map(option => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </FormSelect>
-                </FormRow>
-                <FormRow
-                  label='学校名'
-                  htmlFor='schoolName'
-                  error={errors.schoolName?.message || ''}
-                >
-                  <FormLabel htmlFor='schoolName'>学校名</FormLabel>
-                  <AutocompleteInput
-                    value={watchedSchoolName}
-                    onChange={value =>
-                      setValue('schoolName', value, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      })
-                    }
-                    placeholder='学校名を入力'
-                    suggestions={schoolSuggestions.map(s => ({
-                      id: s.id,
-                      name: s.name,
-                      category: s.category,
-                    }))}
-                    className={errors.schoolName ? 'border-red-500' : ''}
-                  />
-                </FormRow>
-                <FormRow
-                  label='学部学科専攻'
-                  htmlFor='department'
-                  error={errors.department?.message || ''}
-                >
-                  <FormLabel htmlFor='department'>学部学科専攻</FormLabel>
-                  <FormInput
-                    id='department'
-                    type='text'
-                    {...register('department')}
-                    placeholder='学部学科専攻を入力'
-                    className={errors.department ? 'border-red-500' : ''}
-                  />
-                </FormRow>
-                <FormRow
-                  label='卒業年月'
-                  htmlFor='graduationYear'
-                  error={
-                    errors.graduationYear?.message ||
-                    errors.graduationMonth?.message ||
-                    ''
-                  }
-                >
-                  <FormLabel>卒業年月</FormLabel>
-                  <div className='flex gap-2 items-center'>
-                    <FormSelect
-                      id='graduationYear'
-                      {...register('graduationYear')}
-                      className={
-                        errors.graduationYear || errors.graduationMonth
-                          ? 'border-red-500'
-                          : ''
-                      }
-                    >
-                      <option value=''>未選択</option>
-                      {yearOptions.map(year => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </FormSelect>
-                    <span>年</span>
-                    <FormSelect
-                      id='graduationMonth'
-                      {...register('graduationMonth')}
-                      className={
-                        errors.graduationYear || errors.graduationMonth
-                          ? 'border-red-500'
-                          : ''
-                      }
-                    >
-                      <option value=''>未選択</option>
-                      {monthOptions.map(month => (
-                        <option key={month} value={month}>
-                          {month}
-                        </option>
-                      ))}
-                    </FormSelect>
-                    <span>月</span>
-                  </div>
-                </FormRow>
-              </Section>
+            <div className='bg-white rounded-3xl lg:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 pb-6 pt-10 lg:p-10 w-full max-w-[728px]'>
+              {/* 説明文セクション */}
+              <div className='mb-6'>
+                <p className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-8 text-left'>
+                  学歴・経験業種/職種を編集できます。
+                  <br className='hidden md:block' />
+                  内容は履歴書・職務経歴書にも反映されます。
+                </p>
+              </div>
 
-              <Section title='今までに経験した業種・職種'>
-                <FormRow label='業種'>
-                  <button
-                    type='button'
-                    onClick={() => setIsIndustryModalOpen(true)}
-                    className='border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 w-full md:w-auto rounded-[32px] flex text-center justify-center items-center gap-2'
-                  >
-                    業種を選択
-                  </button>
-                  <TagList
-                    items={selectedIndustries as any}
-                    onRemove={removeIndustry}
-                    onChangeExperience={updateIndustryExperience}
-                    experienceOptions={experienceYearOptions}
-                    experienceLabel='経験年数'
-                  />
-                  {errors.industries && (
-                    <FormErrorMessage
-                      message={errors.industries.message as string}
-                    />
-                  )}
-                </FormRow>
-                <FormRow label='職種'>
-                  <button
-                    type='button'
-                    onClick={() => setIsJobTypeModalOpen(true)}
-                    className='border border-[#999999] text-[#323232] text-[16px] w-full md:w-auto text-center justify-center font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
-                  >
-                    職種を選択
-                  </button>
-                  <TagList
-                    items={selectedJobTypes as any}
-                    onRemove={removeJobType}
-                    onChangeExperience={updateJobTypeExperience}
-                    experienceOptions={experienceYearOptions}
-                    experienceLabel='経験年数'
-                  />
-                  {errors.jobTypes && (
-                    <FormErrorMessage
-                      message={errors.jobTypes.message as string}
-                    />
-                  )}
-                </FormRow>
-              </Section>
-            </SectionCard>
+              {/* 学歴セクション */}
+              <div className='mb-6 lg:mb-6'>
+                <div className='mb-2'>
+                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
+                    学歴
+                  </h2>
+                </div>
+                <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                <div className='space-y-6 lg:space-y-2'>
+                  {/* 最終学歴 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        最終学歴
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <div className='relative'>
+                        <select
+                          {...register('finalEducation')}
+                          className={`w-full bg-white border ${
+                            errors.finalEducation
+                              ? 'border-red-500'
+                              : 'border-[#999999]'
+                          } rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
+                        >
+                          <option value=''>未選択</option>
+                          {educationOptions.map(option => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                          >
+                            <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
+                          </svg>
+                        </div>
+                      </div>
+                      {errors.finalEducation && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.finalEducation.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 学校名 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        学校名
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <AutocompleteInput
+                        value={watchedSchoolName}
+                        onChange={value =>
+                          setValue('schoolName', value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                        placeholder='学校名を入力'
+                        suggestions={schoolSuggestions.map(s => ({
+                          id: s.id,
+                          name: s.name,
+                          category: s.category,
+                        }))}
+                        className={`w-full bg-white border ${
+                          errors.schoolName
+                            ? 'border-red-500'
+                            : 'border-[#999999]'
+                        } rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]`}
+                      />
+                      {errors.schoolName && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.schoolName.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 学部学科専攻 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        学部学科専攻
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <input
+                        type='text'
+                        {...register('department')}
+                        placeholder='学部学科専攻を入力'
+                        className={`w-full bg-white border ${
+                          errors.department
+                            ? 'border-red-500'
+                            : 'border-[#999999]'
+                        } rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]`}
+                      />
+                      {errors.department && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.department.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 卒業年月 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        卒業年月
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <div className='flex gap-2 items-center'>
+                        <div className='relative w-[109px]'>
+                          <select
+                            {...register('graduationYear')}
+                            className={`w-[109px] bg-white border ${
+                              errors.graduationYear || errors.graduationMonth
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] px-4 py-[11px] pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
+                          >
+                            <option value=''>未選択</option>
+                            {yearOptions.map(year => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
+                            >
+                              <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
+                            </svg>
+                          </div>
+                        </div>
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          年
+                        </span>
+                        <div className='relative w-[109px]'>
+                          <select
+                            {...register('graduationMonth')}
+                            className={`w-[109px] bg-white border ${
+                              errors.graduationYear || errors.graduationMonth
+                                ? 'border-red-500'
+                                : 'border-[#999999]'
+                            } rounded-[5px] px-4 py-[11px] pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
+                          >
+                            <option value=''>未選択</option>
+                            {monthOptions.map(month => (
+                              <option key={month} value={month}>
+                                {month}
+                              </option>
+                            ))}
+                          </select>
+                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
+                            >
+                              <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
+                            </svg>
+                          </div>
+                        </div>
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          月
+                        </span>
+                      </div>
+                      {(errors.graduationYear || errors.graduationMonth) && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.graduationYear?.message ||
+                            errors.graduationMonth?.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 今までに経験した業種・職種セクション */}
+              <div>
+                <div className='mb-2'>
+                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
+                    今までに経験した業種・職種
+                  </h2>
+                </div>
+                <div className='border-b border-[#dcdcdc] mb-6'></div>
+
+                <div className='space-y-6 lg:space-y-2'>
+                  {/* 業種 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] md:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        業種
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <div className='space-y-4'>
+                        <button
+                          type='button'
+                          onClick={() => setIsIndustryModalOpen(true)}
+                          className='border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 w-full md:w-auto rounded-[32px] flex text-center justify-center items-center gap-2'
+                        >
+                          業種を選択
+                        </button>
+                        {/* 選択された業種 */}
+                        {(selectedIndustries || []).length > 0 && (
+                          <div className='flex flex-wrap gap-1'>
+                            {(selectedIndustries || []).map(industry => (
+                              <div
+                                key={industry.id}
+                                className='inline-flex items-center gap-[2px]'
+                              >
+                                <div className='flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]'>
+                                  <span className='bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap'>
+                                    {industry.name}
+                                  </span>
+                                  <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full'>
+                                    <select
+                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none cursor-pointer focus:outline-none w-full'
+                                      value={industry.experienceYears || ''}
+                                      onChange={e =>
+                                        updateIndustryExperience(
+                                          industry.id,
+                                          e.target.value
+                                        )
+                                      }
+                                    >
+                                      <option value=''>経験年数：未選択</option>
+                                      {experienceYearOptions.map(year => (
+                                        <option key={year} value={year}>
+                                          経験年数：{year}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='14'
+                                      height='10'
+                                      viewBox='0 0 14 10'
+                                      fill='none'
+                                      className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
+                                    >
+                                      <path
+                                        d='M7 10L0 0H14L7 10Z'
+                                        fill='#0f9058'
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <button
+                                  type='button'
+                                  onClick={() => removeIndustry(industry.id)}
+                                  className='bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]'
+                                >
+                                  <svg
+                                    width='13'
+                                    height='12'
+                                    viewBox='0 0 13 12'
+                                    fill='none'
+                                    xmlns='http://www.w3.org/2000/svg'
+                                  >
+                                    <path
+                                      d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                                      fill='#0F9058'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {errors.industries && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.industries.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 職種 */}
+                  <div className='flex flex-col lg:flex-row lg:gap-6'>
+                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
+                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
+                        職種
+                      </div>
+                    </div>
+                    <div className='flex-1 lg:py-6'>
+                      <div className='space-y-4'>
+                        <button
+                          type='button'
+                          onClick={() => setIsJobTypeModalOpen(true)}
+                          className='border border-[#999999] text-[#323232] text-[16px] w-full md:w-auto text-center justify-center items-center font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
+                        >
+                          職種を選択
+                        </button>
+                        {/* 選択された職種 */}
+                        {(selectedJobTypes || []).length > 0 && (
+                          <div className='flex flex-wrap gap-1'>
+                            {(selectedJobTypes || []).map(jobType => (
+                              <div
+                                key={jobType.id}
+                                className='inline-flex items-center gap-[2px]'
+                              >
+                                <div className='flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]'>
+                                  <span className='bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap'>
+                                    {jobType.name}
+                                  </span>
+                                  <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full'>
+                                    <select
+                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
+                                      value={jobType.experienceYears || ''}
+                                      onChange={e =>
+                                        updateJobTypeExperience(
+                                          jobType.id,
+                                          e.target.value
+                                        )
+                                      }
+                                    >
+                                      <option value=''>経験年数：未選択</option>
+                                      {experienceYearOptions.map(year => (
+                                        <option key={year} value={year}>
+                                          経験年数：{year}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='14'
+                                      height='10'
+                                      viewBox='0 0 14 10'
+                                      fill='none'
+                                      className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
+                                    >
+                                      <path
+                                        d='M7 10L0 0H14L7 10Z'
+                                        fill='#0f9058'
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <button
+                                  type='button'
+                                  onClick={() => removeJobType(jobType.id)}
+                                  className='bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]'
+                                >
+                                  <svg
+                                    width='13'
+                                    height='12'
+                                    viewBox='0 0 13 12'
+                                    fill='none'
+                                    xmlns='http://www.w3.org/2000/svg'
+                                  >
+                                    <path
+                                      d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                                      fill='#0F9058'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {errors.jobTypes && (
+                        <p className='text-red-500 text-sm mt-1'>
+                          {errors.jobTypes.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* ボタン */}
-            <FormActions onCancel={handleCancel} isSubmitting={isSubmitting} />
+            <div className='flex gap-4 w-full lg:w-auto'>
+              <Button
+                type='button'
+                variant='green-outline'
+                size='figma-default'
+                onClick={handleCancel}
+                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
+              >
+                キャンセル
+              </Button>
+              <Button
+                type='submit'
+                variant='green-gradient'
+                size='figma-default'
+                disabled={isSubmitting}
+                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
+              >
+                {isSubmitting ? '保存中...' : '保存する'}
+              </Button>
+            </div>
           </form>
         </div>
       </main>

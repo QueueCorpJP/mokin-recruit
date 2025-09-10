@@ -53,7 +53,7 @@ const StarIcon = ({ filled = false }: { filled?: boolean }) => (
   >
     <path
       d='M8.87047 0.739544C8.70986 0.404924 8.37047 0.191406 7.99781 0.191406C7.62516 0.191406 7.28805 0.404924 7.12516 0.739544L5.17691 4.7764L0.825862 5.4226C0.462267 5.47751 0.159269 5.7337 0.0471598 6.0845C-0.0649493 6.43531 0.0259538 6.82265 0.286528 7.08197L3.44377 10.2268L2.69839 14.6709C2.63779 15.037 2.7893 15.4091 3.08926 15.6257C3.38922 15.8423 3.78615 15.8697 4.11339 15.6959L8.00085 13.6064L11.8883 15.6959C12.2156 15.8697 12.6125 15.8423 12.9125 15.6257C13.2124 15.4091 13.3539 15.037 13.2933 14.6709L12.5479 10.2268L15.7052 7.08197C15.9657 6.82265 16.0566 6.43531 15.9445 6.0845C15.8324 5.7337 15.5294 5.47751 15.1658 5.4226L10.8148 4.7764L8.87047 0.739544Z'
-      fill='#FFFFFF'
+      fill={filled ? '#FFDA5F' : '#FFFFFF'}
     />
   </svg>
 );
@@ -109,8 +109,6 @@ export function CandidateSlideMenu({
   const [isHidden, setIsHidden] = useState(false);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string>('');
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const [hasRoom, setHasRoom] = useState<boolean>(false);
   const [selectionProgress, setSelectionProgress] = useState<any>(null);
 
   // 同じグループの求人のみをフィルタリング（CandidateCardと同じロジック）
@@ -187,16 +185,16 @@ export function CandidateSlideMenu({
         getRoomIdAction(candidateId, companyGroupId),
         getSelectionProgressAction(candidateId, companyGroupId)
       ])
-        .then(([candidateDetail, savedResult, hiddenResult, roomIdResult, progressResult]) => {
+        .then(([candidateDetail, savedResult, hiddenResult, , progressResult]) => {
           console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
-          console.log('🔍 [CandidateSlideMenu] experienceJobs:', candidateDetail?.experienceJobs);
-          console.log('🔍 [CandidateSlideMenu] experienceIndustries:', candidateDetail?.experienceIndustries);
+          console.log('🔍 [CandidateSlideMenu] group:', candidateDetail?.group);
           console.log('🔍 [CandidateSlideMenu] jobPostingId:', candidateDetail?.jobPostingId);
+          console.log('🔍 [CandidateSlideMenu] jobPostingTitle:', candidateDetail?.jobPostingTitle);
+          console.log('🔍 [CandidateSlideMenu] assignedUsers:', candidateDetail?.assignedUsers);
+          console.log('🔍 [CandidateSlideMenu] experience:', candidateDetail?.experience);
+          console.log('🔍 [CandidateSlideMenu] industry:', candidateDetail?.industry);
           setCandidateData(candidateDetail);
           
-          // roomの存在状況を設定
-          setRoomId(roomIdResult);
-          setHasRoom(!!roomIdResult);
           
           // 保存状態（ピックアップ）の設定
           if (savedResult.success && savedResult.data) {
@@ -289,7 +287,7 @@ export function CandidateSlideMenu({
     try {
       const result = await toggleCandidateHiddenAction(candidateId, companyGroupId);
       if (result.success) {
-        setIsHidden(result.isHidden);
+        setIsHidden(result.isHidden ?? false);
       } else {
         console.error('Error toggling hidden status:', result.error);
       }
@@ -330,7 +328,7 @@ export function CandidateSlideMenu({
     const result = await updateSelectionProgressAction({
       candidateId: candidateId,
       companyGroupId: companyGroupId,
-      jobPostingId: candidateData?.jobPostingId,
+      jobPostingId: candidateData?.jobPostingId || selectionProgress?.job_posting_id,
       stage: stageMapping[selectedStage],
       result: 'pass',
     });
@@ -356,7 +354,7 @@ export function CandidateSlideMenu({
     const result = await updateSelectionProgressAction({
       candidateId: candidateId,
       companyGroupId: companyGroupId,
-      jobPostingId: candidateData?.jobPostingId,
+      jobPostingId: candidateData?.jobPostingId || selectionProgress?.job_posting_id,
       stage: stageMapping[selectedStage],
       result: 'fail',
     });
@@ -365,6 +363,12 @@ export function CandidateSlideMenu({
       setSelectionProgress(result.data);
     }
     handleModalClose();
+  };
+
+  // handleSelectionResult関数を追加
+  const handleSelectionResult = (stage: string) => {
+    setSelectedStage(stage);
+    setShowSelectionModal(true);
   };
 
   if (!isOpen) return null;
@@ -540,10 +544,10 @@ export function CandidateSlideMenu({
                       className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {String(candidateData?.location || '東京')}／
-                      {String(candidateData?.age || 28)}
-                      歳／{String(candidateData?.gender || '男性')}／
-                      {String(candidateData?.income || '500〜600万円')}
+                      {candidateData?.location || '地域未設定'}／
+                      {candidateData?.age && candidateData.age > 0 ? `${candidateData.age}歳` : '○○歳'}
+                      ／{candidateData?.gender || '性別未設定'}／
+                      {candidateData?.income || '未設定'}
                     </p>
                   </div>
                 </div>
@@ -716,9 +720,9 @@ export function CandidateSlideMenu({
                       </div>
                       <div className='flex-1 flex flex-col gap-2'>
                         <ul className='list-disc ml-6 space-y-0'>
-                          {Array.isArray(candidateData?.experienceJobs) &&
-                          candidateData.experienceJobs.length > 0 ? (
-                            candidateData.experienceJobs.map((job, index) => (
+                          {Array.isArray(candidateData?.experience) &&
+                          candidateData.experience.length > 0 ? (
+                            candidateData.experience.map((job, index) => (
                               <li
                                 key={index}
                                 className='text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2]'
@@ -726,7 +730,7 @@ export function CandidateSlideMenu({
                                   fontFamily: 'Noto Sans JP, sans-serif',
                                 }}
                               >
-                                {typeof job === 'object' ? `${job.title || ''}（${job.years || 0}年）` : String(job)}
+                                {job}
                               </li>
                             ))
                           ) : (
@@ -753,9 +757,9 @@ export function CandidateSlideMenu({
                       </div>
                       <div className='flex-1 flex flex-col gap-2'>
                         <ul className='list-disc ml-6 space-y-0'>
-                          {Array.isArray(candidateData?.experienceIndustries) &&
-                          candidateData.experienceIndustries.length > 0 ? (
-                            candidateData.experienceIndustries.map(
+                          {Array.isArray(candidateData?.industry) &&
+                          candidateData.industry.length > 0 ? (
+                            candidateData.industry.map(
                               (industry, index) => (
                                 <li
                                   key={index}
@@ -764,7 +768,7 @@ export function CandidateSlideMenu({
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {typeof industry === 'object' ? `${industry.title || ''}（${industry.years || 0}年）` : String(industry)}
+                                  {industry}
                                 </li>
                               )
                             )
@@ -1326,45 +1330,10 @@ export function CandidateSlideMenu({
                         </div>
                         <div className='flex-1'>
                           <ul className='list-disc ml-6 space-y-0'>
-                            {(() => {
-                              const languages = [];
-                              
-                              // 英語レベルがある場合は追加
-                              if (candidateData?.englishLevel && candidateData.englishLevel !== 'none') {
-                                languages.push({
-                                  language: '英語',
-                                  level: candidateData.englishLevel
-                                });
-                              }
-                              
-                              // その他の言語を追加
-                              if (Array.isArray(candidateData?.otherLanguages)) {
-                                candidateData.otherLanguages.forEach(lang => {
-                                  if (lang.language && lang.level) {
-                                    languages.push(lang);
-                                  }
-                                });
-                              }
-                              
-                              return languages.length > 0 ? (
-                                languages.map((lang, index) => (
-                                  <li
-                                    key={index}
-                                    className='text-[#323232] text-[16px] font-medium tracking-[1.6px] leading-[2]'
-                                    style={{
-                                      fontFamily: 'Noto Sans JP, sans-serif',
-                                    }}
-                                  >
-                                    {lang.language}／{lang.level}
-                                  </li>
-                                ))
-                              ) : (
-                                <li className='text-[#999999] text-[16px] font-medium tracking-[1.6px] leading-[2] list-none'
-                                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
-                                  未設定
-                                </li>
-                              );
-                            })()}
+                            <li className='text-[#999999] text-[16px] font-medium tracking-[1.6px] leading-[2] list-none'
+                              style={{ fontFamily: 'Noto Sans JP, sans-serif' }}>
+                              未設定
+                            </li>
                           </ul>
                         </div>
                       </div>
@@ -1446,7 +1415,7 @@ export function CandidateSlideMenu({
                               className='text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] text-center w-full sm:w-[200px] h-[22px] truncate'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              {candidateData.group || '未設定'}
+                              {selectionProgress?.group_name || candidateData.group}
                             </span>
                           </div>
                           <div
@@ -1455,7 +1424,7 @@ export function CandidateSlideMenu({
                           >
                             <SelectInput
                               options={filteredJobOptions}
-                              value={candidateData?.jobPostingId || ''}
+                              value={selectionProgress?.job_posting_id || candidateData.jobPostingId}
                               onChange={(value) => onJobChange && onJobChange(candidateData.id, value)}
                               placeholder="求人を選択"
                               className="w-full h-[38px]"
@@ -1472,7 +1441,7 @@ export function CandidateSlideMenu({
                               </div>
                               <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
                               <div className='text-[#323232] text-[10px] font-bold tracking-[1px]'>
-                                {candidateData.applicationDate || 'yyyy/mm/dd'}
+                                yyyy/mm/dd
                               </div>
                             </div>
 
@@ -1497,8 +1466,8 @@ export function CandidateSlideMenu({
                                     </div>
                                   );
                                 }
-                                // 書類選考段階で応募日がある場合のみ合否登録ボタンを表示
-                                if (candidateData.applicationDate) {
+                                // 書類選考段階で合否登録ボタンを表示
+                                if (true) {
                                   return (
                                     <button
                                       className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
@@ -1758,21 +1727,20 @@ export function CandidateSlideMenu({
                               className='text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] text-center w-full sm:w-[200px] h-[22px] truncate'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              未設定
+                              {selectionProgress?.group_name || 'グループ未設定'}
                             </span>
                           </div>
                           <div
                             className='flex-1 flex gap-4 items-center w-full sm:w-[602px] h-[38px]'
                             onClick={e => e.stopPropagation()}
                           >
-                            <div className='bg-white border border-[#999999] rounded-[5px] px-[11px] py-2 w-full h-[38px] flex items-center justify-between truncate'>
-                              <span
-                                className='text-[#323232] text-[14px] font-bold tracking-[1.4px] flex-1 truncate'
-                                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                              >
-                                未設定
-                              </span>
-                            </div>
+                            <SelectInput
+                              options={filteredJobOptions}
+                              value={selectionProgress?.job_posting_id || ''}
+                              onChange={(value) => onJobChange && onJobChange(candidateId!, value)}
+                              placeholder="求人を選択"
+                              className="w-full h-[38px]"
+                            />
                           </div>
                         </div>
 
@@ -1796,7 +1764,7 @@ export function CandidateSlideMenu({
                             </div>
                             <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
                             <button
-                              onClick={() => handleSelectionResult('書類選考', null)}
+                              onClick={() => handleSelectionResult('書類選考')}
                               className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
                               style={{
                                 background:
@@ -1895,9 +1863,7 @@ export function CandidateSlideMenu({
                         {/* 担当者情報 */}
                         <div className='h-[66px] flex items-center justify-between gap-10'>
                           <p className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-                            やりとりしている担当者：{candidateData?.assignedUsers && candidateData.assignedUsers.length > 0 
-                              ? candidateData.assignedUsers.join('、') 
-                              : '設定なし'}
+                            やりとりしている担当者：設定なし
                           </p>
                           <button 
                             className='border border-[#0f9058] rounded-[32px] px-6 py-2.5 min-w-[120px] hover:bg-gray-50 transition-colors'
