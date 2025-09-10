@@ -14,6 +14,11 @@ import type { JobType } from '@/constants/job-type-data';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
+import { FormLabel } from '@/components/education/common/FormLabel';
+import { FormInput } from '@/components/education/common/FormInput';
+import { FormSelect } from '@/components/education/common/FormSelect';
+import { FormErrorMessage } from '@/components/education/common/FormErrorMessage';
+import { TagList } from '@/components/ui/TagList';
 
 const educationSchema = z.object({
   finalEducation: z.string(),
@@ -451,38 +456,24 @@ export default function CandidateEducationEditPage() {
                       </div>
                     </div>
                     <div className='flex-1 lg:py-6'>
-                      <div className='relative'>
-                        <select
-                          {...register('finalEducation')}
-                          className={`w-full bg-white border ${
-                            errors.finalEducation
-                              ? 'border-red-500'
-                              : 'border-[#999999]'
-                          } rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
-                        >
-                          <option value=''>未選択</option>
-                          {educationOptions.map(option => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
-                          </svg>
-                        </div>
-                      </div>
-                      {errors.finalEducation && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.finalEducation.message}
-                        </p>
-                      )}
+                      <FormLabel htmlFor='finalEducation'>最終学歴</FormLabel>
+                      <FormSelect
+                        id='finalEducation'
+                        {...register('finalEducation')}
+                        className={
+                          errors.finalEducation ? 'border-red-500' : ''
+                        }
+                      >
+                        <option value=''>未選択</option>
+                        {educationOptions.map(option => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </FormSelect>
+                      <FormErrorMessage
+                        message={errors.finalEducation?.message}
+                      />
                     </div>
                   </div>
 
@@ -494,6 +485,7 @@ export default function CandidateEducationEditPage() {
                       </div>
                     </div>
                     <div className='flex-1 lg:py-6'>
+                      <FormLabel htmlFor='schoolName'>学校名</FormLabel>
                       <AutocompleteInput
                         value={watchedSchoolName}
                         onChange={value =>
@@ -508,17 +500,9 @@ export default function CandidateEducationEditPage() {
                           name: s.name,
                           category: s.category,
                         }))}
-                        className={`w-full bg-white border ${
-                          errors.schoolName
-                            ? 'border-red-500'
-                            : 'border-[#999999]'
-                        } rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]`}
+                        className={errors.schoolName ? 'border-red-500' : ''}
                       />
-                      {errors.schoolName && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.schoolName.message}
-                        </p>
-                      )}
+                      <FormErrorMessage message={errors.schoolName?.message} />
                     </div>
                   </div>
 
@@ -530,21 +514,15 @@ export default function CandidateEducationEditPage() {
                       </div>
                     </div>
                     <div className='flex-1 lg:py-6'>
-                      <input
+                      <FormLabel htmlFor='department'>学部学科専攻</FormLabel>
+                      <FormInput
+                        id='department'
                         type='text'
                         {...register('department')}
                         placeholder='学部学科専攻を入力'
-                        className={`w-full bg-white border ${
-                          errors.department
-                            ? 'border-red-500'
-                            : 'border-[#999999]'
-                        } rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058]`}
+                        className={errors.department ? 'border-red-500' : ''}
                       />
-                      {errors.department && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.department.message}
-                        </p>
-                      )}
+                      <FormErrorMessage message={errors.department?.message} />
                     </div>
                   </div>
 
@@ -556,74 +534,49 @@ export default function CandidateEducationEditPage() {
                       </div>
                     </div>
                     <div className='flex-1 lg:py-6'>
+                      <FormLabel>卒業年月</FormLabel>
                       <div className='flex gap-2 items-center'>
-                        <div className='relative w-[109px]'>
-                          <select
-                            {...register('graduationYear')}
-                            className={`w-[109px] bg-white border ${
-                              errors.graduationYear || errors.graduationMonth
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] px-4 py-[11px] pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
-                          >
-                            <option value=''>未選択</option>
-                            {yearOptions.map(year => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
-                            </svg>
-                          </div>
-                        </div>
-                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          年
-                        </span>
-                        <div className='relative w-[109px]'>
-                          <select
-                            {...register('graduationMonth')}
-                            className={`w-[109px] bg-white border ${
-                              errors.graduationYear || errors.graduationMonth
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] px-4 py-[11px] pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]`}
-                          >
-                            <option value=''>未選択</option>
-                            {monthOptions.map(month => (
-                              <option key={month} value={month}>
-                                {month}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
-                            </svg>
-                          </div>
-                        </div>
-                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          月
-                        </span>
+                        <FormSelect
+                          id='graduationYear'
+                          {...register('graduationYear')}
+                          className={
+                            errors.graduationYear || errors.graduationMonth
+                              ? 'border-red-500'
+                              : ''
+                          }
+                        >
+                          <option value=''>未選択</option>
+                          {yearOptions.map(year => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </FormSelect>
+                        <span>年</span>
+                        <FormSelect
+                          id='graduationMonth'
+                          {...register('graduationMonth')}
+                          className={
+                            errors.graduationYear || errors.graduationMonth
+                              ? 'border-red-500'
+                              : ''
+                          }
+                        >
+                          <option value=''>未選択</option>
+                          {monthOptions.map(month => (
+                            <option key={month} value={month}>
+                              {month}
+                            </option>
+                          ))}
+                        </FormSelect>
+                        <span>月</span>
                       </div>
-                      {(errors.graduationYear || errors.graduationMonth) && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.graduationYear?.message ||
-                            errors.graduationMonth?.message}
-                        </p>
-                      )}
+                      <FormErrorMessage
+                        message={
+                          errors.graduationYear?.message ||
+                          errors.graduationMonth?.message
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -655,79 +608,20 @@ export default function CandidateEducationEditPage() {
                         >
                           業種を選択
                         </button>
-                        {/* 選択された業種 */}
-                        {(selectedIndustries || []).length > 0 && (
-                          <div className='flex flex-wrap gap-1'>
-                            {(selectedIndustries || []).map(industry => (
-                              <div
-                                key={industry.id}
-                                className='inline-flex items-center gap-[2px]'
-                              >
-                                <div className='flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]'>
-                                  <span className='bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap'>
-                                    {industry.name}
-                                  </span>
-                                  <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full'>
-                                    <select
-                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none cursor-pointer focus:outline-none w-full'
-                                      value={industry.experienceYears || ''}
-                                      onChange={e =>
-                                        updateIndustryExperience(
-                                          industry.id,
-                                          e.target.value
-                                        )
-                                      }
-                                    >
-                                      <option value=''>経験年数：未選択</option>
-                                      {experienceYearOptions.map(year => (
-                                        <option key={year} value={year}>
-                                          経験年数：{year}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <svg
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      width='14'
-                                      height='10'
-                                      viewBox='0 0 14 10'
-                                      fill='none'
-                                      className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
-                                    >
-                                      <path
-                                        d='M7 10L0 0H14L7 10Z'
-                                        fill='#0f9058'
-                                      />
-                                    </svg>
-                                  </div>
-                                </div>
-                                <button
-                                  type='button'
-                                  onClick={() => removeIndustry(industry.id)}
-                                  className='bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]'
-                                >
-                                  <svg
-                                    width='13'
-                                    height='12'
-                                    viewBox='0 0 13 12'
-                                    fill='none'
-                                    xmlns='http://www.w3.org/2000/svg'
-                                  >
-                                    <path
-                                      d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
-                                      fill='#0F9058'
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                        {/* 業種タグリスト */}
+                        <TagList
+                          items={selectedIndustries}
+                          onRemove={removeIndustry}
+                          onChangeExperience={updateIndustryExperience}
+                          experienceOptions={experienceYearOptions}
+                          experienceLabel='経験年数'
+                        />
+                        {errors.industries && (
+                          <FormErrorMessage
+                            message={errors.industries.message}
+                          />
                         )}
                       </div>
-                      {errors.industries && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.industries.message}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -747,79 +641,18 @@ export default function CandidateEducationEditPage() {
                         >
                           職種を選択
                         </button>
-                        {/* 選択された職種 */}
-                        {(selectedJobTypes || []).length > 0 && (
-                          <div className='flex flex-wrap gap-1'>
-                            {(selectedJobTypes || []).map(jobType => (
-                              <div
-                                key={jobType.id}
-                                className='inline-flex items-center gap-[2px]'
-                              >
-                                <div className='flex items-start md:items-center flex-col md:flex-row w-full gap-[2px]'>
-                                  <span className='bg-[#d2f1da] rounded-tl-[10px] md:rounded-l-[10px] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 w-full md:max-w-[120px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap'>
-                                    {jobType.name}
-                                  </span>
-                                  <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative rounded-bl-[10px] md:rounded-b-none w-full'>
-                                    <select
-                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
-                                      value={jobType.experienceYears || ''}
-                                      onChange={e =>
-                                        updateJobTypeExperience(
-                                          jobType.id,
-                                          e.target.value
-                                        )
-                                      }
-                                    >
-                                      <option value=''>経験年数：未選択</option>
-                                      {experienceYearOptions.map(year => (
-                                        <option key={year} value={year}>
-                                          経験年数：{year}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <svg
-                                      xmlns='http://www.w3.org/2000/svg'
-                                      width='14'
-                                      height='10'
-                                      viewBox='0 0 14 10'
-                                      fill='none'
-                                      className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
-                                    >
-                                      <path
-                                        d='M7 10L0 0H14L7 10Z'
-                                        fill='#0f9058'
-                                      />
-                                    </svg>
-                                  </div>
-                                </div>
-                                <button
-                                  type='button'
-                                  onClick={() => removeJobType(jobType.id)}
-                                  className='bg-[#d2f1da] flex items-center justify-center w-10 h-[80px] md:h-[40px] rounded-r-[10px] md:rounded-br-[10px] rounded-br-[10px]'
-                                >
-                                  <svg
-                                    width='13'
-                                    height='12'
-                                    viewBox='0 0 13 12'
-                                    fill='none'
-                                    xmlns='http://www.w3.org/2000/svg'
-                                  >
-                                    <path
-                                      d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
-                                      fill='#0F9058'
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                        {/* 職種タグリスト */}
+                        <TagList
+                          items={selectedJobTypes}
+                          onRemove={removeJobType}
+                          onChangeExperience={updateJobTypeExperience}
+                          experienceOptions={experienceYearOptions}
+                          experienceLabel='経験年数'
+                        />
+                        {errors.jobTypes && (
+                          <FormErrorMessage message={errors.jobTypes.message} />
                         )}
                       </div>
-                      {errors.jobTypes && (
-                        <p className='text-red-500 text-sm mt-1'>
-                          {errors.jobTypes.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -833,6 +666,7 @@ export default function CandidateEducationEditPage() {
                 variant='green-outline'
                 size='figma-default'
                 onClick={handleCancel}
+                disabled={isSubmitting}
                 className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
               >
                 キャンセル
