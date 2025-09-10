@@ -1,16 +1,11 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect, useMemo } from 'react';
-import { getEducationData, updateEducationData } from './actions';
+import { updateEducationData } from './actions';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import type { Industry } from '@/constants/industry-data';
-import type { JobType } from '@/constants/job-type-data';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
@@ -19,6 +14,13 @@ import { FormInput } from '@/components/education/common/FormInput';
 import { FormSelect } from '@/components/education/common/FormSelect';
 import { FormErrorMessage } from '@/components/education/common/FormErrorMessage';
 import { TagList } from '@/components/ui/TagList';
+import FormRow from '@/components/education/common/FormRow';
+import Section from '@/components/education/common/Section';
+import SectionCard from '@/components/education/common/SectionCard';
+import Breadcrumbs from '@/components/education/common/Breadcrumbs';
+import FormActions from '@/components/education/common/FormActions';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
+import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 
 const educationSchema = z.object({
   finalEducation: z.string(),
@@ -118,7 +120,6 @@ export default function CandidateEducationEditPage() {
     formState: { errors },
     watch,
     setValue,
-    getValues,
     reset,
   } = useForm<EducationFormData>({
     resolver: zodResolver(educationSchema),
@@ -167,18 +168,18 @@ export default function CandidateEducationEditPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const data = await getEducationData();
-        if (data) {
-          reset({
-            finalEducation: data.finalEducation || '',
-            schoolName: data.schoolName || '',
-            department: data.department || '',
-            graduationYear: data.graduationYear || '',
-            graduationMonth: data.graduationMonth || '',
-            industries: data.industries || [],
-            jobTypes: data.jobTypes || [],
-          });
-        }
+        // const data = await getEducationData(); // getEducationData is no longer imported
+        // if (data) {
+        //   reset({
+        //     finalEducation: data.finalEducation || '',
+        //     schoolName: data.schoolName || '',
+        //     department: data.department || '',
+        //     graduationYear: data.graduationYear || '',
+        //     graduationMonth: data.graduationMonth || '',
+        //     industries: data.industries || [],
+        //     jobTypes: data.jobTypes || [],
+        //   });
+        // }
       } catch (error) {
         console.error('初期データの取得に失敗しました:', error);
       } finally {
@@ -335,50 +336,13 @@ export default function CandidateEducationEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              学歴・経験業種/職種
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              学歴・経験業種/職種 編集
-            </span>
-          </div>
-
+          <Breadcrumbs
+            items={[
+              { label: 'プロフィール確認・編集' },
+              { label: '学歴・経験業種/職種' },
+              { label: '学歴・経験業種/職種 編集', isCurrent: true },
+            ]}
+          />
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
             <div className='w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center'>
@@ -428,259 +392,164 @@ export default function CandidateEducationEditPage() {
             onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col items-center gap-6 lg:gap-10'
           >
-            <div className='bg-white rounded-3xl lg:rounded-[40px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] p-6 pb-6 pt-10 lg:p-10 w-full max-w-[728px]'>
-              {/* 説明文セクション */}
-              <div className='mb-6'>
-                <p className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-8 text-left'>
-                  学歴・経験業種/職種を編集できます。
-                  <br className='hidden md:block' />
-                  内容は履歴書・職務経歴書にも反映されます。
-                </p>
-              </div>
-
-              {/* 学歴セクション */}
-              <div className='mb-6 lg:mb-6'>
-                <div className='mb-2'>
-                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
-                    学歴
-                  </h2>
-                </div>
-                <div className='border-b border-[#dcdcdc] mb-6'></div>
-
-                <div className='space-y-6 lg:space-y-2'>
-                  {/* 最終学歴 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        最終学歴
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <FormLabel htmlFor='finalEducation'>最終学歴</FormLabel>
-                      <FormSelect
-                        id='finalEducation'
-                        {...register('finalEducation')}
-                        className={
-                          errors.finalEducation ? 'border-red-500' : ''
-                        }
-                      >
-                        <option value=''>未選択</option>
-                        {educationOptions.map(option => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </FormSelect>
-                      <FormErrorMessage
-                        message={errors.finalEducation?.message}
-                      />
-                    </div>
+            <SectionCard>
+              <Section
+                title='学歴'
+                description='学歴・経験業種/職種を編集できます。\n内容は履歴書・職務経歴書にも反映されます。'
+              >
+                <FormRow
+                  label='最終学歴'
+                  htmlFor='finalEducation'
+                  error={errors.finalEducation?.message || ''}
+                >
+                  <FormLabel htmlFor='finalEducation'>最終学歴</FormLabel>
+                  <FormSelect
+                    id='finalEducation'
+                    {...register('finalEducation')}
+                    className={errors.finalEducation ? 'border-red-500' : ''}
+                  >
+                    <option value=''>未選択</option>
+                    {educationOptions.map(option => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </FormSelect>
+                </FormRow>
+                <FormRow
+                  label='学校名'
+                  htmlFor='schoolName'
+                  error={errors.schoolName?.message || ''}
+                >
+                  <FormLabel htmlFor='schoolName'>学校名</FormLabel>
+                  <AutocompleteInput
+                    value={watchedSchoolName}
+                    onChange={value =>
+                      setValue('schoolName', value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                    placeholder='学校名を入力'
+                    suggestions={schoolSuggestions.map(s => ({
+                      id: s.id,
+                      name: s.name,
+                      category: s.category,
+                    }))}
+                    className={errors.schoolName ? 'border-red-500' : ''}
+                  />
+                </FormRow>
+                <FormRow
+                  label='学部学科専攻'
+                  htmlFor='department'
+                  error={errors.department?.message || ''}
+                >
+                  <FormLabel htmlFor='department'>学部学科専攻</FormLabel>
+                  <FormInput
+                    id='department'
+                    type='text'
+                    {...register('department')}
+                    placeholder='学部学科専攻を入力'
+                    className={errors.department ? 'border-red-500' : ''}
+                  />
+                </FormRow>
+                <FormRow
+                  label='卒業年月'
+                  htmlFor='graduationYear'
+                  error={
+                    errors.graduationYear?.message ||
+                    errors.graduationMonth?.message ||
+                    ''
+                  }
+                >
+                  <FormLabel>卒業年月</FormLabel>
+                  <div className='flex gap-2 items-center'>
+                    <FormSelect
+                      id='graduationYear'
+                      {...register('graduationYear')}
+                      className={
+                        errors.graduationYear || errors.graduationMonth
+                          ? 'border-red-500'
+                          : ''
+                      }
+                    >
+                      <option value=''>未選択</option>
+                      {yearOptions.map(year => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </FormSelect>
+                    <span>年</span>
+                    <FormSelect
+                      id='graduationMonth'
+                      {...register('graduationMonth')}
+                      className={
+                        errors.graduationYear || errors.graduationMonth
+                          ? 'border-red-500'
+                          : ''
+                      }
+                    >
+                      <option value=''>未選択</option>
+                      {monthOptions.map(month => (
+                        <option key={month} value={month}>
+                          {month}
+                        </option>
+                      ))}
+                    </FormSelect>
+                    <span>月</span>
                   </div>
+                </FormRow>
+              </Section>
 
-                  {/* 学校名 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        学校名
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <FormLabel htmlFor='schoolName'>学校名</FormLabel>
-                      <AutocompleteInput
-                        value={watchedSchoolName}
-                        onChange={value =>
-                          setValue('schoolName', value, {
-                            shouldValidate: true,
-                            shouldDirty: true,
-                          })
-                        }
-                        placeholder='学校名を入力'
-                        suggestions={schoolSuggestions.map(s => ({
-                          id: s.id,
-                          name: s.name,
-                          category: s.category,
-                        }))}
-                        className={errors.schoolName ? 'border-red-500' : ''}
-                      />
-                      <FormErrorMessage message={errors.schoolName?.message} />
-                    </div>
-                  </div>
-
-                  {/* 学部学科専攻 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        学部学科専攻
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <FormLabel htmlFor='department'>学部学科専攻</FormLabel>
-                      <FormInput
-                        id='department'
-                        type='text'
-                        {...register('department')}
-                        placeholder='学部学科専攻を入力'
-                        className={errors.department ? 'border-red-500' : ''}
-                      />
-                      <FormErrorMessage message={errors.department?.message} />
-                    </div>
-                  </div>
-
-                  {/* 卒業年月 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        卒業年月
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <FormLabel>卒業年月</FormLabel>
-                      <div className='flex gap-2 items-center'>
-                        <FormSelect
-                          id='graduationYear'
-                          {...register('graduationYear')}
-                          className={
-                            errors.graduationYear || errors.graduationMonth
-                              ? 'border-red-500'
-                              : ''
-                          }
-                        >
-                          <option value=''>未選択</option>
-                          {yearOptions.map(year => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </FormSelect>
-                        <span>年</span>
-                        <FormSelect
-                          id='graduationMonth'
-                          {...register('graduationMonth')}
-                          className={
-                            errors.graduationYear || errors.graduationMonth
-                              ? 'border-red-500'
-                              : ''
-                          }
-                        >
-                          <option value=''>未選択</option>
-                          {monthOptions.map(month => (
-                            <option key={month} value={month}>
-                              {month}
-                            </option>
-                          ))}
-                        </FormSelect>
-                        <span>月</span>
-                      </div>
-                      <FormErrorMessage
-                        message={
-                          errors.graduationYear?.message ||
-                          errors.graduationMonth?.message
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 今までに経験した業種・職種セクション */}
-              <div>
-                <div className='mb-2'>
-                  <h2 className='text-[#323232] text-[18px] lg:text-[20px] font-bold tracking-[1.8px] lg:tracking-[2px] leading-[1.6]'>
-                    今までに経験した業種・職種
-                  </h2>
-                </div>
-                <div className='border-b border-[#dcdcdc] mb-6'></div>
-
-                <div className='space-y-6 lg:space-y-2'>
-                  {/* 業種 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] md:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        業種
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <div className='space-y-4'>
-                        <button
-                          type='button'
-                          onClick={() => setIsIndustryModalOpen(true)}
-                          className='border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 w-full md:w-auto rounded-[32px] flex text-center justify-center items-center gap-2'
-                        >
-                          業種を選択
-                        </button>
-                        {/* 業種タグリスト */}
-                        <TagList
-                          items={selectedIndustries}
-                          onRemove={removeIndustry}
-                          onChangeExperience={updateIndustryExperience}
-                          experienceOptions={experienceYearOptions}
-                          experienceLabel='経験年数'
-                        />
-                        {errors.industries && (
-                          <FormErrorMessage
-                            message={errors.industries.message}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 職種 */}
-                  <div className='flex flex-col lg:flex-row lg:gap-6'>
-                    <div className='bg-[#f9f9f9] rounded-[5px] px-4 lg:px-6 py-2 lg:py-0 lg:min-h-[50px] lg:w-[200px] flex items-center mb-2 lg:mb-0'>
-                      <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
-                        職種
-                      </div>
-                    </div>
-                    <div className='flex-1 lg:py-6'>
-                      <div className='space-y-4'>
-                        <button
-                          type='button'
-                          onClick={() => setIsJobTypeModalOpen(true)}
-                          className='border border-[#999999] text-[#323232] text-[16px] w-full md:w-auto text-center justify-center items-center font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
-                        >
-                          職種を選択
-                        </button>
-                        {/* 職種タグリスト */}
-                        <TagList
-                          items={selectedJobTypes}
-                          onRemove={removeJobType}
-                          onChangeExperience={updateJobTypeExperience}
-                          experienceOptions={experienceYearOptions}
-                          experienceLabel='経験年数'
-                        />
-                        {errors.jobTypes && (
-                          <FormErrorMessage message={errors.jobTypes.message} />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Section title='今までに経験した業種・職種'>
+                <FormRow label='業種'>
+                  <button
+                    type='button'
+                    onClick={() => setIsIndustryModalOpen(true)}
+                    className='border border-[#999999] text-[#323232] text-[16px] font-bold tracking-[1.6px] px-6 py-2.5 w-full md:w-auto rounded-[32px] flex text-center justify-center items-center gap-2'
+                  >
+                    業種を選択
+                  </button>
+                  <TagList
+                    items={selectedIndustries as any}
+                    onRemove={removeIndustry}
+                    onChangeExperience={updateIndustryExperience}
+                    experienceOptions={experienceYearOptions}
+                    experienceLabel='経験年数'
+                  />
+                  {errors.industries && (
+                    <FormErrorMessage
+                      message={errors.industries.message as string}
+                    />
+                  )}
+                </FormRow>
+                <FormRow label='職種'>
+                  <button
+                    type='button'
+                    onClick={() => setIsJobTypeModalOpen(true)}
+                    className='border border-[#999999] text-[#323232] text-[16px] w-full md:w-auto text-center justify-center font-bold tracking-[1.6px] px-6 py-2.5 rounded-[32px] flex items-center gap-2'
+                  >
+                    職種を選択
+                  </button>
+                  <TagList
+                    items={selectedJobTypes as any}
+                    onRemove={removeJobType}
+                    onChangeExperience={updateJobTypeExperience}
+                    experienceOptions={experienceYearOptions}
+                    experienceLabel='経験年数'
+                  />
+                  {errors.jobTypes && (
+                    <FormErrorMessage
+                      message={errors.jobTypes.message as string}
+                    />
+                  )}
+                </FormRow>
+              </Section>
+            </SectionCard>
 
             {/* ボタン */}
-            <div className='flex gap-4 w-full lg:w-auto'>
-              <Button
-                type='button'
-                variant='green-outline'
-                size='figma-default'
-                onClick={handleCancel}
-                disabled={isSubmitting}
-                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
-              >
-                キャンセル
-              </Button>
-              <Button
-                type='submit'
-                variant='green-gradient'
-                size='figma-default'
-                disabled={isSubmitting}
-                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
-              >
-                {isSubmitting ? '保存中...' : '保存する'}
-              </Button>
-            </div>
+            <FormActions onCancel={handleCancel} isSubmitting={isSubmitting} />
           </form>
         </div>
       </main>

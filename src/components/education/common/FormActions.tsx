@@ -1,50 +1,50 @@
-import { Button } from '@/components/ui/button';
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface FormActionsProps {
   onCancel: () => void;
-  onSubmit: (e?: React.FormEvent) => void;
   isSubmitting: boolean;
-  variant?: 'pc' | 'sp';
+  cancelLabel?: string;
+  submitLabel?: string;
 }
 
-export const FormActions: React.FC<FormActionsProps> = ({
+/**
+ * [FormActions]
+ * キャンセル・保存ボタンの配置を共通化するコンポーネント。
+ * - onCancel: キャンセル時のハンドラ
+ * - isSubmitting: 保存中かどうか
+ * - cancelLabel: キャンセルボタンのラベル
+ * - submitLabel: 保存ボタンのラベル
+ */
+const FormActions: React.FC<FormActionsProps> = ({
   onCancel,
-  onSubmit,
   isSubmitting,
-  variant = 'pc',
+  cancelLabel = 'キャンセル',
+  submitLabel = '保存する',
 }) => {
-  const containerClass =
-    variant === 'pc'
-      ? 'flex justify-center gap-4'
-      : 'flex gap-4 w-full justify-center';
-  const buttonClass =
-    variant === 'pc'
-      ? 'min-w-[160px] text-[16px] tracking-[1.6px]'
-      : 'basis-0 grow min-w-40 text-[16px] tracking-[1.6px] text-center';
-
   return (
-    <div className={containerClass}>
+    <div className='flex gap-4 w-full lg:w-auto'>
       <Button
         type='button'
         variant='green-outline'
         size='figma-default'
         onClick={onCancel}
-        className={buttonClass}
+        disabled={isSubmitting}
+        className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
       >
-        キャンセル
+        {cancelLabel}
       </Button>
       <Button
         type='submit'
         variant='green-gradient'
         size='figma-default'
         disabled={isSubmitting}
-        className={
-          buttonClass + ' disabled:opacity-50 disabled:cursor-not-allowed'
-        }
+        className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
       >
-        {isSubmitting ? '保存中...' : '保存する'}
+        {isSubmitting ? '保存中...' : submitLabel}
       </Button>
     </div>
   );
 };
+
+export default FormActions;
