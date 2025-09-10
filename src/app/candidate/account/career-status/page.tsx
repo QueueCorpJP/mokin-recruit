@@ -63,28 +63,30 @@ export default async function CandidateCareerStatusPage() {
     <PageLayout breadcrumb='転職活動状況' title='転職活動状況'>
       <SectionCard>
         <Section title='転職活動状況'>
-          <FormRow label='転職希望時期'>
-            <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-              {getLabel(
-                JOB_CHANGE_TIMING_OPTIONS as unknown as {
-                  value: string;
-                  label: string;
-                }[],
-                candidateData.job_change_timing || ''
-              )}
-            </div>
-          </FormRow>
-          <FormRow label='現在の活動状況'>
-            <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-              {getLabel(
-                CURRENT_ACTIVITY_STATUS_OPTIONS as unknown as {
-                  value: string;
-                  label: string;
-                }[],
-                candidateData.current_activity_status || ''
-              )}
-            </div>
-          </FormRow>
+          <div className='flex flex-col gap-[8px]'>
+            <FormRow label='転職希望時期'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
+                {getLabel(
+                  JOB_CHANGE_TIMING_OPTIONS as unknown as {
+                    value: string;
+                    label: string;
+                  }[],
+                  candidateData.job_change_timing || ''
+                )}
+              </div>
+            </FormRow>
+            <FormRow label='現在の活動状況'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
+                {getLabel(
+                  CURRENT_ACTIVITY_STATUS_OPTIONS as unknown as {
+                    value: string;
+                    label: string;
+                  }[],
+                  candidateData.current_activity_status || ''
+                )}
+              </div>
+            </FormRow>
+          </div>
         </Section>
         <Section title='選考状況'>
           {careerStatusEntries && careerStatusEntries.length > 0 ? (
