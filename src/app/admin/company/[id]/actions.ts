@@ -3,6 +3,605 @@
 import { z } from 'zod';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
+import nodemailer from 'nodemailer';
+
+// メール送信サービスの共通関数
+async function sendEmail(to: string, subject: string, html: string) {
+  console.log('=== sendEmail開始 ===');
+  console.log('送信先:', to);
+  console.log('件名:', subject);
+
+  // Gmail SMTP設定の確認
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.error('Gmail設定が不完全です');
+    throw new Error('メール送信設定が正しく構成されていません');
+  }
+
+  try {
+    console.log('Gmail SMTPトランスポーターを作成中...');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    console.log('メール送信中...');
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: to,
+      subject: subject,
+      html: html
+    });
+
+    console.log(`✅ メール送信成功! 送信先: ${to}`);
+    return { success: true };
+  } catch (emailErr) {
+    console.error('❌ メール送信エラー:', emailErr);
+    throw new Error('メールの送信に失敗しました。しばらく時間をおいて再度お試しください。');
+  }
+}
+
+// 招待トークンの生成（一時的な実装：ローカルストレージ使用）
+async function generateInvitationToken(email: string, groupId: string, role: string, companyId: string) {
+  // ユニークな招待トークンを生成
+  const token = `invite_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+
+  // 一時的に招待情報をローカルストレージやメモリに保存
+  // 本番環境ではデータベーステーブルを作成する必要があります
+  console.log('招待トークンを生成しました（一時実装）:', {
+    token,
+    email,
+    groupId,
+    role,
+    companyId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  });
+
+  return token;
+}
+
+// 招待トークンの検証（一時的な実装）
+async function verifyInvitationToken(token: string) {
+  // トークンの形式チェック
+  if (!token.startsWith('invite_')) {
+    return { valid: false, error: '無効な招待トークンです' };
+  }
+
+  // トークンから情報を抽出（一時的な実装）
+  // 本番環境ではデータベースから取得する必要があります
+  console.log('招待トークンを検証中:', token);
+
+  // 一時的なモックデータ
+  const mockInvitation = {
+    token: token,
+    email: 'user@example.com',
+    groupId: 'group-123',
+    role: 'scout',
+    companyId: 'company-123',
+    status: 'pending',
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  };
+
+  // 期限切れチェック
+  if (new Date() > new Date(mockInvitation.expiresAt)) {
+    return { valid: false, error: '招待の有効期限が切れています' };
+  }
+
+  return { valid: true, invitation: mockInvitation };
+}
+
+// 招待トークンの使用済みマーク（一時的な実装）
+async function markInvitationTokenAsUsed(token: string) {
+  console.log('招待トークンを使用済みにマーク:', token);
+  // 本番環境ではデータベースを更新する必要があります
+}
+
+// 企業グループからユーザーを削除
+export async function deleteUserFromGroup(userId: string, groupId: string) {
+  try {
+    console.log(`[User Deletion] Starting deletion process`);
+    console.log(`[User Deletion] User ID: ${userId}`);
+    console.log(`[User Deletion] Group ID: ${groupId}`);
+
+    // 直接Supabaseサービスロールクライアントを使用
+    const supabase = createServerAdminClient();
+
+    // まず、削除対象のレコードが存在するか確認
+    const { data: existingRecord, error: checkError } = await supabase
+      .from('company_user_group_permissions')
+      .select('*')
+      .eq('company_user_id', userId)
+      .eq('company_group_id', groupId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking existing record:', checkError);
+      return {
+        success: false,
+        error: `レコード確認中にエラーが発生しました: ${checkError.message}`
+      };
+    }
+
+    if (!existingRecord) {
+      console.log('[User Deletion] Record not found - user may already be removed');
+      return {
+        success: true,
+        message: 'ユーザーは既にグループから削除されています'
+      };
+    }
+
+    console.log('[User Deletion] Found existing record:', existingRecord);
+
+    // グループからユーザーを削除（company_user_group_permissionsから削除）
+    const { data, error: deleteError } = await supabase
+      .from('company_user_group_permissions')
+      .delete()
+      .eq('company_user_id', userId)
+      .eq('company_group_id', groupId)
+      .select();
+
+    if (deleteError) {
+      console.error('User deletion error:', deleteError);
+      console.error('Error details:', {
+        code: deleteError.code,
+        message: deleteError.message,
+        details: deleteError.details
+      });
+      return {
+        success: false,
+        error: `ユーザーの削除に失敗しました: ${deleteError.message}`
+      };
+    }
+
+    console.log('[User Deletion] Deletion result:', data);
+
+    // 削除されたレコード数を確認
+    if (data && data.length === 0) {
+      console.warn('[User Deletion] No records were deleted');
+    } else {
+      console.log(`[User Deletion] Successfully deleted ${data?.length || 0} record(s)`);
+    }
+
+    // 企業詳細ページのキャッシュを無効化
+    revalidatePath(`/admin/company/[id]`);
+    revalidatePath(`/admin/company/${id}`);
+
+    console.log(`[User Deletion] Successfully completed deletion process`);
+
+    return {
+      success: true,
+      deletedRecords: data?.length || 0
+    };
+
+  } catch (error) {
+    console.error('User deletion process error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'Unknown error');
+    return {
+      success: false,
+      error: 'ユーザー削除処理中にエラーが発生しました'
+    };
+  }
+}
+
+// チケット情報を取得
+export async function getCompanyTickets(companyId: string) {
+  try {
+    console.log(`[Ticket Info] Getting tickets for company: ${companyId}`);
+
+    const supabase = createServerAdminClient();
+
+    // チケット残高を取得
+    const { data: ticketData, error: ticketError } = await supabase
+      .from('company_tickets')
+      .select('*')
+      .eq('company_account_id', companyId)
+      .single();
+
+    if (ticketError && ticketError.code !== 'PGRST116') {
+      console.error('Error fetching ticket data:', ticketError);
+      return {
+        success: false,
+        error: `チケット情報の取得に失敗しました: ${ticketError.message}`
+      };
+    }
+
+    // チケット取引履歴を取得（直近6ヶ月分）
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const { data: transactionData, error: transactionError } = await supabase
+      .from('ticket_transactions')
+      .select(`
+        id,
+        transaction_type,
+        amount,
+        description,
+        created_at,
+        related_message_id,
+        related_application_id
+      `)
+      .eq('company_account_id', companyId)
+      .gte('created_at', sixMonthsAgo.toISOString())
+      .order('created_at', { ascending: false });
+
+    if (transactionError) {
+      console.error('Error fetching transaction data:', transactionError);
+      return {
+        success: false,
+        error: `取引履歴の取得に失敗しました: ${transactionError.message}`
+      };
+    }
+
+    // 初期データが存在しない場合は作成
+    let finalTicketData = ticketData;
+    if (!ticketData) {
+      console.log('[Ticket Info] No ticket data found, creating initial data');
+
+      const { data: newTicketData, error: insertError } = await supabase
+        .from('company_tickets')
+        .insert({
+          company_account_id: companyId,
+          total_tickets: 0,
+          used_tickets: 0,
+          remaining_tickets: 0
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error creating initial ticket data:', insertError);
+      } else {
+        finalTicketData = newTicketData;
+      }
+    }
+
+    console.log(`[Ticket Info] Successfully retrieved ticket data`);
+
+    return {
+      success: true,
+      data: {
+        tickets: finalTicketData || {
+          total_tickets: 0,
+          used_tickets: 0,
+          remaining_tickets: 0
+        },
+        transactions: transactionData || []
+      }
+    };
+
+  } catch (error) {
+    console.error('Get company tickets error:', error);
+    return {
+      success: false,
+      error: 'チケット情報の取得中にエラーが発生しました'
+    };
+  }
+}
+
+// チケットを購入
+export async function purchaseTickets(companyId: string, amount: number, description?: string) {
+  try {
+    console.log(`[Purchase Tickets] Purchasing ${amount} tickets for company: ${companyId}`);
+
+    const supabase = createServerAdminClient();
+
+    // 現在のチケット情報を取得
+    const { data: currentTicketData, error: fetchError } = await supabase
+      .from('company_tickets')
+      .select('*')
+      .eq('company_account_id', companyId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('Error fetching current ticket data:', fetchError);
+      return {
+        success: false,
+        error: `現在のチケット情報の取得に失敗しました: ${fetchError.message}`
+      };
+    }
+
+    // トランザクション開始
+    let newTotalTickets = amount;
+    let newUsedTickets = 0;
+    let newRemainingTickets = amount;
+
+    if (currentTicketData) {
+      newTotalTickets = currentTicketData.total_tickets + amount;
+      newUsedTickets = currentTicketData.used_tickets;
+      newRemainingTickets = currentTicketData.remaining_tickets + amount;
+    }
+
+    // チケット情報を更新または作成
+    const { data: updatedTicketData, error: updateError } = await supabase
+      .from('company_tickets')
+      .upsert({
+        company_account_id: companyId,
+        total_tickets: newTotalTickets,
+        used_tickets: newUsedTickets,
+        remaining_tickets: newRemainingTickets
+      })
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating ticket data:', updateError);
+      return {
+        success: false,
+        error: `チケット情報の更新に失敗しました: ${updateError.message}`
+      };
+    }
+
+    // 取引履歴を記録
+    const { error: transactionError } = await supabase
+      .from('ticket_transactions')
+      .insert({
+        company_account_id: companyId,
+        transaction_type: 'PURCHASE',
+        amount: amount,
+        description: description || `${amount}枚のチケットを購入`
+      });
+
+    if (transactionError) {
+      console.error('Error recording transaction:', transactionError);
+      // 取引履歴の記録に失敗してもチケット購入は成功として扱う
+    }
+
+    // 企業詳細ページのキャッシュを無効化
+    revalidatePath(`/admin/company/[id]`);
+    revalidatePath(`/admin/company/${companyId}`);
+
+    console.log(`[Purchase Tickets] Successfully purchased ${amount} tickets`);
+
+    return {
+      success: true,
+      data: updatedTicketData
+    };
+
+  } catch (error) {
+    console.error('Purchase tickets error:', error);
+    return {
+      success: false,
+      error: 'チケット購入中にエラーが発生しました'
+    };
+  }
+}
+
+// チケットを使用
+export async function useTickets(companyId: string, amount: number, description?: string, relatedMessageId?: string) {
+  try {
+    console.log(`[Use Tickets] Using ${amount} tickets for company: ${companyId}`);
+
+    const supabase = createServerAdminClient();
+
+    // 現在のチケット情報を取得
+    const { data: currentTicketData, error: fetchError } = await supabase
+      .from('company_tickets')
+      .select('*')
+      .eq('company_account_id', companyId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching current ticket data:', fetchError);
+      return {
+        success: false,
+        error: `現在のチケット情報の取得に失敗しました: ${fetchError.message}`
+      };
+    }
+
+    if (!currentTicketData) {
+      return {
+        success: false,
+        error: 'チケット情報が見つかりません'
+      };
+    }
+
+    // 残高チェック
+    if (currentTicketData.remaining_tickets < amount) {
+      return {
+        success: false,
+        error: `チケット残高が不足しています。必要: ${amount}枚、残高: ${currentTicketData.remaining_tickets}枚`
+      };
+    }
+
+    // チケット情報を更新
+    const newUsedTickets = currentTicketData.used_tickets + amount;
+    const newRemainingTickets = currentTicketData.remaining_tickets - amount;
+
+    const { data: updatedTicketData, error: updateError } = await supabase
+      .from('company_tickets')
+      .update({
+        used_tickets: newUsedTickets,
+        remaining_tickets: newRemainingTickets
+      })
+      .eq('company_account_id', companyId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating ticket data:', updateError);
+      return {
+        success: false,
+        error: `チケット情報の更新に失敗しました: ${updateError.message}`
+      };
+    }
+
+    // 取引履歴を記録
+    const { error: transactionError } = await supabase
+      .from('ticket_transactions')
+      .insert({
+        company_account_id: companyId,
+        transaction_type: 'USAGE',
+        amount: -amount, // 使用なのでマイナス
+        description: description || `${amount}枚のチケットを使用`,
+        related_message_id: relatedMessageId
+      });
+
+    if (transactionError) {
+      console.error('Error recording transaction:', transactionError);
+      // 取引履歴の記録に失敗してもチケット使用は成功として扱う
+    }
+
+    console.log(`[Use Tickets] Successfully used ${amount} tickets`);
+
+    return {
+      success: true,
+      data: updatedTicketData
+    };
+
+  } catch (error) {
+    console.error('Use tickets error:', error);
+    return {
+      success: false,
+      error: 'チケット使用中にエラーが発生しました'
+    };
+  }
+}
+
+// 招待受け入れ処理
+export async function acceptInvitation(token: string, userId: string) {
+  try {
+    console.log('=== acceptInvitation開始 ===');
+    console.log('招待トークン:', token);
+    console.log('ユーザーID:', userId);
+
+    // 招待トークンを検証
+    const tokenVerification = await verifyInvitationToken(token);
+    if (!tokenVerification.valid) {
+      console.log('招待トークン検証失敗:', tokenVerification.error);
+      return { success: false, error: tokenVerification.error };
+    }
+
+    const invitation = tokenVerification.invitation;
+    console.log('招待情報:', invitation);
+
+    const supabase = getSupabaseAdminClient();
+
+    // ユーザーが既にグループに属しているかチェック
+    const { data: existingPermission, error: checkError } = await supabase
+      .from('company_user_group_permissions')
+      .select('*')
+      .eq('company_user_id', userId)
+      .eq('company_group_id', invitation.groupId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('既存権限チェックエラー:', checkError);
+      return { success: false, error: '招待受け入れ処理に失敗しました' };
+    }
+
+    // 招待処理時に既にメンバーが追加されている可能性があるため、
+    // 既にメンバーの場合は成功として扱う
+    if (existingPermission) {
+      console.log('ユーザーは既にこのグループに属しています（招待処理時に追加済み）');
+
+      // 招待トークンを使用済みにマーク
+      await markInvitationTokenAsUsed(token);
+
+      console.log('✅ 招待受け入れ処理完了（既存メンバー）');
+      return {
+        success: true,
+        message: '既にグループのメンバーです',
+        alreadyMember: true
+      };
+    }
+
+    // 新規メンバーの場合：ユーザーをグループに追加
+    console.log('新規メンバーとしてグループに追加します');
+    const dbRole = invitation.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF';
+    const { error: permissionError } = await supabase
+      .from('company_user_group_permissions')
+      .insert({
+        company_user_id: userId,
+        company_group_id: invitation.groupId,
+        permission_level: dbRole,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (permissionError) {
+      console.error('権限付与エラー:', permissionError);
+      return { success: false, error: 'グループ参加に失敗しました' };
+    }
+
+    // 招待トークンを使用済みにマーク
+    await markInvitationTokenAsUsed(token);
+
+    console.log('✅ 招待受け入れ処理完了（新規追加）');
+    return {
+      success: true,
+      message: 'グループへの参加が完了しました',
+      alreadyMember: false
+    };
+
+  } catch (error) {
+    console.error('❌ acceptInvitationエラー:', error);
+    return { success: false, error: 'システムエラーが発生しました' };
+  }
+}
+
+// 招待メールのHTMLテンプレート
+function createInvitationEmailTemplate(data: {
+  companyName: string;
+  groupName: string;
+  role: string;
+  invitationUrl: string;
+  email: string;
+}) {
+  const roleText = data.role === 'admin' ? '管理者' : 'スカウト担当者';
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+        <h1 style="color: #0f9058; margin: 0; font-size: 24px;">${data.companyName}</h1>
+      </div>
+
+      <div style="padding: 30px 20px;">
+        <h2 style="color: #333; margin-bottom: 20px;">グループへの招待</h2>
+
+        <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+          ${data.companyName}の<strong>${data.groupName}</strong>グループへの招待が届いています。
+        </p>
+
+        <div style="background-color: #f0f8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #0f9058; margin: 0 0 10px 0;">招待情報</h3>
+          <p style="margin: 5px 0;"><strong>グループ名:</strong> ${data.groupName}</p>
+          <p style="margin: 5px 0;"><strong>権限:</strong> ${roleText}</p>
+          <p style="margin: 5px 0;"><strong>メールアドレス:</strong> ${data.email}</p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.invitationUrl}"
+             style="background-color: #0f9058; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+            招待を受け入れる
+          </a>
+        </div>
+
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="color: #856404; margin: 0; font-size: 14px;">
+            <strong>注意:</strong> この招待リンクは7日間有効です。期限が切れた場合は、管理者に再招待をご依頼ください。
+          </p>
+        </div>
+
+        <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
+          このメールに心当たりがない場合は、無視してください。
+        </p>
+      </div>
+
+      <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+        <p style="color: #666; font-size: 12px; margin: 0;">
+          © ${new Date().getFullYear()} ${data.companyName}
+        </p>
+      </div>
+    </div>
+  `;
+}
 
 // プラン変更のバリデーションスキーマ
 const PlanChangeSchema = z.object({
@@ -73,6 +672,91 @@ export async function updateCompanyPlan(
 
   } catch (error) {
     console.error('Error updating company plan:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// ユーザー権限変更のバリデーションスキーマ
+const UserRoleChangeSchema = z.object({
+  userId: z.string().min(1, 'ユーザーIDが必要です'),
+  groupId: z.string().min(1, 'グループIDが必要です'),
+  newRole: z.enum(['ADMINISTRATOR', 'SCOUT_STAFF', 'ADMIN'], {
+    errorMap: () => ({ message: '有効な権限を選択してください' })
+  }),
+});
+
+export async function updateUserRole(
+  userId: string,
+  groupId: string,
+  newRole: string
+) {
+  try {
+    // Step 1: Validate input data
+    const validation = UserRoleChangeSchema.safeParse({
+      userId,
+      groupId,
+      newRole
+    });
+
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.errors?.[0]?.message || '入力データが正しくありません',
+        validationErrors: validation.errors
+      };
+    }
+
+    const supabase = getSupabaseAdminClient();
+
+    // Step 2: Update user role in group permissions
+    const { data: updatedPermission, error: updateError } = await supabase
+      .from('company_user_group_permissions')
+      .update({
+        permission_level: newRole,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('company_user_id', userId)
+      .eq('company_group_id', groupId)
+      .select(`
+        id,
+        permission_level,
+        company_users (
+          full_name,
+          email
+        ),
+        company_groups (
+          group_name,
+          company_accounts (
+            id
+          )
+        )
+      `)
+      .single();
+
+    if (updateError) {
+      console.error('User role update error:', updateError);
+      return {
+        success: false,
+        error: `ユーザー権限の更新に失敗しました: ${updateError.message}`
+      };
+    }
+
+    console.log('User role updated successfully:', updatedPermission);
+    console.log(`User ${updatedPermission.company_users?.full_name} role changed to ${newRole} in group ${updatedPermission.company_groups?.group_name}`);
+
+    // Step 3: Revalidate the company detail page
+    revalidatePath(`/admin/company/${updatedPermission.company_groups?.company_accounts?.id || 'unknown'}`);
+
+    return {
+      success: true,
+      updatedPermission
+    };
+
+  } catch (error) {
+    console.error('Error updating user role:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -241,8 +925,8 @@ export async function updateGroupName(
 
     console.log(`[Group Name Update] Successfully updated group: ${currentGroup.group_name} → ${updatedGroup.group_name} (ID: ${groupId})`);
 
-    // Step 4: Return success without revalidatePath - will be handled by client
-    // revalidatePath will be called when modal is closed to prevent modal from disappearing
+    // Step 4: Revalidate the company detail page to reflect changes immediately
+    revalidatePath(`/admin/company/${currentGroup.company_account_id}`);
 
     return {
       success: true,
@@ -432,66 +1116,123 @@ export async function inviteMembersToGroup(
           .single();
 
         let userId: string;
+        let userCreated = false;
+        let permissionGranted = false;
+        let emailSent = false;
 
-        if (existingUser) {
-          // User already exists
-          userId = existingUser.id;
-          console.log(`[Member Invitation] User already exists: ${member.email}`);
-        } else {
-          // Create new user account
-          const tempPassword = Math.random().toString(36).slice(-12); // Generate temporary password
+        try {
+          // Step 2: Check if user already exists or create new user
+          if (existingUser) {
+            // User already exists
+            userId = existingUser.id;
+            console.log(`[Member Invitation] User already exists: ${member.email}`);
+            userCreated = true; // 既存ユーザーの場合は作成済みとして扱う
+          } else {
+            // Create new user account
+            const tempPassword = Math.random().toString(36).slice(-12); // Generate temporary password
 
-          const { data: newUser, error: createUserError } = await supabase
-            .from('company_users')
-            .insert({
-              email: member.email,
-              password_hash: tempPassword, // In real implementation, this should be hashed
-              full_name: '', // Will be filled during registration
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select('id')
-            .single();
+            const { data: newUser, error: createUserError } = await supabase
+              .from('company_users')
+              .insert({
+                email: member.email,
+                password_hash: tempPassword, // In real implementation, this should be hashed
+                full_name: '', // Will be filled during registration
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .select('id')
+              .single();
 
-          if (createUserError) {
-            console.error(`Failed to create user ${member.email}:`, createUserError);
+            if (createUserError) {
+              console.error(`Failed to create user ${member.email}:`, createUserError);
+              continue; // Skip this member and continue with others
+            }
+
+            userId = newUser.id;
+            userCreated = true;
+            console.log(`[Member Invitation] Created new user: ${member.email} (ID: ${userId})`);
+          }
+
+          // Step 3: Add user to group with specified role
+          const { error: permissionError } = await supabase
+            .from('company_user_group_permissions')
+            .upsert({
+              company_user_id: userId,
+              company_group_id: groupId,
+              permission_level: member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF'
+            });
+
+          if (permissionError) {
+            console.error(`Failed to add permissions for ${member.email}:`, permissionError);
             continue; // Skip this member and continue with others
           }
 
-          userId = newUser.id;
-          console.log(`[Member Invitation] Created new user: ${member.email} (ID: ${userId})`);
-        }
+          permissionGranted = true;
+          console.log(`[Member Invitation] Permission granted for ${member.email} in group ${groupData.group_name}`);
 
-        // Step 3: Add user to group with specified role
-        const { error: permissionError } = await supabase
-          .from('company_user_group_permissions')
-          .upsert({
-            company_user_id: userId,
-            company_group_id: groupId,
-            permission_level: member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF'
-          });
+          // Step 4: Send invitation email (actual implementation)
+          try {
+            console.log(`[Member Invitation] Sending invitation email to: ${member.email}`);
 
-        if (permissionError) {
-          console.error(`Failed to add permissions for ${member.email}:`, permissionError);
+            // 招待トークンを生成
+            const invitationToken = await generateInvitationToken(
+              member.email,
+              groupId,
+              member.role,
+              companyData.id
+            );
+
+            // 招待URLを生成
+            const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/invite/${invitationToken}`;
+
+            // 招待メールのHTMLテンプレートを生成
+            const emailHtml = createInvitationEmailTemplate({
+              companyName: companyData.company_name,
+              groupName: groupData.group_name,
+              role: member.role,
+              invitationUrl: invitationUrl,
+              email: member.email
+            });
+
+            // メールを送信
+            await sendEmail(
+              member.email,
+              `${companyData.company_name} - グループ招待`,
+              emailHtml
+            );
+
+            emailSent = true;
+            console.log(`✅ 招待メール送信成功: ${member.email}`);
+
+          } catch (emailError) {
+            console.error(`❌ 招待メール送信失敗 ${member.email}:`, emailError);
+            console.warn('メール送信に失敗しましたが、ユーザーの作成と権限付与は完了しています');
+          }
+
+          // Step 5: Add to invited members list (always add if user creation and permission grant succeeded)
+          if (userCreated && permissionGranted) {
+            invitedMembers.push({
+              email: member.email,
+              role: member.role,
+              status: emailSent ? 'invited' : 'added_without_email',
+              emailSent: emailSent
+            });
+            console.log(`[Member Invitation] Successfully processed ${member.email} (email sent: ${emailSent})`);
+          }
+
+        } catch (memberError) {
+          console.error(`Error processing member ${member.email}:`, memberError);
+          // 予期しないエラーの場合も、可能であればリストに追加
+          if (userCreated && permissionGranted) {
+            invitedMembers.push({
+              email: member.email,
+              role: member.role,
+              status: 'error',
+              emailSent: false
+            });
+          }
           continue; // Skip this member and continue with others
         }
-
-        // Step 4: Send invitation email (simulated)
-        // In a real implementation, you would use an email service like SendGrid, AWS SES, etc.
-        console.log(`[Member Invitation] Sending invitation email to: ${member.email}`);
-        console.log(`[Member Invitation] Email content:
-          Subject: ${companyData.company_name} - グループ招待
-          Body: ${groupData.group_name}グループへの招待が届いています。
-                メールアドレス: ${member.email}
-                権限: ${member.role === 'admin' ? '管理者' : 'スカウト担当者'}
-                登録URL: http://localhost:3000/auth/register?token=invitation_token
-        `);
-
-        invitedMembers.push({
-          email: member.email,
-          role: member.role,
-          status: 'invited'
-        });
 
       } catch (error) {
         console.error(`Error processing member ${member.email}:`, error);

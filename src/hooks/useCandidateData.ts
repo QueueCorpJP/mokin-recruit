@@ -48,6 +48,10 @@ export function useCandidateData() {
         self_pr: formData.selfPr,
         
         // Desired conditions
+        desired_income: formData.desiredSalary || '',
+        desired_industries: formData.desiredIndustries || [],
+        desired_job_types: formData.desiredJobTypes || [],
+        desired_work_locations: formData.desiredLocations || [],
         desired_work_styles: formData.desiredWorkStyles || [],
       },
       education,
@@ -57,11 +61,11 @@ export function useCandidateData() {
       selectionEntries: selectionEntries.filter(entry => entry.companyName),
       memo: context.memo,
       expectations: {
-        desired_income: formData.desiredSalary,
-        desired_industries: formData.desiredIndustries,
-        desired_job_types: formData.desiredJobTypes,
-        desired_work_locations: formData.desiredLocations,
-        desired_work_styles: formData.desiredWorkStyles,
+        desired_income: formData.desiredSalary || '',
+        desired_industries: formData.desiredIndustries || [],
+        desired_job_types: formData.desiredJobTypes || [],
+        desired_work_locations: formData.desiredLocations || [],
+        desired_work_styles: formData.desiredWorkStyles || [],
       }
     };
   }, [context]);
@@ -98,6 +102,10 @@ export function useCandidateData() {
       recentJobTypes: candidateData.recent_job_types || [],
       jobSummary: candidateData.job_summary || '',
       selfPr: candidateData.self_pr || '',
+      desiredSalary: candidateData.desired_income || '',
+      desiredIndustries: candidateData.desired_industries || [],
+      desiredJobTypes: candidateData.desired_job_types || [],
+      desiredLocations: candidateData.desired_work_locations || [],
     };
 
     const education = candidateData.education || {
@@ -179,6 +187,26 @@ export function useCandidateData() {
     // 希望の働き方のバリデーション（VALIDATION_ERRORS.mdに準拠）
     if (!formData.desiredWorkStyles || formData.desiredWorkStyles.length === 0) {
       errors.push('興味のある働き方を選択してください');
+    }
+
+    // 希望年収のバリデーション
+    if (!formData.desiredSalary || formData.desiredSalary.trim() === '') {
+      errors.push('希望年収を選択してください');
+    }
+
+    // 希望業種のバリデーション
+    if (!formData.desiredIndustries || formData.desiredIndustries.length === 0) {
+      errors.push('希望業種を選択してください');
+    }
+
+    // 希望職種のバリデーション
+    if (!formData.desiredJobTypes || formData.desiredJobTypes.length === 0) {
+      errors.push('希望職種を選択してください');
+    }
+
+    // 希望勤務地のバリデーション
+    if (!formData.desiredLocations || formData.desiredLocations.length === 0) {
+      errors.push('希望勤務地を選択してください');
     }
 
     return {

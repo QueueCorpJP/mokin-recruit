@@ -20,8 +20,10 @@ export default function CompanyEditCompleteModal({
 
   const handleBackToDetail = () => {
     onClose();
-    // 現在のページに留まり、強制的にリフレッシュして最新データを取得
-    router.push(`/admin/company/${companyId}?refresh=${Date.now()}`);
+    // 編集完了後に企業詳細ページに遷移し、強制的にリフレッシュして最新データを取得
+    setTimeout(() => {
+      router.push(`/admin/company/${companyId}?refresh=${Date.now()}`);
+    }, 150); // モーダルが完全に閉じるまで少し待つ
   };
 
   const handleBackToList = () => {

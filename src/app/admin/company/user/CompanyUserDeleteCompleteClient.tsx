@@ -1,15 +1,35 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function CompanyUserDeleteCompleteClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [companyId, setCompanyId] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    // クエリパラメータから企業IDとユーザー名を取得
+    const companyIdParam = searchParams.get('companyId');
+    const userNameParam = searchParams.get('userName');
+
+    if (companyIdParam) {
+      setCompanyId(companyIdParam);
+    }
+    if (userNameParam) {
+      setUserName(decodeURIComponent(userNameParam));
+    }
+  }, [searchParams]);
 
   const handleGoToCompanyDetail = () => {
-    // TODO: 実際の企業IDを取得して遷移
-    // 現在はダミーIDを使用
-    router.push('/admin/company/debug-company');
+    if (companyId) {
+      // 企業詳細ページに戻る際に、クエリパラメータを付けてキャッシュを無効化
+      router.push(`/admin/company/${companyId}?refresh=${Date.now()}`);
+    } else {
+      // 企業IDがない場合は企業一覧ページに遷移
+      router.push('/admin/company');
+    }
   };
 
   const handleGoToAdminTop = () => {
@@ -23,14 +43,14 @@ export default function CompanyUserDeleteCompleteClient() {
         {/* 企業ユーザー名表示 */}
         <div className="text-center mb-8">
           <div className="text-base font-bold text-black mb-4">
-            企業ユーザー名を表示企業ユーザー名を表示
+            {userName || 'ユーザー'}
           </div>
         </div>
 
         {/* 完了メッセージ */}
         <div className="text-center mb-12">
           <div className="text-base font-bold text-black mb-8">
-            企業ユーザーの削除が完了しました。
+            企業グループからのユーザーの削除が完了しました。
           </div>
         </div>
 

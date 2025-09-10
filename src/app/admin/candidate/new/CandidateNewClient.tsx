@@ -14,6 +14,7 @@ import {
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
+import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import {
   JOB_CHANGE_TIMING_OPTIONS,
@@ -88,13 +89,18 @@ export default function CandidateNewClient() {
     handleIndustryConfirm,
     handleJobTypeConfirm,
     handleWorkStyleConfirm,
+    handleWorkLocationConfirm,
     openIndustryModal,
     openJobTypeModal,
     openWorkStyleModal,
+    openWorkLocationModal,
     closeModal,
     removeIndustryFromSelection,
     removeRecentJobIndustry,
     removeRecentJobType,
+    removeDesiredIndustry,
+    removeDesiredJobType,
+    removeDesiredLocation,
     getModalInitialData,
   } = useCandidateModals();
 
@@ -1559,6 +1565,184 @@ export default function CandidateNewClient() {
                         希望条件
                       </h3>
 
+                      {/* 希望年収 */}
+                      <div className="flex items-center gap-8 mb-6">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0">
+                          希望年収
+                        </label>
+                        <div className="w-[400px]">
+                          <div className="relative">
+                            <select
+                              value={formData.desiredSalary || ''}
+                              onChange={(e) => updateFormData('desiredSalary', e.target.value)}
+                              className="w-full px-[11px] py-[11px] pr-10 border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer"
+                            >
+                              <option value="">未選択</option>
+                              {INCOME_RANGES.map((income) => (
+                                <option key={income.value} value={income.value}>
+                                  {income.label}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute right-[16px] top-1/2 -translate-y-1/2 pointer-events-none">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="10"
+                                viewBox="0 0 14 10"
+                                fill="none"
+                              >
+                                <path
+                                  d="M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z"
+                                  fill="#0F9058"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 希望業種 */}
+                      <div className="flex items-start gap-8 mb-6">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                          希望業種
+                        </label>
+                        <div className="flex-1">
+                          <button
+                            type="button"
+                            onClick={() => openIndustryModal(-3)}
+                            className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                          >
+                            希望業種を選択
+                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            {(formData.desiredIndustries || []).map((industry, index) => (
+                              <div
+                                key={index}
+                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                              >
+                                <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                                  {industry}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeDesiredIndustry(index)}
+                                  className="w-3 h-3"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M1 1L11 11M1 11L11 1"
+                                      stroke="#0f9058"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 希望職種 */}
+                      <div className="flex items-start gap-8 mb-6">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                          希望職種
+                        </label>
+                        <div className="flex-1">
+                          <button
+                            type="button"
+                            onClick={() => openJobTypeModal(-5)}
+                            className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                          >
+                            希望職種を選択
+                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            {(formData.desiredJobTypes || []).map((jobType, index) => (
+                              <div
+                                key={index}
+                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                              >
+                                <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                                  {jobType}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeDesiredJobType(index)}
+                                  className="w-3 h-3"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M1 1L11 11M1 11L11 1"
+                                      stroke="#0f9058"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 希望勤務地 */}
+                      <div className="flex items-start gap-8 mb-6">
+                        <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
+                          希望勤務地
+                        </label>
+                        <div className="flex-1">
+                          <button
+                            type="button"
+                            onClick={() => openWorkLocationModal(-6)}
+                            className="px-10 py-[11px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px] mb-4 w-fit"
+                          >
+                            希望勤務地を選択
+                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            {(formData.desiredLocations || []).map((location, index) => (
+                              <div
+                                key={index}
+                                className="bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5"
+                              >
+                                <span className="text-[#0f9058] text-[14px] font-medium tracking-[1.4px]">
+                                  {location}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeDesiredLocation(index)}
+                                  className="w-3 h-3"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M1 1L11 11M1 11L11 1"
+                                      stroke="#0f9058"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
                       {/* 興味のある働き方 */}
                       <div className="flex items-start gap-8">
                         <label className="text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2">
@@ -1649,6 +1833,15 @@ export default function CandidateNewClient() {
           onClose={closeModal}
           onConfirm={handleWorkStyleConfirm}
           initialSelected={getModalInitialData('workstyle', modalState.targetIndex || 0)}
+        />
+      )}
+
+      {modalState.isOpen && modalState.targetType === 'worklocation' && (
+        <WorkLocationSelectModal
+          isOpen={true}
+          onClose={closeModal}
+          onConfirm={handleWorkLocationConfirm}
+          initialSelected={getModalInitialData('worklocation', modalState.targetIndex || 0)}
         />
       )}
     </>

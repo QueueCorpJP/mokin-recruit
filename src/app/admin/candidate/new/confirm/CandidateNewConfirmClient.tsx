@@ -384,6 +384,66 @@ export default function CandidateNewConfirmClient() {
             </div>
           </section>
 
+          {/* 希望条件 */}
+          <section className="mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
+              希望条件
+            </h3>
+            <div className="px-4 py-4 space-y-6">
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望年収</span>
+                <div className="flex-1">
+                  {formData.expectations?.desired_income ?
+                    (() => {
+                      const incomeRange = [
+                        { value: 'under-500', label: '500万未満' },
+                        { value: '500-600', label: '500~600万' },
+                        { value: '600-700', label: '600~700万' },
+                        { value: '700-800', label: '700~800万' },
+                        { value: '800-900', label: '800~900万' },
+                        { value: '900-1000', label: '900~1000万' },
+                        { value: '1000-1100', label: '1000~1100万' },
+                        { value: '1100-1200', label: '1100~1200万' },
+                        { value: '1200-1300', label: '1200~1300万' },
+                        { value: '1300-1400', label: '1300~1400万' },
+                        { value: '1400-1500', label: '1400~1500万' },
+                        { value: 'over-1500', label: '1500万~' },
+                      ].find(range => range.value === formData.expectations.desired_income);
+                      return incomeRange ? incomeRange.label : formData.expectations.desired_income;
+                    })() : 'なし'}
+                </div>
+              </div>
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望業種</span>
+                <div className="flex-1">
+                  {formData.expectations?.desired_industries?.length > 0 ?
+                    formData.expectations.desired_industries.join(', ') : 'なし'}
+                </div>
+              </div>
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望職種</span>
+                <div className="flex-1">
+                  {formData.expectations?.desired_job_types?.length > 0 ?
+                    formData.expectations.desired_job_types.join(', ') : 'なし'}
+                </div>
+              </div>
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望勤務地</span>
+                <div className="flex-1">
+                  {formData.expectations?.desired_work_locations?.length > 0 ?
+                    formData.expectations.desired_work_locations.join(', ') : 'なし'}
+                </div>
+              </div>
+              <div className="flex gap-8">
+                <span className="text-sm font-medium text-gray-700 w-[120px] text-right">興味のある働き方</span>
+                <div className="flex-1">
+                  {formData.expectations?.desired_work_styles?.length > 0 ?
+                    formData.expectations.desired_work_styles.join(', ') : 'なし'}
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* 保存するボタン */}
           <div className="flex justify-center pt-8">
             <AdminButton 

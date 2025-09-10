@@ -25,10 +25,8 @@ export default function CompanyGroupNameChangeCompleteModal({
     // 完了モーダルを閉じた後に確実にページをリロードして最新データを取得
     setTimeout(() => {
       if (companyId) {
-        // 同じURLにクエリパラメータを付けて強制リロード
-        const currentUrl = `/admin/company/${companyId}`;
-        const refreshUrl = `${currentUrl}?refresh=${Date.now()}`;
-        window.location.href = refreshUrl;
+        // Next.jsのrouterを使ってリロード（クエリパラメータ付きでキャッシュ回避）
+        router.push(`/admin/company/${companyId}?refresh=${Date.now()}`);
       } else {
         // companyIdがない場合は現在のページをリロード
         window.location.reload();

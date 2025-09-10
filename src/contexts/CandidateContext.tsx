@@ -42,6 +42,10 @@ export interface CandidateFormData {
   selfPr: string;
   
   // 希望条件
+  desiredSalary?: string;
+  desiredIndustries?: string[];
+  desiredJobTypes?: string[];
+  desiredLocations?: string[];
   desiredWorkStyles?: string[];
 }
 
@@ -79,7 +83,7 @@ export interface SelectionEntry {
 
 export interface ModalState {
   isOpen: boolean;
-  targetType: 'industry' | 'jobtype' | 'workstyle' | null;
+  targetType: 'industry' | 'jobtype' | 'workstyle' | 'worklocation' | null;
   targetIndex: number | null;
 }
 
@@ -144,6 +148,10 @@ const initialFormData: CandidateFormData = {
   recentJobTypes: [],
   jobSummary: '',
   selfPr: '',
+  desiredSalary: '',
+  desiredIndustries: [],
+  desiredJobTypes: [],
+  desiredLocations: [],
 };
 
 const initialEducation: EducationData = {
@@ -329,7 +337,7 @@ interface CandidateContextValue extends CandidateState {
   updateSelectedIndustries: (index: number, industries: string[]) => void;
   
   // Modal actions
-  openModal: (targetType: 'industry' | 'jobtype', targetIndex: number) => void;
+  openModal: (targetType: 'industry' | 'jobtype' | 'workstyle' | 'worklocation', targetIndex: number) => void;
   closeModal: () => void;
   
   // Skills actions
@@ -385,7 +393,7 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
   }, []);
 
   // Modal actions
-  const openModal = useCallback((targetType: 'industry' | 'jobtype', targetIndex: number) => {
+  const openModal = useCallback((targetType: 'industry' | 'jobtype' | 'workstyle' | 'worklocation', targetIndex: number) => {
     dispatch({ type: 'SET_MODAL_STATE', payload: { isOpen: true, targetType, targetIndex } });
   }, []);
 
