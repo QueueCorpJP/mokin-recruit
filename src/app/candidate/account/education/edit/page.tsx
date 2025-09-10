@@ -110,7 +110,7 @@ export default function CandidateEducationEditPage() {
   // 認証チェック
   useEffect(() => {
     if (loading) return;
-    
+
     if (!isAuthenticated || !candidateUser) {
       router.push('/candidate/auth/login');
     }
@@ -118,8 +118,8 @@ export default function CandidateEducationEditPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-pulse'>Loading...</div>
       </div>
     );
   }
