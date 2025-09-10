@@ -1,6 +1,6 @@
 'use server';
 
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 export async function sendContactFormEmail(formData: {
   name: string;
@@ -14,35 +14,24 @@ export async function sendContactFormEmail(formData: {
     console.log('=== sendContactFormEmail開始 ===');
     console.log('フォームデータ:', formData);
 
-    // Gmail SMTPでメール送信
+    // SendGridでメール送信
     console.log('メール送信設定を確認中...');
     
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.log('Gmail設定が不完全です');
+    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
+      console.log('SendGrid設定が不完全です');
       return { error: 'メール送信設定が正しく構成されていません' };
     }
 
     try {
-      console.log('Gmail SMTPトランスポーターを作成中...');
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+      console.log('SendGrid APIキーを設定中...');
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       
       console.log('メール送信中...');
       
       // 管理者への通知メール
-      await transporter.sendMail({
-        from: process.env.GMAIL_USER,
-        to: process.env.GMAIL_USER, // 管理者のメールアドレス
+      const adminMsg = {
+        to: process.env.SENDGRID_FROM_EMAIL, // 管理者のメールアドレス
+        from: process.env.SENDGRID_FROM_EMAIL,
         subject: '【CuePoint】新しいお問い合わせ',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -63,12 +52,14 @@ export async function sendContactFormEmail(formData: {
             <p style="color: #666; font-size: 12px;">このメールは自動送信です。</p>
           </div>
         `
-      });
+      };
+      
+      await sgMail.send(adminMsg);
 
       // お客様への自動返信メール
-      await transporter.sendMail({
-        from: process.env.GMAIL_USER,
+      const customerMsg = {
         to: formData.email,
+        from: process.env.SENDGRID_FROM_EMAIL,
         subject: '【CuePoint】お問い合わせ受付完了のお知らせ',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -92,7 +83,9 @@ export async function sendContactFormEmail(formData: {
             <p style="color: #666; font-size: 12px;">このメールは自動送信です。心当たりがない場合は、お手数ですが削除をお願いいたします。</p>
           </div>
         `
-      });
+      };
+      
+      await sgMail.send(customerMsg);
       
       console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
       

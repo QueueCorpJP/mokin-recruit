@@ -1,7 +1,7 @@
 import React from 'react';
 import ScoutTemplateNewClient from './ScoutTemplateNewClient';
 import { getCachedCompanyUser } from '@/lib/auth/server';
-import { getCompanyGroups } from './actions';
+import { getCompanyGroups, type GroupOption } from './actions';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -15,8 +15,8 @@ export default async function ScoutTemplateNewPage() {
   }
 
   // サーバーサイドでグループ一覧を取得
-  let groupOptions = [];
-  let error = null;
+  let groupOptions: GroupOption[] = [];
+  let error: string | null = null;
   
   try {
     groupOptions = await getCompanyGroups();

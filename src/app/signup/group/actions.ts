@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 interface GroupSignupData {
   email: string;
@@ -100,38 +100,27 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     // 今回は簡単のため、signup_verification_codesテーブルを拡張して使用
     // 実際の実装では別テーブルを作成することを推奨
 
-    // Gmail SMTPでメール送信
+    // SendGridでメール送信
     console.log('メール送信設定を確認中...');
-    console.log('GMAIL_USER:', process.env.GMAIL_USER);
-    console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
+    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
     
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.log('Gmail設定が不完全です');
+    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
+      console.log('SendGrid設定が不完全です');
       return { error: 'メール送信設定が正しく構成されていません' };
     }
 
     try {
-      console.log('Gmail SMTPトランスポーターを作成中...');
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+      console.log('SendGrid APIキーを設定中...');
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       
       console.log('メール送信中...');
       console.log('送信先:', formData.email);
-      console.log('送信元:', process.env.GMAIL_USER);
+      console.log('送信元:', process.env.SENDGRID_FROM_EMAIL);
       
-      await transporter.sendMail({
-        from: process.env.GMAIL_USER,
+      const msg = {
         to: formData.email,
+        from: process.env.SENDGRID_FROM_EMAIL,
         subject: 'グループ参加の認証コード',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -146,7 +135,9 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
             <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
           </div>
         `
-      });
+      };
+      
+      await sgMail.send(msg);
       
       console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
       

@@ -42,13 +42,22 @@ export function filterCandidatesByConditions(
       totalConditions++;
       const hasMatchingJobType = conditions.job_types.some(jobType => {
         // position, experienceJobs, companyNameから部分一致で検索
-        const positionMatch = candidate.position && candidate.position.toLowerCase().includes(jobType.toLowerCase());
-        const companyMatch = candidate.companyName && candidate.companyName.toLowerCase().includes(jobType.toLowerCase());
+        const positionMatch = candidate.position && 
+          candidate.position !== '役職未設定' && 
+          candidate.position.toLowerCase().includes(jobType.toLowerCase());
+        const companyMatch = candidate.companyName && 
+          candidate.companyName !== '企業名未設定' && 
+          candidate.companyName.toLowerCase().includes(jobType.toLowerCase());
         const experienceJobsMatch = candidate.experienceJobs.some(job => 
-          job && job.toLowerCase().includes(jobType.toLowerCase())
+          job && job !== '未設定' && job.toLowerCase().includes(jobType.toLowerCase())
         );
         
-        const match = positionMatch || companyMatch || experienceJobsMatch;
+        // より寛容なマッチング：「未設定」でも条件によってはマッチさせる
+        const fallbackMatch = (candidate.position === '役職未設定' || candidate.companyName === '企業名未設定') &&
+          (jobType.includes('エンジニア') || jobType.includes('プログラマー') || 
+           jobType.includes('マーケティング') || jobType.includes('コンサルタント'));
+        
+        const match = positionMatch || companyMatch || experienceJobsMatch || fallbackMatch;
         return match;
       });
       
@@ -62,12 +71,19 @@ export function filterCandidatesByConditions(
       totalConditions++;
       const hasMatchingIndustry = conditions.industries.some(industry => {
         // companyName, experienceIndustriesから部分一致で検索
-        const companyMatch = candidate.companyName && candidate.companyName.toLowerCase().includes(industry.toLowerCase());
+        const companyMatch = candidate.companyName && 
+          candidate.companyName !== '企業名未設定' && 
+          candidate.companyName.toLowerCase().includes(industry.toLowerCase());
         const experienceIndustryMatch = candidate.experienceIndustries.some(exp => 
-          exp && exp.toLowerCase().includes(industry.toLowerCase())
+          exp && exp !== '未設定' && exp.toLowerCase().includes(industry.toLowerCase())
         );
         
-        const match = companyMatch || experienceIndustryMatch;
+        // より寛容なマッチング：「未設定」でも条件によってはマッチさせる
+        const fallbackMatch = (candidate.companyName === '企業名未設定' || candidate.experienceIndustries.length === 0) &&
+          (industry.includes('IT') || industry.includes('金融') || 
+           industry.includes('コンサルティング') || industry.includes('マーケティング'));
+        
+        const match = companyMatch || experienceIndustryMatch || fallbackMatch;
         return match;
       });
       
@@ -80,7 +96,15 @@ export function filterCandidatesByConditions(
     if (conditions.locations?.length) {
       totalConditions++;
       const hasMatchingLocation = conditions.locations.some(location => {
-        const match = candidate.location && candidate.location.toLowerCase().includes(location.toLowerCase());
+        const locationMatch = candidate.location && 
+          candidate.location !== '未設定' && 
+          candidate.location.toLowerCase().includes(location.toLowerCase());
+        
+        // より寛容なマッチング：「未設定」でも主要都市はマッチさせる
+        const fallbackMatch = candidate.location === '未設定' &&
+          (location.includes('東京') || location.includes('大阪') || location.includes('全国'));
+        
+        const match = locationMatch || fallbackMatch;
         return match;
       });
       
@@ -92,12 +116,21 @@ export function filterCandidatesByConditions(
     // 年齢フィルタ（AND条件）
     if (conditions.age_min || conditions.age_max) {
       totalConditions++;
-      const ageMatch = candidate.age.match(/(\d+)歳/);
-      if (ageMatch) {
-        const age = parseInt(ageMatch[1]);
-        const ageInRange = (!conditions.age_min || age >= conditions.age_min) && 
-                          (!conditions.age_max || age <= conditions.age_max);
-        if (ageInRange) {
+      if (candidate.age && candidate.age !== '年齢未設定') {
+        const ageMatch = candidate.age.match(/(\d+)歳/);
+        if (ageMatch && ageMatch[1]) {
+          const age = parseInt(ageMatch[1]);
+          const ageInRange = (!conditions.age_min || age >= conditions.age_min) && 
+                            (!conditions.age_max || age <= conditions.age_max);
+          if (ageInRange) {
+            matchCount++;
+          }
+        }
+      } else {
+        // 年齢未設定でも条件によってはマッチさせる（寛容な検索）
+        const fallbackAgeMatch = (!conditions.age_min || conditions.age_min <= 35) &&
+                                (!conditions.age_max || conditions.age_max >= 25);
+        if (fallbackAgeMatch) {
           matchCount++;
         }
       }
@@ -106,14 +139,24 @@ export function filterCandidatesByConditions(
     // 年収フィルタ（AND条件）
     if (conditions.salary_min || conditions.salary_max) {
       totalConditions++;
-      const salaryMatch = candidate.salary.match(/(\d+)(?:〜(\d+))?万円/);
-      if (salaryMatch) {
-        const minSalary = parseInt(salaryMatch[1]);
-        const maxSalary = salaryMatch[2] ? parseInt(salaryMatch[2]) : minSalary;
-        const salaryInRange = (!conditions.salary_min || maxSalary >= conditions.salary_min) && 
-                             (!conditions.salary_max || minSalary <= conditions.salary_max);
-        if (salaryInRange) {
+      
+      if (candidate.salary === '未設定') {
+        // 年収未設定でも条件によってはマッチさせる（寛容な検索）
+        const fallbackSalaryMatch = (!conditions.salary_min || conditions.salary_min <= 500) &&
+                                   (!conditions.salary_max || conditions.salary_max >= 400);
+        if (fallbackSalaryMatch) {
           matchCount++;
+        }
+      } else {
+        const salaryMatch = candidate.salary.match(/(\d+)(?:〜(\d+))?万円/);
+        if (salaryMatch && salaryMatch[1]) {
+          const minSalary = parseInt(salaryMatch[1]);
+          const maxSalary = salaryMatch[2] ? parseInt(salaryMatch[2]) : minSalary;
+          const salaryInRange = (!conditions.salary_min || maxSalary >= conditions.salary_min) && 
+                               (!conditions.salary_max || minSalary <= conditions.salary_max);
+          if (salaryInRange) {
+            matchCount++;
+          }
         }
       }
     }
@@ -121,9 +164,17 @@ export function filterCandidatesByConditions(
     // 学歴フィルタ（OR検索）
     if (conditions.education_level?.length) {
       totalConditions++;
-      const hasMatchingEducation = conditions.education_level.some(level => 
-        candidate.degree && candidate.degree.toLowerCase().includes(level.toLowerCase())
-      );
+      const hasMatchingEducation = conditions.education_level.some(level => {
+        const degreeMatch = candidate.degree && 
+          candidate.degree !== '未設定' && 
+          candidate.degree.toLowerCase().includes(level.toLowerCase());
+        
+        // より寛容なマッチング：「未設定」でも基本的な学歴はマッチさせる
+        const fallbackMatch = candidate.degree === '未設定' &&
+          (level.includes('大学') || level.includes('大学院') || level.includes('専門'));
+        
+        return degreeMatch || fallbackMatch;
+      });
       if (hasMatchingEducation) {
         matchCount++;
       }

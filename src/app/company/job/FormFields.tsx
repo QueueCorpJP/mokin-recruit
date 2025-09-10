@@ -13,6 +13,7 @@ import {
   resumeRequiredOptions,
 } from './types';
 import { Radio } from '@/components/ui/radio';
+import { generateJobTitleSuggestions } from '@/lib/utils/job-title-generator';
 
 interface FormFieldsProps {
   // Form state
@@ -258,6 +259,45 @@ export const FormFields: React.FC<FormFieldsProps> = ({
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
+            
+            {/* タイトルサジェスト */}
+            <div className='w-full'>
+              {/* デバッグ情報 - 常に表示 */}
+              <div className='text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded'>
+                <div>職種配列の長さ: {jobTypes.length}</div>
+                <div>職種: [{jobTypes.join(', ')}]</div>
+                <div>業界配列の長さ: {industries.length}</div>
+                <div>業界: [{industries.join(', ')}]</div>
+                <div>条件チェック: {(jobTypes.length > 0 || industries.length > 0) ? 'TRUE' : 'FALSE'}</div>
+              </div>
+              
+              {jobTypes.length > 0 || industries.length > 0 ? (
+                <div className='w-full'>
+                  <div className='text-sm text-gray-600 mb-2'>おすすめのタイトル:</div>
+                  <div className='flex flex-wrap gap-2'>
+                    {(() => {
+                      const suggestions = generateJobTitleSuggestions(jobTypes, industries);
+                      console.log('[FormFields DEBUG] Generated suggestions:', suggestions);
+                      return suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type='button'
+                          onClick={() => setTitle(suggestion)}
+                          className='px-3 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors'
+                        >
+                          {suggestion}
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              ) : (
+                <div className='text-xs text-gray-500'>
+                  職種または業界を選択するとおすすめタイトルが表示されます
+                </div>
+              )}
+            </div>
+            
             {showErrors && errors.title && (
               <span className='text-red-500 text-sm'>{errors.title}</span>
             )}

@@ -134,7 +134,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         group_id: urlParams.get('search_group')!,
         search_conditions: searchConditions,
         search_title: searchTitle,
-        is_saved: false
+        is_saved: true  // 一時的にtrueに変更してテスト
       }).catch(error => {
         console.error('Failed to save search history:', error);
         return { success: false, error: error.message };

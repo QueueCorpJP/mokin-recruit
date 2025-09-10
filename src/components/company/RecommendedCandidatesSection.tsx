@@ -41,14 +41,15 @@ export function RecommendedCandidatesSection({
   const createSearchParams = () => {
     const params = new URLSearchParams();
     
+    // 結果ページが期待するパラメータ名にマッピング
     if (searchCondition.conditions.job_types?.length) {
-      params.set('job_types', searchCondition.conditions.job_types.join(','));
+      params.set('experience_job_types', searchCondition.conditions.job_types.join(','));
     }
     if (searchCondition.conditions.industries?.length) {
-      params.set('industries', searchCondition.conditions.industries.join(','));
+      params.set('experience_industries', searchCondition.conditions.industries.join(','));
     }
     if (searchCondition.conditions.locations?.length) {
-      params.set('locations', searchCondition.conditions.locations.join(','));
+      params.set('desired_locations', searchCondition.conditions.locations.join(','));
     }
     if (searchCondition.conditions.age_min) {
       params.set('age_min', searchCondition.conditions.age_min.toString());
@@ -57,16 +58,16 @@ export function RecommendedCandidatesSection({
       params.set('age_max', searchCondition.conditions.age_max.toString());
     }
     if (searchCondition.conditions.salary_min) {
-      params.set('salary_min', searchCondition.conditions.salary_min.toString());
+      params.set('current_salary_min', searchCondition.conditions.salary_min.toString());
     }
     if (searchCondition.conditions.salary_max) {
-      params.set('salary_max', searchCondition.conditions.salary_max.toString());
+      params.set('current_salary_max', searchCondition.conditions.salary_max.toString());
     }
     if (searchCondition.conditions.experience_years_min) {
       params.set('experience_years_min', searchCondition.conditions.experience_years_min.toString());
     }
     if (searchCondition.conditions.skills?.length) {
-      params.set('skills', searchCondition.conditions.skills.join(','));
+      params.set('qualifications', searchCondition.conditions.skills.join(','));
     }
     if (searchCondition.conditions.languages?.length) {
       params.set('languages', searchCondition.conditions.languages.join(','));
@@ -77,8 +78,8 @@ export function RecommendedCandidatesSection({
     if (searchCondition.conditions.professional_focus) {
       params.set('professional_focus', 'true');
     }
-    if (searchCondition.conditions.education_level?.length) {
-      params.set('education_level', searchCondition.conditions.education_level.join(','));
+    if (searchCondition.conditions.education_level?.length && searchCondition.conditions.education_level[0]) {
+      params.set('education', searchCondition.conditions.education_level[0]); // 最初の1つだけ
     }
     
     return params.toString();
@@ -113,6 +114,7 @@ export function RecommendedCandidatesSection({
           {searchCondition.title}
         </h3>
       </div>
+
 
       {/* 候補者リスト */}
       <div className="space-y-6">

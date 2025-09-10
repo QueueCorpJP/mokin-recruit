@@ -86,6 +86,7 @@ const buttonVariants = cva(
         /* ───────── SMALL / COMPACT ───────── */
         'small-green':
           'bg-[var(--small-button-bg,#198D76)] text-[var(--small-button-text,#FFFFFF)] font-bold tracking-[var(--small-button-letter-spacing,0.1em)] ' +
+          'hover:bg-[#12614E] focus-visible:ring-[#198D76]/30 ' +
           'transition-all duration-200 ease-in-out font-[family-name:var(--font-noto-sans-jp)] text-[14px] ' +
           'leading-[var(--small-button-line-height,1.6)]',
 

@@ -306,7 +306,7 @@ export default function TemplateEditClient({ initialGroupOptions, templateData, 
       </div>
 
       {/* Main Content */}
-      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10">
+      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20">
         <div className="flex justify-end  pb-10">
       <Button
               variant="destructive"
@@ -469,7 +469,7 @@ export default function TemplateEditClient({ initialGroupOptions, templateData, 
             </div>
           </div>
           {/* Submit Buttons */}
-          <div className="flex justify-center gap-4 mt-10">
+          <div className="flex justify-center gap-4 m-10">
             <Button
               variant="green-outline"
               size="figma-outline"

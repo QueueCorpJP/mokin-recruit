@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
-import { getCompanyGroups, getJobPostingsByGroup, createScoutTemplate, type GroupOption, type JobOption, type ScoutTemplateData } from './actions';
+import { getJobPostingsByGroup, createScoutTemplate, type GroupOption, type JobOption } from './actions';
 
 interface ScoutTemplateNewClientProps {
   initialGroupOptions: GroupOption[];
@@ -13,6 +13,43 @@ interface ScoutTemplateNewClientProps {
 
 export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTemplateNewClientProps) {
   const router = useRouter();
+
+  // URL パラメータから複製データを取得
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDuplicate = urlParams.get('duplicate') === 'true';
+    
+    if (isDuplicate) {
+      const duplicateTemplateId = urlParams.get('templateId');
+      const duplicateGroupId = urlParams.get('groupId');
+      const duplicateTemplateName = urlParams.get('templateName');
+      
+      // 基本情報を設定
+      if (duplicateGroupId) setGroup(duplicateGroupId);
+      if (duplicateTemplateName) setTemplateName(`${duplicateTemplateName}のコピー`);
+      
+      // テンプレートIDがある場合は詳細データを取得
+      if (duplicateTemplateId) {
+        const fetchTemplateData = async () => {
+          try {
+            // 既存のアクションを使用してテンプレート詳細を取得
+            const { getScoutTemplateById } = await import('../edit/actions');
+            const result = await getScoutTemplateById(duplicateTemplateId);
+            
+            if (result.success && result.data) {
+              setSubject(result.data.subject || '');
+              setBody(result.data.body || '');
+              setTargetJob(result.data.targetJobPostingId || '');
+            }
+          } catch (error) {
+            console.error('Failed to fetch template data for duplication:', error);
+          }
+        };
+        
+        fetchTemplateData();
+      }
+    }
+  }, []);
 
   // フォームの状態管理
   const [group, setGroup] = useState('');

@@ -27,7 +27,7 @@ export default async function CompanyLayout({
       : undefined;
 
   return (
-    <>
+    <div className="company-layout" data-company-section>
       {/* ナビゲーションを先行表示 */}
       <CompanyNavigationWrapper
         isLoggedIn={initialAuth.isAuthenticated}
@@ -55,6 +55,6 @@ export default async function CompanyLayout({
         isLoggedIn={initialAuth.isAuthenticated}
         userInfo={userInfo}
       />
-    </>
+    </div>
   );
 }

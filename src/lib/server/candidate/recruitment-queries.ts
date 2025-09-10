@@ -391,6 +391,20 @@ async function getAssignedUsersForCandidate(
   try {
     console.log('🔍 [担当者取得] 開始:', { candidateId, companyGroupId });
     
+    // roomsテーブルからparticipating_company_usersを取得
+    const { data: roomData, error: roomError } = await supabase
+      .from('rooms')
+      .select('participating_company_users')
+      .eq('candidate_id', candidateId)
+      .eq('company_group_id', companyGroupId)
+      .single();
+
+    if (!roomError && roomData && roomData.participating_company_users && roomData.participating_company_users.length > 0) {
+      const result = roomData.participating_company_users;
+      console.log('✅ [担当者取得] ルーム担当者:', result);
+      return result;
+    }
+
     // スカウトの場合：scout_sendsから担当者名を取得
     const { data: scoutSends, error: scoutSendsError } = await supabase
       .from('scout_sends')
@@ -426,7 +440,7 @@ async function getAssignedUsersForCandidate(
       return result;
     }
 
-    console.log('❌ [担当者取得] スカウトも応募グループも見つかりません');
+    console.log('❌ [担当者取得] ルーム、スカウト、応募グループすべて見つかりません');
     return [];
   } catch (error) {
     console.error('❌ [担当者取得エラー]:', error);
