@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Member {
   id: string;
@@ -197,13 +198,14 @@ export default function NewGroupModal({
 
         {/* フッター */}
         <div className="flex justify-center px-10 py-6 border-t border-[#BABABA] flex-shrink-0">
-          <button
+          <Button
+            variant="green-gradient"
+            size="figma-default"
             onClick={handleConfirm}
-            className="px-10 py-3.5 bg-black text-white text-base font-bold hover:bg-gray-800 transition-colors"
-            style={{ borderRadius: '32px' }}
+            className="px-10 py-3.5"
           >
             確定
-          </button>
+          </Button>
         </div>
       </div>
     </div>

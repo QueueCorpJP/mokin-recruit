@@ -193,6 +193,77 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
 
     console.log('✅ [sendCompanyMessage] Room validation passed:', room);
 
+    // 企業ユーザー情報と企業名を取得
+    const { data: companyUser, error: companyUserError } = await supabase
+      .from('company_users')
+      .select(`
+        id, 
+        full_name, 
+        position_title, 
+        email,
+        company_account:company_accounts(company_name)
+      `)
+      .eq('id', companyUserId)
+      .single();
+
+    if (companyUserError) {
+      console.error('❌ [sendCompanyMessage] Company user fetch error:', companyUserError);
+      return { error: 'User information not found' };
+    }
+
+    // 企業名を取得
+    const companyName = companyUser.company_account?.company_name;
+    if (!companyName) {
+      console.error('❌ [sendCompanyMessage] Company name not found');
+      return { error: 'Company information not found' };
+    }
+
+    // roomsテーブルのparticipating_company_usersを更新（企業名を使用）
+    const userRecord = {
+      id: companyUser.id,
+      name: companyUser.full_name,
+      position: companyUser.position_title || '',
+      email: companyUser.email,
+      company_name: companyName,
+      joined_at: new Date().toISOString()
+    };
+
+    // 既存の参加者リストを取得
+    const { data: currentRoom, error: roomFetchError } = await supabase
+      .from('rooms')
+      .select('participating_company_users')
+      .eq('id', data.room_id)
+      .single();
+
+    if (roomFetchError) {
+      console.error('❌ [sendCompanyMessage] Room fetch error:', roomFetchError);
+      return { error: 'Failed to fetch room data' };
+    }
+
+    // 既存の参加者リストを解析し、重複チェック
+    const existingUsers = Array.isArray(currentRoom.participating_company_users) 
+      ? currentRoom.participating_company_users 
+      : [];
+    
+    const userExists = existingUsers.some((user: any) => user.id === companyUser.id);
+    
+    if (!userExists) {
+      // 新しい参加者を追加
+      const updatedUsers = [...existingUsers, userRecord];
+      
+      const { error: updateRoomError } = await supabase
+        .from('rooms')
+        .update({ participating_company_users: updatedUsers })
+        .eq('id', data.room_id);
+
+      if (updateRoomError) {
+        console.error('❌ [sendCompanyMessage] Room update error:', updateRoomError);
+        // ユーザー記録の失敗はメッセージ送信を阻害しない
+      } else {
+        console.log('✅ [sendCompanyMessage] Added company user to room:', `${companyUser.full_name} (${companyName})`);
+      }
+    }
+
     // メッセージを挿入
     const { data: message, error: messageError } = await supabase
       .from('messages')

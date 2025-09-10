@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CandidateData } from '@/lib/server/candidate/recruitment-queries';
 import { SelectInput } from '@/components/ui/select-input';
 import { SelectionResultModal } from '@/components/ui/selection-result-modal';
+import { JoiningDateModal } from '@/components/ui/joining-date-modal';
+import { updateJoiningDateAction } from '@/lib/actions/joining-date';
 import { getSelectionProgressAction, updateSelectionProgressAction } from '@/lib/actions/selection-progress';
 
 const CareerChangeIcon = () => (
@@ -34,6 +36,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
   const [selectionProgress, setSelectionProgress] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStage, setCurrentStage] = useState<string>('');
+  const [isJoiningDateModalOpen, setIsJoiningDateModalOpen] = useState(false);
 
   // 同じグループの求人のみをフィルタリング
   const filteredJobOptions = jobOptions.filter(job => 
@@ -91,8 +94,8 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
 
     const stageMapping: Record<string, any> = {
       '書類選考': 'document_screening',
-      '一次面接': 'first_interview',
-      '二次以降': 'secondary_interview', 
+      '一次面接': 'first_interview', 
+      '二次以降': 'secondary_interview',
       '最終面接': 'final_interview',
       '内定': 'offer'
     };
@@ -109,6 +112,34 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
       setSelectionProgress(result.data);
     }
     handleModalClose();
+  };
+
+  const handleJoiningDateModalOpen = () => {
+    setIsJoiningDateModalOpen(true);
+  };
+
+  const handleJoiningDateModalClose = () => {
+    setIsJoiningDateModalOpen(false);
+  };
+
+  const handleJoiningDateSubmit = async (formData: { joiningDate: string }) => {
+    if (!candidate.id || !companyGroupId) return;
+
+    const result = await updateJoiningDateAction({
+      candidateId: candidate.id,
+      companyGroupId: companyGroupId,
+      joiningDate: formData.joiningDate,
+      jobPostingId: candidate.jobPostingId,
+    });
+
+    if (result.success) {
+      setSelectionProgress(result.data);
+      // 成功メッセージを表示（オプション）
+      alert('入社日を設定しました');
+    } else {
+      // エラーメッセージを表示
+      alert('入社日の設定に失敗しました: ' + result.error);
+    }
   };
 
   // デバッグ用ログ
@@ -193,7 +224,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
             className='text-[#323232] text-[14px] font-medium leading-[160%] tracking-[1.4px] w-full min-[1440px]:w-[356px] h-[22px]'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           >
-            {candidate.location || '未設定'}／{candidate.age || 0}歳／{candidate.gender || '未設定'}
+            {candidate.location || '地域未設定'}／{candidate.age && candidate.age > 0 ? `${candidate.age}歳` : '○○歳'}／{candidate.gender || '性別未設定'}
           </div>
         </div>
 
@@ -564,9 +595,52 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
               入社
             </div>
             <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-            <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-              -
-            </div>
+            {(() => {
+              const progress = selectionProgress;
+              
+              // 内定承諾済みの場合、入社日登録ボタンを表示
+              if (progress?.offer_result === 'accepted') {
+                // 既に入社日が登録されている場合
+                if (progress?.joining_date) {
+                  const joiningDate = new Date(progress.joining_date);
+                  const formattedDate = joiningDate.toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  }).replace(/\//g, '/');
+                  
+                  return (
+                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                      {formattedDate}
+                    </div>
+                  );
+                } else {
+                  // 入社日未登録の場合、登録ボタンを表示
+                  return (
+                    <button
+                      className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
+                      style={{
+                        background: 'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
+                        fontFamily: 'Noto Sans JP, sans-serif',
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleJoiningDateModalOpen();
+                      }}
+                    >
+                      入社日設定
+                    </button>
+                  );
+                }
+              } else {
+                return (
+                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                    -
+                  </div>
+                );
+              }
+            })()}
           </div>
         </div>
 
@@ -586,6 +660,14 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
         selectionStage={currentStage}
         onPass={handlePass}
         onReject={handleReject}
+      />
+
+      {/* Joining Date Modal */}
+      <JoiningDateModal
+        isOpen={isJoiningDateModalOpen}
+        onClose={handleJoiningDateModalClose}
+        onSubmit={handleJoiningDateSubmit}
+        candidateName={candidate.name || '候補者'}
       />
     </div>
   );

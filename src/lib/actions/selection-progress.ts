@@ -122,7 +122,15 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
 
     const { data, error } = await supabase
       .from('selection_progress')
-      .select('*')
+      .select(`
+        *,
+        company_groups (
+          group_name
+        ),
+        job_postings (
+          title
+        )
+      `)
       .eq('candidate_id', candidateId)
       .eq('company_group_id', companyGroupId)
       .single();
@@ -135,9 +143,16 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
       };
     }
 
+    // データを整形して返す
+    const formattedData = data ? {
+      ...data,
+      group_name: data.company_groups?.group_name || '',
+      job_title: data.job_postings?.title || ''
+    } : null;
+
     return {
       success: true,
-      data: data || null,
+      data: formattedData,
     };
 
   } catch (error) {

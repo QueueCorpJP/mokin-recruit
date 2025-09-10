@@ -25,6 +25,11 @@ html {
   font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
 }
 
+/* Noto_Sans_JP クラスも同じフォントファミリーを適用（後方互換性のため） */
+.Noto_Sans_JP {
+  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+}
+
 /* フォント読み込み時のスムーズな切り替え */
 * {
   font-display: swap;

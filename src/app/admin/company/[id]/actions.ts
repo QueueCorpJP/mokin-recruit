@@ -35,8 +35,8 @@ export async function updateCompanyPlan(
     if (!validation.success) {
       return {
         success: false,
-        error: validation.errors?.[0]?.message || 'プランが正しくありません',
-        validationErrors: validation.errors
+        error: validation.error?.issues?.[0]?.message || 'プランが正しくありません',
+        validationErrors: validation.error?.issues
       };
     }
 
@@ -90,23 +90,22 @@ export async function updateCompanyScoutLimit(
     if (!validation.success) {
       return {
         success: false,
-        error: validation.errors?.[0]?.message || 'スカウト上限数が正しくありません',
-        validationErrors: validation.errors
+        error: validation.error?.issues?.[0]?.message || 'スカウト上限数が正しくありません',
+        validationErrors: validation.error?.issues
       };
     }
 
     const supabase = getSupabaseAdminClient();
 
     // Step 2: Update company scout limit
-    // Note: company_accounts table may not have scout_limit column
-    // For now, we'll update the updated_at field to track the change
     const { data: updatedCompany, error: updateError } = await supabase
       .from('company_accounts')
       .update({
+        scout_limit: newScoutLimit,
         updated_at: new Date().toISOString(),
       })
       .eq('id', companyId)
-      .select('id, company_name, updated_at')
+      .select('id, company_name, scout_limit, updated_at')
       .single();
 
     if (updateError) {
@@ -418,7 +417,15 @@ export async function inviteMembersToGroup(
       };
     }
 
-    const companyData = groupData.company_accounts;
+    const companyData = Array.isArray(groupData.company_accounts) ? groupData.company_accounts[0] : groupData.company_accounts;
+    
+    if (!companyData) {
+      return {
+        success: false,
+        error: '企業情報の取得に失敗しました'
+      };
+    }
+    
     const invitedMembers: Array<{ email: string; role: string; status: string }> = [];
 
     // Step 2: Process each member invitation

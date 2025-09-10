@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { Modal } from '@/components/ui/mo-dal';
+import { Button } from '@/components/ui/button';
 
 interface CompanyWithdrawalConfirmModalProps {
   isOpen: boolean;
@@ -15,49 +17,46 @@ export default function CompanyWithdrawalConfirmModal({
   onConfirm,
   companyName,
 }: CompanyWithdrawalConfirmModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+    <Modal
+      title="企業アカウント休会"
+      isOpen={isOpen}
+      onClose={onClose}
+      width="604px"
+      height="284px"
+      hideFooter={true}
     >
-      <div className="bg-white border border-black rounded-2xl w-[604px] h-[284px] relative">
-        {/* コンテンツ */}
-        <div className="flex flex-col items-center justify-center h-full px-8">
-          {/* タイトル */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-black mb-4">
-              企業アカウント休会
-            </h2>
-            <p className="text-base font-bold text-black mb-2">
-              企業アカウントを休会しますか？
-            </p>
-            <p className="text-base font-bold text-black">
-              {companyName}
-            </p>
-          </div>
+      <div className="flex flex-col items-center justify-center w-full h-full space-y-8">
+        {/* 確認メッセージ */}
+        <div className="text-center space-y-2">
+          <p className="text-base font-bold text-[#323232]">
+            企業アカウントを休会しますか？
+          </p>
+          <p className="text-base font-bold text-[#323232]">
+            {companyName}
+          </p>
+        </div>
 
-          {/* ボタン群 */}
-          <div className="flex gap-4 w-full max-w-[435px]">
-            {/* キャンセルボタン */}
-            <button
-              onClick={onClose}
-              className="flex-1 h-[51px] bg-white border border-black rounded-[35px] text-base font-bold text-black hover:bg-gray-50 transition-colors"
-            >
-              キャンセル
-            </button>
-
-            {/* 休会処理するボタン */}
-            <button
-              onClick={onConfirm}
-              className="flex-1 h-[51px] bg-black text-white rounded-[35px] text-base font-bold hover:bg-gray-800 transition-colors"
-            >
-              休会処理する
-            </button>
-          </div>
+        {/* ボタン群 */}
+        <div className="flex gap-4 w-full max-w-[435px]">
+          <Button
+            variant="outline"
+            size="figma-default"
+            onClick={onClose}
+            className="flex-1 h-[51px] border-[#323232] text-[#323232] rounded-[35px] hover:bg-gray-50"
+          >
+            キャンセル
+          </Button>
+          <Button
+            variant="green-gradient"
+            size="figma-default"
+            onClick={onConfirm}
+            className="flex-1 h-[51px]"
+          >
+            休会処理する
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

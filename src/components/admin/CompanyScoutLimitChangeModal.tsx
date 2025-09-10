@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Modal } from '@/components/ui/mo-dal';
+import { Button } from '@/components/ui/button';
 
 interface CompanyScoutLimitChangeModalProps {
   isOpen: boolean;
@@ -39,66 +41,64 @@ export default function CompanyScoutLimitChangeModal({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+    <Modal
+      title="スカウト上限数変更"
+      isOpen={isOpen}
+      onClose={handleClose}
+      width="604px"
+      height="359px"
+      hideFooter={true}
     >
-      <div className="bg-white border border-black rounded-2xl w-[604px] h-[359px] relative">
-        {/* コンテンツ */}
-        <div className="flex flex-col items-center justify-center h-full px-8">
-          {/* タイトル */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-black mb-4">
-              スカウト上限数変更
-            </h2>
-            <p className="text-base font-bold text-black">
-              現在のスカウト上限数: {currentLimit}件
-            </p>
-          </div>
+      <div className="flex flex-col items-center justify-center w-full h-full space-y-8">
+        {/* 現在の上限数表示 */}
+        <div className="text-center">
+          <p className="text-base font-bold text-[#323232]">
+            現在のスカウト上限数: {currentLimit}件
+          </p>
+        </div>
 
-          {/* スカウト上限数入力 */}
-          <div className="mb-16">
-            <div className="flex items-center gap-3">
-              <label className="text-base font-bold text-black">
-                新しい上限数
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={newLimit}
-                  onChange={(e) => setNewLimit(e.target.value)}
-                  min="0"
-                  className="w-24 px-3 py-3 bg-white border border-black text-base font-bold text-black text-center outline-none"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                />
-                <span className="text-base font-bold text-black">件</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ボタン群 */}
-          <div className="flex gap-4 w-full max-w-[435px]">
-            {/* キャンセルボタン */}
-            <button
-              onClick={handleClose}
-              className="flex-1 h-[51px] bg-white border border-black rounded-[35px] text-base font-bold text-black hover:bg-gray-50 transition-colors"
-            >
-              キャンセル
-            </button>
-
-            {/* 更新するボタン */}
-            <button
-              onClick={handleConfirm}
-              className="flex-1 h-[51px] bg-black text-white rounded-[35px] text-base font-bold hover:bg-gray-800 transition-colors"
-            >
-              更新する
-            </button>
+        {/* スカウト上限数入力 */}
+        <div className="flex items-center gap-3">
+          <label className="text-base font-bold text-[#323232]">
+            新しい上限数
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={newLimit}
+              onChange={(e) => setNewLimit(e.target.value)}
+              min="0"
+              className="w-24 px-3 py-3 bg-white border border-[#999999] rounded-[8px] text-base font-bold text-[#323232] text-center outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] transition-all duration-200"
+              style={{ 
+                fontFamily: '"Noto Sans JP", sans-serif',
+                height: '50px'
+              }}
+            />
+            <span className="text-base font-bold text-[#323232]">件</span>
           </div>
         </div>
+
+        {/* ボタン群 */}
+        <div className="flex gap-4 w-full max-w-[435px]">
+          <Button
+            variant="outline"
+            size="figma-default"
+            onClick={handleClose}
+            className="flex-1 h-[51px] border-[#323232] text-[#323232] rounded-[35px] hover:bg-gray-50"
+          >
+            キャンセル
+          </Button>
+          <Button
+            variant="green-gradient"
+            size="figma-default"
+            onClick={handleConfirm}
+            className="flex-1 h-[51px]"
+          >
+            更新する
+          </Button>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

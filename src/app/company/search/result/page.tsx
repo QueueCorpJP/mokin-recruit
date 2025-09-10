@@ -32,9 +32,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
   });
   
-  // search_groupは必ずユーザーが明示的に選択した場合のみ使用
+  // search_groupが設定されていない場合、デフォルトグループIDを取得
+  let defaultGroupId = null;
+  if (!urlParams.get('search_group')) {
+    try {
+      const { getUserDefaultGroupId } = await import('@/lib/actions/search-history');
+      const defaultGroupResult = await getUserDefaultGroupId();
+      if (defaultGroupResult.success && defaultGroupResult.data) {
+        defaultGroupId = defaultGroupResult.data.id;
+        console.log('[DEBUG] Server-side default group ID:', defaultGroupId);
+      }
+    } catch (error) {
+      console.error('[DEBUG] Failed to get default group ID on server:', error);
+    }
+  }
   
   const initialSearchParams = parseSearchParams(urlParams);
+  // デフォルトグループIDを初期パラメータに設定
+  if (defaultGroupId && !initialSearchParams.searchGroup) {
+    initialSearchParams.searchGroup = defaultGroupId;
+  }
 
   // 検索履歴を保存（バックグラウンドで実行）
   console.log('[DEBUG] Search params:', Object.fromEntries(urlParams.entries()));

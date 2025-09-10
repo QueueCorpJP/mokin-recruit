@@ -207,6 +207,7 @@ export async function getCandidatesDataWithQuery(
           gender
         ),
         company_groups!inner (
+          id,
           group_name
         ),
         job_postings (
@@ -239,6 +240,7 @@ export async function getCandidatesDataWithQuery(
           gender
         ),
         company_groups!inner (
+          id,
           group_name
         ),
         job_postings (
@@ -810,10 +812,12 @@ export interface CandidateDetailData {
   badgeType?: 'change' | 'professional' | 'multiple';
   badgeText?: string;
   isAttention?: boolean;
-  jobPostingId?: string;
-  jobPostingTitle?: string;
-  group?: string;
-  groupId?: string;
+  jobPostingId: string;
+  jobPostingTitle: string;
+  group: string;
+  groupId: string;
+  experience?: string[]; // 候補者カードと同じ形式
+  industry?: string[];   // 候補者カードと同じ形式
   experienceJobs?: Array<{ title: string; years: number }>;
   experienceIndustries?: Array<{ title: string; years: number }>;
   workHistory?: Array<{
@@ -855,6 +859,7 @@ export interface CandidateDetailData {
     isHighlighted?: boolean;
     isCareerChange?: boolean;
   };
+  assignedUsers?: string[];
 }
 
 /**
@@ -886,7 +891,7 @@ export async function getCandidateDetailData(
 
   if (companyGroupId) {
     // applicationテーブルから求人情報を取得
-    const { data: applicationData } = await supabase
+    const { data: applicationData, error: appError } = await supabase
       .from('application')
       .select(`
         job_posting_id,
@@ -900,16 +905,16 @@ export async function getCandidateDetailData(
       `)
       .eq('candidate_id', candidateId)
       .eq('company_group_id', companyGroupId)
-      .single();
+      .maybeSingle();
 
-    if (applicationData) {
+    if (applicationData && !appError) {
       jobPostingId = applicationData.job_posting_id || '';
       jobPostingTitle = applicationData.job_postings?.title || '';
       group = applicationData.company_groups?.group_name || '';
       groupId = applicationData.company_group_id || '';
     } else {
       // scout_sendsテーブルからも確認
-      const { data: scoutData } = await supabase
+      const { data: scoutData, error: scoutError } = await supabase
         .from('scout_sends')
         .select(`
           job_posting_id,
@@ -918,14 +923,15 @@ export async function getCandidateDetailData(
             title
           ),
           company_groups (
+            id,
             group_name
           )
         `)
         .eq('candidate_id', candidateId)
         .eq('company_group_id', companyGroupId)
-        .single();
+        .maybeSingle();
 
-      if (scoutData) {
+      if (scoutData && !scoutError) {
         jobPostingId = scoutData.job_posting_id || '';
         jobPostingTitle = scoutData.job_postings?.title || '';
         group = scoutData.company_groups?.group_name || '';
@@ -1048,6 +1054,8 @@ export async function getCandidateDetailData(
     lastUpdate: formatDate(candidate.updated_at),
     registrationDate: formatDate(candidate.created_at),
     jobSummary: candidate.job_summary || '',
+    experience: (jobExp || []).map((j: { job_type_name: string }) => j.job_type_name), // 候補者カードと同じ形式
+    industry: (industryExp || []).map((i: { industry_name: string }) => i.industry_name), // 候補者カードと同じ形式
     experienceJobs: (jobExp || []).map(
       (j: { job_type_name: string; experience_years: number }) => ({
         title: j.job_type_name,

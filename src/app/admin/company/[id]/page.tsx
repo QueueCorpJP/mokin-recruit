@@ -25,6 +25,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       created_at,
       updated_at,
       plan,
+      scout_limit,
       company_groups (
         id,
         group_name,

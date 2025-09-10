@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SelectInput } from '@/components/ui/select-input';
+import { Button } from '@/components/ui/button';
 import { AdminButton } from './AdminButton';
 
 interface JobApprovalModalProps {
@@ -81,7 +82,7 @@ export function JobApprovalModal({
         </div>
 
         {/* 説明文 */}
-        <div className="text-start mb-6 ">
+        <div className="text-center mb-6 ">
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
           求人の承認をした場合、即時掲載がされます。
           </p>
@@ -89,7 +90,7 @@ export function JobApprovalModal({
           非承認の場合は、求人企業に非承認通知が届きます。
           </p>
         </div>
-        <div className="text-start mb-6 ">
+        <div className="text-center mb-6 ">
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
           非承認の場合は、理由を選択の上、詳細をお書きください。
           </p>
@@ -139,13 +140,15 @@ export function JobApprovalModal({
           >
             {isProcessing ? "処理中..." : "非承認にする"}
           </button>
-          <button
+          <Button
+            variant="green-gradient"
+            size="figma-default"
             onClick={handleApprove}
             disabled={!selectedReason || isProcessing}
-            className="w-[180px] bg-[#FFA500] hover:bg-[#FF8C00] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-[32px] transition-colors font-['Inter']"
+            className="w-[180px]"
           >
             {isProcessing ? "処理中..." : "承認する"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

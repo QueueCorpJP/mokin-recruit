@@ -15,6 +15,7 @@ export interface CompanyEditData {
   logo_image_path: string | null;
   contract_plan: any;
   plan: string;
+  scout_limit?: number;
   status: string;
   created_at: string;
   updated_at: string;

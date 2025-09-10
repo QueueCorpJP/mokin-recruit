@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { SelectInput } from '@/components/ui/select-input';
 
 interface Member {
   id: string;
@@ -18,7 +20,8 @@ interface AddMemberModalProps {
 
 const roleOptions = [
   { value: 'admin', label: '管理者' },
-  { value: 'scout', label: 'スカウト担当者' }
+  { value: 'scout', label: 'スカウト担当者' },
+  { value: 'recruiter', label: '採用担当者' }
 ];
 
 export default function AddMemberModal({
@@ -99,12 +102,14 @@ export default function AddMemberModal({
           <h2 className="text-2xl font-bold text-black">
             グループへのメンバー招待
           </h2>
-          <button
+          <Button
             onClick={handleClose}
-            className="flex items-center justify-center w-6 h-6 hover:bg-gray-100 rounded transition-colors"
+            variant="ghost"
+            size="icon"
+            className="w-6 h-6 hover:bg-gray-100 rounded transition-colors"
           >
             <X className="w-6 h-6 text-gray-400 hover:text-gray-600" />
-          </button>
+          </Button>
         </div>
 
         {/* メインコンテンツ */}
@@ -139,33 +144,26 @@ export default function AddMemberModal({
                       style={{ fontFamily: 'Inter, sans-serif' }}
                     />
                     {members.length > 1 && (
-                      <button
+                      <Button
                         onClick={() => handleRemoveMember(member.id)}
-                        className="text-2xl font-bold text-black hover:text-gray-600"
+                        variant="ghost"
+                        size="icon"
+                        className="text-2xl font-bold text-black hover:text-gray-600 w-8 h-8"
                       >
                         ×
-                      </button>
+                      </Button>
                     )}
                   </div>
 
                   {/* 権限選択 */}
-                  <div className="flex items-center gap-2 px-3.5 py-3 bg-white border border-black">
-                    <select
+                  <div className="w-40">
+                    <SelectInput
+                      options={roleOptions}
                       value={member.role}
-                      onChange={(e) => handleMemberChange(member.id, 'role', e.target.value)}
-                      className="text-base font-bold text-black outline-none bg-transparent"
-                      style={{ fontFamily: 'Inter, sans-serif', minWidth: '112px' }}
-                    >
-                      <option value="">権限を選択</option>
-                      {roleOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none" className="flex-shrink-0">
-                      <path d="M1 1L10 10L19 1" stroke="black" strokeWidth="2"/>
-                    </svg>
+                      placeholder="権限を選択"
+                      onChange={(value) => handleMemberChange(member.id, 'role', value)}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               ))}
@@ -173,25 +171,36 @@ export default function AddMemberModal({
 
             {/* さらに追加ボタン */}
             <div className="text-center mt-4">
-              <button
+              <Button
                 onClick={handleAddMember}
+                variant="ghost"
+                size="figma-default"
                 className="text-base font-bold text-black hover:text-gray-600"
               >
                 ＋さらに追加
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* フッター */}
-        <div className="flex justify-center px-10 py-6 border-t border-[#BABABA]">
-          <button
+        <div className="flex justify-center gap-4 px-10 py-6 border-t border-[#BABABA]">
+          <Button
+            onClick={handleClose}
+            variant="outline"
+            size="figma-default"
+            className="px-10"
+          >
+            キャンセル
+          </Button>
+          <Button
             onClick={handleConfirm}
-            className="px-10 py-3.5 bg-black text-white text-base font-bold hover:bg-gray-800 transition-colors"
-            style={{ borderRadius: '32px' }}
+            variant="green-gradient"
+            size="figma-default"
+            className="px-10"
           >
             招待を送信
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -20,7 +20,7 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.39.3",
+    "@supabase/supabase-js": "^2.57.4",
     "@tiptap/extension-image": "^3.1.0",
     "@tiptap/extension-table": "^3.1.0",
     "@tiptap/extension-table-cell": "^3.1.0",

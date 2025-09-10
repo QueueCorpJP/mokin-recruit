@@ -1,18 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CandidateData as RecruitmentCandidateData } from '@/lib/server/candidate/recruitment-queries';
 import { Button } from '@/components/ui/button';
 import CandidateDetailTabDetail from './CandidateDetailTabDetail';
 import CandidateDetailTabProgress from './CandidateDetailTabProgress';
+import { 
+  saveCandidateAction, 
+  unsaveCandidateAction, 
+  getSavedCandidatesAction 
+} from '@/app/company/search/result/candidate-actions';
 
 interface CandidateDetailModalProps {
   candidate: RecruitmentCandidateData;
+  companyGroupId: string;
   onClose: () => void;
 }
 
 const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
   candidate,
+  companyGroupId,
   onClose,
 }) => {
   // データベース構造に基づいて値を取得、未設定の場合はデフォルト値を使用
@@ -62,8 +69,58 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
     if (!arr || arr.length === 0) return ['未設定'];
     return arr.filter(item => item && item.trim() !== '');
   };
+  
   const [isPickupActive, setIsPickupActive] = useState(false);
   const [activeTab, setActiveTab] = useState<'detail' | 'progress'>('detail');
+  
+  // 初期化時にピックアップ状態を取得
+  useEffect(() => {
+    const fetchPickupStatus = async () => {
+      if (!candidate.id || !companyGroupId) return;
+      
+      try {
+        const result = await getSavedCandidatesAction(companyGroupId);
+        if (result.success && result.data) {
+          setIsPickupActive(result.data.includes(candidate.id));
+        }
+      } catch (error) {
+        console.error('Error fetching pickup status:', error);
+      }
+    };
+    
+    fetchPickupStatus();
+  }, [candidate.id, companyGroupId]);
+
+  // ピックアップ状態をトグルする関数
+  const handlePickupToggle = async () => {
+    if (!candidate.id || !companyGroupId) return;
+    
+    try {
+      if (isPickupActive) {
+        // 保存解除
+        const result = await unsaveCandidateAction(candidate.id, companyGroupId);
+        if (result.success) {
+          setIsPickupActive(false);
+        } else {
+          console.error('Error unsaving candidate:', result.error);
+        }
+      } else {
+        // 保存
+        const result = await saveCandidateAction(candidate.id, companyGroupId);
+        if (result.success) {
+          setIsPickupActive(true);
+        } else if (result.error === 'Candidate already saved') {
+          // 既に保存済みの場合は状態を更新
+          setIsPickupActive(true);
+        } else {
+          console.error('Error saving candidate:', result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling pickup:', error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -303,7 +360,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
                 background: isPickupActive ? undefined : '#DCDCDC',
                 color: '#fff',
               }}
-              onClick={() => setIsPickupActive(v => !v)}
+              onClick={handlePickupToggle}
               disabled={!isPickupActive && false}
             >
               <svg
