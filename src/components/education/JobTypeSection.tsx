@@ -17,7 +17,6 @@ export type JobType = {
  * @template T - react-hook-formのFieldValues型
  */
 interface JobTypeSectionProps {
-  /** 選択中の職種リスト */
   selectedJobTypes: JobType[];
   /** バリデーションエラー（jobTypesフィールドのみ） */
   errors: FieldErrors | undefined;
