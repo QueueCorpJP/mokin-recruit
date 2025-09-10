@@ -18,7 +18,6 @@ export type JobType = {
  */
 interface JobTypeSectionProps {
   selectedJobTypes: JobType[];
-  /** バリデーションエラー（jobTypesフィールドのみ） */
   errors: FieldErrors | undefined;
   /** 職種選択モーダルを開くハンドラ */
   onSelect: () => void;
