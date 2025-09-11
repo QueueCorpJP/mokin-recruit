@@ -136,8 +136,3 @@
 - 公式ドキュメント
   （[Next.js App Router Layout 設計](https://nextjs.org/docs/app/building-your-application/upgrading/from-vite)
   など）を参照
-
----
-
-**（独り言）** この第 6 部では、横断的なリファクタリング観点・優先度・推奨戦略を厳密にまとめました。
-**次は全体まとめ・推進計画例（第 7 部）に進みます。**

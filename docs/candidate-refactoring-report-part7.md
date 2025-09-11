@@ -65,8 +65,3 @@
 - [Next.js App Router Layout 設計](https://nextjs.org/docs/app/building-your-application/upgrading/from-vite)
 - [Next.js Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata)
 - [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions)
-
----
-
-**（独り言）** この第 7 部で、candidate 配下リファクタリング診断・設計書の全体まとめ・推進計画例を厳
-密に記述しました。 **ご要望・修正点があれば、どの段階でもご指示ください。**
