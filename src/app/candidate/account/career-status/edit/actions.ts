@@ -1,24 +1,14 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
+import {
+  requireCandidateAuth,
+  requireCandidateAuthForAction,
+} from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import { any } from 'zod';
+import { parseJsonField } from '../../_shared/utils/formData';
 
-interface CareerStatusFormData {
-  transferDesiredTime: string;
-  currentActivityStatus: string;
-  selectionCompanies: Array<{
-    privacyScope: string;
-    isPrivate: boolean;
-    industries: string[];
-    companyName: string;
-    department: string;
-    progressStatus: string;
-    declineReason: string;
-  }>;
-}
+// 型はスキーマ側で定義済みのためここでは重複定義しない
 
 export async function getCareerStatusData() {
   try {
@@ -84,33 +74,27 @@ export async function updateCareerStatusData(formData: FormData) {
     const { candidateId } = authResult.data;
 
     // フォームデータをパース
-    const transferDesiredTime = formData.get('transferDesiredTime')?.toString() || '';
-    const currentActivityStatus = formData.get('currentActivityStatus')?.toString() || '';
-    const selectionCompaniesJson = formData.get('selectionCompanies')?.toString();
-    
-    let selectionCompanies: Array<{
-      privacyScope: string;
-      isPrivate: boolean;
-      industries: string[];
-      companyName: string;
-      department: string;
-      progressStatus: string;
-      declineReason: string;
-    }> = [];
-    
-    if (selectionCompaniesJson) {
-      try {
-        selectionCompanies = JSON.parse(selectionCompaniesJson);
-      } catch (e) {
-        console.error('Selection companies JSON parse error:', e);
-      }
-    }
-    
+    const transferDesiredTime =
+      formData.get('transferDesiredTime')?.toString() || '';
+    const currentActivityStatus =
+      formData.get('currentActivityStatus')?.toString() || '';
+    const selectionCompanies = parseJsonField<
+      Array<{
+        privacyScope: string;
+        isPrivate: boolean;
+        industries: string[];
+        companyName: string;
+        department: string;
+        progressStatus: string;
+        declineReason: string;
+      }>
+    >(formData, 'selectionCompanies', []);
+
     console.log('Updating career status:', {
       candidateId,
       transferDesiredTime,
       currentActivityStatus,
-      selectionCompanies
+      selectionCompanies,
     });
 
     const supabase = await getSupabaseServerClient();
@@ -142,7 +126,9 @@ export async function updateCareerStatusData(formData: FormData) {
       if (deleteError) {
         console.error('Career status entries delete error:', deleteError);
         // エラーでも処理を続行（主要な情報は既に保存済み）
-        console.warn('既存の選考状況エントリの削除に失敗しましたが、処理を続行します');
+        console.warn(
+          '既存の選考状況エントリの削除に失敗しましたが、処理を続行します'
+        );
       }
 
       // 新しい選考状況エントリを挿入
@@ -163,18 +149,22 @@ export async function updateCareerStatusData(formData: FormData) {
       if (insertError) {
         console.error('Career status entries insert error:', insertError);
         // エラーでも処理を続行（主要な情報は既に保存済み）
-        console.warn('選考状況エントリの挿入に失敗しましたが、処理を続行します');
+        console.warn(
+          '選考状況エントリの挿入に失敗しましたが、処理を続行します'
+        );
       }
     }
 
-    console.log('Career status update success:', { candidateId, updatedData: data });
+    console.log('Career status update success:', {
+      candidateId,
+      updatedData: data,
+    });
     return { success: true };
-
   } catch (error) {
     console.error('Career status update failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }

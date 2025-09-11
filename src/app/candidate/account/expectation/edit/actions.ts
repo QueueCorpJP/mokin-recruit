@@ -1,8 +1,12 @@
 'use server';
 
-import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
-import { getCandidateData } from '@/lib/server/candidate/candidateData';
+import {
+  requireCandidateAuth,
+  requireCandidateAuthForAction,
+} from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { parseJsonField } from '../../_shared/utils/formData';
+import { updateOrInsertByKey } from '../../_shared/server/upsert';
 
 export async function getExpectationData() {
   try {
@@ -12,16 +16,18 @@ export async function getExpectationData() {
     }
 
     const supabase = await getSupabaseServerClient();
-    
+
     const { data: expectationData, error } = await supabase
       .from('expectations')
-      .select(`
+      .select(
+        `
         desired_income,
         desired_industries,
         desired_job_types,
         desired_work_locations,
         desired_work_styles
-      `)
+      `
+      )
       .eq('candidate_id', user.id)
       .single();
 
@@ -58,7 +64,9 @@ export async function getExpectationData() {
     };
 
     const result = {
-      desiredIncome: normalizeIncomeValue(expectationData?.desired_income || ''),
+      desiredIncome: normalizeIncomeValue(
+        expectationData?.desired_income || ''
+      ),
       industries: parseJsonSafely(expectationData?.desired_industries),
       jobTypes: parseJsonSafely(expectationData?.desired_job_types),
       workLocations: parseJsonSafely(expectationData?.desired_work_locations),
@@ -84,7 +92,7 @@ export async function updateExpectationData(formData: FormData) {
 
     // フォームデータをパース
     const rawDesiredIncome = formData.get('desiredIncome')?.toString() || '';
-    
+
     // 希望年収を「300」→「300万円」形式に変換
     const formatIncomeValue = (value: string) => {
       if (!value) return '';
@@ -97,51 +105,18 @@ export async function updateExpectationData(formData: FormData) {
       }
       return value;
     };
-    
+
     const desiredIncome = formatIncomeValue(rawDesiredIncome);
-    
-    // 配列データをパース
-    const industriesJson = formData.get('industries')?.toString();
-    const jobTypesJson = formData.get('jobTypes')?.toString();
-    const workLocationsJson = formData.get('workLocations')?.toString();
-    const workStylesJson = formData.get('workStyles')?.toString();
-    
-    let industries: string[] = [];
-    let jobTypes: string[] = [];
-    let workLocations: string[] = [];
-    let workStyles: string[] = [];
-    
-    if (industriesJson) {
-      try {
-        industries = JSON.parse(industriesJson);
-      } catch (e) {
-        console.error('Industries JSON parse error:', e);
-      }
-    }
-    
-    if (jobTypesJson) {
-      try {
-        jobTypes = JSON.parse(jobTypesJson);
-      } catch (e) {
-        console.error('Job types JSON parse error:', e);
-      }
-    }
-    
-    if (workLocationsJson) {
-      try {
-        workLocations = JSON.parse(workLocationsJson);
-      } catch (e) {
-        console.error('Work locations JSON parse error:', e);
-      }
-    }
-    
-    if (workStylesJson) {
-      try {
-        workStyles = JSON.parse(workStylesJson);
-      } catch (e) {
-        console.error('Work styles JSON parse error:', e);
-      }
-    }
+
+    // 配列データをパース（共通ユーティリティ使用）
+    const industries = parseJsonField<string[]>(formData, 'industries', []);
+    const jobTypes = parseJsonField<string[]>(formData, 'jobTypes', []);
+    const workLocations = parseJsonField<string[]>(
+      formData,
+      'workLocations',
+      []
+    );
+    const workStyles = parseJsonField<string[]>(formData, 'workStyles', []);
 
     console.log('Updating expectation data:', {
       candidateId,
@@ -149,46 +124,35 @@ export async function updateExpectationData(formData: FormData) {
       industries,
       jobTypes,
       workLocations,
-      workStyles
+      workStyles,
     });
 
     const supabase = await getSupabaseServerClient();
 
     // expectationsテーブルを更新（まず更新を試し、存在しなければ挿入）
-    const { data: updateData, error: updateError } = await supabase
-      .from('expectations')
-      .update({
+    const { error: expectationError } = await updateOrInsertByKey({
+      client: supabase,
+      table: 'expectations',
+      key: 'candidate_id',
+      value: candidateId,
+      update: {
         desired_income: desiredIncome,
         desired_industries: JSON.stringify(industries),
         desired_job_types: JSON.stringify(jobTypes),
         desired_work_locations: JSON.stringify(workLocations),
         desired_work_styles: JSON.stringify(workStyles),
         updated_at: new Date().toISOString(),
-      })
-      .eq('candidate_id', candidateId)
-      .select();
-
-    let expectationError = null;
-    
-    if (updateError) {
-      expectationError = updateError;
-    } else if (!updateData || updateData.length === 0) {
-      // 更新された行がない場合は新規挿入
-      const { error: insertError } = await supabase
-        .from('expectations')
-        .insert({
-          candidate_id: candidateId,
-          desired_income: desiredIncome,
-          desired_industries: JSON.stringify(industries),
-          desired_job_types: JSON.stringify(jobTypes),
-          desired_work_locations: JSON.stringify(workLocations),
-          desired_work_styles: JSON.stringify(workStyles),
-        });
-      
-      if (insertError) {
-        expectationError = insertError;
-      }
-    }
+      },
+      insert: {
+        candidate_id: candidateId,
+        desired_income: desiredIncome,
+        desired_industries: JSON.stringify(industries),
+        desired_job_types: JSON.stringify(jobTypes),
+        desired_work_locations: JSON.stringify(workLocations),
+        desired_work_styles: JSON.stringify(workStyles),
+        updated_at: new Date().toISOString(),
+      },
+    });
 
     if (expectationError) {
       console.error('Expectation update error:', expectationError);
@@ -197,12 +161,11 @@ export async function updateExpectationData(formData: FormData) {
 
     console.log('Expectation update success:', { candidateId });
     return { success: true };
-
   } catch (error) {
     console.error('Expectation update failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }
