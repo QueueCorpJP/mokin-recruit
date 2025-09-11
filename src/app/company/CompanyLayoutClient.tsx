@@ -104,15 +104,6 @@ export default function CompanyLayoutClient({
       }
     }
     
-    // 認証済みで企業ユーザーでない場合は候補者ページへリダイレクト
-    if (isAuthenticated && companyUser === undefined) {
-      // companyUserが未定義の場合は少し待つ
-      return;
-    }
-    
-    if (isAuthenticated && companyUser && companyUser.userType !== 'company_user') {
-      router.push('/candidate');
-    }
   }, [authState.isAuthenticated, authState.loading, pathname, authState.companyUser, router]);
 
   const { isAuthenticated, companyUser } = authState;
