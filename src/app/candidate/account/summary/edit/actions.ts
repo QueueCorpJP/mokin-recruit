@@ -1,8 +1,13 @@
 'use server';
 
-import { getCachedCandidateUser, requireCandidateAuthForAction } from '@/lib/auth/server';
+import {
+  getCachedCandidateUser,
+  requireCandidateAuthForAction,
+} from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
+import { summarySchema } from '../../_shared/schemas/summarySchema';
 
 export async function getSummaryData() {
   try {
@@ -31,24 +36,27 @@ export async function updateSummaryData(formData: FormData) {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      throw new Error(authResult.error);
+      return {
+        success: false,
+        errors: {},
+        message: authResult.error,
+      };
     }
 
     const { candidateId } = authResult.data;
 
-    // フォームデータをパース
-    const jobSummary = formData.get('jobSummary')?.toString() || '';
-    const selfPr = formData.get('selfPr')?.toString() || '';
-
-    console.log('Updating summary data:', {
-      candidateId,
-      jobSummary,
-      selfPr
-    });
+    // 共通ユーティリティでバリデーション・型変換
+    const validation = await validateFormDataWithZod(summarySchema, formData);
+    if (!validation.success) {
+      return {
+        success: false,
+        errors: validation.errors,
+        message: validation.message,
+      };
+    }
+    const { jobSummary, selfPr } = validation.data;
 
     const supabase = await getSupabaseServerClient();
-
-    // candidatesテーブルを更新
     const { error: candidateError } = await supabase
       .from('candidates')
       .update({
@@ -59,18 +67,19 @@ export async function updateSummaryData(formData: FormData) {
       .eq('id', candidateId);
 
     if (candidateError) {
-      console.error('Summary update error:', candidateError);
-      throw new Error('概要の更新に失敗しました');
+      return {
+        success: false,
+        errors: {},
+        message: '概要の更新に失敗しました',
+      };
     }
 
-    console.log('Summary update success:', { candidateId });
-    return { success: true };
-
+    return { success: true, errors: {}, message: '更新に成功しました' };
   } catch (error) {
-    console.error('Summary update failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      errors: {},
+      message: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }
