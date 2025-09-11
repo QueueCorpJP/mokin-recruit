@@ -79,7 +79,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
       const result = await sendScout(formData);
       
       if (result.success) {
-        router.push('/company/search/scout/complete?success=true');
+        router.push('/company/search');
       } else {
         alert(result.error || 'スカウト送信に失敗しました');
       }
