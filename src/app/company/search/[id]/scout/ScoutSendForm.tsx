@@ -220,7 +220,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // 全フィールドをタッチ済みにする
     setTouched({
       group: true,
@@ -232,35 +232,18 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
     if (!validateForm()) return;
 
-    try {
-      setIsLoading(true);
-      
-      const scoutData: ScoutSendFormData = {
-        group: formData.group,
-        recruitmentTarget: formData.recruitmentTarget,
-        scoutSenderName: formData.scoutSenderName,
-        candidateId: formData.candidateId,
-        scoutTemplate: formData.scoutTemplate,
-        title: formData.title,
-        message: formData.message,
-        searchQuery: searchQuery || undefined,
-      };
+    // 確認ページに遷移（フォームデータをクエリパラメータで渡す）
+    const params = new URLSearchParams({
+      group: formData.group,
+      recruitmentTarget: formData.recruitmentTarget,
+      scoutSenderName: formData.scoutSenderName,
+      scoutTemplate: formData.scoutTemplate,
+      title: formData.title,
+      message: formData.message,
+      ...(searchQuery && { searchQuery }),
+    });
 
-      const result = await sendScout(scoutData);
-      
-      if (result.success) {
-        // 確認画面へ遷移（成功時）
-        router.push('/company/search/scout/complete?success=true');
-      } else {
-        // エラーメッセージを表示
-        alert(result.error || 'スカウト送信に失敗しました');
-      }
-    } catch (error) {
-      console.error('スカウト送信エラー:', error);
-      alert('スカウト送信中にエラーが発生しました');
-    } finally {
-      setIsLoading(false);
-    }
+    router.push(`/company/search/${candidateIdFromProps}/scout/confirm?${params.toString()}`);
   };
 
   // テンプレート選択時の処理
@@ -546,9 +529,9 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
               variant="green-gradient"
               size="figma-default"
               className="min-w-[160px]"
-              disabled={isSubmitDisabled || isLoading}
+              disabled={isSubmitDisabled}
             >
-              {isLoading ? '送信中...' : '送信内容の確認'}
+              送信内容の確認
             </Button>
           </div>
         </div>
