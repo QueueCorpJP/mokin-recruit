@@ -35,9 +35,15 @@ export const AuthAwareNavigation = memo(function AuthAwareNavigation({
     return 'default';
   }, [pathname]);
 
-  // サーバーサイドレンダリング中はプレースホルダーを表示
+  // サーバーサイドレンダリング中は未ログイン状態でナビゲーションを表示
   if (!mounted) {
-    return <div className="h-[80px] bg-white border-b border-gray-200" />;
+    return (
+      <Navigation
+        variant={variant}
+        isLoggedIn={false}
+        userInfo={undefined}
+      />
+    );
   }
 
   // サーバーコンポーネント認証に移行したため、クライアントサイドでは

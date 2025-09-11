@@ -24,6 +24,7 @@ interface SelectInputProps {
   onOpen?: () => void;
   onClose?: () => void;
   'data-testid'?: string;
+  forcePosition?: 'top' | 'bottom'; // ドロップダウンの位置を強制指定
 }
 
 // カスタムドロップダウンアイコンコンポーネント
@@ -76,10 +77,12 @@ export function SelectInput({
   onFocus,
   onOpen,
   onClose,
+  forcePosition,
   'data-testid': testId,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const selectRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -126,6 +129,30 @@ export function SelectInput({
   useEffect(() => {
     setSelectedValue(value);
   }, [value]);
+
+  // ドロップダウンの位置を計算
+  useEffect(() => {
+    if (isOpen && selectRef.current) {
+      // forcePositionが指定されている場合はそれを使用
+      if (forcePosition) {
+        setDropdownPosition(forcePosition);
+        return;
+      }
+      
+      const rect = selectRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownMaxHeight = 240; // max-h-60 = 240px
+      
+      // 下に十分なスペースがあるか、または上のスペースが不十分な場合は下に表示
+      if (spaceBelow >= dropdownMaxHeight || spaceAbove < dropdownMaxHeight) {
+        setDropdownPosition('bottom');
+      } else {
+        setDropdownPosition('top');
+      }
+    }
+  }, [isOpen, forcePosition]);
 
   // 選択処理
   const handleSelect = (optionValue: string) => {
@@ -285,11 +312,13 @@ export function SelectInput({
           ref={listRef}
           className={cn(
             // 基本スタイル
-            'absolute top-full left-0 right-0 z-50 mt-1',
+            'absolute left-0 right-0 z-[9999]',
             'bg-white border border-[#999999] rounded-[8px]',
             'shadow-[0_4px_12px_0_rgba(0,0,0,0.15)]',
             'max-h-60 overflow-y-auto',
-            'py-1'
+            'py-1',
+            // 位置に応じたスタイル
+            dropdownPosition === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1'
           )}
           role='listbox'
           aria-label='選択肢'

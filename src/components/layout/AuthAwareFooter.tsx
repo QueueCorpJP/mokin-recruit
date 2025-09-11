@@ -35,9 +35,15 @@ export const AuthAwareFooter = memo(function AuthAwareFooter({
     return 'default';
   }, [pathname]);
 
-  // サーバーサイドレンダリング中はプレースホルダーを表示
+  // サーバーサイドレンダリング中は未ログイン状態でフッターを表示
   if (!mounted) {
-    return <div className="min-h-[200px] bg-[#323232]" />;
+    return (
+      <Footer
+        variant={variant}
+        isLoggedIn={false}
+        userInfo={undefined}
+      />
+    );
   }
 
   // サーバーコンポーネント認証に移行したため、クライアントサイドでは

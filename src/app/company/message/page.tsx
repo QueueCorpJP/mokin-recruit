@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 import { getCachedCompanyUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
+import { getJobOptions } from '@/lib/server/candidate/recruitment-queries';
 
 interface MessagePageProps {
   searchParams: Promise<{ room?: string }>;
@@ -33,7 +34,11 @@ async function MessageServerComponent({
     userType: 'company'
   });
   
-  const rooms = await getRooms(companyUserId, 'company');
+  const [rooms, jobOptions] = await Promise.all([
+    getRooms(companyUserId, 'company'),
+    getJobOptions()
+  ]);
+  
   console.log('🔍 [STEP 2] Rooms returned:', { 
     roomsCount: rooms.length,
     initialRoomId: params.room,
@@ -55,6 +60,7 @@ async function MessageServerComponent({
           userType="company"
           companyUserName={fullName}
           initialRoomId={params.room}
+          jobOptions={jobOptions}
         />
       </div>
     </div>

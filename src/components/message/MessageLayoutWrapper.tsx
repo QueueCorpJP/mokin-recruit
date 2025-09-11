@@ -5,6 +5,7 @@ import { MessageLayoutServer, MessageLayoutServerProps } from './MessageLayoutSe
 
 export interface MessageLayoutWrapperProps extends MessageLayoutServerProps {
   initialRoomId?: string;
+  jobOptions?: Array<{ value: string; label: string; groupId?: string }>;
 }
 
 export function MessageLayoutWrapper(props: MessageLayoutWrapperProps) {
@@ -22,5 +23,5 @@ export function MessageLayoutWrapper(props: MessageLayoutWrapperProps) {
     );
   }
 
-  return <MessageLayoutServer {...props} initialRoomId={props.initialRoomId} />;
+  return <MessageLayoutServer {...props} initialRoomId={props.initialRoomId} jobOptions={props.jobOptions} />;
 }

@@ -14,6 +14,7 @@ import { getRoomMessages, sendCompanyMessage, markRoomMessagesAsRead } from '@/l
 import { sendMessage, markCandidateRoomMessagesAsRead } from '@/lib/actions/message-actions';
 import { ChatMessage } from '@/types/message';
 import { useToast } from '@/components/ui/toast';
+import { CandidateSlideMenu } from '@/app/company/recruitment/detail/CandidateSlideMenu';
 
 export interface MessageLayoutServerProps {
   className?: string;
@@ -22,6 +23,7 @@ export interface MessageLayoutServerProps {
   userType?: 'candidate' | 'company';
   companyUserName?: string;
   initialRoomId?: string;
+  jobOptions?: Array<{ value: string; label: string; groupId?: string }>;
 }
 
 export function MessageLayoutServer({
@@ -31,6 +33,7 @@ export function MessageLayoutServer({
   userType = 'company',
   companyUserName,
   initialRoomId,
+  jobOptions: propsJobOptions = [],
 }: MessageLayoutServerProps) {
   const { showToast } = useToast();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(initialRoomId || null);
@@ -49,6 +52,10 @@ export function MessageLayoutServer({
   // モバイル判定 - 初期ルーム設定より前に定義
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileDetailMode, setIsMobileDetailMode] = useState(false);
+  
+  // 候補者詳細サイドバー用の状態
+  const [isCandidateDetailOpen, setIsCandidateDetailOpen] = useState(false);
+  const [jobOptions, setJobOptions] = useState<Array<{ value: string; label: string; groupId?: string }>>(propsJobOptions);
   
   const isCandidatePage = userType === 'candidate';
   
@@ -126,6 +133,22 @@ export function MessageLayoutServer({
   const handleBack = () => {
     setIsMobileDetailMode(false);
     setSelectedRoomId(null);
+  };
+
+  // 候補者詳細ボタンのクリックハンドラー
+  const handleCandidateDetailClick = () => {
+    setIsCandidateDetailOpen(true);
+  };
+
+  // 候補者詳細サイドバーを閉じる
+  const handleCandidateDetailClose = () => {
+    setIsCandidateDetailOpen(false);
+  };
+
+  // 求人変更ハンドラー（サイドバー用）
+  const handleJobChange = (candidateId: string, jobId: string) => {
+    // TODO: 実装が必要な場合は後で追加
+    console.log('Job change:', { candidateId, jobId });
   };
 
   // 利用可能なグループリストを生成
@@ -310,9 +333,7 @@ export function MessageLayoutServer({
             candidateName={selectedRoom?.candidateName || ''}
             companyName={selectedRoom?.companyName || ''}
             jobTitle={selectedRoom?.jobTitle || ''}
-            onDetailClick={() => {
-              // TODO: 詳細ボタンのクリック処理
-            }}
+            onDetailClick={handleCandidateDetailClick}
             onBackClick={handleBack}
             isCandidatePage={isCandidatePage}
           />
@@ -436,9 +457,7 @@ export function MessageLayoutServer({
               candidateName={selectedRoom?.candidateName || ''}
               companyName={selectedRoom?.companyName || ''}
               jobTitle={selectedRoom?.jobTitle || ''}
-              onDetailClick={() => {
-                // TODO: 詳細ボタンのクリック処理
-              }}
+              onDetailClick={handleCandidateDetailClick}
               onBackClick={handleBack}
               isCandidatePage={isCandidatePage}
             />
@@ -463,6 +482,18 @@ export function MessageLayoutServer({
           <EmptyMessageState />
         )}
       </div>
+      
+      {/* 候補者詳細サイドバー */}
+      {!isCandidatePage && selectedRoom && (
+        <CandidateSlideMenu
+          isOpen={isCandidateDetailOpen}
+          onClose={handleCandidateDetailClose}
+          candidateId={selectedRoom.candidateId}
+          companyGroupId={selectedRoom.companyGroupId}
+          jobOptions={jobOptions}
+          onJobChange={handleJobChange}
+        />
+      )}
     </div>
   );
 }

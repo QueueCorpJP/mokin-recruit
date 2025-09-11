@@ -92,6 +92,8 @@ interface JobData {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  canEdit?: boolean;
+  editError?: string | null;
 }
 
 interface JobDetailClientProps {
@@ -139,6 +141,11 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
   }, []);
 
   const handleEdit = () => {
+    // 権限チェック
+    if (displayData.canEdit === false) {
+      alert(displayData.editError || 'あなたの権限では編集できません');
+      return;
+    }
     router.push(`/company/job/${displayData.id}/edit`);
   };
 
@@ -301,7 +308,9 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 variant="green-gradient"
                 size="figma-default"
                 onClick={handleEdit}
-                className="min-w-[160px]"
+                disabled={displayData.canEdit === false}
+                className={`min-w-[160px] ${displayData.canEdit === false ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={displayData.canEdit === false ? displayData.editError || 'あなたの権限では編集できません' : ''}
               >
                 編集
               </Button>
