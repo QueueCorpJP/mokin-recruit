@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+//
 import NameField from './fields/NameField';
 import FuriganaField from './fields/FuriganaField';
 import GenderSelector from './fields/GenderSelector';
@@ -10,9 +10,6 @@ import {
   GENDER_OPTIONS,
   PREFECTURES,
   INCOME_RANGES,
-  generateDayOptions,
-  generateMonthOptions,
-  generateYearOptions,
 } from '@/constants/profile';
 import React from 'react';
 import ProfileDescription from './ProfileDescription';
@@ -40,6 +37,19 @@ const ProfileEditMobile: React.FC<ProfileEditMobileProps> = ({ profile }) => {
     selectedYear,
     selectedMonth,
   } = useProfileForm(profile);
+
+  const yearOptionObjects = yearOptions.map((y: string) => ({
+    value: y,
+    label: y,
+  }));
+  const monthOptionObjects = monthOptions.map((m: string) => ({
+    value: m,
+    label: m,
+  }));
+  const dayOptionObjects = dayOptions.map((d: string) => ({
+    value: d,
+    label: d,
+  }));
 
   return (
     <main className='flex flex-col'>
@@ -75,12 +85,12 @@ const ProfileEditMobile: React.FC<ProfileEditMobileProps> = ({ profile }) => {
           {/* Form Fields */}
           <div className='flex flex-col gap-6'>
             <NameField
-              lastName={watch('lastName')}
-              firstName={watch('firstName')}
+              lastName={profile.lastName}
+              firstName={profile.firstName}
             />
             <FuriganaField
-              lastNameKana={watch('lastNameKana')}
-              firstNameKana={watch('firstNameKana')}
+              lastNameKana={profile.lastNameKana}
+              firstNameKana={profile.firstNameKana}
             />
             <GenderSelector
               selectedGender={selectedGender}
@@ -109,10 +119,10 @@ const ProfileEditMobile: React.FC<ProfileEditMobileProps> = ({ profile }) => {
             <BirthDateSelector
               selectedYear={selectedYear}
               selectedMonth={selectedMonth}
-              selectedDay={watch('birthDay')}
-              yearOptions={yearOptions}
-              monthOptions={monthOptions}
-              dayOptions={dayOptions}
+              selectedDay={watch('birthDay') || ''}
+              yearOptions={yearOptionObjects}
+              monthOptions={monthOptionObjects}
+              dayOptions={dayOptionObjects}
               onChange={(field, value) =>
                 setValue(field, value, {
                   shouldValidate: true,
@@ -123,7 +133,7 @@ const ProfileEditMobile: React.FC<ProfileEditMobileProps> = ({ profile }) => {
               errors={errors}
             />
             <PhoneNumberInput
-              phoneNumber={watch('phoneNumber')}
+              phoneNumber={watch('phoneNumber') || ''}
               onChange={value =>
                 setValue('phoneNumber', value, {
                   shouldValidate: true,
@@ -134,7 +144,7 @@ const ProfileEditMobile: React.FC<ProfileEditMobileProps> = ({ profile }) => {
               errors={errors}
             />
             <IncomeSelect
-              selectedIncome={watch('currentIncome')}
+              selectedIncome={watch('currentIncome') || ''}
               options={INCOME_RANGES as any}
               onChange={value =>
                 setValue('currentIncome', value, {

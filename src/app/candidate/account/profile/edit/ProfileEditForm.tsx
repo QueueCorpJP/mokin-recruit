@@ -10,15 +10,8 @@ import {
   generateYearOptions,
 } from '@/constants/profile';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { updateCandidateProfile } from './actions';
-import {
-  profileSchema,
-  ProfileFormData,
-} from '../../_shared/schemas/profileSchema';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+// import { useRouter } from 'next/navigation';
+//
 import { FormErrorMessage } from '../../_shared/fields/FormErrorMessage';
 import { useProfileForm } from '../../_shared/hooks/useProfileForm';
 
@@ -43,7 +36,7 @@ export default function ProfileEditForm({
 }: ProfileEditFormProps) {
   // useProfileFormカスタムフックでフォームロジックを共通化
   const {
-    register,
+    // register,
     handleSubmit,
     errors,
     setValue,
@@ -59,24 +52,10 @@ export default function ProfileEditForm({
     setSelectedMonth,
   } = useProfileForm(candidateData);
 
-  const router = useRouter();
+  // const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  // 生年月日の初期値を設定
-  const getInitialBirthDate = () => {
-    if (!candidateData.birth_date) {
-      return { year: '', month: '', day: '' };
-    }
-
-    const date = new Date(candidateData.birth_date);
-    return {
-      year: date.getFullYear().toString(),
-      month: (date.getMonth() + 1).toString(),
-      day: date.getDate().toString(),
-    };
-  };
-
-  const initialBirthDate = getInitialBirthDate();
+  // 生年月日の初期値は useProfileForm で管理
   const yearOptions = generateYearOptions();
   const monthOptions = generateMonthOptions();
   const dayOptions = generateDayOptions(
@@ -234,7 +213,9 @@ export default function ProfileEditForm({
                         ))}
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.gender?.message} />
+                      <FormErrorMessage
+                        error={errors.gender?.message ?? null}
+                      />
                     </div>
                   </div>
 
@@ -249,7 +230,13 @@ export default function ProfileEditForm({
                       <div className='w-[400px] relative'>
                         <select
                           name='prefecture'
-                          defaultValue={candidateData.prefecture || ''}
+                          value={watch('prefecture')}
+                          onChange={e =>
+                            setValue('prefecture', e.target.value, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            })
+                          }
                           className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
                         >
                           {PREFECTURES.map(prefecture => (
@@ -273,7 +260,9 @@ export default function ProfileEditForm({
                         </div>
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.prefecture?.message} />
+                      <FormErrorMessage
+                        error={errors.prefecture?.message ?? null}
+                      />
                     </div>
                   </div>
 
@@ -381,9 +370,12 @@ export default function ProfileEditForm({
                         {/* バリデーションエラー表示（共通部品） */}
                         <FormErrorMessage
                           error={
-                            errors.birthYear?.message ||
-                            errors.birthMonth?.message ||
-                            errors.birthDay?.message
+                            (errors.birthYear?.message as string | undefined) ||
+                            (errors.birthMonth?.message as
+                              | string
+                              | undefined) ||
+                            (errors.birthDay?.message as string | undefined) ||
+                            null
                           }
                         />
                       </div>
@@ -403,11 +395,19 @@ export default function ProfileEditForm({
                           type='tel'
                           name='phoneNumber'
                           placeholder='08011112222'
-                          defaultValue={candidateData.phone_number || ''}
+                          value={watch('phoneNumber')}
+                          onChange={e =>
+                            setValue('phoneNumber', e.target.value, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            })
+                          }
                           className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
                         />
                         {/* バリデーションエラー表示（共通部品） */}
-                        <FormErrorMessage error={errors.phoneNumber?.message} />
+                        <FormErrorMessage
+                          error={errors.phoneNumber?.message ?? null}
+                        />
                       </div>
                     </div>
                   </div>
@@ -423,7 +423,13 @@ export default function ProfileEditForm({
                       <div className='w-[400px] relative'>
                         <select
                           name='currentIncome'
-                          defaultValue={candidateData.current_income || ''}
+                          value={watch('currentIncome')}
+                          onChange={e =>
+                            setValue('currentIncome', e.target.value, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            })
+                          }
                           className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
                         >
                           {INCOME_RANGES.map(income => (
@@ -447,7 +453,9 @@ export default function ProfileEditForm({
                         </div>
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.currentIncome?.message} />
+                      <FormErrorMessage
+                        error={errors.currentIncome?.message ?? null}
+                      />
                     </div>
                   </div>
                 </div>
@@ -613,7 +621,11 @@ export default function ProfileEditForm({
                         ))}
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.gender?.message} />
+                      <FormErrorMessage
+                        error={
+                          (errors.gender?.message as string | undefined) ?? null
+                        }
+                      />
                     </div>
                   </div>
 
@@ -628,7 +640,13 @@ export default function ProfileEditForm({
                       <div className='relative'>
                         <select
                           name='prefecture'
-                          defaultValue={candidateData.prefecture || ''}
+                          value={watch('prefecture')}
+                          onChange={e =>
+                            setValue('prefecture', e.target.value, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            })
+                          }
                           className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-bold tracking-[1.4px] appearance-none cursor-pointer'
                         >
                           {PREFECTURES.map(prefecture => (
@@ -652,7 +670,12 @@ export default function ProfileEditForm({
                         </div>
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.prefecture?.message} />
+                      <FormErrorMessage
+                        error={
+                          (errors.prefecture?.message as string | undefined) ??
+                          null
+                        }
+                      />
                     </div>
                   </div>
 
@@ -760,9 +783,12 @@ export default function ProfileEditForm({
                         {/* バリデーションエラー表示（共通部品） */}
                         <FormErrorMessage
                           error={
-                            errors.birthYear?.message ||
-                            errors.birthMonth?.message ||
-                            errors.birthDay?.message
+                            (errors.birthYear?.message as string | undefined) ||
+                            (errors.birthMonth?.message as
+                              | string
+                              | undefined) ||
+                            (errors.birthDay?.message as string | undefined) ||
+                            null
                           }
                         />
                       </div>
@@ -781,11 +807,22 @@ export default function ProfileEditForm({
                         type='tel'
                         name='phoneNumber'
                         placeholder='08011112222'
-                        defaultValue={candidateData.phone_number || ''}
+                        value={watch('phoneNumber')}
+                        onChange={e =>
+                          setValue('phoneNumber', e.target.value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
                         className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-medium tracking-[1.4px] placeholder:text-[#999999]'
                       />
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.phoneNumber?.message} />
+                      <FormErrorMessage
+                        error={
+                          (errors.phoneNumber?.message as string | undefined) ??
+                          null
+                        }
+                      />
                     </div>
                   </div>
 
@@ -800,7 +837,13 @@ export default function ProfileEditForm({
                       <div className='relative'>
                         <select
                           name='currentIncome'
-                          defaultValue={candidateData.current_income || ''}
+                          value={watch('currentIncome')}
+                          onChange={e =>
+                            setValue('currentIncome', e.target.value, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            })
+                          }
                           className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-bold tracking-[1.4px] appearance-none cursor-pointer'
                         >
                           {INCOME_RANGES.map(income => (
@@ -824,7 +867,13 @@ export default function ProfileEditForm({
                         </div>
                       </div>
                       {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage error={errors.currentIncome?.message} />
+                      <FormErrorMessage
+                        error={
+                          (errors.currentIncome?.message as
+                            | string
+                            | undefined) ?? null
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -861,7 +910,4 @@ export default function ProfileEditForm({
   );
 }
 
-// 新しいフォーム送信ハンドラ
-function handleSubmitForm(data: ProfileFormData) {
-  // 既存のhandleSubmitロジックをここに移植・呼び出し
-}
+//

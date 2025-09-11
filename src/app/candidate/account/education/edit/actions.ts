@@ -9,40 +9,7 @@ import {
   getCandidateData,
 } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
 import { educationSchema } from '../../_shared/schemas/educationSchema';
-
-interface EducationFormData {
-  final_education?: string;
-  school_name?: string;
-  department?: string;
-  graduation_year?: string;
-  graduation_month?: string;
-
-  university_name?: string;
-  university_department?: string;
-  university_graduation_year?: string;
-  university_graduation_month?: string;
-  university_graduation_status?: string;
-
-  vocational_school_name?: string;
-  vocational_school_department?: string;
-  vocational_school_graduation_year?: string;
-  vocational_school_graduation_month?: string;
-  vocational_school_graduation_status?: string;
-
-  industries?: Array<{
-    id: string;
-    name: string;
-    experienceYears: string;
-  }>;
-
-  jobTypes?: Array<{
-    id: string;
-    name: string;
-    experienceYears: string;
-  }>;
-}
 
 export async function getEducationData() {
   try {
@@ -109,8 +76,35 @@ export async function updateEducationData(formData: FormData) {
 
     const { candidateId } = authResult.data;
 
-    // 共通ユーティリティでバリデーション・型変換
-    const validation = await validateFormDataWithZod(educationSchema, formData);
+    // FormDataをオブジェクト化し、配列がJSON文字列で来る場合はパースしてから検証
+    const raw: Record<string, any> = {};
+    for (const [key, value] of formData.entries()) {
+      raw[key] = value;
+    }
+    if (typeof raw['industries'] === 'string') {
+      try {
+        raw['industries'] = JSON.parse(raw['industries']);
+      } catch {
+        // パース失敗時はそのまま（zodでエラー化）
+      }
+    }
+    if (typeof raw['jobTypes'] === 'string') {
+      try {
+        raw['jobTypes'] = JSON.parse(raw['jobTypes']);
+      } catch {
+        // パース失敗時はそのまま（zodでエラー化）
+      }
+    }
+
+    const parsed = educationSchema.safeParse(raw);
+    const validation = parsed.success
+      ? { success: true as const, data: parsed.data }
+      : {
+          success: false as const,
+          errors: parsed.error.flatten().fieldErrors,
+          message: 'バリデーションエラーがあります',
+        };
+
     if (!validation.success) {
       return {
         success: false,

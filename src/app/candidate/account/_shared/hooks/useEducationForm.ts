@@ -1,12 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { educationSchema, EducationFormData } from '../schemas/educationSchema';
+import {
+  getEducationData,
+  updateEducationData,
+} from '../../education/edit/actions';
 
 export function useEducationForm(initialData?: Partial<EducationFormData>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
 
@@ -17,6 +22,7 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
     formState: { errors, isValid },
     watch,
     setValue,
+    reset,
   } = useForm<EducationFormData>({
     resolver: zodResolver(educationSchema),
     mode: 'onChange',
@@ -30,6 +36,41 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
       jobTypes: [],
     },
   });
+
+  // 初期データ取得
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const data = await getEducationData();
+        if (data) {
+          // actions 側のキー名からフォーム側へ合わせる
+          const mapped: Partial<EducationFormData> = {
+            finalEducation: (data as any).finalEducation || '',
+            schoolName: (data as any).schoolName || '',
+            department: (data as any).department || '',
+            graduationYear: (data as any).graduationYear || '',
+            graduationMonth: (data as any).graduationMonth || '',
+            industries: (data as any).industries || [],
+            jobTypes: (data as any).jobTypes || [],
+          };
+          reset({
+            finalEducation: mapped.finalEducation || '',
+            schoolName: mapped.schoolName || '',
+            department: mapped.department || '',
+            graduationYear: mapped.graduationYear || '',
+            graduationMonth: mapped.graduationMonth || '',
+            industries: mapped.industries || [],
+            jobTypes: mapped.jobTypes || [],
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    initialize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 年の選択肢（1970年〜2025年）
   const yearOptions = useMemo(() => {
@@ -50,8 +91,21 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
   const onSubmit = async (data: EducationFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: API保存処理
-      router.push('/account/education');
+      const formData = new FormData();
+      formData.append('finalEducation', data.finalEducation || '');
+      formData.append('schoolName', data.schoolName || '');
+      formData.append('department', data.department || '');
+      formData.append('graduationYear', data.graduationYear || '');
+      formData.append('graduationMonth', data.graduationMonth || '');
+      formData.append('industries', JSON.stringify(data.industries || []));
+      formData.append('jobTypes', JSON.stringify(data.jobTypes || []));
+
+      const result = await updateEducationData(formData);
+      if (result.success) {
+        router.push('/candidate/account/education');
+      } else {
+        setIsSubmitting(false);
+      }
     } catch {
       setIsSubmitting(false);
     }
@@ -136,6 +190,7 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
     watch,
     setValue,
     isSubmitting,
+    isLoading,
     handleCancel,
     yearOptions,
     monthOptions,
