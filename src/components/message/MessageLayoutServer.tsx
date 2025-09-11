@@ -11,7 +11,7 @@ import { MessageInputBox } from './MessageInputBox';
 import { RoomList } from './RoomList';
 import { type Room } from '@/lib/rooms';
 import { getRoomMessages, sendCompanyMessage, markRoomMessagesAsRead } from '@/lib/actions/messages';
-import { sendMessage, markCandidateRoomMessagesAsRead } from '@/lib/actions/message-actions';
+import { sendMessage, markCandidateRoomMessagesAsRead, uploadMessageFile } from '@/lib/actions';
 import { ChatMessage } from '@/types/message';
 import { useToast } from '@/components/ui/toast';
 import { CandidateSlideMenu } from '@/app/company/recruitment/detail/CandidateSlideMenu';
@@ -278,12 +278,14 @@ export function MessageLayoutServer({
           fileCount: (fileUrls || []).length
         });
         // 候補者用の送信関数を使用
-        result = await sendMessage({
-          room_id: selectedRoomId,
+        result = await sendMessage(
+          selectedRoomId,
           content,
-          message_type: 'GENERAL',
-          file_urls: fileUrls || []
-        });
+          'candidate',
+          userId || '',
+          undefined,
+          fileUrls || []
+        );
       } else {
         console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage with data:', {
           room_id: selectedRoomId,

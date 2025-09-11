@@ -15,6 +15,7 @@ export interface TaskData {
     candidateName: string;
     jobTitle: string;
     appliedAt: Date;
+    groupName?: string;
   }>;
   
   // Task 3: 未確認応募（24時間以上経過）
@@ -24,6 +25,7 @@ export interface TaskData {
     candidateName: string;
     jobTitle: string;
     appliedAt: Date;
+    groupName?: string;
   }>;
   
   // Task 4: 新着メッセージ（72時間以内）
@@ -34,6 +36,7 @@ export interface TaskData {
     jobTitle: string;
     sentAt: Date;
     messagePreview?: string;
+    groupName?: string;
   }>;
   
   // Task 5: 未読メッセージ（72時間以上経過）
@@ -44,6 +47,7 @@ export interface TaskData {
     jobTitle: string;
     sentAt: Date;
     messagePreview?: string;
+    groupName?: string;
   }>;
   
   // Task 6: 選考結果未登録
@@ -53,6 +57,7 @@ export interface TaskData {
     candidateName: string;
     jobTitle: string;
     interviewDate?: Date;
+    groupName?: string;
   }>;
 }
 
@@ -159,7 +164,7 @@ export async function getCompanyTaskData(): Promise<TaskData> {
     ] = await Promise.all([
       getJobPostings(companyAccountId),
       getApplications(companyAccountId, companyGroupIds),
-      getMessages(companyAccountId, companyGroupIds),
+      getMessages(companyUserId), // companyUserIdを渡す
       getInterviewResults(companyAccountId, companyGroupIds)
     ]);
 
@@ -310,6 +315,7 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
       updated_at,
       candidate_id,
       job_posting_id,
+      company_group_id,
       candidates!candidate_id (
         first_name,
         last_name,
@@ -318,6 +324,12 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
       ),
       job_postings!job_posting_id (
         title
+      ),
+      company_groups!company_group_id (
+        group_name,
+        company_accounts!company_account_id (
+          company_name
+        )
       )
     `)
     .eq('company_account_id', companyAccountId)
@@ -341,35 +353,48 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
 }
 
 /**
- * メッセージ情報を取得
+ * メッセージ情報を取得（mypageと同じアプローチを使用）
  */
-async function getMessages(companyAccountId: string, companyGroupIds: string[]) {
+async function getMessages(companyUserId: string) {
   const supabase = createServerAdminClient();
-  // まず企業に関連するルームを取得
-  const roomQuery = supabase
-    .from('rooms')
-    .select('id')
-    .eq('type', 'direct');
-
-  if (companyGroupIds.length > 0) {
-    roomQuery.in('company_group_id', companyGroupIds);
-  }
-
-  const { data: rooms, error: roomError } = await roomQuery;
-
-  if (roomError || !rooms || rooms.length === 0) {
+  
+  console.log('🔍 [TASK DEBUG] getMessages called with companyUserId:', companyUserId);
+  
+  // mypageと同じ方法：getRooms関数を使用してアクセス可能なルームを取得
+  const { getRooms } = await import('@/lib/rooms');
+  const rooms = await getRooms(companyUserId, 'company');
+  const accessibleRoomIds = rooms.map(room => room.id);
+  
+  // roomsデータをMapに変換してO(1)でアクセスできるようにする
+  const roomsMap = new Map();
+  rooms.forEach(room => {
+    roomsMap.set(room.id, room);
+  });
+  
+  console.log('📋 [TASK DEBUG] Accessible rooms from getRooms:', {
+    roomsCount: rooms.length,
+    accessibleRoomIds,
+    sampleRooms: rooms.slice(0, 2).map(r => ({
+      id: r.id,
+      candidateName: r.candidateName,
+      companyName: r.companyName,
+      groupName: r.groupName
+    }))
+  });
+  
+  if (accessibleRoomIds.length === 0) {
+    console.log('❌ [TASK DEBUG] No accessible rooms found for user:', companyUserId);
     return [];
   }
 
-  const roomIds = rooms.map(r => r.id);
-
-  // 候補者からのメッセージを取得
+  // 候補者からの未読メッセージを取得（リアルタイムでステータスをチェック）
   const { data, error } = await supabase
     .from('messages')
     .select(`
       id,
       content,
       status,
+      sender_type,
       sent_at,
       read_at,
       room_id,
@@ -377,6 +402,7 @@ async function getMessages(companyAccountId: string, companyGroupIds: string[]) 
         id,
         candidate_id,
         related_job_posting_id,
+        company_group_id,
         candidates!candidate_id (
           first_name,
           last_name,
@@ -385,20 +411,55 @@ async function getMessages(companyAccountId: string, companyGroupIds: string[]) 
         ),
         job_postings!related_job_posting_id (
           title
+        ),
+        company_groups!company_group_id (
+          group_name,
+          company_accounts!company_account_id (
+            company_name
+          )
         )
       )
     `)
-    .in('room_id', roomIds)
     .eq('sender_type', 'CANDIDATE')
-    .in('status', ['SENT', 'READ']) // 未返信のメッセージ
+    .eq('status', 'SENT') // 未読メッセージのみ（リアルタイムでチェック）
+    .in('room_id', accessibleRoomIds) // getRoomsで取得したアクセス可能なルームIDを使用
     .order('sent_at', { ascending: false });
 
+  console.log('💬 [TASK DEBUG] Messages query result:', {
+    data,
+    error,
+    messagesCount: data?.length || 0,
+    sampleMessages: data?.slice(0, 2).map(msg => ({
+      id: msg.id,
+      status: msg.status,
+      sender_type: msg.sender_type,
+      sent_at: msg.sent_at,
+      room_id: msg.room_id,
+      groupName: msg.rooms?.company_groups?.group_name
+    }))
+  });
+
   if (error) {
-    console.error('Error fetching messages:', error);
+    console.error('❌ [TASK DEBUG] Error fetching messages:', error);
     return [];
   }
 
-  return data || [];
+  // 追加の検証：実際に SENT ステータスのみを返すように二重チェック
+  const filteredMessages = (data || []).filter(msg => 
+    msg.status === 'SENT' && msg.sender_type === 'CANDIDATE'
+  );
+  
+  console.log('✅ [TASK DEBUG] Filtered SENT messages only:', {
+    originalCount: data?.length || 0,
+    filteredCount: filteredMessages.length,
+    filteredSample: filteredMessages.slice(0, 2).map(msg => ({
+      id: msg.id,
+      status: msg.status,
+      room_id: msg.room_id
+    }))
+  });
+
+  return filteredMessages;
 }
 
 /**
@@ -418,6 +479,7 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
       created_at,
       candidate_id,
       job_posting_id,
+      company_group_id,
       candidates!candidate_id (
         first_name,
         last_name,
@@ -426,6 +488,12 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
       ),
       job_postings!job_posting_id (
         title
+      ),
+      company_groups!company_group_id (
+        group_name,
+        company_accounts!company_account_id (
+          company_name
+        )
       )
     `)
     .eq('company_account_id', companyAccountId)
@@ -477,12 +545,14 @@ function processApplications(applications: any[], taskData: TaskData) {
       const appliedAt = new Date(app.created_at);
       const candidateName = formatCandidateName(app.candidates);
       const jobTitle = app.job_postings?.title || '求人タイトル未設定';
+      const groupName = app.company_groups?.group_name || '';
 
       const appData = {
         id: app.id,
         candidateName,
         jobTitle,
-        appliedAt
+        appliedAt,
+        groupName
       };
 
       if (appliedAt >= twentyFourHoursAgo) {
@@ -527,26 +597,44 @@ function processMessages(messages: any[], taskData: TaskData) {
   const overdueMessages = [];
 
   for (const msg of messages) {
-    // 候補者からの未読メッセージのみ処理
-    if (msg.sender_type === 'CANDIDATE' && (msg.status === 'SENT' || !msg.read_at)) {
+    // 候補者からの未読メッセージのみ処理（既にクエリで絞り込み済み）
+    if (msg.sender_type === 'CANDIDATE' && msg.status === 'SENT') {
       const sentAt = new Date(msg.sent_at);
       const candidateName = formatCandidateName(msg.rooms?.candidates);
       const jobTitle = msg.rooms?.job_postings?.title || 'メッセージ';
+      const groupName = msg.rooms?.company_groups?.group_name || '';
 
       const msgData = {
         roomId: msg.room_id,
         candidateName,
         jobTitle,
         sentAt,
-        messagePreview: msg.content?.substring(0, 50) || ''
+        messagePreview: msg.content?.substring(0, 50) || '',
+        groupName
       };
+
+      console.log('📝 [MSG DEBUG] Processing message:', {
+        id: msg.id,
+        status: msg.status,
+        sentAt: sentAt.toISOString(),
+        candidateName,
+        jobTitle,
+        groupName,
+        timeChecks: {
+          isWithin24h: sentAt >= twentyFourHoursAgo,
+          isOver48h: sentAt <= fortyEightHoursAgo,
+          hoursAgo: Math.floor((now.getTime() - sentAt.getTime()) / (1000 * 60 * 60))
+        }
+      });
 
       if (sentAt >= twentyFourHoursAgo) {
         // Task 4: 24時間以内の新着メッセージ - 迅速返信で印象向上
         newMessages.push(msgData);
+        console.log('✅ Added to new messages (24h):', candidateName);
       } else if (sentAt <= fortyEightHoursAgo) {
         // Task 5: 48時間以上の遅延メッセージ - 候補者をお待たせ、至急対応
         overdueMessages.push(msgData);
+        console.log('⚠️ Added to overdue messages (48h+):', candidateName);
       }
     }
   }
@@ -558,14 +646,14 @@ function processMessages(messages: any[], taskData: TaskData) {
   if (newMessages.length > 0) {
     taskData.hasNewMessage = true;
     taskData.newMessages = newMessages.slice(0, 5);
-    console.log('✅ New message task triggered');
+    console.log('✅ New message task triggered with', newMessages.length, 'messages');
   }
 
   // Task 5: 遅延メッセージ（48時間以上）
   if (overdueMessages.length > 0) {
     taskData.hasUnreadMessage = true;
     taskData.unreadMessages = overdueMessages.slice(0, 5);
-    console.log('⚠️ Overdue message task triggered');
+    console.log('⚠️ Overdue message task triggered with', overdueMessages.length, 'messages');
   }
 }
 
@@ -580,13 +668,15 @@ function processInterviewResults(interviews: any[], taskData: TaskData) {
     taskData.unregisteredInterviews = interviews.slice(0, 5).map(interview => {
       const candidateName = formatCandidateName(interview.candidates);
       const jobTitle = interview.job_postings?.title || '求人タイトル未設定';
+      const groupName = interview.company_groups?.group_name || '';
       const interviewDate = interview.updated_at ? new Date(interview.updated_at) : undefined;
 
       return {
         id: interview.id,
         candidateName,
         jobTitle,
-        interviewDate
+        interviewDate,
+        groupName
       };
     });
     

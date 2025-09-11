@@ -1,14 +1,138 @@
 import React from 'react';
 import AccountClient from './AccountClient';
 
-export default function AccountPage() {
-  
+import { requireCompanyAuthForAction, getCompanySupabaseClient } from '@/lib/auth/server';
+
+export default async function AccountPage() {
+  // 認証（RLS有効）
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    // 認証がない場合はプレーンな表示（レイアウト側での制御に委ねる）
+    return (
+      <>
+        <AccountClient />
+      </>
+    );
+  }
+
+  const { companyAccountId } = auth.data;
+  const supabase = await getCompanySupabaseClient();
+
+  // 企業情報
+  const companyPromise = supabase
+    .from('company_accounts')
+    .select(`id, company_name, representative_name, industry, company_overview, headquarters_address`)
+    .eq('id', companyAccountId)
+    .maybeSingle();
+
+  // グループ一覧
+  const groupsPromise = supabase
+    .from('company_groups')
+    .select('id, group_name')
+    .eq('company_account_id', companyAccountId);
+
+  const [{ data: company }, { data: groups }] = await Promise.all([
+    companyPromise,
+    groupsPromise,
+  ]);
+
+  // グループがなければ空配列
+  const groupList = groups ?? [];
+  const groupIds = groupList.map((g) => g.id);
+
+  // メンバー権限（グループ別）
+  let permissions: Array<{ id: string; company_user_id: string; company_group_id: string; permission_level: string }> = [];
+  if (groupIds.length > 0) {
+    const { data: perms } = await supabase
+      .from('company_user_group_permissions')
+      .select('id, company_user_id, company_group_id, permission_level')
+      .in('company_group_id', groupIds);
+    permissions = perms ?? [];
+  }
+
+  // ユーザー詳細
+  let users: Array<{ id: string; full_name: string | null; email: string }> = [];
+  const userIds = Array.from(new Set(permissions.map((p) => p.company_user_id)));
+  if (userIds.length > 0) {
+    const { data: userRows } = await supabase
+      .from('company_users')
+      .select('id, full_name, email')
+      .in('id', userIds);
+    users = userRows ?? [];
+  }
+
+  // 権限マッピング（UIのadmin/scout/recruiterに合わせるが、現行DBは二値運用）
+  const mapPermission = (level: string): 'admin' | 'member' | 'viewer' => {
+    switch (level) {
+      case 'ADMIN':
+      case 'ADMINISTRATOR':
+        return 'admin';
+      case 'SCOUT_STAFF':
+        // UIではscout/recruiterを表示するが、ここでは同一グルーピングで扱う
+        return 'member';
+      default:
+        return 'viewer';
+    }
+  };
+
+  // グループ + メンバー構築
+  const groupsWithMembers = groupList.map((g) => {
+    const membersForGroup = permissions
+      .filter((p) => p.company_group_id === g.id)
+      .map((p) => {
+        const u = users.find((x) => x.id === p.company_user_id);
+        return {
+          id: p.company_user_id,
+          name: u?.full_name ?? '未設定',
+          email: u?.email ?? '未設定',
+          permission: mapPermission(p.permission_level),
+        } as const;
+      });
+    return {
+      id: g.id,
+      name: g.group_name || 'グループ名テキスト',
+      members: membersForGroup,
+    } as const;
+  });
+
+  // 企業基本情報のマッピング
+  const industryList = (company?.industry ?? '')
+    .split(/[、,\s]+/)
+    .filter((s: string) => s.length > 0)
+    .slice(0, 6); // バッジは多くても控えめに
+
+  const companyProps = company
+    ? {
+        companyName: company.company_name ?? 'テキストが入ります。',
+        representativeName: company.representative_name ?? '代表者名テキスト',
+        industryList: industryList.length > 0 ? industryList : ['未設定'],
+        companyOverview: company.company_overview ?? '',
+        headquartersAddress: company.headquarters_address ?? '',
+      }
+    : undefined;
+
+  type GroupMemberPermission = 'admin' | 'member' | 'viewer';
+  interface Member { id: string; name: string; email: string; permission: GroupMemberPermission; }
+  interface Group { id: string; name: string; members: Member[]; }
+  interface AccountPropsLocal {
+    company?: {
+      companyName: string;
+      representativeName: string;
+      industryList: string[];
+      companyOverview: string;
+      headquartersAddress: string;
+    } | undefined;
+    groups?: Group[] | undefined;
+  }
+
+  const Account = AccountClient as React.ComponentType<AccountPropsLocal>;
 
   return (
     <>
-      
-      <AccountClient />
-      
+      <Account
+        company={companyProps}
+        groups={groupsWithMembers}
+      />
     </>
   );
 }

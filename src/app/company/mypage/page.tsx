@@ -409,18 +409,31 @@ export default async function CompanyMypage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+  // 求人データとグループデータを取得
+  const { getJobOptions } = await import('@/lib/server/candidate/recruitment-queries');
+  const { getCompanyGroups, getUserDefaultGroupId } = await import('@/lib/actions/search-history');
+  
   // 基本データを並列取得（検索は後で並列処理）
-  const [candidates, messages, notices, companyAccountData] = await Promise.all([
+  const [candidates, messages, notices, companyAccountData, jobOptions, companyGroupsResult, defaultGroupResult] = await Promise.all([
     getCandidatesData(supabaseUrl, supabaseAnonKey, cookiesData),
     getRecentMessagesUncached(companyUserId),
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData), // 最新3件まで取得
-    getCompanyAccountData(companyUserId)
+    getCompanyAccountData(companyUserId),
+    getJobOptions(),
+    getCompanyGroups(),
+    getUserDefaultGroupId()
   ]);
 
-  // ユーザーのデフォルトグループIDを取得
-  const { getUserDefaultGroupId } = await import('@/lib/actions/search-history');
-  const defaultGroupResult = await getUserDefaultGroupId();
   console.log('[DEBUG] Default group result:', defaultGroupResult);
+  
+  const companyGroups = companyGroupsResult.success 
+    ? companyGroupsResult.data.map(group => ({
+        value: group.id,
+        label: group.name
+      }))
+    : [];
+    
+  const companyGroupId = companyGroups[0]?.value || (defaultGroupResult.success ? defaultGroupResult.data.groupId : undefined);
   
   // デバッグ: 全ての検索履歴を取得（グループフィルタなし）
   const allSearchHistoryResult = await getSearchHistory();
@@ -651,6 +664,8 @@ export default async function CompanyMypage() {
                     key={`recommended-section-${section.searchCondition.id}-${index}`}
                     searchCondition={section.searchCondition}
                     candidates={section.candidates}
+                    companyGroupId={companyGroupId}
+                    jobOptions={jobOptions}
                   />
                 ))
               ) : (

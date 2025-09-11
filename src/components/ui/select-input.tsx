@@ -25,6 +25,7 @@ interface SelectInputProps {
   onClose?: () => void;
   'data-testid'?: string;
   forcePosition?: 'top' | 'bottom'; // ドロップダウンの位置を強制指定
+  // NOTE: 元に戻すため、borderlessは撤回（呼び出し局所で制御する）
 }
 
 // カスタムドロップダウンアイコンコンポーネント
@@ -213,8 +214,8 @@ export function SelectInput({
             opt => opt.value === selectedValue
           );
           const nextIndex = Math.min(currentIndex + 1, options.length - 1);
-          if (nextIndex !== currentIndex) {
-            handleSelect(options[nextIndex].value);
+          if (nextIndex !== currentIndex && options[nextIndex]) {
+            handleSelect(options[nextIndex]!.value);
           }
         }
         break;
@@ -225,8 +226,8 @@ export function SelectInput({
             opt => opt.value === selectedValue
           );
           const prevIndex = Math.max(currentIndex - 1, 0);
-          if (prevIndex !== currentIndex) {
-            handleSelect(options[prevIndex].value);
+          if (prevIndex !== currentIndex && options[prevIndex]) {
+            handleSelect(options[prevIndex]!.value);
           }
         }
         break;

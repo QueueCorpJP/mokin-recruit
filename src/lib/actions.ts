@@ -9,7 +9,8 @@ export async function sendMessage(
   content: string,
   senderType: 'candidate' | 'company',
   senderId: string,
-  subject?: string
+  subject?: string,
+  fileUrls?: string[]
 ) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -34,6 +35,22 @@ export async function sendMessage(
   );
   
   try {
+    // 企業ユーザーの場合、company_group_idを取得
+    let companyGroupId = null;
+    if (senderType === 'company') {
+      const { data: groupPermission, error: groupError } = await supabase
+        .from('company_user_group_permissions')
+        .select('company_group_id')
+        .eq('company_user_id', senderId)
+        .single();
+      
+      if (groupError) {
+        console.error('Error fetching company group ID:', groupError);
+      } else {
+        companyGroupId = groupPermission?.company_group_id;
+      }
+    }
+
     // メッセージを送信
     const { data: messageData, error: messageError } = await supabase
       .from('messages')
@@ -42,12 +59,16 @@ export async function sendMessage(
         sender_type: senderType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER',
         ...(senderType === 'candidate' 
           ? { sender_candidate_id: senderId }
-          : { sender_company_user_id: senderId }
+          : { 
+              sender_company_user_id: senderId,
+              sender_company_group_id: companyGroupId
+            }
         ),
         message_type: 'GENERAL',
         subject: subject || null,
         content,
         status: 'SENT',
+        file_urls: fileUrls || [],
       })
       .select()
       .single();
@@ -303,5 +324,200 @@ export async function markMessageAsRead(messageId: string) {
       success: false, 
       error: error instanceof Error ? error.message : '既読処理に失敗しました'
     };
+  }
+}
+
+// 候補者用: ルームのメッセージを既読にする専用関数
+export async function markCandidateRoomMessagesAsRead(roomId: string): Promise<{ success: boolean; error?: string }> {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Ignore cookie setting errors in Server Actions
+          }
+        },
+      },
+    }
+  );
+  
+  try {
+    // 候補者宛ての未読メッセージ（企業から送信された'SENT'ステータスのメッセージ）を既読にする
+    const { error: readUpdateError } = await supabase
+      .from('messages')
+      .update({
+        status: 'read',
+        read_at: new Date().toISOString()
+      })
+      .eq('room_id', roomId)
+      .eq('status', 'SENT')
+      .eq('sender_type', 'COMPANY_USER'); // 企業からのメッセージのみ
+
+    if (readUpdateError) {
+      console.error('Failed to update read status:', readUpdateError);
+      return { success: false, error: readUpdateError.message };
+    }
+
+    console.log('✅ [markCandidateRoomMessagesAsRead] Successfully updated read status for room:', roomId);
+    
+    // 関連ページを再検証
+    revalidatePath('/candidate/message');
+    revalidatePath('/company/message');
+    
+    return { success: true };
+
+  } catch (error) {
+    console.error('Mark candidate room messages as read error:', error);
+    return { success: false, error: 'Internal server error' };
+  }
+}
+
+// ファイルアップロード用のサーバーアクション
+export async function uploadMessageFile(formData: FormData) {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Ignore cookie setting errors in Server Actions
+          }
+        },
+      },
+    }
+  );
+
+  try {
+    const file = formData.get('file') as File;
+    const userId = formData.get('userId') as string;
+
+    if (!file) {
+      return { error: 'ファイルが指定されていません' };
+    }
+
+    if (!userId) {
+      return { error: 'ユーザーIDが指定されていません' };
+    }
+
+    // ファイルサイズチェック（5MB）
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return { error: 'ファイルサイズは5MB以下にしてください' };
+    }
+
+    // ファイル形式チェック
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/webp',
+      'image/svg+xml',
+      'text/plain'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return { error: 'PDF、Word、画像ファイル、テキストファイルのみアップロード可能です' };
+    }
+
+    // ファイル名の生成（タイムスタンプ + オリジナルファイル名）
+    const timestamp = new Date().getTime();
+    
+    // Supabaseストレージ対応のファイル名サニタイズ処理
+    const sanitizeFileName = (name: string): string => {
+      const lastDotIndex = name.lastIndexOf('.');
+      const extension = lastDotIndex !== -1 ? name.substring(lastDotIndex) : '';
+      const nameWithoutExt = lastDotIndex !== -1 ? name.substring(0, lastDotIndex) : name;
+      
+      let sanitized = nameWithoutExt
+        .replace(/[^a-zA-Z0-9\\-_.]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .replace(/^\\.|\\.$/g, '');
+      
+      if (!sanitized || sanitized === '.' || sanitized === '..') {
+        sanitized = 'file';
+      }
+      
+      const maxLength = 100 - extension.length - `${timestamp}_`.length;
+      if (sanitized.length > maxLength) {
+        sanitized = sanitized.substring(0, maxLength);
+      }
+      
+      return sanitized + extension;
+    };
+    
+    const sanitizedFileName = sanitizeFileName(file.name);
+    const fileName = `${timestamp}_${sanitizedFileName}`;
+    const filePath = `${userId}/messages/${fileName}`;
+    
+    const fileBuffer = await file.arrayBuffer();
+    
+    const { data, error } = await supabase.storage
+      .from('message-files')
+      .upload(filePath, fileBuffer, {
+        cacheControl: '3600',
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Supabase message file upload error:', error);
+      let errorMessage = 'ファイルのアップロードに失敗しました';
+      
+      if (error.message) {
+        if (error.message.includes('Payload too large') || error.message.includes('Request entity too large')) {
+          errorMessage = 'ファイルサイズが大きすぎます。5MB以下にしてください。';
+        } else if (error.message.includes('Invalid file type') || error.message.includes('content-type')) {
+          errorMessage = 'サポートされていないファイル形式です。';
+        } else if (error.message.includes('Duplicate') || error.message.includes('already exists')) {
+          errorMessage = '同じファイルが既に存在します。しばらく待ってから再試行してください。';
+        } else if (error.message.includes('Permission') || error.message.includes('Unauthorized')) {
+          errorMessage = 'ファイルのアップロード権限がありません。';
+        } else if (error.message.includes('Network') || error.message.includes('timeout')) {
+          errorMessage = 'ネットワークエラーです。インターネット接続を確認してください。';
+        }
+      }
+      
+      return { error: errorMessage };
+    }
+
+    // 公開URLを取得
+    const { data: urlData } = supabase.storage
+      .from('message-files')
+      .getPublicUrl(filePath);
+
+    return {
+      url: urlData.publicUrl,
+      path: filePath,
+      success: true
+    };
+
+  } catch (error) {
+    console.error('Upload message file error:', error);
+    return { error: 'ファイルのアップロード中にエラーが発生しました' };
   }
 }
