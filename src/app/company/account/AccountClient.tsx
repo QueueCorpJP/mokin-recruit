@@ -115,6 +115,21 @@ export default function AccountClient() {
     },
   ]);
 
+  // グループ追加関数
+  const addGroup = () => {
+    const newGroupId = `group-${Date.now()}`;
+    const newGroup: Group = {
+      id: newGroupId,
+      name: 'グループ名テキスト',
+      members: [
+        { id: `member-${newGroupId}-1`, name: '名前テキストが入ります。', email: 'examples@mail.com', permission: 'admin' },
+        { id: `member-${newGroupId}-2`, name: '名前テキストが入ります。', email: 'examples@mail.com', permission: 'admin' },
+        { id: `member-${newGroupId}-3`, name: '名前テキストが入ります。', email: 'examples@mail.com', permission: 'admin' },
+      ],
+    };
+    setGroups((prevGroups) => [...prevGroups, newGroup]);
+  };
+
   // メンバー追加関数
   const addMember = (groupId: string) => {
     setGroups((prevGroups) =>
@@ -577,12 +592,11 @@ export default function AccountClient() {
                 </h2>
               </div>
               <Button
+                type="button"
                 variant="green-gradient"
                 size="figma-default"
                 className="min-w-[160px] px-10"
-                onClick={() => {
-                  // 新規グループ作成モーダル表示
-                }}
+                onClick={() => addGroup()}
               >
                 新規グループ作成
               </Button>

@@ -12,50 +12,12 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import type { Industry } from '@/constants/industry-data';
 import type { JobType } from '@/constants/job-type-data';
-
-const educationSchema = z.object({
-  finalEducation: z.string().min(1, '最終学歴を選択してください。'),
-  schoolName: z.string().min(1, '学校名を入力してください。'),
-  department: z.string().min(1, '学部学科専攻を入力してください。'),
-  graduationYear: z.string().min(1, '卒業年月を選択してください。'),
-  graduationMonth: z.string().min(1, '卒業年月を選択してください。'),
-  industries: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        experienceYears: z.string().optional(),
-      })
-    )
-    .min(1, '業種を1つ以上選択してください。')
-    .max(3)
-    .refine(
-      items =>
-        items.every(
-          item => item.experienceYears && item.experienceYears !== ''
-        ),
-      '経験年数を選択してください。'
-    ),
-  jobTypes: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        experienceYears: z.string().optional(),
-      })
-    )
-    .min(1, '職種を1つ以上選択してください。')
-    .max(3)
-    .refine(
-      items =>
-        items.every(
-          item => item.experienceYears && item.experienceYears !== ''
-        ),
-      '経験年数を選択してください。'
-    ),
-});
-
-type EducationFormData = z.infer<typeof educationSchema>;
+import {
+  educationSchema,
+  type EducationFormData,
+} from '../../_shared/schemas/educationSchema';
+import { FormErrorMessage } from '../../_shared/fields/FormErrorMessage';
+import { useEducationForm } from '../../_shared/hooks/useEducationForm';
 
 // 最終学歴の選択肢
 const educationOptions = [
@@ -97,140 +59,39 @@ const experienceYearOptions = [
 ];
 
 export default function CandidateEducationEditPage() {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
-  const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    errors,
+    isValid,
     watch,
     setValue,
-  } = useForm<EducationFormData>({
-    resolver: zodResolver(educationSchema),
-    mode: 'onChange',
-    defaultValues: {
-      finalEducation: '',
-      schoolName: '',
-      department: '',
-      graduationYear: '',
-      graduationMonth: '',
-      industries: [],
-      jobTypes: [],
-    },
-  });
+    isSubmitting,
+    handleCancel,
+    yearOptions,
+    monthOptions,
+    selectedIndustries,
+    selectedJobTypes,
+    isIndustryModalOpen,
+    setIsIndustryModalOpen,
+    isJobTypeModalOpen,
+    setIsJobTypeModalOpen,
+    handleIndustryConfirm,
+    handleJobTypeConfirm,
+    removeIndustry,
+    updateIndustryExperience,
+    removeJobType,
+    updateJobTypeExperience,
+    onSubmit,
+    isLoading,
+  } = useEducationForm();
 
-  const selectedIndustries = watch('industries');
-  const selectedJobTypes = watch('jobTypes');
-
-  // 年の選択肢を生成（1970年から2025年まで）
-  const yearOptions = useMemo(() => {
-    const years = [];
-    for (let year = 2025; year >= 1970; year--) {
-      years.push(year.toString());
-    }
-    return years;
-  }, []);
-
-  // 月の選択肢を生成（1〜12月）
-  const monthOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
-
-  useEffect(() => {
-    // TODO: APIから既存のデータを取得
-    // データが存在しない場合はデフォルト値を設定
-  }, [setValue]);
-
-  const onSubmit = async (data: EducationFormData) => {
-    setIsSubmitting(true);
-    try {
-      // TODO: APIを通じてデータを保存
-      console.log('Saving education data:', data);
-      router.push('/account/education');
-    } catch {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    router.back();
-  };
-
-  const handleIndustryConfirm = (industries: string[]) => {
-    const industriesWithExperience = industries.map(industryId => {
-      const existing = selectedIndustries.find(i => i.id === industryId);
-      return {
-        id: industryId,
-        name: industryId, // TODO: Get proper name from industry data
-        experienceYears: existing?.experienceYears || '',
-      };
-    });
-    setValue('industries', industriesWithExperience, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-    setIsIndustryModalOpen(false);
-  };
-
-  const removeIndustry = (industryId: string) => {
-    const updated = selectedIndustries.filter(i => i.id !== industryId);
-    setValue('industries', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const updateIndustryExperience = (
-    industryId: string,
-    experienceYears: string
-  ) => {
-    const updated = selectedIndustries.map(industry =>
-      industry.id === industryId ? { ...industry, experienceYears } : industry
-    );
-    setValue('industries', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const handleJobTypeConfirm = (jobTypes: string[]) => {
-    const jobTypesWithExperience = jobTypes.map(jobTypeId => {
-      const existing = selectedJobTypes.find(jt => jt.id === jobTypeId);
-      return {
-        id: jobTypeId,
-        name: jobTypeId, // TODO: Get proper name from job type data
-        experienceYears: existing?.experienceYears || '',
-      };
-    });
-    setValue('jobTypes', jobTypesWithExperience, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-    setIsJobTypeModalOpen(false);
-  };
-
-  const removeJobType = (jobTypeId: string) => {
-    const updated = selectedJobTypes.filter(jt => jt.id !== jobTypeId);
-    setValue('jobTypes', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
-
-  const updateJobTypeExperience = (
-    jobTypeId: string,
-    experienceYears: string
-  ) => {
-    const updated = selectedJobTypes.map(jobType =>
-      jobType.id === jobTypeId ? { ...jobType, experienceYears } : jobType
-    );
-    setValue('jobTypes', updated, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
+  // const router = useRouter();
+  // const isDesktop = useMediaQuery('(min-width: 1024px)');
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
+  // useEffect ... 認証チェックや初期データ取得もカスタムフックに集約済みなので削除
 
   return (
     <div className='min-h-screen flex flex-col'>
@@ -341,6 +202,9 @@ export default function CandidateEducationEditPage() {
                               </option>
                             ))}
                           </select>
+                          <FormErrorMessage
+                            error={errors.finalEducation?.message}
+                          />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
                               width='14'
@@ -377,6 +241,9 @@ export default function CandidateEducationEditPage() {
                                 : 'border-[#999999]'
                             } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
                           />
+                          <FormErrorMessage
+                            error={errors.schoolName?.message}
+                          />
                         </div>
                       </div>
                     </div>
@@ -399,6 +266,9 @@ export default function CandidateEducationEditPage() {
                                 ? 'border-red-500'
                                 : 'border-[#999999]'
                             } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                          />
+                          <FormErrorMessage
+                            error={errors.department?.message}
                           />
                         </div>
                       </div>
@@ -433,6 +303,9 @@ export default function CandidateEducationEditPage() {
                                 </option>
                               ))}
                             </select>
+                            <FormErrorMessage
+                              error={errors.graduationYear?.message}
+                            />
                             <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                               <svg
                                 width='14'
@@ -470,6 +343,9 @@ export default function CandidateEducationEditPage() {
                                 </option>
                               ))}
                             </select>
+                            <FormErrorMessage
+                              error={errors.graduationMonth?.message}
+                            />
                             <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                               <svg
                                 width='14'
@@ -587,11 +463,9 @@ export default function CandidateEducationEditPage() {
                               })}
                             </div>
                           </div>
-                          {errors.industries && (
-                            <p className='text-red-500 text-sm mt-1'>
-                              {errors.industries.message}
-                            </p>
-                          )}
+                          <FormErrorMessage
+                            error={errors.industries?.message}
+                          />
                         </div>
                       </div>
                     </div>
@@ -680,11 +554,7 @@ export default function CandidateEducationEditPage() {
                               })}
                             </div>
                           </div>
-                          {errors.jobTypes && (
-                            <p className='text-red-500 text-sm mt-1'>
-                              {errors.jobTypes.message}
-                            </p>
-                          )}
+                          <FormErrorMessage error={errors.jobTypes?.message} />
                         </div>
                       </div>
                     </div>
@@ -819,6 +689,9 @@ export default function CandidateEducationEditPage() {
                             </option>
                           ))}
                         </select>
+                        <FormErrorMessage
+                          error={errors.finalEducation?.message}
+                        />
                         <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                           <svg
                             width='14'
@@ -852,6 +725,7 @@ export default function CandidateEducationEditPage() {
                             : 'border-[#999999]'
                         } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
                       />
+                      <FormErrorMessage error={errors.schoolName?.message} />
                     </div>
 
                     {/* 学部学科専攻 */}
@@ -871,6 +745,7 @@ export default function CandidateEducationEditPage() {
                             : 'border-[#999999]'
                         } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
                       />
+                      <FormErrorMessage error={errors.department?.message} />
                     </div>
 
                     {/* 卒業年月 */}
@@ -901,6 +776,9 @@ export default function CandidateEducationEditPage() {
                               </option>
                             ))}
                           </select>
+                          <FormErrorMessage
+                            error={errors.graduationYear?.message}
+                          />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
                               width='14'
@@ -940,6 +818,9 @@ export default function CandidateEducationEditPage() {
                               </option>
                             ))}
                           </select>
+                          <FormErrorMessage
+                            error={errors.graduationMonth?.message}
+                          />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
                               width='14'
@@ -1049,11 +930,7 @@ export default function CandidateEducationEditPage() {
                           })}
                         </div>
                       ) : null}
-                      {errors.industries && (
-                        <p className='text-red-500 text-sm'>
-                          {errors.industries.message}
-                        </p>
-                      )}
+                      <FormErrorMessage error={errors.industries?.message} />
                     </div>
 
                     {/* 職種 */}
@@ -1136,11 +1013,7 @@ export default function CandidateEducationEditPage() {
                           })}
                         </div>
                       ) : null}
-                      {errors.jobTypes && (
-                        <p className='text-red-500 text-sm'>
-                          {errors.jobTypes.message}
-                        </p>
-                      )}
+                      <FormErrorMessage error={errors.jobTypes?.message} />
                     </div>
                   </div>
                 </div>

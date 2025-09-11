@@ -1,8 +1,13 @@
 'use server';
 
-import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
+import {
+  requireCandidateAuth,
+  requireCandidateAuthForAction,
+} from '@/lib/auth/server';
 import { getSkillsData as getSkillsFromDB } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { parseJsonField } from '../../_shared/utils/formData';
+import { updateOrInsertByKey } from '../../_shared/server/upsert';
 
 export async function getSkillsData() {
   try {
@@ -18,11 +23,11 @@ export async function getSkillsData() {
 
     return {
       englishLevel: skillsData.english_level || '',
-      otherLanguages: Array.isArray(skillsData.other_languages) 
-        ? skillsData.other_languages 
+      otherLanguages: Array.isArray(skillsData.other_languages)
+        ? skillsData.other_languages
         : [],
-      skills: Array.isArray(skillsData.skills_list) 
-        ? skillsData.skills_list 
+      skills: Array.isArray(skillsData.skills_list)
+        ? skillsData.skills_list
         : [],
       qualifications: skillsData.qualifications || '',
     };
@@ -45,72 +50,45 @@ export async function updateSkillsData(formData: FormData) {
     // フォームデータをパース
     const englishLevel = formData.get('englishLevel')?.toString() || '';
     const qualifications = formData.get('qualifications')?.toString() || '';
-    
-    // 配列データをパース
-    const skillsJson = formData.get('skills')?.toString();
-    const otherLanguagesJson = formData.get('otherLanguages')?.toString();
-    
-    let skills: string[] = [];
-    let otherLanguages: any[] = [];
-    
-    if (skillsJson) {
-      try {
-        skills = JSON.parse(skillsJson);
-      } catch (e) {
-        console.error('Skills JSON parse error:', e);
-      }
-    }
-    
-    if (otherLanguagesJson) {
-      try {
-        otherLanguages = JSON.parse(otherLanguagesJson);
-      } catch (e) {
-        console.error('Other languages JSON parse error:', e);
-      }
-    }
+
+    // 配列データをパース（共通ユーティリティ使用）
+    const skills = parseJsonField<string[]>(formData, 'skills', []);
+    const otherLanguages = parseJsonField<any[]>(
+      formData,
+      'otherLanguages',
+      []
+    );
 
     console.log('Updating skills data:', {
       candidateId,
       englishLevel,
       qualifications,
       skills,
-      otherLanguages
+      otherLanguages,
     });
 
     const supabase = await getSupabaseServerClient();
 
-    // skillsテーブルを更新（まず更新を試し、存在しなければ挿入）
-    const { data: updateData, error: updateError } = await supabase
-      .from('skills')
-      .update({
+    // skillsテーブル upsert（update→0件ならinsert）
+    const { error: skillsError } = await updateOrInsertByKey({
+      client: supabase,
+      table: 'skills',
+      key: 'candidate_id',
+      value: candidateId,
+      update: {
         english_level: englishLevel || null,
         qualifications: qualifications || null,
         skills_list: skills,
         other_languages: otherLanguages,
-      })
-      .eq('candidate_id', candidateId)
-      .select();
-
-    let skillsError = null;
-    
-    if (updateError) {
-      skillsError = updateError;
-    } else if (!updateData || updateData.length === 0) {
-      // 更新された行がない場合は新規挿入
-      const { error: insertError } = await supabase
-        .from('skills')
-        .insert({
-          candidate_id: candidateId,
-          english_level: englishLevel || null,
-          qualifications: qualifications || null,
-          skills_list: skills,
-          other_languages: otherLanguages,
-        });
-      
-      if (insertError) {
-        skillsError = insertError;
-      }
-    }
+      },
+      insert: {
+        candidate_id: candidateId,
+        english_level: englishLevel || null,
+        qualifications: qualifications || null,
+        skills_list: skills,
+        other_languages: otherLanguages,
+      },
+    });
 
     if (skillsError) {
       console.error('Skills update error:', skillsError);
@@ -129,17 +107,18 @@ export async function updateSkillsData(formData: FormData) {
     if (candidateError) {
       console.error('Candidate skills update error:', candidateError);
       // これはエラーにしない（主要な情報は既にskillsテーブルに保存済み）
-      console.warn('候補者テーブルのスキル配列の更新に失敗しましたが、処理を続行します');
+      console.warn(
+        '候補者テーブルのスキル配列の更新に失敗しましたが、処理を続行します'
+      );
     }
 
     console.log('Skills update success:', { candidateId });
     return { success: true };
-
   } catch (error) {
     console.error('Skills update failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }

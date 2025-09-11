@@ -173,8 +173,7 @@ export default function JobEditClient({
 
   // 必須項目が全て入力されているかチェックする関数
   const isFormValid = () => {
-    // グループ選択
-    if (!group) return false;
+    // 編集モードではグループはチェックしない（変更できないため）
     
     // 求人タイトル
     if (!title.trim()) return false;
@@ -225,7 +224,7 @@ export default function JobEditClient({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!group) newErrors.group = 'グループを選択してください。';
+    // 編集モードではグループは必須チェックしない（変更できないため）
     if (!title.trim()) newErrors.title = '求人タイトルを入力してください。';
     if (!jobDescription.trim())
       newErrors.jobDescription = '業務内容を入力してください。';
@@ -387,7 +386,7 @@ export default function JobEditClient({
 
   return (
     <>
-      <JobEditHeader />
+      <JobEditHeader jobId={jobId} />
       <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
         <div className='w-full max-w-[1280px] mx-auto mb-10'>
           <AttentionBanner 
@@ -494,6 +493,7 @@ export default function JobEditClient({
             setIndustryModalOpen={setIndustryModalOpen}
             errors={errors}
             showErrors={showErrors}
+            isEditMode={true}
           />
 
           {/* ボタンエリア */}

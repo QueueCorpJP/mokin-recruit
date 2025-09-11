@@ -25,18 +25,28 @@ export const LocationModal: React.FC<LocationModalProps> = ({
     }
   };
 
-  const allPrefectures = regions.flatMap(r => r.prefectures);
-  const isAllSelected =
-    selectedLocations.length === allPrefectures.length &&
-    allPrefectures.length > 0;
+  // 日本の都道府県のみを対象（海外を除く）
+  const japanPrefectures = regions
+    .filter(r => !r.name.includes('海外') && !r.name.includes('アジア'))
+    .flatMap(r => r.prefectures);
+  
+  const isAllJapanSelected = 
+    japanPrefectures.length > 0 &&
+    japanPrefectures.every(prefecture => selectedLocations.includes(prefecture));
 
   const handleSelectAllJapan = () => {
-    if (isAllSelected) {
-      setSelectedLocations([]);
+    if (isAllJapanSelected) {
+      // 日本の都道府県のみを削除（海外は残す）
+      const overseasLocations = selectedLocations.filter(location => 
+        !japanPrefectures.includes(location)
+      );
+      setSelectedLocations(overseasLocations);
     } else {
-      // 全選択の場合は制限を無視（または制限内で選択）
-      // 制限を適用する場合は以下のようにします：
-      setSelectedLocations(allPrefectures.slice(0, MAX_SELECTION_JAPAN));
+      // 現在の海外選択を保持しつつ、日本の都道府県を全て追加
+      const overseasLocations = selectedLocations.filter(location => 
+        !japanPrefectures.includes(location)
+      );
+      setSelectedLocations([...overseasLocations, ...japanPrefectures]);
     }
   };
 
@@ -50,12 +60,9 @@ export const LocationModal: React.FC<LocationModalProps> = ({
             </span>
             <Checkbox
               label='日本を全て選択'
-              checked={isAllSelected}
+              checked={isAllJapanSelected}
               onChange={handleSelectAllJapan}
-              disabled={
-                !isAllSelected &&
-                selectedLocations.length >= MAX_SELECTION_JAPAN
-              }
+              disabled={false}
             />
           </div>
           {/* 選択数カウンターの表示を削除 */}

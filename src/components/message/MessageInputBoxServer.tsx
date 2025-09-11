@@ -1,9 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { SelectInput } from '@/components/ui/select-input';
 import { sendMessage } from '@/lib/actions';
+import { getScoutTemplates } from '@/app/company/scout-template/actions';
+
+interface TemplateOption {
+  value: string;
+  label: string;
+  subject?: string;
+  body?: string;
+}
 
 export const MessageInputBoxServer: React.FC<{ 
   isCandidatePage?: boolean;
@@ -16,15 +24,56 @@ export const MessageInputBoxServer: React.FC<{
   userType = '',
   roomId,
 }) => {
-  const templateOptions = [
+  const [templateOptions, setTemplateOptions] = useState<TemplateOption[]>([
     { value: '', label: 'テンプレート未選択' },
-    { value: '1', label: '面談日程調整テンプレート' },
-    { value: '2', label: '合否連絡テンプレート' },
-  ];
+  ]);
   const [template, setTemplate] = useState('');
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // テンプレートを取得する関数
+  const loadTemplates = async () => {
+    if (userType !== 'company') return;
+    
+    setIsLoadingTemplates(true);
+    try {
+      const result = await getScoutTemplates(100, 0); // 最大1000件取得
+      if (result.success && result.data) {
+        const options: TemplateOption[] = [
+          { value: '', label: 'テンプレート未選択' },
+          ...result.data.map(item => ({
+            value: item.id,
+            label: item.template_name,
+            subject: item.subject,
+            body: item.body || ''
+          }))
+        ];
+        setTemplateOptions(options);
+      }
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  // コンポーネントマウント時にテンプレートを取得
+  useEffect(() => {
+    loadTemplates();
+  }, [userType]);
+
+  // テンプレート選択時の処理
+  const handleTemplateChange = (selectedValue: string) => {
+    setTemplate(selectedValue);
+    if (selectedValue) {
+      const selectedTemplate = templateOptions.find(opt => opt.value === selectedValue);
+      if (selectedTemplate?.body) {
+        setMessage(selectedTemplate.body);
+      }
+    }
+  };
 
   // デバッグ用：props の値を確認
   console.log('MessageInputBoxServer props:', { 
@@ -152,9 +201,11 @@ export const MessageInputBoxServer: React.FC<{
           <SelectInput
             options={templateOptions}
             value={template}
-            onChange={setTemplate}
-            placeholder='テンプレート未選択'
+            onChange={handleTemplateChange}
+            placeholder={isLoadingTemplates ? 'テンプレート読み込み中...' : 'テンプレート未選択'}
             className='w-[240px] font-bold text-[16px]'
+            disabled={isLoadingTemplates}
+            forcePosition="top"
           />
         )}
       </div>

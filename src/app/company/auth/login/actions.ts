@@ -121,7 +121,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     });
     
     // 成功時は適切なダッシュボードにリダイレクト
-    const redirectPath = userType === 'company' ? '/company' : '/candidate';
+    const redirectPath = userType === 'company' ? '/company/mypage' : '/candidate';
     redirect(redirectPath);
 
   } catch (error) {

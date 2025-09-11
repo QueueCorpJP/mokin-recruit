@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import SearchConditionForm from './components/SearchConditionForm';
@@ -19,6 +19,8 @@ interface SearchFormProps {
 
 export default function SearchForm({ companyId }: SearchFormProps) {
   const router = useRouter();
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const searchStore = useSearchStore();
 
@@ -42,9 +44,12 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                 variant="green-gradient"
                 size="figma-default"
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                disabled={isSearching || isSaving}
                 onClick={async () => {
                   console.log('[DEBUG SearchForm] Search button clicked');
                   console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
+                  
+                  setIsSearching(true);
                   
                   // タッチ済みにしてバリデーションをトリガー
                   searchStore.setSearchGroupTouched(true);
@@ -134,6 +139,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     if (searchStore.currentCompany) searchParams.set('current_company', searchStore.currentCompany);
                     if (searchStore.education) searchParams.set('education', searchStore.education);
                     if (searchStore.englishLevel) searchParams.set('english_level', searchStore.englishLevel);
+                    if (searchStore.qualifications) searchParams.set('qualifications', searchStore.qualifications);
+                    if (searchStore.otherLanguage) searchParams.set('other_language', searchStore.otherLanguage);
+                    if (searchStore.otherLanguageLevel) searchParams.set('other_language_level', searchStore.otherLanguageLevel);
                     
                     // 年齢
                     if (searchStore.ageMin) searchParams.set('age_min', searchStore.ageMin);
@@ -157,6 +165,12 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     if (searchStore.transferTime) searchParams.set('transfer_time', searchStore.transferTime);
                     if (searchStore.selectionStatus) searchParams.set('selection_status', searchStore.selectionStatus);
                     if (searchStore.lastLoginMin) searchParams.set('last_login_min', searchStore.lastLoginMin);
+                    if (searchStore.similarCompanyIndustry) searchParams.set('similar_company_industry', searchStore.similarCompanyIndustry);
+                    if (searchStore.similarCompanyLocation) searchParams.set('similar_company_location', searchStore.similarCompanyLocation);
+                    
+                    // 希望給与
+                    if (searchStore.desiredSalaryMin) searchParams.set('desired_salary_min', searchStore.desiredSalaryMin);
+                    if (searchStore.desiredSalaryMax) searchParams.set('desired_salary_max', searchStore.desiredSalaryMax);
                     
                     router.push(`/company/search/result?${searchParams.toString()}`);
                   } else {
@@ -172,18 +186,22 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         block: 'center',
                       });
                     }
+                    setIsSearching(false);
                   }
                 }}
               >
-                この条件で検索
+                {isSearching ? '検索中...' : 'この条件で検索'}
               </Button>
               <Button
                 variant="green-outline"
                 size="figma-outline"
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                disabled={isSearching || isSaving}
                 onClick={async () => {
                   console.log('[DEBUG SearchForm] Save button clicked');
                   console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
+                  
+                  setIsSaving(true);
                   
                   // タッチ済みにしてバリデーションをトリガー
                   searchStore.setSearchGroupTouched(true);
@@ -253,9 +271,6 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     // 検索条件をURLパラメータとして結果ページに遷移
                     const searchParams = new URLSearchParams();
                     
-                    // 保存ボタンから来たことを示すフラグ
-                    searchParams.set('from_save', 'true');
-                    
                     // 基本検索条件
                     if (searchStore.searchGroup) searchParams.set('search_group', searchStore.searchGroup);
                     if (searchStore.keyword) searchParams.set('keyword', searchStore.keyword);
@@ -276,6 +291,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     if (searchStore.currentCompany) searchParams.set('current_company', searchStore.currentCompany);
                     if (searchStore.education) searchParams.set('education', searchStore.education);
                     if (searchStore.englishLevel) searchParams.set('english_level', searchStore.englishLevel);
+                    if (searchStore.qualifications) searchParams.set('qualifications', searchStore.qualifications);
+                    if (searchStore.otherLanguage) searchParams.set('other_language', searchStore.otherLanguage);
+                    if (searchStore.otherLanguageLevel) searchParams.set('other_language_level', searchStore.otherLanguageLevel);
                     
                     // 年齢
                     if (searchStore.ageMin) searchParams.set('age_min', searchStore.ageMin);
@@ -299,6 +317,12 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     if (searchStore.transferTime) searchParams.set('transfer_time', searchStore.transferTime);
                     if (searchStore.selectionStatus) searchParams.set('selection_status', searchStore.selectionStatus);
                     if (searchStore.lastLoginMin) searchParams.set('last_login_min', searchStore.lastLoginMin);
+                    if (searchStore.similarCompanyIndustry) searchParams.set('similar_company_industry', searchStore.similarCompanyIndustry);
+                    if (searchStore.similarCompanyLocation) searchParams.set('similar_company_location', searchStore.similarCompanyLocation);
+                    
+                    // 希望給与
+                    if (searchStore.desiredSalaryMin) searchParams.set('desired_salary_min', searchStore.desiredSalaryMin);
+                    if (searchStore.desiredSalaryMax) searchParams.set('desired_salary_max', searchStore.desiredSalaryMax);
                     
                     router.push(`/company/search/result?${searchParams.toString()}`);
                   } else {
@@ -314,10 +338,11 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         block: 'center',
                       });
                     }
+                    setIsSaving(false);
                   }
                 }}
               >
-                検索条件を保存
+                {isSaving ? '保存中...' : '検索条件を保存'}
               </Button>
             </div>
           </div>

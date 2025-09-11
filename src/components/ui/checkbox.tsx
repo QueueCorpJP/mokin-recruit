@@ -41,7 +41,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         className={`w-5 h-5 flex items-center justify-center rounded-[4px] transition-colors duration-200 
           ${checked ? 'bg-[#0F9058]' : 'bg-[#DCDCDC]'}`}
       >
-        {/* ✓ マークは常に描画し、色は白固定 */}
+        {/* ✓ マークは常に表示、色を変更 */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
@@ -51,7 +51,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         >
           <path
             d="M5 10L8.5 13.5L15 7"
-            stroke="#FFFFFF"
+            stroke={checked ? "#FFFFFF" : "#FFF"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

@@ -1,40 +1,23 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useFieldArray } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { getRecentJobData, updateRecentJobData } from './actions';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import {
+  recentJobSchema,
+  type RecentJobFormData,
+} from '../../_shared/schemas/recentJob';
+import { useEditForm } from '../../_shared/hooks/useEditForm';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
-import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
-import { useCandidateAuth } from '@/hooks/useClientAuth';
+// import { useCandidateAuth } from '@/hooks/useClientAuth';
 import AddButton from '@/components/education/common/AddButton';
 import JobHistoryEditRow from '@/components/education/common/JobHistoryEditRow';
 
-// フォームスキーマ定義
-const recentJobSchema = z.object({
-  jobHistories: z.array(
-    z.object({
-      companyName: z.string().min(1, '企業名を入力してください'),
-      departmentPosition: z.string().optional(),
-      startYear: z.string().min(1, '開始年を入力してください'),
-      startMonth: z.string().min(1, '開始月を入力してください'),
-      endYear: z.string().optional(),
-      endMonth: z.string().optional(),
-      isCurrentlyWorking: z.boolean(),
-      industries: z.array(z.string()),
-      jobTypes: z.array(z.string()),
-      jobDescription: z.string().optional(),
-    })
-  ),
-});
-
-type RecentJobFormData = z.infer<typeof recentJobSchema>;
+// スキーマは共通化されたものを使用
 
 // 月の選択肢
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
@@ -51,8 +34,7 @@ const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => ({
 
 // 候補者_職務経歴編集ページ
 export default function CandidateRecentJobEditPage() {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const router = useRouter();
   const [currentIndustryModalIndex, setCurrentIndustryModalIndex] = useState<
     number | null
   >(null);
@@ -74,10 +56,12 @@ export default function CandidateRecentJobEditPage() {
     formState: { errors },
     watch,
     setValue,
-    reset,
-    control, // useFieldArray用
-  } = useForm<RecentJobFormData>({
-    resolver: zodResolver(recentJobSchema),
+    control,
+    isSubmitting,
+    onSubmit,
+    handleCancel,
+  } = useEditForm<RecentJobFormData>({
+    schema: recentJobSchema,
     defaultValues: {
       jobHistories: [
         {
@@ -94,12 +78,52 @@ export default function CandidateRecentJobEditPage() {
         },
       ],
     },
+    fetchInitialData: async () => {
+      const data = await getRecentJobData();
+      if (!data || !data.jobHistories) return null;
+      // フォーム用にIDへ正規化（name/ID混在対策）
+      const normalizeId = (item: string) => {
+        const ind = INDUSTRY_GROUPS.flatMap(g => g.industries).find(
+          i => i.id === item || i.name === item
+        );
+        if (ind) return ind.id;
+        const jt = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(
+          j => j.id === item || j.name === item
+        );
+        if (jt) return jt.id;
+        return item;
+      };
+      return {
+        jobHistories: data.jobHistories.map(job => ({
+          companyName: job.companyName || '',
+          departmentPosition: job.departmentPosition || '',
+          startYear: job.startYear || '',
+          startMonth: job.startMonth || '',
+          endYear: job.endYear || '',
+          endMonth: job.endMonth || '',
+          isCurrentlyWorking: !!job.isCurrentlyWorking,
+          industries: (job.industries || [])
+            .map((x: string) => normalizeId(x))
+            .filter(Boolean),
+          jobTypes: (job.jobTypes || [])
+            .map((x: string) => normalizeId(x))
+            .filter(Boolean),
+          jobDescription: job.jobDescription || '',
+        })),
+      };
+    },
+    redirectPath: '/candidate/account/recent-job',
+    buildFormData: data => {
+      const formData = new FormData();
+      formData.append('jobHistories', JSON.stringify(data.jobHistories));
+      return formData;
+    },
+    submitAction: updateRecentJobData,
   });
   const {
     fields: jobHistoryFields,
     append,
     remove,
-    replace: replaceJobHistories,
   } = useFieldArray({
     control,
     name: 'jobHistories',
@@ -119,33 +143,12 @@ export default function CandidateRecentJobEditPage() {
       jobDescription: '',
     });
 
-  // 初期データを取得してフォームに設定
+  // 初期データを取得して選択マップを再構築（フォームの初期化は useEditForm に委譲）
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const buildSelectedMaps = async () => {
       try {
         const data = await getRecentJobData();
         if (data && data.jobHistories) {
-          reset({
-            jobHistories:
-              data.jobHistories.length > 0
-                ? data.jobHistories
-                : [
-                    {
-                      companyName: '',
-                      departmentPosition: '',
-                      startYear: '',
-                      startMonth: '',
-                      endYear: '',
-                      endMonth: '',
-                      isCurrentlyWorking: false,
-                      industries: [],
-                      jobTypes: [],
-                      jobDescription: '',
-                    },
-                  ],
-          });
-
-          // selectedMapsを初期データから再構築
           const industryMap: { [key: number]: Industry[] } = {};
           const jobTypeMap: { [key: number]: JobType[] } = {};
           data.jobHistories.forEach((job, index) => {
@@ -176,60 +179,15 @@ export default function CandidateRecentJobEditPage() {
           });
           setSelectedIndustriesMap(industryMap);
           setSelectedJobTypesMap(jobTypeMap);
-          // useFieldArrayのreplaceで初期化
-          replaceJobHistories(
-            data.jobHistories.length > 0
-              ? data.jobHistories
-              : [
-                  {
-                    companyName: '',
-                    departmentPosition: '',
-                    startYear: '',
-                    startMonth: '',
-                    endYear: '',
-                    endMonth: '',
-                    isCurrentlyWorking: false,
-                    industries: [],
-                    jobTypes: [],
-                    jobDescription: '',
-                  },
-                ]
-          );
         }
       } catch (error) {
         console.error('初期データの取得に失敗しました:', error);
       }
     };
-    fetchInitialData();
-  }, [reset, replaceJobHistories]);
+    buildSelectedMaps();
+  }, []);
 
-  const onSubmit = async (data: RecentJobFormData) => {
-    setIsSubmitting(true);
-
-    try {
-      // 全ての職歴を送信
-      const formData = new FormData();
-      formData.append('jobHistories', JSON.stringify(data.jobHistories));
-
-      const result = await updateRecentJobData(formData);
-
-      if (result.success) {
-        router.push('/candidate/account/recent-job');
-      } else {
-        console.error('更新エラー:', result.error);
-        alert('更新に失敗しました。もう一度お試しください。');
-      }
-    } catch (error) {
-      console.error('送信エラー:', error);
-      alert('更新に失敗しました。もう一度お試しください。');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    router.push('/candidate/account/recent-job');
-  };
+  // onSubmit / handleCancel は useEditForm に委譲
 
   // 業種モーダル
   const openIndustryModal = (index: number) => {

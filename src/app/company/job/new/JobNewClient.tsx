@@ -12,7 +12,7 @@ import { IndustryModal } from '@/app/company/job/IndustryModal';
 import { FormFields } from '@/app/company/job/FormFields';
 import { ConfirmView } from '@/app/company/job/ConfirmView';
 // Note: Auth is now handled server-side, user info passed as props
-import { createJob } from '../actions';
+import { createJob, checkUserPermission } from '../actions';
 
 interface JobNewClientProps {
   initialCompanyGroups: CompanyGroup[];
@@ -63,6 +63,10 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   // バリデーション状態
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
+  
+  // 権限エラー状態
+  const [permissionError, setPermissionError] = useState<string>('');
+  const [showPermissionError, setShowPermissionError] = useState(false);
 
   // 下書き保存用のキー（ユーザー固有）
   const actualCurrentUserId = currentUserId;
@@ -426,13 +430,37 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   };
 
   // 確認モードに切り替え
-  const handleConfirm = () => {
-    if (validateForm()) {
-      setIsConfirmMode(true);
-      setShowErrors(false);
-    } else {
+  const handleConfirm = async () => {
+    if (!validateForm()) {
       setShowErrors(true);
+      return;
     }
+
+    // 権限チェック
+    if (group) {
+      try {
+        const permissionResult = await checkUserPermission(group);
+        if (!permissionResult.success) {
+          setPermissionError(permissionResult.error || '権限エラーが発生しました');
+          setShowPermissionError(true);
+          // ページの上部にスクロール
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      } catch (error) {
+        console.error('Permission check failed:', error);
+        setPermissionError('権限の確認中にエラーが発生しました');
+        setShowPermissionError(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+
+    // すべてのチェックが通った場合のみ確認モードに移行
+    setIsConfirmMode(true);
+    setShowErrors(false);
+    setPermissionError('');
+    setShowPermissionError(false);
   };
 
   // 編集モードに戻る
@@ -520,11 +548,22 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
       const result = await createJob(data);
 
       if (result.success) {
+        // 権限エラーをクリア
+        setPermissionError('');
+        setShowPermissionError(false);
         // 完了ページにリダイレクト
         router.push('/company/job/complete');
       } else {
         console.error('API Error:', result);
-        alert(`エラー: ${result.error}`);
+        // 権限関連のエラーかどうかをチェック
+        if (result.error?.includes('スカウト担当者') || result.error?.includes('権限')) {
+          setPermissionError(result.error);
+          setShowPermissionError(true);
+          // ページの上部にスクロール
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert(`エラー: ${result.error}`);
+        }
       }
     } catch (error) {
       console.error('Request Error:', error);
@@ -535,6 +574,44 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   return (
     <>
       <NewJobHeader />
+      
+      {/* 権限エラーメッセージ */}
+      {showPermissionError && permissionError && (
+        <div className='mx-[76px] mt-[20px]'>
+          <div className='bg-red-50 border border-red-200 rounded-[10px] p-4 mb-4'>
+            <div className='flex items-center'>
+              <div className='flex-shrink-0'>
+                <svg className='w-5 h-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
+                  <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
+                </svg>
+              </div>
+              <div className='ml-3'>
+                <h3 className='text-sm font-medium text-red-800'>
+                  権限エラー
+                </h3>
+                <div className='mt-2 text-sm text-red-700'>
+                  <p>{permissionError}</p>
+                </div>
+              </div>
+              <div className='ml-auto pl-3'>
+                <div className='-mx-1.5 -my-1.5'>
+                  <button
+                    type='button'
+                    className='inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600'
+                    onClick={() => setShowPermissionError(false)}
+                  >
+                    <span className='sr-only'>閉じる</span>
+                    <svg className='w-4 h-4' viewBox='0 0 20 20' fill='currentColor'>
+                      <path fillRule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clipRule='evenodd' />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className='mx-[76px]'>
         <div className='w-full my-[37px] p-[37px] rounded-[10px] bg-white'>
           {isConfirmMode ? (

@@ -156,7 +156,7 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
           {/* 入力フィールド - 通常 */}
           <div className='flex justify-center w-full'>
             <div className='flex flex-col gap-2 w-[400px]'>
-              <div className='bg-white border border-[#999999] border-solid rounded-[5px] cursor-pointer relative w-full'>
+              <div className='bg-white cursor-pointer relative w-full'>
                 <div className='flex items-center w-full h-full'>
                   <div className='flex items-center justify-start p-[11px] w-full gap-2.5'>
                     <input
@@ -164,7 +164,7 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
                       placeholder='メールアドレスを入力'
                       value={email}
                       onChange={handleEmailChange}
-                      className='grow min-w-0 bg-transparent text-[#999999] font-medium text-[16px] outline-none placeholder-[#999999]'
+                      className='p-3 grow min-w-0 bg-transparent text-[#999999] font-medium text-[16px] outline-none placeholder-[#999999] rounded-[5px] border border-[#999999] focus:border-[#0f9058] focus:placeholder-[#cccccc] disabled:cursor-not-allowed disabled:opacity-50'
                       style={{
                         fontFamily: 'Noto Sans JP, sans-serif',
                         fontWeight: 500,

@@ -40,6 +40,7 @@ interface CandidateCardProps {
   onTogglePickup?: (id: number) => void;
   onToggleHidden?: (id: number) => void;
   showActions?: boolean;
+  onCandidateClick?: (candidate: CandidateData) => void;
 }
 
 export function CandidateCard({
@@ -47,6 +48,7 @@ export function CandidateCard({
   onTogglePickup,
   onToggleHidden,
   showActions = true,
+  onCandidateClick,
 }: CandidateCardProps) {
   return (
     <div
@@ -61,7 +63,11 @@ export function CandidateCard({
         {showActions && (
           <div className='flex flex-col gap-6 w-8'>
             <button
-              onClick={() => onTogglePickup?.(candidate.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTogglePickup?.(candidate.id);
+              }}
               className='w-8 h-8 flex items-center justify-center'
             >
               {candidate.isPickup ? (
@@ -93,7 +99,11 @@ export function CandidateCard({
               )}
             </button>
             <button
-              onClick={() => onToggleHidden?.(candidate.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggleHidden?.(candidate.id);
+              }}
               className='w-8 h-8 flex items-center justify-center'
             >
               {candidate.isHidden ? (
@@ -128,7 +138,7 @@ export function CandidateCard({
         )}
 
         {/* Candidate Info */}
-        <div className='flex-1'>
+        <div className='flex-1' onClick={() => onCandidateClick?.(candidate)} style={{ cursor: onCandidateClick ? 'pointer' : 'default' }}>
           {/* Badges */}
           <div className='flex items-center gap-2 mb-2'>
             {candidate.isAttention && (

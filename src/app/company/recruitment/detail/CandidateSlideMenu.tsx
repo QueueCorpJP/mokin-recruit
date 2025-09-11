@@ -105,6 +105,8 @@ export function CandidateSlideMenu({
   const [activeTab, setActiveTab] = useState<'details' | 'progress'>('details');
   const [candidateData, setCandidateData] = useState<CandidateDetailData | null>(propsCandidateData || null);
   const [loading, setLoading] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [secondaryDataLoading, setSecondaryDataLoading] = useState(false);
   const [isPickedUp, setIsPickedUp] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
@@ -174,18 +176,15 @@ export function CandidateSlideMenu({
       setCandidateData(null);
       setIsPickedUp(false);
       setIsHidden(false);
+      setSelectionProgress(null);
       
+      setDetailsLoading(true);
+      setSecondaryDataLoading(true);
       setLoading(true);
       
-      // 並行して候補者詳細、保存状態、非表示状態、roomIDを取得
-      Promise.all([
-        getCandidateDetailAction(candidateId, companyGroupId),
-        getSavedCandidatesAction(companyGroupId),
-        getHiddenCandidatesAction(companyGroupId),
-        getRoomIdAction(candidateId, companyGroupId),
-        getSelectionProgressAction(candidateId, companyGroupId)
-      ])
-        .then(([candidateDetail, savedResult, hiddenResult, , progressResult]) => {
+      // 第1段階: 最優先データ（候補者詳細）を先に取得・表示
+      getCandidateDetailAction(candidateId, companyGroupId)
+        .then((candidateDetail) => {
           console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
           console.log('🔍 [CandidateSlideMenu] group:', candidateDetail?.group);
           console.log('🔍 [CandidateSlideMenu] jobPostingId:', candidateDetail?.jobPostingId);
@@ -194,8 +193,21 @@ export function CandidateSlideMenu({
           console.log('🔍 [CandidateSlideMenu] experience:', candidateDetail?.experience);
           console.log('🔍 [CandidateSlideMenu] industry:', candidateDetail?.industry);
           setCandidateData(candidateDetail);
-          
-          
+        })
+        .catch((error) => {
+          console.error('候補者詳細データの取得に失敗:', error);
+        })
+        .finally(() => {
+          setDetailsLoading(false);
+        });
+
+      // 第2段階: セカンダリデータを並列で取得（候補者詳細の表示を妨げない）
+      Promise.all([
+        getSavedCandidatesAction(companyGroupId),
+        getHiddenCandidatesAction(companyGroupId),
+        getSelectionProgressAction(candidateId, companyGroupId)
+      ])
+        .then(([savedResult, hiddenResult, progressResult]) => {
           // 保存状態（ピックアップ）の設定
           if (savedResult.success && savedResult.data) {
             setIsPickedUp(savedResult.data.includes(candidateId));
@@ -214,9 +226,10 @@ export function CandidateSlideMenu({
           }
         })
         .catch((error) => {
-          console.error('候補者データの取得に失敗:', error);
+          console.error('セカンダリデータの取得に失敗:', error);
         })
         .finally(() => {
+          setSecondaryDataLoading(false);
           setLoading(false);
         });
     }
@@ -596,43 +609,71 @@ export function CandidateSlideMenu({
 
             {/* 右側のボタン群 */}
             <div className='flex gap-4'>
-              {/* ピックアップボタン */}
-              <button 
-                onClick={handlePickupToggle}
-                className={`px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] transition-colors ${
-                  isPickedUp 
-                    ? 'bg-[#FFDA5F] hover:bg-[#FFD040]' 
-                    : 'bg-[#DCDCDC] hover:bg-[#C5C5C5]'
-                }`}
-              >
-                <StarIcon filled={isPickedUp} />
-                <span
-                  className='text-white text-[16px] font-bold tracking-[1.6px]'
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  ピックアップ
-                </span>
-              </button>
+              {secondaryDataLoading ? (
+                <div className='flex gap-4'>
+                  {/* ピックアップボタン（ローディング状態） */}
+                  <div className='px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] bg-[#DCDCDC] opacity-70'>
+                    <div className='animate-pulse w-4 h-4 bg-white rounded'></div>
+                    <span
+                      className='text-white text-[16px] font-bold tracking-[1.6px]'
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      ピックアップ
+                    </span>
+                  </div>
 
-              {/* 非表示ボタン */}
-              <button 
-                onClick={handleHiddenToggle}
-                className={`border px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] transition-colors ${
-                  isHidden 
-                    ? 'border-[#999999] bg-gray-50 hover:bg-gray-100' 
-                    : 'border-[#DCDCDC] hover:bg-gray-50'
-                }`}
-              >
-                <EyeOffIcon hidden={isHidden} />
-                <span
-                  className={`text-[16px] font-bold tracking-[1.6px] ${
-                    isHidden ? 'text-[#999999]' : 'text-[#DCDCDC]'
-                  }`}
-                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                >
-                  非表示
-                </span>
-              </button>
+                  {/* 非表示ボタン（ローディング状態） */}
+                  <div className='border border-[#DCDCDC] px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] opacity-70'>
+                    <div className='animate-pulse w-4 h-4 bg-[#DCDCDC] rounded'></div>
+                    <span
+                      className='text-[#DCDCDC] text-[16px] font-bold tracking-[1.6px]'
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      非表示
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* ピックアップボタン */}
+                  <button 
+                    onClick={handlePickupToggle}
+                    className={`px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] transition-colors ${
+                      isPickedUp 
+                        ? 'bg-[#FFDA5F] hover:bg-[#FFD040]' 
+                        : 'bg-[#DCDCDC] hover:bg-[#C5C5C5]'
+                    }`}
+                  >
+                    <StarIcon filled={isPickedUp} />
+                    <span
+                      className='text-white text-[16px] font-bold tracking-[1.6px]'
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      ピックアップ
+                    </span>
+                  </button>
+
+                  {/* 非表示ボタン */}
+                  <button 
+                    onClick={handleHiddenToggle}
+                    className={`border px-10 py-3.5 rounded-[32px] flex items-center gap-2.5 min-w-[160px] transition-colors ${
+                      isHidden 
+                        ? 'border-[#999999] bg-gray-50 hover:bg-gray-100' 
+                        : 'border-[#DCDCDC] hover:bg-gray-50'
+                    }`}
+                  >
+                    <EyeOffIcon hidden={isHidden} />
+                    <span
+                      className={`text-[16px] font-bold tracking-[1.6px] ${
+                        isHidden ? 'text-[#999999]' : 'text-[#DCDCDC]'
+                      }`}
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      非表示
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -668,7 +709,7 @@ export function CandidateSlideMenu({
         {/* コンテンツエリア */}
         <div className='flex-1 overflow-y-auto'>
           <div className='px-10 py-6'>
-            {loading ? (
+            {detailsLoading ? (
               <div className='flex items-center justify-center py-20'>
                 <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0f9058]'></div>
               </div>
@@ -1394,17 +1435,26 @@ export function CandidateSlideMenu({
               </div>
             ) : (
               <div className='space-y-8'>
-                {/* 候補者の進捗状況セクション */}
-                <div className='flex flex-col gap-4'>
-                  {/* セクションタイトル */}
-                  <div className='flex gap-3 items-center pb-2 border-b-2 border-[#dcdcdc] relative'>
-                    <h2
-                      className='text-[#323232] text-[20px] font-bold tracking-[2px] leading-[1.6]'
-                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                    >
-                      候補者の進捗状況
-                    </h2>
+                {secondaryDataLoading ? (
+                  <div className='flex items-center justify-center py-20'>
+                    <div className='flex flex-col items-center gap-3'>
+                      <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#0f9058]'></div>
+                      <span className='text-[#999999] text-[14px]'>選考進捗を読み込み中...</span>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    {/* 候補者の進捗状況セクション */}
+                    <div className='flex flex-col gap-4'>
+                      {/* セクションタイトル */}
+                      <div className='flex gap-3 items-center pb-2 border-b-2 border-[#dcdcdc] relative'>
+                        <h2
+                          className='text-[#323232] text-[20px] font-bold tracking-[2px] leading-[1.6]'
+                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                        >
+                          候補者の進捗状況
+                        </h2>
+                      </div>
 
                   {candidateData ? (
                       <div className='flex flex-col gap-4'>
@@ -1905,6 +1955,8 @@ export function CandidateSlideMenu({
                     社内メモは候補者に共有されません。
                   </p>
                 </div>
+                  </>
+                )}
               </div>
             )}
           </div>

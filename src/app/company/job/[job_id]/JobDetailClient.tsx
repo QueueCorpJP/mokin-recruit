@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getJobForEdit } from '../actions';
 
@@ -92,6 +93,8 @@ interface JobData {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  canEdit?: boolean;
+  editError?: string | null;
 }
 
 interface JobDetailClientProps {
@@ -139,6 +142,11 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
   }, []);
 
   const handleEdit = () => {
+    // 権限チェック
+    if (displayData.canEdit === false) {
+      alert(displayData.editError || 'あなたの権限では編集できません');
+      return;
+    }
     router.push(`/company/job/${displayData.id}/edit`);
   };
 
@@ -232,12 +240,14 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="text-white text-[16px] font-medium tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    求人一覧
-                  </span>
+                  <Link href="/company/job" className="hover:opacity-80">
+                    <span
+                      className="text-white text-[16px] font-medium tracking-[1.6px] cursor-pointer"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      求人一覧
+                    </span>
+                  </Link>
                   <svg 
                     width="6" 
                     height="8" 
@@ -301,7 +311,9 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
                 variant="green-gradient"
                 size="figma-default"
                 onClick={handleEdit}
-                className="min-w-[160px]"
+                disabled={displayData.canEdit === false}
+                className={`min-w-[160px] ${displayData.canEdit === false ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={displayData.canEdit === false ? displayData.editError || 'あなたの権限では編集できません' : ''}
               >
                 編集
               </Button>

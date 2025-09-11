@@ -1,11 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useEditForm } from '../../_shared/hooks/useEditForm';
 import { useState, useEffect } from 'react';
 import { getCareerStatusData, updateCareerStatusData } from './actions';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import {
+  careerStatusSchema,
+  type CareerStatusFormData,
+} from '../../_shared/schemas/careerStatus';
+import {
+  idFor,
+  describedByIdFor,
+  ariaPropsFor,
+} from '../../_shared/utils/a11y';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
 import {
@@ -19,24 +26,7 @@ import Breadcrumbs from '@/components/education/common/Breadcrumbs';
 import FormActions from '@/components/education/common/FormActions';
 import CompanyStatusEditRow from './CompanyStatusEditRow';
 
-// フォームスキーマ定義
-const careerStatusSchema = z.object({
-  transferDesiredTime: z.string().min(1, '転職希望時期を選択してください'),
-  currentActivityStatus: z.string().min(1, '現在の活動状況を選択してください'),
-  selectionCompanies: z.array(
-    z.object({
-      privacyScope: z.string(),
-      isPrivate: z.boolean(),
-      industries: z.array(z.string()),
-      companyName: z.string(),
-      department: z.string(),
-      progressStatus: z.string(),
-      declineReason: z.string(),
-    })
-  ),
-});
-
-type CareerStatusFormData = z.infer<typeof careerStatusSchema>;
+// スキーマは共通化されたものを使用
 
 // 候補者_転職活動状況編集ページ
 export default function CandidateCareerStatusEditPage() {
@@ -53,9 +43,11 @@ export default function CandidateCareerStatusEditPage() {
     watch,
     setValue,
     getValues,
-    reset,
-  } = useForm<CareerStatusFormData>({
-    resolver: zodResolver(careerStatusSchema),
+    isSubmitting,
+    onSubmit,
+    handleCancel,
+  } = useEditForm<CareerStatusFormData>({
+    schema: careerStatusSchema,
     defaultValues: {
       transferDesiredTime: '',
       currentActivityStatus: '',
@@ -71,37 +63,43 @@ export default function CandidateCareerStatusEditPage() {
         },
       ],
     },
+    fetchInitialData: async () => {
+      const data = await getCareerStatusData();
+      if (!data) return null;
+      return {
+        transferDesiredTime: data.transferDesiredTime || '',
+        currentActivityStatus: data.currentActivityStatus || '',
+        selectionCompanies:
+          data.selectionCompanies && data.selectionCompanies.length > 0
+            ? data.selectionCompanies
+            : [
+                {
+                  privacyScope: '',
+                  isPrivate: false,
+                  industries: [],
+                  companyName: '',
+                  department: '',
+                  progressStatus: '',
+                  declineReason: '',
+                },
+              ],
+      };
+    },
+    redirectPath: '/candidate/account/career-status',
+    buildFormData: data => {
+      const formData = new FormData();
+      formData.append('transferDesiredTime', data.transferDesiredTime);
+      formData.append('currentActivityStatus', data.currentActivityStatus);
+      formData.append(
+        'selectionCompanies',
+        JSON.stringify(data.selectionCompanies)
+      );
+      return formData;
+    },
+    submitAction: updateCareerStatusData,
   });
 
-  // 初期データを取得してフォームに設定
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const data = await getCareerStatusData();
-        reset({
-          transferDesiredTime: data?.transferDesiredTime || '',
-          currentActivityStatus: data?.currentActivityStatus || '',
-          selectionCompanies:
-            data?.selectionCompanies && data.selectionCompanies.length > 0
-              ? data.selectionCompanies
-              : [
-                  {
-                    privacyScope: '',
-                    isPrivate: false,
-                    industries: [],
-                    companyName: '',
-                    department: '',
-                    progressStatus: '',
-                    declineReason: '',
-                  },
-                ],
-        });
-      } catch (error) {
-        globalThis.console.error('初期データの取得に失敗しました:', error);
-      }
-    };
-    fetchInitialData();
-  }, [reset]);
+  // 初期化は useEditForm に委譲
 
   // 認証チェック
   useEffect(() => {
@@ -122,37 +120,7 @@ export default function CandidateCareerStatusEditPage() {
     return null;
   }
 
-  const onSubmit = async (data: CareerStatusFormData) => {
-    // setIsSubmitting(true); // isSubmitting自体未使用なので削除
-
-    try {
-      const formData = new globalThis.FormData();
-      formData.append('transferDesiredTime', data.transferDesiredTime);
-      formData.append('currentActivityStatus', data.currentActivityStatus);
-      formData.append(
-        'selectionCompanies',
-        JSON.stringify(data.selectionCompanies)
-      );
-
-      const result = await updateCareerStatusData(formData);
-
-      if (result.success) {
-        router.push('/candidate/account/career-status');
-      } else {
-        globalThis.console.error('更新エラー:', result.error);
-        globalThis.alert('更新に失敗しました。もう一度お試しください。');
-      }
-    } catch (error) {
-      globalThis.console.error('送信エラー:', error);
-      globalThis.alert('更新に失敗しました。もう一度お試しください。');
-    } finally {
-      // setIsSubmitting(false); // isSubmitting自体未使用なので削除
-    }
-  };
-
-  const handleCancel = () => {
-    router.push('/candidate/account/career-status');
-  };
+  // onSubmit / handleCancel は useEditForm に委譲
 
   const addCompany = () => {
     const currentCompanies = getValues('selectionCompanies');
@@ -284,7 +252,12 @@ export default function CandidateCareerStatusEditPage() {
                   error={errors.transferDesiredTime?.message || ''}
                 >
                   <select
+                    id={idFor('transferDesiredTime')}
                     {...register('transferDesiredTime')}
+                    {...ariaPropsFor(
+                      !!errors.transferDesiredTime,
+                      describedByIdFor('transferDesiredTime')
+                    )}
                     className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
                   >
                     {JOB_CHANGE_TIMING_OPTIONS.map(option => (
@@ -299,7 +272,12 @@ export default function CandidateCareerStatusEditPage() {
                   error={errors.currentActivityStatus?.message || ''}
                 >
                   <select
+                    id={idFor('currentActivityStatus')}
                     {...register('currentActivityStatus')}
+                    {...ariaPropsFor(
+                      !!errors.currentActivityStatus,
+                      describedByIdFor('currentActivityStatus')
+                    )}
                     className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
                   >
                     {CURRENT_ACTIVITY_STATUS_OPTIONS.map(option => (
@@ -352,7 +330,7 @@ export default function CandidateCareerStatusEditPage() {
               </Section>
             </SectionCard>
             {/* ボタン */}
-            <FormActions onCancel={handleCancel} isSubmitting={false} />
+            <FormActions onCancel={handleCancel} isSubmitting={isSubmitting} />
           </form>
         </div>
       </main>

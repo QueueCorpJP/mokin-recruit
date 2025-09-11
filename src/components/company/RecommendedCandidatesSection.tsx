@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { CandidateCard, CandidateData } from '@/components/company/CandidateCard';
+import { CandidateSlideMenu } from '@/app/company/recruitment/detail/CandidateSlideMenu';
 
 interface SearchCondition {
   id: number;
@@ -34,8 +35,21 @@ export function RecommendedCandidatesSection({
   searchCondition,
   candidates,
 }: RecommendedCandidatesSectionProps) {
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateData | null>(null);
+  const [isSlideMenuOpen, setIsSlideMenuOpen] = useState(false);
+  
   // 候補者を最大3名まで表示
   const displayCandidates = candidates.slice(0, 3);
+
+  const handleCandidateClick = (candidate: CandidateData) => {
+    setSelectedCandidate(candidate);
+    setIsSlideMenuOpen(true);
+  };
+
+  const handleCloseSlideMenu = () => {
+    setIsSlideMenuOpen(false);
+    setSelectedCandidate(null);
+  };
 
   // 検索条件をURLSearchParamsに変換
   const createSearchParams = () => {
@@ -103,16 +117,18 @@ export function RecommendedCandidatesSection({
           </span>
         </div>
         
-        {/* 検索条件タイトル */}
-        <h3
-          className="text-[#0f9058] text-[16px] font-bold tracking-[1.6px] underline decoration-solid flex-1 truncate"
-          style={{ 
-            fontFamily: 'Noto Sans JP, sans-serif',
-            textUnderlinePosition: 'from-font'
-          }}
-        >
-          {searchCondition.title}
-        </h3>
+        {/* 検索条件タイトル - リンク化 */}
+        <Link href={searchUrl} className="flex-1">
+          <h3
+            className="text-[#0f9058] text-[16px] font-bold tracking-[1.6px] underline decoration-solid truncate hover:opacity-70 transition-opacity cursor-pointer"
+            style={{ 
+              fontFamily: 'Noto Sans JP, sans-serif',
+              textUnderlinePosition: 'from-font'
+            }}
+          >
+            {searchCondition.title}
+          </h3>
+        </Link>
       </div>
 
 
@@ -123,6 +139,7 @@ export function RecommendedCandidatesSection({
             key={`recommended-${searchCondition.id}-${candidate.id}-${index}`}
             candidate={candidate}
             showActions={false}
+            onCandidateClick={handleCandidateClick}
           />
         ))}
       </div>
@@ -160,6 +177,14 @@ export function RecommendedCandidatesSection({
           </div>
         </div>
       </Link>
+
+      {/* Candidate Slide Menu */}
+      <CandidateSlideMenu
+        isOpen={isSlideMenuOpen}
+        onClose={handleCloseSlideMenu}
+        candidateId={selectedCandidate?.id.toString()}
+        companyGroupId={undefined} // NOTE: 適切なcompanyGroupIdを取得する必要があります
+      />
     </div>
   );
 }

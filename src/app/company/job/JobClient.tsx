@@ -459,7 +459,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                 <div className='w-[90px]'>ステータス</div>
                 <div className='w-[107px]'>公開範囲</div>
                 <div className='w-[112px]'>社内メモ</div>
-                <div className='w-[70px]'>登録日</div>
+                <div className='w-[70px]'>公開日</div>
                 <div className='w-[76px]'>最終更新日</div>
               </div>
               <div className='mt-2'></div>
