@@ -1,14 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { SelectInput } from '@/components/ui/select-input';
 import { uploadMultipleFiles } from '@/lib/storage';
 import { useToast } from '@/components/ui/toast';
+import { getMessageTemplates } from '@/app/company/template/actions';
 
 interface MessageInputBoxProps {
   isCandidatePage?: boolean;
   onSendMessage?: (message: string, fileUrls?: string[]) => void;
   candidateId?: string;
   userType?: 'candidate' | 'company';
+}
+
+interface TemplateOption {
+  value: string;
+  label: string;
+  body?: string;
 }
 
 /**
@@ -25,10 +32,11 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   userType = 'candidate',
 }) => {
   // company用セレクトのstate
-  const templateOptions = [
+  const [templateOptions, setTemplateOptions] = useState<TemplateOption[]>([
     { value: '', label: 'テンプレート未選択' },
-  ];
+  ]);
   const [template, setTemplate] = useState('');
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [message, setMessage] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -37,6 +45,86 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
   const [characterError, setCharacterError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
+
+  // テンプレートを取得する関数
+  const loadTemplates = async () => {
+    if (userType !== 'company') return;
+    
+    setIsLoadingTemplates(true);
+    try {
+      console.log('Loading message templates...');
+      const result = await getMessageTemplates(100, 0);
+      console.log('Message templates loaded result:', result);
+      if (result.success && result.data) {
+        const options: TemplateOption[] = [
+          { value: '', label: 'テンプレート未選択' },
+          ...result.data.map(item => ({
+            value: item.id,
+            label: item.template_name,
+            body: item.body || ''
+          }))
+        ];
+        console.log('Template options created:', options);
+        setTemplateOptions(options);
+      } else {
+        console.error('Failed to load message templates:', result.error);
+      }
+    } catch (error) {
+      console.error('Failed to load message templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  // コンポーネントマウント時にテンプレートを取得
+  useEffect(() => {
+    loadTemplates();
+  }, [userType]);
+
+  // テンプレート選択時の処理
+  const handleTemplateChange = (selectedValue: string) => {
+    console.log('Template changed:', selectedValue);
+    setTemplate(selectedValue);
+    if (selectedValue) {
+      const selectedTemplate = templateOptions.find(opt => opt.value === selectedValue);
+      console.log('Selected template:', selectedTemplate);
+      if (selectedTemplate?.body) {
+        console.log('Setting message to template body:', selectedTemplate.body);
+        setMessage(selectedTemplate.body);
+        // テンプレート設定後にテキストエリアの高さを再計算
+        setTimeout(() => {
+          const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+          if (textarea) {
+            const initialHeight = 56;
+            const lineHeight = 32;
+            
+            // 高さをリセットして再計算
+            textarea.style.height = initialHeight + 'px';
+            const scrollHeight = textarea.scrollHeight;
+            
+            // 行数計算
+            const additionalHeight = scrollHeight - initialHeight;
+            const calculatedLines = Math.floor(additionalHeight / lineHeight) + 1;
+            
+            setCurrentLines(calculatedLines);
+            
+            // 8行以下の場合は高さを自動調整、8行を超える場合は固定
+            if (calculatedLines <= 8) {
+              textarea.style.height = scrollHeight + 'px';
+            } else {
+              textarea.style.height = '256px';
+            }
+          }
+        }, 0);
+      } else {
+        console.log('No body in selected template or template body is empty');
+        setMessage('');
+      }
+    } else {
+      console.log('Template cleared, resetting message');
+      setMessage('');
+    }
+  };
 
   // 文字数チェック関数
   const validateMessageLength = (text: string): boolean => {
@@ -229,9 +317,11 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           <SelectInput
             options={templateOptions}
             value={template}
-            onChange={setTemplate}
-            placeholder='テンプレート未選択'
+            onChange={handleTemplateChange}
+            placeholder={isLoadingTemplates ? 'テンプレート読み込み中...' : 'テンプレート未選択'}
             className='w-[240px] font-bold text-[16px]'
+            disabled={isLoadingTemplates}
+            forcePosition="top"
           />
         )}
       </div>

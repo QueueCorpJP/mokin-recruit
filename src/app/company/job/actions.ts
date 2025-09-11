@@ -4,6 +4,48 @@ import { createClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { unstable_cache, revalidateTag } from 'next/cache';
 
+// 権限チェック用の関数
+export async function checkUserPermission(groupId: string) {
+  'use server'
+  
+  try {
+    const supabase = createClient();
+    const { user, companyAccountId } = await requireCompanyAuthForAction();
+    
+    if (!user) {
+      return { success: false, error: '認証が必要です' };
+    }
+
+    const actualUserId = user.id;
+
+    // 選択されたグループでの権限を確認
+    const { data: userPermission, error: permissionError } = await supabase
+      .from('company_user_group_permissions')
+      .select('permission_level')
+      .eq('company_user_id', actualUserId)
+      .eq('company_group_id', groupId)
+      .single();
+
+    if (permissionError) {
+      console.error('Permission check error:', permissionError);
+      return { success: false, error: '権限の確認に失敗しました' };
+    }
+
+    // スカウト担当者の場合は求人作成をブロック
+    if (userPermission?.permission_level === 'SCOUT_STAFF') {
+      return { 
+        success: false, 
+        error: 'スカウト担当者は求人を作成することができません。管理者または採用担当者に求人作成を依頼してください。' 
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Permission check failed:', error);
+    return { success: false, error: '権限の確認中にエラーが発生しました' };
+  }
+}
+
 // 求人データの型定義
 interface JobPosting {
   id: string;
@@ -200,6 +242,30 @@ export async function createJob(data: any) {
     } = authResult.data;
     const supabase = await createClient();
 
+    // ユーザーの権限チェック（選択されたグループでの権限を確認）
+    const selectedGroupId = data.company_group_id;
+    if (selectedGroupId) {
+      const { data: userPermission, error: permissionError } = await supabase
+        .from('company_user_group_permissions')
+        .select('permission_level')
+        .eq('company_user_id', actualUserId)
+        .eq('company_group_id', selectedGroupId)
+        .single();
+
+      if (permissionError) {
+        console.error('Permission check error:', permissionError);
+        return { success: false, error: '権限の確認に失敗しました' };
+      }
+
+      // スカウト担当者の場合は求人作成をブロック
+      if (userPermission?.permission_level === 'SCOUT_STAFF') {
+        return { 
+          success: false, 
+          error: 'スカウト担当者は求人を作成することができません。管理者または採用担当者に求人作成を依頼してください。' 
+        };
+      }
+    }
+
     // 利用可能なグループを確認
     const { data: availableGroups } = await supabase
       .from('company_groups')
@@ -387,7 +453,7 @@ export async function getJobDetail(jobId: string) {
       return { success: false, error: authResult.error };
     }
 
-    const { companyAccountId: companyAccountId } = authResult.data;
+    const { companyUserId, companyAccountId } = authResult.data;
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -409,6 +475,28 @@ export async function getJobDetail(jobId: string) {
 
     if (!data) {
       return { success: false, error: '求人情報が見つかりません' };
+    }
+
+    // ユーザーのこのグループでの権限をチェック
+    let canEdit = true;
+    let editError = null;
+    
+    try {
+      const { data: userPermission } = await supabase
+        .from('company_user_group_permissions')
+        .select('permission_level')
+        .eq('company_user_id', companyUserId)
+        .eq('company_group_id', data.company_group_id)
+        .single();
+
+      if (userPermission?.permission_level === 'SCOUT_STAFF') {
+        canEdit = false;
+        editError = 'あなたの権限では編集できません';
+      }
+    } catch (permissionError) {
+      // 権限チェックでエラーが発生した場合、安全のため編集を禁止
+      canEdit = false;
+      editError = '権限の確認に失敗しました';
     }
 
     // レスポンス用にデータを整形
@@ -447,6 +535,9 @@ export async function getJobDetail(jobId: string) {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
       publishedAt: data.published_at,
+      // 編集権限情報を追加
+      canEdit,
+      editError,
     };
 
     return { success: true, data: formattedJob };

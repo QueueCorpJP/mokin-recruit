@@ -122,7 +122,8 @@ interface ScoutTemplateItem {
   subject: string;
   targetJobId: string;
   targetJobTitle: string;
-  date: string;
+  createdAt: string;
+  updatedAt: string;
   isMenuOpen?: boolean;
 }
 
@@ -132,7 +133,7 @@ interface ScoutTemplateClientProps {
   initialError: string | null;
 }
 
-type SortField = 'groupName' | 'templateName' | 'subject' | 'targetJobTitle' | 'date';
+type SortField = 'groupName' | 'templateName' | 'subject' | 'targetJobTitle' | 'createdAt' | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -188,7 +189,14 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
       subject: item.subject,
       targetJobId: item.target_job_posting_id,
       targetJobTitle: item.target_job_title,
-      date: new Date(item.created_at).toLocaleString('ja-JP', {
+      createdAt: new Date(item.created_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      updatedAt: new Date(item.updated_at).toLocaleString('ja-JP', {
         year: 'numeric',
         month: '2-digit', 
         day: '2-digit',
@@ -317,15 +325,19 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
           aValue = a.targetJobTitle;
           bValue = b.targetJobTitle;
           break;
-        case 'date':
-          aValue = new Date(a.date);
-          bValue = new Date(b.date);
+        case 'createdAt':
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        case 'updatedAt':
+          aValue = new Date(a.updatedAt);
+          bValue = new Date(b.updatedAt);
           break;
         default:
           return 0;
       }
 
-      if (field === 'date') {
+      if (field === 'createdAt' || field === 'updatedAt') {
         const result = (aValue as Date).getTime() - (bValue as Date).getTime();
         return direction === 'asc' ? result : -result;
       } else {
@@ -548,10 +560,17 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
               </span>
             </div>
 
-            {/* Date column */}
+            {/* Created Date column */}
+            <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6'>
+              <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
+                作成日
+              </span>
+            </div>
+
+            {/* Updated Date column */}
             <div className='flex-1 ml-4 min-[1200px]:ml-6'>
               <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-                検索日
+                最終更新日
               </span>
             </div>
 
@@ -610,9 +629,14 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
                   {item.targetJobTitle}
                 </div>
 
-                {/* Date */}
+                {/* Created Date */}
+                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                  {item.createdAt}
+                </div>
+
+                {/* Updated Date */}
                 <div className='flex-1 ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
-                  {item.date}
+                  {item.updatedAt}
                 </div>
 
                 {/* Menu Button */}

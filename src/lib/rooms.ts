@@ -15,6 +15,8 @@ export interface Room {
   groupName?: string;
   currentCompany?: string;
   unreadCount?: number; // 未読メッセージ数を追加
+  candidateId?: string; // 候補者詳細サイドバー用
+  companyGroupId?: string; // 候補者詳細サイドバー用
 }
 
 // 簡単なメモリキャッシュ
@@ -334,6 +336,8 @@ async function buildRoomsData(
       groupName,
       currentCompany,
       unreadCount: 0,
+      candidateId: room.candidate_id,
+      companyGroupId: room.company_group_id,
     };
   }).filter(room => room !== null); // NG企業を除外
 }
