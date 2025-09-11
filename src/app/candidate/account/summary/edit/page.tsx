@@ -15,87 +15,31 @@ import {
 } from '@/app/candidate/account/_shared/schemas/summarySchema';
 import { FormErrorMessage } from '@/app/candidate/account/_shared/fields/FormErrorMessage';
 import { FormField } from '@/app/candidate/account/_shared/fields/FormField';
+import { useSummaryForm } from '../../_shared/hooks/useSummaryForm';
 
 // 候補者_職務要約編集ページ
 export default function CandidateSummaryEditPage() {
-  const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
-  const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
   const {
     register,
     handleSubmit,
+    errors,
+    isSubmitting,
+    handleCancel,
+    onSubmit,
     reset,
-    formState: { errors },
-  } = useForm<SummaryFormData>({
-    resolver: zodResolver(summarySchema),
-    defaultValues: {
-      jobSummary: '',
-      selfPr: '',
-    },
-  });
+    isLoading,
+    isDesktop,
+    isAuthenticated,
+    candidateUser,
+  } = useSummaryForm();
 
-  // 認証チェック
-  useEffect(() => {
-    if (loading) return;
+  // const router = useRouter();
+  // const isDesktop = useMediaQuery('(min-width: 1024px)');
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
+  // useEffect ... 認証チェックや初期データ取得もカスタムフックに集約済みなので削除
 
-    if (!isAuthenticated || !candidateUser) {
-      router.push('/candidate/auth/login');
-    }
-  }, [isAuthenticated, candidateUser, loading, router]);
-
-  // 初期データを取得してフォームに設定
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const data = await getSummaryData();
-        if (data) {
-          reset({
-            jobSummary: data.jobSummary || '',
-            selfPr: data.selfPr || '',
-          });
-        }
-      } catch (error) {
-        console.error('初期データの取得に失敗しました:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, [reset]);
-
-  const onSubmit = async (data: SummaryFormData) => {
-    setIsSubmitting(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('jobSummary', data.jobSummary || '');
-      formData.append('selfPr', data.selfPr || '');
-
-      const result = await updateSummaryData(formData);
-
-      if (result.success) {
-        router.push('/candidate/account/summary');
-      } else {
-        console.error('更新エラー:', result.error);
-        alert('更新に失敗しました。もう一度お試しください。');
-      }
-    } catch (error) {
-      console.error('送信エラー:', error);
-      alert('更新に失敗しました。もう一度お試しください。');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    router.push('/candidate/account/summary');
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='animate-pulse'>Loading...</div>

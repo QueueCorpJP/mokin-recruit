@@ -20,6 +20,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormErrorMessage } from '../../_shared/fields/FormErrorMessage';
+import { useProfileForm } from '../../_shared/hooks/useProfileForm';
 
 interface CandidateData {
   last_name?: string;
@@ -40,8 +41,25 @@ interface ProfileEditFormProps {
 export default function ProfileEditForm({
   candidateData,
 }: ProfileEditFormProps) {
+  // useProfileFormカスタムフックでフォームロジックを共通化
+  const {
+    register,
+    handleSubmit,
+    errors,
+    setValue,
+    watch,
+    selectedGender,
+    setSelectedGender,
+    isSubmitting,
+    handleSubmitForm,
+    handleCancel,
+    selectedYear,
+    setSelectedYear,
+    selectedMonth,
+    setSelectedMonth,
+  } = useProfileForm(candidateData);
+
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   // 生年月日の初期値を設定
@@ -59,60 +77,12 @@ export default function ProfileEditForm({
   };
 
   const initialBirthDate = getInitialBirthDate();
-  const [selectedYear, setSelectedYear] = useState(initialBirthDate.year);
-  const [selectedMonth, setSelectedMonth] = useState(initialBirthDate.month);
-  const [selectedGender, setSelectedGender] = useState(
-    candidateData.gender || ''
-  );
-
-  // 選択肢の生成
   const yearOptions = generateYearOptions();
   const monthOptions = generateMonthOptions();
-  const dayOptions = generateDayOptions(selectedYear, selectedMonth);
-
-  // useFormで型・バリデーションを共通スキーマに適用
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      gender: candidateData.gender || '',
-      prefecture: candidateData.prefecture || '',
-      birthYear: '',
-      birthMonth: '',
-      birthDay: '',
-      phoneNumber: candidateData.phone_number || '',
-      currentIncome: candidateData.current_income || '',
-    },
-  });
-
-  const handleSubmitForm = async (formData: ProfileFormData) => {
-    setIsSubmitting(true);
-
-    try {
-      const initialState = { success: false, message: '', errors: undefined };
-      const result = await updateCandidateProfile(initialState, formData);
-
-      if (result.success) {
-        router.push('/candidate/account/profile');
-      } else {
-        console.error('プロフィール更新エラー:', result.message);
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('フォーム送信エラー:', error);
-      setIsSubmitting(false);
-      // エラー処理（必要に応じてトーストやエラーメッセージを表示）
-    }
-  };
-
-  const handleCancel = () => {
-    router.back();
-  };
+  const dayOptions = generateDayOptions(
+    watch('birthYear'),
+    watch('birthMonth')
+  );
 
   return (
     <>
@@ -241,6 +211,7 @@ export default function ProfileEditForm({
                       </label>
                     </div>
                     <div className='flex-1 py-6'>
+                      {/* hidden inputもselectedGenderをuseProfileFormから受け取る */}
                       <input
                         type='hidden'
                         name='gender'
@@ -379,7 +350,8 @@ export default function ProfileEditForm({
                         <div className='relative flex-1'>
                           <select
                             name='birthDay'
-                            defaultValue={initialBirthDate.day}
+                            value={watch('birthDay')}
+                            onChange={e => setValue('birthDay', e.target.value)}
                             className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
                           >
                             <option value=''>未選択</option>
@@ -610,7 +582,7 @@ export default function ProfileEditForm({
                     </div>
                   </div>
 
-                  {/* Gender */}
+                  {/* Gender (SP版) */}
                   <div>
                     <div className='bg-[#f9f9f9] rounded-[5px] px-4 py-2 mb-2'>
                       <div className='font-bold text-[16px] text-[#323232] tracking-[1.6px]'>
@@ -618,6 +590,7 @@ export default function ProfileEditForm({
                       </div>
                     </div>
                     <div className='px-4'>
+                      {/* hidden inputもselectedGenderをuseProfileFormから受け取る */}
                       <input
                         type='hidden'
                         name='gender'
@@ -756,7 +729,8 @@ export default function ProfileEditForm({
                         <div className='relative flex-1'>
                           <select
                             name='birthDay'
-                            defaultValue={initialBirthDate.day}
+                            value={watch('birthDay')}
+                            onChange={e => setValue('birthDay', e.target.value)}
                             className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[14px] text-[#323232] font-bold tracking-[1.4px] appearance-none cursor-pointer'
                           >
                             <option value=''>未選択</option>
