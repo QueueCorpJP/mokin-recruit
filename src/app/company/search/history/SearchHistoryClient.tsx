@@ -596,6 +596,7 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
                   className='w-[18px] flex-shrink-0'
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     toggleBookmark(item.id);
                   }}
                 >
@@ -625,9 +626,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
                 </div>
 
                 {/* Menu Button */}
-                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
+                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative ml-auto'>
                   <button onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     toggleMenu(item.id);
                   }}>
                     <DotsMenuIcon />
@@ -635,15 +637,23 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
 
                   {/* Dropdown Menu */}
                   {item.isMenuOpen && (
-                    <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                    <div className='absolute top-5 right-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleEdit(item);
+                        }}
                         className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
                       >
                         編集
                       </button>
                       <button
-                        onClick={() => handleDelete(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleDelete(item);
+                        }}
                         className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
                       >
                         削除

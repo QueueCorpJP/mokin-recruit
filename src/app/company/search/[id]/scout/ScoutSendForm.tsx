@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+import { Modal } from '@/components/ui/mo-dal';
+import { LocationModal } from '@/app/company/job/LocationModal';
+import { ScoutTicketLimitModal } from '@/components/scout/ScoutTicketLimitModal';
 import Link from 'next/link';
 import {
   sendScout,
@@ -11,6 +14,7 @@ import {
   getJobPostingOptions,
   getCompanyUserOptions,
   getScoutTemplateOptions,
+  getScoutTicketsRemaining,
   type ScoutSendFormData,
 } from './actions';
 
@@ -92,6 +96,11 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const [jobPostingOptions, setJobPostingOptions] = useState([{ value: '', label: '未選択' }]);
   const [companyUserOptions, setCompanyUserOptions] = useState([{ value: '', label: '未選択' }]);
   const [templateOptions, setTemplateOptions] = useState([{ value: '', label: '未選択' }]);
+  
+  // チケット管理
+  const [scoutTicketsRemaining, setScoutTicketsRemaining] = useState(0);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [isTicketLoading, setIsTicketLoading] = useState(false);
 
   // 現在のユーザー情報（実際はContextやAPIから取得）
   const currentUserName = '山田 太郎'; // デフォルトのユーザー名
@@ -101,13 +110,21 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
-        // グループオプションを取得（認証されたユーザーのアクセス可能なグループのみ）
-        const groups = await getCompanyGroupOptions();
+        setIsTicketLoading(true);
+        
+        // 並行してデータを取得
+        const [groups, ticketsRemaining] = await Promise.all([
+          getCompanyGroupOptions(),
+          getScoutTicketsRemaining()
+        ]);
+        
         setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
+        setScoutTicketsRemaining(ticketsRemaining);
       } catch (error) {
         console.error('初期データの読み込みに失敗:', error);
       } finally {
         setIsLoading(false);
+        setIsTicketLoading(false);
       }
     };
 
@@ -221,6 +238,12 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   };
 
   const handleSubmit = () => {
+    // チケット残数チェック
+    if (scoutTicketsRemaining <= 0) {
+      setIsTicketModalOpen(true);
+      return;
+    }
+
     // 全フィールドをタッチ済みにする
     setTouched({
       group: true,
@@ -279,6 +302,20 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       }));
     }
   }, [formData.group, formData.scoutSenderName, currentUserName]);
+
+  // チケット購入処理
+  const handleTicketPurchase = () => {
+    // 実際の実装では、チケット購入ページに遷移またはAPI呼び出し
+    console.log('チケット購入処理を開始');
+    // 仮の実装: モーダルを閉じて購入完了として扱う
+    setIsTicketModalOpen(false);
+    // 実際には購入が完了した時点でチケット数を更新
+    setScoutTicketsRemaining(prev => prev + 10);
+  };
+
+  const handleModalClose = () => {
+    setIsTicketModalOpen(false);
+  };
 
   // 送信ボタンの有効/無効判定
   const isSubmitDisabled =
@@ -430,7 +467,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    送信先候補者ID
+                    送信先候補者
                   </span>
                 </div>
                 <div className="flex-1">
@@ -536,6 +573,13 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
           </div>
         </div>
       </div>
+
+      {/* チケット制限モーダル */}
+      <ScoutTicketLimitModal
+        isOpen={isTicketModalOpen}
+        onClose={handleModalClose}
+        onPurchaseTicket={handleTicketPurchase}
+      />
     </>
   );
 }

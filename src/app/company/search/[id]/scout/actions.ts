@@ -209,6 +209,14 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       }
     }
 
+    // チケット消費処理（実際にはscout_sendsレコード作成で自動的にカウントされる）
+    // 念のため月次制限をチェック
+    const remainingTickets = await getScoutTicketsRemaining();
+    if (remainingTickets <= 0) {
+      console.warn('スカウト送信制限に達しています');
+      // 既にレコードが作成されているため、警告のみ
+    }
+
     revalidatePath('/company/search/scout');
     revalidatePath('/company/search/scout/complete');
 
@@ -348,5 +356,55 @@ export async function getScoutTemplateOptions(groupId: string) {
   } catch (error) {
     console.error('テンプレートオプション取得エラー:', error);
     return [];
+  }
+}
+
+export async function getScoutTicketsRemaining(): Promise<number> {
+  const supabase = await createClient();
+  
+  try {
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      console.error('チケット残数取得の認証エラー:', authResult.error);
+      return 0;
+    }
+
+    const { companyAccountId } = authResult.data;
+
+    // 月次上限と今月の使用済みスカウト数を取得
+    const { data: accountData, error: accountError } = await supabase
+      .from('company_accounts')
+      .select('scout_limit')
+      .eq('id', companyAccountId)
+      .single();
+
+    if (accountError) {
+      console.error('アカウントデータ取得エラー:', accountError);
+      return 0;
+    }
+
+    // 今月のスカウト送信数をカウント
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { data: scoutSends, error: countError } = await supabase
+      .from('scout_sends')
+      .select('id', { count: 'exact' })
+      .eq('company_account_id', companyAccountId)
+      .gte('sent_at', startOfMonth.toISOString());
+
+    if (countError) {
+      console.error('スカウト送信数取得エラー:', countError);
+      return accountData?.scout_limit || 0; // エラー時は上限をそのまま返す
+    }
+
+    const usedThisMonth = scoutSends?.length || 0;
+    const remaining = (accountData?.scout_limit || 0) - usedThisMonth;
+    
+    return Math.max(0, remaining); // 負数にならないよう調整
+  } catch (error) {
+    console.error('チケット残数取得エラー:', error);
+    return 0;
   }
 }

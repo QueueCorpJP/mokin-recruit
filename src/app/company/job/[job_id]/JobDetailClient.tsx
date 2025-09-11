@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getJobForEdit } from '../actions';
 
@@ -239,12 +240,14 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="text-white text-[16px] font-medium tracking-[1.6px]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    求人一覧
-                  </span>
+                  <Link href="/company/job" className="hover:opacity-80">
+                    <span
+                      className="text-white text-[16px] font-medium tracking-[1.6px] cursor-pointer"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      求人一覧
+                    </span>
+                  </Link>
                   <svg 
                     width="6" 
                     height="8" 

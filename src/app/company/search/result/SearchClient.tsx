@@ -15,6 +15,8 @@ import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
 import {
   loadSearchParamsToStore,
 } from './actions';
+import { saveSearchConditions } from '../actions';
+import { generateSearchTitle } from '@/lib/utils/search-history';
 import {
   saveCandidateAction,
   unsaveCandidateAction,
@@ -275,6 +277,7 @@ export default function SearchClient({
   const [isHydrated, setIsHydrated] = useState(false);
   const [savedCandidateIds, setSavedCandidateIds] = useState<string[]>([]);
   const [hiddenCandidateIds, setHiddenCandidateIds] = useState<string[]>([]);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   // ページネーション関連のstate
   const [currentPage, setCurrentPage] = useState(1);
@@ -830,6 +833,7 @@ export default function SearchClient({
         const result = await saveCandidateAction(candidateId, currentGroupId);
         if (result.success) {
           setSavedCandidateIds(prev => [...prev, candidateId]);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           console.error('Failed to save candidate:', result.error);
           console.log('[DEBUG] Full save result:', result);
@@ -887,6 +891,72 @@ export default function SearchClient({
         setHiddenCandidateIds(prev => [...prev, candidateId]);
       }
       console.error('Error toggling hidden:', error);
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    if (!searchStore.searchGroup || searchStore.searchGroup === '') {
+      alert('グループを選択してください');
+      return;
+    }
+
+    setSaveLoading(true);
+
+    const searchData = {
+      keywords: searchStore.keyword ? [searchStore.keyword] : [],
+      age_min: searchStore.ageMin ? parseInt(searchStore.ageMin) : undefined,
+      age_max: searchStore.ageMax ? parseInt(searchStore.ageMax) : undefined,
+      job_types: searchStore.experienceJobTypes.map(j => j.name),
+      industries: searchStore.experienceIndustries.map(i => i.name),
+      locations: searchStore.desiredLocations.map(l => l.name),
+      work_styles: searchStore.workStyles.map(w => w.name),
+      education_levels: searchStore.education ? [searchStore.education] : [],
+      skills: searchStore.qualifications ? searchStore.qualifications.split(',').filter(Boolean) : [],
+      salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
+      salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
+      language_skills: [],
+      desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
+      desired_industries: searchStore.desiredIndustries.map(i => i.name),
+      desired_salary_min: searchStore.desiredSalaryMin ? parseInt(searchStore.desiredSalaryMin) : undefined,
+      desired_salary_max: searchStore.desiredSalaryMax ? parseInt(searchStore.desiredSalaryMax) : undefined,
+      current_company: searchStore.currentCompany || '',
+      english_level: searchStore.englishLevel || '',
+      other_language: searchStore.otherLanguage || '',
+      other_language_level: searchStore.otherLanguageLevel || '',
+      transfer_time: searchStore.transferTime || '',
+      selection_status: searchStore.selectionStatus || '',
+      similar_company_industry: searchStore.similarCompanyIndustry || '',
+      similar_company_location: searchStore.similarCompanyLocation || '',
+      last_login_min: searchStore.lastLoginMin || '',
+    };
+
+    // 検索条件からタイトルを自動生成
+    const searchTitle = generateSearchTitle(searchData);
+
+    try {
+      // ブックマーク付きで検索履歴に保存
+      const { saveSearchHistory } = await import('@/lib/actions/search-history');
+      const result = await saveSearchHistory({
+        group_id: searchStore.searchGroup,
+        search_conditions: searchData,
+        search_title: searchTitle,
+        is_saved: true  // ブックマークとして保存
+      });
+
+      if (result.success) {
+        alert('検索条件を保存しました');
+        // 保存成功後、URLパラメータに保存済みフラグを追加してページを再読み込み
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('saved', 'true');
+        window.location.href = currentUrl.toString();
+      } else {
+        alert(result.error || '保存に失敗しました');
+      }
+    } catch (error) {
+      alert('保存に失敗しました');
+      console.error('Save error:', error);
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -1920,7 +1990,7 @@ export default function SearchClient({
                             });
                           }
                         } else {
-                          // 保存処理
+                          handleSaveSearch();
                         }
                       }}
                     >
@@ -2609,6 +2679,7 @@ export default function SearchClient({
         candidateId={selectedCandidateId || undefined}
         companyGroupId={searchStore.searchGroup}
       />
+
     </>
   );
 }

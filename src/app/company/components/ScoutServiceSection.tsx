@@ -1,3 +1,4 @@
+import { autoLoginAction } from '@/app/signup/complete/actions';
 import Image from 'next/image';
 
 export function ScoutServiceSection() {
@@ -78,8 +79,7 @@ export function ScoutServiceSection() {
               <Image
                 src={card.img}
                 alt='カードイメージ'
-                width={220}
-                height={220}
+                fill
                 className='rounded-full object-cover'
                 loading="lazy"
               />

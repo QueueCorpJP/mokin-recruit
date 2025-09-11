@@ -159,9 +159,18 @@ export default async function CandidateCareerStatusPage() {
                           </div>
                         </div>
                         <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
-                          <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-                            {entry.company_name || '未設定'}
-                          </div>
+                          {entry.company_name ? (
+                            <button
+                              onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(entry.company_name)}`, '_blank')}
+                              className='text-[16px] text-[#0F9058] font-medium tracking-[1.6px] leading-[2] hover:underline cursor-pointer bg-transparent border-none p-0 text-left'
+                            >
+                              {entry.company_name}
+                            </button>
+                          ) : (
+                            <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
+                              未設定
+                            </div>
+                          )}
                         </div>
                       </div>
 

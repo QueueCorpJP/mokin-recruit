@@ -260,11 +260,13 @@ export function ColumnSection() {
               <label className='font-bold text-[#323232] text-[14px] tracking-[1.4px] leading-[2] font-[family-name:var(--font-noto-sans-jp)]'>
                 お問い合わせ内容 <span className='text-red-500'>*</span>
               </label>
+              <div className={`border rounded-[5px] w-full ${errors.content ? 'border-red-500' : 'border-[#DCDCDC]'}`}>
               <textarea
                 name='content'
                 placeholder='お問い合わせ内容を入力'
-                className={`rounded-[5px] border ${errors.content ? 'border-red-500' : 'border-[#999]'} bg-white p-[11px] h-[147px] font-[family-name:var(--font-noto-sans-jp)] text-[14px] text-[#999999] tracking-[1.4px] leading-[2] resize-none`}
+                className={`rounded-[5px] border ${errors.content ? 'border-red-500' : 'border-[#999]'} bg-white p-[11px] h-[147px] font-[family-name:var(--font-noto-sans-jp)] text-[14px] text-[#999999] tracking-[1.4px] leading-[2] resize-none w-full`}
               />
+              </div>
               {errors.content && (
                 <span className='text-red-500 text-[12px]'>{errors.content}</span>
               )}

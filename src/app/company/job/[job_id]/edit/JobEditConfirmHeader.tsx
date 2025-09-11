@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 function RightLine() {
   return (
@@ -27,9 +28,10 @@ function RightLine() {
 interface JobEditConfirmHeaderProps {
   breadcrumbText?: string;
   titleText?: string;
+  jobId: string;
 }
 
-export default function JobEditConfirmHeader() {
+export default function JobEditConfirmHeader({ jobId }: JobEditConfirmHeaderProps) {
   return (
     <div
       className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10 px-10"
@@ -42,34 +44,40 @@ export default function JobEditConfirmHeader() {
               <div
                 className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center"
               >
+                <Link href="/company/job" className="hover:opacity-80">
+                  <div
+                    className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
+                  >
+                    求人一覧
+                  </div>
+                </Link>
+              </div>
+              <div
+                className="flex items-center justify-center"
+                style={{ width: '6px', height: '8px' }}
+              >
+                <RightLine />
+              </div>
+              <Link href={`/company/job/${jobId}`} className="hover:opacity-80">
                 <div
-                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
+                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
                 >
-                  求人一覧
+                  求人詳細
                 </div>
-              </div>
+              </Link>
               <div
                 className="flex items-center justify-center"
                 style={{ width: '6px', height: '8px' }}
               >
                 <RightLine />
               </div>
-              <div
-                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
-              >
-                求人詳細
-              </div>
-              <div
-                className="flex items-center justify-center"
-                style={{ width: '6px', height: '8px' }}
-              >
-                <RightLine />
-              </div>
-              <div
-                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
-              >
-                求人編集
-              </div>
+              <Link href={`/company/job/${jobId}/edit`} className="hover:opacity-80">
+                <div
+                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
+                >
+                  求人編集
+                </div>
+              </Link>
               <div
                 className="flex items-center justify-center"
                 style={{ width: '6px', height: '8px' }}

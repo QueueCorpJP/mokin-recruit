@@ -224,7 +224,7 @@ export default function JobEditConfirmClient({
   return (
     <>
       {/* ヘッダー部分 */}
-      <JobEditConfirmHeader />
+      <JobEditConfirmHeader jobId={jobId} />
 
       {/* メインコンテンツ */}
       <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
