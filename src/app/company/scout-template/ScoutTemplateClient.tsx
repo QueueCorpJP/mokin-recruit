@@ -1,11 +1,10 @@
 'use client';
 
-import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
 import { 
-  updateScoutTemplateSavedStatus,
   type ScoutTemplate as ServerScoutTemplate,
   type JobPosting 
 } from './actions';
@@ -23,20 +22,6 @@ const MailIcon = () => (
   />
 );
 
-const BookmarkIcon = ({ filled = false }: { filled?: boolean }) => (
-  <svg
-    xmlns='http://www.w3.org/2000/svg'
-    width='18'
-    height='24'
-    viewBox='0 0 18 24'
-    fill='none'
-  >
-    <path
-      d='M0 2.25V22.8609C0 23.4891 0.510937 24 1.13906 24C1.37344 24 1.60312 23.9297 1.79531 23.7938L9 18.75L16.2047 23.7938C16.3969 23.9297 16.6266 24 16.8609 24C17.4891 24 18 23.4891 18 22.8609V2.25C18 1.00781 16.9922 0 15.75 0H2.25C1.00781 0 0 1.00781 0 2.25Z'
-      fill={filled ? '#FFDA5F' : '#DCDCDC'}
-    />
-  </svg>
-);
 
 const DotsMenuIcon = () => (
   <svg
@@ -115,7 +100,6 @@ const SortDownIcon = () => (
 
 interface ScoutTemplateItem {
   id: string;
-  saved: boolean;
   group: string; // group_id for filtering
   groupName: string; // group_name for display
   templateName: string;
@@ -171,7 +155,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
     
     checkClientAuth();
   }, []);
-  const [, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [loading] = useState(false);
@@ -182,7 +165,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
   const transformScoutTemplates = (items: ServerScoutTemplate[]): ScoutTemplateItem[] => {
     return items.map(item => ({
       id: item.id,
-      saved: item.is_saved,
       group: item.group_id, // group_idを使用してフィルタリングと統一
       groupName: item.group_name, // 表示用のgroup_name
       templateName: item.template_name,
@@ -221,21 +203,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
     );
   };
 
-  const toggleBookmark = (id: string) => {
-    const item = scoutTemplates.find(h => h.id === id);
-    if (!item) return;
-
-    startTransition(async () => {
-      const result = await updateScoutTemplateSavedStatus(id, !item.saved);
-      if (result.success) {
-        setScoutTemplates((prev: ScoutTemplateItem[]) =>
-          prev.map((prevItem: ScoutTemplateItem) =>
-            prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
-          )
-        );
-      }
-    });
-  };
 
   const handleEdit = (item: ScoutTemplateItem) => {
     try {
@@ -529,11 +496,8 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
 
           {/* Table Header */}
           <div className='flex items-center px-10 pb-2 border-b border-[#dcdcdc]'>
-            {/* Spacer for bookmark icon */}
-            <div className='w-[18px]'></div>
-
             {/* Group column */}
-            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6'>
+            <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px]'>
               <span className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
                 グループ
               </span>
@@ -599,16 +563,8 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
                 key={item.id}
                 className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
               >
-                {/* Bookmark Icon */}
-                <button
-                  className='w-[18px] flex-shrink-0'
-                  onClick={() => toggleBookmark(item.id)}
-                >
-                  <BookmarkIcon filled={item.saved} />
-                </button>
-
                 {/* Group Badge */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
                   <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
                     {item.groupName}
                   </span>
