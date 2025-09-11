@@ -29,11 +29,15 @@ interface SearchCondition {
 interface RecommendedCandidatesSectionProps {
   searchCondition: SearchCondition;
   candidates: CandidateData[];
+  companyGroupId?: string;
+  jobOptions?: Array<{ value: string; label: string; groupId?: string }>;
 }
 
 export function RecommendedCandidatesSection({
   searchCondition,
   candidates,
+  companyGroupId,
+  jobOptions = [],
 }: RecommendedCandidatesSectionProps) {
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateData | null>(null);
   const [isSlideMenuOpen, setIsSlideMenuOpen] = useState(false);
@@ -49,6 +53,10 @@ export function RecommendedCandidatesSection({
   const handleCloseSlideMenu = () => {
     setIsSlideMenuOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleJobChange = (candidateId: string, jobId: string) => {
+    // Job change logic if needed
   };
 
   // 検索条件をURLSearchParamsに変換
@@ -183,7 +191,10 @@ export function RecommendedCandidatesSection({
         isOpen={isSlideMenuOpen}
         onClose={handleCloseSlideMenu}
         candidateId={selectedCandidate?.id.toString()}
-        companyGroupId={undefined} // NOTE: 適切なcompanyGroupIdを取得する必要があります
+        candidateData={selectedCandidate}
+        companyGroupId={companyGroupId}
+        jobOptions={jobOptions}
+        onJobChange={handleJobChange}
       />
     </div>
   );

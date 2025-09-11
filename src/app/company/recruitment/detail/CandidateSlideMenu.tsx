@@ -146,6 +146,13 @@ export function CandidateSlideMenu({
       return;
     }
     
+    // 数値IDの場合は機能を無効化
+    const isValidUUID = candidateId.length >= 30 && candidateId.includes('-');
+    if (!isValidUUID) {
+      alert('この機能はデモ候補者では利用できません。');
+      return;
+    }
+    
     console.log('🔍 [handleCheckMessage] Starting message navigation:', { candidateId, companyGroupId });
     
     try {
@@ -181,6 +188,19 @@ export function CandidateSlideMenu({
       setDetailsLoading(true);
       setSecondaryDataLoading(true);
       setLoading(true);
+      
+      // candidateIdがUUID形式かチェック（36文字で、ハイフンを含む）
+      const isValidUUID = candidateId.length >= 30 && candidateId.includes('-');
+      
+      if (!isValidUUID) {
+        // 数値IDの場合はpropsで渡されたcandidateDataを使用し、APIは呼ばない
+        console.log('🔍 [CandidateSlideMenu] Using props candidateData for numeric ID:', candidateId);
+        setCandidateData(propsCandidateData);
+        setDetailsLoading(false);
+        setSecondaryDataLoading(false);
+        setLoading(false);
+        return;
+      }
       
       // 第1段階: 最優先データ（候補者詳細）を先に取得・表示
       getCandidateDetailAction(candidateId, companyGroupId)
@@ -263,6 +283,13 @@ export function CandidateSlideMenu({
       return;
     }
     
+    // 数値IDの場合は機能を無効化
+    const isValidUUID = candidateId.length >= 30 && candidateId.includes('-');
+    if (!isValidUUID) {
+      alert('この機能はデモ候補者では利用できません。');
+      return;
+    }
+    
     try {
       if (isPickedUp) {
         // 保存解除
@@ -294,6 +321,13 @@ export function CandidateSlideMenu({
     console.log('[DEBUG] handleHiddenToggle called', { candidateId, companyGroupId, isHidden });
     if (!candidateId || !companyGroupId) {
       console.log('[DEBUG] Missing candidateId or companyGroupId');
+      return;
+    }
+    
+    // 数値IDの場合は機能を無効化
+    const isValidUUID = candidateId.length >= 30 && candidateId.includes('-');
+    if (!isValidUUID) {
+      alert('この機能はデモ候補者では利用できません。');
       return;
     }
     

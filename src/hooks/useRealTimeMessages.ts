@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ChatMessage } from '@/types/message';
-import { sendMessage, getRoomMessages } from '@/lib/actions/message-actions';
+import { sendMessage, getRoomMessages } from '@/lib/actions';
 
 export const useRealTimeMessages = (roomId: string | null, candidateId?: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -133,13 +133,14 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     }, 50);
     
     try {
-      const result = await sendMessage({
-        room_id: roomId,
+      const result = await sendMessage(
+        roomId,
         content,
+        'candidate',
+        candidateId || '',
         subject,
-        message_type: 'GENERAL',
-        file_urls: fileUrls,
-      });
+        fileUrls
+      );
 
       if (result.error) {
         // エラー時は楽観的更新を元に戻す

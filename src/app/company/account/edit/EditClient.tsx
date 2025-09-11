@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +9,7 @@ import { SelectInput } from '@/components/ui/select-input';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import type { Industry } from '@/constants/industry-data';
+import { getCompanyAccountForEdit, saveCompanyAccountEdit } from './actions';
 
 // Icons
 const RightArrowIcon = () => (
@@ -137,7 +138,7 @@ const companyPhases = [
   '大企業（グローバル展開・数千名規模）',
 ];
 
-interface FormData {
+interface EditFormState {
   companyName: string;
   urls: Array<{ title: string; url: string }>;
   iconImage: File | null;
@@ -157,11 +158,11 @@ interface FormData {
 
 export default function EditClient() {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<EditFormState>({
     companyName: 'テキストが入ります。',
     urls: [{ title: '', url: '' }],
     iconImage: null,
-    currentIconUrl: '/images/account-sample.png', // 既存の画像URL（モック）
+    currentIconUrl: null,
     representative: { position: '', name: '' },
     establishedYear: '',
     capital: { amount: '', unit: '万円' },
@@ -171,15 +172,36 @@ export default function EditClient() {
     location: { prefecture: '', address: '' },
     companyPhase: '',
     images: [],
-    currentImageUrls: [
-      '/images/account-sample-2.png',
-      '/images/account-sample-2.png',
-    ], // 既存のイメージ画像URL（モック）
+    currentImageUrls: [],
     attractions: [{ title: '', content: '' }],
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
+
+  // 初期ロード
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const result = await getCompanyAccountForEdit();
+        if (result.success) {
+          setFormData(prev => ({
+            ...prev,
+            companyName: result.data.companyName || 'テキストが入ります。',
+            representative: { position: prev.representative.position, name: result.data.representativeName || '' },
+            industries: result.data.industries || [],
+            businessContent: result.data.companyOverview || '',
+            location: result.data.location || { prefecture: '', address: '' },
+          }));
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   // モック画像削除ハンドラー
   const handleDeleteMockImage = (index: number) => {
@@ -239,20 +261,20 @@ export default function EditClient() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.representative.position || !formData.representative.name) {
-      newErrors.representative = '代表者の役職名と氏名を入力してください。';
+    if (!formData.representative.name) {
+      newErrors['representative'] = '代表者の氏名を入力してください。';
     }
 
     if (formData.industries.length === 0) {
-      newErrors.industries = '業種を1つ以上選択してください。';
+      newErrors['industries'] = '業種を1つ以上選択してください。';
     }
 
     if (!formData.businessContent.trim()) {
-      newErrors.businessContent = '事業内容を入力してください。';
+      newErrors['businessContent'] = '事業内容を入力してください。';
     }
 
     if (!formData.location.prefecture || !formData.location.address.trim()) {
-      newErrors.location = '所在地を入力してください。';
+      newErrors['location'] = '所在地を入力してください。';
     }
 
     setErrors(newErrors);
@@ -260,10 +282,23 @@ export default function EditClient() {
   };
 
   // 保存処理
-  const handleSave = () => {
-    if (validate()) {
-      // 保存処理（API呼び出しなど）
-      router.push('/company/account');
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      const res = await saveCompanyAccountEdit({
+        representativeName: formData.representative.name,
+        industries: formData.industries,
+        businessContent: formData.businessContent,
+        location: formData.location,
+      });
+      if ('success' in res && res.success) {
+        router.push('/company/account');
+      } else {
+        setErrors(prev => ({ ...prev, submit: res.error || '保存に失敗しました' }));
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -308,6 +343,10 @@ export default function EditClient() {
       {/* メインコンテンツ */}
       <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
         <div className="w-full max-w-[1200px] mx-auto">
+          {loading ? (
+            <div className="bg-white rounded-[10px] p-10 text-[#323232]">読み込み中...</div>
+          ) : (
+          <>
           {/* 編集フォーム */}
           <div className="bg-white rounded-[10px] p-10">
             <div className="flex flex-col gap-2">
@@ -349,10 +388,11 @@ export default function EditClient() {
                           type="text"
                           placeholder="URLタイトルを入力"
                           className="flex-1 px-4 py-2 border border-[#999] rounded-[5px] max-w-100"
-                          value={url.title}
+                          value={url.title || ''}
                           onChange={(e) => {
-                            const newUrls = [...formData.urls];
-                            newUrls[index].title = e.target.value;
+                            const newUrls = [...formData['urls']];
+                            const current = newUrls[index] ?? { title: '', url: '' };
+                            newUrls[index] = { ...current, title: e.target.value };
                             setFormData({ ...formData, urls: newUrls });
                           }}
                         />
@@ -360,10 +400,11 @@ export default function EditClient() {
                           type="text"
                           placeholder="https://"
                           className="flex-1 px-4 py-2 border border-[#999] rounded-[5px] max-w-100"
-                          value={url.url}
+                          value={url.url || ''}
                           onChange={(e) => {
-                            const newUrls = [...formData.urls];
-                            newUrls[index].url = e.target.value;
+                            const newUrls = [...formData['urls']];
+                            const current = newUrls[index] ?? { title: '', url: '' };
+                            newUrls[index] = { ...current, url: e.target.value };
                             setFormData({ ...formData, urls: newUrls });
                           }}
                         />
@@ -417,10 +458,10 @@ export default function EditClient() {
                       {/* 「画像を変更」オーバーレイ */}
                       <label
                         htmlFor="icon-upload"
-                        className="absolute inset-0 bg-[#32323280] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        className="absolute inset-0 bg-[#32323240] flex items-center justify-center opacity-100 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <span
-                          className="text-white text-[14px] font-bold tracking-[1.4px]"
+                          className="text-white text-[14px] font-bold tracking-[1.4px] drop-shadow"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           画像を変更
@@ -481,7 +522,7 @@ export default function EditClient() {
                         setFormData({
                           ...formData,
                           representative: {
-                            ...formData.representative,
+                            ...formData['representative'],
                             position: e.target.value,
                           },
                         })
@@ -496,16 +537,16 @@ export default function EditClient() {
                         setFormData({
                           ...formData,
                           representative: {
-                            ...formData.representative,
+                            ...formData['representative'],
                             name: e.target.value,
                           },
                         })
                       }
                     />
                   </div>
-                  {errors.representative && (
+                  {errors['representative'] && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.representative}
+                      {errors['representative']}
                     </p>
                   )}
                 </div>
@@ -664,9 +705,9 @@ export default function EditClient() {
                       ))}
                     </div>
                   </div>
-                  {errors.industries && (
+                  {errors['industries'] && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.industries}
+                      {errors['industries']}
                     </p>
                   )}
                 </div>
@@ -694,9 +735,9 @@ export default function EditClient() {
                       })
                     }
                   />
-                  {errors.businessContent && (
+                  {errors['businessContent'] && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.businessContent}
+                      {errors['businessContent']}
                     </p>
                   )}
                 </div>
@@ -742,9 +783,9 @@ export default function EditClient() {
                       }
                     />
                   </div>
-                  {errors.location && (
+                  {errors['location'] && (
                     <p className="text-red-500 text-sm mt-1">
-                      {errors.location}
+                      {errors['location']}
                     </p>
                   )}
                 </div>
@@ -920,8 +961,9 @@ export default function EditClient() {
                           className="w-full px-4 py-2 border border-[#999] rounded-[5px]"
                           value={attraction.title}
                           onChange={(e) => {
-                            const newAttractions = [...formData.attractions];
-                            newAttractions[index].title = e.target.value;
+                            const newAttractions = [...formData['attractions']];
+                            const current = newAttractions[index] ?? { title: '', content: '' };
+                            newAttractions[index] = { ...current, title: e.target.value };
                             setFormData({
                               ...formData,
                               attractions: newAttractions,
@@ -933,8 +975,9 @@ export default function EditClient() {
                           className="w-full px-4 py-2 border border-[#999] rounded-[5px] resize-none h-[120px]"
                           value={attraction.content}
                           onChange={(e) => {
-                            const newAttractions = [...formData.attractions];
-                            newAttractions[index].content = e.target.value;
+                            const newAttractions = [...formData['attractions']];
+                            const current = newAttractions[index] ?? { title: '', content: '' };
+                            newAttractions[index] = { ...current, content: e.target.value };
                             setFormData({
                               ...formData,
                               attractions: newAttractions,
@@ -969,6 +1012,8 @@ export default function EditClient() {
               </div>
             </div>
           </div>
+          </>
+          )}
 
           {/* ボタンエリア */}
           <div className="flex justify-center gap-4 mt-10">
@@ -986,15 +1031,16 @@ export default function EditClient() {
               onClick={handleSave}
               className="min-w-[160px] px-10"
               disabled={
-                !formData.representative.position ||
                 !formData.representative.name ||
                 formData.industries.length === 0 ||
                 !formData.businessContent ||
                 !formData.location.prefecture ||
-                !formData.location.address
+                !formData.location.address ||
+                saving ||
+                loading
               }
             >
-              保存する
+              {saving ? '保存中...' : '保存する'}
             </Button>
           </div>
         </div>
@@ -1004,8 +1050,12 @@ export default function EditClient() {
       <IndustrySelectModal
         isOpen={isIndustryModalOpen}
         onClose={() => setIsIndustryModalOpen(false)}
-        onConfirm={handleIndustryConfirm}
-        initialSelected={formData.industries}
+        onConfirm={(names: string[]) => {
+          // names は業種名の配列。定義済みIndustryへ変換
+          const mapToIndustry = (name: string): Industry => ({ id: name, name });
+          handleIndustryConfirm(names.map(mapToIndustry));
+        }}
+        initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}
       />
     </>

@@ -48,22 +48,8 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
       messageCount: messages?.length || 0
     });
 
-    // 企業側宛ての未読メッセージ（候補者から送信された'SENT'ステータスのメッセージ）を既読にする
-    const { error: readUpdateError } = await supabase
-      .from('messages')
-      .update({
-        status: 'READ',
-        read_at: new Date().toISOString()
-      })
-      .eq('room_id', roomId)
-      .eq('status', 'SENT')
-      .eq('sender_type', 'CANDIDATE'); // 候補者からのメッセージのみ
-
-    if (readUpdateError) {
-      console.warn('❌ [getRoomMessages] Failed to update read status:', readUpdateError);
-    } else {
-      console.log('✅ [getRoomMessages] Updated read status for candidate messages in room:', roomId);
-    }
+    // 注意: 既読処理はMessageLayoutServer.tsxで明示的に行うため、ここでは行わない
+    // これにより、メッセージ一覧表示時に自動的に既読になることを防ぐ
 
     // file_urlsをJSONB形式からstring[]に変換
     const formattedMessages: ChatMessage[] = (messages || []).map((msg: any) => ({
