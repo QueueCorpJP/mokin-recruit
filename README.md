@@ -25,10 +25,12 @@
 
 ```bash
 npm install
-cp .env.local.example .env.local  # 例が無い場合は作成
+# .env.local を作成し、環境変数を設定してください（例は docs/ENV.example.md を参照）
 # 必須（例）
 # NEXT_PUBLIC_SUPABASE_URL=...
 # NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+# SUPABASE_SERVICE_ROLE_KEY=...
+# ADMIN_JWT_SECRET=...
 ```
 
 ### 開発サーバー
@@ -58,7 +60,7 @@ npm run test:watch  # 変更監視
 
 ### 環境変数
 
-- `.env.local.example` を参考に `.env.local` を作成してください。
+- `docs/ENV.example.md` を参考に `.env.local` を作成してください。
 
 ### Lint/型チェック
 
