@@ -17,7 +17,7 @@ export function GroupNameChangeModal({
   onConfirm, 
   currentGroupName = '' 
 }: GroupNameChangeModalProps) {
-  const [groupName, setGroupName] = useState(currentGroupName);
+  const [groupName, setGroupName] = useState('');
 
   const handleConfirm = () => {
     if (groupName.trim()) {
@@ -26,7 +26,7 @@ export function GroupNameChangeModal({
   };
 
   const handleClose = () => {
-    setGroupName(currentGroupName); // Reset to original value
+    setGroupName('');
     onClose();
   };
 
@@ -42,18 +42,18 @@ export function GroupNameChangeModal({
       width="760px"
       height="auto"
     >
-      <div className="flex flex-col py-10 min-h-[240px] max-h-[400px]">
-        {/* Input form section */}
-        <div className="flex gap-4 items-start justify-center items-center w-full">
+      <div className="flex flex-col py-10 min-h-[240px] max-h-[400px] w-full justify-center items-center">
+        {/* Input form section*/}
+        <div className="flex flex-row gap-4 items-center justify-center items-center w-full">
           {/* Label */}
-          <div className="flex items-center justify-center pb-0 pt-[11px] px-0 shrink-0">
+          <div className="flex items-center justify-start pb-6 px-0 shrink-0">
             <div className="font-['Noto_Sans_JP'] text-[16px] font-bold leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
               グループ名
             </div>
           </div>
 
           {/* Input field and description */}
-          <div className="flex flex-col gap-2 items-start w-[400px]">
+          <div className="flex flex-col gap-2 w-[400px]">
             <Input
               type="text"
               value={groupName}

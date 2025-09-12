@@ -256,7 +256,7 @@ export default function CandidateEditClient({ candidate }: Props) {
 
   const handleRemoveLanguage = (index: number) => {
     const currentLanguages = skills.other_languages || [];
-    const newLanguages = currentLanguages.filter((_, i) => i !== index);
+    const newLanguages = currentLanguages.filter((_: any, i) => i !== index);
     setSkills(prev => ({ ...prev, other_languages: newLanguages }));
   };
 

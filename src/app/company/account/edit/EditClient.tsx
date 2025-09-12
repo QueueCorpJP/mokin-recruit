@@ -10,7 +10,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { prefectures as PREFS } from '@/constants/prefectures';
 import type { Industry } from '@/constants/industry-data';
-import { getCompanyAccountForEdit, saveCompanyAccountEdit } from './actions';
+import { getCompanyAccountForEdit, saveCompanyAccountEdit, uploadCompanyAccountIconAction, uploadCompanyAccountImagesAction } from './actions';
 
 // Icons
 const RightArrowIcon = () => (
@@ -129,6 +129,7 @@ export default function EditClient() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
@@ -451,10 +452,21 @@ export default function EditClient() {
                           accept='image/*'
                           className='hidden'
                           id='icon-upload'
-                          onChange={e => {
+                          onChange={async e => {
                             const file = e.target.files?.[0];
-                            if (file) {
-                              setFormData({ ...formData, iconImage: file });
+                            if (!file) return;
+                            setUploading(true);
+                            try {
+                              const fd = new FormData();
+                              fd.append('icon', file);
+                              const res = await uploadCompanyAccountIconAction(fd);
+                              if ('success' in res && res.success) {
+                                setFormData({ ...formData, iconImage: file, currentIconUrl: res.url });
+                              } else {
+                                setErrors(prev => ({ ...prev, submit: res.error || 'アイコンのアップロードに失敗しました' }));
+                              }
+                            } finally {
+                              setUploading(false);
                             }
                           }}
                         />
@@ -917,19 +929,31 @@ export default function EditClient() {
                           3 && (
                           <ImageUpload
                             images={[]}
-                            onChange={newFiles => {
-                              const totalCount =
-                                formData.currentImageUrls.length +
-                                formData.images.length;
+                            onChange={async newFiles => {
+                              const totalCount = formData.currentImageUrls.length + formData.images.length;
                               const availableSlots = 3 - totalCount;
-                              const filesToAdd = newFiles.slice(
-                                0,
-                                availableSlots
-                              );
-                              setFormData({
-                                ...formData,
-                                images: [...formData.images, ...filesToAdd],
-                              });
+                              const filesToAdd = newFiles.slice(0, availableSlots);
+                              if (filesToAdd.length === 0) return;
+                              setUploading(true);
+                              try {
+                                const fd = new FormData();
+                                for (const f of filesToAdd) fd.append('images', f);
+                                const res = await uploadCompanyAccountImagesAction(fd);
+                                if ('success' in res && res.success) {
+                                  setFormData({
+                                    ...formData,
+                                    images: [...formData.images, ...filesToAdd],
+                                    currentImageUrls: [
+                                      ...formData.currentImageUrls,
+                                      ...res.files.map(f => f.url),
+                                    ],
+                                  });
+                                } else {
+                                  setErrors(prev => ({ ...prev, submit: res.error || '画像のアップロードに失敗しました' }));
+                                }
+                              } finally {
+                                setUploading(false);
+                              }
                             }}
                             maxImages={1}
                           />
@@ -1050,11 +1074,11 @@ export default function EditClient() {
                 !formData.businessContent ||
                 !formData.location.prefecture ||
                 !formData.location.address ||
-                saving ||
+                saving || uploading ||
                 loading
               }
             >
-              {saving ? '保存中...' : '保存する'}
+              {saving ? '保存中...' : uploading ? 'アップロード中...' : '保存する'}
             </Button>
           </div>
         </div>
