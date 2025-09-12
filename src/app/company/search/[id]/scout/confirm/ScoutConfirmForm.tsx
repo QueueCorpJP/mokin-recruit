@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { sendScout, type ScoutSendFormData } from '../actions';
+import { useScoutSendStore } from '@/stores/scoutSendStore';
 
 interface ScoutConfirmFormProps {
   candidateId: string;
@@ -45,6 +46,8 @@ const MailIcon = () => (
 export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const setDraft = useScoutSendStore((s) => s.setDraft);
+  const resetDraft = useScoutSendStore((s) => s.resetDraft);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ScoutSendFormData | null>(null);
   const [groupLabel, setGroupLabel] = useState<string>('');
@@ -71,7 +74,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
     setScoutTemplateLabel(scoutTemplateLabelParam);
     setCandidateName(candidateNameParam);
 
-    setFormData({
+    const restored = {
       group,
       recruitmentTarget,
       scoutSenderName,
@@ -80,7 +83,10 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
       title,
       message,
       searchQuery,
-    });
+    } as ScoutSendFormData;
+    setFormData(restored);
+    // 確認画面に直接アクセスした場合でもドラフトへ反映
+    setDraft(candidateId, restored);
   }, [candidateId, searchParams]);
 
   const handleSend = async () => {
@@ -92,6 +98,8 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
       const result = await sendScout(formData);
       
       if (result.success) {
+        // 送信完了時はドラフトを破棄
+        resetDraft(candidateId);
         router.push('/company/search');
       } else {
         alert(result.error || 'スカウト送信に失敗しました');
