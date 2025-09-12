@@ -43,11 +43,11 @@ export default async function ScoutTemplatePage() {
     
     if (!companyUser) {
       console.log('🔄 Redirecting to login...');
-      redirect('/auth/company/signin');
+      redirect('/company/auth/login');
     }
   } catch (error) {
     console.error('❌ Auth error:', error);
-    redirect('/auth/company/signin');
+    redirect('/company/auth/login');
   }
 
   // サーバーサイドでスカウトテンプレートと求人データを取得
@@ -57,26 +57,28 @@ export default async function ScoutTemplatePage() {
   
   try {
     console.log('📡 Calling getScoutTemplates...');
-    const templatesResult = await getScoutTemplates(50, 0);
+    const templatesResult = await getScoutTemplates(50, 0).catch(() => null);
     console.log('📊 getScoutTemplates result:', templatesResult);
     
-    if (templatesResult.success) {
+    if (templatesResult?.success) {
       initialScoutTemplates = templatesResult.data;
       console.log('✅ Templates loaded:', initialScoutTemplates.length);
     } else {
-      error = templatesResult.error || 'スカウトテンプレートの取得に失敗しました';
-      console.error('❌ Failed to fetch scout templates:', templatesResult.error);
+      const errMsg = templatesResult?.error || 'スカウトテンプレートの取得に失敗しました';
+      error = errMsg;
+      console.error('❌ Failed to fetch scout templates:', errMsg);
     }
 
     console.log('📡 Calling getJobPostings...');
     const jobPostingsResult = await getJobPostings();
     console.log('📊 getJobPostings result:', jobPostingsResult);
     
-    if (jobPostingsResult.success) {
+    if (jobPostingsResult?.success) {
       initialJobPostings = jobPostingsResult.data;
       console.log('✅ Job postings loaded:', initialJobPostings.length);
     } else {
-      console.error('❌ Failed to fetch job postings:', jobPostingsResult.error);
+      const errMsg = jobPostingsResult?.error || '求人の取得に失敗しました';
+      console.error('❌ Failed to fetch job postings:', errMsg);
       // 求人の取得に失敗してもスカウトテンプレートは表示する
     }
   } catch (err) {

@@ -98,17 +98,20 @@ export async function saveCompanyAccountEdit(
   const supabase = await createClient();
 
   // 入力検証（必須項目）
+  // 代表者: 役職名と氏名の両方必須（役職は現状保持していないため氏名で代替不可）
   if (!input.representativeName?.trim()) {
-    return { success: false, error: '代表者名を入力してください' };
+    // クライアントでは役職名と氏名の両方を必須にしているため、
+    // サーバー側の共通エラーメッセージも指定文言に合わせる
+    return { success: false, error: '代表者の役職名と氏名を入力してください。' };
   }
   if (!input.businessContent?.trim()) {
-    return { success: false, error: '事業内容を入力してください' };
+    return { success: false, error: '事業内容を入力してください。' };
   }
   if (!input.location?.prefecture || !input.location?.address?.trim()) {
-    return { success: false, error: '所在地を入力してください' };
+    return { success: false, error: '所在地を入力してください。' };
   }
   if (!Array.isArray(input.industries) || input.industries.length === 0) {
-    return { success: false, error: '業種を1つ以上選択してください' };
+    return { success: false, error: '業種を1つ以上選択してください。' };
   }
 
   // 現在の値を取得して差分のみ更新

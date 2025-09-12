@@ -151,7 +151,14 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
     }
 
     // user_metadataからユーザータイプを取得
-    const userType = (user.user_metadata?.user_type || 'candidate') as UserType;
+    // フォールバック: company_account_id があれば company_user とみなす
+    const meta = user.user_metadata || {};
+    let userType: UserType = (meta.user_type as UserType) || (meta.userType as UserType) || 'candidate';
+    if (userType !== 'company_user') {
+      if (meta.company_account_id || (meta as any).companyAccountId) {
+        userType = 'company_user';
+      }
+    }
     
     const authUser: User = {
       id: user.id,
@@ -178,10 +185,8 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
   }
 }
 
-/**
- * キャッシュ付きの認証チェック（パフォーマンス重視の場合のみ使用）
- */
-export const getCachedServerAuth = cache(getServerAuth);
+// キャッシュによる認証状態の取り違いを避けるため、メモ化は無効化
+export const getCachedServerAuth = getServerAuth as unknown as typeof getServerAuth;
 
 /**
  * 静的レンダリング用の認証チェック（cookiesを使わない）
@@ -209,10 +214,8 @@ export async function requireCandidateAuth(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCandidateUser(): Promise<User | null> {
-  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
-  return auth.isAuthenticated && auth.userType === 'candidate'
-    ? auth.user
-    : null;
+  const auth = await getServerAuth(false, false); // 非キャッシュ
+  return auth.isAuthenticated && auth.userType === 'candidate' ? auth.user : null;
 }
 
 /**
@@ -220,10 +223,8 @@ export async function getCachedCandidateUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedCompanyUser(): Promise<User | null> {
-  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
-  return auth.isAuthenticated && auth.userType === 'company_user'
-    ? auth.user
-    : null;
+  const auth = await getServerAuth(false, false); // 非キャッシュ
+  return auth.isAuthenticated && auth.userType === 'company_user' ? auth.user : null;
 }
 
 /**
@@ -231,10 +232,8 @@ export async function getCachedCompanyUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedAdminUser(): Promise<User | null> {
-  const auth = await getCachedServerAuth(false, true); // キャッシュ版を使用
-  return auth.isAuthenticated && auth.userType === 'admin'
-    ? auth.user
-    : null;
+  const auth = await getServerAuth(false, false); // 非キャッシュ
+  return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
 
 /**
@@ -381,13 +380,10 @@ export async function requireCompanyAuthForAction(): Promise<
  * 認証されたユーザーのクライアントを返すため、RLSポリシーが適用される
  */
 export async function getAuthenticatedSupabaseClient() {
-  const auth = await getCachedServerAuth();
-  
+  const auth = await getServerAuth(false, false);
   if (!auth.isAuthenticated) {
     throw new Error('認証が必要です');
   }
-
-  // 認証されたユーザーのクライアントを作成
   return await createSupabaseServerClientReadOnly(true);
 }
 

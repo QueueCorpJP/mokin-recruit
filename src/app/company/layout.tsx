@@ -4,7 +4,7 @@ import { getServerAuth } from '@/lib/auth/server';
 import { CompanyNavigationWrapper } from '@/components/layout/CompanyNavigationWrapper';
 import { CompanyFooterWrapper } from '@/components/layout/CompanyFooterWrapper';
 
-export const dynamic = 'force-dynamic';
+// dynamic はデフォルト挙動に委譲（不要な再レンダリング抑制）
 
 export default async function CompanyLayout({
   children,
@@ -35,14 +35,7 @@ export default async function CompanyLayout({
       />
 
       {/* メインコンテンツ */}
-      <Suspense
-        fallback={
-          <div className='min-h-screen bg-white'>
-            <div className='animate-pulse bg-gray-100 h-4 w-full' />
-            <div className='min-h-[200px] bg-[#323232]' />
-          </div>
-        }
-      >
+      <Suspense fallback={null}>
         <CompanyLayoutClient initialAuth={initialAuth}>
           {children}
           {/* ここでモーダルslotを描画 */}

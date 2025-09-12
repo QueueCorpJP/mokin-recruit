@@ -1,10 +1,7 @@
 'use client';
 
 import { UserProvider } from '@/contexts/UserContext';
-import { AccessRestricted } from '@/components/AccessRestricted';
-import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { protectedPaths } from '@/app/company/constants/routes';
 import { createBrowserClient } from '@supabase/ssr';
 
 interface InitialAuth {
@@ -33,8 +30,7 @@ export default function CompanyLayoutClient({
   children: React.ReactNode;
   initialAuth: InitialAuth;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  // ルート保護はmiddlewareで実施済み
 
   // サーバーから渡された初期認証情報を使用（クライアントサイドでのAPI呼び出しなし）
   const [authState, setAuthState] = useState({
@@ -43,7 +39,7 @@ export default function CompanyLayoutClient({
     loading: false, // サーバーサイドで既に確定済み
   });
 
-  // 認証状態の変化を監視（ログイン・ログアウト時のみ）
+  // 認証状態の変化を監視（ヘッダー表示のための軽量同期）
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,30 +81,7 @@ export default function CompanyLayoutClient({
     return () => subscription.unsubscribe();
   }, []);
 
-  // 認証が必要なページのパスは共通定数から参照
-
-  // 認証が必要なページでリダイレクト処理
-  useEffect(() => {
-    const { isAuthenticated, companyUser, loading } = authState;
-
-    if (loading) return;
-
-    if (!isAuthenticated) {
-      const isProtectedPath = protectedPaths.some(path =>
-        pathname.startsWith(path)
-      );
-      if (isProtectedPath) {
-        router.push('/company/auth/login');
-        return;
-      }
-    }
-  }, [
-    authState.isAuthenticated,
-    authState.loading,
-    pathname,
-    authState.companyUser,
-    router,
-  ]);
+  // ルート保護/リダイレクトはmiddlewareへ集約済み
 
   const { isAuthenticated, companyUser } = authState;
 
@@ -133,13 +106,7 @@ export default function CompanyLayoutClient({
         }
       : null;
 
-  // 認証が必要なページでアクセス制限の表示
-  const isProtectedPath = protectedPaths.some(path =>
-    pathname.startsWith(path)
-  );
-  if (isProtectedPath && !isAuthenticated) {
-    return <AccessRestricted userType='company' />;
-  }
+  // ページ保護表示は不要（middlewareがリダイレクト済み）
 
   return <UserProvider user={contextUser}>{children}</UserProvider>;
 }

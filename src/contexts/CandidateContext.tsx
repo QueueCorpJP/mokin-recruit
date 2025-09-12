@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 // 候補者データの共通型定義
 export interface CandidateFormData {
@@ -19,12 +25,12 @@ export interface CandidateFormData {
   prefecture: string;
   phoneNumber: string;
   currentIncome: string;
-  
+
   // 転職活動状況
   hasCareerChange: string;
   jobChangeTiming: string;
   currentActivityStatus: string;
-  
+
   // 職務経歴
   recentJobCompanyName: string;
   recentJobDepartmentPosition: string;
@@ -36,13 +42,17 @@ export interface CandidateFormData {
   recentJobDescription: string;
   recentJobIndustries: string[];
   recentJobTypes: string[];
-  
+
   // 職務要約・自己PR
   jobSummary: string;
   selfPr: string;
-  
+
   // 希望条件
   desiredWorkStyles?: string[];
+  desiredSalary?: string;
+  desiredIndustries?: string[];
+  desiredJobTypes?: string[];
+  desiredLocations?: string[];
 }
 
 export interface EducationData {
@@ -57,6 +67,7 @@ export interface SkillsData {
   english_level: string;
   qualifications: string;
   skills_tags: string[];
+  other_languages?: Array<{ language: string; level: string }>;
 }
 
 export interface SelectionEntry {
@@ -100,11 +111,20 @@ type CandidateAction =
   | { type: 'SET_EDUCATION'; payload: Partial<EducationData> }
   | { type: 'SET_SKILLS'; payload: Partial<SkillsData> }
   | { type: 'SET_SELECTION_ENTRIES'; payload: SelectionEntry[] }
-  | { type: 'UPDATE_SELECTION_ENTRY'; payload: { index: number; field: keyof SelectionEntry; value: any } }
+  | {
+      type: 'UPDATE_SELECTION_ENTRY';
+      payload: { index: number; field: keyof SelectionEntry; value: any };
+    }
   | { type: 'ADD_SELECTION_ENTRY' }
   | { type: 'REMOVE_SELECTION_ENTRY'; payload: number }
-  | { type: 'SET_SELECTED_INDUSTRIES_MAP'; payload: { [key: number]: string[] } }
-  | { type: 'UPDATE_SELECTED_INDUSTRIES'; payload: { index: number; industries: string[] } }
+  | {
+      type: 'SET_SELECTED_INDUSTRIES_MAP';
+      payload: { [key: number]: string[] };
+    }
+  | {
+      type: 'UPDATE_SELECTED_INDUSTRIES';
+      payload: { index: number; industries: string[] };
+    }
   | { type: 'SET_MODAL_STATE'; payload: ModalState }
   | { type: 'SET_SKILL_INPUT'; payload: string }
   | { type: 'ADD_SKILL_TAG'; payload: string }
@@ -144,6 +164,11 @@ const initialFormData: CandidateFormData = {
   recentJobTypes: [],
   jobSummary: '',
   selfPr: '',
+  desiredWorkStyles: [],
+  desiredSalary: '',
+  desiredIndustries: [],
+  desiredJobTypes: [],
+  desiredLocations: [],
 };
 
 const initialEducation: EducationData = {
@@ -189,7 +214,10 @@ const initialState: CandidateState = {
   isSubmitting: false,
 };
 
-function candidateReducer(state: CandidateState, action: CandidateAction): CandidateState {
+function candidateReducer(
+  state: CandidateState,
+  action: CandidateAction
+): CandidateState {
   switch (action.type) {
     case 'SET_FORM_DATA':
       return {
@@ -246,9 +274,13 @@ function candidateReducer(state: CandidateState, action: CandidateAction): Candi
     case 'REMOVE_SELECTION_ENTRY':
       return {
         ...state,
-        selectionEntries: state.selectionEntries.filter((_, i) => i !== action.payload),
+        selectionEntries: state.selectionEntries.filter(
+          (_, i) => i !== action.payload
+        ),
         selectedIndustriesMap: Object.fromEntries(
-          Object.entries(state.selectedIndustriesMap).filter(([key]) => parseInt(key) !== action.payload)
+          Object.entries(state.selectedIndustriesMap).filter(
+            ([key]) => parseInt(key) !== action.payload
+          )
         ),
       };
     case 'SET_SELECTED_INDUSTRIES_MAP':
@@ -275,7 +307,10 @@ function candidateReducer(state: CandidateState, action: CandidateAction): Candi
         skillInput: action.payload,
       };
     case 'ADD_SKILL_TAG':
-      if (action.payload.trim() && !state.skills.skills_tags.includes(action.payload.trim())) {
+      if (
+        action.payload.trim() &&
+        !state.skills.skills_tags.includes(action.payload.trim())
+      ) {
         return {
           ...state,
           skills: {
@@ -291,7 +326,9 @@ function candidateReducer(state: CandidateState, action: CandidateAction): Candi
         ...state,
         skills: {
           ...state.skills,
-          skills_tags: state.skills.skills_tags.filter(tag => tag !== action.payload),
+          skills_tags: state.skills.skills_tags.filter(
+            tag => tag !== action.payload
+          ),
         },
       };
     case 'SET_MEMO':
@@ -321,22 +358,29 @@ interface CandidateContextValue extends CandidateState {
   updateFormData: (field: keyof CandidateFormData, value: any) => void;
   updateEducation: (field: keyof EducationData, value: any) => void;
   updateSkills: (field: keyof SkillsData, value: any) => void;
-  
+
   // Selection entries actions
-  updateSelectionEntry: (index: number, field: keyof SelectionEntry, value: any) => void;
+  updateSelectionEntry: (
+    index: number,
+    field: keyof SelectionEntry,
+    value: any
+  ) => void;
   addSelectionEntry: () => void;
   removeSelectionEntry: (index: number) => void;
   updateSelectedIndustries: (index: number, industries: string[]) => void;
-  
+
   // Modal actions
-  openModal: (targetType: 'industry' | 'jobtype', targetIndex: number) => void;
+  openModal: (
+    targetType: 'industry' | 'jobtype' | 'workstyle',
+    targetIndex: number
+  ) => void;
   closeModal: () => void;
-  
+
   // Skills actions
   setSkillInput: (input: string) => void;
   addSkillTag: () => void;
   removeSkillTag: (tag: string) => void;
-  
+
   // Other actions
   setMemo: (memo: string) => void;
   setSubmitting: (submitting: boolean) => void;
@@ -354,22 +398,34 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
   const [state, dispatch] = useReducer(candidateReducer, initialState);
 
   // Form data actions
-  const updateFormData = useCallback((field: keyof CandidateFormData, value: any) => {
-    dispatch({ type: 'SET_FORM_DATA', payload: { [field]: value } });
-  }, []);
+  const updateFormData = useCallback(
+    (field: keyof CandidateFormData, value: any) => {
+      dispatch({ type: 'SET_FORM_DATA', payload: { [field]: value } });
+    },
+    []
+  );
 
-  const updateEducation = useCallback((field: keyof EducationData, value: any) => {
-    dispatch({ type: 'SET_EDUCATION', payload: { [field]: value } });
-  }, []);
+  const updateEducation = useCallback(
+    (field: keyof EducationData, value: any) => {
+      dispatch({ type: 'SET_EDUCATION', payload: { [field]: value } });
+    },
+    []
+  );
 
   const updateSkills = useCallback((field: keyof SkillsData, value: any) => {
     dispatch({ type: 'SET_SKILLS', payload: { [field]: value } });
   }, []);
 
   // Selection entries actions
-  const updateSelectionEntry = useCallback((index: number, field: keyof SelectionEntry, value: any) => {
-    dispatch({ type: 'UPDATE_SELECTION_ENTRY', payload: { index, field, value } });
-  }, []);
+  const updateSelectionEntry = useCallback(
+    (index: number, field: keyof SelectionEntry, value: any) => {
+      dispatch({
+        type: 'UPDATE_SELECTION_ENTRY',
+        payload: { index, field, value },
+      });
+    },
+    []
+  );
 
   const addSelectionEntry = useCallback(() => {
     dispatch({ type: 'ADD_SELECTION_ENTRY' });
@@ -379,18 +435,36 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
     dispatch({ type: 'REMOVE_SELECTION_ENTRY', payload: index });
   }, []);
 
-  const updateSelectedIndustries = useCallback((index: number, industries: string[]) => {
-    dispatch({ type: 'UPDATE_SELECTED_INDUSTRIES', payload: { index, industries } });
-    dispatch({ type: 'UPDATE_SELECTION_ENTRY', payload: { index, field: 'industries', value: industries } });
-  }, []);
+  const updateSelectedIndustries = useCallback(
+    (index: number, industries: string[]) => {
+      dispatch({
+        type: 'UPDATE_SELECTED_INDUSTRIES',
+        payload: { index, industries },
+      });
+      dispatch({
+        type: 'UPDATE_SELECTION_ENTRY',
+        payload: { index, field: 'industries', value: industries },
+      });
+    },
+    []
+  );
 
   // Modal actions
-  const openModal = useCallback((targetType: 'industry' | 'jobtype', targetIndex: number) => {
-    dispatch({ type: 'SET_MODAL_STATE', payload: { isOpen: true, targetType, targetIndex } });
-  }, []);
+  const openModal = useCallback(
+    (targetType: 'industry' | 'jobtype' | 'workstyle', targetIndex: number) => {
+      dispatch({
+        type: 'SET_MODAL_STATE',
+        payload: { isOpen: true, targetType, targetIndex },
+      });
+    },
+    []
+  );
 
   const closeModal = useCallback(() => {
-    dispatch({ type: 'SET_MODAL_STATE', payload: { isOpen: false, targetType: null, targetIndex: null } });
+    dispatch({
+      type: 'SET_MODAL_STATE',
+      payload: { isOpen: false, targetType: null, targetIndex: null },
+    });
   }, []);
 
   // Skills actions
@@ -455,7 +529,9 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
 export function useCandidateContext() {
   const context = useContext(CandidateContext);
   if (!context) {
-    throw new Error('useCandidateContext must be used within a CandidateProvider');
+    throw new Error(
+      'useCandidateContext must be used within a CandidateProvider'
+    );
   }
   return context;
 }

@@ -393,13 +393,15 @@ export async function getCompanyUserOptions(groupId: string) {
       return [];
     }
 
-    return users
+    const flattenedUsers = users
       .map(permission => permission.company_users)
       .filter(Boolean)
-      .map(user => ({
-        value: user.full_name,
-        label: user.full_name,
-      }));
+      .flatMap(user => (Array.isArray(user) ? user : [user]));
+
+    return flattenedUsers.map(user => ({
+      value: user.full_name,
+      label: user.full_name,
+    }));
   } catch (error) {
     console.error('ユーザーオプション取得エラー:', error);
     return [];

@@ -46,7 +46,7 @@ export async function getSingleByCandidateId<T>(
   return dataStr as unknown as T;
 }
 
-export async function upsertByCandidateId<T extends Record<string, unknown>>(
+export async function upsertByCandidateId<T extends object>(
   table: TableName,
   payload: T
 ): Promise<{ success: true } | { success: false; error: string }> {

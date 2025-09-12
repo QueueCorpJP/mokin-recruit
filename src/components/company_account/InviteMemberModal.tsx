@@ -85,23 +85,20 @@ export function InviteMemberModal({
       onPrimaryAction={handleConfirm}
       secondaryButtonText="キャンセル"
       onSecondaryAction={handleClose}
-      width="640px"
+      width="760px"
       height="auto"
     >
       <div className="px-0 py-10 w-full justify-center items-center">
         {/* グループ名（中央・グリーン） */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-[24px]">
           <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#0f9058] leading-[1.6]">
             {groupName || 'グループ名テキスト'}
           </h3>
         </div>
 
         {/* 招待するメンバー */}
-        <div className="mb-2 md:mb-10">
-          <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#323232] text-center mb-6 leading-[1.6]">
-            招待するメンバー
-          </h3>
-
+        <div className="mb-0">
+         
           <div className="space-y-2 w-[560px] mx-auto">
             {members.map((member, index) => (
               <div key={member.id} className="flex items-center gap-2">
@@ -143,7 +140,7 @@ export function InviteMemberModal({
             ))}
 
             {/* さらに追加ボタン */}
-            <div className="text-center mt-4">
+            <div className="text-center mt-4 w-full flex justify-center items-center">
               <Button
                 onClick={handleAddMember}
                 variant="green-outline"

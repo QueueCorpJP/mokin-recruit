@@ -107,6 +107,20 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       companyAccountId: companyUser.company_account_id
     });
 
+    // ユーザーメタデータを即時更新して企業ユーザー属性を明示
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          ...(data.user.user_metadata || {}),
+          user_type: 'company_user',
+          company_account_id: companyUser.company_account_id,
+          company_user_id: companyUser.id,
+        },
+      });
+    } catch (e) {
+      console.warn('User metadata update failed (non-fatal):', e);
+    }
+
     // 認証関連のキャッシュを完全にクリア
     revalidatePath('/', 'layout');
     revalidateTag('auth');

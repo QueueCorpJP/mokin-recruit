@@ -39,7 +39,7 @@ export function GroupNameChangeModal({
       onPrimaryAction={handleConfirm}
       secondaryButtonText="キャンセル"
       onSecondaryAction={handleClose}
-      width="560px"
+      width="760px"
       height="auto"
     >
       <div className="flex flex-col py-10 min-h-[240px] max-h-[400px]">
