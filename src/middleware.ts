@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getNonce } from '@/lib/server/utils/nonce';
-import { verifyJwt } from '@/lib/server/utils/jwt';
+import { verifyJwtEdge } from '@/lib/edge/utils/jwt';
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
     let isAdmin = false;
     if (authToken && process.env.ADMIN_JWT_SECRET) {
       try {
-        const verified = await verifyJwt(
+        const verified = await verifyJwtEdge(
           authToken,
           process.env.ADMIN_JWT_SECRET
         );
