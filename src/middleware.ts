@@ -42,6 +42,56 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // company配下のルートをチェック（認証必須・auth配下は除外）
+  // 判定はサーバー側レイアウトに委譲するため、ここでは
+  // セッション（アクセストークン）の存在のみを確認
+  if (path.startsWith('/company') && !path.startsWith('/company/auth')) {
+    // Supabaseのセッションクッキーを確認（優先: sb-access-token）
+    let accessToken = request.cookies.get('sb-access-token')?.value;
+    let hasSupabaseSession = false;
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const names = request.cookies.getAll().map(c => c.name);
+        console.log('[MW:/company] path=', path, 'cookies=', names);
+      } catch {}
+    }
+
+    // 次に sb-<project-ref>-auth-token.0（base64 JSON）を探す
+    if (!accessToken) {
+      try {
+        const all = request.cookies.getAll();
+        // v2 cookieの存在自体をセッション有りとみなす（デコードは不要）
+        const hasV2 = all.some(c => /sb-.*-auth-token\.(0|1)/.test(c.name));
+        if (hasV2) {
+          hasSupabaseSession = true;
+        }
+      } catch {}
+    }
+
+    // 最後にレガシーな supabase-auth-token（JWT文字列）を確認
+    if (!accessToken) {
+      const legacy = request.cookies.get('supabase-auth-token')?.value;
+      if (legacy && legacy.split('.').length === 3) {
+        accessToken = legacy;
+      }
+    }
+
+    if (!accessToken && !hasSupabaseSession) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[MW:/company] redirect -> /company/auth/login (no accessToken)');
+      }
+      const redirectResponse = NextResponse.redirect(
+        new URL('/company/auth/login', request.url)
+      );
+      redirectResponse.headers.set('x-nonce', nonce);
+      return redirectResponse;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[MW:/company] session found, continue');
+    }
+  }
+
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('x-nonce', nonce);
 

@@ -23,9 +23,10 @@ export function DeleteMemberModal({
       onClose={onClose}
       primaryButtonText="削除"
       onPrimaryAction={onConfirm}
+      primaryButtonVariant="destructive"
       secondaryButtonText="キャンセル"
       onSecondaryAction={onClose}
-      width="640px"
+      width="760px"
       height="auto"
     >
       <div className="flex flex-col items-center gap-6 py-10 min-h-[240px] justify-center w-full">

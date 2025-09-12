@@ -19,7 +19,7 @@ export function InviteMemberCompleteModal({
       onClose={onClose}
       primaryButtonText="閉じる"
       onPrimaryAction={onClose}
-      width="812px"
+      width="760px"
       height="auto"
       hideFooter={false}
     >

@@ -216,8 +216,11 @@ export default function EditClient() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.representative.name) {
-      newErrors['representative'] = '代表者の氏名を入力してください。';
+    if (
+      !formData.representative.position?.trim() ||
+      !formData.representative.name?.trim()
+    ) {
+      newErrors['representative'] = '代表者の役職名と氏名を入力してください。';
     }
 
     if (formData.industries.length === 0) {
@@ -1041,6 +1044,7 @@ export default function EditClient() {
               onClick={handleSave}
               className='min-w-[160px] px-10'
               disabled={
+                !formData.representative.position ||
                 !formData.representative.name ||
                 formData.industries.length === 0 ||
                 !formData.businessContent ||

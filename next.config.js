@@ -128,46 +128,8 @@ const nextConfig = {
     // 同時に保持するページ数
     pagesBufferLength: 5,
   },
-  // Code splitting最適化
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            priority: -5,
-            reuseExistingChunk: true,
-            chunks: 'all',
-          },
-          // 重いライブラリを個別チャンク化
-          tiptap: {
-            test: /[\\/]node_modules[\\/]@tiptap[\\/]/,
-            name: 'tiptap',
-            chunks: 'async',
-            priority: 10,
-          },
-          supabase: {
-            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-            name: 'supabase',
-            chunks: 'async',
-            priority: 10,
-          },
-        },
-      };
-    }
+  // Code splitting は Next.js のデフォルト挙動を使用
+  webpack: (config) => {
     return config;
   },
   images: {

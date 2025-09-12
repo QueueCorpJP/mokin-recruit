@@ -19,7 +19,7 @@ export function DeleteMemberSuccessModal({
       onClose={onClose}
       primaryButtonText="閉じる"
       onPrimaryAction={onClose}
-      width="640px"
+      width="760px"
       height="auto"
       hideFooter={false}
     >

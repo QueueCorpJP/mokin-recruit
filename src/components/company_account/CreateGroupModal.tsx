@@ -61,7 +61,7 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
       onPrimaryAction={handleSubmit}
       secondaryButtonText="キャンセル"
       onSecondaryAction={onClose}
-      width="600px"
+      width="760px"
       height="auto"
     >
       <div className="flex flex-col gap-10 w-full">

@@ -137,7 +137,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       searchConditions.industries.length > 0 ||
       searchConditions.age_min || searchConditions.age_max;
     const isManualSave = urlParams.get('saved') === 'true';
-    const shouldSaveHistory = urlParams.get('search_group') && hasValidConditions && hasKeywordOrFilters && !isManualSave;
+    // search_group がURLに無い場合はサーバで取得した defaultGroupId を保存時に使用
+    const groupForSave = urlParams.get('search_group') || defaultGroupId;
+    console.log('[DEBUG] groupForSave (for history save):', groupForSave);
+    const shouldSaveHistory = groupForSave && hasValidConditions && hasKeywordOrFilters && !isManualSave;
     
     if (shouldSaveHistory) {
       console.log('[DEBUG] Saving search history...');
@@ -145,7 +148,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       // 履歴保存（エラーが発生しても処理を続行）
       const result = await saveSearchHistory({
-        group_id: urlParams.get('search_group')!,
+        group_id: groupForSave as string,
         search_conditions: searchConditions,
         search_title: searchTitle,
         is_saved: false  // 検索履歴は未保存として記録

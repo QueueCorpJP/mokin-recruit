@@ -146,8 +146,20 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
         alert(result.error || 'グループの作成に失敗しました');
         return;
       }
+      
+      // 新しいグループをローカルステートに追加
+      const newGroup: Group = {
+        id: `group-${Date.now()}`, // 一時的なID、実際はサーバーから返されるIDを使用
+        name: payload.groupName,
+        members: payload.members.map((m, index) => ({
+          id: `member-${Date.now()}-${index}`,
+          name: m.email.split('@')[0], // 仮の名前
+          email: m.email,
+          permission: m.role === 'admin' ? 'admin' : m.role === 'member' ? 'recruiter' : 'scout'
+        }))
+      };
+      setGroups(prev => [...prev, newGroup]);
       setIsCreateModalOpen(false);
-      router.refresh();
     } catch (e) {
       console.error(e);
       alert('グループの作成に失敗しました');
@@ -195,9 +207,22 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
         alert(result.error || 'メンバー削除に失敗しました');
         return;
       }
+      
+      // グループからメンバーを削除
+      setGroups(prevGroups => 
+        prevGroups.map(group => {
+          if (group.id === deleteTarget.groupId) {
+            return {
+              ...group,
+              members: group.members.filter(member => member.id !== deleteTarget.memberId)
+            };
+          }
+          return group;
+        })
+      );
+      
       setIsDeleteSuccessOpen(true);
       setDeleteTarget(null);
-      router.refresh();
     } catch (e) {
       console.error(e);
       alert('メンバー削除に失敗しました');
@@ -234,8 +259,18 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
         alert(result.error || 'グループ名の更新に失敗しました');
         return;
       }
+      
+      // グループ名を更新
+      setGroups(prevGroups =>
+        prevGroups.map(group => {
+          if (group.id === renameTarget.groupId) {
+            return { ...group, name: newName };
+          }
+          return group;
+        })
+      );
+      
       setRenameTarget(null);
-      router.refresh();
     } catch (e) {
       console.error(e);
       alert('グループ名の更新に失敗しました');
@@ -257,9 +292,29 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
         alert(result.error || 'メンバー招待に失敗しました');
         return;
       }
+      
+      // 新しいメンバーをグループに追加
+      const newMembers = members.map((m, index) => ({
+        id: `member-${Date.now()}-${index}`,
+        name: m.email.split('@')[0], // 仮の名前
+        email: m.email,
+        permission: m.role as 'admin' | 'recruiter' | 'scout'
+      }));
+      
+      setGroups(prevGroups =>
+        prevGroups.map(group => {
+          if (group.id === inviteTarget.groupId) {
+            return {
+              ...group,
+              members: [...group.members, ...newMembers]
+            };
+          }
+          return group;
+        })
+      );
+      
       setInviteTarget(null);
       setInviteCompleteOpen(true);
-      router.refresh();
     } catch (e) {
       console.error(e);
       alert('メンバー招待に失敗しました');
@@ -276,8 +331,26 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
         alert(result.error || '権限の更新に失敗しました');
         return;
       }
+      
+      // メンバーの権限を更新
+      setGroups(prevGroups =>
+        prevGroups.map(group => {
+          if (group.id === permTarget.groupId) {
+            return {
+              ...group,
+              members: group.members.map(member => {
+                if (member.id === permTarget.memberId) {
+                  return { ...member, permission: permTarget.newRoleUi };
+                }
+                return member;
+              })
+            };
+          }
+          return group;
+        })
+      );
+      
       setPermTarget(null);
-      router.refresh();
     } catch (e) {
       console.error(e);
       alert('権限の更新に失敗しました');

@@ -10,6 +10,7 @@ export interface ModalProps {
   children: React.ReactNode;
   primaryButtonText?: string;
   onPrimaryAction?: () => void;
+  primaryButtonVariant?: 'green-gradient' | 'destructive' | 'primary' | 'outline' | 'secondary' | 'ghost' | 'link' | 'green-square' | 'blue-gradient' | 'blue-outline' | 'yellow-gradient' | 'yellow-outline';
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
   width?: string;
@@ -35,6 +36,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   primaryButtonText = '決定',
   onPrimaryAction,
+  primaryButtonVariant = 'green-gradient',
   secondaryButtonText,
   onSecondaryAction,
   width = '800px',
@@ -168,7 +170,7 @@ export const Modal: React.FC<ModalProps> = ({
                 </Button>
               )}
               <Button
-                variant='green-gradient'
+                variant={primaryButtonVariant}
                 size='figma-default'
                 className='min-w-40 w-full md:w-auto'
                 onClick={onPrimaryAction}

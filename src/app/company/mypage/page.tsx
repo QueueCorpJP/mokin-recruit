@@ -1,181 +1,15 @@
 import React from 'react';
-import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { MessageButton } from './MessageButton';
-import { NewMessageList } from './NewMessageList';
-import { Message } from './NewMessageItem';
-import { CandidateCard, CandidateData } from '@/components/company/CandidateCard';
 import { CompanyTaskSidebar } from '@/components/company/CompanyTaskSidebar';
-import { CandidateListClient } from './CandidateListClient';
-import { RecommendedCandidatesSection } from '@/components/company/RecommendedCandidatesSection';
-import { createClient } from '@/lib/supabase/server';
-import { unstable_cache } from 'next/cache';
-import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
-import { getSearchHistory } from '@/lib/actions/search-history';
 import { getPublishedNotices } from '@/lib/utils/noticeHelpers';
-import { getRooms } from '@/lib/rooms';
 import { getCompanyAccountData } from '@/lib/actions/company-task-data';
-import { calculateCandidateBadge } from '@/lib/utils/candidateBadgeLogic';
+import NewMessagesSectionClient from './NewMessagesSectionClient';
+import SavedSearchRecommendationsClient from './SavedSearchRecommendationsClient';
 
-// キャッシュ付きの候補者データ取得関数
-const getCandidatesData = unstable_cache(
-  async (url: string, anonKey: string, cookiesData: any): Promise<CandidateData[]> => {
-    try {
-      const { createServerClient } = await import('@supabase/ssr');
-      const supabase = createServerClient(url, anonKey, {
-        cookies: {
-          getAll() {
-            return cookiesData;
-          },
-          setAll() {
-            // キャッシュ内では何もしない
-          },
-        },
-      });
-    
-    // 複数のテーブルから必要なデータを1回のクエリで効率的に取得
-    // N+1問題を防ぐため、関連テーブルのJOINを活用
-    const { data: candidates, error } = await supabase
-      .from('candidates')
-      .select(`
-        id,
-        last_name,
-        first_name,
-        current_company,
-        current_position,
-        prefecture,
-        gender,
-        birth_date,
-        current_income,
-        desired_salary,
-        skills,
-        experience_years,
-        desired_industries,
-        desired_job_types,
-        last_login_at,
-        recent_job_company_name,
-        recent_job_department_position,
-        recent_job_industries,
-        recent_job_types,
-        recent_job_description,
-        education(
-          final_education,
-          school_name
-        ),
-        work_experience(
-          industry_name,
-          experience_years
-        ),
-        job_type_experience(
-          job_type_name,
-          experience_years
-        ),
-        career_status_entries(
-          company_name,
-          industries,
-          progress_status
-        )
-      `)
-      .eq('status', 'ACTIVE')
-      .not('last_login_at', 'is', null) // ログイン履歴があるユーザーのみ
-      .order('last_login_at', { ascending: false })
-      .limit(10);
+export const dynamic = 'force-dynamic';
 
-    if (error) {
-      console.error('Error fetching candidates:', error);
-      return [];
-    }
-
-    // データ変換処理を最適化
-    return (candidates || []).map((candidate, index) => {
-      // 年齢計算を最適化
-      const age = candidate.birth_date 
-        ? new Date().getFullYear() - new Date(candidate.birth_date).getFullYear()
-        : null;
-
-      // 最終ログイン時間の表示を改善
-      const lastLogin = candidate.last_login_at 
-        ? formatRelativeTime(new Date(candidate.last_login_at))
-        : '未ログイン';
-
-      // 実際の職歴・業界経験データを活用
-      const experienceJobs = candidate.job_type_experience?.map(exp => exp.job_type_name) || 
-                            candidate.desired_job_types || 
-                            candidate.skills || 
-                            [];
-
-      const experienceIndustries = candidate.work_experience?.map(exp => exp.industry_name) || 
-                                  candidate.desired_industries || 
-                                  [];
-
-      // 選考中企業の実データを反映
-      const selectionCompanies = candidate.career_status_entries
-        ?.filter(entry => entry.progress_status)
-        .map(entry => ({
-          company: entry.company_name || '企業名未設定',
-          detail: Array.isArray(entry.industries) 
-            ? entry.industries.join('、') 
-            : '業界情報なし',
-          jobTypes: [] // job_typesプロパティが存在しないため空配列にする
-        })) || [{
-          company: '選考状況未登録',
-          detail: '選考詳細未登録',
-          jobTypes: []
-        }];
-
-      // 実際の職歴データから構築
-      const careerHistory = [
-        {
-          period: candidate.recent_job_company_name ? '現在' : '経歴情報未入力',
-          company: candidate.current_company || candidate.recent_job_company_name || '企業名未設定',
-          role: candidate.current_position || candidate.recent_job_department_position || '役職未設定',
-        }
-      ];
-
-      // 志向バッジの判定（共通ロジックを使用）
-      const { badgeType, badgeText } = calculateCandidateBadge({
-        recent_job_types: candidate.recent_job_types,
-        desired_job_types: candidate.desired_job_types,
-        selectionCompanies
-      });
-
-      return {
-        id: index + 1,
-        candidateId: candidate.id, // 実候補者ID（UUID）を保持
-        isPickup: false,
-        isHidden: false,
-        isAttention: index % 3 === 0, // 一時的なロジック、将来的にはユーザー設定に基づく
-        badgeType,
-        badgeText,
-        lastLogin,
-        companyName: candidate.current_company || candidate.recent_job_company_name || '企業名未設定',
-        department: candidate.recent_job_department_position || '部署名未設定',
-        position: candidate.current_position || '役職未設定',
-        location: candidate.prefecture || '未設定',
-        age: age ? `${age}歳` : '年齢未設定',
-        gender: candidate.gender === 'male' ? '男性' : 
-                candidate.gender === 'female' ? '女性' : '未設定',
-        salary: candidate.desired_salary || candidate.current_salary || candidate.current_income || '未設定',
-        university: candidate.education?.[0]?.school_name || '未設定',
-        degree: candidate.education?.[0]?.final_education || '未設定',
-        experienceJobs: experienceJobs.slice(0, 3), // 表示用に最大3つまで
-        experienceIndustries: experienceIndustries.slice(0, 3),
-        careerHistory,
-        selectionCompanies: selectionCompanies.slice(0, 3), // 表示用に最大3つまで
-      };
-    });
-    } catch (error) {
-      console.error('Error in getCandidatesData:', error);
-      // エラー時も空配列を返して、ページ表示を継続
-      return [];
-    }
-  },
-  ['candidates-mypage'], // キャッシュキー
-  {
-    revalidate: 300, // 5分間キャッシュ
-    tags: ['candidates', 'mypage']
-  }
-);
+// サーバー側での重い候補者データ取得は行わない（RLSのためクライアントで取得・先出）
 
 // 相対時間表示のヘルパー関数
 function formatRelativeTime(date: Date): string {
@@ -212,82 +46,7 @@ function formatRelativeTime(date: Date): string {
 }
 
 
-// キャッシュなしのメッセージデータ取得関数
-async function getRecentMessagesUncached(companyUserId: string): Promise<Message[]> {
-  try {
-    const supabase = await createClient();
-    
-    // まず、企業ユーザーがアクセス権限を持つルームIDを取得
-    const rooms = await getRooms(companyUserId, 'company');
-    const accessibleRoomIds = rooms.map(room => room.id);
-    
-    if (accessibleRoomIds.length === 0) {
-      console.log('No accessible rooms found for user:', companyUserId);
-      return [];
-    }
-    
-    // アクセス権限のあるルームの未読メッセージのみ取得
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        content,
-        sent_at,
-        room_id,
-        status,
-        rooms!room_id (
-          id,
-          candidate_id,
-          related_job_posting_id,
-          candidates!candidate_id (
-            first_name,
-            last_name
-          ),
-          job_postings!related_job_posting_id (
-            title
-          ),
-          company_groups!company_group_id (
-            group_name,
-            company_accounts!company_account_id (
-              company_name
-            )
-          )
-        )
-      `)
-      .eq('sender_type', 'CANDIDATE')
-      .eq('status', 'SENT') 
-      .in('room_id', accessibleRoomIds) 
-      .order('sent_at', { ascending: false })
-      .limit(3);
-
-    if (error || !messages) {
-      console.error('Error fetching messages:', error);
-      return [];
-    }
-
-    console.log('Recent unread messages fetched:', {
-      companyUserId,
-      accessibleRoomsCount: accessibleRoomIds.length,
-      unreadMessagesCount: messages.length
-    });
-
-    return messages.map((msg) => ({
-      id: msg.id,
-      date: new Date(msg.sent_at).toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }),
-      group: (msg.rooms as { company_groups?: { group_name?: string } })?.company_groups?.group_name || '不明なグループ',
-      user: `${(msg.rooms as { candidates?: { last_name?: string; first_name?: string } })?.candidates?.last_name || ''} ${(msg.rooms as { candidates?: { last_name?: string; first_name?: string } })?.candidates?.first_name || ''}`.trim() || '候補者',
-      content: msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content || '',
-      room_id: msg.room_id
-    }));
-  } catch (error) {
-    console.error('Error in getRecentMessages:', error);
-    return [];
-  }
-}
+// メッセージはクライアントセクション（NewMessagesSectionClient）で取得する
 
 export default async function CompanyMypage() {
   // 企業ユーザー認証情報を取得
@@ -305,28 +64,22 @@ export default async function CompanyMypage() {
     );
   }
 
-  const { companyUserId } = authResult.data;
-
-  // cookiesを外部で取得
+  // cookiesを外部で取得（サイドバーの軽量データのみサーバーで用意）
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   const cookiesData = cookieStore.getAll();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  // 求人データとグループデータを取得
+  const { getCompanyGroups, getUserDefaultGroupId, getSearchHistory } = await import('@/lib/actions/search-history');
   const { getJobOptions } = await import('@/lib/server/candidate/recruitment-queries');
-  const { getCompanyGroups, getUserDefaultGroupId } = await import('@/lib/actions/search-history');
-  
-  // 基本データを並列取得（検索は後で並列処理）
-  const [candidates, messages, notices, companyAccountData, jobOptions, companyGroupsResult, defaultGroupResult] = await Promise.all([
-    getCandidatesData(supabaseUrl, supabaseAnonKey, cookiesData),
-    getRecentMessagesUncached(companyUserId),
+
+  const [notices, companyAccountData, companyGroupsResult, defaultGroupResult, jobOptions] = await Promise.all([
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData),
-    getCompanyAccountData(companyUserId),
-    getJobOptions(),
+    getCompanyAccountData(authResult.data.companyUserId),
     getCompanyGroups(),
-    getUserDefaultGroupId()
+    getUserDefaultGroupId(),
+    getJobOptions(),
   ]);
 
   console.log('[DEBUG] Default group result:', defaultGroupResult);
@@ -340,149 +93,18 @@ export default async function CompanyMypage() {
       }))
     : [];
     
-  const companyGroupId = companyGroups[0]?.value || (defaultGroupResult.success ? defaultGroupResult.data.groupId : undefined);
-  
-  // デバッグ: 全ての検索履歴を取得（グループフィルタなし）
-  const allSearchHistoryResult = await getSearchHistory();
-  console.log('[DEBUG] All search history (no group filter):', allSearchHistoryResult);
-  if (allSearchHistoryResult.success) {
-    console.log('[DEBUG] All search history items found:', allSearchHistoryResult.data.length);
-    allSearchHistoryResult.data.forEach((item, index) => {
-      console.log(`[DEBUG] All history item ${index}:`, {
-        id: item.id,
-        title: item.search_title,
-        is_saved: item.is_saved,
-        group_id: item.group_id,
-        group_name: item.group_name
-      });
-    });
-  }
+  const companyGroupId = companyGroups[0]?.value ?? (defaultGroupResult.success && defaultGroupResult.data ? (defaultGroupResult.data as any).id : undefined);
 
-  // 保存された検索条件を取得（is_saved=true、3件まで）
-  const searchHistoryResult = await getSearchHistory();
-  console.log('[DEBUG] Search history result (without group filter):', searchHistoryResult);
-  console.log('[DEBUG] Search history data length:', searchHistoryResult.success ? searchHistoryResult.data.length : 0);
-  // 取得された検索履歴の詳細をログ出力
-  if (searchHistoryResult.success && searchHistoryResult.data.length > 0) {
-    console.log('[DEBUG] Detailed search history items:');
-    searchHistoryResult.data.forEach((item, index) => {
-      console.log(`[DEBUG] Item ${index}:`, {
-        id: item.id,
-        title: item.search_title,
-        is_saved: item.is_saved,
-        is_saved_type: typeof item.is_saved,
-        group_id: item.group_id,
-        group_name: item.group_name,
-        conditions: item.search_conditions
-      });
-    });
-  } else {
-    console.log('[DEBUG] No search history data available:', {
-      success: searchHistoryResult.success,
-      error: searchHistoryResult.success ? null : searchHistoryResult.error,
-      dataLength: searchHistoryResult.success ? searchHistoryResult.data?.length : null
-    });
-  }
-  
-  // まず全レコードを表示してデバッグ（一時的）
-  console.log('[DEBUG] 全検索履歴の詳細確認:');
-  if (searchHistoryResult.success && searchHistoryResult.data.length > 0) {
-    searchHistoryResult.data.forEach((item, index) => {
-      console.log(`[DEBUG] 全件チェック ${index}:`, {
-        id: item.id,
-        title: item.search_title,
-        is_saved: item.is_saved,
-        is_saved_type: typeof item.is_saved,
-        is_saved_string: String(item.is_saved),
-        raw_value: JSON.stringify(item.is_saved)
-      });
-    });
-  }
-
-  const savedSearchConditions = searchHistoryResult.success 
-    ? searchHistoryResult.data
-        .filter(history => {
-          const isSaved = history.is_saved;
-          const passes = isSaved === true || 
-                        isSaved === 'true' || 
-                        isSaved === 'TRUE' ||
-                        String(isSaved).toLowerCase() === 'true';
-          console.log('[DEBUG] フィルタリング結果:', {
-            id: history.id,
-            title: history.search_title,
-            is_saved: isSaved,
-            passes_filter: passes
-          });
-          return passes;
-        })
-        .slice(0, 3) // 最大3件まで
-    : [];
-    
-  console.log('[DEBUG] Saved search conditions count:', savedSearchConditions.length);
-  console.log('[DEBUG] Saved search conditions:', savedSearchConditions.map(item => ({
-    id: item.id,
-    title: item.search_title,
-    is_saved: item.is_saved
-  })));
-  console.log('[DEBUG] Candidates available:', candidates.length);
-  
-  // 保存された検索条件の詳細をログ出力
-  savedSearchConditions.forEach((condition, index) => {
-    console.log(`[DEBUG] Saved condition ${index}:`, {
-      title: condition.search_title,
-      group_name: condition.group_name,
-      conditions: condition.search_conditions
-    });
-  });
-
-  // おすすめ候補者データの並列生成
-  const candidateSearchPromises = savedSearchConditions.map(async (searchHistory, index) => {
-    return new Promise(resolve => {
-      // 非同期で検索処理を実行
-      setTimeout(() => {
-        console.log(`[DEBUG] Processing search condition ${index}:`, {
-          title: searchHistory.search_title,
-          conditions: searchHistory.search_conditions,
-          totalCandidates: candidates.length
-        });
-        
-        const matchingCandidates = searchCandidatesWithMockData(searchHistory.search_conditions, candidates);
-        console.log(`[DEBUG] Search condition "${searchHistory.search_title}" matched:`, matchingCandidates.length, 'candidates');
-        
-        if (matchingCandidates.length > 0) {
-          console.log(`[DEBUG] First matching candidate for "${searchHistory.search_title}":`, {
-            name: `${matchingCandidates[0].companyName} - ${matchingCandidates[0].position}`,
-            location: matchingCandidates[0].location,
-            age: matchingCandidates[0].age
-          });
-        }
-        
-        resolve({
-          searchCondition: {
-            id: searchHistory.id,
-            groupName: searchHistory.group_name,
-            title: searchHistory.search_title,
-            conditions: searchHistory.search_conditions
-          },
-          candidates: matchingCandidates.slice(0, 3) // 3名まで表示
-        });
-      }, 0);
-    });
-  });
-
-  // 検索処理を並列実行
-  const recommendedSections = await Promise.all(candidateSearchPromises);
-  console.log('[DEBUG] Final recommended sections count:', recommendedSections.length);
-  
-  // 各セクションの詳細をログ出力
-  recommendedSections.forEach((section, index) => {
-    console.log(`[DEBUG] Section ${index}:`, {
-      title: section.searchCondition.title,
-      groupName: section.searchCondition.groupName,
-      candidateCount: section.candidates.length,
-      candidateNames: section.candidates.map(c => `${c.companyName} - ${c.position}`)
-    });
-  });
+  // おすすめ候補者セクション用にサーバー側で検索履歴（保存済みが0件なら直近履歴でフォールバック）を取得
+  let initialSavedSearches: Array<{ id: string; group_name: string; search_title: string; search_conditions: any }> = [];
+  try {
+    const savedHistoryResult = await getSearchHistory(companyGroupId, 20, 0);
+    if (savedHistoryResult.success) {
+      const all = (savedHistoryResult.data as any[]) || [];
+      const saved = all.filter((h) => h.is_saved === true || String(h.is_saved).toLowerCase() === 'true');
+      initialSavedSearches = (saved.length > 0 ? saved : all).slice(0, 3);
+    }
+  } catch (_) {}
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -497,7 +119,7 @@ export default async function CompanyMypage() {
             >
               新着メッセージ
             </SectionHeading>
-            <NewMessageList messages={messages} />
+            <NewMessagesSectionClient />
             <div
               style={{
                 display: 'flex',
@@ -563,33 +185,12 @@ export default async function CompanyMypage() {
                 </div>
               </div>
             </div>
-            {/* おすすめ候補者セクション */}
-            <div className="space-y-6">
-              {recommendedSections.length > 0 ? (
-                recommendedSections.map((section, index) => (
-                  <RecommendedCandidatesSection
-                    key={`recommended-section-${section.searchCondition.id}-${index}`}
-                    searchCondition={section.searchCondition}
-                    candidates={section.candidates}
-                    companyGroupId={companyGroupId}
-                    jobOptions={jobOptions}
-                  />
-                ))
-              ) : (
-                <div className="bg-[#EFEFEF] p-6 rounded-[24px] text-center">
-                  <p
-                    className="text-[#666] text-[16px]"
-                    style={{ 
-                      fontFamily: 'Noto Sans JP, sans-serif',
-                      letterSpacing: '0.04em',
-                      lineHeight: 1.6
-                    }}
-                  >
-                    現在おすすめの候補者はいません。
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* おすすめ候補者セクション（クライアント先出） */}
+            <SavedSearchRecommendationsClient
+              companyGroupId={companyGroupId}
+              jobOptions={jobOptions}
+              initialSavedSearches={initialSavedSearches}
+            />
           </div>
           {/* 右カラム（サブ） */}
           <CompanyTaskSidebar className="md:flex-none" showTodoAndNews={true} notices={notices} companyAccountData={companyAccountData} />
