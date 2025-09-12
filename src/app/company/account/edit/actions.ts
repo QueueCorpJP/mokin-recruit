@@ -19,6 +19,8 @@ export interface CompanyAccountEditInput {
   industries: Industry[];
   businessContent: string;
   location: { prefecture: string; address: string };
+  iconUrl?: string | null;
+  imageUrls?: string[];
 }
 
 function findIndustriesByNames(names: string[]): Industry[] {
@@ -119,7 +121,7 @@ export async function saveCompanyAccountEdit(
   const { data: current, error: fetchError } = await supabase
     .from('company_accounts')
     .select(
-      'representative_name, industry, headquarters_address, company_overview'
+      'representative_name, industry, headquarters_address, company_overview, logo_url, image_urls'
     )
     .eq('id', companyAccountId)
     .maybeSingle();
@@ -145,6 +147,16 @@ export async function saveCompanyAccountEdit(
   }
   if ((current.company_overview || '') !== input.businessContent) {
     updateData.company_overview = input.businessContent;
+  }
+  if (input.iconUrl !== undefined && (current.logo_url || null) !== (input.iconUrl || null)) {
+    updateData.logo_url = input.iconUrl || null;
+  }
+  if (input.imageUrls !== undefined) {
+    const curr = Array.isArray(current.image_urls) ? current.image_urls : [];
+    const next = Array.isArray(input.imageUrls) ? input.imageUrls : [];
+    if (JSON.stringify(curr) !== JSON.stringify(next)) {
+      updateData.image_urls = next;
+    }
   }
 
   if (Object.keys(updateData).length === 0) {
