@@ -3,6 +3,7 @@
 import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import type { TaskData } from '@/app/candidate/task/_shared/types';
+import { runAction, type ActionResult } from '@/lib/server/actions/utils';
 
 export async function getCandidateTaskData(): Promise<TaskData> {
   const user = await getCachedCandidateUser();
@@ -54,4 +55,15 @@ export async function getCandidateTaskData(): Promise<TaskData> {
     console.error('Failed to fetch task data:', error);
     return { hasNewMessage: false, hasUnreadMessage: false };
   }
+}
+
+export async function getCandidateTaskDataResult(): Promise<
+  ActionResult<TaskData>
+> {
+  return runAction(
+    async () => {
+      return await getCandidateTaskData();
+    },
+    { logTag: 'getCandidateTaskData' }
+  );
 }

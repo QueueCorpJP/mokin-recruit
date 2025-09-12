@@ -7,12 +7,8 @@ import { getCareerStatusData, updateCareerStatusData } from './actions';
 import {
   careerStatusSchema,
   type CareerStatusFormData,
-} from '../../_shared/schemas/careerStatus';
-import {
-  idFor,
-  describedByIdFor,
-  ariaPropsFor,
-} from '../../_shared/utils/a11y';
+} from '../../_shared/schemas';
+import { idFor, describedByIdFor, ariaPropsFor } from '../../_shared/utils';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
 import {

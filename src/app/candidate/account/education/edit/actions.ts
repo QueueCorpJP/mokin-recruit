@@ -9,7 +9,7 @@ import {
   getCandidateData,
 } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import { educationSchema } from '../../_shared/schemas/educationSchema';
+import { educationSchema } from '../../_shared/schemas';
 import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
 
 export async function getEducationData() {

@@ -2,11 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { SALARY_OPTIONS } from '../../_shared/constants/forms';
-import {
-  idFor,
-  describedByIdFor,
-  ariaPropsFor,
-} from '../../_shared/utils/a11y';
+import { idFor, describedByIdFor, ariaPropsFor } from '../..//_shared/utils';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { getExpectationData, updateExpectationData } from './actions';

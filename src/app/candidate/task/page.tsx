@@ -6,14 +6,16 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import TaskList from './TaskList';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { getCandidateTaskData } from '@/app/candidate/task/_shared/server/getTaskData';
+import { getCandidateTaskDataResult } from '@/app/candidate/task/_shared/server/getTaskData';
 import type { TaskData } from '@/app/candidate/task/_shared/types';
 
 // Room 型は getRooms 側の戻り値型を参照しており、ここでは未使用
 
 async function getTaskData(): Promise<TaskData> {
   // レイアウトでSSR認証済みのため、ここでのリダイレクトは不要
-  return getCandidateTaskData();
+  const result = await getCandidateTaskDataResult();
+  if (result.success && result.data) return result.data;
+  return { hasNewMessage: false, hasUnreadMessage: false };
 }
 
 export default async function CandidateTaskPage() {
