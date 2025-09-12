@@ -4,20 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
-import { Modal } from '@/components/ui/mo-dal';
-import { LocationModal } from '@/app/company/job/LocationModal';
+// import { Modal } from '@/components/ui/mo-dal';
+// import { LocationModal } from '@/app/company/job/LocationModal';
 import { ScoutTicketLimitModal } from '@/components/scout/ScoutTicketLimitModal';
 import Link from 'next/link';
 import {
-  sendScout,
   getCompanyGroupOptions,
   getJobPostingOptions,
   getCompanyUserOptions,
   getScoutTemplateOptions,
   getScoutTicketsRemaining,
   getCandidateName,
-  type ScoutSendFormData,
 } from './actions';
+import { useScoutSendStore } from '@/stores/scoutSendStore';
 
 // Mail Icon Component
 const MailIcon = () => (
@@ -58,6 +57,8 @@ interface ScoutSendFormProps {
 export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const setDraft = useScoutSendStore((s) => s.setDraft);
+  const getDraft = useScoutSendStore((s) => s.getDraft);
   
   // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
   const candidateIdFromProps = candidateId || 'CND-2024-00123';
@@ -93,7 +94,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   });
 
   // 動的データ管理
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [groupOptions, setGroupOptions] = useState([{ value: '', label: '未選択' }]);
   const [jobPostingOptions, setJobPostingOptions] = useState([{ value: '', label: '未選択' }]);
   const [companyUserOptions, setCompanyUserOptions] = useState([{ value: '', label: '未選択' }]);
@@ -102,7 +103,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   // チケット管理
   const [scoutTicketsRemaining, setScoutTicketsRemaining] = useState(0);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
-  const [isTicketLoading, setIsTicketLoading] = useState(false);
+  // const [isTicketLoading, setIsTicketLoading] = useState(false);
 
   // 現在のユーザー情報（実際はContextやAPIから取得）
   const currentUserName = '山田 太郎'; // デフォルトのユーザー名
@@ -111,8 +112,8 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setIsLoading(true);
-        setIsTicketLoading(true);
+        // setIsLoading(true);
+        // setIsTicketLoading(true);
         
         // 並行してデータを取得
         const [groups, ticketsRemaining, name] = await Promise.all([
@@ -127,13 +128,21 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       } catch (error) {
         console.error('初期データの読み込みに失敗:', error);
       } finally {
-        setIsLoading(false);
-        setIsTicketLoading(false);
+        // setIsLoading(false);
+        // setIsTicketLoading(false);
       }
     };
 
     loadInitialData();
   }, []);
+
+  // sessionStorage に保存してあるドラフトから初期値を復元
+  useEffect(() => {
+    const saved = getDraft(candidateIdFromProps);
+    if (saved) {
+      setFormData((prev) => ({ ...prev, ...saved }));
+    }
+  }, [candidateIdFromProps, getDraft]);
 
   // 候補者IDが変更された場合にフォームデータを更新
   useEffect(() => {
@@ -141,6 +150,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       ...prev,
       candidateId: candidateIdFromProps
     }));
+    setDraft(candidateIdFromProps, { candidateId: candidateIdFromProps });
   }, [candidateIdFromProps]);
 
   // グループ選択時の動的データ更新
@@ -188,6 +198,8 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         newData.scoutTemplate = '';
       }
 
+      // ドラフト保存
+      setDraft(candidateIdFromProps, newData);
       return newData;
     });
 
@@ -198,13 +210,21 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
   const handleInputChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: e.target.value };
+        setDraft(candidateIdFromProps, newData);
+        return newData;
+      });
       setErrors((prev) => ({ ...prev, [field]: '' }));
       setTouched((prev) => ({ ...prev, [field]: true }));
     };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, message: e.target.value }));
+    setFormData((prev) => {
+      const newData = { ...prev, message: e.target.value };
+      setDraft(candidateIdFromProps, newData);
+      return newData;
+    });
     setErrors((prev) => ({ ...prev, message: '' }));
     setTouched((prev) => ({ ...prev, message: true }));
   };
@@ -291,11 +311,15 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       );
 
       if (selectedTemplate && 'subject' in selectedTemplate && 'body' in selectedTemplate) {
-        setFormData((prev) => ({
-          ...prev,
-          title: typeof (selectedTemplate as any).subject === 'string' ? (selectedTemplate as any).subject : '',
-          message: typeof (selectedTemplate as any).body === 'string' ? (selectedTemplate as any).body : '',
-        }));
+        setFormData((prev) => {
+          const updated = {
+            ...prev,
+            title: typeof (selectedTemplate as any).subject === 'string' ? (selectedTemplate as any).subject : '',
+            message: typeof (selectedTemplate as any).body === 'string' ? (selectedTemplate as any).body : '',
+          };
+          setDraft(candidateIdFromProps, updated);
+          return updated;
+        });
         // テンプレート適用時はエラーをクリア
         setErrors((prev) => ({
           ...prev,
@@ -309,10 +333,11 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   // グループ選択時に送信者名をデフォルト設定
   useEffect(() => {
     if (formData.group && !formData.scoutSenderName) {
-      setFormData((prev) => ({
-        ...prev,
-        scoutSenderName: currentUserName,
-      }));
+      setFormData((prev) => {
+        const updated = { ...prev, scoutSenderName: currentUserName };
+        setDraft(candidateIdFromProps, updated);
+        return updated;
+      });
     }
   }, [formData.group, formData.scoutSenderName, currentUserName]);
 
