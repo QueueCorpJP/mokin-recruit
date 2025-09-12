@@ -224,7 +224,8 @@ export function SearchHistoryTable({
     try {
       if (!editModal.item) return;
       const id = editModal.item.id;
-      const { error } = await supabase
+      const supa = supabase as any;
+      const { error } = await supa
         .from('search_history')
         .update({
           search_title: newTitle,
