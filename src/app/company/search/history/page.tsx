@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCachedCompanyUser } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { SearchHistoryClient } from './SearchHistoryClient';
 import { getSearchHistory } from '@/lib/actions/search-history';
 import { redirect } from 'next/navigation';
@@ -7,11 +7,16 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function SearchHistoryPage() {
-  // 企業ユーザー認証
-  const companyUser = await getCachedCompanyUser();
-  
-  if (!companyUser) {
-    redirect('/company/auth/login');
+  // 企業ユーザー認証（統一パターン）
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    return (
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
   }
 
   // サーバーサイドで検索履歴を取得（WHEREによる手動フィルタリング）
@@ -35,7 +40,7 @@ export default async function SearchHistoryPage() {
     <SearchHistoryClient 
       initialSearchHistory={initialSearchHistory}
       initialError={error}
-      companyUserId={companyUser.id}
+      companyUserId={auth.data.companyUserId}
     />
   );
 }

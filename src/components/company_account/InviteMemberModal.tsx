@@ -5,7 +5,7 @@ import { Modal } from '../ui/mo-dal';
 import { Input } from '../ui/input';
 import { SelectInput } from '../ui/select-input';
 import { Button } from '../ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -129,11 +129,22 @@ export function InviteMemberModal({
                   <Button
                     onClick={() => handleRemoveMember(member.id)}
                     variant="ghost"
-                    size="icon"
-                    className="w-8 h-8 text-[#999999] hover:text-[#323232]"
+                    className="p-2 w-8 h-8 text-[#999999] hover:text-[#323232]"
                     aria-label="remove-row"
                   >
-                    ×
+                    <svg 
+                      className="size-6"
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                   </Button>
                 )}
               </div>

@@ -116,21 +116,22 @@ async function getTaskData(): Promise<LegacyTaskData> {
 }
 
 export default async function CompanyTaskPage() {
-  const user = await getCachedCompanyUser();
-  
-  // 新しい形式のタスクデータを直接使用
-  const taskData = await getCompanyTaskData();
-
-  // サイドバーのプラン表示用データ（サーバー側で確実に取得して渡す）
-  let companyAccountData = null as Awaited<ReturnType<typeof getCompanyAccountData>>;
-  try {
-    const authResult = await requireCompanyAuthForAction();
-    if (authResult.success) {
-      companyAccountData = await getCompanyAccountData(authResult.data.companyUserId);
-    }
-  } catch (e) {
-    // noop: フォールバックはクライアント側取得に任せる
+  const authResult = await requireCompanyAuthForAction();
+  if (!authResult.success) {
+    return (
+      <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20">
+        <main className="w-full max-w-[1280px] mx-auto">
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
   }
+
+  // 新しい形式のタスクデータを直接使用（並列化）
+  const [taskData, companyAccountData] = await Promise.all([
+    getCompanyTaskData(),
+    getCompanyAccountData(authResult.data.companyUserId).catch(() => null),
+  ]);
 
   const headingListStyle: React.CSSProperties = {
     display: 'flex',

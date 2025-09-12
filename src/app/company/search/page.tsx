@@ -1,22 +1,23 @@
 import React from 'react';
 import Search from './SearchClient';
-import { getCachedCompanyUser } from '@/lib/auth/server';
-import { getSavedSearches } from './actions';
 
 export default async function SearchPage() {
-  const companyUser = await getCachedCompanyUser();
-  let savedSearches = [];
+  const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
+  const authResult = await requireCompanyAuthForAction();
 
-  if (companyUser) {
-    const result = await getSavedSearches(companyUser.id, companyUser.group_id || '');
-    if (result.success) {
-      savedSearches = result.data;
-    }
+  if (!authResult.success) {
+    return (
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
   }
 
   return (
     <div>
-      <Search companyId={companyUser?.id || ''} />
+      <Search companyId={authResult.data.companyUserId} />
     </div>
   );
 }
