@@ -1,7 +1,6 @@
 'use server';
 
-import { getCachedCompanyUser } from '@/lib/auth/server';
-import { createServerAdminClient } from '@/lib/supabase/server-admin';
+import { getCachedCompanyUser, requireCompanyAuthForAction, getCompanySupabaseClient } from '@/lib/auth/server';
 import { formatCandidateName } from './utils';
 
 export interface TaskData {
@@ -85,27 +84,22 @@ export async function getCompanyTaskData(): Promise<TaskData> {
     };
   }
 
-  const supabase = createServerAdminClient();
-  
-  // Supabase Auth IDからCompany User IDと権限情報を取得
-  let companyUserId = user.id;
-  let companyAccountId = user.user_metadata?.company_account_id;
-  
-  // Company User IDとアカウント情報を正確に取得
-  const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
-  if (authUser.user) {
-    const { data: companyUser, error } = await supabase
-      .from('company_users')
-      .select('id, company_account_id')
-      .eq('email', authUser.user.email)
-      .single();
-    
-    if (companyUser && !error) {
-      companyUserId = companyUser.id;
-      companyAccountId = companyUser.company_account_id;
+  const supabase = await getCompanySupabaseClient();
+
+  // requireCompanyAuthForAction で companyUserId / companyAccountId を決定
+  let companyUserId = user.user_metadata?.company_user_id || user.id;
+  let companyAccountId = user.user_metadata?.company_account_id as string | undefined;
+
+  try {
+    const authResult = await requireCompanyAuthForAction();
+    if (authResult.success) {
+      companyUserId = authResult.data.companyUserId;
+      companyAccountId = authResult.data.companyAccountId;
     }
+  } catch (_) {
+    // noop: user_metadata の値をフォールバック使用
   }
-  
+
   if (!companyAccountId) {
     console.error('❌ Company account ID not found');
     return {
@@ -117,17 +111,18 @@ export async function getCompanyTaskData(): Promise<TaskData> {
       hasUnregisteredInterviewResult: false,
     };
   }
-  
+
   // ユーザーの権限に基づいてアクセス可能なグループIDを取得
   const { data: permissions } = await supabase
     .from('company_user_group_permissions')
     .select('company_group_id, permission_level')
     .eq('company_user_id', companyUserId);
-  
+
   let companyGroupIds: string[] = [];
-  
+  let hasAdminPermission = false;
+
   if (permissions && permissions.length > 0) {
-    const hasAdminPermission = permissions.some(p => p.permission_level === 'ADMINISTRATOR');
+    hasAdminPermission = permissions.some(p => p.permission_level === 'ADMINISTRATOR');
     
     if (hasAdminPermission) {
       // ADMINの場合は同じcompany_accountの全グループ
@@ -163,9 +158,9 @@ export async function getCompanyTaskData(): Promise<TaskData> {
       interviewResults
     ] = await Promise.all([
       getJobPostings(companyAccountId),
-      getApplications(companyAccountId, companyGroupIds),
-      getMessages(companyUserId), // companyUserIdを渡す
-      getInterviewResults(companyAccountId, companyGroupIds)
+      getApplications(supabase, companyAccountId, companyGroupIds, hasAdminPermission),
+      getMessages(supabase, companyGroupIds),
+      getInterviewResults(supabase, companyAccountId, companyGroupIds, hasAdminPermission)
     ]);
 
     console.log('📊 Raw data fetched:', {
@@ -285,7 +280,7 @@ export async function getCompanyTaskData(): Promise<TaskData> {
  * 求人情報を取得
  */
 async function getJobPostings(companyAccountId: string) {
-  const supabase = createServerAdminClient();
+  const supabase = await getCompanySupabaseClient();
   const { data, error } = await supabase
     .from('job_postings')
     .select('id, status')
@@ -304,8 +299,12 @@ async function getJobPostings(companyAccountId: string) {
 /**
  * 応募情報を取得
  */
-async function getApplications(companyAccountId: string, companyGroupIds: string[]) {
-  const supabase = createServerAdminClient();
+async function getApplications(supabase: any, companyAccountId: string, companyGroupIds: string[], hasAdminPermission: boolean) {
+  // 権限がなくグループが取得できなかった場合は0件
+  if (!hasAdminPermission && companyGroupIds.length === 0) {
+    return [];
+  }
+
   const query = supabase
     .from('application')
     .select(`
@@ -335,8 +334,8 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
     .eq('company_account_id', companyAccountId)
     .order('created_at', { ascending: false });
 
-  // グループIDがある場合はフィルタリング
-  if (companyGroupIds.length > 0) {
+  // ADMINは全グループ、それ以外は所属グループのみ
+  if (!hasAdminPermission) {
     query.in('company_group_id', companyGroupIds);
   }
 
@@ -355,39 +354,13 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
 /**
  * メッセージ情報を取得（mypageと同じアプローチを使用）
  */
-async function getMessages(companyUserId: string) {
-  const supabase = createServerAdminClient();
-  
-  console.log('🔍 [TASK DEBUG] getMessages called with companyUserId:', companyUserId);
-  
-  // mypageと同じ方法：getRooms関数を使用してアクセス可能なルームを取得
-  const { getRooms } = await import('@/lib/rooms');
-  const rooms = await getRooms(companyUserId, 'company');
-  const accessibleRoomIds = rooms.map(room => room.id);
-  
-  // roomsデータをMapに変換してO(1)でアクセスできるようにする
-  const roomsMap = new Map();
-  rooms.forEach(room => {
-    roomsMap.set(room.id, room);
-  });
-  
-  console.log('📋 [TASK DEBUG] Accessible rooms from getRooms:', {
-    roomsCount: rooms.length,
-    accessibleRoomIds,
-    sampleRooms: rooms.slice(0, 2).map(r => ({
-      id: r.id,
-      candidateName: r.candidateName,
-      companyName: r.companyName,
-      groupName: r.groupName
-    }))
-  });
-  
-  if (accessibleRoomIds.length === 0) {
-    console.log('❌ [TASK DEBUG] No accessible rooms found for user:', companyUserId);
+async function getMessages(supabase: any, companyGroupIds: string[]) {
+  // 権限がなくグループが取得できなかった場合は0件
+  if (companyGroupIds.length === 0) {
     return [];
   }
 
-  // 候補者からの未読メッセージを取得（リアルタイムでステータスをチェック）
+  // 候補者からの未読メッセージを取得（所属グループのルームに限定）
   const { data, error } = await supabase
     .from('messages')
     .select(`
@@ -398,7 +371,7 @@ async function getMessages(companyUserId: string) {
       sent_at,
       read_at,
       room_id,
-      rooms!room_id (
+      rooms!inner (
         id,
         candidate_id,
         related_job_posting_id,
@@ -421,8 +394,8 @@ async function getMessages(companyUserId: string) {
       )
     `)
     .eq('sender_type', 'CANDIDATE')
-    .eq('status', 'SENT') // 未読メッセージのみ（リアルタイムでチェック）
-    .in('room_id', accessibleRoomIds) // getRoomsで取得したアクセス可能なルームIDを使用
+    .eq('status', 'SENT')
+    .in('rooms.company_group_id', companyGroupIds)
     .order('sent_at', { ascending: false });
 
   console.log('💬 [TASK DEBUG] Messages query result:', {
@@ -466,10 +439,12 @@ async function getMessages(companyUserId: string) {
  * 面接結果情報を取得
  * ※実際のテーブル構造に応じて調整が必要
  */
-async function getInterviewResults(companyAccountId: string, companyGroupIds: string[]) {
+async function getInterviewResults(supabase: any, companyAccountId: string, companyGroupIds: string[], hasAdminPermission: boolean) {
+  if (!hasAdminPermission && companyGroupIds.length === 0) {
+    return [];
+  }
   // 面接済みだが選考結果が未登録の応募を取得
   // statusがRESPONDED（企業が返信済み、面接設定済み）で、72時間以上経過したものを探す
-  const supabase = createServerAdminClient();
   const query = supabase
     .from('application')
     .select(`
@@ -500,7 +475,7 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
     .eq('status', 'RESPONDED') // 面接設定済みのステータス
     .order('updated_at', { ascending: false });
 
-  if (companyGroupIds.length > 0) {
+  if (!hasAdminPermission) {
     query.in('company_group_id', companyGroupIds);
   }
 
@@ -693,22 +668,56 @@ export async function markTasksAsRead(taskIds: string[], taskType: string) {
   const user = await getCachedCompanyUser();
   if (!user) return { success: false, error: 'User not authenticated' };
 
-  const supabase = createServerAdminClient();
+  const supabase = await getCompanySupabaseClient();
 
   try {
+    // 権限チェックとアクセス可能グループの算出
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) throw new Error('Unauthorized');
+
+    const companyUserId = authResult.data.companyUserId;
+    const companyAccountId = authResult.data.companyAccountId;
+
+    const { data: permissions } = await supabase
+      .from('company_user_group_permissions')
+      .select('company_group_id, permission_level')
+      .eq('company_user_id', companyUserId);
+
+    const isAdmin = (permissions || []).some(p => p.permission_level === 'ADMINISTRATOR');
+    let accessibleGroupIds: string[] = [];
+    if (isAdmin) {
+      const { data: allGroups } = await supabase
+        .from('company_groups')
+        .select('id')
+        .eq('company_account_id', companyAccountId);
+      accessibleGroupIds = allGroups?.map(g => g.id) || [];
+    } else {
+      accessibleGroupIds = (permissions || []).map(p => p.company_group_id);
+    }
+
     switch (taskType) {
       case 'APPLICATION':
-        // 応募を既読（READ）に更新
+        if (!isAdmin && accessibleGroupIds.length === 0) throw new Error('No access groups');
+        // 応募を既読（READ）に更新（スコープ制限）
         const { error: appError } = await supabase
           .from('application')
           .update({ status: 'READ', updated_at: new Date().toISOString() })
-          .in('id', taskIds);
+          .in('id', taskIds)
+          .eq('company_account_id', companyAccountId)
+          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds);
         
         if (appError) throw appError;
         break;
       
       case 'MESSAGE':
-        // メッセージを既読に更新
+        if (!isAdmin && accessibleGroupIds.length === 0) throw new Error('No access groups');
+        // アクセス可能なルームIDを取得
+        const { data: rooms } = await supabase
+          .from('rooms')
+          .select('id, company_group_id')
+          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds);
+        const accessibleRoomIds = (rooms || []).map(r => r.id);
+        // メッセージを既読に更新（スコープ制限）
         const { error: msgError } = await supabase
           .from('messages')
           .update({ 
@@ -716,7 +725,8 @@ export async function markTasksAsRead(taskIds: string[], taskType: string) {
             read_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .in('id', taskIds);
+          .in('id', taskIds)
+          .in('room_id', accessibleRoomIds);
         
         if (msgError) throw msgError;
         break;
@@ -736,9 +746,33 @@ export async function getTaskDetails(taskId: string, taskType: string) {
   const user = await getCachedCompanyUser();
   if (!user) return null;
 
-  const supabase = createServerAdminClient();
+  const supabase = await getCompanySupabaseClient();
 
   try {
+    // 権限チェックとアクセス可能グループの算出
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) throw new Error('Unauthorized');
+
+    const companyUserId = authResult.data.companyUserId;
+    const companyAccountId = authResult.data.companyAccountId;
+
+    const { data: permissions } = await supabase
+      .from('company_user_group_permissions')
+      .select('company_group_id, permission_level')
+      .eq('company_user_id', companyUserId);
+
+    const isAdmin = (permissions || []).some(p => p.permission_level === 'ADMINISTRATOR');
+    let accessibleGroupIds: string[] = [];
+    if (isAdmin) {
+      const { data: allGroups } = await supabase
+        .from('company_groups')
+        .select('id')
+        .eq('company_account_id', companyAccountId);
+      accessibleGroupIds = allGroups?.map(g => g.id) || [];
+    } else {
+      accessibleGroupIds = (permissions || []).map(p => p.company_group_id);
+    }
+
     switch (taskType) {
       case 'APPLICATION':
         const { data: appData } = await supabase
@@ -749,6 +783,8 @@ export async function getTaskDetails(taskId: string, taskType: string) {
             job_postings!job_posting_id (*)
           `)
           .eq('id', taskId)
+          .eq('company_account_id', companyAccountId)
+          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds)
           .single();
         
         return appData;
@@ -758,13 +794,14 @@ export async function getTaskDetails(taskId: string, taskType: string) {
           .from('messages')
           .select(`
             *,
-            rooms!room_id (
+            rooms!inner (
               *,
               candidates!candidate_id (*),
               job_postings!related_job_posting_id (*)
             )
           `)
           .eq('id', taskId)
+          .in('rooms.company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds)
           .single();
         
         return msgData;

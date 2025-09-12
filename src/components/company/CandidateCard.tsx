@@ -5,6 +5,7 @@ import Image from 'next/image';
 
 export interface CandidateData {
   id: number;
+  candidateId?: string; // 実テーブルの候補者UUID（スライドメニュー用）
   isPickup: boolean;
   isHidden: boolean;
   isAttention: boolean;

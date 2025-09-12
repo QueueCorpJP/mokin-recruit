@@ -2,6 +2,7 @@
 
 import { createServerActionClient } from '@/lib/supabase/server';
 import type { CandidateData } from '@/components/company/CandidateCard';
+import { calculateCandidateBadge } from '@/lib/utils/candidateBadgeLogic';
 
 // 検索条件の型定義
 interface SearchConditions {
@@ -273,47 +274,22 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         role: candidate.current_position || candidate.recent_job_department_position || '役職未設定'
       }];
 
-      // バッジタイプとテキストの判定ロジック
-      const determineBadge = (candidate: any) => {
-        // より確実な判定のため複数の条件を使用
-
-        // 多職種志向の判定条件を拡張
-        const hasMultipleJobTypes = experienceJobs.length >= 3; // 3種類以上の職種経験
-        const hasMultipleIndustries = experienceIndustries.length >= 2; // 2種類以上の業界経験
-        const hasSelectionVariety = selectionCompanies.length >= 2; // 複数企業選考中
-
-        if (hasMultipleJobTypes || (hasMultipleIndustries && hasSelectionVariety)) {
-          return { type: 'multiple' as const, text: '多職種志向' };
-        }
-
-        // 専門性追求志向の判定条件を拡張
-        const currentJobType = candidate.current_position || candidate.recent_job_department_position || '';
-        const isExperienced = candidate.experience_years >= 3; // 3年以上の経験
-        const isSingleIndustry = experienceIndustries.length <= 1; // 特定業界に集中
-        
-        // 専門職キーワードをチェック
-        const professionalKeywords = ['エンジニア', 'デザイナー', 'コンサルタント', 'アナリスト', 'スペシャリスト', 'マネージャー'];
-        const hasProfessionalTitle = professionalKeywords.some(keyword => 
-          currentJobType.includes(keyword)
-        );
-
-        if (isExperienced && (isSingleIndustry || hasProfessionalTitle)) {
-          return { type: 'professional' as const, text: '専門性追求志向' };
-        }
-
-        // キャリアチェンジ志向（デフォルト）
-        return { type: 'change' as const, text: 'キャリアチェンジ志向' };
-      };
-
-      const badge = determineBadge(candidate);
+      // 志向バッジの判定（共通ロジックを使用）
+      const { badgeType, badgeText } = calculateCandidateBadge({
+        recent_job_types: candidate.recent_job_types,
+        desired_job_types: candidate.desired_job_types,
+        selectionCompanies: selectionCompanies.map(company => ({
+          jobTypes: [] // 既存のselectionCompaniesにjobTypesがない場合は空配列
+        }))
+      });
 
       return {
         id: candidate.id,
         isPickup: false,
         isHidden: false,
         isAttention: isAttentionWorthy(),
-        badgeType: badge.type,
-        badgeText: badge.text,
+        badgeType,
+        badgeText,
         lastLogin: getLastLoginText(candidate.last_login_at),
         companyName: candidate.current_company || candidate.recent_job_company_name || '企業名未設定',
         department: candidate.recent_job_department_position || '部署名未設定',

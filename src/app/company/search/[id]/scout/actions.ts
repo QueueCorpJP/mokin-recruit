@@ -21,6 +21,23 @@ export interface ScoutSendResult {
   error?: string;
 }
 
+// 表示用: 候補者名を取得
+export async function getCandidateName(candidateId: string): Promise<string> {
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('first_name, last_name')
+      .eq('id', candidateId)
+      .maybeSingle();
+    if (error || !data) return '';
+    const fullName = `${data.last_name || ''} ${data.first_name || ''}`.trim();
+    return fullName;
+  } catch {
+    return '';
+  }
+}
+
 export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendResult> {
   const supabase = await createClient();
   

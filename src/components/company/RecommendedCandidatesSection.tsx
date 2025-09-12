@@ -55,7 +55,7 @@ export function RecommendedCandidatesSection({
     setSelectedCandidate(null);
   };
 
-  const handleJobChange = (candidateId: string, jobId: string) => {
+  const handleJobChange = (_candidateId: string, _jobId: string) => {
     // Job change logic if needed
   };
 
@@ -187,15 +187,19 @@ export function RecommendedCandidatesSection({
       </Link>
 
       {/* Candidate Slide Menu */}
-      <CandidateSlideMenu
-        isOpen={isSlideMenuOpen}
-        onClose={handleCloseSlideMenu}
-        candidateId={selectedCandidate?.id.toString()}
-        candidateData={selectedCandidate}
-        companyGroupId={companyGroupId}
-        jobOptions={jobOptions}
-        onJobChange={handleJobChange}
-      />
+      {(() => {
+        const cid = selectedCandidate ? (selectedCandidate.candidateId || selectedCandidate.id.toString()) : undefined;
+        return (
+          <CandidateSlideMenu
+            isOpen={isSlideMenuOpen}
+            onClose={handleCloseSlideMenu}
+            {...(cid ? { candidateId: cid } : {})}
+            {...(companyGroupId ? { companyGroupId } : {})}
+            jobOptions={jobOptions}
+            onJobChange={handleJobChange}
+          />
+        );
+      })()}
     </div>
   );
 }

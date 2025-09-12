@@ -65,8 +65,7 @@ export function CandidateListClient({
       <CandidateSlideMenu
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
-        candidateId={selectedCandidate?.id.toString()}
-        candidateData={selectedCandidate}
+        {...(selectedCandidate ? { candidateId: selectedCandidate.candidateId || selectedCandidate.id.toString() } : {})}
         companyGroupId={companyGroupId}
         jobOptions={jobOptions}
         onJobChange={handleJobChange}
