@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
-import { profileSchema } from '../../_shared/schemas/profileSchema';
+import { profileSchema } from '../../_shared/schemas';
 
 // フォームデータの型定義
 export interface ProfileUpdateData {

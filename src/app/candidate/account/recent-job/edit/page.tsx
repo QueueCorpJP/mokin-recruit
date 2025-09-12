@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useFieldArray } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { getRecentJobData, updateRecentJobData } from './actions';
-import {
-  recentJobSchema,
-  type RecentJobFormData,
-} from '../../_shared/schemas/recentJob';
+import { recentJobSchema, type RecentJobFormData } from '../../_shared/schemas';
 import { useEditForm } from '../../_shared/hooks/useEditForm';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';

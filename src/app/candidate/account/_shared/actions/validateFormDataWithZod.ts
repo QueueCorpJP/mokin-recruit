@@ -10,15 +10,28 @@ import { ZodSchema, ZodError, ZodTypeAny } from 'zod';
  */
 export async function validateFormDataWithZod<T extends ZodTypeAny>(
   schema: T,
-  formData: FormData
+  formData: FormData,
+  options?: {
+    // zod検証前にFormData->Objectへ変換した後の前処理を差し込むための変換関数
+    transform?: (obj: Record<string, any>) => Record<string, any>;
+  }
 ): Promise<
   | { success: true; data: ReturnType<T['parse']> }
   | { success: false; errors: Record<string, string[]>; message: string }
 > {
   // FormDataをオブジェクトに変換
-  const obj: Record<string, any> = {};
+  let obj: Record<string, any> = {};
   for (const [key, value] of formData.entries()) {
     obj[key] = value;
+  }
+
+  // 事前変換（JSONフィールドのパース等）
+  if (options?.transform) {
+    try {
+      obj = options.transform(obj);
+    } catch (e) {
+      // 変換で致命的エラーが出た場合はそのままzodへ（zodが適切にエラー化）
+    }
   }
 
   // zodでバリデーション

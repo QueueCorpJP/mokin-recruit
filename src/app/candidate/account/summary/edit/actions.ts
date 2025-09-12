@@ -7,7 +7,8 @@ import {
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
-import { summarySchema } from '../../_shared/schemas/summarySchema';
+import { type ActionResult, fail, ok } from '@/lib/server/actions/utils';
+import { summarySchema } from '../../_shared/schemas';
 
 export async function getSummaryData() {
   try {
@@ -31,29 +32,19 @@ export async function getSummaryData() {
   }
 }
 
-export async function updateSummaryData(formData: FormData) {
+export async function updateSummaryData(
+  formData: FormData
+): Promise<ActionResult<{ updated: boolean }>> {
   try {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
-    if (!authResult.success) {
-      return {
-        success: false,
-        errors: {},
-        message: authResult.error,
-      };
-    }
+    if (!authResult.success) return fail(authResult.error);
 
     const { candidateId } = authResult.data;
 
     // 共通ユーティリティでバリデーション・型変換
     const validation = await validateFormDataWithZod(summarySchema, formData);
-    if (!validation.success) {
-      return {
-        success: false,
-        errors: validation.errors,
-        message: validation.message,
-      };
-    }
+    if (!validation.success) return fail(validation.message, validation.errors);
     const { jobSummary, selfPr } = validation.data;
 
     const supabase = await getSupabaseServerClient();
@@ -66,20 +57,10 @@ export async function updateSummaryData(formData: FormData) {
       })
       .eq('id', candidateId);
 
-    if (candidateError) {
-      return {
-        success: false,
-        errors: {},
-        message: '概要の更新に失敗しました',
-      };
-    }
+    if (candidateError) return fail('概要の更新に失敗しました');
 
-    return { success: true, errors: {}, message: '更新に成功しました' };
+    return ok('更新に成功しました', { updated: true });
   } catch (error) {
-    return {
-      success: false,
-      errors: {},
-      message: error instanceof Error ? error.message : '更新に失敗しました',
-    };
+    return fail(error instanceof Error ? error.message : '更新に失敗しました');
   }
 }

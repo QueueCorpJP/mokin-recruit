@@ -6,7 +6,7 @@ import {
 } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { parseJsonField } from '../../_shared/utils/formData';
-import { updateOrInsertByKey } from '../../_shared/server/upsert';
+import { updateOrInsertByKey } from '@/lib/server/db/upsert';
 
 export async function getExpectationData() {
   try {

@@ -1,16 +1,24 @@
 import { notFound, redirect } from 'next/navigation';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import { getSidebarData, getRelatedArticles } from '@/app/candidate/media/actions';
+import {
+  getSidebarData,
+  getRelatedArticles,
+} from '@/app/candidate/media/actions';
 import MediaDetailClient from './MediaDetailClient';
+import {
+  parseArticleContent,
+  formatArticleCards,
+} from '@/app/candidate/media/_shared/utils';
 import type { Metadata } from 'next';
 
 // 記事詳細を取得する関数
 async function getArticleData(mediaId: string) {
   const supabase = await getSupabaseServerClient();
-  
+
   const { data, error } = await supabase
     .from('articles')
-    .select(`
+    .select(
+      `
       *,
       article_category_relations (
         article_categories (*)
@@ -18,7 +26,8 @@ async function getArticleData(mediaId: string) {
       article_tag_relations (
         article_tags (*)
       )
-    `)
+    `
+    )
     .eq('id', mediaId)
     .single();
 
@@ -29,32 +38,21 @@ async function getArticleData(mediaId: string) {
   return data;
 }
 
-// 関連記事を取得してフォーマットする関数
-function formatArticles(articles: any[]) {
-  return articles.map(article => ({
-    id: article.id,
-    date: new Date(article.published_at || article.created_at).toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }),
-    categories: article.categories || ['メディア'],
-    tags: article.tags || [],
-    title: article.title,
-    description: article.excerpt || 'No description available',
-    imageUrl: article.thumbnail_url || '/images/media01.jpg'
-  }));
-}
+// 関連記事のフォーマットは共通ユーティリティに委譲
 
 // メタデータ生成
-export async function generateMetadata({ params }: { params: Promise<{ media_id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ media_id: string }>;
+}): Promise<Metadata> {
   const resolvedParams = await params;
   const article = await getArticleData(resolvedParams.media_id);
-  
+
   if (!article) {
     return {
       title: '記事が見つかりません',
-      description: '指定された記事は存在しません'
+      description: '指定された記事は存在しません',
     };
   }
 
@@ -65,14 +63,18 @@ export async function generateMetadata({ params }: { params: Promise<{ media_id:
       title: article.title,
       description: article.excerpt || '',
       images: article.thumbnail_url ? [article.thumbnail_url] : [],
-    }
+    },
   };
 }
 
-export default async function MediaDetailPage({ params }: { params: Promise<{ media_id: string }> }) {
+export default async function MediaDetailPage({
+  params,
+}: {
+  params: Promise<{ media_id: string }>;
+}) {
   const resolvedParams = await params;
   const mediaId = resolvedParams.media_id;
-  
+
   if (!mediaId) {
     notFound();
   }
@@ -81,7 +83,7 @@ export default async function MediaDetailPage({ params }: { params: Promise<{ me
   const [article, sidebarData, relatedArticles] = await Promise.all([
     getArticleData(mediaId),
     getSidebarData(),
-    getRelatedArticles(mediaId, 6)
+    getRelatedArticles(mediaId, 6),
   ]);
 
   if (!article) {
@@ -92,37 +94,15 @@ export default async function MediaDetailPage({ params }: { params: Promise<{ me
     redirect('/candidate/media');
   }
 
-  // content フィールドの安全な解析
-  const parseContent = (content: any): any => {
-    if (!content) return content;
-    
-    if (typeof content === 'string') {
-      // HTMLコンテンツの場合はそのまま返す
-      if (content.startsWith('<') || content.includes('<p>') || content.includes('<div>')) {
-        return content;
-      }
-      
-      // JSONコンテンツの場合は解析を試行
-      try {
-        return JSON.parse(content);
-      } catch (error) {
-        // JSON解析に失敗した場合はそのまま返す
-        return content;
-      }
-    }
-    
-    return content;
-  };
-
   // 記事データを整形
   const formattedArticle = {
     ...article,
-    content: parseContent(article.content)
+    content: parseArticleContent(article.content),
   };
 
   // 関連記事を分割してフォーマット
-  const recommendedArticles = formatArticles(relatedArticles.slice(0, 3));
-  const newArticles = formatArticles(relatedArticles.slice(3, 6));
+  const recommendedArticles = formatArticleCards(relatedArticles.slice(0, 3));
+  const newArticles = formatArticleCards(relatedArticles.slice(3, 6));
 
   return (
     <MediaDetailClient

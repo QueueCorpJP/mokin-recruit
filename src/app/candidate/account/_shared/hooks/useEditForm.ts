@@ -17,9 +17,15 @@ export interface UseEditFormParams<TForm extends FieldValues> {
   fetchInitialData: () => Promise<Partial<TForm> | null>;
   redirectPath: string;
   buildFormData: (data: TForm) => FormData;
-  submitAction: (
-    formData: FormData
-  ) => Promise<{ success: boolean; error?: string }>;
+  submitAction: (formData: FormData) => Promise<
+    | { success: boolean; error?: string }
+    | {
+        success: boolean;
+        message: string;
+        errors?: Record<string, string[]>;
+        data?: unknown;
+      }
+  >;
 }
 
 export interface UseEditFormReturn<TForm extends FieldValues>
@@ -92,8 +98,12 @@ export function useEditForm<TForm extends FieldValues>(
       if (result.success) {
         router.push(redirectPath);
       } else {
+        const message =
+          (result as any)?.message ||
+          (result as any)?.error ||
+          '更新に失敗しました。もう一度お試しください。';
         // eslint-disable-next-line no-alert
-        alert('更新に失敗しました。もう一度お試しください。');
+        alert(message);
       }
     } catch (e) {
       // eslint-disable-next-line no-alert

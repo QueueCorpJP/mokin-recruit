@@ -1,22 +1,12 @@
 'use client';
 
 // Header/Footer はレイアウトで提供されるため本フォームでは描画しない
-import { Button } from '@/components/ui/button';
+import ActionButtons from '../../_shared/ui/ActionButtons';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { useState, useEffect, useMemo } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
-import type { Industry } from '@/constants/industry-data';
-import type { JobType } from '@/constants/job-type-data';
-import {
-  educationSchema,
-  type EducationFormData,
-} from '../../_shared/schemas/educationSchema';
 import { FormErrorMessage } from '../../_shared/fields/FormErrorMessage';
+import FormRow from '../../_shared/ui/FormRow';
 import { useEducationForm } from '../../_shared/hooks/useEducationForm';
 
 // 最終学歴の選択肢
@@ -64,9 +54,7 @@ export default function CandidateEducationEditPage() {
     register,
     handleSubmit,
     errors,
-    isValid,
     watch,
-    setValue,
     isSubmitting,
     handleCancel,
     yearOptions,
@@ -84,7 +72,6 @@ export default function CandidateEducationEditPage() {
     removeJobType,
     updateJobTypeExperience,
     onSubmit,
-    isLoading,
   } = useEducationForm();
 
   // const router = useRouter();
@@ -175,35 +162,101 @@ export default function CandidateEducationEditPage() {
 
                   <div className='flex flex-col gap-2'>
                     {/* 最終学歴 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          最終学歴
-                        </label>
+                    <FormRow label='最終学歴'>
+                      <div className='w-[400px] relative'>
+                        <select
+                          {...register('finalEducation')}
+                          className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                            errors.finalEducation
+                              ? 'border-red-500'
+                              : 'border-[#999999]'
+                          } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                        >
+                          <option value=''>未選択</option>
+                          {educationOptions.map(option => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <FormErrorMessage
+                          error={errors.finalEducation?.message ?? null}
+                        />
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
                       </div>
-                      <div className='flex-1 py-6'>
-                        <div className='w-[400px] relative'>
+                    </FormRow>
+
+                    {/* 学校名 */}
+                    <FormRow label='学校名'>
+                      <div className='w-[400px]'>
+                        <input
+                          type='text'
+                          placeholder='学校名を入力'
+                          {...register('schoolName')}
+                          className={`w-full px-[11px] py-[11px] bg-white border ${
+                            errors.schoolName
+                              ? 'border-red-500'
+                              : 'border-[#999999]'
+                          } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                        />
+                        <FormErrorMessage
+                          error={errors.schoolName?.message ?? null}
+                        />
+                      </div>
+                    </FormRow>
+
+                    {/* 学部学科専攻 */}
+                    <FormRow label='学部学科専攻'>
+                      <div className='w-[400px]'>
+                        <input
+                          type='text'
+                          placeholder='学部学科専攻を入力'
+                          {...register('department')}
+                          className={`w-full px-[11px] py-[11px] bg-white border ${
+                            errors.department
+                              ? 'border-red-500'
+                              : 'border-[#999999]'
+                          } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
+                        />
+                        <FormErrorMessage
+                          error={errors.department?.message ?? null}
+                        />
+                      </div>
+                    </FormRow>
+
+                    {/* 卒業年月 */}
+                    <FormRow label='卒業年月'>
+                      <div className='flex gap-2 items-center w-[400px]'>
+                        <div className='relative flex-1'>
                           <select
-                            {...register('finalEducation')}
+                            {...register('graduationYear')}
                             className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                              errors.finalEducation
+                              errors.graduationYear || errors.graduationMonth
                                 ? 'border-red-500'
                                 : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] ${
-                              watch('finalEducation')
-                                ? 'text-[#323232]'
-                                : 'text-[#323232]'
-                            } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
                           >
                             <option value=''>未選択</option>
-                            {educationOptions.map(option => (
-                              <option key={option} value={option}>
-                                {option}
+                            {yearOptions.map(year => (
+                              <option key={year} value={year}>
+                                {year}
                               </option>
                             ))}
                           </select>
                           <FormErrorMessage
-                            error={errors.finalEducation?.message}
+                            error={errors.graduationYear?.message ?? null}
                           />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
@@ -219,153 +272,47 @@ export default function CandidateEducationEditPage() {
                             </svg>
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* 学校名 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          学校名
-                        </label>
-                      </div>
-                      <div className='flex-1 py-6'>
-                        <div className='w-[400px]'>
-                          <input
-                            type='text'
-                            placeholder='学校名を入力'
-                            {...register('schoolName')}
-                            className={`w-full px-[11px] py-[11px] bg-white border ${
-                              errors.schoolName
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          年
+                        </span>
+                        <div className='relative flex-1'>
+                          <select
+                            {...register('graduationMonth')}
+                            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
+                              errors.graduationYear || errors.graduationMonth
                                 ? 'border-red-500'
                                 : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
-                          />
+                            } rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          >
+                            <option value=''>未選択</option>
+                            {monthOptions.map(month => (
+                              <option key={month} value={month}>
+                                {month}
+                              </option>
+                            ))}
+                          </select>
                           <FormErrorMessage
-                            error={errors.schoolName?.message}
+                            error={errors.graduationMonth?.message ?? null}
                           />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 学部学科専攻 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          学部学科専攻
-                        </label>
-                      </div>
-                      <div className='flex-1 py-6'>
-                        <div className='w-[400px]'>
-                          <input
-                            type='text'
-                            placeholder='学部学科専攻を入力'
-                            {...register('department')}
-                            className={`w-full px-[11px] py-[11px] bg-white border ${
-                              errors.department
-                                ? 'border-red-500'
-                                : 'border-[#999999]'
-                            } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
-                          />
-                          <FormErrorMessage
-                            error={errors.department?.message}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 卒業年月 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          卒業年月
-                        </label>
-                      </div>
-                      <div className='flex-1 py-6'>
-                        <div className='flex gap-2 items-center w-[400px]'>
-                          <div className='relative flex-1'>
-                            <select
-                              {...register('graduationYear')}
-                              className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                                errors.graduationYear || errors.graduationMonth
-                                  ? 'border-red-500'
-                                  : 'border-[#999999]'
-                              } rounded-[5px] text-[16px] ${
-                                watch('graduationYear')
-                                  ? 'text-[#323232]'
-                                  : 'text-[#323232]'
-                              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
+                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                            <svg
+                              width='14'
+                              height='10'
+                              viewBox='0 0 14 10'
+                              fill='none'
                             >
-                              <option value=''>未選択</option>
-                              {yearOptions.map(year => (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              ))}
-                            </select>
-                            <FormErrorMessage
-                              error={errors.graduationYear?.message}
-                            />
-                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              <path
+                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                fill='#0F9058'
+                              />
+                            </svg>
                           </div>
-                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                            年
-                          </span>
-                          <div className='relative flex-1'>
-                            <select
-                              {...register('graduationMonth')}
-                              className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-                                errors.graduationYear || errors.graduationMonth
-                                  ? 'border-red-500'
-                                  : 'border-[#999999]'
-                              } rounded-[5px] text-[16px] ${
-                                watch('graduationMonth')
-                                  ? 'text-[#323232]'
-                                  : 'text-[#323232]'
-                              } font-bold tracking-[1.6px] appearance-none cursor-pointer`}
-                            >
-                              <option value=''>未選択</option>
-                              {monthOptions.map(month => (
-                                <option key={month} value={month}>
-                                  {month}
-                                </option>
-                              ))}
-                            </select>
-                            <FormErrorMessage
-                              error={errors.graduationMonth?.message}
-                            />
-                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                            月
-                          </span>
                         </div>
+                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          月
+                        </span>
                       </div>
-                    </div>
+                    </FormRow>
                   </div>
                 </div>
 
@@ -378,12 +325,7 @@ export default function CandidateEducationEditPage() {
 
                   <div className='flex flex-col gap-2'>
                     {/* 業種 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          業種
-                        </label>
-                      </div>
+                    <FormRow label='業種'>
                       <div className='flex-1 py-6'>
                         <div className='w-[400px]'>
                           <div className='flex flex-col gap-2'>
@@ -464,125 +406,102 @@ export default function CandidateEducationEditPage() {
                             </div>
                           </div>
                           <FormErrorMessage
-                            error={errors.industries?.message}
+                            error={errors.industries?.message ?? null}
                           />
                         </div>
                       </div>
-                    </div>
+                    </FormRow>
 
                     {/* 職種 */}
-                    <div className='flex gap-6'>
-                      <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                        <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          職種
-                        </label>
-                      </div>
-                      <div className='flex-1 py-6'>
-                        <div className='w-[400px]'>
-                          <div className='flex flex-col gap-2'>
-                            <button
-                              type='button'
-                              onClick={() => setIsJobTypeModalOpen(true)}
-                              className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
-                            >
-                              職種を選択
-                            </button>
-                            <div className='flex flex-wrap gap-2'>
-                              {selectedJobTypes.map(jobType => {
-                                return (
-                                  <div
-                                    key={jobType.id}
-                                    className='inline-flex items-center gap-1'
-                                  >
-                                    <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]'>
-                                      {jobType.name}
-                                    </span>
-                                    <div className='bg-[#d2f1da] h-[40px] flex items-center px-4'>
-                                      <select
-                                        className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
-                                        value={jobType.experienceYears || ''}
-                                        onChange={e =>
-                                          updateJobTypeExperience(
-                                            jobType.id,
-                                            e.target.value
-                                          )
-                                        }
-                                      >
-                                        <option value=''>
-                                          経験年数：未選択
-                                        </option>
-                                        {experienceYearOptions.map(year => (
-                                          <option key={year} value={year}>
-                                            経験年数：{year}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <svg
-                                        xmlns='http://www.w3.org/2000/svg'
-                                        width='14'
-                                        height='10'
-                                        viewBox='0 0 14 10'
-                                        fill='none'
-                                        className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'
-                                      >
-                                        <path
-                                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                          fill='#0F9058'
-                                        />
-                                      </svg>
-                                    </div>
-                                    <button
-                                      type='button'
-                                      onClick={() => removeJobType(jobType.id)}
-                                      className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
+                    <FormRow label='職種'>
+                      <div className='w-[400px]'>
+                        <div className='flex flex-col gap-2'>
+                          <button
+                            type='button'
+                            onClick={() => setIsJobTypeModalOpen(true)}
+                            className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[16px] text-[#323232] font-bold tracking-[1.6px]'
+                          >
+                            職種を選択
+                          </button>
+                          <div className='flex flex-wrap gap-2'>
+                            {selectedJobTypes.map(jobType => {
+                              return (
+                                <div
+                                  key={jobType.id}
+                                  className='inline-flex items-center gap-1'
+                                >
+                                  <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px]'>
+                                    {jobType.name}
+                                  </span>
+                                  <div className='bg-[#d2f1da] h-[40px] flex items-center px-4'>
+                                    <select
+                                      className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
+                                      value={jobType.experienceYears || ''}
+                                      onChange={e =>
+                                        updateJobTypeExperience(
+                                          jobType.id,
+                                          e.target.value
+                                        )
+                                      }
                                     >
-                                      <svg
-                                        width='13'
-                                        height='12'
-                                        viewBox='0 0 13 12'
-                                        fill='none'
-                                        xmlns='http://www.w3.org/2000/svg'
-                                      >
-                                        <path
-                                          d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
-                                          fill='#0F9058'
-                                        />
-                                      </svg>
-                                    </button>
+                                      <option value=''>経験年数：未選択</option>
+                                      {experienceYearOptions.map(year => (
+                                        <option key={year} value={year}>
+                                          経験年数：{year}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <svg
+                                      xmlns='http://www.w3.org/2000/svg'
+                                      width='14'
+                                      height='10'
+                                      viewBox='0 0 14 10'
+                                      fill='none'
+                                    >
+                                      <path
+                                        d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                        fill='#0F9058'
+                                      />
+                                    </svg>
                                   </div>
-                                );
-                              })}
-                            </div>
+                                  <button
+                                    type='button'
+                                    onClick={() => removeJobType(jobType.id)}
+                                    className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
+                                  >
+                                    <svg
+                                      width='13'
+                                      height='12'
+                                      viewBox='0 0 13 12'
+                                      fill='none'
+                                      xmlns='http://www.w3.org/2000/svg'
+                                    >
+                                      <path
+                                        d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                                        fill='#0F9058'
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
-                          <FormErrorMessage error={errors.jobTypes?.message} />
                         </div>
+                        <FormErrorMessage
+                          error={errors.jobTypes?.message ?? null}
+                        />
                       </div>
-                    </div>
+                    </FormRow>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className='flex justify-center gap-4'>
-                <Button
-                  type='button'
-                  variant='green-outline'
-                  size='figma-default'
-                  onClick={handleCancel}
-                  className='min-w-[160px] text-[16px] tracking-[1.6px]'
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type='submit'
-                  variant='green-gradient'
-                  size='figma-default'
-                  disabled={isSubmitting}
-                  className='min-w-[160px] text-[16px] tracking-[1.6px] disabled:opacity-50 disabled:cursor-not-allowed'
-                >
-                  {isSubmitting ? '保存中...' : '保存する'}
-                </Button>
-              </div>
+              <ActionButtons
+                isSubmitting={isSubmitting}
+                handleCancel={handleCancel}
+                isMobile={false}
+              />
             </div>
           </main>
         ) : (
@@ -690,7 +609,7 @@ export default function CandidateEducationEditPage() {
                           ))}
                         </select>
                         <FormErrorMessage
-                          error={errors.finalEducation?.message}
+                          error={errors.finalEducation?.message ?? null}
                         />
                         <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                           <svg
@@ -725,7 +644,9 @@ export default function CandidateEducationEditPage() {
                             : 'border-[#999999]'
                         } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
                       />
-                      <FormErrorMessage error={errors.schoolName?.message} />
+                      <FormErrorMessage
+                        error={errors.schoolName?.message ?? null}
+                      />
                     </div>
 
                     {/* 学部学科専攻 */}
@@ -745,7 +666,9 @@ export default function CandidateEducationEditPage() {
                             : 'border-[#999999]'
                         } rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]`}
                       />
-                      <FormErrorMessage error={errors.department?.message} />
+                      <FormErrorMessage
+                        error={errors.department?.message ?? null}
+                      />
                     </div>
 
                     {/* 卒業年月 */}
@@ -777,7 +700,7 @@ export default function CandidateEducationEditPage() {
                             ))}
                           </select>
                           <FormErrorMessage
-                            error={errors.graduationYear?.message}
+                            error={errors.graduationYear?.message ?? null}
                           />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
@@ -819,7 +742,7 @@ export default function CandidateEducationEditPage() {
                             ))}
                           </select>
                           <FormErrorMessage
-                            error={errors.graduationMonth?.message}
+                            error={errors.graduationMonth?.message ?? null}
                           />
                           <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
                             <svg
@@ -930,7 +853,9 @@ export default function CandidateEducationEditPage() {
                           })}
                         </div>
                       ) : null}
-                      <FormErrorMessage error={errors.industries?.message} />
+                      <FormErrorMessage
+                        error={errors.industries?.message ?? null}
+                      />
                     </div>
 
                     {/* 職種 */}
@@ -1013,33 +938,20 @@ export default function CandidateEducationEditPage() {
                           })}
                         </div>
                       ) : null}
-                      <FormErrorMessage error={errors.jobTypes?.message} />
+                      <FormErrorMessage
+                        error={errors.jobTypes?.message ?? null}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className='flex gap-4 w-full justify-center'>
-                <Button
-                  type='button'
-                  variant='green-outline'
-                  size='figma-default'
-                  onClick={handleCancel}
-                  className='basis-0 grow min-w-40 text-[16px] tracking-[1.6px] text-center'
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  type='submit'
-                  variant='green-gradient'
-                  size='figma-default'
-                  disabled={isSubmitting}
-                  className='basis-0 grow min-w-40 text-[16px] tracking-[1.6px] text-center disabled:opacity-50 disabled:cursor-not-allowed'
-                >
-                  {isSubmitting ? '保存中...' : '保存する'}
-                </Button>
-              </div>
+              <ActionButtons
+                isSubmitting={isSubmitting}
+                handleCancel={handleCancel}
+                isMobile={true}
+              />
             </div>
           </main>
         )}

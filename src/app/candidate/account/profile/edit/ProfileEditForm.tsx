@@ -13,7 +13,14 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 // import { useRouter } from 'next/navigation';
 //
 import { FormErrorMessage } from '../../_shared/fields/FormErrorMessage';
-import { useProfileForm } from '../../_shared/hooks/useProfileForm';
+import FormRow from '../../_shared/ui/FormRow';
+import { useEditForm } from '../../_shared/hooks/useEditForm';
+import {
+  profileSchema,
+  type ProfileFormData,
+} from '../../_shared/schemas/profileSchema';
+import { updateCandidateProfile } from './actions';
+import { useCancelNavigation } from '../../_shared/hooks/useNavigation';
 
 interface CandidateData {
   last_name?: string;
@@ -22,6 +29,7 @@ interface CandidateData {
   first_name_kana?: string;
   gender?: string;
   prefecture?: string;
+  current_residence?: string;
   birth_date?: string;
   phone_number?: string;
   current_income?: string;
@@ -34,23 +42,85 @@ interface ProfileEditFormProps {
 export default function ProfileEditForm({
   candidateData,
 }: ProfileEditFormProps) {
-  // useProfileFormカスタムフックでフォームロジックを共通化
+  // 初期生年月日の計算（candidateData から）
+  const getInitialBirthDate = () => {
+    if (!candidateData.birth_date) return { year: '', month: '', day: '' };
+    const date = new Date(candidateData.birth_date);
+    return {
+      year: date.getFullYear().toString(),
+      month: (date.getMonth() + 1).toString(),
+      day: date.getDate().toString(),
+    };
+  };
+  const initialBirth = getInitialBirthDate();
+
   const {
-    // register,
     handleSubmit,
-    errors,
-    setValue,
+    formState: { errors },
     watch,
-    selectedGender,
-    setSelectedGender,
+    setValue,
     isSubmitting,
-    handleSubmitForm,
-    handleCancel,
-    selectedYear,
-    setSelectedYear,
-    selectedMonth,
-    setSelectedMonth,
-  } = useProfileForm(candidateData);
+    onSubmit,
+  } = useEditForm<ProfileFormData>({
+    schema: profileSchema,
+    defaultValues: {
+      gender: '',
+      prefecture: '',
+      birthYear: '',
+      birthMonth: '',
+      birthDay: '',
+      phoneNumber: '',
+      currentIncome: '',
+    },
+    fetchInitialData: async () => ({
+      gender: candidateData.gender || '',
+      prefecture:
+        candidateData.prefecture || candidateData.current_residence || '',
+      birthYear: initialBirth.year,
+      birthMonth: initialBirth.month,
+      birthDay: initialBirth.day,
+      phoneNumber: candidateData.phone_number || '',
+      currentIncome: candidateData.current_income || '',
+    }),
+    redirectPath: '/candidate/account/profile',
+    buildFormData: data => {
+      const fd = new FormData();
+      fd.append('gender', data.gender || '');
+      fd.append('prefecture', data.prefecture || '');
+      fd.append('birthYear', data.birthYear || '');
+      fd.append('birthMonth', data.birthMonth || '');
+      fd.append('birthDay', data.birthDay || '');
+      fd.append('phoneNumber', data.phoneNumber || '');
+      fd.append('currentIncome', data.currentIncome || '');
+      return fd;
+    },
+    submitAction: async (fd: FormData) => {
+      const initialState = {
+        success: false,
+        message: '',
+        errors: {} as Record<string, string[]>,
+      };
+      const result = await updateCandidateProfile(initialState, fd);
+      if (result.success) {
+        return { success: true };
+      }
+      return { success: false, error: result.message };
+    },
+  });
+
+  // 共通ナビゲーションフックをセット（既存の handleCancel は redirectPath を使用するため互換）
+  const cancel = useCancelNavigation('/candidate/account/profile');
+
+  // UI のための選択値と setter を RHF 経由で提供
+  const selectedGender = watch('gender') || '';
+  const setSelectedGender = (value: string) =>
+    setValue('gender', value, { shouldValidate: true, shouldDirty: true });
+  const selectedYear = watch('birthYear') || '';
+  const setSelectedYear = (value: string) =>
+    setValue('birthYear', value, { shouldValidate: true, shouldDirty: true });
+  const selectedMonth = watch('birthMonth') || '';
+  const setSelectedMonth = (value: string) =>
+    setValue('birthMonth', value, { shouldValidate: true, shouldDirty: true });
 
   // const router = useRouter();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -65,7 +135,7 @@ export default function ProfileEditForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(handleSubmitForm)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         {isDesktop ? (
           /* PC Version */
           <main className='flex flex-col'>
@@ -183,258 +253,82 @@ export default function ProfileEditForm({
                   </div>
 
                   {/* Gender */}
-                  <div className='flex gap-6'>
-                    <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                        性別
-                      </label>
+                  <FormRow label='性別'>
+                    {/* hidden inputもselectedGenderをuseProfileFormから受け取る */}
+                    <input type='hidden' name='gender' value={selectedGender} />
+                    <div className='flex gap-2 w-[400px]'>
+                      {GENDER_OPTIONS.map(option => (
+                        <button
+                          key={option.value}
+                          type='button'
+                          onClick={() => setSelectedGender(option.value)}
+                          className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
+                            selectedGender === option.value
+                              ? 'bg-[#0f9058] border-[#0f9058] text-white'
+                              : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
                     </div>
-                    <div className='flex-1 py-6'>
-                      {/* hidden inputもselectedGenderをuseProfileFormから受け取る */}
-                      <input
-                        type='hidden'
-                        name='gender'
-                        value={selectedGender}
-                      />
-                      <div className='flex gap-2 w-[400px]'>
-                        {GENDER_OPTIONS.map(option => (
-                          <button
-                            key={option.value}
-                            type='button'
-                            onClick={() => setSelectedGender(option.value)}
-                            className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
-                              selectedGender === option.value
-                                ? 'bg-[#0f9058] border-[#0f9058] text-white'
-                                : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                      {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage
-                        error={errors.gender?.message ?? null}
-                      />
-                    </div>
-                  </div>
+                    {/* バリデーションエラー表示（共通部品） */}
+                    <FormErrorMessage error={errors.gender?.message ?? null} />
+                  </FormRow>
 
                   {/* Current Address */}
-                  <div className='flex gap-6'>
-                    <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                        現在の住まい
-                      </label>
-                    </div>
-                    <div className='flex-1 py-6'>
-                      <div className='w-[400px] relative'>
-                        <select
-                          name='prefecture'
-                          value={watch('prefecture')}
-                          onChange={e =>
-                            setValue('prefecture', e.target.value, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            })
-                          }
-                          className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                  <FormRow label='現在の住まい'>
+                    <div className='w-[400px] relative'>
+                      <select
+                        name='prefecture'
+                        value={watch('prefecture')}
+                        onChange={e =>
+                          setValue('prefecture', e.target.value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                        className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                      >
+                        {PREFECTURES.map(prefecture => (
+                          <option key={prefecture} value={prefecture}>
+                            {prefecture}
+                          </option>
+                        ))}
+                      </select>
+                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                        <svg
+                          width='14'
+                          height='10'
+                          viewBox='0 0 14 10'
+                          fill='none'
                         >
-                          {PREFECTURES.map(prefecture => (
-                            <option key={prefecture} value={prefecture}>
-                              {prefecture}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
+                          <path
+                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                            fill='#0F9058'
+                          />
+                        </svg>
                       </div>
-                      {/* バリデーションエラー表示（共通部品） */}
-                      <FormErrorMessage
-                        error={errors.prefecture?.message ?? null}
-                      />
                     </div>
-                  </div>
+                    {/* バリデーションエラー表示（共通部品） */}
+                    <FormErrorMessage
+                      error={errors.prefecture?.message ?? null}
+                    />
+                  </FormRow>
 
                   {/* Birth Date */}
-                  <div className='flex gap-6'>
-                    <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                        生年月日
-                      </label>
-                    </div>
-                    <div className='flex-1 py-6'>
-                      <div className='flex gap-2 items-center w-[400px]'>
-                        <div className='relative flex-1'>
-                          <select
-                            name='birthYear'
-                            value={selectedYear}
-                            onChange={e => setSelectedYear(e.target.value)}
-                            className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            {yearOptions.map(year => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          年
-                        </span>
-                        <div className='relative flex-1'>
-                          <select
-                            name='birthMonth'
-                            value={selectedMonth}
-                            onChange={e => setSelectedMonth(e.target.value)}
-                            className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            <option value=''>未選択</option>
-                            {monthOptions.map(month => (
-                              <option key={month} value={month}>
-                                {month}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          月
-                        </span>
-                        <div className='relative flex-1'>
-                          <select
-                            name='birthDay'
-                            value={watch('birthDay')}
-                            onChange={e => setValue('birthDay', e.target.value)}
-                            className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            <option value=''>未選択</option>
-                            {dayOptions.map(day => (
-                              <option key={day} value={day}>
-                                {day}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                        <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                          日
-                        </span>
-                        {/* バリデーションエラー表示（共通部品） */}
-                        <FormErrorMessage
-                          error={
-                            (errors.birthYear?.message as string | undefined) ||
-                            (errors.birthMonth?.message as
-                              | string
-                              | undefined) ||
-                            (errors.birthDay?.message as string | undefined) ||
-                            null
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phone Number */}
-                  <div className='flex gap-6'>
-                    <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                        連絡先電話番号
-                      </label>
-                    </div>
-                    <div className='flex-1 py-6'>
-                      <div className='w-[400px]'>
-                        <input
-                          type='tel'
-                          name='phoneNumber'
-                          placeholder='08011112222'
-                          value={watch('phoneNumber')}
-                          onChange={e =>
-                            setValue('phoneNumber', e.target.value, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            })
-                          }
-                          className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
-                        />
-                        {/* バリデーションエラー表示（共通部品） */}
-                        <FormErrorMessage
-                          error={errors.phoneNumber?.message ?? null}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Current Income */}
-                  <div className='flex gap-6'>
-                    <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 min-h-[50px] flex items-center'>
-                      <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                        現在の年収
-                      </label>
-                    </div>
-                    <div className='flex-1 py-6'>
-                      <div className='w-[400px] relative'>
+                  <FormRow label='生年月日'>
+                    <div className='flex gap-2 items-center w-[400px]'>
+                      <div className='relative flex-1'>
                         <select
-                          name='currentIncome'
-                          value={watch('currentIncome')}
-                          onChange={e =>
-                            setValue('currentIncome', e.target.value, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            })
-                          }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                          name='birthYear'
+                          value={selectedYear}
+                          onChange={e => setSelectedYear(e.target.value)}
+                          className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
                         >
-                          {INCOME_RANGES.map(income => (
-                            <option key={income.value} value={income.value}>
-                              {income.label}
+                          {yearOptions.map(year => (
+                            <option key={year} value={year}>
+                              {year}
                             </option>
                           ))}
                         </select>
@@ -452,12 +346,145 @@ export default function ProfileEditForm({
                           </svg>
                         </div>
                       </div>
+                      <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                        年
+                      </span>
+                      <div className='relative flex-1'>
+                        <select
+                          name='birthMonth'
+                          value={selectedMonth}
+                          onChange={e => setSelectedMonth(e.target.value)}
+                          className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                        >
+                          <option value=''>未選択</option>
+                          {monthOptions.map(month => (
+                            <option key={month} value={month}>
+                              {month}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                        月
+                      </span>
+                      <div className='relative flex-1'>
+                        <select
+                          name='birthDay'
+                          value={watch('birthDay')}
+                          onChange={e => setValue('birthDay', e.target.value)}
+                          className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                        >
+                          <option value=''>未選択</option>
+                          {dayOptions.map(day => (
+                            <option key={day} value={day}>
+                              {day}
+                            </option>
+                          ))}
+                        </select>
+                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                          <svg
+                            width='14'
+                            height='10'
+                            viewBox='0 0 14 10'
+                            fill='none'
+                          >
+                            <path
+                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                              fill='#0F9058'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                        日
+                      </span>
                       {/* バリデーションエラー表示（共通部品） */}
                       <FormErrorMessage
-                        error={errors.currentIncome?.message ?? null}
+                        error={
+                          (errors.birthYear?.message as string | undefined) ||
+                          (errors.birthMonth?.message as string | undefined) ||
+                          (errors.birthDay?.message as string | undefined) ||
+                          null
+                        }
                       />
                     </div>
-                  </div>
+                  </FormRow>
+
+                  {/* Phone Number */}
+                  <FormRow label='連絡先電話番号'>
+                    <div className='w-[400px]'>
+                      <input
+                        type='tel'
+                        name='phoneNumber'
+                        placeholder='08011112222'
+                        value={watch('phoneNumber')}
+                        onChange={e =>
+                          setValue('phoneNumber', e.target.value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                        className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
+                      />
+                      {/* バリデーションエラー表示（共通部品） */}
+                      <FormErrorMessage
+                        error={errors.phoneNumber?.message ?? null}
+                      />
+                    </div>
+                  </FormRow>
+
+                  {/* Current Income */}
+                  <FormRow label='現在の年収'>
+                    <div className='w-[400px] relative'>
+                      <select
+                        name='currentIncome'
+                        value={watch('currentIncome')}
+                        onChange={e =>
+                          setValue('currentIncome', e.target.value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                      >
+                        {INCOME_RANGES.map(income => (
+                          <option key={income.value} value={income.value}>
+                            {income.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                        <svg
+                          width='14'
+                          height='10'
+                          viewBox='0 0 14 10'
+                          fill='none'
+                        >
+                          <path
+                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                            fill='#0F9058'
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    {/* バリデーションエラー表示（共通部品） */}
+                    <FormErrorMessage
+                      error={errors.currentIncome?.message ?? null}
+                    />
+                  </FormRow>
                 </div>
               </div>
 
@@ -467,7 +494,7 @@ export default function ProfileEditForm({
                   type='button'
                   variant='green-outline'
                   size='figma-default'
-                  onClick={handleCancel}
+                  onClick={cancel}
                   className='min-w-[160px] text-[16px] tracking-[1.6px]'
                 >
                   キャンセル
@@ -895,7 +922,7 @@ export default function ProfileEditForm({
                     type='button'
                     variant='green-outline'
                     size='figma-default'
-                    onClick={handleCancel}
+                    onClick={cancel}
                     className='w-full text-[16px] tracking-[1.6px]'
                   >
                     キャンセル

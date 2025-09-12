@@ -5,12 +5,22 @@ import Image from 'next/image';
 import { useState, useTransition, lazy, Suspense } from 'react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
-import { addToFavoritesServer, removeFromFavoritesServer } from '../search/setting/actions';
+import { useFavoriteToggleMutation } from '@/hooks';
 
 // Dynamic imports for heavy components
-const FaqBox = lazy(() => import('@/components/ui/FaqBox').then(mod => ({ default: mod.FaqBox })));
-const MessageListCard = lazy(() => import('@/components/ui/MessageListCard').then(mod => ({ default: mod.MessageListCard })));
-const JobPostCard = lazy(() => import('@/components/ui/JobPostCard').then(mod => ({ default: mod.JobPostCard })));
+const FaqBox = lazy(() =>
+  import('@/components/ui/FaqBox').then(mod => ({ default: mod.FaqBox }))
+);
+const MessageListCard = lazy(() =>
+  import('@/components/ui/MessageListCard').then(mod => ({
+    default: mod.MessageListCard,
+  }))
+);
+const JobPostCard = lazy(() =>
+  import('@/components/ui/JobPostCard').then(mod => ({
+    default: mod.JobPostCard,
+  }))
+);
 
 interface User {
   id: string;
@@ -74,13 +84,16 @@ export function CandidateDashboardClient({
   const router = useRouter();
   const [_isPending, startTransition] = useTransition();
   const [jobList, setJobList] = useState<JobPosting[]>(jobs);
-  const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
+  const [favoriteLoading, setFavoriteLoading] = useState<
+    Record<string, boolean>
+  >({});
+  const favoriteToggle = useFavoriteToggleMutation();
 
   // スター切り替え（サーバーアクション使用）
   const handleStarClick = async (jobId: string) => {
     const job = jobList.find(j => j.id === jobId);
     if (!job) return;
-    
+
     const isCurrentlyStarred = job.starred || false;
 
     // ローディング状態を設定
@@ -88,17 +101,14 @@ export function CandidateDashboardClient({
 
     try {
       startTransition(async () => {
-        let response;
-        if (isCurrentlyStarred) {
-          response = await removeFromFavoritesServer(jobId);
-        } else {
-          response = await addToFavoritesServer(jobId);
-        }
+        const response = await favoriteToggle.mutateAsync({
+          jobPostingId: jobId,
+          isFavorite: isCurrentlyStarred,
+        });
 
         if (response.success) {
-          // 表示データを更新
           setJobList(jobs =>
-            jobs.map((job) =>
+            jobs.map(job =>
               job.id === jobId ? { ...job, starred: !isCurrentlyStarred } : job
             )
           );
@@ -106,13 +116,13 @@ export function CandidateDashboardClient({
           console.error('お気に入り操作エラー:', response.error);
           alert(response.error || 'お気に入り操作に失敗しました');
         }
-        
-        // ローディング状態を解除
         setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
       });
     } catch (error) {
       console.error('お気に入り操作エラー:', error);
-      alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
+      alert(
+        'ネットワークエラーが発生しました。インターネット接続を確認してください。'
+      );
       setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
     }
   };
@@ -187,7 +197,7 @@ export function CandidateDashboardClient({
                             width={48}
                             height={48}
                             style={{ display: 'block' }}
-                            loading="lazy"
+                            loading='lazy'
                           />
                           <div
                             style={{
@@ -237,8 +247,8 @@ export function CandidateDashboardClient({
                   {/* ページネーション（ダミー） */}
                   {tasks.length > 0 && (
                     <div>
-                      <div className="flex justify-center items-center py-4">
-                        <span className="text-sm text-gray-500">
+                      <div className='flex justify-center items-center py-4'>
+                        <span className='text-sm text-gray-500'>
                           {tasks.length}件のタスクがあります
                         </span>
                       </div>
@@ -284,7 +294,19 @@ export function CandidateDashboardClient({
                     現在新着メッセージはありません。
                   </div>
                 ) : (
-                  <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>読み込み中...</div>}>
+                  <Suspense
+                    fallback={
+                      <div
+                        style={{
+                          padding: 24,
+                          textAlign: 'center',
+                          color: '#999',
+                        }}
+                      >
+                        読み込み中...
+                      </div>
+                    }
+                  >
                     <MessageListCard messages={messages} />
                   </Suspense>
                 )}
@@ -356,23 +378,42 @@ export function CandidateDashboardClient({
                   >
                     {/* 求人カード */}
                     <div className='flex flex-col gap-4'>
-                      <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>求人を読み込み中...</div>}>
-                        {jobList.map((job) => (
+                      <Suspense
+                        fallback={
+                          <div
+                            style={{
+                              padding: 24,
+                              textAlign: 'center',
+                              color: '#999',
+                            }}
+                          >
+                            求人を読み込み中...
+                          </div>
+                        }
+                      >
+                        {jobList.map(job => (
                           <JobPostCard
                             key={job.id}
                             imageUrl={
-                              job.image_urls?.[0] ||
-                              '/images/default-job.jpg'
+                              job.image_urls?.[0] || '/images/default-job.jpg'
                             }
                             imageAlt='求人画像'
                             title={job.title}
                             tags={job.appeal_points || []}
                             companyName={job.company_name || ''}
-                            location={Array.isArray(job.work_location) ? job.work_location.join('、') : job.work_location || ''}
-                            salary={job.salary_min && job.salary_max ? `${job.salary_min}万円〜${job.salary_max}万円` : '給与応相談'}
+                            location={
+                              Array.isArray(job.work_location)
+                                ? job.work_location.join('、')
+                                : job.work_location || ''
+                            }
+                            salary={
+                              job.salary_min && job.salary_max
+                                ? `${job.salary_min}万円〜${job.salary_max}万円`
+                                : '給与応相談'
+                            }
                             starred={job.starred || false}
                             apell={[]}
-                            variant="mypage-simple"
+                            variant='mypage-simple'
                             showStar={true}
                             showCompanyName={true}
                             showLocation={false}
@@ -496,7 +537,9 @@ export function CandidateDashboardClient({
                           marginBottom: 4,
                         }}
                       >
-                        {new Date(notice.published_at || notice.created_at).toLocaleDateString('ja-JP')}
+                        {new Date(
+                          notice.published_at || notice.created_at
+                        ).toLocaleDateString('ja-JP')}
                       </span>
                       <div
                         style={{
@@ -555,8 +598,8 @@ export function CandidateDashboardClient({
                     alt='arrow'
                     width={12}
                     height={12}
-                    loading="lazy"
-                    style={{ display: 'block'}}
+                    loading='lazy'
+                    style={{ display: 'block' }}
                   />
                 </div>
               </div>
@@ -567,9 +610,9 @@ export function CandidateDashboardClient({
                 width={800}
                 height={200}
                 className='w-full h-auto block rounded-lg'
-                loading="lazy"
+                loading='lazy'
                 priority={false}
-                sizes="(max-width: 768px) 100vw, 320px"
+                sizes='(max-width: 768px) 100vw, 320px'
                 quality={75}
               />
               {/* FAQ/QAセクション */}
@@ -583,7 +626,19 @@ export function CandidateDashboardClient({
                   よくある質問
                 </SectionHeading>
                 {/* FAQボックス（ダミー） */}
-                <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#999' }}>FAQ読み込み中...</div>}>
+                <Suspense
+                  fallback={
+                    <div
+                      style={{
+                        padding: 24,
+                        textAlign: 'center',
+                        color: '#999',
+                      }}
+                    >
+                      FAQ読み込み中...
+                    </div>
+                  }
+                >
                   <FaqBox
                     title='退会したい場合はどうすればいいですか？'
                     body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
@@ -634,7 +689,7 @@ export function CandidateDashboardClient({
                     alt='arrow'
                     width={12}
                     height={12}
-                    loading="lazy"
+                    loading='lazy'
                     style={{ display: 'block' }}
                   />
                 </div>
