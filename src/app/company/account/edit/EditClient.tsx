@@ -763,10 +763,10 @@ export default function EditClient() {
                         事業内容
                       </div>
                     </div>
-                    <div className='flex-1 py-6'>
+                    <div className='flex-1 py-6 border border-[#999] rounded-[5px] '>
                       <textarea
                         placeholder='事業内容を入力'
-                        className='w-full px-4 py-2 border border-[#999] rounded-[5px] resize-none h-[120px]'
+                        className='w-full px-4 py-2 resize-none h-[120px]'
                         value={formData.businessContent}
                         onChange={e =>
                           setFormData({

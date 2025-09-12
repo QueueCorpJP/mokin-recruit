@@ -117,7 +117,7 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
                     onClick={() => handleRemoveMember(index)}
                     className="p-2 text-[#999999] hover:text-[#323232] transition-colors"
                   >
-                    <X size={16} />
+                    <X size={24} />
                   </button>
                 )}
               </div>
