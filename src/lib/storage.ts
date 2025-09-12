@@ -1,3 +1,12 @@
+// Client-side storage utilities
+// This file contains only client-compatible storage functions
+
+export type UploadedFile = {
+  path: string;
+  publicUrl: string;
+};
+
+// Import server actions for file uploads
 import { uploadMessageFile } from '@/lib/actions';
 import { uploadCompanyMessageFile } from '@/lib/actions/messages';
 

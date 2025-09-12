@@ -4,6 +4,7 @@ import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { INDUSTRY_GROUPS, type Industry } from '@/constants/industry-data';
 import { prefectureNamesForMatch } from '@/constants/prefectures';
+import { uploadCompanyIcon, uploadCompanyImages } from '@/lib/storage-server';
 
 export interface CompanyAccountEditData {
   companyName: string;
@@ -163,4 +164,56 @@ export async function saveCompanyAccountEdit(
   }
 
   return { success: true };
+}
+
+// Upload icon image for company account
+export async function uploadCompanyAccountIconAction(formData: FormData): Promise<
+  | { success: true; url: string; path: string }
+  | { success: false; error: string }
+> {
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    return { success: false, error: auth.error };
+  }
+
+  const file = formData.get('icon');
+  if (!(file instanceof File)) {
+    return { success: false, error: 'アイコン画像が選択されていません' };
+  }
+
+  try {
+    const uploaded = await uploadCompanyIcon(auth.data.companyAccountId, file);
+    return { success: true, url: uploaded.publicUrl, path: uploaded.path };
+  } catch (e: any) {
+    console.error('uploadCompanyAccountIconAction error:', e);
+    return { success: false, error: e?.message || 'アップロードに失敗しました' };
+  }
+}
+
+// Upload multiple images for company account
+export async function uploadCompanyAccountImagesAction(formData: FormData): Promise<
+  | { success: true; files: Array<{ url: string; path: string }> }
+  | { success: false; error: string }
+> {
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    return { success: false, error: auth.error };
+  }
+
+  const entries = Array.from(formData.getAll('images'));
+  const files: File[] = entries.filter((e): e is File => e instanceof File);
+  if (files.length === 0) {
+    return { success: false, error: '画像が選択されていません' };
+  }
+
+  try {
+    const uploaded = await uploadCompanyImages(auth.data.companyAccountId, files);
+    return {
+      success: true,
+      files: uploaded.map(u => ({ url: u.publicUrl, path: u.path })),
+    };
+  } catch (e: any) {
+    console.error('uploadCompanyAccountImagesAction error:', e);
+    return { success: false, error: e?.message || 'アップロードに失敗しました' };
+  }
 }

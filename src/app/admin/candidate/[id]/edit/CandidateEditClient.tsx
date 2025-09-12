@@ -139,37 +139,37 @@ export default function CandidateEditClient({ candidate }: Props) {
     job_summary: candidate.job_summary || '',
     self_pr: candidate.self_pr || '',
     recent_job_industries:
-      candidate.recent_job_industries?.map(industry =>
+      candidate.recent_job_industries?.map((industry: any) =>
         typeof industry === 'object'
           ? industry.name || industry.id || JSON.stringify(industry)
           : industry
       ) || [],
     recent_job_types:
-      candidate.recent_job_types?.map(jobType =>
+      candidate.recent_job_types?.map((jobType: any) =>
         typeof jobType === 'object'
           ? jobType.name || jobType.id || JSON.stringify(jobType)
           : jobType
       ) || [],
     desired_industries:
-      candidate.desired_industries?.map(industry =>
+      candidate.desired_industries?.map((industry: any) =>
         typeof industry === 'object'
           ? industry.name || industry.id || JSON.stringify(industry)
           : industry
       ) || [],
     desired_job_types:
-      candidate.desired_job_types?.map(jobType =>
+      candidate.desired_job_types?.map((jobType: any) =>
         typeof jobType === 'object'
           ? jobType.name || jobType.id || JSON.stringify(jobType)
           : jobType
       ) || [],
     desired_locations:
-      candidate.desired_locations?.map(location =>
+      candidate.desired_locations?.map((location: any) =>
         typeof location === 'object'
           ? location.name || location.id || JSON.stringify(location)
           : location
       ) || [],
     desired_work_styles:
-      candidate.interested_work_styles?.map(style =>
+      candidate.interested_work_styles?.map((style: any) =>
         typeof style === 'object'
           ? style.name || style.id || JSON.stringify(style)
           : style
@@ -194,7 +194,7 @@ export default function CandidateEditClient({ candidate }: Props) {
       ? candidate.skills[0].other_languages
       : [{ language: '', level: '' }],
     skills_list: candidate.skills[0]?.skills_list
-      ? candidate.skills[0].skills_list.map(skill =>
+      ? candidate.skills[0].skills_list.map((skill: any) =>
           typeof skill === 'object'
             ? skill.name || skill.id || JSON.stringify(skill)
             : skill
@@ -205,7 +205,7 @@ export default function CandidateEditClient({ candidate }: Props) {
 
   // Work experience data
   const [workExperience, setWorkExperience] = useState<WorkExperienceData[]>(
-    candidate.work_experience?.map(exp => ({
+    candidate.work_experience?.map((exp: any) => ({
       industry_name:
         typeof exp.industry_name === 'object'
           ? exp.industry_name.name ||
@@ -220,7 +220,7 @@ export default function CandidateEditClient({ candidate }: Props) {
   const [jobTypeExperience, setJobTypeExperience] = useState<
     JobTypeExperienceData[]
   >(
-    candidate.job_type_experience?.map(exp => ({
+    candidate.job_type_experience?.map((exp: any) => ({
       job_type_name:
         typeof exp.job_type_name === 'object'
           ? exp.job_type_name.name ||
