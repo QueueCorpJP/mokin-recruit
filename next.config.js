@@ -2,11 +2,11 @@
 const nextConfig = {
   // ビルド時のESLintチェックを完全に無視
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   // ビルド時のTypeScriptエラーを完全に無視
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   output: 'standalone',
   // セキュリティヘッダー設定
@@ -171,16 +171,8 @@ const nextConfig = {
     return config;
   },
   images: {
-    // remotePatterns のみを使用（domains は廃止予定）
+    // remotePatterns のみを使用（必要なホストのみに最小化）
     remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: '**', // すべてのホスト許可
-      },
-      {
-        protocol: 'https',
-        hostname: '**', // すべてのホスト許可
-      },
       {
         protocol: 'https',
         hostname: 'mjhqeagxibsklugikyma.supabase.co',

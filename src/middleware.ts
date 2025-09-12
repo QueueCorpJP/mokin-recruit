@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getNonce } from '@/lib/server/utils/nonce';
+import { verifyJwt } from '@/lib/server/utils/jwt';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // 各リクエストにnonceを付与（CSP強化のための下準備。現時点では非破壊）
@@ -16,8 +17,23 @@ export function middleware(request: NextRequest) {
     const authToken = request.cookies.get('auth_token')?.value;
     const adminUser = request.cookies.get('admin_user')?.value;
 
-    // 認証されていない場合、または admin_user でない場合はログインページにリダイレクト
-    if (!authToken || adminUser !== 'true') {
+    let isAdmin = false;
+    if (authToken && process.env.ADMIN_JWT_SECRET) {
+      try {
+        const verified = await verifyJwt(
+          authToken,
+          process.env.ADMIN_JWT_SECRET
+        );
+        // 期待するクレーム: { role: 'admin' } または { admin: true }
+        if (verified.valid) {
+          const payload = verified.payload as any;
+          isAdmin = payload?.role === 'admin' || payload?.admin === true;
+        }
+      } catch {}
+    }
+
+    // 既存の Cookie フラグも後方互換として許容（段階的移行）
+    if (!authToken || (!isAdmin && adminUser !== 'true')) {
       const redirectResponse = NextResponse.redirect(
         new URL('/admin/login', request.url)
       );
