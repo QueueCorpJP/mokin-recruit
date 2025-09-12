@@ -1,19 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { getSummaryData, updateSummaryData } from './actions';
-import { useCandidateAuth } from '@/hooks/useClientAuth';
-import {
-  summarySchema,
-  type SummaryFormData,
-} from '@/app/candidate/account/_shared/schemas/summarySchema';
-import { FormErrorMessage } from '@/app/candidate/account/_shared/fields/FormErrorMessage';
+import ActionButtons from '@/app/candidate/account/_shared/ui/ActionButtons';
 import { FormField } from '@/app/candidate/account/_shared/fields/FormField';
 import { useSummaryForm } from '../../_shared/hooks/useSummaryForm';
 
@@ -22,11 +9,10 @@ export default function CandidateSummaryEditPage() {
   const {
     register,
     handleSubmit,
-    errors,
+    formState: { errors },
     isSubmitting,
     handleCancel,
     onSubmit,
-    reset,
     isLoading,
     isDesktop,
     isAuthenticated,
@@ -175,7 +161,7 @@ export default function CandidateSummaryEditPage() {
                     <FormField
                       label='職務要約'
                       htmlFor='jobSummary'
-                      error={errors.jobSummary?.message}
+                      error={errors.jobSummary?.message ?? null}
                       hideLabel={true}
                     >
                       <textarea
@@ -204,7 +190,7 @@ export default function CandidateSummaryEditPage() {
                     <FormField
                       label='自己PR・その他'
                       htmlFor='selfPr'
-                      error={errors.selfPr?.message}
+                      error={errors.selfPr?.message ?? null}
                       hideLabel={true}
                     >
                       <textarea
@@ -224,25 +210,12 @@ export default function CandidateSummaryEditPage() {
             </div>
 
             {/* ボタン */}
-            <div className='flex gap-4 w-full lg:w-auto'>
-              <Button
-                type='button'
-                variant='green-outline'
-                size='figma-default'
-                onClick={handleCancel}
-                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
-              >
-                キャンセル
-              </Button>
-              <Button
-                type='submit'
-                variant='green-gradient'
-                size='figma-default'
-                disabled={isSubmitting}
-                className='min-w-[160px] flex-1 lg:flex-none text-[16px] tracking-[1.6px]'
-              >
-                {isSubmitting ? '保存中...' : '保存する'}
-              </Button>
+            <div className='w-full lg:w-auto'>
+              <ActionButtons
+                isSubmitting={isSubmitting}
+                handleCancel={handleCancel}
+                isMobile={!isDesktop}
+              />
             </div>
           </form>
         </div>

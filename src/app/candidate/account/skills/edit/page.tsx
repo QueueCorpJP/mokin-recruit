@@ -3,21 +3,15 @@
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { getSkillsData, updateSkillsData } from './actions';
-import {
-  skillsSchema,
-  type SkillsFormData,
-} from '../../_shared/schemas/skills';
+import { skillsSchema, type SkillsFormData } from '../../_shared/schemas';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import {
   ENGLISH_LEVELS,
   LANGUAGE_OPTIONS,
 } from '../../_shared/constants/forms';
 import { useEditForm } from '../../_shared/hooks/useEditForm';
-import {
-  idFor,
-  describedByIdFor,
-  ariaPropsFor,
-} from '../../_shared/utils/a11y';
+import { idFor, describedByIdFor, ariaPropsFor } from '../../_shared/utils';
 
 // スキーマは共通化されたものを使用
 
@@ -123,7 +117,7 @@ export default function CandidateSkillsEditPage() {
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
+        <LoadingSpinner label='Loading' />
       </div>
     );
   }

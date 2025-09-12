@@ -44,7 +44,7 @@ export function GroupNameChangeModal({
     >
       <div className="flex flex-col py-10 min-h-[240px] max-h-[400px]">
         {/* Input form section */}
-        <div className="flex gap-4 items-start">
+        <div className="flex gap-4 items-start justify-center items-center w-full">
           {/* Label */}
           <div className="flex items-center justify-center pb-0 pt-[11px] px-0 shrink-0">
             <div className="font-['Noto_Sans_JP'] text-[16px] font-bold leading-[2] tracking-[1.6px] text-[#323232] whitespace-nowrap">
@@ -59,11 +59,11 @@ export function GroupNameChangeModal({
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="グループ名を入力"
-              className="w-full font-['Noto_Sans_JP'] text-[16px] font-medium leading-[2] tracking-[1.6px] border-[#999999] rounded-[5px] px-[11px] py-[11px] placeholder:text-[#999999]"
+              className="w-full font-['Noto_Sans_JP'] text-[16px] font-medium leading-[2] tracking-[1.6px] border-[#999999] rounded-[5px] px-[11px] py-0 h-[42px] placeholder:text-[#999999]"
             />
             
             {/* Description */}
-            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium leading-[1.6] tracking-[1.4px] text-[#999999] w-full">
+            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium leading-[1.6] tracking-[1.4px] text-[#999999] w-full text-center">
               グループ名は候補者にも公開されます。
             </div>
           </div>

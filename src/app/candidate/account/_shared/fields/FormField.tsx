@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormErrorMessage } from './FormErrorMessage';
+import { describedByIdFor } from '../utils/a11y';
 
 /**
  * 共通Field部品
@@ -24,6 +25,7 @@ export function FormField({
   error?: string | string[] | null;
   hideLabel?: boolean;
 }) {
+  const descId = describedByIdFor(htmlFor);
   return (
     <div className='mb-4'>
       <label
@@ -37,7 +39,7 @@ export function FormField({
         {label}
       </label>
       {children}
-      <FormErrorMessage error={error} />
+      <FormErrorMessage error={error ?? null} id={descId} />
     </div>
   );
 }

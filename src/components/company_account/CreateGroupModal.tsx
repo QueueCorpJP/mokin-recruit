@@ -9,7 +9,7 @@ import { X, Plus } from 'lucide-react';
 
 interface MemberInvitation {
   email: string;
-  role: 'admin' | 'member' | 'viewer';
+  role: 'admin' | 'recruiter' | 'scout';
 }
 
 interface CreateGroupModalProps {
@@ -20,18 +20,18 @@ interface CreateGroupModalProps {
 
 const roleOptions = [
   { value: 'admin', label: '管理者' },
-  { value: 'member', label: 'メンバー' },
-  { value: 'viewer', label: '閲覧者' },
+  { value: 'recruiter', label: '採用担当者' },
+  { value: 'scout', label: 'スカウト担当者' },
 ];
 
 export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState('');
   const [members, setMembers] = useState<MemberInvitation[]>([
-    { email: '', role: 'member' }
+    { email: '', role: 'recruiter' }
   ]);
 
   const handleAddMember = () => {
-    setMembers([...members, { email: '', role: 'member' }]);
+    setMembers([...members, { email: '', role: 'recruiter' }]);
   };
 
   const handleRemoveMember = (index: number) => {
@@ -78,9 +78,9 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
               placeholder="グループ名を入力"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+              className="!bg-white !border !border-[#999999] !rounded-[5px] !px-[11px] !py-0 !h-[42px] !w-full font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999]"
             />
-            <p className="text-[#999999] text-[14px] font-['Noto_Sans_JP'] font-medium tracking-[1.4px] leading-[1.6] text-left">
+            <p className="text-[#999999] text-[14px] font-['Noto_Sans_JP'] font-medium tracking-[1.4px] leading-[1.6] text-center">
               グループ名は候補者にも公開されます。
             </p>
           </div>
@@ -88,7 +88,7 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
 
         {/* メンバー招待セクション */}
         <div className="flex flex-col gap-4 items-center">
-          <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#323232] leading-[1.6]">
+          <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#323232] leading-[1.6] text-center">
             招待するメンバー
           </h3>
           
@@ -100,15 +100,16 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
                   value={member.email}
                   onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
                   type="email"
-                  className="flex-1 bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999]"
+                  className="!flex-1 !bg-white !border !border-[#999999] !rounded-[5px] !px-[11px] !py-0 !h-[42px] !w-auto !min-w-0 font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999]"
                 />
-                <div className="w-[120px]">
+                <div className="w-[120px] flex-shrink-0">
                   <SelectInput
                     options={roleOptions}
                     value={member.role}
                     placeholder="権限を選択"
+                    radius={5}
+                    className="!w-full"
                     onChange={(value) => handleMemberChange(index, 'role', value)}
-                    className="bg-white border border-[#999999] rounded-[5px] font-['Noto_Sans_JP'] text-[16px] font-bold tracking-[1.6px]"
                   />
                 </div>
                 {members.length > 1 && (

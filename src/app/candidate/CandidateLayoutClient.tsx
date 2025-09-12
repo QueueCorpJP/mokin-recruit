@@ -11,17 +11,9 @@ export default function CandidateLayoutClient({
 }) {
   return (
     <UserProvider user={null}>
-      <AuthAwareNavigationServer 
-        variant="candidate" 
-        isLoggedIn={false}
-        userInfo={undefined}
-      />
+      <AuthAwareNavigationServer variant='candidate' />
       {children}
-      <AuthAwareFooterServer 
-        variant="candidate" 
-        isLoggedIn={false}
-        userInfo={undefined}
-      />
+      <AuthAwareFooterServer variant='candidate' />
     </UserProvider>
   );
 }

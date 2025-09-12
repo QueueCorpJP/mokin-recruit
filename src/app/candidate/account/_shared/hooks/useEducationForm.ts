@@ -7,13 +7,14 @@ import {
   getEducationData,
   updateEducationData,
 } from '../../education/edit/actions';
+import { useModal } from './useModal';
 
 export function useEducationForm(initialData?: Partial<EducationFormData>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
-  const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
+  const industryModal = useModal(false);
+  const jobTypeModal = useModal(false);
 
   // useForm初期化
   const {
@@ -130,7 +131,7 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
       shouldValidate: true,
       shouldDirty: true,
     });
-    setIsIndustryModalOpen(false);
+    industryModal.close();
   };
   const handleJobTypeConfirm = (jobTypes: string[]) => {
     const jobTypesWithExperience = jobTypes.map(jobTypeId => {
@@ -145,7 +146,7 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
       shouldValidate: true,
       shouldDirty: true,
     });
-    setIsJobTypeModalOpen(false);
+    jobTypeModal.close();
   };
 
   // 業種・職種の削除・経験年数更新
@@ -196,10 +197,12 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
     monthOptions,
     selectedIndustries,
     selectedJobTypes,
-    isIndustryModalOpen,
-    setIsIndustryModalOpen,
-    isJobTypeModalOpen,
-    setIsJobTypeModalOpen,
+    isIndustryModalOpen: industryModal.isOpen,
+    setIsIndustryModalOpen: (open: boolean) =>
+      open ? industryModal.open() : industryModal.close(),
+    isJobTypeModalOpen: jobTypeModal.isOpen,
+    setIsJobTypeModalOpen: (open: boolean) =>
+      open ? jobTypeModal.open() : jobTypeModal.close(),
     handleIndustryConfirm,
     handleJobTypeConfirm,
     removeIndustry,
