@@ -144,13 +144,28 @@ export default function EditClient() {
           setFormData(prev => ({
             ...prev,
             companyName: result.data.companyName || 'テキストが入ります。',
+            urls: Array.isArray(result.data.companyUrls) && result.data.companyUrls.length > 0 
+              ? result.data.companyUrls 
+              : [{ title: '', url: '' }],
             representative: {
-              position: prev.representative.position,
+              position: result.data.representativePosition || '',
               name: result.data.representativeName || '',
             },
+            establishedYear: result.data.establishedYear?.toString() || '',
+            capital: {
+              amount: result.data.capitalAmount?.toString() || '',
+              unit: result.data.capitalUnit || '万円',
+            },
+            employees: result.data.employeesCount?.toString() || '',
             industries: result.data.industries || [],
-            businessContent: result.data.companyOverview || '',
+            businessContent: result.data.businessContent || result.data.companyOverview || '',
             location: result.data.location || { prefecture: '', address: '' },
+            companyPhase: result.data.companyPhase || '',
+            currentIconUrl: result.data.logoUrl ?? null,
+            currentImageUrls: Array.isArray(result.data.imageUrls) ? result.data.imageUrls : [],
+            attractions: Array.isArray(result.data.companyAttractions) && result.data.companyAttractions.length > 0 
+              ? result.data.companyAttractions 
+              : [{ title: '', content: '' }],
           }));
         }
       } finally {
@@ -217,11 +232,10 @@ export default function EditClient() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (
-      !formData.representative.position?.trim() ||
-      !formData.representative.name?.trim()
-    ) {
-      newErrors['representative'] = '代表者の役職名と氏名を入力してください。';
+    if (!formData.representative.position?.trim()) {
+      newErrors['representative'] = '代表者の役職名を入力してください。';
+    } else if (!formData.representative.name?.trim()) {
+      newErrors['representative'] = '代表者の氏名を入力してください。';
     }
 
     if (formData.industries.length === 0) {
@@ -245,19 +259,57 @@ export default function EditClient() {
     if (!validate()) return;
     setSaving(true);
     try {
+      let iconUrl = formData.currentIconUrl;
+      let imageUrls = formData.currentImageUrls;
+
+      // アイコン画像のアップロード
+      if (formData.iconImage) {
+        const fd = new FormData();
+        fd.append('icon', formData.iconImage);
+        const iconRes = await uploadCompanyAccountIconAction(fd);
+        if (iconRes.success) {
+          iconUrl = iconRes.url;
+        } else {
+          setErrors({ submit: iconRes.error || 'アイコンのアップロードに失敗しました' });
+          return;
+        }
+      }
+
+      // 企業画像のアップロード
+      if (formData.images.length > 0) {
+        const fd = new FormData();
+        for (const img of formData.images) {
+          fd.append('images', img);
+        }
+        const imagesRes = await uploadCompanyAccountImagesAction(fd);
+        if (imagesRes.success) {
+          imageUrls = [...imageUrls, ...imagesRes.files.map(f => f.url)];
+        } else {
+          setErrors({ submit: imagesRes.error || '画像のアップロードに失敗しました' });
+          return;
+        }
+      }
+
       const res = await saveCompanyAccountEdit({
         representativeName: formData.representative.name,
+        representativePosition: formData.representative.position,
         industries: formData.industries,
         businessContent: formData.businessContent,
         location: formData.location,
+        iconUrl,
+        imageUrls,
+        companyUrls: formData.urls.filter(url => url.title.trim() || url.url.trim()),
+        establishedYear: formData.establishedYear ? parseInt(formData.establishedYear, 10) : null,
+        capitalAmount: formData.capital.amount ? parseInt(formData.capital.amount, 10) : null,
+        capitalUnit: formData.capital.unit,
+        employeesCount: formData.employees ? parseInt(formData.employees, 10) : null,
+        companyPhase: formData.companyPhase,
+        companyAttractions: formData.attractions.filter(attr => attr.title.trim() || attr.content.trim()),
       });
       if ('success' in res && res.success) {
         router.push('/company/account');
       } else {
-        setErrors(prev => ({
-          ...prev,
-          submit: res.error || '保存に失敗しました',
-        }));
+        setErrors({ submit: res.error || '保存に失敗しました' });
       }
     } finally {
       setSaving(false);
@@ -452,22 +504,16 @@ export default function EditClient() {
                           accept='image/*'
                           className='hidden'
                           id='icon-upload'
-                          onChange={async e => {
+                          onChange={e => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            setUploading(true);
-                            try {
-                              const fd = new FormData();
-                              fd.append('icon', file);
-                              const res = await uploadCompanyAccountIconAction(fd);
-                              if ('success' in res && res.success) {
-                                setFormData({ ...formData, iconImage: file, currentIconUrl: res.url });
-                              } else {
-                                setErrors(prev => ({ ...prev, submit: res.error || 'アイコンのアップロードに失敗しました' }));
-                              }
-                            } finally {
-                              setUploading(false);
-                            }
+                            
+                            // 画像ファイルを保持して即座に表示（アップロードは保存時）
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              iconImage: file,
+                              currentIconUrl: null // 新しい画像を優先表示
+                            }));
                           }}
                         />
                         {/* 画像を削除リンク */}
@@ -929,31 +975,17 @@ export default function EditClient() {
                           3 && (
                           <ImageUpload
                             images={[]}
-                            onChange={async newFiles => {
+                            onChange={newFiles => {
                               const totalCount = formData.currentImageUrls.length + formData.images.length;
                               const availableSlots = 3 - totalCount;
                               const filesToAdd = newFiles.slice(0, availableSlots);
                               if (filesToAdd.length === 0) return;
-                              setUploading(true);
-                              try {
-                                const fd = new FormData();
-                                for (const f of filesToAdd) fd.append('images', f);
-                                const res = await uploadCompanyAccountImagesAction(fd);
-                                if ('success' in res && res.success) {
-                                  setFormData({
-                                    ...formData,
-                                    images: [...formData.images, ...filesToAdd],
-                                    currentImageUrls: [
-                                      ...formData.currentImageUrls,
-                                      ...res.files.map(f => f.url),
-                                    ],
-                                  });
-                                } else {
-                                  setErrors(prev => ({ ...prev, submit: res.error || '画像のアップロードに失敗しました' }));
-                                }
-                              } finally {
-                                setUploading(false);
-                              }
+                              
+                              // 画像を即座に表示（アップロードは保存時）
+                              setFormData(prev => ({
+                                ...prev,
+                                images: [...prev.images, ...filesToAdd],
+                              }));
                             }}
                             maxImages={1}
                           />
@@ -1052,6 +1084,13 @@ export default function EditClient() {
             </>
           )}
 
+          {/* エラーメッセージ */}
+          {errors['submit'] && (
+            <div className='text-center mt-6'>
+              <p className='text-red-500 text-sm'>{errors['submit']}</p>
+            </div>
+          )}
+
           {/* ボタンエリア */}
           <div className='flex justify-center gap-4 mt-10'>
             <Button
@@ -1067,16 +1106,7 @@ export default function EditClient() {
               size='figma-default'
               onClick={handleSave}
               className='min-w-[160px] px-10'
-              disabled={
-                !formData.representative.position ||
-                !formData.representative.name ||
-                formData.industries.length === 0 ||
-                !formData.businessContent ||
-                !formData.location.prefecture ||
-                !formData.location.address ||
-                saving || uploading ||
-                loading
-              }
+              disabled={saving || uploading || loading}
             >
               {saving ? '保存中...' : uploading ? 'アップロード中...' : '保存する'}
             </Button>
@@ -1095,6 +1125,7 @@ export default function EditClient() {
             name,
           });
           handleIndustryConfirm(names.map(mapToIndustry));
+          setIsIndustryModalOpen(false);
         }}
         initialSelected={formData.industries.map(i => i.name)}
         maxSelections={3}

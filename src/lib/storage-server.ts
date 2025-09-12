@@ -37,14 +37,24 @@ export async function uploadCompanyIcon(companyAccountId: string, file: File): P
 export async function uploadCompanyImages(companyAccountId: string, files: File[]): Promise<UploadedFile[]> {
   const results: UploadedFile[] = [];
   for (const file of files) {
-    const uploaded = await uploadCompanyIcon(companyAccountId, new File([await file.arrayBuffer()], file.name, { type: file.type }));
-    // place into images/ prefix instead of icons/
-    if (uploaded.path.startsWith('icons/')) {
-      const replaced = uploaded.path.replace(/^icons\//, 'images/');
-      results.push({ ...uploaded, path: replaced, publicUrl: uploaded.publicUrl.replace('/icons/', '/images/') });
-    } else {
-      results.push(uploaded);
+    const supabase = await getSupabaseServerClient();
+    const arrayBuffer = await file.arrayBuffer();
+    const objectPath = generateObjectPath('images', companyAccountId, file.name || 'image');
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET_ID)
+      .upload(objectPath, arrayBuffer, {
+        cacheControl: '3600',
+        contentType: file.type || 'image/*',
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
     }
+
+    const { data: urlData } = supabase.storage.from(BUCKET_ID).getPublicUrl(data.path);
+    results.push({ path: data.path, publicUrl: urlData.publicUrl });
   }
   return results;
 }

@@ -35,7 +35,17 @@ export default async function CompanyLayout({
       />
 
       {/* メインコンテンツ */}
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div className="min-h-[80vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20">
+            <main className="w-full max-w-[1280px] mx-auto">
+              <div className="animate-pulse h-7 bg-gray-200 rounded w-1/3 mb-6"></div>
+              <div className="animate-pulse h-56 bg-gray-200 rounded mb-4"></div>
+              <div className="animate-pulse h-56 bg-gray-200 rounded mb-4"></div>
+            </main>
+          </div>
+        }
+      >
         <CompanyLayoutClient initialAuth={initialAuth}>
           {children}
           {/* ここでモーダルslotを描画 */}
