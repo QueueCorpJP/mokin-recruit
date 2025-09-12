@@ -218,7 +218,7 @@ export async function getCandidatesDataWithQuery(
       `
       )
       .in('company_group_id', groupIds),
-    
+
     // スカウトデータ取得
     supabase
       .from('scout_sends')
@@ -250,10 +250,11 @@ export async function getCandidatesDataWithQuery(
         )
       `
       )
-      .in('company_group_id', groupIds)
+      .in('company_group_id', groupIds),
   ]);
 
-  const { data: applicationsData, error: applicationsError } = applicationResult;
+  const { data: applicationsData, error: applicationsError } =
+    applicationResult;
   const { data: scoutSendsData, error: scoutSendsError } = scoutSendsResult;
 
   if (applicationsError && scoutSendsError) return [];
@@ -263,13 +264,13 @@ export async function getCandidatesDataWithQuery(
     ...(applicationsData || []).map((app: any) => ({
       ...app,
       type: 'application',
-      created_at: app.created_at
+      created_at: app.created_at,
     })),
     ...(scoutSendsData || []).map((scout: any) => ({
       ...scout,
       type: 'scout',
-      created_at: scout.sent_at
-    }))
+      created_at: scout.sent_at,
+    })),
   ];
 
   let query = allCandidatesData;
@@ -332,14 +333,14 @@ export async function getCandidatesDataWithQuery(
       ]);
       const candidate = app.candidates;
       const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
-      
+
       // 担当者を取得
       const assignedUsers = await getAssignedUsersForCandidate(
         supabase,
         candidateId,
         app.company_group_id
       );
-      
+
       // 選考進捗を取得
       const { data: selectionProgress } = await supabase
         .from('selection_progress')
@@ -347,11 +348,12 @@ export async function getCandidatesDataWithQuery(
         .eq('candidate_id', candidateId)
         .eq('company_group_id', app.company_group_id)
         .single();
-      
+
       return {
         id: candidateId,
         name: `${candidate.first_name} ${candidate.last_name}`,
-        company: candidate.recent_job_company_name || candidate.current_company || '',
+        company:
+          candidate.recent_job_company_name || candidate.current_company || '',
         location: candidate.prefecture || '',
         age,
         gender: candidate.gender || '',
@@ -391,7 +393,7 @@ async function getAssignedUsersForCandidate(
 ): Promise<string[]> {
   try {
     console.log('🔍 [担当者取得] 開始:', { candidateId, companyGroupId });
-    
+
     // roomsテーブルからparticipating_company_usersを取得
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
@@ -400,7 +402,12 @@ async function getAssignedUsersForCandidate(
       .eq('company_group_id', companyGroupId)
       .single();
 
-    if (!roomError && roomData && roomData.participating_company_users && roomData.participating_company_users.length > 0) {
+    if (
+      !roomError &&
+      roomData &&
+      roomData.participating_company_users &&
+      roomData.participating_company_users.length > 0
+    ) {
       const result = roomData.participating_company_users;
       console.log('✅ [担当者取得] ルーム担当者:', result);
       return result;
@@ -420,7 +427,7 @@ async function getAssignedUsersForCandidate(
           uniqueSenders.add(scout.sender_name);
         }
       });
-      
+
       if (uniqueSenders.size > 0) {
         const result = Array.from(uniqueSenders);
         console.log('✅ [担当者取得] スカウト担当者:', result);
@@ -441,7 +448,9 @@ async function getAssignedUsersForCandidate(
       return result;
     }
 
-    console.log('❌ [担当者取得] ルーム、スカウト、応募グループすべて見つかりません');
+    console.log(
+      '❌ [担当者取得] ルーム、スカウト、応募グループすべて見つかりません'
+    );
     return [];
   } catch (error) {
     console.error('❌ [担当者取得エラー]:', error);
@@ -501,8 +510,11 @@ async function getCandidatesDataFallback(
   groupIds: string[]
 ): Promise<CandidateData[]> {
   try {
-    console.log('🔍 Querying applications and scout_sends with group IDs:', groupIds);
-    
+    console.log(
+      '🔍 Querying applications and scout_sends with group IDs:',
+      groupIds
+    );
+
     // applicationとscout_sendsの両方を並列取得
     const [applicationResult, scoutSendsResult] = await Promise.all([
       // 応募データ取得
@@ -536,7 +548,7 @@ async function getCandidatesDataFallback(
         `
         )
         .in('company_group_id', groupIds),
-      
+
       // スカウトデータ取得
       supabase
         .from('scout_sends')
@@ -567,21 +579,25 @@ async function getCandidatesDataFallback(
           )
         `
         )
-        .in('company_group_id', groupIds)
+        .in('company_group_id', groupIds),
     ]);
 
-    const { data: applicationsData, error: applicationsError } = applicationResult;
+    const { data: applicationsData, error: applicationsError } =
+      applicationResult;
     const { data: scoutSendsData, error: scoutSendsError } = scoutSendsResult;
 
     console.log('🔍 Applications and Scout Sends Query Result:', {
       applicationsCount: applicationsData?.length || 0,
       applicationsError,
       scoutSendsCount: scoutSendsData?.length || 0,
-      scoutSendsError
+      scoutSendsError,
     });
 
     if (applicationsError && scoutSendsError) {
-      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
+      console.error('Both Applications and Scout Sends queries failed:', {
+        applicationsError,
+        scoutSendsError,
+      });
       return [];
     }
 
@@ -590,13 +606,13 @@ async function getCandidatesDataFallback(
       ...(applicationsData || []).map((app: any) => ({
         ...app,
         type: 'application',
-        created_at: app.created_at
+        created_at: app.created_at,
       })),
       ...(scoutSendsData || []).map((scout: any) => ({
         ...scout,
-        type: 'scout', 
-        created_at: scout.sent_at
-      }))
+        type: 'scout',
+        created_at: scout.sent_at,
+      })),
     ];
 
     const candidatesData = allCandidatesData;
@@ -609,7 +625,10 @@ async function getCandidatesDataFallback(
     });
 
     if (applicationsError && scoutSendsError) {
-      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
+      console.error('Both Applications and Scout Sends queries failed:', {
+        applicationsError,
+        scoutSendsError,
+      });
       return [];
     }
 
@@ -622,8 +641,11 @@ async function getCandidatesDataFallback(
     const uniqueCandidatesMap = new Map();
     candidatesData.forEach((app: any) => {
       const candidateId = app.candidate_id;
-      if (!uniqueCandidatesMap.has(candidateId) || 
-          new Date(app.created_at) > new Date(uniqueCandidatesMap.get(candidateId).created_at)) {
+      if (
+        !uniqueCandidatesMap.has(candidateId) ||
+        new Date(app.created_at) >
+          new Date(uniqueCandidatesMap.get(candidateId).created_at)
+      ) {
         uniqueCandidatesMap.set(candidateId, app);
       }
     });
@@ -681,7 +703,10 @@ async function getCandidatesDataFallback(
         return {
           id: candidateId,
           name: `${candidate.first_name} ${candidate.last_name}`,
-          company: candidate.recent_job_company_name || candidate.current_company || '',
+          company:
+            candidate.recent_job_company_name ||
+            candidate.current_company ||
+            '',
           location: candidate.prefecture || '',
           age,
           gender: candidate.gender || '',
@@ -796,10 +821,10 @@ export async function getJobOptions(): Promise<
 
     const options = [
       { value: '', label: 'すべて' },
-      ...(data?.map(job => ({ 
-        value: job.id.toString(), 
+      ...(data?.map(job => ({
+        value: job.id.toString(),
         label: job.title,
-        groupId: job.company_group_id 
+        groupId: job.company_group_id,
       })) || []),
     ];
 
@@ -831,8 +856,48 @@ export interface CandidateDetailData {
   jobPostingTitle: string;
   group: string;
   groupId: string;
+  // ===== UI alias fields (to avoid breaking existing components) =====
+  lastName?: string;
+  firstName?: string;
+  lastNameKana?: string;
+  firstNameKana?: string;
+  birthDate?: string;
+  prefecture?: string;
+  phoneNumber?: string;
+  currentCompany?: string;
+  currentPosition?: string;
+  currentIncome?: string;
+  desiredSalary?: string;
+  recentJobCompanyName?: string;
+  recentJobDepartmentPosition?: string;
+  recentJobStartYear?: string;
+  recentJobStartMonth?: string;
+  recentJobEndYear?: string;
+  recentJobEndMonth?: string;
+  recentJobIsCurrentlyWorking?: boolean;
+  recentJobDescription?: string;
+  experienceYears?: number;
+  skills?: string[];
+  desiredIndustries?: string[];
+  desiredJobTypes?: string[];
+  desiredLocations?: string[];
+  interestedWorkStyles?: string[];
+  selfPr?: string;
+  hasCareerChange?: string;
+  jobChangeTiming?: string;
+  currentActivityStatus?: string;
+  managementExperienceCount?: number;
+  scoutReceptionEnabled?: boolean;
+  status?: 'ACTIVE' | 'INACTIVE' | 'PAUSED' | string;
+  lastLoginAt?: string;
+  updatedAt?: string;
+  createdAt?: string;
+  careerStatusUpdatedAt?: string;
+  recentJobUpdatedAt?: string;
+  resumeUploadedAt?: string;
+  resumeFilename?: string;
   experience?: string[]; // 候補者カードと同じ形式
-  industry?: string[];   // 候補者カードと同じ形式
+  industry?: string[]; // 候補者カードと同じ形式
   experienceJobs?: Array<{ title: string; years: number }>;
   experienceIndustries?: Array<{ title: string; years: number }>;
   workHistory?: Array<{
@@ -908,7 +973,8 @@ export async function getCandidateDetailData(
     // applicationテーブルから求人情報を取得
     const { data: applicationData, error: appError } = await supabase
       .from('application')
-      .select(`
+      .select(
+        `
         job_posting_id,
         company_group_id,
         job_postings (
@@ -917,7 +983,8 @@ export async function getCandidateDetailData(
         company_groups (
           group_name
         )
-      `)
+      `
+      )
       .eq('candidate_id', candidateId)
       .eq('company_group_id', companyGroupId)
       .maybeSingle();
@@ -931,7 +998,8 @@ export async function getCandidateDetailData(
       // scout_sendsテーブルからも確認
       const { data: scoutData, error: scoutError } = await supabase
         .from('scout_sends')
-        .select(`
+        .select(
+          `
           job_posting_id,
           company_group_id,
           job_postings (
@@ -941,7 +1009,8 @@ export async function getCandidateDetailData(
             id,
             group_name
           )
-        `)
+        `
+        )
         .eq('candidate_id', candidateId)
         .eq('company_group_id', companyGroupId)
         .maybeSingle();
@@ -970,16 +1039,17 @@ export async function getCandidateDetailData(
   // 4. 選考状況 - 自分の会社グループのもののみ取得
   let selectionStatusQuery = supabase
     .from('career_status_entries')
-    .select(
-      'company_name, industries, progress_status, decline_reason'
-    )
+    .select('company_name, industries, progress_status, decline_reason')
     .eq('candidate_id', candidateId);
-    
+
   // companyGroupIdが指定されている場合はそのグループの進捗のみ取得
   if (companyGroupId) {
-    selectionStatusQuery = selectionStatusQuery.eq('company_group_id', companyGroupId);
+    selectionStatusQuery = selectionStatusQuery.eq(
+      'company_group_id',
+      companyGroupId
+    );
   }
-  
+
   const { data: selectionStatus } = await selectionStatusQuery;
 
   // 5. スキル情報
@@ -996,21 +1066,19 @@ export async function getCandidateDetailData(
     .eq('candidate_id', candidateId);
 
   // 7. 担当者情報を取得
-  const assignedUsers = companyGroupId ? await getAssignedUsersForCandidate(
-    supabase,
-    candidateId,
-    companyGroupId
-  ) : [];
+  const assignedUsers = companyGroupId
+    ? await getAssignedUsersForCandidate(supabase, candidateId, companyGroupId)
+    : [];
 
   // 年齢計算
   const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
-  
+
   // デバッグ: 希望勤務地データを確認
   console.log('🔍 [希望勤務地デバッグ]:', {
     candidateId,
     desired_locations: candidate.desired_locations,
     type: typeof candidate.desired_locations,
-    isArray: Array.isArray(candidate.desired_locations)
+    isArray: Array.isArray(candidate.desired_locations),
   });
 
   // 日付フォーマット関数
@@ -1031,7 +1099,7 @@ export async function getCandidateDetailData(
     const endYear = candidate.recent_job_end_year;
     const endMonth = candidate.recent_job_end_month;
     const isCurrentlyWorking = candidate.recent_job_is_currently_working;
-    
+
     let period = '';
     if (startYear && startMonth) {
       period = `${startYear}年${startMonth}月〜`;
@@ -1045,32 +1113,105 @@ export async function getCandidateDetailData(
     workHistory.push({
       companyName: candidate.recent_job_company_name,
       period: period,
-      industries: Array.isArray(candidate.recent_job_industries) 
-        ? candidate.recent_job_industries 
-        : (candidate.recent_job_industries ? [candidate.recent_job_industries] : []),
+      industries: Array.isArray(candidate.recent_job_industries)
+        ? candidate.recent_job_industries
+        : candidate.recent_job_industries
+        ? [candidate.recent_job_industries]
+        : [],
       department: candidate.recent_job_department_position || '',
       position: candidate.recent_job_department_position || '',
-      jobType: Array.isArray(candidate.recent_job_types) 
-        ? candidate.recent_job_types.join('、') 
-        : (candidate.recent_job_types || ''),
+      jobType: Array.isArray(candidate.recent_job_types)
+        ? candidate.recent_job_types.join('、')
+        : candidate.recent_job_types || '',
       description: candidate.recent_job_description || '',
     });
   }
 
   return {
     id: candidate.id,
-    name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'N/A',
-    company: candidate.recent_job_company_name || candidate.current_company || '',
+    name:
+      `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() ||
+      'N/A',
+    company:
+      candidate.recent_job_company_name || candidate.current_company || '',
     location: candidate.prefecture || candidate.current_residence || '',
     age,
-    gender: candidate.gender === 'male' ? '男性' : candidate.gender === 'female' ? '女性' : candidate.gender || '',
+    gender:
+      candidate.gender === 'male'
+        ? '男性'
+        : candidate.gender === 'female'
+        ? '女性'
+        : candidate.gender || '',
     income: candidate.current_income || candidate.current_salary || '',
     lastLogin: formatDate(candidate.last_login_at),
     lastUpdate: formatDate(candidate.updated_at),
     registrationDate: formatDate(candidate.created_at),
     jobSummary: candidate.job_summary || '',
-    experience: (jobExp || []).map((j: { job_type_name: string }) => j.job_type_name), // 候補者カードと同じ形式
-    industry: (industryExp || []).map((i: { industry_name: string }) => i.industry_name), // 候補者カードと同じ形式
+    // ===== UI alias fields mapping =====
+    lastName: candidate.last_name || '',
+    firstName: candidate.first_name || '',
+    lastNameKana: candidate.last_name_kana || '',
+    firstNameKana: candidate.first_name_kana || '',
+    birthDate: candidate.birth_date || '',
+    prefecture: candidate.prefecture || candidate.current_residence || '',
+    phoneNumber: candidate.phone_number || '',
+    currentCompany: candidate.current_company || '',
+    currentPosition: candidate.recent_job_department_position || '',
+    currentIncome: candidate.current_income || candidate.current_salary || '',
+    desiredSalary: candidate.desired_salary || '',
+    recentJobCompanyName: candidate.recent_job_company_name || '',
+    recentJobDepartmentPosition: candidate.recent_job_department_position || '',
+    recentJobStartYear: candidate.recent_job_start_year || '',
+    recentJobStartMonth: candidate.recent_job_start_month || '',
+    recentJobEndYear: candidate.recent_job_end_year || '',
+    recentJobEndMonth: candidate.recent_job_end_month || '',
+    recentJobIsCurrentlyWorking: !!candidate.recent_job_is_currently_working,
+    recentJobDescription: candidate.recent_job_description || '',
+    experienceYears:
+      (jobExp || []).reduce(
+        (acc: number, j: any) => acc + (j.experience_years || 0),
+        0
+      ) || undefined,
+    desiredIndustries: Array.isArray(candidate.desired_industries)
+      ? candidate.desired_industries
+      : [],
+    desiredJobTypes: Array.isArray(candidate.desired_job_types)
+      ? candidate.desired_job_types
+      : [],
+    desiredLocations: Array.isArray(candidate.desired_locations)
+      ? candidate.desired_locations.filter(
+          (l: any) => l && String(l).trim() !== ''
+        )
+      : [],
+    interestedWorkStyles: Array.isArray(candidate.interested_work_styles)
+      ? candidate.interested_work_styles
+      : [],
+    selfPr: candidate.self_pr || '',
+    hasCareerChange: candidate.has_career_change || '',
+    jobChangeTiming: candidate.job_change_timing || '',
+    currentActivityStatus: candidate.current_activity_status || '',
+    managementExperienceCount:
+      typeof candidate.management_experience_count === 'number'
+        ? candidate.management_experience_count
+        : undefined,
+    scoutReceptionEnabled:
+      typeof candidate.scout_reception_enabled === 'boolean'
+        ? candidate.scout_reception_enabled
+        : undefined,
+    status: candidate.status || undefined,
+    lastLoginAt: candidate.last_login_at || undefined,
+    updatedAt: candidate.updated_at || undefined,
+    createdAt: candidate.created_at || undefined,
+    careerStatusUpdatedAt: undefined,
+    recentJobUpdatedAt: undefined,
+    resumeUploadedAt: undefined,
+    resumeFilename: undefined,
+    experience: (jobExp || []).map(
+      (j: { job_type_name: string }) => j.job_type_name
+    ), // 候補者カードと同じ形式
+    industry: (industryExp || []).map(
+      (i: { industry_name: string }) => i.industry_name
+    ), // 候補者カードと同じ形式
     experienceJobs: (jobExp || []).map(
       (j: { job_type_name: string; experience_years: number }) => ({
         title: j.job_type_name,
@@ -1087,13 +1228,21 @@ export async function getCandidateDetailData(
     desiredConditions: {
       annualIncome: candidate.desired_salary || '',
       currentIncome: candidate.current_income || candidate.current_salary || '',
-      jobTypes: Array.isArray(candidate.desired_job_types) ? candidate.desired_job_types : [],
-      industries: Array.isArray(candidate.desired_industries) ? candidate.desired_industries : [],
-      workLocations: Array.isArray(candidate.desired_locations) 
-        ? candidate.desired_locations.filter(location => location && location.trim() !== '') 
+      jobTypes: Array.isArray(candidate.desired_job_types)
+        ? candidate.desired_job_types
+        : [],
+      industries: Array.isArray(candidate.desired_industries)
+        ? candidate.desired_industries
+        : [],
+      workLocations: Array.isArray(candidate.desired_locations)
+        ? candidate.desired_locations.filter(
+            location => location && location.trim() !== ''
+          )
         : [],
       jobChangeTiming: candidate.job_change_timing || '',
-      workStyles: Array.isArray(candidate.interested_work_styles) ? candidate.interested_work_styles : [],
+      workStyles: Array.isArray(candidate.interested_work_styles)
+        ? candidate.interested_work_styles
+        : [],
     },
     selectionStatus: (selectionStatus || []).map(
       (s: {
@@ -1112,13 +1261,19 @@ export async function getCandidateDetailData(
     ),
     selfPR: candidate.self_pr || '',
     qualifications: skillsData?.qualifications || '',
-    skills: Array.isArray(candidate.skills) ? candidate.skills : (Array.isArray(skillsData?.skills_list) ? skillsData.skills_list : []),
-    languages: skillsData?.other_languages ? 
-      Object.entries(skillsData.other_languages).map(([language, level]) => ({
-        language: language,
-        level: String(level),
-      })) : 
-      (skillsData?.english_level ? [{ language: '英語', level: skillsData.english_level }] : []),
+    skills: Array.isArray(candidate.skills)
+      ? candidate.skills
+      : Array.isArray(skillsData?.skills_list)
+      ? skillsData.skills_list
+      : [],
+    languages: skillsData?.other_languages
+      ? Object.entries(skillsData.other_languages).map(([language, level]) => ({
+          language: language,
+          level: String(level),
+        }))
+      : skillsData?.english_level
+      ? [{ language: '英語', level: skillsData.english_level }]
+      : [],
     education: (education || []).map(
       (e: {
         school_name: string;
@@ -1140,7 +1295,7 @@ export async function getCandidateDetailData(
       const { badgeType, badgeText } = calculateCandidateBadge({
         recent_job_types: candidate.recent_job_types,
         desired_job_types: candidate.desired_job_types,
-        selectionCompanies: [] // recruitment/detailでは選考中企業の情報が利用可能な場合に実装
+        selectionCompanies: [], // recruitment/detailでは選考中企業の情報が利用可能な場合に実装
       });
       return { badgeType, badgeText };
     })(),

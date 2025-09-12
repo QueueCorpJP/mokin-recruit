@@ -83,11 +83,12 @@ export const useJobSearchQuery = (params: JobSearchParams = {}) => {
     setError(null);
     try {
       const searchParams = new URLSearchParams();
-      
+
       if (keyword) searchParams.append('keyword', keyword);
       if (location) searchParams.append('location', location);
       if (salaryMin) searchParams.append('salaryMin', salaryMin);
-      if (industries?.length) searchParams.append('industries', industries.join(','));
+      if (industries?.length)
+        searchParams.append('industries', industries.join(','));
       if (jobTypes?.length) searchParams.append('jobTypes', jobTypes.join(','));
       searchParams.append('page', page.toString());
       searchParams.append('limit', limit.toString());
@@ -95,7 +96,7 @@ export const useJobSearchQuery = (params: JobSearchParams = {}) => {
       const response = await apiClient.get<JobSearchResponse>(
         `/candidate/job/search?${searchParams.toString()}`
       );
-      setData(response);
+      setData(response.data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to search jobs'));
     } finally {
@@ -118,14 +119,16 @@ export const useJobDetailQuery = (jobId: string, enabled = true) => {
 
   const refetch = useCallback(async () => {
     if (!jobId || !enabled) return;
-    
+
     setIsLoading(true);
     setError(null);
     try {
       const response = await apiClient.get<JobPosting>(`/company/job/${jobId}`);
-      setData(response);
+      setData(response.data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch job detail'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch job detail')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -148,14 +151,16 @@ export const useCompanyJobsQuery = (companyId?: string) => {
 
   const refetch = useCallback(async () => {
     if (!companyId) return;
-    
+
     setIsLoading(true);
     setError(null);
     try {
       const response = await apiClient.get<JobSearchResponse>('/company/job');
-      setData(response);
+      setData(response.data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch company jobs'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch company jobs')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -177,7 +182,10 @@ export const useJobCreateMutation = () => {
   const mutate = async (data: JobCreateData): Promise<JobPosting> => {
     setIsPending(true);
     try {
-      const response = await apiClient.post<JobPosting>('/company/job/new', data);
+      const response = await apiClient.post<JobPosting>(
+        '/company/job/new',
+        data
+      );
       return response;
     } catch (error) {
       logError(error as any, 'useJobCreateMutation');

@@ -3,18 +3,34 @@ import React from 'react';
 export type LoadingProps = {
   label?: string;
   className?: string;
+  inline?: boolean;
+  size?: number | string;
+  variant?: 'default' | 'muted' | 'primary' | string;
 };
 
 export const Loading: React.FC<LoadingProps> = ({
   label = '読み込み中…',
   className = '',
+  inline = false,
+  size = 16,
+  variant = 'default',
 }) => {
+  const dimension = typeof size === 'number' ? `${size}px` : size;
+  const colorClass =
+    variant === 'primary'
+      ? 'text-[#0f9058]'
+      : variant === 'muted'
+      ? 'text-gray-400'
+      : 'text-gray-500';
   return (
     <div
-      className={`flex items-center justify-center text-sm text-gray-600 ${className}`}
+      className={`${
+        inline ? 'inline-flex' : 'flex'
+      } items-center justify-center text-sm text-gray-600 ${className}`}
     >
       <svg
-        className='animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500'
+        className={`animate-spin -ml-1 mr-2 ${colorClass}`}
+        style={{ width: dimension, height: dimension }}
         xmlns='http://www.w3.org/2000/svg'
         fill='none'
         viewBox='0 0 24 24'
