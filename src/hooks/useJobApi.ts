@@ -186,7 +186,7 @@ export const useJobCreateMutation = () => {
         '/company/job/new',
         data
       );
-      return response;
+      return response.data!;
     } catch (error) {
       logError(error as any, 'useJobCreateMutation');
       throw error;
@@ -212,7 +212,7 @@ export const useJobUpdateMutation = () => {
         id,
         ...updateData,
       });
-      return response;
+      return response.data!;
     } catch (error) {
       logError(error as any, 'useJobUpdateMutation');
       throw error;

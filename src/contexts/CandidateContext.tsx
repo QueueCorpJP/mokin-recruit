@@ -451,7 +451,7 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
 
   // Modal actions
   const openModal = useCallback(
-    (targetType: 'industry' | 'jobtype', targetIndex: number) => {
+    (targetType: 'industry' | 'jobtype' | 'workstyle', targetIndex: number) => {
       dispatch({
         type: 'SET_MODAL_STATE',
         payload: { isOpen: true, targetType, targetIndex },

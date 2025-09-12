@@ -193,7 +193,7 @@ const CandidateDetailModal: React.FC<CandidateDetailModalProps> = ({
         {/* --- ここからCandidateCardの内容 --- */}
         <div
           className={`rounded-[10px]  ${
-            candidate.isHidden ? 'bg-[#efefef]' : 'bg-white'
+            (candidate as any).isHidden ? 'bg-[#efefef]' : 'bg-white'
           }`}
         >
           <div className='flex gap-6'>

@@ -34,6 +34,7 @@ export interface CandidateData {
   } | null;
   badgeType?: 'change' | 'professional' | 'multiple';
   isAttention?: boolean;
+  isHidden?: boolean;
   tags?: {
     isHighlighted?: boolean;
     isCareerChange?: boolean;
@@ -273,44 +274,58 @@ export async function getCandidatesDataWithQuery(
     })),
   ];
 
-  let query = allCandidatesData;
+  let query = allCandidatesData as any[];
 
   // 4. パラメータによるフィルタ
   if (params.groupId) {
-    query = query.eq('company_group_id', params.groupId);
+    query = query.filter(item => item.company_group_id === params.groupId);
   }
   if (params.jobId) {
-    query = query.eq('job_posting_id', params.jobId);
+    query = query.filter(item => item.job_posting_id === params.jobId);
   }
   // 除外: 辞退者
   if (params.excludeDeclined) {
-    query = query.neq('status', 'declined');
+    query = query.filter(item => item.status !== 'declined');
   }
   // キーワード検索（名前・会社名・経験）
   // Supabaseの複数カラム部分一致はやや工夫が必要。ここでは名前・会社名のみ対応。
   if (params.keyword) {
     // candidatesテーブルJOIN済みなのでfirst_name/last_name/current_companyでilike
-    query = query.or(
-      `candidates.first_name.ilike.%${params.keyword}%,candidates.last_name.ilike.%${params.keyword}%,candidates.current_company.ilike.%${params.keyword}%`
-    );
+    const keyword = params.keyword.toLowerCase();
+    query = query.filter(item => {
+      const c = item.candidates || {};
+      const first = String(c.first_name || '').toLowerCase();
+      const last = String(c.last_name || '').toLowerCase();
+      const comp = String(c.current_company || '').toLowerCase();
+      return (
+        first.includes(keyword) ||
+        last.includes(keyword) ||
+        comp.includes(keyword)
+      );
+    });
   }
   // ソート
   if (params.sortOrder === 'date') {
-    query = query.order('created_at', { ascending: false });
+    query = query.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   } else {
     // デフォルト: 進行順（statusで並び替え。進行度合いの昇順/降順は要件次第で調整）
-    query = query.order('status', { ascending: true });
+    query = query.sort((a, b) =>
+      String(a.status).localeCompare(String(b.status))
+    );
   }
   // ページネーション
   const page = params.page ?? 1;
   const itemsPerPage = params.itemsPerPage ?? 10;
   const from = (page - 1) * itemsPerPage;
   const to = from + itemsPerPage - 1;
-  query = query.range(from, to);
+  query = query.slice(from, to + 1);
 
   // 5. 実行
-  const { data: candidatesData, error: candidatesError } = await query;
-  if (candidatesError || !candidatesData) return [];
+  const candidatesData = query;
+  if (!candidatesData) return [];
 
   // 6. 各候補者の追加情報を並列取得（既存ロジック流用）
   const candidatesWithDetails = await Promise.all(
@@ -422,7 +437,7 @@ async function getAssignedUsersForCandidate(
 
     if (!scoutSendsError && scoutSends && scoutSends.length > 0) {
       const uniqueSenders = new Set<string>();
-      scoutSends.forEach(scout => {
+      scoutSends.forEach((scout: { sender_name?: string | null }) => {
         if (scout.sender_name) {
           uniqueSenders.add(scout.sender_name);
         }
@@ -710,8 +725,14 @@ async function getCandidatesDataFallback(
           location: candidate.prefecture || '',
           age,
           gender: candidate.gender || '',
-          experience: jobExperience.data?.map(exp => exp.job_type_name) || [],
-          industry: workExperience.data?.map(ind => ind.industry_name) || [],
+          experience:
+            jobExperience.data?.map(
+              (exp: { job_type_name: string }) => exp.job_type_name
+            ) || [],
+          industry:
+            workExperience.data?.map(
+              (ind: { industry_name: string }) => ind.industry_name
+            ) || [],
           targetCompany: careerStatus.data?.[0]?.company_name || '',
           targetJob: app.job_postings?.job_type || '',
           jobPostingId: app.job_posting_id || '',
@@ -877,7 +898,6 @@ export interface CandidateDetailData {
   recentJobIsCurrentlyWorking?: boolean;
   recentJobDescription?: string;
   experienceYears?: number;
-  skills?: string[];
   desiredIndustries?: string[];
   desiredJobTypes?: string[];
   desiredLocations?: string[];
@@ -1236,7 +1256,7 @@ export async function getCandidateDetailData(
         : [],
       workLocations: Array.isArray(candidate.desired_locations)
         ? candidate.desired_locations.filter(
-            location => location && location.trim() !== ''
+            (location: string) => location && location.trim() !== ''
           )
         : [],
       jobChangeTiming: candidate.job_change_timing || '',
@@ -1267,7 +1287,9 @@ export async function getCandidateDetailData(
       ? skillsData.skills_list
       : [],
     languages: skillsData?.other_languages
-      ? Object.entries(skillsData.other_languages).map(([language, level]) => ({
+      ? Object.entries(
+          skillsData.other_languages as Record<string, string | number>
+        ).map(([language, level]) => ({
           language: language,
           level: String(level),
         }))

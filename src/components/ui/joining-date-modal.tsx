@@ -70,7 +70,11 @@ export const JoiningDateModal: React.FC<JoiningDateModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const validationErrors = validateJoiningDate(formData);
+    const validationErrors = validateJoiningDate(
+      formData.year,
+      formData.month,
+      formData.day
+    );
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };

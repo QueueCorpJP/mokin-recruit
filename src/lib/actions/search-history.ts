@@ -134,6 +134,12 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     }
 
     const companyUser = companyUsers[0];
+    if (!companyUser) {
+      return {
+        success: false,
+        error: '企業ユーザーが見つかりません',
+      };
+    }
 
     // 指定されたグループにユーザーがアクセス権限を持っているかチェック
     const userGroups = companyUser.company_user_group_permissions || [];
@@ -154,7 +160,11 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
 
     // グループ名の取得状況をログ出力
     if (targetGroup) {
-      const groupName = targetGroup.company_group?.group_name;
+      const cg = targetGroup.company_group as
+        | { id: string; group_name: string }
+        | Array<{ id: string; group_name: string }>
+        | undefined;
+      const groupName = Array.isArray(cg) ? cg[0]?.group_name : cg?.group_name;
       if (groupName) {
         console.log(
           '[saveSearchHistory] ✅ グループ名が正常に取得されました:',
@@ -207,11 +217,17 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     }
 
     // 検索履歴を挿入（RLSが自動的にアクセス制御）
+    const cg2 = targetGroup.company_group as
+      | { id: string; group_name: string }
+      | Array<{ id: string; group_name: string }>
+      | undefined;
     const insertData = {
       searcher_id: companyUser.id,
       searcher_name: companyUser.full_name || 'Unknown User',
       group_id: data.group_id,
-      group_name: targetGroup.company_group?.group_name || 'Unknown Group',
+      group_name:
+        (Array.isArray(cg2) ? cg2[0]?.group_name : cg2?.group_name) ||
+        'Unknown Group',
       search_conditions: data.search_conditions,
       search_title: data.search_title,
       is_saved: data.is_saved || false,
@@ -766,8 +782,13 @@ export async function getUserDefaultGroupId() {
       };
     }
 
-    const group = userPermissions.company_group;
-    if (!group || !group.id) {
+    const rawGroup = userPermissions.company_group as
+      | { id: string; group_name: string }
+      | Array<{ id: string; group_name: string }>
+      | null
+      | undefined;
+    const group = Array.isArray(rawGroup) ? rawGroup[0] : rawGroup;
+    if (!group || !('id' in group) || !group.id) {
       console.error('[getUserDefaultGroupId] No group found for user');
       return {
         success: false,
