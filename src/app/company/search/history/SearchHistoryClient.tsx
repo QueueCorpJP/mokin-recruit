@@ -1,22 +1,21 @@
 'use client';
 
-import React, { ChangeEvent, useState, useTransition, useEffect } from 'react';
+import React, { ChangeEvent, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DeleteSearchConditionModal } from './DeleteSearchConditionModal';
-import { EditSearchConditionModal } from './EditSearchConditionModal';
+import { DeleteSearchConditionModal } from '@/components/company/common/DeleteSearchConditionModal';
+import { EditSearchConditionModal } from '@/components/company/common/EditSearchConditionModal';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
-import { 
-  updateSearchHistorySavedStatus, 
+import {
+  updateSearchHistorySavedStatus,
   deleteSearchHistory,
   updateSearchHistoryTitle,
-  type SearchHistoryItem as ServerSearchHistoryItem 
+  type SearchHistoryItem as ServerSearchHistoryItem,
 } from '@/lib/actions/search-history';
-import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from    '@/lib/supabase/client';
+// removed unused imports
 import { useRouter } from 'next/navigation';
-import { Pagination } from '@/components/ui/Pagination';      
+import { Pagination } from '@/components/ui/Pagination';
 // Icons
 const SearchIcon = () => (
   <svg
@@ -120,8 +119,11 @@ interface SearchHistoryClientProps {
   companyUserId: string;
 }
 
-export function SearchHistoryClient({ initialSearchHistory, initialError, companyUserId }: SearchHistoryClientProps) {
-  const { user, accessToken, loading: authLoading } = useAuth();
+export function SearchHistoryClient({
+  initialSearchHistory,
+  initialError,
+  companyUserId: _companyUserId,
+}: SearchHistoryClientProps) {
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
@@ -134,14 +136,16 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
   const [deletingItem, setDeletingItem] = useState<SearchHistoryItem | null>(
     null
   );
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(initialError);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(initialError);
 
   // ServerSearchHistoryItemをクライアント用のSearchHistoryItemに変換
-  const transformSearchHistory = (items: ServerSearchHistoryItem[]): SearchHistoryItem[] => {
+  const transformSearchHistory = (
+    items: ServerSearchHistoryItem[]
+  ): SearchHistoryItem[] => {
     return items.map(item => ({
       id: item.id,
       saved: item.is_saved,
@@ -151,10 +155,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
       searcher: item.searcher_name,
       date: new Date(item.searched_at).toLocaleString('ja-JP', {
         year: 'numeric',
-        month: '2-digit', 
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
       isMenuOpen: false,
     }));
@@ -183,7 +187,9 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
       if (result.success) {
         setSearchHistory((prev: SearchHistoryItem[]) =>
           prev.map((prevItem: SearchHistoryItem) =>
-            prevItem.id === id ? { ...prevItem, saved: !prevItem.saved } : prevItem
+            prevItem.id === id
+              ? { ...prevItem, saved: !prevItem.saved }
+              : prevItem
           )
         );
       }
@@ -202,7 +208,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
   const handleSaveEdit = async (newSearchCondition: string) => {
     if (editingItem) {
       startTransition(async () => {
-        const result = await updateSearchHistoryTitle(editingItem.id, newSearchCondition);
+        const result = await updateSearchHistoryTitle(
+          editingItem.id,
+          newSearchCondition
+        );
         if (result.success) {
           setSearchHistory((prev: SearchHistoryItem[]) =>
             prev.map((item: SearchHistoryItem) =>
@@ -236,7 +245,9 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
         const result = await deleteSearchHistory(deletingItem.id);
         if (result.success) {
           setSearchHistory((prev: SearchHistoryItem[]) =>
-            prev.filter((item: SearchHistoryItem) => item.id !== deletingItem.id)
+            prev.filter(
+              (item: SearchHistoryItem) => item.id !== deletingItem.id
+            )
           );
           setDeleteModalOpen(false);
           setDeletingItem(null);
@@ -255,79 +266,124 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
   // 検索条件をURLパラメータに変換する関数
   const buildSearchUrl = (searchConditions: any, groupId: string): string => {
     const params = new URLSearchParams();
-    
+
     // グループIDを設定
     params.set('search_group', groupId);
-    
+
     // キーワード（データベースではkeywords配列だが単体として扱う）
     if (searchConditions.keywords?.length > 0) {
       params.set('keyword', searchConditions.keywords.join(' '));
     }
-    
+
     // 年齢
-    if (searchConditions.age_min !== undefined && searchConditions.age_min !== null && searchConditions.age_min !== '') {
+    if (
+      searchConditions.age_min !== undefined &&
+      searchConditions.age_min !== null &&
+      searchConditions.age_min !== ''
+    ) {
       params.set('age_min', searchConditions.age_min.toString());
     }
-    if (searchConditions.age_max !== undefined && searchConditions.age_max !== null && searchConditions.age_max !== '') {
+    if (
+      searchConditions.age_max !== undefined &&
+      searchConditions.age_max !== null &&
+      searchConditions.age_max !== ''
+    ) {
       params.set('age_max', searchConditions.age_max.toString());
     }
-    
+
     // 現在の年収
-    if (searchConditions.current_salary_min !== undefined && searchConditions.current_salary_min !== null && searchConditions.current_salary_min !== '') {
-      params.set('current_salary_min', searchConditions.current_salary_min.toString());
+    if (
+      searchConditions.current_salary_min !== undefined &&
+      searchConditions.current_salary_min !== null &&
+      searchConditions.current_salary_min !== ''
+    ) {
+      params.set(
+        'current_salary_min',
+        searchConditions.current_salary_min.toString()
+      );
     }
-    if (searchConditions.current_salary_max !== undefined && searchConditions.current_salary_max !== null && searchConditions.current_salary_max !== '') {
-      params.set('current_salary_max', searchConditions.current_salary_max.toString());
+    if (
+      searchConditions.current_salary_max !== undefined &&
+      searchConditions.current_salary_max !== null &&
+      searchConditions.current_salary_max !== ''
+    ) {
+      params.set(
+        'current_salary_max',
+        searchConditions.current_salary_max.toString()
+      );
     }
-    
+
     // 希望年収
-    if (searchConditions.desired_salary_min !== undefined && searchConditions.desired_salary_min !== null && searchConditions.desired_salary_min !== '') {
-      params.set('desired_salary_min', searchConditions.desired_salary_min.toString());
+    if (
+      searchConditions.desired_salary_min !== undefined &&
+      searchConditions.desired_salary_min !== null &&
+      searchConditions.desired_salary_min !== ''
+    ) {
+      params.set(
+        'desired_salary_min',
+        searchConditions.desired_salary_min.toString()
+      );
     }
-    if (searchConditions.desired_salary_max !== undefined && searchConditions.desired_salary_max !== null && searchConditions.desired_salary_max !== '') {
-      params.set('desired_salary_max', searchConditions.desired_salary_max.toString());
+    if (
+      searchConditions.desired_salary_max !== undefined &&
+      searchConditions.desired_salary_max !== null &&
+      searchConditions.desired_salary_max !== ''
+    ) {
+      params.set(
+        'desired_salary_max',
+        searchConditions.desired_salary_max.toString()
+      );
     }
-    
+
     // 経験職種（データベースではjob_types）
     if (searchConditions.job_types?.length > 0) {
       params.set('experience_job_types', searchConditions.job_types.join(','));
     }
-    
+
     // 経験業界（データベースではindustries）
     if (searchConditions.industries?.length > 0) {
-      params.set('experience_industries', searchConditions.industries.join(','));
+      params.set(
+        'experience_industries',
+        searchConditions.industries.join(',')
+      );
     }
-    
+
     // 希望職種
     if (searchConditions.desired_job_types?.length > 0) {
-      params.set('desired_job_types', searchConditions.desired_job_types.join(','));
+      params.set(
+        'desired_job_types',
+        searchConditions.desired_job_types.join(',')
+      );
     }
-    
+
     // 希望業界
     if (searchConditions.desired_industries?.length > 0) {
-      params.set('desired_industries', searchConditions.desired_industries.join(','));
+      params.set(
+        'desired_industries',
+        searchConditions.desired_industries.join(',')
+      );
     }
-    
+
     // 希望勤務地（データベースではlocations）
     if (searchConditions.locations?.length > 0) {
       params.set('desired_locations', searchConditions.locations.join(','));
     }
-    
+
     // 働き方
     if (searchConditions.work_styles?.length > 0) {
       params.set('work_styles', searchConditions.work_styles.join(','));
     }
-    
+
     // 学歴（データベースではeducation_levels配列だが単体として扱う）
     if (searchConditions.education_levels?.length > 0) {
       params.set('education', searchConditions.education_levels[0]);
     }
-    
+
     // スキル
     if (searchConditions.skills?.length > 0) {
       params.set('qualifications', searchConditions.skills.join(','));
     }
-    
+
     // その他の条件
     if (searchConditions.current_company) {
       params.set('current_company', searchConditions.current_company);
@@ -348,10 +404,16 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
       params.set('selection_status', searchConditions.selection_status);
     }
     if (searchConditions.similar_company_industry) {
-      params.set('similar_company_industry', searchConditions.similar_company_industry);
+      params.set(
+        'similar_company_industry',
+        searchConditions.similar_company_industry
+      );
     }
     if (searchConditions.similar_company_location) {
-      params.set('similar_company_location', searchConditions.similar_company_location);
+      params.set(
+        'similar_company_location',
+        searchConditions.similar_company_location
+      );
     }
     if (searchConditions.last_login_min) {
       params.set('last_login_min', searchConditions.last_login_min);
@@ -362,7 +424,7 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
     if (searchConditions.industry_and_search) {
       params.set('industry_and_search', searchConditions.industry_and_search);
     }
-    
+
     return `/company/search/result?${params.toString()}`;
   };
 
@@ -370,7 +432,10 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
     // SearchHistoryItemからServerSearchHistoryItemを取得
     const serverItem = initialSearchHistory.find(h => h.id === item.id);
     if (serverItem) {
-      const searchUrl = buildSearchUrl(serverItem.search_conditions, serverItem.group_id);
+      const searchUrl = buildSearchUrl(
+        serverItem.search_conditions,
+        serverItem.group_id
+      );
       router.push(searchUrl);
     }
   };
@@ -382,26 +447,30 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
       uniqueGroupsMap.set(item.group, item.groupName);
     }
   });
-  
+
   const groupOptions = [
     { value: '', label: '未選択' },
     ...Array.from(uniqueGroupsMap.entries()).map(([groupId, groupName]) => ({
       value: groupId,
-      label: groupName
-    }))
+      label: groupName,
+    })),
   ];
 
   // フィルタリング済みの検索履歴
   const filteredSearchHistory = searchHistory.filter(item => {
     // グループフィルタ
     if (selectedGroup && item.group !== selectedGroup) return false;
-    
+
     // キーワードフィルタ
-    if (keyword && !item.searchCondition.toLowerCase().includes(keyword.toLowerCase())) return false;
-    
+    if (
+      keyword &&
+      !item.searchCondition.toLowerCase().includes(keyword.toLowerCase())
+    )
+      return false;
+
     // 保存済みフィルタ
     if (showSavedOnly && !item.saved) return false;
-    
+
     return true;
   });
 
@@ -513,8 +582,9 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
               className='min-w-[160px]'
               onClick={() => {
                 // Redirect to new search page
-              router.push('/company/search');
-              }}>
+                router.push('/company/search');
+              }}
+            >
               新規検索
             </Button>
 
@@ -523,7 +593,11 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || totalItems === 0}
-                className={currentPage === 1 || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === 1 || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronLeftIcon />
               </button>
@@ -533,7 +607,11 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalItems === 0}
-                className={currentPage === totalPages || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === totalPages || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronRightIcon />
               </button>
@@ -572,106 +650,110 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
           {/* Search History Items */}
           <div className='flex flex-col gap-2 mt-2'>
             {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴を読み込んでいます...</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>検索履歴を読み込んでいます...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-8">
-                <p className="text-red-500 mb-4">検索履歴の取得に失敗しました</p>
-                <p className="text-gray-600">{error}</p>
+              <div className='text-center py-8'>
+                <p className='text-red-500 mb-4'>
+                  検索履歴の取得に失敗しました
+                </p>
+                <p className='text-gray-600'>{error}</p>
               </div>
             ) : currentItems.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴がありません</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>検索履歴がありません</p>
               </div>
             ) : (
               currentItems.map((item: SearchHistoryItem) => (
-              <div
-                key={item.id}
-                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative hover:bg-gray-50 cursor-pointer transition-colors duration-150'
-                onClick={() => handleHistoryClick(item)}
-              >
-                {/* Bookmark Icon */}
-                <button
-                  className='w-[18px] flex-shrink-0'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleBookmark(item.id);
-                  }}
+                <div
+                  key={item.id}
+                  className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative hover:bg-gray-50 cursor-pointer transition-colors duration-150'
+                  onClick={() => handleHistoryClick(item)}
                 >
-                  <BookmarkIcon filled={item.saved} />
-                </button>
-
-                {/* Group Badge */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
-                  <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
-                    {item.groupName}
-                  </span>
-                </div>
-
-                {/* Search Condition */}
-                <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.searchCondition}
-                </div>
-
-                {/* Searcher */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.searcher}
-                </div>
-
-                {/* Date */}
-                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
-                  {item.date}
-                </div>
-
-                {/* Menu Button */}
-                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative ml-auto'>
-                  <button onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleMenu(item.id);
-                  }}>
-                    <DotsMenuIcon />
+                  {/* Bookmark Icon */}
+                  <button
+                    className='w-[18px] flex-shrink-0'
+                    onClick={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggleBookmark(item.id);
+                    }}
+                  >
+                    <BookmarkIcon filled={item.saved} />
                   </button>
 
-                  {/* Dropdown Menu */}
-                  {item.isMenuOpen && (
-                    <div className='absolute top-5 right-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleEdit(item);
-                        }}
-                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleDelete(item);
-                        }}
-                        className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
+                  {/* Group Badge */}
+                  <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] ml-4 min-[1200px]:ml-6 flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                    <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
+                      {item.groupName}
+                    </span>
+                  </div>
+
+                  {/* Search Condition */}
+                  <div className='w-[320px] min-[1200px]:w-[400px] min-[1300px]:w-[500px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.searchCondition}
+                  </div>
+
+                  {/* Searcher */}
+                  <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[160px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.searcher}
+                  </div>
+
+                  {/* Date */}
+                  <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                    {item.date}
+                  </div>
+
+                  {/* Menu Button */}
+                  <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative ml-auto'>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        toggleMenu(item.id);
+                      }}
+                    >
+                      <DotsMenuIcon />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {item.isMenuOpen && (
+                      <div className='absolute top-5 right-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleEdit(item);
+                          }}
+                          className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleDelete(item);
+                          }}
+                          className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          削除
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               ))
             )}
           </div>
 
           {/* Pagination */}
-          <Pagination 
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
-            className="mt-10"
+            className='mt-10'
           />
         </div>
       </div>
