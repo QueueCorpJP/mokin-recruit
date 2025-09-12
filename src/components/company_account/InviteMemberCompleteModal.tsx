@@ -23,7 +23,7 @@ export function InviteMemberCompleteModal({
       height="auto"
       hideFooter={false}
     >
-      <div className="flex flex-col items-center justify-center py-10 min-h-[200px]">
+      <div className="flex flex-col items-center w-full justify-center py-10 min-h-[200px]">
         <p className="text-base font-bold text-[#323232] text-center leading-relaxed">
           入力したアドレス宛に、グループへの招待メールが送信されました。<br />
           メール内のリンクから、グループへご参加いただけます。
