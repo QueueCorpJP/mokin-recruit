@@ -854,7 +854,7 @@ export default function CandidateDetailClient({ candidate }: Props) {
             <div className="flex gap-8">
               <span className="text-sm font-medium text-gray-700 w-[120px] text-right">希望年収</span>
               <span className="text-gray-900 flex-1">
-                {candidate.desired_salary || (candidate.expectations.length > 0 ? candidate.expectations[0].desired_income : '') || '選択された内容を表示'}
+                {candidate.desired_salary || (candidate.expectations && candidate.expectations.length > 0 ? candidate.expectations[0]?.desired_income : '') || '選択された内容を表示'}
               </span>
             </div>
             <div className="flex gap-8">
