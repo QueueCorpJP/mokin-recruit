@@ -62,12 +62,12 @@ body [data-company-page] *,
   opacity: 1;
 }
 
-.fonts-loaded {
+.font-loaded {
   opacity: 1;
 }
 
 /* Font loading states */
-html:not(.fonts-loaded) body {
+html:not(.font-loaded) body {
   font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN',
     'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
 }

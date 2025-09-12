@@ -101,8 +101,8 @@ export default function RootLayout({
             }
             
             /* Noto Sans JPが読み込まれた後に適用 */
-            .font-loaded html,
-            .font-loaded body { 
+            html.font-loaded,
+            html.font-loaded body { 
               font-family: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "Meiryo", "MS PGothic", system-ui, sans-serif; 
             }
             

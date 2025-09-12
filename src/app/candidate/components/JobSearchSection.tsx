@@ -1,6 +1,33 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function JobSearchSection() {
+  const router = useRouter();
+  const [selectedJobType, setSelectedJobType] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [selectedSalary, setSelectedSalary] = useState('');
+
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams();
+    
+    if (selectedJobType) {
+      searchParams.set('jobTypes', selectedJobType);
+    }
+    if (selectedIndustry) {
+      searchParams.set('industries', selectedIndustry);
+    }
+    if (selectedSalary) {
+      searchParams.set('salaryMin', selectedSalary);
+    }
+
+    const queryString = searchParams.toString();
+    const url = queryString ? `/candidate/search/setting?${queryString}` : '/candidate/search/setting';
+    
+    router.push(url);
+  };
   return (
     <section className='relative py-20 flex flex-col items-center overflow-hidden px-[24px] md:px-0'>
       {/* 背景グラデーションレイヤー */}
@@ -48,7 +75,10 @@ export function JobSearchSection() {
                 職種
               </label>
               <div className='relative md:w-[400px] w-auto'>
-                <select className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
+                <select 
+                  value={selectedJobType}
+                  onChange={(e) => setSelectedJobType(e.target.value)}
+                  className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
                   <option value=''>選択してください</option>
                   <option value='engineer'>エンジニア</option>
                   <option value='designer'>デザイナー</option>
@@ -73,11 +103,16 @@ export function JobSearchSection() {
                 業種
               </label>
               <div className='relative md:w-[400px] w-auto'>
-                <select className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
+                <select 
+                  value={selectedIndustry}
+                  onChange={(e) => setSelectedIndustry(e.target.value)}
+                  className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
                   <option value=''>選択してください</option>
-                  <option value='tokyo'>東京</option>
-                  <option value='osaka'>大阪</option>
-                  <option value='remote'>リモート</option>
+                  <option value='IT・通信'>IT・通信</option>
+                  <option value='金融・保険'>金融・保険</option>
+                  <option value='メーカー'>メーカー</option>
+                  <option value='商社・流通・小売'>商社・流通・小売</option>
+                  <option value='サービス'>サービス</option>
                 </select>
                 <svg
                   className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3'
@@ -98,12 +133,16 @@ export function JobSearchSection() {
                 年収
               </label>
               <div className='relative md:w-[400px] w-auto'>
-                <select className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
+                <select 
+                  value={selectedSalary}
+                  onChange={(e) => setSelectedSalary(e.target.value)}
+                  className='appearance-none w-full rounded-[5px] border border-[#E0E0E0] px-[11px] py-[11px] text-[#323232] font-medium text-[16px] leading-[2em] tracking-[0.1em] font-[family-name:var(--font-noto-sans-jp)] focus:outline-none focus:ring-2 focus:ring-[#198D76] focus:border-[#198D76]'>
                   <option value=''>選択してください</option>
-                  <option value='lt300'>300万円未満</option>
-                  <option value='300-500'>300〜500万円</option>
-                  <option value='500-800'>500〜800万円</option>
-                  <option value='gt800'>800万円以上</option>
+                  <option value='300'>300万円以上</option>
+                  <option value='500'>500万円以上</option>
+                  <option value='700'>700万円以上</option>
+                  <option value='800'>800万円以上</option>
+                  <option value='1000'>1000万円以上</option>
                 </select>
                 <svg
                   className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3'
@@ -121,7 +160,12 @@ export function JobSearchSection() {
           </div>
           {/* 求人を探すボタン */}
           <div className='md:w-full w-[100%] flex justify-center mt-0'>
-            <Button variant='green-gradient' size='figma-default' className='md:w-auto w-[100%]'>
+            <Button 
+              variant='green-gradient' 
+              size='figma-default' 
+              className='md:w-auto w-[100%]'
+              onClick={handleSearch}
+            >
               求人を探す
             </Button>
           </div>

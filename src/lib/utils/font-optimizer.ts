@@ -32,7 +32,7 @@ export const fontOptimizer = {
 
       observer.load(null, 5000).then(
         () => {
-          document.documentElement.classList.add('fonts-loaded');
+          document.documentElement.classList.add('font-loaded');
         },
         () => {
           console.warn(`Font ${font.family} ${font.weight} failed to load`);

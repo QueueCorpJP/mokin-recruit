@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/client';
+import { createServerActionClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export interface JobSearchResult {
@@ -174,7 +174,7 @@ async function searchJobsServerOptimized(
   const startTime = performance.now();
 
   try {
-    const supabase = createClient();
+    const supabase = createServerActionClient();
 
     // ページネーション設定
     const page = params.page || 1;
@@ -205,11 +205,7 @@ async function searchJobsServerOptimized(
         appeal_points,
         created_at,
         image_urls,
-        company_account_id,
-        company_accounts (
-          id,
-          company_name
-        )
+        company_account_id
       `
       )
       .eq('status', 'PUBLISHED')
@@ -244,8 +240,7 @@ async function searchJobsServerOptimized(
 
     // データ変換（JOINされた企業情報を使用）
     const transformedJobs = jobs.map((job: any, index: number) => {
-      const companyName =
-        job.company_accounts?.company_name || `企業名未設定 #${index + 1}`;
+      const companyName = job.company_name || `企業名未設定 #${index + 1}`;
 
       return {
         id: job.id,

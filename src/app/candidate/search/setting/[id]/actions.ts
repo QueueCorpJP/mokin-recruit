@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/client';
+import { createServerActionClient } from '@/lib/supabase/server';
 
 export interface JobDetailData {
   id: string;
@@ -51,7 +51,7 @@ export interface JobDetailData {
 // Server Component用のgetJobDetail実装（直接データベースアクセス）
 async function getJobDetailServer(jobId: string) {
   try {
-    const supabase = createClient();
+    const supabase = createServerActionClient();
     
     // 求人詳細を取得（必要フィールドのみ）
     const { data: job, error: jobError } = await supabase
@@ -94,28 +94,30 @@ async function getJobDetailServer(jobId: string) {
       throw new Error('求人情報が見つかりませんでした');
     }
 
-    // 会社情報を取得
-    const { data: company, error: companyError } = await supabase
-      .from('company_accounts')
-      .select(`
-        id,
-        company_name,
-        representative_name,
-        industry,
-        company_overview,
-        headquarters_address,
-        status,
-        created_at,
-        updated_at
-      `)
-      .eq('id', job.company_account_id)
-      .maybeSingle();
+    // 会社情報を取得（company_account_id が null の場合はスキップ）
+    let company: any = null;
+    if (job.company_account_id) {
+      const { data: companyRow, error: companyError } = await supabase
+        .from('company_accounts')
+        .select(`
+          id,
+          company_name,
+          representative_name,
+          industry,
+          company_overview,
+          headquarters_address,
+          status,
+          created_at,
+          updated_at
+        `)
+        .eq('id', job.company_account_id)
+        .maybeSingle();
 
-    if (companyError) {
-      console.error('Failed to fetch company:', companyError);
-    }
-
-    if (!company) {
+      if (companyError) {
+        console.error('Failed to fetch company:', companyError);
+      }
+      company = companyRow;
+    } else {
       console.warn(`Company not found for job ${jobId}, company_account_id: ${job.company_account_id}`);
     }
 

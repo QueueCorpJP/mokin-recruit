@@ -47,7 +47,17 @@ export function HeroSection() {
             alt='hero'
             width={1920}
             height={1080}
-            className='w-full h-auto object-cover'
+            className='w-full h-auto object-cover hidden md:block'
+            priority={true}
+            sizes='100vw'
+            style={{ width: '100%', height: 'auto' }}
+          />
+          <Image
+            src='/image.png'
+            alt='hero'
+            width={1920}
+            height={1080}
+            className='w-full h-auto object-cover block md:hidden'
             priority={true}
             sizes='100vw'
             style={{ width: '100%', height: 'auto' }}

@@ -23,10 +23,11 @@ export async function authenticateMessageUser(request: NextRequest): Promise<Mes
   try {
     const sessionService = new SessionService();
     
-    // Authorizationヘッダーまたはクッキーからトークンを取得
+    // まずはSSRクッキー経由のセッション解決を試みる（@supabase/ssr の仕組みに委ねる）
+    // フォールバックとして Authorization: Bearer <token> を許可
     const authHeader = request.headers.get('authorization');
-    const cookieToken = request.cookies.get('supabase-auth-token')?.value;
-    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+    const bearer = authHeader?.replace('Bearer ', '').trim();
+    const token = bearer || undefined;
 
     if (!token) {
       return {
@@ -35,8 +36,32 @@ export async function authenticateMessageUser(request: NextRequest): Promise<Mes
       };
     }
 
-    // セッションを検証
-    const sessionResult = await sessionService.validateSession(token);
+    // セッションを検証（Bearer があれば使用。なければ SSR クッキーに依存した getUser() を内部で使用）
+    const sessionResult = token
+      ? await sessionService.validateSession(token)
+      : await (async () => {
+          try {
+            const supabase = getSupabaseAdminClient();
+            const { data, error } = await supabase.auth.getUser();
+            if (error || !data.user) {
+              return { success: false, error: 'No active session' } as const;
+            }
+            const { data: sessionData } = await supabase.auth.getSession();
+            if (!sessionData.session) {
+              return { success: false, error: 'No active session' } as const;
+            }
+            return {
+              success: true,
+              sessionInfo: {
+                user: data.user,
+                session: sessionData.session,
+                expiresAt: new Date((sessionData.session.expires_at || 0) * 1000)
+              }
+            } as const;
+          } catch (e) {
+            return { success: false, error: 'Session validation failed' } as const;
+          }
+        })();
 
     if (!sessionResult.success || !sessionResult.sessionInfo) {
       return {
@@ -46,7 +71,7 @@ export async function authenticateMessageUser(request: NextRequest): Promise<Mes
     }
 
     const user = sessionResult.sessionInfo.user;
-    const userType = user.user_metadata?.userType;
+    const userType = user.user_metadata?.user_type || user.user_metadata?.userType;
 
     if (!userType || !['candidate', 'company_user'].includes(userType)) {
       return {

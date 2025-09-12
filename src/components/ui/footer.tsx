@@ -19,6 +19,74 @@ export function Footer({
   isLoggedIn = false,
   userInfo
 }: FooterProps) {
+  // ラベルから遷移先パスを返す（存在しないページは undefined を返して非リンクのまま）
+  const getLinkForItem = (label: string): string | undefined => {
+    const normalized = label.trim();
+    if (variant === 'company') {
+      switch (normalized) {
+        case '求人管理':
+          return '/company/job';
+        case 'メッセージ':
+          return '/company/message';
+        case '候補者検索':
+          return '/company/search';
+        case '企業設定':
+          return '/company/setting';
+        case 'サービス紹介':
+          return '/company';
+        case '企業向け機能':
+          return '/company';
+        case '問い合わせ':
+          return '/company/contact';
+        case 'よくある質問':
+          return '/company';
+        case '不具合・要望フォーム':
+          return '/company/contact';
+        case '運営会社':
+          return '/company';
+        case '利用規約':
+          return '/company/terms';
+        case 'プライバシーポリシー':
+          return '/company/privacy';
+        case '法令に基づく表記':
+          return undefined;
+        default:
+          return undefined;
+      }
+    }
+
+    // candidate / default / login-before は候補者向けページ優先
+    switch (normalized) {
+      case 'メッセージ':
+        return '/candidate/message';
+      case 'メディア':
+        return '/candidate/media';
+      case '求人を探す':
+        return '/candidate/search/setting';
+      case 'お気に入り求人':
+        return '/candidate/job/favorite';
+      case 'お知らせ一覧':
+        return '/candidate/news';
+      case 'サービス紹介':
+        return '/candidate';
+      case '問い合わせ':
+        return '/candidate';
+      case 'よくある質問':
+        return '/candidate';
+      case '不具合・要望フォーム':
+        return '/candidate';
+      case '運営会社':
+        return '/candidate';
+      case '利用規約':
+        return '/candidate/terms';
+      case 'プライバシーポリシー':
+        return '/candidate/privacy';
+      case '法令に基づく表記':
+        return '/candidate/laws';
+      default:
+        return undefined;
+    }
+  };
   // variantと認証状態に応じたメニューデータ
   const getMenuData = () => {
     if (variant === 'candidate') {
@@ -263,23 +331,35 @@ export function Footer({
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>
-                  {menuData.service.items.map((item, index) => (
-                    <div key={index} className='flex items-center gap-2 py-1'>
-                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
-                        style={{
-                          fontFamily: 'Noto Sans JP, sans-serif',
-                          fontWeight: 700,
-                          fontSize: '16px',
-                          lineHeight: '200%',
-                          letterSpacing: '0.1em',
-                        }}
-                      >
-                        {item}
-                      </span>
-                    </div>
-                  ))}
+                  {menuData.service.items.map((item, index) => {
+                    const href = getLinkForItem(item);
+                    const content = (
+                      <>
+                        <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                        <span
+                          className='text-white font-bold'
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                            fontWeight: 700,
+                            fontSize: '16px',
+                            lineHeight: '200%',
+                            letterSpacing: '0.1em',
+                          }}
+                        >
+                          {item}
+                        </span>
+                      </>
+                    );
+                    return href ? (
+                      <Link key={index} href={href} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={index} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -326,23 +406,35 @@ export function Footer({
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>
-                  {menuData.support.items.map((item, index) => (
-                    <div key={index} className='flex items-center gap-2 py-1'>
-                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
-                        style={{
-                          fontFamily: 'Noto Sans JP, sans-serif',
-                          fontWeight: 700,
-                          fontSize: '16px',
-                          lineHeight: '200%',
-                          letterSpacing: '0.1em',
-                        }}
-                      >
-                        {item}
-                      </span>
-                    </div>
-                  ))}
+                  {menuData.support.items.map((item, index) => {
+                    const href = getLinkForItem(item);
+                    const content = (
+                      <>
+                        <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                        <span
+                          className='text-white font-bold'
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                            fontWeight: 700,
+                            fontSize: '16px',
+                            lineHeight: '200%',
+                            letterSpacing: '0.1em',
+                          }}
+                        >
+                          {item}
+                        </span>
+                      </>
+                    );
+                    return href ? (
+                      <Link key={index} href={href} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={index} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -387,23 +479,35 @@ export function Footer({
                 } md:max-h-none md:opacity-100`}
               >
                 <div className='space-y-0'>
-                  {menuData.company.items.map((item, index) => (
-                    <div key={index} className='flex items-center gap-2 py-1'>
-                      <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
-                        style={{
-                          fontFamily: 'Noto Sans JP, sans-serif',
-                          fontWeight: 700,
-                          fontSize: '16px',
-                          lineHeight: '200%',
-                          letterSpacing: '0.1em',
-                        }}
-                      >
-                        {item}
-                      </span>
-                    </div>
-                  ))}
+                  {menuData.company.items.map((item, index) => {
+                    const href = getLinkForItem(item);
+                    const content = (
+                      <>
+                        <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
+                        <span
+                          className='text-white font-bold'
+                          style={{
+                            fontFamily: 'Noto Sans JP, sans-serif',
+                            fontWeight: 700,
+                            fontSize: '16px',
+                            lineHeight: '200%',
+                            letterSpacing: '0.1em',
+                          }}
+                        >
+                          {item}
+                        </span>
+                      </>
+                    );
+                    return href ? (
+                      <Link key={index} href={href} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={index} className='flex items-center gap-2 py-1'>
+                        {content}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

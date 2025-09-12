@@ -453,14 +453,15 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
 
             {/* テーブルヘッダー */}
             <div className='rounded-t-lg flex flex-col items-center justify-center'>
-              <div className="max-w-[1280px] w-full mx-auto flex gap-[24px] border-b border-[#DCDCDC] text-[#222] text-[14px] font-bold font-['Noto_Sans_JP'] px-[40px] pr-[82px] pb-2">
+              <div className="max-w-[1280px] w-full mx-auto flex gap-[24px] border-b border-[#DCDCDC] text-[#222] text-[14px] font-bold font-['Noto_Sans_JP'] px-[24px] pb-2">
                 <div className='w-[160px]'>グループ</div>
                 <div className='w-[424px]'>職種 / 求人タイトル</div>
-                <div className='w-[90px]'>ステータス</div>
+                <div className='w-[76px]'>ステータス</div>
                 <div className='w-[107px]'>公開範囲</div>
                 <div className='w-[112px]'>社内メモ</div>
                 <div className='w-[70px]'>公開日</div>
                 <div className='w-[76px]'>最終更新日</div>
+                <div className='w-[64px] text-right'>操作</div>
               </div>
               <div className='mt-2'></div>
 

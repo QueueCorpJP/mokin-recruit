@@ -37,19 +37,6 @@ export async function candidateLogin(email: string, password: string): Promise<L
       return { success: false, error: 'メールアドレスが確認されていません。確認メールをご確認ください。' };
     }
 
-    // セッションクッキーを設定
-    const cookieStore = await cookies();
-    cookieStore.set('user_session', JSON.stringify({
-      userId: candidate.id,
-      email: candidate.email,
-      userType: 'candidate'
-    }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7日間
-    });
-
     return { success: true, redirectTo: '/candidate/dashboard' };
   } catch (error) {
     console.error('Login error:', error);
@@ -83,19 +70,6 @@ export async function companyLogin(email: string, password: string): Promise<Log
       return { success: false, error: 'メールアドレスが確認されていません。確認メールをご確認ください。' };
     }
 
-    // セッションクッキーを設定
-    const cookieStore = await cookies();
-    cookieStore.set('user_session', JSON.stringify({
-      userId: companyUser.id,
-      email: companyUser.email,
-      userType: 'company_user'
-    }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7日間
-    });
-
     return { success: true, redirectTo: '/company/dashboard' };
   } catch (error) {
     console.error('Company login error:', error);
@@ -104,8 +78,6 @@ export async function companyLogin(email: string, password: string): Promise<Log
 }
 
 export async function logout() {
-  const cookieStore = await cookies();
-  cookieStore.delete('user_session');
   redirect('/');
 }
 
