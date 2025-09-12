@@ -15,6 +15,7 @@ import {
   getCompanyUserOptions,
   getScoutTemplateOptions,
   getScoutTicketsRemaining,
+  getCandidateName,
   type ScoutSendFormData,
 } from './actions';
 
@@ -61,6 +62,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
   const candidateIdFromProps = candidateId || 'CND-2024-00123';
   const searchQuery = searchParams.get('query');
+  const [candidateName, setCandidateName] = useState<string>('');
   
   const [formData, setFormData] = useState({
     group: '',
@@ -105,7 +107,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   // 現在のユーザー情報（実際はContextやAPIから取得）
   const currentUserName = '山田 太郎'; // デフォルトのユーザー名
 
-  // 初期データロード
+  // 初期データロード + 候補者名取得
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -113,13 +115,15 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         setIsTicketLoading(true);
         
         // 並行してデータを取得
-        const [groups, ticketsRemaining] = await Promise.all([
+        const [groups, ticketsRemaining, name] = await Promise.all([
           getCompanyGroupOptions(),
-          getScoutTicketsRemaining()
+          getScoutTicketsRemaining(),
+          getCandidateName(candidateIdFromProps),
         ]);
         
         setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
         setScoutTicketsRemaining(ticketsRemaining);
+        setCandidateName(name || '');
       } catch (error) {
         console.error('初期データの読み込みに失敗:', error);
       } finally {
@@ -255,14 +259,23 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
     if (!validateForm()) return;
 
-    // 確認ページに遷移（フォームデータをクエリパラメータで渡す）
+    // 選択中のラベルを取得
+    const selectedGroupLabel = groupOptions.find(o => o.value === formData.group)?.label || '';
+    const selectedJobLabel = jobPostingOptions.find(o => o.value === formData.recruitmentTarget)?.label || '';
+    const selectedTemplateLabel = templateOptions.find(o => o.value === formData.scoutTemplate)?.label || '';
+
+    // 確認ページに遷移（フォームデータと表示用ラベルをクエリパラメータで渡す）
     const params = new URLSearchParams({
       group: formData.group,
+      groupLabel: selectedGroupLabel,
       recruitmentTarget: formData.recruitmentTarget,
+      recruitmentTargetLabel: selectedJobLabel,
       scoutSenderName: formData.scoutSenderName,
       scoutTemplate: formData.scoutTemplate,
+      scoutTemplateLabel: selectedTemplateLabel,
       title: formData.title,
       message: formData.message,
+      candidateName: candidateName || '',
       ...(searchQuery && { searchQuery }),
     });
 
@@ -280,8 +293,8 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       if (selectedTemplate && 'subject' in selectedTemplate && 'body' in selectedTemplate) {
         setFormData((prev) => ({
           ...prev,
-          title: selectedTemplate.subject || '',
-          message: selectedTemplate.body || '',
+          title: typeof (selectedTemplate as any).subject === 'string' ? (selectedTemplate as any).subject : '',
+          message: typeof (selectedTemplate as any).body === 'string' ? (selectedTemplate as any).body : '',
         }));
         // テンプレート適用時はエラーをクリア
         setErrors((prev) => ({
@@ -475,7 +488,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {formData.candidateId}
+                    {candidateName || searchQuery || formData.candidateId}
                   </span>
                 </div>
               </div>

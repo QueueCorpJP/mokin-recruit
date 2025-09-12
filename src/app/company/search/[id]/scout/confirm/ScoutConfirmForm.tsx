@@ -47,16 +47,29 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ScoutSendFormData | null>(null);
+  const [groupLabel, setGroupLabel] = useState<string>('');
+  const [recruitmentTargetLabel, setRecruitmentTargetLabel] = useState<string>('');
+  const [scoutTemplateLabel, setScoutTemplateLabel] = useState<string>('');
+  const [candidateName, setCandidateName] = useState<string>('');
 
   // URLSearchParamsからフォームデータを復元
   useEffect(() => {
     const group = searchParams.get('group') || '';
+    const groupLabelParam = searchParams.get('groupLabel') || '';
     const recruitmentTarget = searchParams.get('recruitmentTarget') || '';
+    const recruitmentTargetLabelParam = searchParams.get('recruitmentTargetLabel') || '';
     const scoutSenderName = searchParams.get('scoutSenderName') || '';
     const scoutTemplate = searchParams.get('scoutTemplate') || '';
+    const scoutTemplateLabelParam = searchParams.get('scoutTemplateLabel') || '';
     const title = searchParams.get('title') || '';
     const message = searchParams.get('message') || '';
-    const searchQuery = searchParams.get('searchQuery') || undefined;
+    const searchQuery = searchParams.get('searchQuery') || '';
+    const candidateNameParam = searchParams.get('candidateName') || '';
+
+    setGroupLabel(groupLabelParam);
+    setRecruitmentTargetLabel(recruitmentTargetLabelParam);
+    setScoutTemplateLabel(scoutTemplateLabelParam);
+    setCandidateName(candidateNameParam);
 
     setFormData({
       group,
@@ -161,10 +174,10 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
         <div className="w-full max-w-[1200px] mx-auto">
           {/* Confirmation Card */}
           <div className="bg-white rounded-[10px] p-10">
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
               {/* グループ */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -177,14 +190,14 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
                     className="text-[#323232] text-[16px] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {formData.group}
+                    {groupLabel || formData.group}
                   </span>
                 </div>
               </div>
 
               {/* 添付する求人 */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -197,14 +210,14 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
                     className="text-[#323232] text-[16px] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {formData.recruitmentTarget}
+                    {recruitmentTargetLabel || formData.recruitmentTarget}
                   </span>
                 </div>
               </div>
 
               {/* スカウト送信者名 */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -224,12 +237,12 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
 
               {/* 送信先候補者ID */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    送信先候補者ID
+                    送信先候補者
                   </span>
                 </div>
                 <div className="flex-1 flex items-center">
@@ -237,15 +250,15 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
                     className="text-[#323232] text-[16px] tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {formData.candidateId}
+                    {candidateName || formData.searchQuery || formData.candidateId}
                   </span>
                 </div>
               </div>
 
               {/* スカウトテンプレート */}
-              {formData.scoutTemplate && (
+              {(scoutTemplateLabel || formData.scoutTemplate) && (
                 <div className="flex gap-6">
-                  <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                  <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                     <span
                       className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -258,7 +271,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
                       className="text-[#323232] text-[16px] tracking-[1.6px]"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      {formData.scoutTemplate}
+                      {scoutTemplateLabel || formData.scoutTemplate}
                     </span>
                   </div>
                 </div>
@@ -266,7 +279,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
 
               {/* 件名 */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-center justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -286,7 +299,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
 
               {/* 本文 */}
               <div className="flex gap-6">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-4 flex items-start justify-start">
+                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start self-stretch">
                   <span
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -295,14 +308,14 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="p-4 min-h-[200px]">
+                  {/* <div className="p-4 min-h-[200px]"> */}
                     <pre
                       className="text-[#323232] text-[16px] tracking-[1.6px] whitespace-pre-wrap"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
                       {formData.message}
                     </pre>
-                  </div>
+                  {/* </div> */}
                 </div>
               </div>
             </div>
@@ -312,12 +325,12 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
           <div className="flex justify-center gap-6 mt-10">
             <Button
               onClick={handleBack}
-              variant="outline"
+              variant="green-outline"
               size="figma-default"
               className="min-w-[160px]"
               disabled={isLoading}
             >
-              戻る
+             編集画面に戻る
             </Button>
             <Button
               onClick={handleSend}
@@ -326,7 +339,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
               className="min-w-[160px]"
               disabled={isLoading}
             >
-              {isLoading ? '送信中...' : 'スカウトを送信'}
+              {isLoading ? '送信中...' : 'この内容で送信'}
             </Button>
           </div>
         </div>

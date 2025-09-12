@@ -1,11 +1,13 @@
-'use client';
+ 'use client';
 
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers.client';
 import { tr } from 'zod/v4/locales';
 import { Button } from '@/components/ui/button';
+import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client';
 // TaskDataインターフェース（TaskListと同じ）
 interface TaskData {
   hasNoJobPostings: boolean;
@@ -61,6 +63,7 @@ interface TaskItem {
 interface CompanyAccountData {
   plan: string;
   scoutLimit: number;
+  remainingTickets?: number;
   nextUpdateDate: string;
 }
 
@@ -75,6 +78,112 @@ interface CompanyTaskSidebarProps {
 export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskData, notices = [], companyAccountData }: CompanyTaskSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  
+  console.log('[CompanyTaskSidebar] Props received:', {
+    showTodoAndNews,
+    notices: notices?.length || 0,
+    companyAccountData
+  });
+
+  // クライアント直接取得用のローカルステート（propsが無い場合に使用）
+  const [fetchedNotices, setFetchedNotices] = useState<NoticeData[]>([]);
+  const [fetchedCompanyAccountData, setFetchedCompanyAccountData] = useState<CompanyAccountData | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const supabase = createBrowserSupabaseClient();
+
+    const fetchSidebarData = async () => {
+      try {
+        // ユーザー情報取得（RLS用に認証ユーザーで実行）
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // お知らせ（公開済み）最新3件
+        if (!notices || notices.length === 0) {
+          const { data: noticeRows } = await supabase
+            .from('notices')
+            .select('id, title, slug, content, excerpt, published_at, created_at')
+            .eq('status', 'PUBLISHED')
+            .not('published_at', 'is', null)
+            .order('published_at', { ascending: false })
+            .limit(3);
+          if (mounted) setFetchedNotices(noticeRows || []);
+        }
+
+        // プラン情報（company_users 経由で company_accounts を参照）
+        if (!companyAccountData && user) {
+          const { data: companyAccountRow, error } = await supabase
+            .from('company_users')
+            .select(`
+              company_account_id,
+              company_accounts!company_account_id (
+                id,
+                company_name,
+                plan,
+                scout_limit,
+                created_at
+              )
+            `)
+            .eq('email', user.email as string)
+            .single();
+
+          if (!error) {
+            const account: any = companyAccountRow?.company_accounts;
+            if (account && mounted) {
+              // サイクル算出
+              const createdAt = new Date(account.created_at);
+              const addMonths = (date: Date, months: number) => {
+                const d = new Date(date.getTime());
+                const targetMonth = d.getMonth() + months;
+                d.setMonth(targetMonth);
+                return d;
+              };
+              const now = new Date();
+              let cycleStart = new Date(createdAt.getTime());
+              if (now >= addMonths(createdAt, 1)) {
+                const monthsDiff = (now.getFullYear() - createdAt.getFullYear()) * 12 + (now.getMonth() - createdAt.getMonth());
+                cycleStart = addMonths(createdAt, monthsDiff);
+                if (cycleStart > now) {
+                  cycleStart = addMonths(cycleStart, -1);
+                }
+              }
+              const nextCycleStart = addMonths(cycleStart, 1);
+
+              // 当サイクルの使用数集計
+              let usedThisCycle = 0;
+              {
+                const { count } = await supabase
+                  .from('scout_sends')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('company_account_id', account.id)
+                  .gte('sent_at', cycleStart.toISOString())
+                  .lt('sent_at', nextCycleStart.toISOString());
+                usedThisCycle = typeof count === 'number' ? count : 0;
+              }
+              const remainingTickets = Math.max(0, (account.scout_limit as number) - usedThisCycle);
+
+              setFetchedCompanyAccountData({
+                plan: account.plan,
+                scoutLimit: account.scout_limit,
+                remainingTickets,
+                nextUpdateDate: nextCycleStart.toLocaleDateString('ja-JP', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                }).replace(/\//g, '/')
+              });
+            }
+          }
+        }
+      } catch (e) {
+        // 取得失敗時は静かに無視（サイドバーは表示継続）
+        console.error('[CompanyTaskSidebar] Failed to fetch sidebar data', e);
+      }
+    };
+
+    fetchSidebarData();
+    return () => { mounted = false; };
+  }, [companyAccountData, notices]);
 
   // デフォルトのサンプルタスクデータ
   const defaultTaskData: TaskData = {
@@ -410,6 +519,10 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
     gap: '8px',
   };
 
+  // props が優先。なければローカル取得データを使用
+  const resolvedCompanyAccountData = companyAccountData ?? fetchedCompanyAccountData;
+  const resolvedNotices = (notices && notices.length > 0) ? notices : fetchedNotices;
+
   return (
     <div className={cn("w-full max-w-[320px]", className)}>
       {/* プラン情報セクション */}
@@ -425,15 +538,15 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
         <div style={upperBlockStyle}>
           <div style={{ width: '100%', textAlign: 'center' }}>
             <div style={planTitleStyle}>
-              {companyAccountData?.plan === 'standard' ? 'スタンダードプラン' : 'ベーシックプラン'}
+              {resolvedCompanyAccountData?.plan === 'standard' ? 'スタンダードプラン' : 'ベーシックプラン'}
             </div>
             <div style={planInfoStyle}>
               <div>
                 <span style={remainingTextStyle}>残数：</span>
-                <span style={remainingNumberStyle}>{companyAccountData?.scoutLimit || 10}</span>
+                <span style={remainingNumberStyle}>{resolvedCompanyAccountData?.scoutLimit ?? 0}</span>
               </div>
               <div style={nextUpdateStyle}>
-                次回更新日：{companyAccountData?.nextUpdateDate || '未設定'}
+                次回更新日：{resolvedCompanyAccountData?.nextUpdateDate || '読み込み中...'}
               </div>
             </div>
           </div>
@@ -633,8 +746,8 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* お知らせカード - 最新3件まで表示 */}
-          {notices.length > 0 ? (
-            notices.slice(0, 3).map((notice) => (
+          {resolvedNotices.length > 0 ? (
+            resolvedNotices.slice(0, 3).map((notice) => (
               <div 
                 key={notice.id}
                 style={{

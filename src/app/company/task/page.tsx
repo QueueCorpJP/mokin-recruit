@@ -2,10 +2,11 @@ import { ChevronRightIcon } from 'lucide-react';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
-import { getCachedCompanyUser } from '@/lib/auth/server';
+import { getCachedCompanyUser, requireCompanyAuthForAction } from '@/lib/auth/server';
 import TaskList from './TaskList';
 import { CompanyTaskSidebar } from '@/components/company/CompanyTaskSidebar';
 import { getCompanyTaskData } from './action';
+import { getCompanyAccountData } from '@/lib/actions/company-task-data';
 
 interface Room {
   id: string;
@@ -120,6 +121,17 @@ export default async function CompanyTaskPage() {
   // 新しい形式のタスクデータを直接使用
   const taskData = await getCompanyTaskData();
 
+  // サイドバーのプラン表示用データ（サーバー側で確実に取得して渡す）
+  let companyAccountData = null as Awaited<ReturnType<typeof getCompanyAccountData>>;
+  try {
+    const authResult = await requireCompanyAuthForAction();
+    if (authResult.success) {
+      companyAccountData = await getCompanyAccountData(authResult.data.companyUserId);
+    }
+  } catch (e) {
+    // noop: フォールバックはクライアント側取得に任せる
+  }
+
   const headingListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -173,7 +185,7 @@ export default async function CompanyTaskPage() {
             <TaskList initialTaskData={taskData} />
           </div>
           
-          <CompanyTaskSidebar className="md:flex-none" />
+          <CompanyTaskSidebar className="md:flex-none" companyAccountData={companyAccountData} />
         </div>
       </main>
     </div>

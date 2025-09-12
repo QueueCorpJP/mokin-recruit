@@ -14,6 +14,8 @@ import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
 import { getSearchHistory } from '@/lib/actions/search-history';
 import { getPublishedNotices } from '@/lib/utils/noticeHelpers';
 import { getRooms } from '@/lib/rooms';
+import { getCompanyAccountData } from '@/lib/actions/company-task-data';
+import { calculateCandidateBadge } from '@/lib/utils/candidateBadgeLogic';
 
 // キャッシュ付きの候補者データ取得関数
 const getCandidatesData = unstable_cache(
@@ -130,62 +132,16 @@ const getCandidatesData = unstable_cache(
         }
       ];
 
-      // 思考ラベルのアルゴリズム実装
-      let badgeType: 'change' | 'professional' | 'multiple' = 'change';
-      let badgeText = 'キャリアチェンジ志向';
-
-      // 直近の職種を取得
-      const currentJobTypes = candidate.recent_job_types || [];
-      
-      // 選考中の求人の職種を取得
-      const selectionJobTypes = new Set<string>();
-      selectionCompanies.forEach(company => {
-        if (company.jobTypes && Array.isArray(company.jobTypes)) {
-          company.jobTypes.forEach((jobType: string | unknown) => {
-            if (typeof jobType === 'string') {
-              selectionJobTypes.add(jobType);
-            }
-          });
-        }
+      // 志向バッジの判定（共通ロジックを使用）
+      const { badgeType, badgeText } = calculateCandidateBadge({
+        recent_job_types: candidate.recent_job_types,
+        desired_job_types: candidate.desired_job_types,
+        selectionCompanies
       });
-
-      // 希望職種を取得
-      const desiredJobTypes = candidate.desired_job_types || [];
-
-      // 多職種志向：選考中の求人の種類が3種類以上ある
-      if (selectionJobTypes.size >= 3) {
-        badgeType = 'multiple';
-        badgeText = '多職種志向';
-      }
-      // 専門性追求志向：直近の在籍企業と同一職種の求人のみ選考中
-      else if (
-        currentJobTypes.length > 0 && 
-        selectionJobTypes.size > 0 &&
-        Array.from(selectionJobTypes).every(jobType => 
-          currentJobTypes.some((currentJob: string | unknown) => 
-            String(currentJob).toLowerCase() === String(jobType).toLowerCase()
-          )
-        )
-      ) {
-        badgeType = 'professional';
-        badgeText = '専門性追求志向';
-      }
-      // キャリアチェンジ志向：直近の在籍企業と希望職種が違うものが含まれる
-      else if (
-        currentJobTypes.length > 0 &&
-        desiredJobTypes.length > 0 &&
-        desiredJobTypes.some((desiredJob: string | unknown) => 
-          !currentJobTypes.some((currentJob: string | unknown) => 
-            String(currentJob).toLowerCase() === String(desiredJob).toLowerCase()
-          )
-        )
-      ) {
-        badgeType = 'change';
-        badgeText = 'キャリアチェンジ志向';
-      }
 
       return {
         id: index + 1,
+        candidateId: candidate.id, // 実候補者ID（UUID）を保持
         isPickup: false,
         isHidden: false,
         isAttention: index % 3 === 0, // 一時的なロジック、将来的にはユーザー設定に基づく
@@ -255,57 +211,6 @@ function formatRelativeTime(date: Date): string {
   }
 }
 
-// 企業アカウント情報取得関数
-async function getCompanyAccountData(companyUserId: string) {
-  try {
-    const supabase = await createClient();
-    
-    // company_usersから企業アカウントIDを取得し、company_accountsの情報を取得
-    const { data: companyAccountData, error } = await supabase
-      .from('company_users')
-      .select(`
-        company_account_id,
-        company_accounts!company_account_id (
-          id,
-          company_name,
-          plan,
-          scout_limit,
-          created_at
-        )
-      `)
-      .eq('id', companyUserId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching company account data:', error);
-      return null;
-    }
-
-    const account = companyAccountData?.company_accounts;
-    if (!account) {
-      console.error('Company account not found');
-      return null;
-    }
-
-    // 次回更新日の計算（作成日から1ヶ月後）
-    const createdAt = new Date(account.created_at);
-    const nextUpdateDate = new Date(createdAt);
-    nextUpdateDate.setMonth(nextUpdateDate.getMonth() + 1);
-
-    return {
-      plan: account.plan,
-      scoutLimit: account.scout_limit,
-      nextUpdateDate: nextUpdateDate.toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).replace(/\//g, '/')
-    };
-  } catch (error) {
-    console.error('Error in getCompanyAccountData:', error);
-    return null;
-  }
-}
 
 // キャッシュなしのメッセージデータ取得関数
 async function getRecentMessagesUncached(companyUserId: string): Promise<Message[]> {
@@ -417,7 +322,7 @@ export default async function CompanyMypage() {
   const [candidates, messages, notices, companyAccountData, jobOptions, companyGroupsResult, defaultGroupResult] = await Promise.all([
     getCandidatesData(supabaseUrl, supabaseAnonKey, cookiesData),
     getRecentMessagesUncached(companyUserId),
-    getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData), // 最新3件まで取得
+    getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData),
     getCompanyAccountData(companyUserId),
     getJobOptions(),
     getCompanyGroups(),
@@ -425,6 +330,8 @@ export default async function CompanyMypage() {
   ]);
 
   console.log('[DEBUG] Default group result:', defaultGroupResult);
+  console.log('[DEBUG] Notices fetched:', notices);
+  console.log('[DEBUG] Company Account Data:', companyAccountData);
   
   const companyGroups = companyGroupsResult.success 
     ? companyGroupsResult.data.map(group => ({
