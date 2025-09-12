@@ -30,7 +30,7 @@ export function MemberPermissionChangeModal({
       width="640px"
       height="auto"
     >
-      <div className="flex flex-col items-center gap-6 py-10 min-h-[240px] justify-center">
+      <div className="flex flex-col items-center gap-6 py-10 min-h-[240px] justify-center w-full">
         {/* メインメッセージ */}
         <div className="flex flex-col gap-2 items-center w-full">
           <div className="font-['Noto_Sans_JP'] text-[18px] font-medium leading-[1.6] tracking-[1.8px] text-[#323232] text-center w-full">

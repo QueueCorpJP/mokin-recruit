@@ -5,6 +5,7 @@ import { Modal } from '../ui/mo-dal';
 import { Input } from '../ui/input';
 import { SelectInput } from '../ui/select-input';
 import { Button } from '../ui/button';
+import { Plus } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -84,44 +85,45 @@ export function InviteMemberModal({
       onPrimaryAction={handleConfirm}
       secondaryButtonText="キャンセル"
       onSecondaryAction={handleClose}
-      width="812px"
+      width="640px"
       height="auto"
     >
-      <div className="px-2 md:px-4 py-6 md:py-10">
-        {/* グループ名表示 */}
-        <div className="flex items-center justify-center gap-10 mb-10">
-          <label className="text-base font-bold text-[#323232]">グループ名</label>
-          <span className="text-base font-bold text-[#323232]">{groupName}</span>
+      <div className="px-0 py-10 w-full justify-center items-center">
+        {/* グループ名（中央・グリーン） */}
+        <div className="text-center mb-10">
+          <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#0f9058] leading-[1.6]">
+            {groupName || 'グループ名テキスト'}
+          </h3>
         </div>
 
         {/* 招待するメンバー */}
         <div className="mb-2 md:mb-10">
-          <h3 className="text-[18px] md:text-2xl font-bold text-[#323232] text-center mb-6">
+          <h3 className="font-['Noto_Sans_JP'] text-[18px] font-bold tracking-[1.8px] text-[#323232] text-center mb-6 leading-[1.6]">
             招待するメンバー
           </h3>
 
-          <div className="space-y-2 max-w-[812px] mx-auto">
+          <div className="space-y-2 w-[560px] mx-auto">
             {members.map((member, index) => (
               <div key={member.id} className="flex items-center gap-2">
                 {/* メールアドレス入力 */}
-                <div className="flex-1">
+                <div className="flex-1 w-[400px]">
                   <Input
                     type="email"
                     value={member.email}
                     onChange={(e) => handleMemberChange(member.id, 'email', e.target.value)}
                     placeholder={index === 0 ? 'name@gmail.com' : 'メールアドレス'}
-                    className="bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] text-[#323232]"
+                    className="bg-white border border-[#999999] rounded-[5px] px-[11px] py-0 h-[42px] font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] text-[#323232]"
                   />
                 </div>
 
                 {/* 権限選択 */}
-                <div className="w-40">
+                <div className="w-[120px]">
                   <SelectInput
                     options={roleOptions}
                     value={member.role}
                     placeholder="権限を選択"
+                    radius={5}
                     onChange={(value) => handleMemberChange(member.id, 'role', value)}
-                    className="bg-white border border-[#999999] rounded-[5px] font-['Noto_Sans_JP'] text-[16px] font-bold tracking-[1.6px]"
                   />
                 </div>
 
@@ -144,11 +146,13 @@ export function InviteMemberModal({
             <div className="text-center mt-4">
               <Button
                 onClick={handleAddMember}
-                variant="ghost"
-                size="figma-default"
-                className="text-base font-bold text-[#323232] hover:text-[#0f9058]"
+                variant="green-outline"
+                size="figma-small"
+                className="flex items-center gap-2.5 px-6 py-2.5 min-w-[120px] rounded-[32px] border border-[#0f9058] bg-transparent text-[#0f9058] font-['Noto_Sans_JP'] text-[14px] font-bold tracking-[1.4px]"
+                aria-label="add-row"
               >
-                ＋さらに追加
+                <Plus size={16} />
+                さらに追加
               </Button>
             </div>
           </div>

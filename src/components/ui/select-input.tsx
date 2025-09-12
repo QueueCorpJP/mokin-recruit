@@ -18,6 +18,7 @@ interface SelectInputProps {
   errorMessage?: string;
   className?: string;
   style?: React.CSSProperties;
+  radius?: number;
   onChange?: (value: string) => void;
   onBlur?: () => void;
   onFocus?: () => void;
@@ -73,6 +74,7 @@ export function SelectInput({
   errorMessage = '',
   className = '',
   style,
+  radius = 8,
   onChange,
   onBlur,
   onFocus,
@@ -283,6 +285,7 @@ export function SelectInput({
           padding: '4px 16px 4px 11px',
           alignItems: 'center',
           gap: '16px',
+          borderRadius: `${radius}px`,
           ...style,
         }}
         aria-expanded={isOpen}
@@ -321,6 +324,7 @@ export function SelectInput({
             // 位置に応じたスタイル
             dropdownPosition === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1'
           )}
+          style={{ borderRadius: `${radius}px` }}
           role='listbox'
           aria-label='選択肢'
         >
