@@ -21,7 +21,7 @@ export default async function AccountPage() {
   // 企業情報
   const companyPromise = supabase
     .from('company_accounts')
-    .select(`id, company_name, representative_name, industry, company_overview, headquarters_address`)
+    .select(`id, company_name, representative_name, representative_position, industry, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, company_attractions`)
     .eq('id', companyAccountId)
     .maybeSingle();
 
@@ -101,13 +101,35 @@ export default async function AccountPage() {
     .filter((s: string) => s.length > 0)
     .slice(0, 6); // バッジは多くても控えめに
 
+  // JSONフィールドの安全な解析
+  const parseJsonField = (field: any, defaultValue: any) => {
+    if (typeof field === 'string') {
+      try {
+        return JSON.parse(field);
+      } catch {
+        return defaultValue;
+      }
+    }
+    return field ?? defaultValue;
+  };
+
   const companyProps = company
     ? {
         companyName: company.company_name ?? 'テキストが入ります。',
         representativeName: company.representative_name ?? '代表者名テキスト',
+        representativePosition: company.representative_position ?? '未設定',
         industryList: industryList.length > 0 ? industryList : ['未設定'],
         companyOverview: company.company_overview ?? '',
         headquartersAddress: company.headquarters_address ?? '',
+        iconUrl: company.icon_image_url ?? null,
+        imageUrls: Array.isArray(company.company_images) ? company.company_images : [],
+        companyUrls: parseJsonField(company.company_urls, []),
+        establishedYear: company.established_year ?? null,
+        capitalAmount: company.capital_amount ?? null,
+        capitalUnit: company.capital_unit ?? '万円',
+        employeesCount: company.employees_count ?? null,
+        companyPhase: company.company_phase ?? '',
+        companyAttractions: parseJsonField(company.company_attractions, []),
       }
     : undefined;
 
@@ -118,9 +140,19 @@ export default async function AccountPage() {
     company?: {
       companyName: string;
       representativeName: string;
+      representativePosition: string;
       industryList: string[];
       companyOverview: string;
       headquartersAddress: string;
+      iconUrl?: string | null;
+      imageUrls?: string[];
+      companyUrls?: Array<{ title: string; url: string }>;
+      establishedYear?: number | null;
+      capitalAmount?: number | null;
+      capitalUnit?: string;
+      employeesCount?: number | null;
+      companyPhase?: string;
+      companyAttractions?: Array<{ title: string; content: string }>;
     } | undefined;
     groups?: Group[] | undefined;
   }

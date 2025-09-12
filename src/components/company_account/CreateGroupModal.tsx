@@ -27,11 +27,11 @@ const roleOptions = [
 export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModalProps) {
   const [groupName, setGroupName] = useState('');
   const [members, setMembers] = useState<MemberInvitation[]>([
-    { email: '', role: 'recruiter' }
+    { email: '', role: '' as any }
   ]);
 
   const handleAddMember = () => {
-    setMembers([...members, { email: '', role: 'recruiter' }]);
+    setMembers([...members, { email: '', role: '' as any }]);
   };
 
   const handleRemoveMember = (index: number) => {
@@ -80,7 +80,7 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
               onChange={(e) => setGroupName(e.target.value)}
               className="!bg-white !border !border-[#999999] !rounded-[5px] !px-[11px] !py-0 !h-[42px] !w-full font-['Noto_Sans_JP'] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999]"
             />
-            <p className="text-[#999999] text-[14px] font-['Noto_Sans_JP'] font-medium tracking-[1.4px] leading-[1.6] text-center">
+            <p className="text-[#999999]  w-full flex justify-start items-start text-[14px] font-['Noto_Sans_JP'] font-medium tracking-[1.4px] leading-[1.6] text-center">
               グループ名は候補者にも公開されます。
             </p>
           </div>

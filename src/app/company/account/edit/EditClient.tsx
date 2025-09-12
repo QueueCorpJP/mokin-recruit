@@ -552,7 +552,7 @@ export default function EditClient() {
                         <input
                           type='text'
                           placeholder='代表者役職名を入力'
-                          className='px-4 py-2 border border-[#999] rounded-[5px] w-100'
+                          className='px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
                           value={formData.representative.position}
                           onChange={e =>
                             setFormData({
@@ -567,7 +567,7 @@ export default function EditClient() {
                         <input
                           type='text'
                           placeholder='代表者名を入力'
-                          className='px-4 py-2 border border-[#999] rounded-[5px] w-100'
+                          className='px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
                           value={formData.representative.name}
                           onChange={e =>
                             setFormData({
@@ -791,6 +791,7 @@ export default function EditClient() {
                     </div>
                     <div className='flex-1 py-6'>
                       <div className='flex flex-col gap-2'>
+                        <div className='w-[380px]'>
                         <SelectInput
                           options={prefectures.map(p => ({
                             value: p,
@@ -809,6 +810,7 @@ export default function EditClient() {
                           }
                           placeholder='都道府県を選択'
                         />
+                        </div>
                         <input
                           type='text'
                           placeholder='所在地を入力'
@@ -844,6 +846,7 @@ export default function EditClient() {
                       </div>
                     </div>
                     <div className='flex-1 py-6'>
+                      <div className='w-[380px]'>
                       <SelectInput
                         options={companyPhases.map(p => ({
                           value: p,
@@ -854,8 +857,9 @@ export default function EditClient() {
                         onChange={value =>
                           setFormData({ ...formData, companyPhase: value })
                         }
-                        placeholder='未選択'
-                      />
+                            placeholder='未選択'
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1031,9 +1035,10 @@ export default function EditClient() {
                                 });
                               }}
                             />
+                            <div className='border border-[#999] rounded-[5px] p-[1px]'>
                             <textarea
                               placeholder='事業内容や社風、現状について自由にご記入ください。'
-                              className='w-full px-4 py-2 border border-[#999] rounded-[5px] resize-none h-[120px]'
+                              className='w-full px-4 py-2 resize-none h-[120px]'
                               value={attraction.content}
                               onChange={e => {
                                 const newAttractions = [
@@ -1053,6 +1058,7 @@ export default function EditClient() {
                                 });
                               }}
                             />
+                            </div>
                             {formData.attractions.length > 1 && (
                               <button
                                 type='button'
