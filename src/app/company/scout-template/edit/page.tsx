@@ -1,6 +1,6 @@
 import React from 'react';
 import ScoutTemplateEditClient from './ScoutTemplateEditClient';
-import { getCachedCompanyUser } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyGroups, type GroupOption } from '../new/actions';
 import { type ScoutTemplateData } from './actions';
 import { getScoutTemplateById } from './actions';
@@ -19,11 +19,15 @@ export default async function ScoutTemplateEditPage({ searchParams }: ScoutTempl
     redirect('/company/scout-template');
   }
 
-  // 企業ユーザー認証
-  const companyUser = await getCachedCompanyUser();
-  
-  if (!companyUser) {
-    redirect('/company/auth/login');
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    return (
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
   }
 
   // サーバーサイドでグループ一覧を取得
@@ -33,8 +37,6 @@ export default async function ScoutTemplateEditPage({ searchParams }: ScoutTempl
   
   try {
     console.log('📋 Fetching template data for ID:', templateId);
-    console.log('👤 Company user ID:', companyUser.id);
-    console.log('🏢 Company account ID:', companyUser.user_metadata?.company_account_id);
 
     const [groups, template] = await Promise.all([
       getCompanyGroups(),

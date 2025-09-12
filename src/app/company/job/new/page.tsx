@@ -1,9 +1,20 @@
 import React, { Suspense } from 'react';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyGroups } from '../actions';
 import JobNewClient from './JobNewClient';
 
 // データ取得を行うサーバーコンポーネント
 async function JobNewServerComponent() {
+  const auth = await requireCompanyAuthForAction();
+  if (!auth.success) {
+    return (
+      <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20">
+        <main className="w-full max-w-[1280px] mx-auto">
+          <p>認証が必要です。</p>
+        </main>
+      </div>
+    );
+  }
   // サーバーサイドで企業グループ情報を取得
   const groupsResult = await getCompanyGroups();
   

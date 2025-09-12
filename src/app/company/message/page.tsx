@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
-import { getCachedCompanyUser } from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { getJobOptions } from '@/lib/server/candidate/recruitment-queries';
 
@@ -14,19 +14,21 @@ async function MessageServerComponent({
 }: {
   searchParams: Promise<{ room?: string }>
 }) {
-  const user = await getCachedCompanyUser();
+  const auth = await requireCompanyAuthForAction();
   const params = await searchParams;
 
-  if (!user) {
+  if (!auth.success) {
     return (
-      <div className='flex flex-col bg-white min-h-screen items-center justify-center'>
-        <p>認証が必要です。</p>
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
+          <p>認証が必要です。</p>
+        </main>
       </div>
     );
   }
 
-  const companyUserId = user.id;
-  const fullName = user.name || '';
+  const companyUserId = auth.data.companyUserId;
+  const fullName = '';
   console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,

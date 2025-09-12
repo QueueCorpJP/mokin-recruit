@@ -1,60 +1,86 @@
-# Company配下ページの骨組み表示対応
+# Candidate配下ページの骨組み表示対応
 
 ## 修正内容の概要
-現在、company配下のページでmypageのような「認証チェック → 骨組み表示 → データ取得」の一貫した処理パターンが実装されていない。全ページで統一された遷移体験を提供するため、mypageと同様の処理パターンを適用する。
+candidate配下のページも、company配下と同様に「認証チェック → 骨組み表示 → データ取得」の一貫した処理パターンに統一する。
 
 具体的には以下の処理を各ページで実装：
-1. **認証チェック**: `requireCompanyAuthForAction()`による企業ユーザー認証
-2. **認証失敗時の骨組み表示**: 認証エラー時に統一されたフォールバック画面を表示
-3. **データ取得の並列化**: `Promise.all`を使用した効率的なデータ取得
-4. **エラーハンドリングの統一**: 一貫したエラー表示パターン
+1. 認証チェック: `requireCandidateAuthForAction()` による候補者ユーザー認証
+2. 認証失敗時の骨組み表示: 認証エラー時に統一されたフォールバック画面を表示
+3. データ取得の並列化: `Promise.all` を使用した効率的なデータ取得
+4. エラーハンドリングの統一: 一貫したエラー表示パターン
 
 ## 対象ページ修正チェックリスト
 
 ### 🟢 基本ページ（優先度: 高）
-- [ ] `/company/search/page.tsx` - 検索ページの認証・骨組み対応
-- [ ] `/company/job/page.tsx` - 求人一覧ページの統一
-- [ ] `/company/task/page.tsx` - タスクページの認証強化
-- [ ] `/company/account/page.tsx` - アカウントページの統一
-- [ ] `/company/setting/page.tsx` - 設定ページの認証・骨組み対応
+- [ ] `/candidate/mypage/page.tsx`
+- [ ] `/candidate/message/page.tsx`
+- [ ] `/candidate/job/[job_id]/page.tsx`
+- [ ] `/candidate/job/favorite/page.tsx`
+- [ ] `/candidate/search/setting/page.tsx`
+- [ ] `/candidate/task/page.tsx`
+
+### 🟡 アカウント表示ページ（優先度: 中）
+- [ ] `/candidate/account/profile/page.tsx`
+- [ ] `/candidate/account/summary/page.tsx`
+- [ ] `/candidate/account/skills/page.tsx`
+- [ ] `/candidate/account/education/page.tsx`
+- [ ] `/candidate/account/recent-job/page.tsx`
+- [ ] `/candidate/account/career-status/page.tsx`
+- [ ] `/candidate/account/expectation/page.tsx`
+- [ ] `/candidate/account/resume/page.tsx`
 
 ### 🟡 機能ページ（優先度: 中）
-- [ ] `/company/message/page.tsx` - メッセージ一覧の統一
-- [ ] `/company/recruitment/detail/page.tsx` - 採用詳細の統一
-- [ ] `/company/scout-template/page.tsx` - スカウトテンプレートの統一
-- [ ] `/company/template/page.tsx` - テンプレート管理の統一
-- [ ] `/company/search/history/page.tsx` - 検索履歴の統一
-- [ ] `/company/search/result/page.tsx` - 検索結果の統一
+- [ ] `/candidate/company/[company_id]/page.tsx`
+- [ ] `/candidate/search/setting/[id]/page.tsx`
+- [ ] `/candidate/search/setting/[id]/confirm/page.tsx`
 
-### 🟠 サブページ（優先度: 低）
-- [ ] `/company/job/new/page.tsx` - 求人新規作成の統一
-- [ ] `/company/job/[job_id]/page.tsx` - 求人詳細の統一
-- [ ] `/company/job/[job_id]/edit/page.tsx` - 求人編集の統一
-- [ ] `/company/account/edit/page.tsx` - アカウント編集の統一
-- [ ] `/company/scout-template/new/page.tsx` - スカウトテンプレート新規の統一
-- [ ] `/company/scout-template/edit/page.tsx` - スカウトテンプレート編集の統一
-- [ ] `/company/template/new/page.tsx` - テンプレート新規の統一
-- [ ] `/company/template/edit/page.tsx` - テンプレート編集の統一
+### 🟠 編集ページ（優先度: 低）
+- [ ] `/candidate/account/profile/edit/page.tsx`
+- [ ] `/candidate/account/summary/edit/page.tsx`
+- [ ] `/candidate/account/skills/edit/page.tsx`
+- [ ] `/candidate/account/education/edit/page.tsx`
+- [ ] `/candidate/account/recent-job/edit/page.tsx`
+- [ ] `/candidate/account/career-status/edit/page.tsx`
+- [ ] `/candidate/account/expectation/edit/page.tsx`
+- [ ] `/candidate/account/resume/rirekisyo-preview/page.tsx`
+- [ ] `/candidate/account/resume/shokumu-preview/page.tsx`
 
 ### 🔵 設定関連ページ（優先度: 低）
-- [ ] `/company/setting/mail/page.tsx` - メール設定の統一
-- [ ] `/company/setting/password/page.tsx` - パスワード設定の統一
-- [ ] `/company/setting/position/page.tsx` - 役職設定の統一
-- [ ] `/company/setting/profile/page.tsx` - プロフィール設定の統一
+- [ ] `/candidate/setting/page.tsx`
+- [ ] `/candidate/setting/mail/page.tsx`
+- [ ] `/candidate/setting/mail/verify/page.tsx`
+- [ ] `/candidate/setting/mail/complete/page.tsx`
+- [ ] `/candidate/setting/password/page.tsx`
+- [ ] `/candidate/setting/password/complete/page.tsx`
+- [ ] `/candidate/setting/scout/page.tsx`
+- [ ] `/candidate/setting/scout/complete/page.tsx`
+- [ ] `/candidate/setting/notification/page.tsx`
+- [ ] `/candidate/setting/notification/complete/page.tsx`
+- [ ] `/candidate/setting/ng-company/page.tsx`
+- [ ] `/candidate/setting/withdrawal/page.tsx`
+- [ ] `/candidate/setting/withdrawal/reason/page.tsx`
+- [ ] `/candidate/setting/withdrawal/complete/page.tsx`
 
 ### 🟣 その他ページ（優先度: 最低）
-- [ ] `/company/contact/page.tsx` - お問い合わせの統一
-- [ ] `/company/privacy/page.tsx` - プライバシーポリシーの統一  
-- [ ] `/company/terms/page.tsx` - 利用規約の統一
+- [ ] `/candidate/media/page.tsx`
+- [ ] `/candidate/media/[media_id]/page.tsx`
+- [ ] `/candidate/news/page.tsx`
+- [ ] `/candidate/news/[id]/page.tsx`
+- [ ] `/candidate/terms/page.tsx`
+- [ ] `/candidate/privacy/page.tsx`
+- [ ] `/candidate/laws/page.tsx`
+- [ ] `/candidate/page.tsx`
 
-## 実装パターンテンプレート
+※ 認証不要のページ（`/candidate/auth/*` 等）は本対応の対象外。
+
+## 実装パターンテンプレート（Candidate版）
 
 ```typescript
-export default async function SamplePage() {
-  // 1. 企業ユーザー認証情報を取得
-  const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
-  const authResult = await requireCompanyAuthForAction();
-  
+export default async function SampleCandidatePage() {
+  // 1. 候補者ユーザー認証情報を取得
+  const { requireCandidateAuthForAction } = await import('@/lib/auth/server');
+  const authResult = await requireCandidateAuthForAction();
+
   if (!authResult.success) {
     // 2. 認証エラーの場合は統一された骨組みを返す
     return (
@@ -77,78 +103,32 @@ export default async function SamplePage() {
 }
 ```
 
-## データベース関連の初回速度最適化項目
+## データベース関連の初回速度最適化項目（Candidate）
 
 ### 🚀 クエリ最適化（優先度: 最高）
-- [ ] **データ取得の並列化強化**: 現在のmypageパターンを全ページに適用（Promise.all活用）
-- [ ] **SELECT句の最適化**: 必要最小限のフィールドのみ取得（例：candidates表示用フィールドのみ）
-- [ ] **JOINクエリの最適化**: 複数テーブル結合を1回のクエリで実行
-- [ ] **重複データ取得の排除**: 同一データを複数箇所で取得している箇所の統合
+- [ ] データ取得の並列化: 候補者カード等の付随情報取得（職種/業種/進捗）を `Promise.all` に集約
+- [ ] SELECT句の最適化: 候補者カード表示に不要な項目を除外
+- [ ] JOINクエリの最適化: 候補者一覧に必要な結合のみを実行
+- [ ] 重複データ取得の排除: 応募/スカウトの統合後に重複候補者の最新のみ採用
 
 ### 🔍 インデックス追加（優先度: 高）
-- [ ] **candidates表のインデックス**: `status`, `last_login_at`, `updated_at`の複合インデックス
-- [ ] **application表のインデックス**: `company_group_id`, `status`, `created_at`の複合インデックス  
-- [ ] **scout_sends表のインデックス**: `company_group_id`, `status`, `sent_at`の複合インデックス
-- [ ] **job_postings表のインデックス**: `company_account_id`, `status`, `updated_at`の複合インデックス
-- [ ] **search_history表のインデックス**: `company_group_id`, `searched_at`, `is_saved`の複合インデックス
+- [ ] `candidates` 表: `last_login_at`, `updated_at` の複合 or 単独インデックス
+- [ ] `application` 表: `company_group_id`, `status`, `created_at` の複合インデックス
+- [ ] `scout_sends` 表: `company_group_id`, `status`, `sent_at` の複合インデックス
 
 ### 💾 キャッシュ戦略（優先度: 中）
-- [ ] **認証情報のキャッシュ**: `getCachedCompanyUser`の活用拡大
-- [ ] **静的データのキャッシュ**: 業界・職種・都道府県データの事前読み込み
-- [ ] **会社グループ情報のキャッシュ**: セッション中の再利用
-- [ ] **求人オプション情報のキャッシュ**: jobOptionsの共通化
-
-### 📊 データベースビュー活用（優先度: 中）
-- [ ] **候補者一覧ビューの作成**: 複雑なJOINを事前計算
-- [ ] **求人統計ビューの作成**: ダッシュボード用集計データの事前計算
-- [ ] **メッセージ統計ビューの作成**: 未読数・新着数の効率的取得
+- [ ] 認証情報のキャッシュ: `getCachedCandidateUser`（必要に応じて拡張）
+- [ ] 静的データのキャッシュ: 業界・職種・都道府県データのサーバー注入とキャッシュ
+- [ ] 候補者カード用オプションのキャッシュ: よく使う辞書データの共通化
 
 ### ⚡ 初回表示の骨組み最適化（優先度: 高）
-- [ ] **スケルトンローダーの統一**: 全ページで一貫したローディング表示
-- [ ] **重要データの優先取得**: 画面表示に必要な最小データを先行取得
-- [ ] **遅延読み込みの実装**: 初回表示後に詳細データを非同期取得
-- [ ] **エラー状態の統一**: 認証エラー・データ取得エラーの一貫した処理
+- [ ] スケルトンローダーの統一: 全ページで一貫したローディング表示
+- [ ] 重要データの優先取得: 画面表示に必要な最小データを先行取得
+- [ ] 遅延読み込みの実装: 初回表示後に詳細データを非同期取得
+- [ ] エラー状態の統一: 認証エラー・データ取得エラーの一貫した処理
 
-### 🔧 実装パターンテンプレート（改良版）
-
-```typescript
-export default async function OptimizedPage() {
-  // 1. 認証チェック（キャッシュ活用）
-  const authResult = await requireCompanyAuthForAction();
-  
-  if (!authResult.success) {
-    // 2. 統一された骨組み表示
-    return <UnifiedFallbackComponent message="認証が必要です。" />;
-  }
-
-  // 3. 必須データの並列取得（最小限のフィールド）
-  const [coreData, optionalData] = await Promise.all([
-    // 画面表示に必須のデータ（最小フィールド）
-    getCorePageData(authResult.data.companyUserId),
-    // 追加機能用のデータ（後から読み込み可能）
-    getOptionalPageData(authResult.data.companyUserId),
-  ]);
-
-  // 4. 初回表示用の最小データでクライアントコンポーネントを先行レンダリング
-  return (
-    <ClientComponent 
-      initialData={coreData}
-      deferredData={optionalData}
-      userId={authResult.data.companyUserId}
-    />
-  );
-}
-```
-
-### 📈 成果指標
-- [ ] **初回表示時間**: 目標2秒以内（現在の50%短縮）
-- [ ] **データベースクエリ数**: ページあたり最大5クエリ以内
-- [ ] **並列処理率**: データ取得の80%以上を並列化
-- [ ] **キャッシュヒット率**: 静的データの90%以上をキャッシュから取得
-
-## 注意事項
-- 既存の機能を壊さないよう、段階的に修正を実施
+## 備考
+- 既存機能を壊さないよう段階的に適用する
 - 各ページの既存の認証処理は保持しつつ、統一パターンに合わせて調整
-- エラーハンドリングは既存のパターンを尊重し、必要に応じて改善
 - データベースインデックス追加前に、現在のクエリ実行計画を確認
-- キャッシュ実装時はデータの整合性を保つよう注意
+- キャッシュ実装時はデータの整合性を担保
