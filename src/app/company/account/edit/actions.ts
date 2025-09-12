@@ -9,18 +9,39 @@ import { uploadCompanyIcon, uploadCompanyImages } from '@/lib/storage-server';
 export interface CompanyAccountEditData {
   companyName: string;
   representativeName: string;
+  representativePosition: string;
   industryText: string;
   headquartersAddress: string;
   companyOverview: string;
+  logoUrl?: string | null;
+  imageUrls?: string[];
+  companyUrls: Array<{ title: string; url: string }>;
+  establishedYear: number | null;
+  capitalAmount: number | null;
+  capitalUnit: string;
+  employeesCount: number | null;
+  companyPhase: string;
+  businessContent: string;
+  prefecture: string;
+  address: string;
+  companyAttractions: Array<{ title: string; content: string }>;
 }
 
 export interface CompanyAccountEditInput {
   representativeName: string;
+  representativePosition: string;
   industries: Industry[];
   businessContent: string;
   location: { prefecture: string; address: string };
   iconUrl?: string | null;
   imageUrls?: string[];
+  companyUrls: Array<{ title: string; url: string }>;
+  establishedYear: number | null;
+  capitalAmount: number | null;
+  capitalUnit: string;
+  employeesCount: number | null;
+  companyPhase: string;
+  companyAttractions: Array<{ title: string; content: string }>;
 }
 
 function findIndustriesByNames(names: string[]): Industry[] {
@@ -50,7 +71,7 @@ export async function getCompanyAccountForEdit(): Promise<
   const { data, error } = await supabase
     .from('company_accounts')
     .select(
-      'company_name, representative_name, industry, company_overview, headquarters_address'
+      'company_name, representative_name, representative_position, industry, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, business_content, prefecture, address, company_attractions'
     )
     .eq('id', companyAccountId)
     .maybeSingle();
@@ -75,16 +96,45 @@ export async function getCompanyAccountForEdit(): Promise<
     address = fullAddress;
   }
 
+  // Parse JSON fields safely
+  const parseJsonField = (field: any, defaultValue: any) => {
+    if (typeof field === 'string') {
+      try {
+        return JSON.parse(field);
+      } catch {
+        return defaultValue;
+      }
+    }
+    return field ?? defaultValue;
+  };
+
+  const companyUrls = parseJsonField(data.company_urls, []);
+  const companyAttractions = parseJsonField(data.company_attractions, []);
+  const companyImages = Array.isArray(data.company_images) ? data.company_images : [];
+
   return {
     success: true,
     data: {
       companyName: data.company_name || '',
       representativeName: data.representative_name || '',
+      representativePosition: data.representative_position || '',
       industryText,
       companyOverview: data.company_overview || '',
       headquartersAddress: fullAddress,
+      logoUrl: data.icon_image_url ?? null,
+      imageUrls: companyImages,
       industries,
       location: { prefecture, address },
+      companyUrls: Array.isArray(companyUrls) ? companyUrls : [],
+      establishedYear: data.established_year || null,
+      capitalAmount: data.capital_amount || null,
+      capitalUnit: data.capital_unit || '万円',
+      employeesCount: data.employees_count || null,
+      companyPhase: data.company_phase || '',
+      businessContent: data.business_content || '',
+      prefecture: data.prefecture || '',
+      address: data.address || '',
+      companyAttractions: Array.isArray(companyAttractions) ? companyAttractions : [],
     },
   };
 }
@@ -101,11 +151,11 @@ export async function saveCompanyAccountEdit(
   const supabase = await createClient();
 
   // 入力検証（必須項目）
-  // 代表者: 役職名と氏名の両方必須（役職は現状保持していないため氏名で代替不可）
+  if (!input.representativePosition?.trim()) {
+    return { success: false, error: '代表者の役職名を入力してください。' };
+  }
   if (!input.representativeName?.trim()) {
-    // クライアントでは役職名と氏名の両方を必須にしているため、
-    // サーバー側の共通エラーメッセージも指定文言に合わせる
-    return { success: false, error: '代表者の役職名と氏名を入力してください。' };
+    return { success: false, error: '代表者の氏名を入力してください。' };
   }
   if (!input.businessContent?.trim()) {
     return { success: false, error: '事業内容を入力してください。' };
@@ -121,7 +171,7 @@ export async function saveCompanyAccountEdit(
   const { data: current, error: fetchError } = await supabase
     .from('company_accounts')
     .select(
-      'representative_name, industry, headquarters_address, company_overview, logo_url, image_urls'
+      'representative_name, representative_position, industry, headquarters_address, company_overview, business_content, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, prefecture, address, company_attractions'
     )
     .eq('id', companyAccountId)
     .maybeSingle();
@@ -139,6 +189,9 @@ export async function saveCompanyAccountEdit(
   if ((current.representative_name || '') !== input.representativeName) {
     updateData.representative_name = input.representativeName;
   }
+  if ((current.representative_position || '') !== input.representativePosition) {
+    updateData.representative_position = input.representativePosition;
+  }
   if ((current.industry || '') !== primaryIndustry) {
     updateData.industry = primaryIndustry;
   }
@@ -148,14 +201,50 @@ export async function saveCompanyAccountEdit(
   if ((current.company_overview || '') !== input.businessContent) {
     updateData.company_overview = input.businessContent;
   }
-  if (input.iconUrl !== undefined && (current.logo_url || null) !== (input.iconUrl || null)) {
-    updateData.logo_url = input.iconUrl || null;
+  if ((current.business_content || '') !== input.businessContent) {
+    updateData.business_content = input.businessContent;
+  }
+  if (input.iconUrl !== undefined && (current.icon_image_url || null) !== (input.iconUrl || null)) {
+    updateData.icon_image_url = input.iconUrl || null;
   }
   if (input.imageUrls !== undefined) {
-    const curr = Array.isArray(current.image_urls) ? current.image_urls : [];
+    const curr = Array.isArray(current.company_images) ? current.company_images : [];
     const next = Array.isArray(input.imageUrls) ? input.imageUrls : [];
     if (JSON.stringify(curr) !== JSON.stringify(next)) {
-      updateData.image_urls = next;
+      updateData.company_images = next;
+    }
+  }
+  if (input.companyUrls !== undefined) {
+    const curr = current.company_urls ? (typeof current.company_urls === 'string' ? JSON.parse(current.company_urls) : current.company_urls) : [];
+    if (JSON.stringify(curr) !== JSON.stringify(input.companyUrls)) {
+      updateData.company_urls = JSON.stringify(input.companyUrls);
+    }
+  }
+  if (input.establishedYear !== undefined && (current.established_year || null) !== input.establishedYear) {
+    updateData.established_year = input.establishedYear;
+  }
+  if (input.capitalAmount !== undefined && (current.capital_amount || null) !== input.capitalAmount) {
+    updateData.capital_amount = input.capitalAmount;
+  }
+  if (input.capitalUnit !== undefined && (current.capital_unit || '') !== input.capitalUnit) {
+    updateData.capital_unit = input.capitalUnit;
+  }
+  if (input.employeesCount !== undefined && (current.employees_count || null) !== input.employeesCount) {
+    updateData.employees_count = input.employeesCount;
+  }
+  if (input.companyPhase !== undefined && (current.company_phase || '') !== input.companyPhase) {
+    updateData.company_phase = input.companyPhase;
+  }
+  if ((current.prefecture || '') !== input.location.prefecture) {
+    updateData.prefecture = input.location.prefecture;
+  }
+  if ((current.address || '') !== input.location.address) {
+    updateData.address = input.location.address;
+  }
+  if (input.companyAttractions !== undefined) {
+    const curr = current.company_attractions ? (typeof current.company_attractions === 'string' ? JSON.parse(current.company_attractions) : current.company_attractions) : [];
+    if (JSON.stringify(curr) !== JSON.stringify(input.companyAttractions)) {
+      updateData.company_attractions = JSON.stringify(input.companyAttractions);
     }
   }
 
