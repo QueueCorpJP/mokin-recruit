@@ -8,8 +8,10 @@ import React from 'react';
  */
 export function FormErrorMessage({
   error,
+  id,
 }: {
   error?: string | string[] | null;
+  id?: string;
 }) {
   if (!error || (Array.isArray(error) && error.length === 0)) return null;
 
@@ -17,7 +19,12 @@ export function FormErrorMessage({
   const errors = Array.isArray(error) ? error : [error];
 
   return (
-    <div className='text-red-600 text-sm mt-1' aria-live='polite' role='alert'>
+    <div
+      id={id}
+      className='text-red-600 text-sm mt-1'
+      aria-live='polite'
+      role='alert'
+    >
       {errors.map((msg, i) => (
         <div key={i}>{msg}</div>
       ))}

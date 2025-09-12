@@ -10,6 +10,7 @@ import {
 } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { educationSchema } from '../../_shared/schemas/educationSchema';
+import { validateFormDataWithZod } from '../../_shared/actions/validateFormDataWithZod';
 
 export async function getEducationData() {
   try {
@@ -76,34 +77,27 @@ export async function updateEducationData(formData: FormData) {
 
     const { candidateId } = authResult.data;
 
-    // FormDataをオブジェクト化し、配列がJSON文字列で来る場合はパースしてから検証
-    const raw: Record<string, any> = {};
-    for (const [key, value] of formData.entries()) {
-      raw[key] = value;
-    }
-    if (typeof raw['industries'] === 'string') {
-      try {
-        raw['industries'] = JSON.parse(raw['industries']);
-      } catch {
-        // パース失敗時はそのまま（zodでエラー化）
+    // 共通ユーティリティで検証（配列JSON文字列の事前変換を含む）
+    const validation = await validateFormDataWithZod(
+      educationSchema,
+      formData,
+      {
+        transform: obj => {
+          const output = { ...obj } as any;
+          const parseIfStringJson = (value: any) => {
+            if (typeof value !== 'string') return value;
+            try {
+              return JSON.parse(value);
+            } catch {
+              return value;
+            }
+          };
+          output.industries = parseIfStringJson(output.industries) ?? [];
+          output.jobTypes = parseIfStringJson(output.jobTypes) ?? [];
+          return output;
+        },
       }
-    }
-    if (typeof raw['jobTypes'] === 'string') {
-      try {
-        raw['jobTypes'] = JSON.parse(raw['jobTypes']);
-      } catch {
-        // パース失敗時はそのまま（zodでエラー化）
-      }
-    }
-
-    const parsed = educationSchema.safeParse(raw);
-    const validation = parsed.success
-      ? { success: true as const, data: parsed.data }
-      : {
-          success: false as const,
-          errors: parsed.error.flatten().fieldErrors,
-          message: 'バリデーションエラーがあります',
-        };
+    );
 
     if (!validation.success) {
       return {
@@ -120,7 +114,7 @@ export async function updateEducationData(formData: FormData) {
       graduationMonth,
       industries,
       jobTypes,
-    } = validation.data;
+    } = validation.data as any;
 
     const supabase = await getSupabaseServerClient();
     // educationテーブルを更新（まず更新を試し、存在しなければ挿入）
