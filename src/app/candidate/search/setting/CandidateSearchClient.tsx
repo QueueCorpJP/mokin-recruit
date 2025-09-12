@@ -3,9 +3,14 @@
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
-import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
-import { addFavoriteAction, removeFavoriteAction } from '@/lib/actions/favoriteActions';
-import { useFavoriteStatusQuery } from '@/hooks/useFavoriteApi';
+import {
+  useState,
+  useEffect,
+  useTransition,
+  useCallback,
+  useMemo,
+} from 'react';
+import { useCandidateSearch } from './useCandidateSearch';
 
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/job/LocationModal';
@@ -40,99 +45,110 @@ interface CandidateSearchClientProps {
   };
 }
 
-function CandidateSearchClient({ 
+function CandidateSearchClient({
   initialJobs,
   initialPagination,
-  initialSearchConditions
+  initialSearchConditions,
 }: CandidateSearchClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  
+
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(initialSearchConditions.jobTypes);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(
+    initialSearchConditions.jobTypes
+  );
   const [selectedLocations, setSelectedLocations] = useState<string[]>(
-    initialSearchConditions.location ? initialSearchConditions.location.split(',').filter(Boolean) : []
+    initialSearchConditions.location
+      ? initialSearchConditions.location.split(',').filter(Boolean)
+      : []
   );
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialSearchConditions.industries);
-  const [searchKeyword, setSearchKeyword] = useState(initialSearchConditions.keyword);
-  
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(
+    initialSearchConditions.industries
+  );
+  const [searchKeyword, setSearchKeyword] = useState(
+    initialSearchConditions.keyword
+  );
+
   // 年収とアピールポイントの状態
-  const [selectedSalary, setSelectedSalary] = useState(initialSearchConditions.salaryMin || '');
+  const [selectedSalary, setSelectedSalary] = useState(
+    initialSearchConditions.salaryMin || ''
+  );
   const [selectedAppealPoint, setSelectedAppealPoint] = useState(
     initialSearchConditions.appealPoints[0] || ''
   );
-  
-  // 求人データとローディング状態
-  const [jobCards, setJobCards] = useState<JobSearchResult[]>(initialJobs);
-  const [loading, setLoading] = useState(false);
-  const [favoriteLoading, setFavoriteLoading] = useState<Record<string, boolean>>({});
-  const [pagination, setPagination] = useState(initialPagination);
 
-  // お気に入り状態を取得（メモ化で無限レンダリングを防止）
-  const jobIds = useMemo(() => jobCards.map(job => job.id), [jobCards]);
-  const { data: favoriteStatus, refetch: refetchFavoriteStatus } = useFavoriteStatusQuery(jobIds);
+  // 求人データとローディング状態
+  const {
+    jobCards,
+    pagination,
+    loading,
+    favoriteLoading,
+    favoriteStatus,
+    executeSearch,
+    toggleFavorite,
+  } = useCandidateSearch({
+    initialJobs: initialJobs as any,
+    initialPagination,
+  });
 
   // 初期化とURLパラメータの読み取り
   const [initialized, setInitialized] = useState(false);
-  
+
   useEffect(() => {
     if (!initialized && typeof window !== 'undefined') {
       setInitialized(true);
-      
+
       // URLパラメータを直接読み取り（状態の同期のため）
       const urlParams = new URLSearchParams(window.location.search);
-      
+
       // URLパラメータがある場合のみ状態を更新（初期データと重複を避ける）
       if (urlParams.toString()) {
         const parsedConditions = {
           keyword: urlParams.get('keyword') || '',
           location: urlParams.get('location') || '',
           salaryMin: urlParams.get('salaryMin') || '',
-          industries: urlParams.get('industries')?.split(',').filter(Boolean) || [],
+          industries:
+            urlParams.get('industries')?.split(',').filter(Boolean) || [],
           jobTypes: urlParams.get('jobTypes')?.split(',').filter(Boolean) || [],
-          appealPoints: urlParams.get('appealPoints')?.split(',').filter(Boolean) || [],
+          appealPoints:
+            urlParams.get('appealPoints')?.split(',').filter(Boolean) || [],
           page: parseInt(urlParams.get('page') || '1'),
-          limit: 10
+          limit: 10,
         };
-        
+
         // 状態を初期化（URLパラメータに基づく）
         setSelectedJobTypes(parsedConditions.jobTypes);
-        setSelectedLocations(parsedConditions.location ? parsedConditions.location.split(',').filter(Boolean) : []);
+        setSelectedLocations(
+          parsedConditions.location
+            ? parsedConditions.location.split(',').filter(Boolean)
+            : []
+        );
         setSelectedIndustries(parsedConditions.industries);
         setSearchKeyword(parsedConditions.keyword);
         setSelectedSalary(parsedConditions.salaryMin);
         setSelectedAppealPoint(parsedConditions.appealPoints[0] || '');
-        
+
         // URLパラメータがあり、初期データと異なる場合のみ検索実行
         const hasUrlParams = urlParams.toString();
-        const isDifferentFromInitial = (
+        const isDifferentFromInitial =
           parsedConditions.keyword !== initialSearchConditions.keyword ||
           parsedConditions.location !== initialSearchConditions.location ||
           parsedConditions.salaryMin !== initialSearchConditions.salaryMin ||
-          JSON.stringify(parsedConditions.industries) !== JSON.stringify(initialSearchConditions.industries) ||
-          JSON.stringify(parsedConditions.jobTypes) !== JSON.stringify(initialSearchConditions.jobTypes) ||
-          JSON.stringify(parsedConditions.appealPoints) !== JSON.stringify(initialSearchConditions.appealPoints) ||
-          parsedConditions.page !== initialSearchConditions.page
-        );
-        
+          JSON.stringify(parsedConditions.industries) !==
+            JSON.stringify(initialSearchConditions.industries) ||
+          JSON.stringify(parsedConditions.jobTypes) !==
+            JSON.stringify(initialSearchConditions.jobTypes) ||
+          JSON.stringify(parsedConditions.appealPoints) !==
+            JSON.stringify(initialSearchConditions.appealPoints) ||
+          parsedConditions.page !== initialSearchConditions.page;
+
         if (hasUrlParams && isDifferentFromInitial) {
           // 直接実行（useCallbackを避ける）
           (async () => {
-            setLoading(true);
-            try {
-              const result = await getJobSearchData(parsedConditions);
-              if (result.success && result.data) {
-                setJobCards(result.data.jobs);
-                setPagination(result.data.pagination);
-              }
-            } catch (error) {
-              console.error('Initial search error:', error);
-            } finally {
-              setLoading(false);
-            }
+            await executeSearch(parsedConditions as any);
           })();
         }
       }
@@ -142,60 +158,71 @@ function CandidateSearchClient({
   // 検索条件をURLに反映（サーバーレンダリングを避ける）
   const updateURL = (newConditions: any) => {
     const params = new URLSearchParams();
-    
+
     if (newConditions.keyword) params.set('keyword', newConditions.keyword);
     if (newConditions.location) params.set('location', newConditions.location);
-    if (newConditions.salaryMin && newConditions.salaryMin !== '問わない') params.set('salaryMin', newConditions.salaryMin);
-    if (newConditions.industries.length > 0) params.set('industries', newConditions.industries.join(','));
-    if (newConditions.jobTypes.length > 0) params.set('jobTypes', newConditions.jobTypes.join(','));
-    if (newConditions.appealPoints.length > 0) params.set('appealPoints', newConditions.appealPoints.join(','));
-    if (newConditions.page > 1) params.set('page', newConditions.page.toString());
+    if (newConditions.salaryMin && newConditions.salaryMin !== '問わない')
+      params.set('salaryMin', newConditions.salaryMin);
+    if (newConditions.industries.length > 0)
+      params.set('industries', newConditions.industries.join(','));
+    if (newConditions.jobTypes.length > 0)
+      params.set('jobTypes', newConditions.jobTypes.join(','));
+    if (newConditions.appealPoints.length > 0)
+      params.set('appealPoints', newConditions.appealPoints.join(','));
+    if (newConditions.page > 1)
+      params.set('page', newConditions.page.toString());
 
     const queryString = params.toString();
     const newUrl = queryString ? `?${queryString}` : '';
-    
+
     // URLの更新をHistory APIで直接行い、Reactのrouterを使わない
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', `/candidate/search/setting${newUrl}`);
+      window.history.replaceState(
+        null,
+        '',
+        `/candidate/search/setting${newUrl}`
+      );
     }
   };
 
   // 検索条件を使って検索を実行（useCallbackで安定化）
-  const fetchJobsWithConditions = useCallback(async (conditions: any) => {
-    setLoading(true);
-    
-    try {
-      const result = await getJobSearchData(conditions);
-      
-      if (result.success && result.data) {
-        setJobCards(result.data.jobs);
-        setPagination(result.data.pagination);
-        
-        // URLも更新する
-        updateURL(conditions);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchJobsWithConditions = useCallback(
+    async (conditions: any) => {
+      await executeSearch(conditions);
+    },
+    [executeSearch]
+  );
 
   // 現在の状態を使って検索を実行
-  const fetchJobs = useCallback(async (page: number = 1) => {
-    const searchConditions = {
-      keyword: searchKeyword,
-      location: selectedLocations.join(','),
-      salaryMin: selectedSalary && selectedSalary !== '問わない' ? selectedSalary.replace(/[^\d]/g, '') : undefined,
-      industries: selectedIndustries,
-      jobTypes: selectedJobTypes,
-      appealPoints: selectedAppealPoint ? [selectedAppealPoint] : [],
-      page: page,
-      limit: pagination.limit || 10
-    };
-    
-    await fetchJobsWithConditions(searchConditions);
-  }, [searchKeyword, selectedLocations, selectedSalary, selectedIndustries, selectedJobTypes, selectedAppealPoint, pagination.limit, fetchJobsWithConditions]);
+  const fetchJobs = useCallback(
+    async (page: number = 1) => {
+      const searchConditions = {
+        keyword: searchKeyword,
+        location: selectedLocations.join(','),
+        salaryMin:
+          selectedSalary && selectedSalary !== '問わない'
+            ? selectedSalary.replace(/[^\d]/g, '')
+            : undefined,
+        industries: selectedIndustries,
+        jobTypes: selectedJobTypes,
+        appealPoints: selectedAppealPoint ? [selectedAppealPoint] : [],
+        page: page,
+        limit: pagination.limit || 10,
+      };
+
+      await fetchJobsWithConditions(searchConditions);
+    },
+    [
+      searchKeyword,
+      selectedLocations,
+      selectedSalary,
+      selectedIndustries,
+      selectedJobTypes,
+      selectedAppealPoint,
+      pagination.limit,
+      fetchJobsWithConditions,
+    ]
+  );
 
   // 検索実行（条件変更時）
   const handleSearch = () => {
@@ -207,32 +234,7 @@ function CandidateSearchClient({
     const job = jobCards[idx];
     const jobId = job.id;
     const isCurrentlyStarred = favoriteStatus?.[jobId] || false;
-
-    // ローディング状態を設定
-    setFavoriteLoading(prev => ({ ...prev, [jobId]: true }));
-
-    try {
-      let response;
-      if (isCurrentlyStarred) {
-        response = await removeFavoriteAction(jobId);
-      } else {
-        response = await addFavoriteAction(jobId);
-      }
-
-      if (response.success) {
-        // お気に入り状態を再取得
-        await refetchFavoriteStatus();
-      } else {
-        console.error('お気に入り操作エラー:', response.error);
-        alert(response.error || 'お気に入り操作に失敗しました');
-      }
-    } catch (error) {
-      console.error('お気に入り操作エラー:', error);
-      alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
-    } finally {
-      // ローディング状態を解除
-      setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
-    }
+    await toggleFavorite(jobId, isCurrentlyStarred);
   };
 
   // 年収セレクト用
@@ -299,12 +301,12 @@ function CandidateSearchClient({
   // ページネーション処理（サーバーサイド）
   const handlePageChange = (page: number) => {
     fetchJobs(page);
-    
+
     // ページ遷移後にページトップにスクロール
     if (typeof window !== 'undefined') {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
   };
@@ -338,10 +340,10 @@ function CandidateSearchClient({
             <div className='flex-1 flex items-center justify-center mt-10'>
               <div className='w-full md:w-[742px] bg-white rounded-lg shadow p-6 md:p-[40px]'>
                 <div className='max-w-[662px] w-full mx-auto flex flex-col gap-6'>
-                  <BaseInput 
-                    placeholder='キーワード検索' 
+                  <BaseInput
+                    placeholder='キーワード検索'
                     value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    onChange={e => setSearchKeyword(e.target.value)}
                   />
 
                   <div className='flex flex-col md:flex-row gap-6 items-start justify-start w-full'>
@@ -359,7 +361,10 @@ function CandidateSearchClient({
                       {selectedJobTypes.length > 0 && (
                         <div className='flex flex-col items-start mt-2'>
                           <div className='flex flex-col gap-2 w-full'>
-                            {(showAllJobTypes ? selectedJobTypes : selectedJobTypes.slice(0, 6)).map(item => (
+                            {(showAllJobTypes
+                              ? selectedJobTypes
+                              : selectedJobTypes.slice(0, 6)
+                            ).map(item => (
                               <div
                                 key={item}
                                 className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -382,10 +387,14 @@ function CandidateSearchClient({
                             ))}
                             {selectedJobTypes.length > 6 && (
                               <button
-                                onClick={() => setShowAllJobTypes(!showAllJobTypes)}
+                                onClick={() =>
+                                  setShowAllJobTypes(!showAllJobTypes)
+                                }
                                 className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
                               >
-                                {showAllJobTypes ? '折りたたむ' : `+${selectedJobTypes.length - 6}件`}
+                                {showAllJobTypes
+                                  ? '折りたたむ'
+                                  : `+${selectedJobTypes.length - 6}件`}
                               </button>
                             )}
                           </div>
@@ -406,7 +415,10 @@ function CandidateSearchClient({
                       {selectedLocations.length > 0 && (
                         <div className='flex flex-col items-start mt-2'>
                           <div className='flex flex-row flex-wrap gap-2 max-w-[205px] w-full'>
-                            {(showAllLocations ? selectedLocations : selectedLocations.slice(0, 6)).map(item => (
+                            {(showAllLocations
+                              ? selectedLocations
+                              : selectedLocations.slice(0, 6)
+                            ).map(item => (
                               <div
                                 key={item}
                                 className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -430,10 +442,14 @@ function CandidateSearchClient({
                           </div>
                           {selectedLocations.length > 6 && (
                             <button
-                              onClick={() => setShowAllLocations(!showAllLocations)}
+                              onClick={() =>
+                                setShowAllLocations(!showAllLocations)
+                              }
                               className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0 mt-2 w-full text-center"
                             >
-                              {showAllLocations ? '折りたたむ' : `+${selectedLocations.length - 6}件`}
+                              {showAllLocations
+                                ? '折りたたむ'
+                                : `+${selectedLocations.length - 6}件`}
                             </button>
                           )}
                         </div>
@@ -447,7 +463,11 @@ function CandidateSearchClient({
                         onChange={v => setSelectedSalary(v)}
                         placeholder={
                           selectedSalary
-                            ? `年収：${selectedSalary.length > 7 ? selectedSalary.slice(0, 7) + '...' : selectedSalary}`
+                            ? `年収：${
+                                selectedSalary.length > 7
+                                  ? selectedSalary.slice(0, 7) + '...'
+                                  : selectedSalary
+                              }`
                             : '年収'
                         }
                         className='w-full'
@@ -493,7 +513,9 @@ function CandidateSearchClient({
                     />
                     {/* 線を覆う中央の184x32pxのdiv */}
                     <button
-                      onClick={() => setIsSearchConditionActive(!isSearchConditionActive)}
+                      onClick={() =>
+                        setIsSearchConditionActive(!isSearchConditionActive)
+                      }
                       style={{
                         position: 'absolute',
                         top: '50%',
@@ -517,9 +539,11 @@ function CandidateSearchClient({
                         viewBox='0 0 14 10'
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'
-                        style={{ 
-                          transform: isSearchConditionActive ? 'rotate(0deg)' : 'rotate(180deg)',
-                          transition: 'transform 0.4s ease'
+                        style={{
+                          transform: isSearchConditionActive
+                            ? 'rotate(0deg)'
+                            : 'rotate(180deg)',
+                          transition: 'transform 0.4s ease',
                         }}
                       >
                         <path
@@ -546,7 +570,10 @@ function CandidateSearchClient({
                         {selectedIndustries.length > 0 && (
                           <div className='flex flex-col items-start mt-2'>
                             <div className='flex flex-col gap-2 w-full'>
-                              {(showAllIndustries ? selectedIndustries : selectedIndustries.slice(0, 6)).map(item => (
+                              {(showAllIndustries
+                                ? selectedIndustries
+                                : selectedIndustries.slice(0, 6)
+                              ).map(item => (
                                 <div
                                   key={item}
                                   className='bg-[#d2f1da] flex flex-row items-center justify-start px-[11px] py-[4px] rounded-[5px] w-fit'
@@ -558,7 +585,9 @@ function CandidateSearchClient({
                                     className='ml-0.5 p-1 rounded hover:bg-[#b6e5c5] transition-colors'
                                     onClick={() =>
                                       setSelectedIndustries(
-                                        selectedIndustries.filter(j => j !== item)
+                                        selectedIndustries.filter(
+                                          j => j !== item
+                                        )
                                       )
                                     }
                                     aria-label='削除'
@@ -569,10 +598,14 @@ function CandidateSearchClient({
                               ))}
                               {selectedIndustries.length > 6 && (
                                 <button
-                                  onClick={() => setShowAllIndustries(!showAllIndustries)}
+                                  onClick={() =>
+                                    setShowAllIndustries(!showAllIndustries)
+                                  }
                                   className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] hover:underline cursor-pointer bg-transparent border-none p-0"
                                 >
-                                  {showAllIndustries ? '折りたたむ' : `+${selectedIndustries.length - 6}件`}
+                                  {showAllIndustries
+                                    ? '折りたたむ'
+                                    : `+${selectedIndustries.length - 6}件`}
                                 </button>
                               )}
                             </div>
@@ -587,7 +620,11 @@ function CandidateSearchClient({
                           onChange={v => setSelectedAppealPoint(v)}
                           placeholder={
                             selectedAppealPoint
-                              ? `アピールポイント：${selectedAppealPoint.length > 19 ? selectedAppealPoint.slice(0, 19) + '...' : selectedAppealPoint}`
+                              ? `アピールポイント：${
+                                  selectedAppealPoint.length > 19
+                                    ? selectedAppealPoint.slice(0, 19) + '...'
+                                    : selectedAppealPoint
+                                }`
                               : 'アピールポイント'
                           }
                           className='w-full'
@@ -668,7 +705,8 @@ function CandidateSearchClient({
                         alignItems: 'center',
                         gap: '10px',
                         borderRadius: '32px',
-                        background: 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
+                        background:
+                          'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)',
                         boxShadow: '0 5px 10px 0 rgba(0, 0, 0, 0.15)',
                         border: 'none',
                         color: 'white',
@@ -678,16 +716,20 @@ function CandidateSearchClient({
                         opacity: loading ? 0.7 : 1,
                       }}
                       className='w-full md:w-[160px] transition-all duration-150 hover:shadow-[0_5px_10px_0_rgba(0,0,0,0.15)] hover:bg-[linear-gradient(263deg,#249881_0%,#27668D_100%)]'
-                      onMouseEnter={(e) => {
+                      onMouseEnter={e => {
                         if (!loading) {
-                          e.currentTarget.style.background = 'linear-gradient(263deg, #249881 0%, #27668D 100%)';
-                          e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+                          e.currentTarget.style.background =
+                            'linear-gradient(263deg, #249881 0%, #27668D 100%)';
+                          e.currentTarget.style.boxShadow =
+                            '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
                         }
                       }}
-                      onMouseLeave={(e) => {
+                      onMouseLeave={e => {
                         if (!loading) {
-                          e.currentTarget.style.background = 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)';
-                          e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+                          e.currentTarget.style.background =
+                            'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)';
+                          e.currentTarget.style.boxShadow =
+                            '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
                         }
                       }}
                     >
@@ -705,35 +747,67 @@ function CandidateSearchClient({
             {/* ページネーションデザイン（矢印アイコン8px） */}
             <div className='flex flex-row items-center justify-end gap-2 w-full'>
               <button
-                className={`p-1 ${pagination.page === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
-                onClick={() => pagination.page > 1 && handlePageChange(pagination.page - 1)}
+                className={`p-1 ${
+                  pagination.page === 1
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer hover:opacity-70'
+                }`}
+                onClick={() =>
+                  pagination.page > 1 && handlePageChange(pagination.page - 1)
+                }
                 disabled={pagination.page === 1}
-                aria-label="前のページ"
+                aria-label='前のページ'
               >
                 <PaginationArrow direction='left' className='w-[8px] h-[8px]' />
               </button>
-              <span className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232] cursor-pointer hover:text-[#0F9058] transition-colors'
-                    onClick={() => {
-                      const targetPage = prompt(`ページ番号を入力してください (1-${pagination.totalPages}):`, pagination.page.toString());
-                      if (targetPage) {
-                        const pageNum = parseInt(targetPage, 10);
-                        if (pageNum >= 1 && pageNum <= pagination.totalPages) {
-                          handlePageChange(pageNum);
-                        } else {
-                          alert(`有効なページ番号を入力してください (1-${pagination.totalPages})`);
-                        }
-                      }
-                    }}
-                    title="クリックしてページ移動">
-                {loading ? 'Loading...' : pagination.total === 0 ? '0件' : `${((pagination.page - 1) * pagination.limit) + 1}〜${Math.min(pagination.page * pagination.limit, pagination.total)}件 / ${pagination.total}件`}
+              <span
+                className='font-bold text-[12px] leading-[1.6] tracking-[0.1em] text-[#323232] cursor-pointer hover:text-[#0F9058] transition-colors'
+                onClick={() => {
+                  const targetPage = prompt(
+                    `ページ番号を入力してください (1-${pagination.totalPages}):`,
+                    pagination.page.toString()
+                  );
+                  if (targetPage) {
+                    const pageNum = parseInt(targetPage, 10);
+                    if (pageNum >= 1 && pageNum <= pagination.totalPages) {
+                      handlePageChange(pageNum);
+                    } else {
+                      alert(
+                        `有効なページ番号を入力してください (1-${pagination.totalPages})`
+                      );
+                    }
+                  }
+                }}
+                title='クリックしてページ移動'
+              >
+                {loading
+                  ? 'Loading...'
+                  : pagination.total === 0
+                  ? '0件'
+                  : `${
+                      (pagination.page - 1) * pagination.limit + 1
+                    }〜${Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total
+                    )}件 / ${pagination.total}件`}
               </span>
               <button
-                className={`p-1 ${pagination.page === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
-                onClick={() => pagination.page < pagination.totalPages && handlePageChange(pagination.page + 1)}
+                className={`p-1 ${
+                  pagination.page === pagination.totalPages
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer hover:opacity-70'
+                }`}
+                onClick={() =>
+                  pagination.page < pagination.totalPages &&
+                  handlePageChange(pagination.page + 1)
+                }
                 disabled={pagination.page === pagination.totalPages}
-                aria-label="次のページ"
+                aria-label='次のページ'
               >
-                <PaginationArrow direction='right' className='w-[8px] h-[8px]' />
+                <PaginationArrow
+                  direction='right'
+                  className='w-[8px] h-[8px]'
+                />
               </button>
             </div>
             {/* 求人カード表示 */}
@@ -744,7 +818,9 @@ function CandidateSearchClient({
                 </div>
               ) : jobCards.length === 0 ? (
                 <div className='text-center py-10'>
-                  <span className='text-gray-500'>該当する求人が見つかりませんでした</span>
+                  <span className='text-gray-500'>
+                    該当する求人が見つかりませんでした
+                  </span>
                 </div>
               ) : (
                 jobCards.map((card, idx) => (
@@ -762,11 +838,12 @@ function CandidateSearchClient({
                     onStarClick={() => handleStarClick(idx)}
                     isFavoriteLoading={favoriteLoading[card.id]}
                     jobId={card.id}
-                    onClick={() => router.push(`/candidate/search/setting/${card.id}`)}
+                    onClick={() =>
+                      router.push(`/candidate/search/setting/${card.id}`)
+                    }
                   />
                 ))
               )}
-
             </div>
             {/* ページネーション */}
             {pagination.totalPages > 1 && (
@@ -774,12 +851,11 @@ function CandidateSearchClient({
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
                 onPageChange={handlePageChange}
-                className="mt-10"
+                className='mt-10'
               />
             )}
           </div>
         </section>
-
       </main>
     </>
   );

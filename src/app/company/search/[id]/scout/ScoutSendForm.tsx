@@ -4,15 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+// import { Modal } from '@/components/ui/mo-dal';
+// import { LocationModal } from '@/app/company/job/LocationModal';
+import { ScoutTicketLimitModal } from '@/components/scout/ScoutTicketLimitModal';
 import Link from 'next/link';
 import {
-  sendScout,
   getCompanyGroupOptions,
   getJobPostingOptions,
   getCompanyUserOptions,
   getScoutTemplateOptions,
-  type ScoutSendFormData,
+  getScoutTicketsRemaining,
+  getCandidateName,
 } from './actions';
+import { useScoutSendStore } from '@/stores/scoutSendStore';
 
 // Mail Icon Component
 const MailIcon = () => (
@@ -53,10 +57,13 @@ interface ScoutSendFormProps {
 export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const setDraft = useScoutSendStore((s) => s.setDraft);
+  const getDraft = useScoutSendStore((s) => s.getDraft);
   
   // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
   const candidateIdFromProps = candidateId || 'CND-2024-00123';
   const searchQuery = searchParams.get('query');
+  const [candidateName, setCandidateName] = useState<string>('');
   
   const [formData, setFormData] = useState({
     group: '',
@@ -87,32 +94,55 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   });
 
   // 動的データ管理
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [groupOptions, setGroupOptions] = useState([{ value: '', label: '未選択' }]);
   const [jobPostingOptions, setJobPostingOptions] = useState([{ value: '', label: '未選択' }]);
   const [companyUserOptions, setCompanyUserOptions] = useState([{ value: '', label: '未選択' }]);
   const [templateOptions, setTemplateOptions] = useState([{ value: '', label: '未選択' }]);
+  
+  // チケット管理
+  const [scoutTicketsRemaining, setScoutTicketsRemaining] = useState(0);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  // const [isTicketLoading, setIsTicketLoading] = useState(false);
 
   // 現在のユーザー情報（実際はContextやAPIから取得）
   const currentUserName = '山田 太郎'; // デフォルトのユーザー名
 
-  // 初期データロード
+  // 初期データロード + 候補者名取得
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setIsLoading(true);
-        // グループオプションを取得（認証されたユーザーのアクセス可能なグループのみ）
-        const groups = await getCompanyGroupOptions();
+        // setIsLoading(true);
+        // setIsTicketLoading(true);
+        
+        // 並行してデータを取得
+        const [groups, ticketsRemaining, name] = await Promise.all([
+          getCompanyGroupOptions(),
+          getScoutTicketsRemaining(),
+          getCandidateName(candidateIdFromProps),
+        ]);
+        
         setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
+        setScoutTicketsRemaining(ticketsRemaining);
+        setCandidateName(name || '');
       } catch (error) {
         console.error('初期データの読み込みに失敗:', error);
       } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
+        // setIsTicketLoading(false);
       }
     };
 
     loadInitialData();
   }, []);
+
+  // sessionStorage に保存してあるドラフトから初期値を復元
+  useEffect(() => {
+    const saved = getDraft(candidateIdFromProps);
+    if (saved) {
+      setFormData((prev) => ({ ...prev, ...saved }));
+    }
+  }, [candidateIdFromProps, getDraft]);
 
   // 候補者IDが変更された場合にフォームデータを更新
   useEffect(() => {
@@ -120,6 +150,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       ...prev,
       candidateId: candidateIdFromProps
     }));
+    setDraft(candidateIdFromProps, { candidateId: candidateIdFromProps });
   }, [candidateIdFromProps]);
 
   // グループ選択時の動的データ更新
@@ -167,6 +198,8 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         newData.scoutTemplate = '';
       }
 
+      // ドラフト保存
+      setDraft(candidateIdFromProps, newData);
       return newData;
     });
 
@@ -177,13 +210,21 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
   const handleInputChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: e.target.value };
+        setDraft(candidateIdFromProps, newData);
+        return newData;
+      });
       setErrors((prev) => ({ ...prev, [field]: '' }));
       setTouched((prev) => ({ ...prev, [field]: true }));
     };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, message: e.target.value }));
+    setFormData((prev) => {
+      const newData = { ...prev, message: e.target.value };
+      setDraft(candidateIdFromProps, newData);
+      return newData;
+    });
     setErrors((prev) => ({ ...prev, message: '' }));
     setTouched((prev) => ({ ...prev, message: true }));
   };
@@ -221,6 +262,12 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   };
 
   const handleSubmit = () => {
+    // チケット残数チェック
+    if (scoutTicketsRemaining <= 0) {
+      setIsTicketModalOpen(true);
+      return;
+    }
+
     // 全フィールドをタッチ済みにする
     setTouched({
       group: true,
@@ -232,14 +279,23 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
     if (!validateForm()) return;
 
-    // 確認ページに遷移（フォームデータをクエリパラメータで渡す）
+    // 選択中のラベルを取得
+    const selectedGroupLabel = groupOptions.find(o => o.value === formData.group)?.label || '';
+    const selectedJobLabel = jobPostingOptions.find(o => o.value === formData.recruitmentTarget)?.label || '';
+    const selectedTemplateLabel = templateOptions.find(o => o.value === formData.scoutTemplate)?.label || '';
+
+    // 確認ページに遷移（フォームデータと表示用ラベルをクエリパラメータで渡す）
     const params = new URLSearchParams({
       group: formData.group,
+      groupLabel: selectedGroupLabel,
       recruitmentTarget: formData.recruitmentTarget,
+      recruitmentTargetLabel: selectedJobLabel,
       scoutSenderName: formData.scoutSenderName,
       scoutTemplate: formData.scoutTemplate,
+      scoutTemplateLabel: selectedTemplateLabel,
       title: formData.title,
       message: formData.message,
+      candidateName: candidateName || '',
       ...(searchQuery && { searchQuery }),
     });
 
@@ -255,11 +311,15 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       );
 
       if (selectedTemplate && 'subject' in selectedTemplate && 'body' in selectedTemplate) {
-        setFormData((prev) => ({
-          ...prev,
-          title: selectedTemplate.subject || '',
-          message: selectedTemplate.body || '',
-        }));
+        setFormData((prev) => {
+          const updated = {
+            ...prev,
+            title: typeof (selectedTemplate as any).subject === 'string' ? (selectedTemplate as any).subject : '',
+            message: typeof (selectedTemplate as any).body === 'string' ? (selectedTemplate as any).body : '',
+          };
+          setDraft(candidateIdFromProps, updated);
+          return updated;
+        });
         // テンプレート適用時はエラーをクリア
         setErrors((prev) => ({
           ...prev,
@@ -273,12 +333,27 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   // グループ選択時に送信者名をデフォルト設定
   useEffect(() => {
     if (formData.group && !formData.scoutSenderName) {
-      setFormData((prev) => ({
-        ...prev,
-        scoutSenderName: currentUserName,
-      }));
+      setFormData((prev) => {
+        const updated = { ...prev, scoutSenderName: currentUserName };
+        setDraft(candidateIdFromProps, updated);
+        return updated;
+      });
     }
   }, [formData.group, formData.scoutSenderName, currentUserName]);
+
+  // チケット購入処理
+  const handleTicketPurchase = () => {
+    // 実際の実装では、チケット購入ページに遷移またはAPI呼び出し
+    console.log('チケット購入処理を開始');
+    // 仮の実装: モーダルを閉じて購入完了として扱う
+    setIsTicketModalOpen(false);
+    // 実際には購入が完了した時点でチケット数を更新
+    setScoutTicketsRemaining(prev => prev + 10);
+  };
+
+  const handleModalClose = () => {
+    setIsTicketModalOpen(false);
+  };
 
   // 送信ボタンの有効/無効判定
   const isSubmitDisabled =
@@ -430,7 +505,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    送信先候補者ID
+                    送信先候補者
                   </span>
                 </div>
                 <div className="flex-1">
@@ -438,7 +513,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
                     className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    {formData.candidateId}
+                    {candidateName || searchQuery || formData.candidateId}
                   </span>
                 </div>
               </div>
@@ -536,6 +611,13 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
           </div>
         </div>
       </div>
+
+      {/* チケット制限モーダル */}
+      <ScoutTicketLimitModal
+        isOpen={isTicketModalOpen}
+        onClose={handleModalClose}
+        onPurchaseTicket={handleTicketPurchase}
+      />
     </>
   );
 }

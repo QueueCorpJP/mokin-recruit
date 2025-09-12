@@ -1,6 +1,6 @@
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import CandidateFavoriteClient from './CandidateFavoriteClient';
-import { getFavoriteList } from './actions';
+import { getFavoriteListAction } from '@/lib/actions/favoriteActions';
 
 interface CandidateFavoriteServerComponentProps {
   searchParams: {
@@ -9,8 +9,8 @@ interface CandidateFavoriteServerComponentProps {
   };
 }
 
-export default async function CandidateFavoriteServerComponent({ 
-  searchParams 
+export default async function CandidateFavoriteServerComponent({
+  searchParams,
 }: CandidateFavoriteServerComponentProps) {
   // パラメータ解析
   const page = parseInt(searchParams.page || '1');
@@ -20,21 +20,25 @@ export default async function CandidateFavoriteServerComponent({
   const user = await getCachedCandidateUser();
 
   // Server Actionを使用してお気に入りデータを取得
-  const favoriteData = await getFavoriteList({ page, limit });
+  const favoriteData = await getFavoriteListAction({ page, limit });
 
   if (!favoriteData.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full mx-4">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">エラーが発生しました</h2>
-          <p className="text-red-600">{favoriteData.error || 'お気に入りデータの取得に失敗しました'}</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full mx-4'>
+          <h2 className='text-lg font-semibold text-red-800 mb-2'>
+            エラーが発生しました
+          </h2>
+          <p className='text-red-600'>
+            {favoriteData.error || 'お気に入りデータの取得に失敗しました'}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <CandidateFavoriteClient 
+    <CandidateFavoriteClient
       initialData={favoriteData.data}
       initialParams={{ page, limit }}
     />

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 function RightLine() {
   return (
@@ -27,12 +28,14 @@ function RightLine() {
 interface JobEditHeaderProps {
   breadcrumbText?: string;
   titleText?: string;
+  jobId: string;
 }
 
 export default function JobEditHeader({ 
   breadcrumbText = '求人一覧', 
-  titleText = '求人編集' 
-}: JobEditHeaderProps = {}) {
+  titleText = '求人編集',
+  jobId 
+}: JobEditHeaderProps) {
   return (
     <div
       className="bg-gradient-to-t from-[#17856f] to-[#229a4e] py-10 px-10"
@@ -45,11 +48,13 @@ export default function JobEditHeader({
               <div
                 className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center"
               >
-                <div
-                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
-                >
-                    {breadcrumbText}
-                </div>
+                <Link href="/company/job" className="hover:opacity-80">
+                  <div
+                    className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
+                  >
+                      {breadcrumbText}
+                  </div>
+                </Link>
               </div>
               <div
                 className="flex items-center justify-center"
@@ -57,11 +62,13 @@ export default function JobEditHeader({
               >
                 <RightLine />
               </div>
-              <div
-                className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
-              >
-                求人詳細
-              </div>
+              <Link href={`/company/job/${jobId}`} className="hover:opacity-80">
+                <div
+                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
+                >
+                  求人詳細
+                </div>
+              </Link>
               <div
                 className="flex items-center justify-center"
                 style={{ width: '6px', height: '8px' }}

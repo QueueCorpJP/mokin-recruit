@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 function RightLine() {
   return (
@@ -46,11 +48,13 @@ export default function NewJobHeader({
               <div
                 className="box-border content-stretch flex flex-row gap-2.5 items-center justify-center"
               >
-                <div
-                  className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px]"
-                >
-                    {breadcrumbText}
-                </div>
+                <Link href="/company/job" className="hover:opacity-80">
+                  <div
+                    className="font-['Noto_Sans_JP'] font-bold leading-[1.6] not-italic text-white text-[14px] text-left tracking-[1.4px] cursor-pointer"
+                  >
+                      {breadcrumbText}
+                  </div>
+                </Link>
               </div>
               <div
                 className="flex items-center justify-center"

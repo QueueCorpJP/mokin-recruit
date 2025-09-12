@@ -21,6 +21,23 @@ export interface ScoutSendResult {
   error?: string;
 }
 
+// 表示用: 候補者名を取得
+export async function getCandidateName(candidateId: string): Promise<string> {
+  const supabase = await createClient();
+  try {
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('first_name, last_name')
+      .eq('id', candidateId)
+      .maybeSingle();
+    if (error || !data) return '';
+    const fullName = `${data.last_name || ''} ${data.first_name || ''}`.trim();
+    return fullName;
+  } catch {
+    return '';
+  }
+}
+
 export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendResult> {
   const supabase = await createClient();
   
@@ -32,6 +49,13 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     }
 
     const companyUser = authResult.data;
+
+    // スカウトチケット残数をチェック（送信前）
+    const remainingTickets = await getScoutTicketsRemaining();
+    if (remainingTickets <= 0) {
+      console.warn('スカウト送信制限に達しています');
+      return { success: false, error: 'スカウト送信制限に達しています。チケットを追加購入してください。' };
+    }
 
     // 候補者情報を取得
     const { data: candidate, error: candidateError } = await supabase
@@ -133,6 +157,13 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     }
 
     // Roomを作成または取得
+    console.info('=== Room作成フロー開始 ===');
+    console.info('Room検索条件:', {
+      candidate_id: formData.candidateId,
+      company_group_id: formData.group,
+      type: 'direct'
+    });
+
     let roomId = null;
     const { data: existingRoom, error: roomSearchError } = await supabase
       .from('rooms')
@@ -142,18 +173,28 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       .eq('type', 'direct')
       .maybeSingle();
 
-    if (!roomSearchError && existingRoom) {
+    if (roomSearchError) {
+      console.error('Room検索エラー:', roomSearchError);
+      return { success: false, error: 'メッセージルームの検索に失敗しました' };
+    }
+
+    if (existingRoom) {
       roomId = existingRoom.id;
+      console.info('既存Room使用:', { roomId });
     } else {
       // 新しいRoomを作成
+      console.info('新規Room作成中...');
+      const roomData = {
+        type: 'direct',
+        candidate_id: formData.candidateId,
+        company_group_id: formData.group,
+        related_job_posting_id: jobPosting?.id || null,
+      };
+      console.info('Room作成データ:', roomData);
+
       const { data: newRoom, error: roomInsertError } = await supabase
         .from('rooms')
-        .insert({
-          type: 'direct',
-          candidate_id: formData.candidateId,
-          company_group_id: formData.group,
-          related_job_posting_id: jobPosting?.id || null,
-        })
+        .insert(roomData)
         .select('id')
         .single();
 
@@ -162,9 +203,11 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
         return { success: false, error: 'メッセージルームの作成に失敗しました' };
       }
       roomId = newRoom.id;
+      console.info('新規Room作成完了:', { roomId });
     }
 
     // メッセージを作成
+    console.info('=== Message作成フロー開始 ===');
     const messageData = {
       room_id: roomId,
       sender_type: 'COMPANY_USER',
@@ -175,39 +218,46 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       status: 'SENT',
       sent_at: new Date().toISOString(),
     };
+    console.info('Message作成データ:', messageData);
 
-    const { error: messageInsertError } = await supabase
+    const { data: message, error: messageInsertError } = await supabase
       .from('messages')
-      .insert(messageData);
+      .insert(messageData)
+      .select('id')
+      .single();
 
     if (messageInsertError) {
       console.error('メッセージ作成エラー:', messageInsertError);
-      // スカウト送信は成功したが、メッセージ作成に失敗した場合は警告
-      console.warn('スカウト送信は成功しましたが、メッセージ作成に失敗しました');
+      return { success: false, error: 'スカウトメッセージの作成に失敗しました' };
     }
+
+    console.info('Message作成完了:', { messageId: message.id });
 
     // 通知テーブルに追加
-    if (!messageInsertError) {
-      const { data: message } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('room_id', roomId)
-        .eq('sender_type', 'COMPANY_USER')
-        .eq('message_type', 'SCOUT')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+    console.info('=== Notification作成フロー開始 ===');
+    if (message) {
+      const notificationData = {
+        candidate_id: formData.candidateId,
+        message_id: message.id,
+        task_type: 'SCOUT',
+      };
+      console.info('Notification作成データ:', notificationData);
 
-      if (message) {
-        await supabase
-          .from('unread_notifications')
-          .insert({
-            candidate_id: formData.candidateId,
-            message_id: message.id,
-            task_type: 'SCOUT',
-          });
+      const { error: notificationError } = await supabase
+        .from('unread_notifications')
+        .insert(notificationData);
+
+      if (notificationError) {
+        console.error('通知作成エラー:', notificationError);
+        // 通知作成失敗は警告のみ（メッセージ作成は成功している）
+        console.warn('スカウト通知の作成に失敗しましたが、メッセージは正常に作成されました');
+      } else {
+        console.info('Notification作成完了');
       }
     }
+
+    // スカウト送信が成功したため、チケット消費が完了
+    console.info('スカウト送信完了。チケットが1つ消費されました。');
 
     revalidatePath('/company/search/scout');
     revalidatePath('/company/search/scout/complete');
@@ -348,5 +398,55 @@ export async function getScoutTemplateOptions(groupId: string) {
   } catch (error) {
     console.error('テンプレートオプション取得エラー:', error);
     return [];
+  }
+}
+
+export async function getScoutTicketsRemaining(): Promise<number> {
+  const supabase = await createClient();
+  
+  try {
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      console.error('チケット残数取得の認証エラー:', authResult.error);
+      return 0;
+    }
+
+    const { companyAccountId } = authResult.data;
+
+    // 月次上限と今月の使用済みスカウト数を取得
+    const { data: accountData, error: accountError } = await supabase
+      .from('company_accounts')
+      .select('scout_limit')
+      .eq('id', companyAccountId)
+      .single();
+
+    if (accountError) {
+      console.error('アカウントデータ取得エラー:', accountError);
+      return 0;
+    }
+
+    // 今月のスカウト送信数をカウント
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { data: scoutSends, error: countError } = await supabase
+      .from('scout_sends')
+      .select('id', { count: 'exact' })
+      .eq('company_account_id', companyAccountId)
+      .gte('sent_at', startOfMonth.toISOString());
+
+    if (countError) {
+      console.error('スカウト送信数取得エラー:', countError);
+      return accountData?.scout_limit || 0; // エラー時は上限をそのまま返す
+    }
+
+    const usedThisMonth = scoutSends?.length || 0;
+    const remaining = (accountData?.scout_limit || 0) - usedThisMonth;
+    
+    return Math.max(0, remaining); // 負数にならないよう調整
+  } catch (error) {
+    console.error('チケット残数取得エラー:', error);
+    return 0;
   }
 }

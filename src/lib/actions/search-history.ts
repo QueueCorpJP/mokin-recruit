@@ -137,6 +137,27 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       };
     }
 
+    // 最近の重複チェック（過去1分以内の同じ検索条件）
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    const { data: recentHistory, error: duplicateError } = await supabase
+      .from('search_history')
+      .select('*')
+      .eq('searcher_id', companyUser.id)
+      .eq('group_id', data.group_id)
+      .eq('search_title', data.search_title)
+      .gte('created_at', oneMinuteAgo)
+      .limit(1);
+
+    if (duplicateError) {
+      console.warn('[saveSearchHistory] Error checking duplicates:', duplicateError);
+    } else if (recentHistory && recentHistory.length > 0) {
+      console.log('[saveSearchHistory] Duplicate search detected, skipping save');
+      return {
+        success: true,
+        message: 'Similar search already saved recently'
+      };
+    }
+
     // 検索履歴を挿入（RLSが自動的にアクセス制御）
     const insertData = {
       searcher_id: companyUser.id,

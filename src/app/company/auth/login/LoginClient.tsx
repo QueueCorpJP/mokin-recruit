@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
@@ -16,7 +16,6 @@ export function LoginClient({ userType }: LoginClientProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // フォームバリデーション
@@ -47,14 +46,9 @@ export function LoginClient({ userType }: LoginClientProps) {
     }
 
     setError(null);
-    setSuccess(null);
 
     startTransition(async () => {
       try {
-        // クライアントサイドでのみログ出力
-        if (typeof window !== 'undefined') {
-          console.log('🚀 Attempting login for:', email, 'userType:', userType);
-        }
 
         const result: LoginResult = await loginAction({
           email: email.trim(),
@@ -64,23 +58,9 @@ export function LoginClient({ userType }: LoginClientProps) {
 
         if (!result.success) {
           setError(result.error || 'ログインに失敗しました');
-          
-          if (typeof window !== 'undefined') {
-            console.error('❌ Login failed:', {
-              error: result.error,
-              message: result.message,
-              code: result.code,
-            });
-          }
           return;
         }
 
-        // 成功時（実際にはredirectされるのでここには到達しない）
-        if (typeof window !== 'undefined') {
-          console.log('✅ Login successful');
-        }
-
-        setSuccess('ログインに成功しました！');
 
       } catch (err) {
         // Next.jsのリダイレクトエラーは正常な処理なので無視
@@ -101,10 +81,6 @@ export function LoginClient({ userType }: LoginClientProps) {
 
         const errorMessage = errorInfo.message;
         setError(errorMessage);
-
-        if (typeof window !== 'undefined') {
-          console.error('❌ Login error:', errorInfo);
-        }
       }
     });
   };
@@ -128,15 +104,6 @@ export function LoginClient({ userType }: LoginClientProps) {
             </Alert>
           )}
 
-          {/* 成功表示 */}
-          {success && (
-            <Alert className='border-green-200 bg-green-50 mb-6'>
-              <CheckCircle className='h-4 w-4 text-green-600' />
-              <AlertDescription className='text-green-800'>
-                {success}
-              </AlertDescription>
-            </Alert>
-          )}
 
           {/* フォームフィールド */}
           <div className='flex flex-col gap-6 items-center'>

@@ -1,5 +1,6 @@
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { cookies } from 'next/headers';
+import { calculateCandidateBadge } from '@/lib/utils/candidateBadgeLogic';
 
 // 候補者データの型定義
 export interface CandidateData {
@@ -1134,19 +1135,15 @@ export async function getCandidateDetailData(
       isHighlighted: false,
       isCareerChange: false,
     },
-    // バッジ情報（CandidateCardと同じロジック）
-    badgeType: candidate.desired_job_types && 
-      Array.isArray(candidate.desired_job_types) && 
-      candidate.desired_job_types.length > 1 ? 'multiple' : 
-      (candidate.desired_job_types && 
-       Array.isArray(candidate.desired_job_types) && 
-       candidate.desired_job_types.length === 1 ? 'professional' : 'change'),
-    badgeText: candidate.desired_job_types && 
-      Array.isArray(candidate.desired_job_types) && 
-      candidate.desired_job_types.length > 1 ? 'マルチキャリア志向' : 
-      (candidate.desired_job_types && 
-       Array.isArray(candidate.desired_job_types) && 
-       candidate.desired_job_types.length === 1 ? 'プロフェッショナル志向' : '転職志向'),
+    // 志向バッジの判定（共通ロジックを使用）
+    ...(() => {
+      const { badgeType, badgeText } = calculateCandidateBadge({
+        recent_job_types: candidate.recent_job_types,
+        desired_job_types: candidate.desired_job_types,
+        selectionCompanies: [] // recruitment/detailでは選考中企業の情報が利用可能な場合に実装
+      });
+      return { badgeType, badgeText };
+    })(),
     isAttention: false, // TODO: 注目候補者のロジックを実装
     // 求人・グループ情報（CandidateCardと同じ情報）
     jobPostingId,

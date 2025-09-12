@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+import { CreateGroupModal } from '@/components/company_account/CreateGroupModal';
+import { DeleteMemberModal } from '@/components/company_account/DeleteMemberModal';
+import { DeleteMemberSuccessModal } from '@/components/company_account/DeleteMemberSuccessModal';
+import { MemberPermissionChangeModal } from '@/components/company_account/MemberPermissionChangeModal';
+import { InviteMemberModal } from '@/components/company_account/InviteMemberModal';
+import { InviteMemberCompleteModal } from '@/components/company_account/InviteMemberCompleteModal';
+import { createGroupAndInvite, removeGroupMember, updateMemberPermission, updateGroupName, inviteMembersToGroup } from './actions';
+import { GroupNameChangeModal } from '@/components/company_account/GroupNameChangeModal';
 
 const AccountIcon = () => (
   <svg
@@ -79,13 +87,24 @@ interface Group {
   members: Member[];
 }
 
-export default function AccountClient() {
+export interface AccountProps {
+  company?: {
+    companyName: string;
+    representativeName: string;
+    industryList: string[];
+    companyOverview: string;
+    headquartersAddress: string;
+  };
+  groups?: Group[];
+}
+
+export default function AccountClient({ company, groups: groupsProp }: AccountProps) {
   const router = useRouter();
   const [userPermission] = useState<'scout' | 'recruiter' | 'admin'>('admin');
   const isAdmin = userPermission === 'admin';
 
   // グループとメンバーの状態管理
-  const [groups, setGroups] = useState<Group[]>([
+  const [groups, setGroups] = useState<Group[]>(groupsProp ?? [
     {
       id: 'group-1',
       name: 'グループ名テキスト',
@@ -115,6 +134,26 @@ export default function AccountClient() {
     },
   ]);
 
+  // 新規グループ作成モーダル
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const handleOpenCreateModal = () => setIsCreateModalOpen(true);
+  const handleCloseCreateModal = () => setIsCreateModalOpen(false);
+
+  const handleCreateGroupSubmit = async (payload: { groupName: string; members: { email: string; role: 'admin' | 'member' | 'viewer' }[] }) => {
+    try {
+      const result = await createGroupAndInvite(payload);
+      if (!result.success) {
+        alert(result.error || 'グループの作成に失敗しました');
+        return;
+      }
+      setIsCreateModalOpen(false);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert('グループの作成に失敗しました');
+    }
+  };
+
   // メンバー追加関数
   const addMember = (groupId: string) => {
     setGroups((prevGroups) =>
@@ -137,18 +176,112 @@ export default function AccountClient() {
   };
 
   // メンバー削除関数
-  const deleteMember = (groupId: string, memberId: string) => {
-    setGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            members: group.members.filter((member) => member.id !== memberId),
-          };
-        }
-        return group;
-      })
-    );
+  const [deleteTarget, setDeleteTarget] = useState<{ groupId: string; memberId: string; memberName: string } | null>(null);
+  const [isDeleteSuccessOpen, setIsDeleteSuccessOpen] = useState(false);
+
+  const openDeleteModal = (groupId: string, memberId: string, memberName: string) => {
+    setDeleteTarget({ groupId, memberId, memberName });
+  };
+
+  const closeDeleteModal = () => setDeleteTarget(null);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      // メンバーIDはcompany_users.idである必要があるが、UIはモックなので名前/メールから直接は取れない
+      // この段階ではUIモックのIDをそのまま渡しているため、実データに差し替え後はcompany_user_idを保持して渡す想定
+      const result = await removeGroupMember(deleteTarget.groupId, deleteTarget.memberId);
+      if (!result.success) {
+        alert(result.error || 'メンバー削除に失敗しました');
+        return;
+      }
+      setIsDeleteSuccessOpen(true);
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert('メンバー削除に失敗しました');
+    }
+  };
+
+  // 権限変更モーダル
+  const [permTarget, setPermTarget] = useState<{
+    groupId: string;
+    memberId: string;
+    memberName: string;
+    newRoleUi: 'admin' | 'scout' | 'recruiter';
+  } | null>(null);
+
+  const handlePermissionSelect = (groupId: string, member: Member, newUiRoleValue: string) => {
+    // 現在の表示値とは異なる場合にのみモーダル
+    const currentUi = member.permission; // 'admin' | 'member' | 'viewer'（モック）
+    // UI仕様に合わせ、セレクトは admin/scout/recruiter を使う
+    const nextUi = (newUiRoleValue as 'admin' | 'scout' | 'recruiter');
+    if (!nextUi) return;
+    if (currentUi === nextUi) return;
+    setPermTarget({ groupId, memberId: member.id, memberName: member.name, newRoleUi: nextUi });
+  };
+
+  // グループ名変更モーダル
+  const [renameTarget, setRenameTarget] = useState<{ groupId: string; currentName: string } | null>(null);
+  const openRenameModal = (groupId: string, currentName: string) => setRenameTarget({ groupId, currentName });
+  const closeRenameModal = () => setRenameTarget(null);
+  const handleConfirmRename = async (newName: string) => {
+    if (!renameTarget) return;
+    try {
+      const result = await updateGroupName(renameTarget.groupId, newName);
+      if (!result.success) {
+        alert(result.error || 'グループ名の更新に失敗しました');
+        return;
+      }
+      setRenameTarget(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert('グループ名の更新に失敗しました');
+    }
+  };
+
+  // メンバー招待モーダル
+  const [inviteTarget, setInviteTarget] = useState<{ groupId: string; groupName: string } | null>(null);
+  const [inviteCompleteOpen, setInviteCompleteOpen] = useState(false);
+  const openInviteModal = (groupId: string, groupName: string) => setInviteTarget({ groupId, groupName });
+  const closeInviteModal = () => setInviteTarget(null);
+  const handleInviteConfirm = async (members: { id: string; email: string; role: string }[]) => {
+    if (!inviteTarget) return;
+    try {
+      // UIロール→APIロールへ型を合わせる
+      const payload = members.map(m => ({ email: m.email, role: (m.role as 'admin' | 'scout' | 'recruiter') }));
+      const result = await inviteMembersToGroup(inviteTarget.groupId, payload);
+      if (!result.success) {
+        alert(result.error || 'メンバー招待に失敗しました');
+        return;
+      }
+      setInviteTarget(null);
+      setInviteCompleteOpen(true);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert('メンバー招待に失敗しました');
+    }
+  };
+
+  const closePermModal = () => setPermTarget(null);
+
+  const handleConfirmPermissionChange = async () => {
+    if (!permTarget) return;
+    try {
+      const result = await updateMemberPermission(permTarget.groupId, permTarget.memberId, permTarget.newRoleUi);
+      if (!result.success) {
+        alert(result.error || '権限の更新に失敗しました');
+        return;
+      }
+      setPermTarget(null);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      alert('権限の更新に失敗しました');
+    }
   };
 
   return (
@@ -208,7 +341,7 @@ export default function AccountClient() {
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    テキストが入ります。
+                    {company?.companyName ?? '未設定'}
                   </div>
                 </div>
               </div>
@@ -282,7 +415,7 @@ export default function AccountClient() {
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    代表者名テキスト
+                    {company?.representativeName ?? '未設定'}
                   </div>
                 </div>
               </div>
@@ -377,30 +510,16 @@ export default function AccountClient() {
                 </div>
                 <div className="flex items-center py-6">
                   <div className="flex flex-wrap gap-2">
-                    <div className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
-                      <span
-                        className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        業種テキスト
-                      </span>
-                    </div>
-                    <div className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
-                      <span
-                        className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        業種テキスト
-                      </span>
-                    </div>
-                    <div className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
-                      <span
-                        className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        業種テキスト
-                      </span>
-                    </div>
+                    {(company?.industryList ?? ['業種テキスト']).map((label, idx) => (
+                      <div key={idx} className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
+                        <span
+                          className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                        >
+                          {label}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -420,9 +539,9 @@ export default function AccountClient() {
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                    <br />
-                    テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
+                    {company?.companyOverview && company.companyOverview.trim().length > 0
+                      ? company.companyOverview
+                      : '未設定'}
                   </div>
                 </div>
               </div>
@@ -449,7 +568,7 @@ export default function AccountClient() {
                       className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
-                      テキストが入ります。
+                      {company?.headquartersAddress ?? '未設定'}
                     </div>
                   </div>
                 </div>
@@ -577,12 +696,11 @@ export default function AccountClient() {
                 </h2>
               </div>
               <Button
+                type="button"
                 variant="green-gradient"
                 size="figma-default"
                 className="min-w-[160px] px-10"
-                onClick={() => {
-                  // 新規グループ作成モーダル表示
-                }}
+                onClick={handleOpenCreateModal}
               >
                 新規グループ作成
               </Button>
@@ -603,9 +721,7 @@ export default function AccountClient() {
                       </h3>
                       <button
                         className="p-0 hover:opacity-70 transition-opacity"
-                        onClick={() => {
-                          // グループ名変更モーダル表示
-                        }}
+                        onClick={() => openRenameModal(group.id, group.name)}
                       >
                         <SettingIcon />
                       </button>
@@ -615,7 +731,7 @@ export default function AccountClient() {
                       variant="green-outline"
                       size="figma-default"
                       className="border-[#0f9058] text-[#0f9058] min-w-[120px] px-6 py-2.5 transition-colors"
-                      onClick={() => addMember(group.id)}
+                      onClick={() => openInviteModal(group.id, group.name)}
                     >
                       <PlusIcon />
                       <span className="ml-2">メンバー追加</span>
@@ -648,17 +764,25 @@ export default function AccountClient() {
                           <SelectInput
                             options={[
                               { value: 'admin', label: '管理者' },
-                              { value: 'member', label: 'メンバー' },
-                              { value: 'viewer', label: '閲覧者' },
+                              { value: 'scout', label: 'スカウト担当者' },
+                              { value: 'recruiter', label: '採用担当者' },
                             ]}
-                            value={member.permission}
+                            value={
+                              member.permission === 'admin'
+                                ? 'admin'
+                                : member.permission === 'member' || member.permission === 'viewer'
+                                  ? 'scout'
+                                  : 'scout'
+                            }
                             placeholder="権限を選択"
+                            onChange={(value: string) => handlePermissionSelect(group.id, member, value)}
+                            className=''
                           />
                         </div>
                         <button
                           className="text-[14px] font-bold text-[#323232] tracking-[1.4px] leading-[1.6] px-2.5 hover:text-[#f56c6c] transition-colors"
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                          onClick={() => deleteMember(group.id, member.id)}
+                          onClick={() => openDeleteModal(group.id, member.id, member.name)}
                         >
                           削除
                         </button>
@@ -735,6 +859,57 @@ export default function AccountClient() {
           </div>
         </div>
       </div>
+      {/* 新規グループ作成モーダル */}
+      <CreateGroupModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseCreateModal}
+        onSubmit={(data) => handleCreateGroupSubmit({ groupName: data.groupName, members: data.members })}
+      />
+      {/* メンバー削除確認モーダル */}
+      <DeleteMemberModal
+        isOpen={!!deleteTarget}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        memberName={deleteTarget?.memberName || ''}
+      />
+      {/* メンバー削除完了モーダル */}
+      <DeleteMemberSuccessModal
+        isOpen={isDeleteSuccessOpen}
+        onClose={() => setIsDeleteSuccessOpen(false)}
+      />
+      {/* メンバー権限変更モーダル */}
+      <MemberPermissionChangeModal
+        isOpen={!!permTarget}
+        onClose={closePermModal}
+        onConfirm={handleConfirmPermissionChange}
+        memberName={permTarget?.memberName || ''}
+        newPermission={
+          permTarget?.newRoleUi === 'admin'
+            ? '管理者'
+            : permTarget?.newRoleUi === 'scout'
+              ? 'スカウト担当者'
+              : '採用担当者'
+        }
+      />
+      {/* グループ名変更モーダル */}
+      <GroupNameChangeModal
+        isOpen={!!renameTarget}
+        onClose={closeRenameModal}
+        onConfirm={handleConfirmRename}
+        currentGroupName={renameTarget?.currentName || ''}
+      />
+      {/* グループへのメンバー招待モーダル */}
+      <InviteMemberModal
+        isOpen={!!inviteTarget}
+        onClose={closeInviteModal}
+        onConfirm={handleInviteConfirm}
+        groupName={inviteTarget?.groupName || ''}
+      />
+      {/* 招待完了モーダル */}
+      <InviteMemberCompleteModal
+        isOpen={inviteCompleteOpen}
+        onClose={() => setInviteCompleteOpen(false)}
+      />
     </>
   );
 }

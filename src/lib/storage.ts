@@ -1,4 +1,4 @@
-import { uploadMessageFile } from '@/lib/actions/message-actions';
+import { uploadMessageFile } from '@/lib/actions';
 import { uploadCompanyMessageFile } from '@/lib/actions/messages';
 
 export interface UploadFileResult {

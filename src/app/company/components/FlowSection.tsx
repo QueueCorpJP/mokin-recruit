@@ -53,15 +53,15 @@ export function FlowSection() {
                       <Image
                         src='/images/flow-arrow2.svg'
                         alt=''
-                        width={24}
-                        height={24}
+                        width={16}
+                        height={32}
                         className='block md:hidden items-center justify-center'
                       />
                       {/* デスクトップ用矢印 */}
                       <Image
                         src='/images/flow-arrow.svg'
                         alt=''
-                        width={32}
+                        width={16}
                         height={32}
                         className='hidden md:block items-center justify-center'
                       />

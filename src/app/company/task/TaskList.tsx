@@ -76,7 +76,7 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
   const router = useRouter();
   
   // デバッグ・デザインテスト用の強制表示フラグ（簡単に切り替え可能）
-  const FORCE_SHOW_ALL_TASKS = true; // ← これを true/false で切り替え
+  const FORCE_SHOW_ALL_TASKS = false; // ← これを true/false で切り替え
   
   // デバッグ用ログ
   console.log('🎨 TaskList received data:', initialTaskData);
@@ -223,6 +223,24 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
     currentPage * itemsPerPage
   );
 
+  // 動的なグループ名を取得するヘルパー関数
+  const getGroupNameForTask = (taskId: string): string => {
+    switch (taskId) {
+      case '2':
+        return userState.newApplications?.[0]?.groupName || 'グループ名';
+      case '3':
+        return userState.unreadApplications?.[0]?.groupName || 'グループ名';
+      case '4':
+        return userState.newMessages?.[0]?.groupName || 'グループ名';
+      case '5':
+        return userState.unreadMessages?.[0]?.groupName || 'グループ名';
+      case '6':
+        return userState.unregisteredInterviews?.[0]?.groupName || 'グループ名';
+      default:
+        return 'グループ名';
+    }
+  };
+
   const handleTaskItemClick = (item: TaskItem) => {
     if (item.navigateTo) {
       if (item.id === '2' && userState.newApplications && userState.newApplications.length > 0) {
@@ -337,7 +355,7 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
                 {/* Gradient tag */}
                 <div style={gradientTagStyle}>
                   <div style={gradientTagTextStyle}>
-                    グループ名テキスト
+                    {getGroupNameForTask(item.id)}
                   </div>
                 </div>
                 

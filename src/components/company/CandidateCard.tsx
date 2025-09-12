@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 
 export interface CandidateData {
   id: number;
+  candidateId?: string; // 実テーブルの候補者UUID（スライドメニュー用）
   isPickup: boolean;
   isHidden: boolean;
   isAttention: boolean;
@@ -40,6 +40,7 @@ interface CandidateCardProps {
   onTogglePickup?: (id: number) => void;
   onToggleHidden?: (id: number) => void;
   showActions?: boolean;
+  onCandidateClick?: (candidate: CandidateData) => void;
 }
 
 export function CandidateCard({
@@ -47,6 +48,7 @@ export function CandidateCard({
   onTogglePickup,
   onToggleHidden,
   showActions = true,
+  onCandidateClick,
 }: CandidateCardProps) {
   return (
     <div
@@ -61,7 +63,11 @@ export function CandidateCard({
         {showActions && (
           <div className='flex flex-col gap-6 w-8'>
             <button
-              onClick={() => onTogglePickup?.(candidate.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTogglePickup?.(candidate.id);
+              }}
               className='w-8 h-8 flex items-center justify-center'
             >
               {candidate.isPickup ? (
@@ -93,7 +99,11 @@ export function CandidateCard({
               )}
             </button>
             <button
-              onClick={() => onToggleHidden?.(candidate.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggleHidden?.(candidate.id);
+              }}
               className='w-8 h-8 flex items-center justify-center'
             >
               {candidate.isHidden ? (
@@ -128,7 +138,7 @@ export function CandidateCard({
         )}
 
         {/* Candidate Info */}
-        <div className='flex-1'>
+        <div className='flex-1' onClick={() => onCandidateClick?.(candidate)} style={{ cursor: onCandidateClick ? 'pointer' : 'default' }}>
           {/* Badges */}
           <div className='flex items-center gap-2 mb-2'>
             {candidate.isAttention && (
@@ -400,9 +410,14 @@ export function CandidateCard({
                     ) : (
                       <div key={index} className='flex gap-4 items-start'>
                         <span
-                          className='text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate'
+                          className='text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate cursor-pointer hover:opacity-70'
                           style={{
                             fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(`https://www.google.com/search?q=${encodeURIComponent(selection.company)}`, '_blank');
                           }}
                         >
                           {selection.company}
