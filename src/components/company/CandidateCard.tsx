@@ -411,9 +411,14 @@ export function CandidateCard({
                     ) : (
                       <div key={index} className='flex gap-4 items-start'>
                         <span
-                          className='text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate'
+                          className='text-[#0f9058] text-[12px] font-bold tracking-[1.2px] underline w-40 truncate cursor-pointer hover:opacity-70'
                           style={{
                             fontFamily: 'Noto Sans JP, sans-serif',
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(`https://www.google.com/search?q=${encodeURIComponent(selection.company)}`, '_blank');
                           }}
                         >
                           {selection.company}

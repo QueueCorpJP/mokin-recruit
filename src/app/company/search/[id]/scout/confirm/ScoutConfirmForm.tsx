@@ -170,7 +170,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-20 pt-10 pb-20">
+      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20">
         <div className="w-full max-w-[1200px] mx-auto">
           {/* Confirmation Card */}
           <div className="bg-white rounded-[10px] p-10">
