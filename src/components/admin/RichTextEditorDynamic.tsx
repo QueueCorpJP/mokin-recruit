@@ -1,18 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  TiptapEditor,
-  TiptapEditorContent,
-  TiptapStarterKit,
-  TiptapImage,
-  TiptapTable,
-  TiptapTableRow,
-  TiptapTableHeader,
-  TiptapTableCell,
-  TiptapHardBreak,
-  TiptapCore
-} from '@/lib/lazy-imports';
+import dynamic from 'next/dynamic';
+
+// 必要なものだけを動的 import し、型は利用側で付与
+const TiptapEditorContent = dynamic(
+  () => import('@tiptap/react').then(mod => ({ default: mod.EditorContent })),
+  { ssr: false }
+);
 
 interface RichTextEditorDynamicProps {
   content: string;
@@ -20,7 +15,11 @@ interface RichTextEditorDynamicProps {
   placeholder?: string;
 }
 
-export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: RichTextEditorDynamicProps) {
+export function RichTextEditorDynamic({
+  content,
+  onChange,
+  placeholder = '',
+}: RichTextEditorDynamicProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [editor, setEditor] = useState<any>(null);
 
@@ -29,26 +28,30 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
     const initializeEditor = async () => {
       try {
         const [
-          { default: useEditor },
-          StarterKit,
-          Image,
-          { default: Table },
-          { default: TableRow },
-          { default: TableHeader },
-          { default: TableCell },
-          { default: HardBreak },
-          { Node, mergeAttributes }
+          { useEditor },
+          starterKitModule,
+          imageModule,
+          { Table },
+          { TableRow },
+          { TableHeader },
+          { TableCell },
+          { HardBreak },
+          { Node, mergeAttributes },
         ] = await Promise.all([
-          import('@tiptap/react').then(mod => ({ default: mod.useEditor })),
+          import('@tiptap/react'),
           import('@tiptap/starter-kit'),
           import('@tiptap/extension-image'),
-          import('@tiptap/extension-table').then(mod => ({ default: mod.Table })),
-          import('@tiptap/extension-table-row').then(mod => ({ default: mod.TableRow })),
-          import('@tiptap/extension-table-header').then(mod => ({ default: mod.TableHeader })),
-          import('@tiptap/extension-table-cell').then(mod => ({ default: mod.TableCell })),
-          import('@tiptap/extension-hard-break').then(mod => ({ default: mod.HardBreak })),
-          import('@tiptap/core').then(mod => ({ Node: mod.Node, mergeAttributes: mod.mergeAttributes }))
+          import('@tiptap/extension-table'),
+          import('@tiptap/extension-table-row'),
+          import('@tiptap/extension-table-header'),
+          import('@tiptap/extension-table-cell'),
+          import('@tiptap/extension-hard-break'),
+          import('@tiptap/core'),
         ]);
+
+        const StarterKit =
+          (starterKitModule as any).default ?? starterKitModule;
+        const Image = (imageModule as any).default ?? imageModule;
 
         // カスタム目次ノード
         const TableOfContents = Node.create({
@@ -57,55 +60,74 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
           content: 'tocTitle tocItem*',
           atom: false,
           selectable: true,
-          
+
           addKeyboardShortcuts() {
             return {
-              'Delete': () => {
+              Delete: () => {
                 const { selection } = this.editor.state;
                 const { $anchor } = selection;
-                
-                if ($anchor.parent.type.name === 'tableOfContents' && selection.empty && 
-                    $anchor.parentOffset === 0 && $anchor.parent.childCount === 1) {
+
+                if (
+                  $anchor.parent.type.name === 'tableOfContents' &&
+                  selection.empty &&
+                  $anchor.parentOffset === 0 &&
+                  $anchor.parent.childCount === 1
+                ) {
                   return true;
                 }
-                
+
                 const { $from, $to } = selection;
-                if ($from.parent.type.name === 'tableOfContents' || $to.parent.type.name === 'tableOfContents') {
+                if (
+                  $from.parent.type.name === 'tableOfContents' ||
+                  $to.parent.type.name === 'tableOfContents'
+                ) {
                   return true;
                 }
-                
+
                 return false;
               },
-              'Backspace': () => {
+              Backspace: () => {
                 const { selection } = this.editor.state;
                 const { $anchor } = selection;
-                
-                if ($anchor.parent.type.name === 'tableOfContents' && selection.empty && 
-                    $anchor.parentOffset === 0) {
+
+                if (
+                  $anchor.parent.type.name === 'tableOfContents' &&
+                  selection.empty &&
+                  $anchor.parentOffset === 0
+                ) {
                   return true;
                 }
-                
+
                 const { $from, $to } = selection;
-                if ($from.parent.type.name === 'tableOfContents' || $to.parent.type.name === 'tableOfContents') {
+                if (
+                  $from.parent.type.name === 'tableOfContents' ||
+                  $to.parent.type.name === 'tableOfContents'
+                ) {
                   return true;
                 }
-                
+
                 return false;
-              }
-            }
+              },
+            };
           },
-          
+
           parseHTML() {
-            return [{
-              tag: 'div.table-of-contents',
-            }]
+            return [
+              {
+                tag: 'div.table-of-contents',
+              },
+            ];
           },
 
           renderHTML({ HTMLAttributes }) {
-            return ['div', mergeAttributes(HTMLAttributes, { 
-              class: 'table-of-contents fixed-toc',
-              contenteditable: 'true'
-            }), 0]
+            return [
+              'div',
+              mergeAttributes(HTMLAttributes, {
+                class: 'table-of-contents fixed-toc',
+                contenteditable: 'true',
+              }),
+              0,
+            ];
           },
         });
 
@@ -115,13 +137,19 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
           content: 'text*',
 
           parseHTML() {
-            return [{
-              tag: 'div.toc-title',
-            }]
+            return [
+              {
+                tag: 'div.toc-title',
+              },
+            ];
           },
 
           renderHTML({ HTMLAttributes }) {
-            return ['div', mergeAttributes(HTMLAttributes, { class: 'toc-title' }), 0]
+            return [
+              'div',
+              mergeAttributes(HTMLAttributes, { class: 'toc-title' }),
+              0,
+            ];
           },
         });
 
@@ -131,13 +159,19 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
           content: 'text*',
 
           parseHTML() {
-            return [{
-              tag: 'div.toc-item',
-            }]
+            return [
+              {
+                tag: 'div.toc-item',
+              },
+            ];
           },
 
           renderHTML({ HTMLAttributes }) {
-            return ['div', mergeAttributes(HTMLAttributes, { class: 'toc-item' }), 0]
+            return [
+              'div',
+              mergeAttributes(HTMLAttributes, { class: 'toc-item' }),
+              0,
+            ];
           },
         });
 
@@ -148,13 +182,19 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
           whitespace: 'pre',
 
           parseHTML() {
-            return [{
-              tag: 'div.quote-container',
-            }]
+            return [
+              {
+                tag: 'div.quote-container',
+              },
+            ];
           },
 
           renderHTML({ HTMLAttributes }) {
-            return ['div', mergeAttributes(HTMLAttributes, { class: 'quote-container' }), 0]
+            return [
+              'div',
+              mergeAttributes(HTMLAttributes, { class: 'quote-container' }),
+              0,
+            ];
           },
         });
 
@@ -172,7 +212,8 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
               allowBase64: true,
               HTMLAttributes: {
                 class: 'max-w-full h-auto',
-                style: 'max-width: 100%; height: auto; display: block; border-radius: 24px; margin: 24px 0;',
+                style:
+                  'max-width: 100%; height: auto; display: block; border-radius: 24px; margin: 24px 0;',
               },
             }),
             Table.configure({
@@ -180,20 +221,24 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
               allowTableNodeSelection: true,
               HTMLAttributes: {
                 class: 'border-collapse border border-gray-300 w-full mb-4',
-                style: 'max-width: 100%; table-layout: fixed; word-wrap: break-word;',
+                style:
+                  'max-width: 100%; table-layout: fixed; word-wrap: break-word;',
               },
             }),
             TableRow,
             TableHeader.configure({
               HTMLAttributes: {
-                class: 'border border-gray-300 bg-gray-50 px-4 py-2 font-semibold',
-                style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
+                class:
+                  'border border-gray-300 bg-gray-50 px-4 py-2 font-semibold',
+                style:
+                  'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
               },
             }),
             TableCell.configure({
               HTMLAttributes: {
                 class: 'border border-gray-300 px-4 py-2',
-                style: 'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
+                style:
+                  'word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;',
               },
             }),
             TableOfContents,
@@ -227,26 +272,26 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
 
   if (!isLoaded || !editor) {
     return (
-      <div className="h-96 bg-gray-100 animate-pulse rounded flex items-center justify-center">
-        <div className="text-gray-500">エディタを読み込み中...</div>
+      <div className='h-96 bg-gray-100 animate-pulse rounded flex items-center justify-center'>
+        <div className='text-gray-500'>エディタを読み込み中...</div>
       </div>
     );
   }
 
   return (
-    <div className="border border-gray-300 rounded-none">
+    <div className='border border-gray-300 rounded-none'>
       {/* 簡素化されたツールバー */}
-      <div className="bg-gray-100 border-b border-gray-300 p-2">
-        <div className="text-sm text-gray-600">
+      <div className='bg-gray-100 border-b border-gray-300 p-2'>
+        <div className='text-sm text-gray-600'>
           リッチテキストエディタ (軽量版)
         </div>
       </div>
 
       {/* エディタエリア */}
-      <div className="min-h-[400px] p-4 overflow-hidden">
+      <div className='min-h-[400px] p-4 overflow-hidden'>
         <TiptapEditorContent
           editor={editor}
-          className="prose prose-lg max-w-none focus:outline-none media-content-editor overflow-hidden"
+          className='prose prose-lg max-w-none focus:outline-none media-content-editor overflow-hidden'
           style={{
             fontFamily: 'Inter',
             fontSize: '16px',

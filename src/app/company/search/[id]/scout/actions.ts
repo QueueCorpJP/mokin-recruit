@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateCompanyPaths } from '@/lib/server/actions/revalidate';
 
 export interface ScoutSendFormData {
   group: string;
@@ -38,9 +38,11 @@ export async function getCandidateName(candidateId: string): Promise<string> {
   }
 }
 
-export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendResult> {
+export async function sendScout(
+  formData: ScoutSendFormData
+): Promise<ScoutSendResult> {
   const supabase = await createClient();
-  
+
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
@@ -54,7 +56,11 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     const remainingTickets = await getScoutTicketsRemaining();
     if (remainingTickets <= 0) {
       console.warn('スカウト送信制限に達しています');
-      return { success: false, error: 'スカウト送信制限に達しています。チケットを追加購入してください。' };
+      return {
+        success: false,
+        error:
+          'スカウト送信制限に達しています。チケットを追加購入してください。',
+      };
     }
 
     // 候補者情報を取得
@@ -80,9 +86,12 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     if (settingsError) {
       console.error('スカウト設定の確認エラー:', settingsError);
     }
-    
+
     if (scoutSettings && scoutSettings.scout_status === 'not-receive') {
-      return { success: false, error: 'この候補者はスカウトの受信を拒否しています' };
+      return {
+        success: false,
+        error: 'この候補者はスカウトの受信を拒否しています',
+      };
     }
 
     // グループ情報を取得
@@ -133,14 +142,18 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       sender_name: formData.scoutSenderName,
       candidate_id: formData.candidateId,
       candidate_email: candidate.email,
-      candidate_name: `${candidate.last_name || ''} ${candidate.first_name || ''}`.trim(),
+      candidate_name: `${candidate.last_name || ''} ${
+        candidate.first_name || ''
+      }`.trim(),
       job_posting_id: jobPosting?.id || null,
       job_title: jobPosting?.title || null,
       subject: formData.title,
       message_content: formData.message,
       template_id: templateId,
       status: 'sent',
-      search_query: formData.searchQuery ? JSON.parse(formData.searchQuery) : null,
+      search_query: formData.searchQuery
+        ? JSON.parse(formData.searchQuery)
+        : null,
       query_source: formData.searchQuery ? 'search' : 'direct',
       sent_at: new Date().toISOString(),
     };
@@ -153,7 +166,10 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
 
     if (insertError) {
       console.error('スカウト送信データの保存エラー:', insertError);
-      return { success: false, error: 'スカウト送信データの保存に失敗しました' };
+      return {
+        success: false,
+        error: 'スカウト送信データの保存に失敗しました',
+      };
     }
 
     // Roomを作成または取得
@@ -161,7 +177,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     console.info('Room検索条件:', {
       candidate_id: formData.candidateId,
       company_group_id: formData.group,
-      type: 'direct'
+      type: 'direct',
     });
 
     let roomId = null;
@@ -200,7 +216,10 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
 
       if (roomInsertError) {
         console.error('ルーム作成エラー:', roomInsertError);
-        return { success: false, error: 'メッセージルームの作成に失敗しました' };
+        return {
+          success: false,
+          error: 'メッセージルームの作成に失敗しました',
+        };
       }
       roomId = newRoom.id;
       console.info('新規Room作成完了:', { roomId });
@@ -228,7 +247,10 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
 
     if (messageInsertError) {
       console.error('メッセージ作成エラー:', messageInsertError);
-      return { success: false, error: 'スカウトメッセージの作成に失敗しました' };
+      return {
+        success: false,
+        error: 'スカウトメッセージの作成に失敗しました',
+      };
     }
 
     console.info('Message作成完了:', { messageId: message.id });
@@ -250,7 +272,9 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       if (notificationError) {
         console.error('通知作成エラー:', notificationError);
         // 通知作成失敗は警告のみ（メッセージ作成は成功している）
-        console.warn('スカウト通知の作成に失敗しましたが、メッセージは正常に作成されました');
+        console.warn(
+          'スカウト通知の作成に失敗しましたが、メッセージは正常に作成されました'
+        );
       } else {
         console.info('Notification作成完了');
       }
@@ -259,20 +283,24 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     // スカウト送信が成功したため、チケット消費が完了
     console.info('スカウト送信完了。チケットが1つ消費されました。');
 
-    revalidatePath('/company/search/scout');
-    revalidatePath('/company/search/scout/complete');
+    revalidateCompanyPaths(
+      '/company/search/scout',
+      '/company/search/scout/complete'
+    );
 
     return { success: true, scoutSendId: scoutSend.id };
-
   } catch (error) {
     console.error('スカウト送信処理中のエラー:', error);
-    return { success: false, error: 'スカウト送信処理中にエラーが発生しました' };
+    return {
+      success: false,
+      error: 'スカウト送信処理中にエラーが発生しました',
+    };
   }
 }
 
 export async function getCompanyGroupOptions() {
   const supabase = await createClient();
-  
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
@@ -282,16 +310,18 @@ export async function getCompanyGroupOptions() {
     }
 
     const { companyUserId } = authResult.data;
-    
+
     // ユーザーがアクセス可能なグループを取得
     const { data: userPermissions, error } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         company_group:company_groups (
           id,
           group_name
         )
-      `)
+      `
+      )
       .eq('company_user_id', companyUserId);
 
     if (error || !userPermissions) {
@@ -317,7 +347,7 @@ export async function getCompanyGroupOptions() {
 
 export async function getJobPostingOptions(groupId: string) {
   const supabase = await createClient();
-  
+
   try {
     const { data: jobs, error } = await supabase
       .from('job_postings')
@@ -343,17 +373,19 @@ export async function getJobPostingOptions(groupId: string) {
 
 export async function getCompanyUserOptions(groupId: string) {
   const supabase = await createClient();
-  
+
   try {
     const { data: users, error } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         company_users (
           id,
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('company_group_id', groupId);
 
     if (error) {
@@ -361,13 +393,15 @@ export async function getCompanyUserOptions(groupId: string) {
       return [];
     }
 
-    return users
+    const flattenedUsers = users
       .map(permission => permission.company_users)
       .filter(Boolean)
-      .map(user => ({
-        value: user.full_name,
-        label: user.full_name,
-      }));
+      .flatMap(user => (Array.isArray(user) ? user : [user]));
+
+    return flattenedUsers.map(user => ({
+      value: user.full_name,
+      label: user.full_name,
+    }));
   } catch (error) {
     console.error('ユーザーオプション取得エラー:', error);
     return [];
@@ -376,7 +410,7 @@ export async function getCompanyUserOptions(groupId: string) {
 
 export async function getScoutTemplateOptions(groupId: string) {
   const supabase = await createClient();
-  
+
   try {
     const { data: templates, error } = await supabase
       .from('search_templates')
@@ -403,7 +437,7 @@ export async function getScoutTemplateOptions(groupId: string) {
 
 export async function getScoutTicketsRemaining(): Promise<number> {
   const supabase = await createClient();
-  
+
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
@@ -443,7 +477,7 @@ export async function getScoutTicketsRemaining(): Promise<number> {
 
     const usedThisMonth = scoutSends?.length || 0;
     const remaining = (accountData?.scout_limit || 0) - usedThisMonth;
-    
+
     return Math.max(0, remaining); // 負数にならないよう調整
   } catch (error) {
     console.error('チケット残数取得エラー:', error);

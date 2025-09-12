@@ -1,10 +1,16 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateCompanyPaths } from '@/lib/server/actions/revalidate';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import sgMail from '@sendgrid/mail';
 import { getBaseUrl } from '@/lib/server/utils/url';
+import {
+  getFromAddress,
+  isSendgridConfigured,
+  sendBatch,
+} from '@/lib/server/mail/sendgrid';
+import { ok, fail } from '@/lib/server/actions/response';
+import { toDbPermission } from '@/lib/company/permissions';
 
 interface CreateGroupPayload {
   groupName: string;
@@ -15,7 +21,7 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error || 'Unauthorized' };
+      return fail(authResult.error || 'Unauthorized');
     }
 
     const { companyAccountId } = authResult.data;
@@ -35,7 +41,7 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
       .single();
 
     if (groupError || !newGroup) {
-      return { success: false, error: groupError?.message || 'グループ作成に失敗しました' };
+      return fail(groupError?.message || 'グループ作成に失敗しました');
     }
 
     const invited: { email: string; role: string }[] = [];
@@ -56,14 +62,15 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
 
       if (!companyUserId) {
         // 認証ユーザー作成（パスワード未設定）
-        const { data: authCreated, error: authErr } = await supabase.auth.admin.createUser({
-          email,
-          email_confirm: false,
-          user_metadata: {
-            user_type: 'company_user',
-            company_account_id: companyAccountId,
-          },
-        });
+        const { data: authCreated, error: authErr } =
+          await supabase.auth.admin.createUser({
+            email,
+            email_confirm: false,
+            user_metadata: {
+              user_type: 'company_user',
+              company_account_id: companyAccountId,
+            },
+          });
         if (authErr || !authCreated.user) {
           // 次のメンバーへ
           continue;
@@ -88,7 +95,9 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
       }
 
       // 権限付与（viewerはSCOUT_STAFFにマップ）
-      const permission = member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF';
+      const permission = toDbPermission(
+        member.role === 'member' ? 'scout' : (member.role as any)
+      );
       const { error: permErr } = await supabase
         .from('company_user_group_permissions')
         .upsert({
@@ -104,13 +113,12 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
     }
 
     // 3) SendGrid 招待メール送信
-    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      const from = process.env.SENDGRID_FROM_EMAIL;
+    if (isSendgridConfigured()) {
+      const from = getFromAddress() as string;
       const baseUrl = getBaseUrl();
       const setPasswordUrl = `${baseUrl}/signup/set-password`;
 
-      const messages = invited.map((m) => ({
+      const messages = invited.map(m => ({
         to: m.email,
         from,
         subject: `${payload.groupName} への招待`,
@@ -118,29 +126,25 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
         html: `mokin recruit に招待されました。<br/>以下のリンクからパスワードを設定してログインしてください。<br/><a href="${setPasswordUrl}">${setPasswordUrl}</a>`,
       }));
 
-      try {
-        if (messages.length > 0) {
-          await sgMail.send(messages as any, false);
-        }
-      } catch (e) {
-        // 送信失敗は致命ではないのでログのみ
-        console.error('SendGrid error:', e);
-      }
+      await sendBatch(messages);
     }
 
-    revalidatePath('/company/account');
-    return { success: true, groupId: newGroup.id, invited };
+    revalidateCompanyPaths('/company/account');
+    return ok({ groupId: newGroup.id, invited });
   } catch (e) {
     console.error(e);
-    return { success: false, error: 'Internal Server Error' };
+    return fail('Internal Server Error');
   }
 }
 
-export async function removeGroupMember(groupId: string, companyUserId: string) {
+export async function removeGroupMember(
+  groupId: string,
+  companyUserId: string
+) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error || 'Unauthorized' };
+      return fail(authResult.error || 'Unauthorized');
     }
 
     const supabase = getSupabaseAdminClient();
@@ -151,44 +155,51 @@ export async function removeGroupMember(groupId: string, companyUserId: string) 
       .eq('company_user_id', companyUserId);
 
     if (error) {
-      return { success: false, error: error.message };
+      return fail(error.message);
     }
 
-    revalidatePath('/company/account');
-    return { success: true };
+    revalidateCompanyPaths('/company/account');
+    return ok();
   } catch (e) {
     console.error(e);
-    return { success: false, error: 'Internal Server Error' };
+    return fail('Internal Server Error');
   }
 }
 
-export async function updateMemberPermission(groupId: string, companyUserId: string, newRole: 'admin' | 'scout' | 'recruiter') {
+export async function updateMemberPermission(
+  groupId: string,
+  companyUserId: string,
+  newRole: 'admin' | 'scout' | 'recruiter'
+) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error || 'Unauthorized' };
+      return fail(authResult.error || 'Unauthorized');
     }
 
     // UIロール → DB permission_level 変換
     // admin → ADMINISTRATOR, scout/recruiter → SCOUT_STAFF（現行スキーマでは2値のため）
-    const permissionLevel = newRole === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF';
+    const permissionLevel = toDbPermission(newRole);
 
     const supabase = getSupabaseAdminClient();
     const { error } = await supabase
       .from('company_user_group_permissions')
-      .update({ permission_level: permissionLevel, updated_at: new Date().toISOString() })
+      .update({
+        permission_level: permissionLevel,
+        updated_at: new Date().toISOString(),
+      })
       .eq('company_group_id', groupId)
       .eq('company_user_id', companyUserId);
 
     if (error) {
-      return { success: false, error: error.message };
+      return fail(error.message);
     }
 
-    revalidatePath('/company/account');
-    return { success: true };
+    revalidateCompanyPaths('/company/account');
+    return ok();
   } catch (e) {
     console.error(e);
-    return { success: false, error: 'Internal Server Error' };
+    return fail('Internal Server Error');
   }
 }
 
@@ -196,24 +207,27 @@ export async function updateGroupName(groupId: string, newGroupName: string) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error || 'Unauthorized' };
+      return fail(authResult.error || 'Unauthorized');
     }
 
     const supabase = getSupabaseAdminClient();
     const { error } = await supabase
       .from('company_groups')
-      .update({ group_name: newGroupName.trim(), updated_at: new Date().toISOString() })
+      .update({
+        group_name: newGroupName.trim(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', groupId);
 
     if (error) {
-      return { success: false, error: error.message };
+      return fail(error.message);
     }
 
-    revalidatePath('/company/account');
-    return { success: true };
+    revalidateCompanyPaths('/company/account');
+    return ok();
   } catch (e) {
     console.error(e);
-    return { success: false, error: 'Internal Server Error' };
+    return fail('Internal Server Error');
   }
 }
 
@@ -224,7 +238,7 @@ export async function inviteMembersToGroup(
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error || 'Unauthorized' };
+      return fail(authResult.error || 'Unauthorized');
     }
 
     const { companyAccountId } = authResult.data;
@@ -236,8 +250,12 @@ export async function inviteMembersToGroup(
       .select('id, group_name, company_account_id')
       .eq('id', groupId)
       .single();
-    if (groupErr || !groupRow || groupRow.company_account_id !== companyAccountId) {
-      return { success: false, error: '不正なグループです' };
+    if (
+      groupErr ||
+      !groupRow ||
+      groupRow.company_account_id !== companyAccountId
+    ) {
+      return fail('不正なグループです');
     }
 
     const invited: { email: string; role: string }[] = [];
@@ -286,7 +304,7 @@ export async function inviteMembersToGroup(
       }
 
       // 権限付与（admin→ADMINISTRATOR、scout/recruiter→SCOUT_STAFF）
-      const permissionLevel = member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF';
+      const permissionLevel = toDbPermission(member.role);
       const { error: permErr } = await supabase
         .from('company_user_group_permissions')
         .upsert({
@@ -302,13 +320,12 @@ export async function inviteMembersToGroup(
     }
 
     // SendGrid通知
-    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      const from = process.env.SENDGRID_FROM_EMAIL;
+    if (isSendgridConfigured()) {
+      const from = getFromAddress() as string;
       const baseUrl = getBaseUrl();
       const setPasswordUrl = `${baseUrl}/signup/set-password`;
 
-      const messages = invited.map((m) => ({
+      const messages = invited.map(m => ({
         to: m.email,
         from,
         subject: `${groupRow.group_name} への招待`,
@@ -316,21 +333,13 @@ export async function inviteMembersToGroup(
         html: `mokin recruit に招待されました。<br/>以下のリンクからパスワードを設定してログインしてください。<br/><a href="${setPasswordUrl}">${setPasswordUrl}</a>`,
       }));
 
-      try {
-        if (messages.length > 0) {
-          await sgMail.send(messages as any, false);
-        }
-      } catch (e) {
-        console.error('SendGrid error:', e);
-      }
+      await sendBatch(messages);
     }
 
-    revalidatePath('/company/account');
-    return { success: true, invitedCount: invited.length };
+    revalidateCompanyPaths('/company/account');
+    return ok({ invitedCount: invited.length });
   } catch (e) {
     console.error(e);
-    return { success: false, error: 'Internal Server Error' };
+    return fail('Internal Server Error');
   }
 }
-
-

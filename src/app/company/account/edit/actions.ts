@@ -3,6 +3,7 @@
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { INDUSTRY_GROUPS, type Industry } from '@/constants/industry-data';
+import { prefectureNamesForMatch } from '@/constants/prefectures';
 
 export interface CompanyAccountEditData {
   companyName: string;
@@ -26,7 +27,13 @@ function findIndustriesByNames(names: string[]): Industry[] {
 }
 
 export async function getCompanyAccountForEdit(): Promise<
-  | { success: true; data: CompanyAccountEditData & { industries: Industry[]; location: { prefecture: string; address: string } } }
+  | {
+      success: true;
+      data: CompanyAccountEditData & {
+        industries: Industry[];
+        location: { prefecture: string; address: string };
+      };
+    }
   | { success: false; error: string }
 > {
   const auth = await requireCompanyAuthForAction();
@@ -39,7 +46,9 @@ export async function getCompanyAccountForEdit(): Promise<
 
   const { data, error } = await supabase
     .from('company_accounts')
-    .select('company_name, representative_name, industry, company_overview, headquarters_address')
+    .select(
+      'company_name, representative_name, industry, company_overview, headquarters_address'
+    )
     .eq('id', companyAccountId)
     .maybeSingle();
 
@@ -51,9 +60,7 @@ export async function getCompanyAccountForEdit(): Promise<
   const industries = industryText ? findIndustriesByNames([industryText]) : [];
 
   // 都道府県の推定分割（一致しなければ住所に全体を入れる）
-  const prefectureList = [
-    '北海道','青森','岩手','宮城','秋田','山形','福島','茨城','栃木','群馬','埼玉','千葉','東京','神奈川','新潟','富山','石川','福井','山梨','長野','岐阜','静岡','愛知','三重','滋賀','京都','大阪','兵庫','奈良','和歌山','鳥取','島根','岡山','広島','山口','徳島','香川','愛媛','高知','福岡','佐賀','長崎','熊本','大分','宮崎','鹿児島','沖縄','海外'
-  ];
+  const prefectureList = [...prefectureNamesForMatch, '海外'];
   const fullAddress: string = data.headquarters_address || '';
   let prefecture = '';
   let address = '';
@@ -74,13 +81,14 @@ export async function getCompanyAccountForEdit(): Promise<
       companyOverview: data.company_overview || '',
       headquartersAddress: fullAddress,
       industries,
-      location: { prefecture, address }
-    }
+      location: { prefecture, address },
+    },
   };
 }
 
-export async function saveCompanyAccountEdit(input: CompanyAccountEditInput): Promise<{ success: true } | { success: false; error: string }>
-{
+export async function saveCompanyAccountEdit(
+  input: CompanyAccountEditInput
+): Promise<{ success: true } | { success: false; error: string }> {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
     return { success: false, error: auth.error };
@@ -106,7 +114,9 @@ export async function saveCompanyAccountEdit(input: CompanyAccountEditInput): Pr
   // 現在の値を取得して差分のみ更新
   const { data: current, error: fetchError } = await supabase
     .from('company_accounts')
-    .select('representative_name, industry, headquarters_address, company_overview')
+    .select(
+      'representative_name, industry, headquarters_address, company_overview'
+    )
     .eq('id', companyAccountId)
     .maybeSingle();
 
@@ -116,7 +126,8 @@ export async function saveCompanyAccountEdit(input: CompanyAccountEditInput): Pr
   }
 
   const primaryIndustry = input.industries[0]?.name || '';
-  const headquartersAddress = `${input.location.prefecture} ${input.location.address}`.trim();
+  const headquartersAddress =
+    `${input.location.prefecture} ${input.location.address}`.trim();
 
   const updateData: Record<string, any> = {};
   if ((current.representative_name || '') !== input.representativeName) {
@@ -150,5 +161,3 @@ export async function saveCompanyAccountEdit(input: CompanyAccountEditInput): Pr
 
   return { success: true };
 }
-
-

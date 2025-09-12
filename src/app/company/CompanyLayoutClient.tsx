@@ -4,6 +4,7 @@ import { UserProvider } from '@/contexts/UserContext';
 import { AccessRestricted } from '@/components/AccessRestricted';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { protectedPaths } from '@/app/company/constants/routes';
 import { createBrowserClient } from '@supabase/ssr';
 
 interface InitialAuth {
@@ -34,7 +35,7 @@ export default function CompanyLayoutClient({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   // サーバーから渡された初期認証情報を使用（クライアントサイドでのAPI呼び出しなし）
   const [authState, setAuthState] = useState({
     isAuthenticated: initialAuth.isAuthenticated,
@@ -60,8 +61,11 @@ export default function CompanyLayoutClient({
         });
       } else if (event === 'SIGNED_IN' && session?.user) {
         const user = session.user;
-        const userType = (user.user_metadata?.user_type || 'candidate') as 'candidate' | 'company_user' | 'admin';
-        
+        const userType = (user.user_metadata?.user_type || 'candidate') as
+          | 'candidate'
+          | 'company_user'
+          | 'admin';
+
         setAuthState({
           isAuthenticated: true,
           companyUser: {
@@ -81,57 +85,61 @@ export default function CompanyLayoutClient({
     return () => subscription.unsubscribe();
   }, []);
 
-  // 認証が必要なページのパス
-  const protectedPaths = [
-    '/company/dashboard',
-    '/company/message',
-    '/company/job',
-    '/company/task',
-    '/company/mypage'
-  ];
+  // 認証が必要なページのパスは共通定数から参照
 
   // 認証が必要なページでリダイレクト処理
   useEffect(() => {
     const { isAuthenticated, companyUser, loading } = authState;
-    
+
     if (loading) return;
-    
+
     if (!isAuthenticated) {
-      const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
+      const isProtectedPath = protectedPaths.some(path =>
+        pathname.startsWith(path)
+      );
       if (isProtectedPath) {
         router.push('/company/auth/login');
         return;
       }
     }
-    
-  }, [authState.isAuthenticated, authState.loading, pathname, authState.companyUser, router]);
+  }, [
+    authState.isAuthenticated,
+    authState.loading,
+    pathname,
+    authState.companyUser,
+    router,
+  ]);
 
   const { isAuthenticated, companyUser } = authState;
-  
+
   // 認証情報を整理
-  const userInfo = isAuthenticated && companyUser ? {
-    name: companyUser.name || companyUser.email || '',
-    email: companyUser.email || '',
-    userType: companyUser.userType
-  } : undefined;
+  const userInfo =
+    isAuthenticated && companyUser
+      ? {
+          name: companyUser.name || companyUser.email || '',
+          email: companyUser.email || '',
+          userType: companyUser.userType,
+        }
+      : undefined;
 
   // UserContext用のユーザー情報
-  const contextUser = isAuthenticated && companyUser ? {
-    id: companyUser.id,
-    email: companyUser.email || '',
-    role: 'company' as const,
-    profile: companyUser
-  } : null;
+  const contextUser =
+    isAuthenticated && companyUser
+      ? {
+          id: companyUser.id,
+          email: companyUser.email || '',
+          role: 'company' as const,
+          profile: companyUser,
+        }
+      : null;
 
   // 認証が必要なページでアクセス制限の表示
-  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
+  const isProtectedPath = protectedPaths.some(path =>
+    pathname.startsWith(path)
+  );
   if (isProtectedPath && !isAuthenticated) {
-    return <AccessRestricted userType="company" />;
+    return <AccessRestricted userType='company' />;
   }
 
-  return (
-    <UserProvider user={contextUser}>
-      {children}
-    </UserProvider>
-  );
+  return <UserProvider user={contextUser}>{children}</UserProvider>;
 }

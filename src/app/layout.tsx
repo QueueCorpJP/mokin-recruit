@@ -18,21 +18,32 @@ import { Suspense } from 'react';
 
 // 重要でないコンポーネントを遅延読み込み
 const AuthAwareNavigation = dynamic(
-  () => import('../components/layout/AuthAwareNavigation').then(mod => ({ default: mod.AuthAwareNavigation })),
+  () =>
+    import('../components/layout/AuthAwareNavigation').then(mod => ({
+      default: mod.AuthAwareNavigation,
+    })),
   {
-    loading: () => <div className="h-[80px] bg-white border-b border-gray-200" />,
+    loading: () => (
+      <div className='h-[80px] bg-white border-b border-gray-200' />
+    ),
   }
 );
 
 const AuthAwareFooter = dynamic(
-  () => import('../components/layout/AuthAwareFooter').then(mod => ({ default: mod.AuthAwareFooter })),
+  () =>
+    import('../components/layout/AuthAwareFooter').then(mod => ({
+      default: mod.AuthAwareFooter,
+    })),
   {
-    loading: () => <div className="min-h-[200px] bg-[#323232]" />,
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
   }
 );
 
 const FontLoader = dynamic(
-  () => import('../components/FontLoader').then(mod => ({ default: mod.FontLoader })),
+  () =>
+    import('../components/FontLoader').then(mod => ({
+      default: mod.FontLoader,
+    })),
   { ssr: false } // クライアントサイドでのみ実行
 );
 
@@ -45,13 +56,13 @@ const notoSansJP = Noto_Sans_JP({
   weight: ['300', '400', '500', '600', '700', '800', '900'], // より多くのウェイトを追加
   adjustFontFallback: true, // メトリクス調整を有効化
   fallback: [
-    'Hiragino Kaku Gothic ProN', 
-    'Hiragino Sans', 
-    'Yu Gothic Medium', 
-    'Meiryo', 
+    'Hiragino Kaku Gothic ProN',
+    'Hiragino Sans',
+    'Yu Gothic Medium',
+    'Meiryo',
     'MS PGothic',
-    'system-ui', 
-    'sans-serif'
+    'system-ui',
+    'sans-serif',
   ],
 });
 
@@ -86,11 +97,6 @@ export default function RootLayout({
   return (
     <html lang='ja' className={`${notoSansJP.variable}`}>
       <head>
-        {/* DNS Prefetch - 遅延で必要時のみ */}
-        <link rel='dns-prefetch' href='//fonts.googleapis.com' />
-        <link rel='dns-prefetch' href='//fonts.gstatic.com' />
-        
-
         {/* Critical CSS - レスポンシブ対応のちらつき防止 */}
         <style
           dangerouslySetInnerHTML={{
