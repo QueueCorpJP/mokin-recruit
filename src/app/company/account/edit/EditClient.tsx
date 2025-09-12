@@ -400,10 +400,11 @@ export default function EditClient() {
                       <div className='flex flex-col gap-4'>
                         {formData.urls.map((url, index) => (
                           <div key={index} className='flex items-center gap-2'>
+                            <div className='w-[380px]'>
                             <input
                               type='text'
                               placeholder='URLタイトルを入力'
-                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] max-w-100'
+                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
                               value={url.title || ''}
                               onChange={e => {
                                 const newUrls = [...formData['urls']];
@@ -418,10 +419,12 @@ export default function EditClient() {
                                 setFormData({ ...formData, urls: newUrls });
                               }}
                             />
+                            </div>
+                            <div className='w-[380px]'>
                             <input
                               type='text'
                               placeholder='https://'
-                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] max-w-100'
+                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
                               value={url.url || ''}
                               onChange={e => {
                                 const newUrls = [...formData['urls']];
@@ -436,6 +439,7 @@ export default function EditClient() {
                                 setFormData({ ...formData, urls: newUrls });
                               }}
                             />
+                            </div>
                             <button
                               type='button'
                               onClick={() => removeUrl(index)}
