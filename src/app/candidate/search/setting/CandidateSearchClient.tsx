@@ -3,13 +3,7 @@
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
-import {
-  useState,
-  useEffect,
-  useTransition,
-  useCallback,
-  useMemo,
-} from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCandidateSearch } from './useCandidateSearch';
 
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -22,8 +16,8 @@ import { PaginationArrow } from '@/components/svg/PaginationArrow';
 import { JobPostCard } from '@/components/ui/JobPostCard';
 import { Pagination } from '@/components/ui/Pagination';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { JobSearchResult, getJobSearchData } from './actions';
+import { useRouter } from 'next/navigation';
+import { JobSearchResult } from './actions';
 
 interface CandidateSearchClientProps {
   initialJobs: JobSearchResult[];
@@ -51,8 +45,6 @@ function CandidateSearchClient({
   initialSearchConditions,
 }: CandidateSearchClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
 
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -155,35 +147,7 @@ function CandidateSearchClient({
     }
   }, [initialized, initialSearchConditions]);
 
-  // 検索条件をURLに反映（サーバーレンダリングを避ける）
-  const updateURL = (newConditions: any) => {
-    const params = new URLSearchParams();
-
-    if (newConditions.keyword) params.set('keyword', newConditions.keyword);
-    if (newConditions.location) params.set('location', newConditions.location);
-    if (newConditions.salaryMin && newConditions.salaryMin !== '問わない')
-      params.set('salaryMin', newConditions.salaryMin);
-    if (newConditions.industries.length > 0)
-      params.set('industries', newConditions.industries.join(','));
-    if (newConditions.jobTypes.length > 0)
-      params.set('jobTypes', newConditions.jobTypes.join(','));
-    if (newConditions.appealPoints.length > 0)
-      params.set('appealPoints', newConditions.appealPoints.join(','));
-    if (newConditions.page > 1)
-      params.set('page', newConditions.page.toString());
-
-    const queryString = params.toString();
-    const newUrl = queryString ? `?${queryString}` : '';
-
-    // URLの更新をHistory APIで直接行い、Reactのrouterを使わない
-    if (typeof window !== 'undefined') {
-      window.history.replaceState(
-        null,
-        '',
-        `/candidate/search/setting${newUrl}`
-      );
-    }
-  };
+  // （URL同期は useCandidateSearch 側で実施）
 
   // 検索条件を使って検索を実行（useCallbackで安定化）
   const fetchJobsWithConditions = useCallback(
@@ -232,6 +196,7 @@ function CandidateSearchClient({
   // スター切り替え（サーバーアクション使用）
   const handleStarClick = async (idx: number) => {
     const job = jobCards[idx];
+    if (!job) return;
     const jobId = job.id;
     const isCurrentlyStarred = favoriteStatus?.[jobId] || false;
     await toggleFavorite(jobId, isCurrentlyStarred);
@@ -836,7 +801,7 @@ function CandidateSearchClient({
                     apell={card.apell}
                     starred={favoriteStatus?.[card.id] || false}
                     onStarClick={() => handleStarClick(idx)}
-                    isFavoriteLoading={favoriteLoading[card.id]}
+                    isFavoriteLoading={!!favoriteLoading[card.id]}
                     jobId={card.id}
                     onClick={() =>
                       router.push(`/candidate/search/setting/${card.id}`)
