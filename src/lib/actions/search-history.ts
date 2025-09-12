@@ -12,7 +12,7 @@ export interface SearchConditions {
   age_max?: number;
   experience_years_min?: number;
   experience_years_max?: number;
-  
+
   // 選択式条件
   industries?: string[];
   job_types?: string[];
@@ -20,12 +20,12 @@ export interface SearchConditions {
   work_styles?: string[];
   education_levels?: string[];
   skills?: string[];
-  
+
   // その他の条件
   salary_min?: number;
   salary_max?: number;
   language_skills?: string[];
-  
+
   [key: string]: any; // その他の動的な条件に対応
 }
 
@@ -54,21 +54,40 @@ export interface SearchHistoryItem {
  * 検索履歴を保存する（RLS有効・サーバーサイドでクライアントキー使用）
  */
 export async function saveSearchHistory(data: SaveSearchHistoryData) {
-  console.log('[saveSearchHistory] Called with data:', JSON.stringify(data, null, 2));
-  
+  console.log(
+    '[saveSearchHistory] Called with data:',
+    JSON.stringify(data, null, 2)
+  );
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('saveSearchHistory', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証（従来通り）
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { 
-        success: false, 
-        error: authResult.error 
+      return {
+        success: false,
+        error: authResult.error,
       };
     }
 
     const { companyUserId } = authResult.data;
     console.log('[saveSearchHistory] Company User ID:', companyUserId);
-    
+    // 非破壊の再認可チェック（現状はログのみ）
+    try {
+      const { softReauthorizeForCompany } = await import(
+        '@/lib/server/utils/soft-auth-check'
+      );
+      await softReauthorizeForCompany('saveSearchHistory.auth', {
+        expectedCompanyUserId: companyUserId,
+      });
+    } catch {}
+
     // RLS有効なサーバークライアントを作成
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -76,7 +95,9 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         cookies: {
-          getAll() { return cookieStore.getAll(); },
+          getAll() {
+            return cookieStore.getAll();
+          },
           setAll() {},
         },
       }
@@ -85,7 +106,8 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     // company_usersから現在のユーザー情報を取得（JOINのため.single()は使わない）
     const { data: companyUsers, error: userError } = await supabase
       .from('company_users')
-      .select(`
+      .select(
+        `
         id,
         full_name,
         company_user_group_permissions (
@@ -94,46 +116,67 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
             group_name
           )
         )
-      `)
+      `
+      )
       .eq('id', companyUserId);
 
     if (userError || !companyUsers || companyUsers.length === 0) {
-      console.error('[saveSearchHistory] Error fetching company user:', userError);
+      console.error(
+        '[saveSearchHistory] Error fetching company user:',
+        userError
+      );
       return {
         success: false,
-        error: '企業ユーザー情報の取得に失敗しました: ' + (userError?.message || 'ユーザーが見つかりません')
+        error:
+          '企業ユーザー情報の取得に失敗しました: ' +
+          (userError?.message || 'ユーザーが見つかりません'),
       };
     }
-    
+
     const companyUser = companyUsers[0];
 
     // 指定されたグループにユーザーがアクセス権限を持っているかチェック
     const userGroups = companyUser.company_user_group_permissions || [];
-    console.log('[saveSearchHistory] User groups:', JSON.stringify(userGroups, null, 2));
+    console.log(
+      '[saveSearchHistory] User groups:',
+      JSON.stringify(userGroups, null, 2)
+    );
     console.log('[saveSearchHistory] Looking for group_id:', data.group_id);
-    
-    const targetGroup = userGroups.find((perm: any) => 
-      perm.company_group?.id === data.group_id
+
+    const targetGroup = userGroups.find(
+      (perm: any) => perm.company_group?.id === data.group_id
     );
 
-    console.log('[saveSearchHistory] Found target group:', JSON.stringify(targetGroup, null, 2));
-    
+    console.log(
+      '[saveSearchHistory] Found target group:',
+      JSON.stringify(targetGroup, null, 2)
+    );
+
     // グループ名の取得状況をログ出力
     if (targetGroup) {
       const groupName = targetGroup.company_group?.group_name;
       if (groupName) {
-        console.log('[saveSearchHistory] ✅ グループ名が正常に取得されました:', groupName);
+        console.log(
+          '[saveSearchHistory] ✅ グループ名が正常に取得されました:',
+          groupName
+        );
       } else {
         console.warn('[saveSearchHistory] ⚠️ グループ名が取得できませんでした');
       }
     }
 
     if (!targetGroup) {
-      console.log('[saveSearchHistory] No matching group found for group_id:', data.group_id);
-      console.log('[saveSearchHistory] Available group IDs:', userGroups.map((perm: any) => perm.company_group?.id));
+      console.log(
+        '[saveSearchHistory] No matching group found for group_id:',
+        data.group_id
+      );
+      console.log(
+        '[saveSearchHistory] Available group IDs:',
+        userGroups.map((perm: any) => perm.company_group?.id)
+      );
       return {
         success: false,
-        error: '指定されたグループへのアクセス権限がありません'
+        error: '指定されたグループへのアクセス権限がありません',
       };
     }
 
@@ -149,12 +192,17 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       .limit(1);
 
     if (duplicateError) {
-      console.warn('[saveSearchHistory] Error checking duplicates:', duplicateError);
+      console.warn(
+        '[saveSearchHistory] Error checking duplicates:',
+        duplicateError
+      );
     } else if (recentHistory && recentHistory.length > 0) {
-      console.log('[saveSearchHistory] Duplicate search detected, skipping save');
+      console.log(
+        '[saveSearchHistory] Duplicate search detected, skipping save'
+      );
       return {
         success: true,
-        message: 'Similar search already saved recently'
+        message: 'Similar search already saved recently',
       };
     }
 
@@ -169,9 +217,12 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       is_saved: data.is_saved || false,
       searched_at: new Date().toISOString(),
     };
-    
-    console.log('[saveSearchHistory] Inserting data:', JSON.stringify(insertData, null, 2));
-    
+
+    console.log(
+      '[saveSearchHistory] Inserting data:',
+      JSON.stringify(insertData, null, 2)
+    );
+
     const { data: searchHistory, error: insertError } = await supabase
       .from('search_history')
       .insert(insertData)
@@ -182,22 +233,21 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       console.error('[saveSearchHistory] Insert error:', insertError);
       return {
         success: false,
-        error: '検索履歴の保存に失敗しました'
+        error: '検索履歴の保存に失敗しました',
       };
     }
 
     console.log('[saveSearchHistory] Successfully saved:', searchHistory?.id);
-    
+
     return {
       success: true,
-      data: searchHistory
+      data: searchHistory,
     };
-
   } catch (error) {
     console.error('Save search history error:', error);
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }
@@ -210,25 +260,42 @@ export async function getSearchHistory(
   limit: number = 50,
   offset: number = 0
 ) {
-  console.log('[getSearchHistory] Called with params:', { groupId, limit, offset });
-  
+  console.log('[getSearchHistory] Called with params:', {
+    groupId,
+    limit,
+    offset,
+  });
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('getSearchHistory', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[getSearchHistory] Company auth failed:', authResult.error);
+      console.error(
+        '[getSearchHistory] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
-        error: authResult.error
+        error: authResult.error,
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[getSearchHistory] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[getSearchHistory] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用（RLS無効でWHEREで手動フィルタリング）
     const supabase = getSupabaseAdminClient();
-    
+
     // company_usersから現在のユーザーの権限を取得
     const { data: userPermissions, error: userError } = await supabase
       .from('company_user_group_permissions')
@@ -236,10 +303,13 @@ export async function getSearchHistory(
       .eq('company_user_id', companyUserId);
 
     if (userError || !userPermissions) {
-      console.error('[getSearchHistory] Failed to get user permissions:', userError);
+      console.error(
+        '[getSearchHistory] Failed to get user permissions:',
+        userError
+      );
       return {
         success: false,
-        error: '企業ユーザー情報の取得に失敗しました'
+        error: '企業ユーザー情報の取得に失敗しました',
       };
     }
 
@@ -252,11 +322,14 @@ export async function getSearchHistory(
       console.log('[getSearchHistory] User has no group permissions');
       return {
         success: true,
-        data: []
+        data: [],
       };
     }
 
-    console.log('[getSearchHistory] User has access to groups:', accessibleGroupIds);
+    console.log(
+      '[getSearchHistory] User has access to groups:',
+      accessibleGroupIds
+    );
 
     // 手動でWHEREフィルタリングを適用
     let query = supabase
@@ -271,14 +344,16 @@ export async function getSearchHistory(
       if (!accessibleGroupIds.includes(groupId)) {
         return {
           success: false,
-          error: '指定されたグループへのアクセス権限がありません'
+          error: '指定されたグループへのアクセス権限がありません',
         };
       }
       console.log('[getSearchHistory] Filtering by specific group:', groupId);
       query = query.eq('group_id', groupId);
     }
 
-    console.log('[getSearchHistory] Executing query with manual WHERE filtering...');
+    console.log(
+      '[getSearchHistory] Executing query with manual WHERE filtering...'
+    );
     const { data: searchHistories, error: fetchError } = await query;
 
     if (fetchError) {
@@ -286,33 +361,38 @@ export async function getSearchHistory(
         message: fetchError.message,
         details: fetchError.details,
         hint: fetchError.hint,
-        code: fetchError.code
+        code: fetchError.code,
       });
       return {
         success: false,
-        error: '検索履歴の取得に失敗しました'
+        error: '検索履歴の取得に失敗しました',
       };
     }
 
-    console.log('[getSearchHistory] Query successful, found items:', searchHistories?.length || 0);
+    console.log(
+      '[getSearchHistory] Query successful, found items:',
+      searchHistories?.length || 0
+    );
     if (searchHistories && searchHistories.length > 0) {
-      console.log('[getSearchHistory] Sample item:', JSON.stringify(searchHistories[0], null, 2));
+      console.log(
+        '[getSearchHistory] Sample item:',
+        JSON.stringify(searchHistories[0], null, 2)
+      );
     }
 
     return {
       success: true,
-      data: searchHistories || []
+      data: searchHistories || [],
     };
-
   } catch (error) {
     console.error('[getSearchHistory] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }
@@ -320,22 +400,41 @@ export async function getSearchHistory(
 /**
  * 検索履歴の保存状態を更新する（サーバーサイドでWHEREによる手動フィルタリング）
  */
-export async function updateSearchHistorySavedStatus(historyId: string, isSaved: boolean) {
-  console.log('[updateSearchHistorySavedStatus] Called with:', { historyId, isSaved });
-  
+export async function updateSearchHistorySavedStatus(
+  historyId: string,
+  isSaved: boolean
+) {
+  console.log('[updateSearchHistorySavedStatus] Called with:', {
+    historyId,
+    isSaved,
+  });
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('updateSearchHistorySavedStatus', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[updateSearchHistorySavedStatus] Company auth failed:', authResult.error);
+      console.error(
+        '[updateSearchHistorySavedStatus] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
-        error: authResult.error
+        error: authResult.error,
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[updateSearchHistorySavedStatus] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[updateSearchHistorySavedStatus] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -349,19 +448,23 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
     if (!userPermissions || userPermissions.length === 0) {
       return {
         success: false,
-        error: 'アクセス権限がありません'
+        error: 'アクセス権限がありません',
       };
     }
 
-    const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
 
-    console.log('[updateSearchHistorySavedStatus] Executing update query with access control...');
+    console.log(
+      '[updateSearchHistorySavedStatus] Executing update query with access control...'
+    );
     // 手動でアクセス制御を適用して更新
     const { data: updated, error: updateError } = await supabase
       .from('search_history')
       .update({
         is_saved: isSaved,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', historyId)
       .in('group_id', accessibleGroupIds) // アクセス可能なグループのみ
@@ -373,29 +476,28 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
         message: updateError.message,
         details: updateError.details,
         hint: updateError.hint,
-        code: updateError.code
+        code: updateError.code,
       });
       return {
         success: false,
-        error: '検索履歴の更新に失敗しました'
+        error: '検索履歴の更新に失敗しました',
       };
     }
 
     console.log('[updateSearchHistorySavedStatus] Update successful');
     return {
       success: true,
-      data: updated
+      data: updated,
     };
-
   } catch (error) {
     console.error('[updateSearchHistorySavedStatus] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }
@@ -405,72 +507,92 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
  */
 export async function getCompanyGroups() {
   console.log('[getCompanyGroups] Called');
-  
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('getCompanyGroups', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[getCompanyGroups] Company auth failed:', authResult.error);
+      console.error(
+        '[getCompanyGroups] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
         error: authResult.error,
-        data: []
+        data: [],
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[getCompanyGroups] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[getCompanyGroups] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用
     const supabase = getSupabaseAdminClient();
-    
+
     // company_usersから現在のユーザーの権限を取得
     const { data: userPermissions, error: userError } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         company_group:company_groups (
           id,
           group_name
         )
-      `)
+      `
+      )
       .eq('company_user_id', companyUserId);
 
     if (userError || !userPermissions) {
-      console.error('[getCompanyGroups] Failed to get user permissions:', userError);
+      console.error(
+        '[getCompanyGroups] Failed to get user permissions:',
+        userError
+      );
       return {
         success: false,
         error: '企業ユーザー情報の取得に失敗しました',
-        data: []
+        data: [],
       };
     }
 
     // グループデータを整形
-    console.log('[getCompanyGroups] Raw userPermissions:', JSON.stringify(userPermissions, null, 2));
-    
+    console.log(
+      '[getCompanyGroups] Raw userPermissions:',
+      JSON.stringify(userPermissions, null, 2)
+    );
+
     const groups = userPermissions
       .map((perm: any) => perm.company_group)
       .filter((group: any) => group && group.id && group.group_name)
       .map((group: any) => ({
         id: group.id,
-        name: group.group_name
+        name: group.group_name,
       }));
 
     console.log('[getCompanyGroups] Successfully retrieved groups:', groups);
     return {
       success: true,
-      data: groups
+      data: groups,
     };
-
   } catch (error) {
     console.error('[getCompanyGroups] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
       error: 'サーバーエラーが発生しました',
-      data: []
+      data: [],
     };
   }
 }
@@ -478,22 +600,41 @@ export async function getCompanyGroups() {
 /**
  * 検索条件名を更新する（サーバーサイドでWHEREによる手動フィルタリング）
  */
-export async function updateSearchHistoryTitle(historyId: string, searchTitle: string) {
-  console.log('[updateSearchHistoryTitle] Called with:', { historyId, searchTitle });
-  
+export async function updateSearchHistoryTitle(
+  historyId: string,
+  searchTitle: string
+) {
+  console.log('[updateSearchHistoryTitle] Called with:', {
+    historyId,
+    searchTitle,
+  });
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('updateSearchHistoryTitle', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[updateSearchHistoryTitle] Company auth failed:', authResult.error);
+      console.error(
+        '[updateSearchHistoryTitle] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
-        error: authResult.error
+        error: authResult.error,
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[updateSearchHistoryTitle] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[updateSearchHistoryTitle] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -507,19 +648,23 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
     if (!userPermissions || userPermissions.length === 0) {
       return {
         success: false,
-        error: 'アクセス権限がありません'
+        error: 'アクセス権限がありません',
       };
     }
 
-    const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
 
-    console.log('[updateSearchHistoryTitle] Executing update query with access control...');
+    console.log(
+      '[updateSearchHistoryTitle] Executing update query with access control...'
+    );
     // 手動でアクセス制御を適用して更新
     const { data: updated, error: updateError } = await supabase
       .from('search_history')
       .update({
         search_title: searchTitle,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', historyId)
       .in('group_id', accessibleGroupIds) // アクセス可能なグループのみ
@@ -531,29 +676,28 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
         message: updateError.message,
         details: updateError.details,
         hint: updateError.hint,
-        code: updateError.code
+        code: updateError.code,
       });
       return {
         success: false,
-        error: '検索条件名の更新に失敗しました'
+        error: '検索条件名の更新に失敗しました',
       };
     }
 
     console.log('[updateSearchHistoryTitle] Update successful');
     return {
       success: true,
-      data: updated
+      data: updated,
     };
-
   } catch (error) {
     console.error('[updateSearchHistoryTitle] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }
@@ -563,44 +707,62 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
  */
 export async function getUserDefaultGroupId() {
   console.log('[getUserDefaultGroupId] Called');
-  
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('getUserDefaultGroupId', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[getUserDefaultGroupId] Company auth failed:', authResult.error);
+      console.error(
+        '[getUserDefaultGroupId] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
         error: authResult.error,
-        data: null
+        data: null,
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[getUserDefaultGroupId] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[getUserDefaultGroupId] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用
     const supabase = getSupabaseAdminClient();
-    
+
     // company_usersから現在のユーザーの最初のグループを取得（デフォルトとして使用）
     const { data: userPermissions, error: userError } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         company_group:company_groups (
           id,
           group_name
         )
-      `)
+      `
+      )
       .eq('company_user_id', companyUserId)
       .limit(1)
       .single();
 
     if (userError || !userPermissions) {
-      console.error('[getUserDefaultGroupId] Failed to get user permissions:', userError);
+      console.error(
+        '[getUserDefaultGroupId] Failed to get user permissions:',
+        userError
+      );
       return {
         success: false,
         error: '企業ユーザー情報の取得に失敗しました',
-        data: null
+        data: null,
       };
     }
 
@@ -610,29 +772,31 @@ export async function getUserDefaultGroupId() {
       return {
         success: false,
         error: 'ユーザーにグループが割り当てられていません',
-        data: null
+        data: null,
       };
     }
 
-    console.log('[getUserDefaultGroupId] Successfully retrieved default group:', group);
+    console.log(
+      '[getUserDefaultGroupId] Successfully retrieved default group:',
+      group
+    );
     return {
       success: true,
       data: {
         id: group.id,
-        name: group.group_name
-      }
+        name: group.group_name,
+      },
     };
-
   } catch (error) {
     console.error('[getUserDefaultGroupId] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
       error: 'サーバーエラーが発生しました',
-      data: null
+      data: null,
     };
   }
 }
@@ -642,20 +806,33 @@ export async function getUserDefaultGroupId() {
  */
 export async function deleteSearchHistory(historyId: string) {
   console.log('[deleteSearchHistory] Called with:', { historyId });
-  
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('deleteSearchHistory', {});
+  } catch {}
+
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[deleteSearchHistory] Company auth failed:', authResult.error);
+      console.error(
+        '[deleteSearchHistory] Company auth failed:',
+        authResult.error
+      );
       return {
         success: false,
-        error: authResult.error
+        error: authResult.error,
       };
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[deleteSearchHistory] Company auth successful, user ID:', companyUserId);
+    console.log(
+      '[deleteSearchHistory] Company auth successful, user ID:',
+      companyUserId
+    );
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -669,13 +846,17 @@ export async function deleteSearchHistory(historyId: string) {
     if (!userPermissions || userPermissions.length === 0) {
       return {
         success: false,
-        error: 'アクセス権限がありません'
+        error: 'アクセス権限がありません',
       };
     }
 
-    const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
 
-    console.log('[deleteSearchHistory] Executing delete query with access control...');
+    console.log(
+      '[deleteSearchHistory] Executing delete query with access control...'
+    );
     // 手動でアクセス制御を適用して削除
     const { error: deleteError } = await supabase
       .from('search_history')
@@ -688,29 +869,27 @@ export async function deleteSearchHistory(historyId: string) {
         message: deleteError.message,
         details: deleteError.details,
         hint: deleteError.hint,
-        code: deleteError.code
+        code: deleteError.code,
       });
       return {
         success: false,
-        error: '検索履歴の削除に失敗しました'
+        error: '検索履歴の削除に失敗しました',
       };
     }
 
     console.log('[deleteSearchHistory] Delete successful');
     return {
-      success: true
+      success: true,
     };
-
   } catch (error) {
     console.error('[deleteSearchHistory] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      error
+      error,
     });
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }
-

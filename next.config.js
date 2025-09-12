@@ -34,6 +34,7 @@ const nextConfig = {
               'upgrade-insecure-requests',
             ].join('; '),
           },
+          // Report-Only は middleware 側で nonce を付与して動的に適用
           // HTTP Strict Transport Security
           {
             key: 'Strict-Transport-Security',
@@ -72,6 +73,11 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
+      // 悪性オリジンからのserver actions呼び出しを抑止（非破壊: 本番での適用想定）
+      allowedOrigins:
+        process.env.NODE_ENV === 'production'
+          ? ['https://mokin-recruit-client.vercel.app']
+          : undefined,
     },
     optimizePackageImports: [
       '@supabase/supabase-js',

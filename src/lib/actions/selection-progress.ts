@@ -6,7 +6,12 @@ export interface SelectionProgressUpdateParams {
   candidateId: string;
   companyGroupId: string;
   jobPostingId?: string;
-  stage: 'document_screening' | 'first_interview' | 'secondary_interview' | 'final_interview' | 'offer';
+  stage:
+    | 'document_screening'
+    | 'first_interview'
+    | 'secondary_interview'
+    | 'final_interview'
+    | 'offer';
   result: 'pass' | 'fail';
   applicationId?: string;
   scoutSendId?: string;
@@ -24,6 +29,14 @@ export async function updateSelectionProgressAction({
   applicationId,
   scoutSendId,
 }: SelectionProgressUpdateParams) {
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('updateSelectionProgressAction', {});
+  } catch {}
+
   try {
     const supabase = await getSupabaseServerClient();
 
@@ -72,7 +85,7 @@ export async function updateSelectionProgressAction({
     }
 
     let response;
-    
+
     if (existingProgress) {
       // 既存レコードを更新
       response = await supabase
@@ -103,12 +116,12 @@ export async function updateSelectionProgressAction({
       success: true,
       data: response.data,
     };
-
   } catch (error) {
     console.error('進捗更新エラー:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラーが発生しました',
+      error:
+        error instanceof Error ? error.message : '不明なエラーが発生しました',
     };
   }
 }
@@ -116,13 +129,25 @@ export async function updateSelectionProgressAction({
 /**
  * 選考進捗を取得するaction
  */
-export async function getSelectionProgressAction(candidateId: string, companyGroupId: string) {
+export async function getSelectionProgressAction(
+  candidateId: string,
+  companyGroupId: string
+) {
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('getSelectionProgressAction', {});
+  } catch {}
+
   try {
     const supabase = await getSupabaseServerClient();
 
     const { data, error } = await supabase
       .from('selection_progress')
-      .select(`
+      .select(
+        `
         *,
         company_groups (
           group_name
@@ -130,12 +155,14 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
         job_postings (
           title
         )
-      `)
+      `
+      )
       .eq('candidate_id', candidateId)
       .eq('company_group_id', companyGroupId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is "not found" error
       console.error('進捗取得エラー:', error);
       return {
         success: false,
@@ -144,22 +171,24 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
     }
 
     // データを整形して返す
-    const formattedData = data ? {
-      ...data,
-      group_name: data.company_groups?.group_name || '',
-      job_title: data.job_postings?.title || ''
-    } : null;
+    const formattedData = data
+      ? {
+          ...data,
+          group_name: data.company_groups?.group_name || '',
+          job_title: data.job_postings?.title || '',
+        }
+      : null;
 
     return {
       success: true,
       data: formattedData,
     };
-
   } catch (error) {
     console.error('進捗取得エラー:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラーが発生しました',
+      error:
+        error instanceof Error ? error.message : '不明なエラーが発生しました',
     };
   }
 }
