@@ -63,7 +63,7 @@ export function GroupNameChangeModal({
             />
             
             {/* Description */}
-            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium leading-[1.6] tracking-[1.4px] text-[#999999] w-full text-center">
+            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium leading-[1.6] tracking-[1.4px] text-[#999999] w-full flex justify-start items-start text-center">
               グループ名は候補者にも公開されます。
             </div>
           </div>

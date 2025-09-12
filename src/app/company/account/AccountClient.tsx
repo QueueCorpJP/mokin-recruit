@@ -78,7 +78,7 @@ interface Member {
   id: string;
   name: string;
   email: string;
-  permission: 'admin' | 'member' | 'viewer';
+  permission: 'admin' | 'scout' | 'recruiter' | 'member' | 'viewer';
 }
 
 interface Group {
@@ -91,9 +91,19 @@ export interface AccountProps {
   company?: {
     companyName: string;
     representativeName: string;
+    representativePosition: string;
     industryList: string[];
     companyOverview: string;
     headquartersAddress: string;
+    iconUrl?: string | null;
+    imageUrls?: string[];
+    companyUrls?: Array<{ title: string; url: string }>;
+    establishedYear?: number | null;
+    capitalAmount?: number | null;
+    capitalUnit?: string;
+    employeesCount?: number | null;
+    companyPhase?: string;
+    companyAttractions?: Array<{ title: string; content: string }>;
   };
   groups?: Group[];
 }
@@ -237,13 +247,27 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
     newRoleUi: 'admin' | 'scout' | 'recruiter';
   } | null>(null);
 
+  // SelectInputの強制再レンダリング用キー
+  const [selectInputKeys, setSelectInputKeys] = useState<Record<string, number>>({});
+
   const handlePermissionSelect = (groupId: string, member: Member, newUiRoleValue: string) => {
     // 現在の表示値とは異なる場合にのみモーダル
     const currentUi = member.permission; // 'admin' | 'member' | 'viewer'（モック）
     // UI仕様に合わせ、セレクトは admin/scout/recruiter を使う
     const nextUi = (newUiRoleValue as 'admin' | 'scout' | 'recruiter');
     if (!nextUi) return;
-    if (currentUi === nextUi) return;
+    
+    // 現在の権限と新しい権限の比較（UIレベルで）
+    const currentUiDisplay = member.permission === 'admin' ? 'admin' : 'scout';
+    if (currentUiDisplay === nextUi) return;
+    
+    // SelectInputを元の値にリセットするため、キーを更新して強制再レンダリング
+    const memberKey = `${groupId}-${member.id}`;
+    setSelectInputKeys(prev => ({
+      ...prev,
+      [memberKey]: (prev[memberKey] || 0) + 1
+    }));
+    
     setPermTarget({ groupId, memberId: member.id, memberName: member.name, newRoleUi: nextUi });
   };
 
@@ -321,7 +345,17 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
     }
   };
 
-  const closePermModal = () => setPermTarget(null);
+  const closePermModal = () => {
+    // モーダルキャンセル時はSelectInputを強制的に元の値に戻すため再レンダリング
+    if (permTarget) {
+      const memberKey = `${permTarget.groupId}-${permTarget.memberId}`;
+      setSelectInputKeys(prev => ({
+        ...prev,
+        [memberKey]: (prev[memberKey] || 0) + 1
+      }));
+    }
+    setPermTarget(null);
+  };
 
   const handleConfirmPermissionChange = async () => {
     if (!permTarget) return;
@@ -349,6 +383,14 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
           return group;
         })
       );
+      
+      // SelectInputの強制再レンダリングキーをクリア（正常に更新されたため）
+      const memberKey = `${permTarget.groupId}-${permTarget.memberId}`;
+      setSelectInputKeys(prev => {
+        const newKeys = { ...prev };
+        delete newKeys[memberKey];
+        return newKeys;
+      });
       
       setPermTarget(null);
     } catch (e) {
@@ -429,19 +471,35 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                     URL
                   </div>
                 </div>
-                <div className="flex items-center py-6 gap-2">
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    URLタイトルテキスト
-                  </div>
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    https://
-                  </div>
+                <div className="flex flex-col py-6 gap-2">
+                  {company?.companyUrls && company.companyUrls.length > 0 ? (
+                    company.companyUrls.map((urlItem, index) => (
+                      <div key={index} className="flex gap-4 items-center">
+                        <div
+                          className="text-[16px] font-medium text-[#323232] tracking-[1.6px] min-w-[120px]"
+                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                        >
+                          {urlItem.title}
+                        </div>
+                        <a
+                          href={urlItem.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[16px] font-medium text-blue-600 tracking-[1.6px] hover:underline"
+                          style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                        >
+                          {urlItem.url}
+                        </a>
+                      </div>
+                    ))
+                  ) : (
+                    <div
+                      className="text-[16px] font-medium text-gray-500 tracking-[1.6px]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      未設定
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -456,14 +514,30 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                   </div>
                 </div>
                 <div className="flex items-start py-6">
-                  <div className="w-[100px] h-[100px] rounded-full overflow-hidden relative">
-                    <Image
-                      src="/images/account-sample.png"
-                      alt="企業アイコン"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  {company?.iconUrl ? (
+                    <div className="w-[100px] h-[100px] rounded-full overflow-hidden border-2 border-gray-300">
+                      <img 
+                        src={company.iconUrl} 
+                        alt="企業アイコン"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-[100px] h-[100px] rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                      <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 40 40"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M20 0C8.954 0 0 8.954 0 20s8.954 20 20 20 20-8.954 20-20S31.046 0 20 0zm0 6c3.315 0 6 2.685 6 6s-2.685 6-6 6-6-2.685-6-6 2.685-6 6-6zm0 28.4c-5 0-9.42-2.58-12-6.48.06-3.96 8.04-6.12 12-6.12s11.94 2.16 12 6.12c-2.58 3.9-7 6.48-12 6.48z"
+                          fill="#9CA3AF"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -482,7 +556,7 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    代表者役職名テキスト
+                    {company?.representativePosition ?? '未設定'}
                   </div>
                   <div
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
@@ -504,18 +578,29 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                   </div>
                 </div>
                 <div className="flex items-center py-6 gap-2">
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    2020
-                  </div>
-                  <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    年
-                  </div>
+                  {company?.establishedYear ? (
+                    <>
+                      <div
+                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        {company.establishedYear}
+                      </div>
+                      <div
+                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        年
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="text-[16px] font-medium text-gray-500 tracking-[1.6px] leading-[2]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      未設定
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -530,18 +615,29 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                   </div>
                 </div>
                 <div className="flex items-center py-6 gap-2">
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    100
-                  </div>
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    万円
-                  </div>
+                  {company?.capitalAmount ? (
+                    <>
+                      <div
+                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        {company.capitalAmount.toLocaleString()}
+                      </div>
+                      <div
+                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        {company.capitalUnit || '万円'}
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="text-[16px] font-medium text-gray-500 tracking-[1.6px] leading-[2]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      未設定
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -556,18 +652,29 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                   </div>
                 </div>
                 <div className="flex items-center py-6 gap-2">
-                  <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    100
-                  </div>
-                  <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px] leading-[2]"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  >
-                    人
-                  </div>
+                  {company?.employeesCount ? (
+                    <>
+                      <div
+                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        {company.employeesCount.toLocaleString()}
+                      </div>
+                      <div
+                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px] leading-[2]"
+                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                      >
+                        人
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="text-[16px] font-medium text-gray-500 tracking-[1.6px] leading-[2]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      未設定
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -662,7 +769,7 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                     className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
-                    テキストが入ります。
+                    {company?.companyPhase || '未設定'}
                   </div>
                 </div>
               </div>
@@ -677,31 +784,36 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                     イメージ画像
                   </div>
                 </div>
-                <div className="flex items-start py-6 gap-4">
-                  <div className="w-[200px] h-[133px] bg-gray-200 rounded-[5px] overflow-hidden relative">
-                    <Image
-                      src="/images/account-sample-2.png"
-                      alt="企業画像1"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="w-[200px] h-[133px] bg-gray-200 rounded-[5px] overflow-hidden relative">
-                    <Image
-                      src="/images/account-sample-2.png"
-                      alt="企業画像2"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="w-[200px] h-[133px] bg-gray-200 rounded-[5px] overflow-hidden relative">
-                    <Image
-                      src="/images/account-sample-2.png"
-                      alt="企業画像3"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                <div className="flex items-start py-6 gap-4 flex-wrap">
+                  {company?.imageUrls && company.imageUrls.length > 0 ? (
+                    company.imageUrls.slice(0, 6).map((url, index) => (
+                      <div key={index} className="w-[200px] h-[133px] rounded-[5px] border-2 border-gray-300 overflow-hidden">
+                        <img 
+                          src={url} 
+                          alt={`企業画像${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    // プレースホルダー画像を3つ表示
+                    Array.from({length: 3}).map((_, index) => (
+                      <div key={index} className="w-[200px] h-[133px] bg-gray-200 rounded-[5px] border-2 border-gray-300 flex items-center justify-center">
+                        <svg
+                          width="48"
+                          height="48"
+                          viewBox="0 0 48 48"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M38 6H10C7.79 6 6 7.79 6 10v28c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V10c0-2.21-1.79-4-4-4zM17 27l5 6.01L29 24l9 12H10l7-9z"
+                            fill="#9CA3AF"
+                          />
+                        </svg>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -716,40 +828,33 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                   </div>
                 </div>
                 <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-6">
-                    <div>
-                      <div
-                        className="text-[18px] font-bold text-[#323232] tracking-[1.8px] leading-[1.6] mb-1"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        見出しテキストが入ります。
-                      </div>
-                      <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                        <br />
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                      </div>
+                  {company?.companyAttractions && company.companyAttractions.length > 0 ? (
+                    <div className="flex flex-col gap-6">
+                      {company.companyAttractions.map((attraction, index) => (
+                        <div key={index}>
+                          <div
+                            className="text-[18px] font-bold text-[#323232] tracking-[1.8px] leading-[1.6] mb-1"
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            {attraction.title}
+                          </div>
+                          <div
+                            className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] whitespace-pre-line"
+                            style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          >
+                            {attraction.content}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <div
-                        className="text-[18px] font-bold text-[#323232] tracking-[1.8px] leading-[1.6] mb-1"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        見出しテキストが入ります。
-                      </div>
-                      <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
-                        style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                      >
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                        <br />
-                        テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。テキストが入ります。
-                      </div>
+                  ) : (
+                    <div
+                      className="text-[16px] font-medium text-gray-500 tracking-[1.6px] leading-[2]"
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    >
+                      未設定
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -835,6 +940,7 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                         </div>
                         <div className="w-60">
                           <SelectInput
+                            key={`${group.id}-${member.id}-${selectInputKeys[`${group.id}-${member.id}`] || 0}`}
                             options={[
                               { value: 'admin', label: '管理者' },
                               { value: 'scout', label: 'スカウト担当者' },
@@ -848,7 +954,10 @@ export default function AccountClient({ company, groups: groupsProp }: AccountPr
                                   : 'scout'
                             }
                             placeholder="権限を選択"
-                            onChange={(value: string) => handlePermissionSelect(group.id, member, value)}
+                            onChange={(value: string) => {
+                              // 権限変更の確認モーダルを表示（実際の変更は承認後）
+                              handlePermissionSelect(group.id, member, value);
+                            }}
                             className=''
                           />
                         </div>

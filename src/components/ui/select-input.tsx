@@ -103,7 +103,7 @@ export function SelectInput({
         ? '年収：'
         : 'アピールポイント：';
       const base = `${prefix}${selectedOption.label}`;
-      displayText = base.length > 19 ? base.slice(0, 19) + '...' : base;
+      displayText = base.length > 30 ? base.slice(0, 30) + '...' : base;
     } else {
       displayText = placeholder;
     }

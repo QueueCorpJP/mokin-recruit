@@ -71,29 +71,13 @@ export async function getCompanyAccountForEdit(): Promise<
   const { data, error } = await supabase
     .from('company_accounts')
     .select(
-      'company_name, representative_name, representative_position, industry, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, business_content, prefecture, address, company_attractions'
+      'company_name, representative_name, representative_position, industry, industries, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, business_content, prefecture, address, company_attractions'
     )
     .eq('id', companyAccountId)
     .maybeSingle();
 
   if (error || !data) {
     return { success: false, error: '企業情報の取得に失敗しました' };
-  }
-
-  const industryText: string = data.industry || '';
-  const industries = industryText ? findIndustriesByNames([industryText]) : [];
-
-  // 都道府県の推定分割（一致しなければ住所に全体を入れる）
-  const prefectureList = [...prefectureNamesForMatch, '海外'];
-  const fullAddress: string = data.headquarters_address || '';
-  let prefecture = '';
-  let address = '';
-  const hit = prefectureList.find(p => fullAddress.startsWith(p));
-  if (hit) {
-    prefecture = hit;
-    address = fullAddress.slice(hit.length).trim();
-  } else {
-    address = fullAddress;
   }
 
   // Parse JSON fields safely
@@ -107,6 +91,45 @@ export async function getCompanyAccountForEdit(): Promise<
     }
     return field ?? defaultValue;
   };
+
+  // industries (jsonb) フィールドを優先し、なければ古い industry フィールドを使用
+  let industries: Industry[] = [];
+  
+  if (data.industries) {
+    // industries フィールドがある場合（新しい形式）
+    const industriesData = parseJsonField(data.industries, []);
+    if (Array.isArray(industriesData) && industriesData.length > 0) {
+      // industriesが業種名の配列の場合
+      if (typeof industriesData[0] === 'string') {
+        industries = findIndustriesByNames(industriesData);
+      }
+      // industriesが {id, name} オブジェクトの配列の場合
+      else if (typeof industriesData[0] === 'object' && industriesData[0].name) {
+        industries = industriesData.filter((item: any) => item && item.name);
+      }
+    }
+  }
+  
+  // industries が空で、古い industry フィールドがある場合は fallback
+  if (industries.length === 0 && data.industry) {
+    const industryText: string = data.industry;
+    industries = findIndustriesByNames([industryText]);
+  }
+  
+  const industryText = industries.map(i => i.name).join(', ') || data.industry || '';
+
+  // 都道府県の推定分割（一致しなければ住所に全体を入れる）
+  const prefectureList = [...prefectureNamesForMatch, '海外'];
+  const fullAddress: string = data.headquarters_address || '';
+  let prefecture = '';
+  let address = '';
+  const hit = prefectureList.find(p => fullAddress.startsWith(p));
+  if (hit) {
+    prefecture = hit;
+    address = fullAddress.slice(hit.length).trim();
+  } else {
+    address = fullAddress;
+  }
 
   const companyUrls = parseJsonField(data.company_urls, []);
   const companyAttractions = parseJsonField(data.company_attractions, []);
@@ -171,7 +194,7 @@ export async function saveCompanyAccountEdit(
   const { data: current, error: fetchError } = await supabase
     .from('company_accounts')
     .select(
-      'representative_name, representative_position, industry, headquarters_address, company_overview, business_content, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, prefecture, address, company_attractions'
+      'representative_name, representative_position, industry, industries, headquarters_address, company_overview, business_content, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, prefecture, address, company_attractions'
     )
     .eq('id', companyAccountId)
     .maybeSingle();
@@ -194,6 +217,14 @@ export async function saveCompanyAccountEdit(
   }
   if ((current.industry || '') !== primaryIndustry) {
     updateData.industry = primaryIndustry;
+  }
+  
+  // industries フィールドにも保存（新しい複数業種対応）
+  const currentIndustries = current.industries ? 
+    (typeof current.industries === 'string' ? JSON.parse(current.industries) : current.industries) : [];
+  const newIndustries = input.industries.map(i => ({ id: i.id, name: i.name }));
+  if (JSON.stringify(currentIndustries) !== JSON.stringify(newIndustries)) {
+    updateData.industries = JSON.stringify(newIndustries);
   }
   if ((current.headquarters_address || '') !== headquartersAddress) {
     updateData.headquarters_address = headquartersAddress;
