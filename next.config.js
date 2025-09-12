@@ -31,48 +31,56 @@ const nextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
-              "upgrade-insecure-requests"
-            ].join('; ')
+              'upgrade-insecure-requests',
+            ].join('; '),
           },
           // HTTP Strict Transport Security
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           // X-Frame-Options (CSP frame-ancestorsと併用)
           {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'DENY',
           },
           // X-Content-Type-Options
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           // Referrer Policy
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'strict-origin-when-cross-origin',
           },
           // Permissions Policy
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+            value:
+              'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
           // X-DNS-Prefetch-Control
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'off'
-          }
-        ]
-      }
-    ]
+            value: 'off',
+          },
+        ],
+      },
+    ];
   },
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb', // Server Actionsのボディサイズ制限を5MBに設定
     },
-    optimizePackageImports: ['@supabase/supabase-js'],
+    optimizePackageImports: [
+      '@supabase/supabase-js',
+      'lucide-react',
+      '@heroicons/react',
+      '@radix-ui/react-select',
+      '@radix-ui/react-checkbox',
+      '@tiptap/react',
+    ],
     swcPlugins: [],
     // 開発時の最適化
     turbo: {
@@ -85,15 +93,28 @@ const nextConfig = {
     },
     // 開発時のコンパイル最適化
     esmExternals: 'loose',
-    // SWCミニファイヤーを使用
-    swcMinify: true,
   },
   distDir: '.next',
+  // SWCミニファイヤーの明示（デフォルトtrueだが明示化）
+  swcMinify: true,
   compiler: {
     // SWC compiler options for JSX
     styledComponents: false,
     reactRemoveProperties: false,
+    // 本番ではconsole.*を除去（warn/errorは維持）し、バンドルサイズ削減
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] }
+        : false,
   },
+  // import { Icon } from 'lucide-react' → 個別アイコンに自動変換し解析負荷を低減
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+  },
+  // 本番のブラウザ向けソースマップを無効化してビルド時間と配信サイズを軽減
+  productionBrowserSourceMaps: false,
   // 開発時のパフォーマンス最適化
   onDemandEntries: {
     // ページが60秒間アクセスされない場合、メモリから削除
@@ -148,11 +169,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: '**',   // すべてのホスト許可
+        hostname: '**', // すべてのホスト許可
       },
       {
         protocol: 'https',
-        hostname: '**',   // すべてのホスト許可
+        hostname: '**', // すべてのホスト許可
       },
       {
         protocol: 'https',
@@ -177,12 +198,12 @@ const nextConfig = {
         hostname: '*.vercel.app',
         port: '',
         pathname: '/**',
-      }
+      },
     ],
     // 画像最適化設定
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ['image/webp'],
+    formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
     // SVGファイルは通常のimgタグで扱い、Next.js Image最適化は無効にする
     dangerouslyAllowSVG: false,

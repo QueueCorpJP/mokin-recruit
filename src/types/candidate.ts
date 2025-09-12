@@ -37,4 +37,18 @@ export interface JobCardData {
 // Favorite status map for batch lookups
 export type FavoriteStatusMap = Record<string, boolean>;
 
-
+// UIで参照される可能性のある候補者概要（既存のCandidateDataが散在するため補完用）
+export interface CandidateData {
+  id: string;
+  name?: string;
+  position?: string;
+  location?: string;
+  age?: string | number;
+  gender?: string;
+  salary?: string;
+  degree?: string;
+  university?: string;
+  languageLevel?: string;
+  lastLogin?: string;
+  [key: string]: any;
+}

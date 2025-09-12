@@ -12,9 +12,7 @@ import WorkLocationSelectModal from '@/components/career-status/WorkLocationSele
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
 import { CandidateCard } from '@/components/company/CandidateCard';
 import { filterCandidatesByConditions } from '@/lib/utils/candidateSearch';
-import {
-  loadSearchParamsToStore,
-} from './actions';
+import { loadSearchParamsToStore } from './actions';
 import { saveSearchConditions } from '../actions';
 import { generateSearchTitle } from '@/lib/utils/search-history';
 import {
@@ -211,16 +209,14 @@ function generateSearchConditionText(searchStore: any): {
     conditions.push(`年齢：${min}${separator}${max}`);
   }
 
-  // 勤務地
-  if (searchStore.workLocations && searchStore.workLocations.length > 0) {
-    const validLocations = searchStore.workLocations.filter(
-      (loc: any) => loc && loc !== 'undefined'
-    );
-    if (validLocations.length > 0) {
+  // 希望勤務地（storeのdesiredLocationsに合わせる）
+  if (searchStore.desiredLocations && searchStore.desiredLocations.length > 0) {
+    const names = (searchStore.desiredLocations as any[])
+      .map((l: any) => (typeof l === 'string' ? l : l?.name))
+      .filter((loc: any) => loc && loc !== 'undefined');
+    if (names.length > 0) {
       const locationText =
-        validLocations.length > 2
-          ? `${validLocations.slice(0, 2).join('/')}他`
-          : validLocations.join('/');
+        names.length > 2 ? `${names.slice(0, 2).join('/')}他` : names.join('/');
       conditions.push(`勤務地：${locationText}`);
     }
   }
@@ -228,14 +224,15 @@ function generateSearchConditionText(searchStore: any): {
   // 条件が何もない場合
   if (conditions.length === 0) {
     return {
-      title: 'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円',
+      title:
+        'キーワード検索：テキストが入ります、経験職種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、経験業種：職種テキスト ○年/職種テキスト ○年/職種テキスト ○年、現在の年収：〇〇万円',
       description: '',
     };
   }
 
   // 最初の条件をタイトル、残りを説明にする
   return {
-    title: conditions[0],
+    title: conditions[0] ?? '',
     description: conditions.slice(1).join('、'),
   };
 }
@@ -253,6 +250,9 @@ export default function SearchClient({
   initialSearchParams,
   initialCompanyGroups = [],
 }: SearchClientProps = {}) {
+  // 入力初期値の未定義を安全に扱う
+  initialSearchParams = initialSearchParams ?? {};
+  initialCompanyGroups = initialCompanyGroups ?? [];
   const searchParams = useSearchParams();
   const router = useRouter();
   const searchStore = useSearchStore();
@@ -282,7 +282,9 @@ export default function SearchClient({
   // ページネーション関連のstate
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12); // 12件に戻す
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
+    null
+  );
   const [isSlidePanelOpen, setIsSlidePanelOpen] = useState(false);
 
   // フィルター処理
@@ -347,24 +349,26 @@ export default function SearchClient({
 
   // ソート処理
   const sortedCandidates = useMemo(() => {
-    const candidatesToSort = [...filteredCandidates];
+    const base = Array.isArray(filteredCandidates) ? filteredCandidates : [];
+    const candidatesToSort = [...base];
 
     // 最終ログイン日時をパースする共通関数
-    const parseLastLogin = (loginStr: string) => {
-      if (loginStr.includes('時間前')) {
-        const hours = parseInt(loginStr.replace('時間前', ''));
+    const parseLastLogin = (loginStr?: string) => {
+      const s = loginStr ?? '';
+      if (s.includes('時間前')) {
+        const hours = parseInt(s.replace('時間前', ''));
         return new Date(Date.now() - hours * 60 * 60 * 1000);
       }
-      if (loginStr.includes('日前')) {
-        const days = parseInt(loginStr.replace('日前', ''));
+      if (s.includes('日前')) {
+        const days = parseInt(s.replace('日前', ''));
         return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
       }
-      if (loginStr.includes('週間前')) {
-        const weeks = parseInt(loginStr.replace('週間前', ''));
+      if (s.includes('週間前')) {
+        const weeks = parseInt(s.replace('週間前', ''));
         return new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
       }
       // 日本語の日付形式 "2024年1月15日" を解析
-      const dateMatch = loginStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      const dateMatch = s.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
       if (dateMatch) {
         return new Date(
           parseInt(dateMatch[1]),
@@ -379,32 +383,32 @@ export default function SearchClient({
       case 'featured':
         // 注目順：注目タブがついている候補者ユーザーを優先表示
         // いずれも上記条件内で、会員登録日時降順で表示
-        return candidatesToSort.sort((a, b) => {
+        return candidatesToSort.sort((a: any, b: any) => {
           // まず注目タブで分ける
-          if (a.isAttention && !b.isAttention) return -1;
-          if (!a.isAttention && b.isAttention) return 1;
+          if (a?.isAttention && !b?.isAttention) return -1;
+          if (!a?.isAttention && b?.isAttention) return 1;
           // 同じカテゴリ内では会員登録日時（ID）降順
-          return b.id - a.id;
+          return (b?.id ?? 0) - (a?.id ?? 0);
         });
 
       case 'newest':
         // 新着順：会員登録日時降順で候補者ユーザーを表示
-        return candidatesToSort.sort((a, b) => b.id - a.id);
+        return candidatesToSort.sort(
+          (a: any, b: any) => (b?.id ?? 0) - (a?.id ?? 0)
+        );
 
       case 'updated':
         // 更新順：会員情報の更新日時降順で候補者ユーザーを表示
         // いずれも上記条件内で、会員登録日時降順で表示
-        return candidatesToSort.sort((a, b) => {
+        return candidatesToSort.sort((a: any, b: any) => {
           // updatedAtがある場合はそれを使用、なければlastLoginを使用（暫定的に更新日時として扱う）
-          const dateA = a.updatedAt
+          const dateA = a?.updatedAt
             ? new Date(a.updatedAt)
-            : parseLastLogin(a.lastLogin);
-          const dateB = b.updatedAt
+            : parseLastLogin(a?.lastLogin ?? '');
+          const dateB = b?.updatedAt
             ? new Date(b.updatedAt)
-            : parseLastLogin(b.lastLogin);
-          const timeDiff = dateB.getTime() - dateA.getTime();
-          // 更新日時が同じ場合は会員登録日時（ID）降順
-          return timeDiff !== 0 ? timeDiff : b.id - a.id;
+            : parseLastLogin(b?.lastLogin ?? '');
+          return (dateB?.getTime?.() ?? 0) - (dateA?.getTime?.() ?? 0);
         });
 
       case 'lastLogin':
@@ -438,13 +442,12 @@ export default function SearchClient({
     searchStore.experienceIndustries,
     searchStore.currentSalaryMin,
     searchStore.currentSalaryMax,
-    searchStore.workLocations,
+    searchStore.desiredLocations,
     searchStore.desiredJobTypes,
     searchStore.desiredIndustries,
     searchStore.ageMin,
     searchStore.ageMax,
     searchStore.lastLoginMin,
-    searchStore.lastLoginMax,
   ]);
 
   // 検索実行ハンドラー
@@ -467,12 +470,14 @@ export default function SearchClient({
 
       // 検索グループを必ず含める
       if (searchStore.searchGroup) {
-        params.set('search_group', searchStore.searchGroup);
+        if (searchStore.searchGroup) {
+          params.set('search_group', searchStore.searchGroup);
+        }
       }
 
       // 検索条件をURLパラメータに追加
       if (searchStore.keyword?.trim()) {
-        params.set('keyword', searchStore.keyword.trim());
+        params.set('keyword', (searchStore.keyword ?? '').trim());
       }
 
       if (searchStore.experienceJobTypes?.length > 0) {
@@ -494,19 +499,27 @@ export default function SearchClient({
       }
 
       if (searchStore.currentSalaryMin) {
-        params.set('current_salary_min', searchStore.currentSalaryMin);
+        if (searchStore.currentSalaryMin) {
+          params.set('current_salary_min', searchStore.currentSalaryMin);
+        }
       }
 
       if (searchStore.currentSalaryMax) {
-        params.set('current_salary_max', searchStore.currentSalaryMax);
+        if (searchStore.currentSalaryMax) {
+          params.set('current_salary_max', searchStore.currentSalaryMax);
+        }
       }
 
       if (searchStore.ageMin) {
-        params.set('age_min', searchStore.ageMin);
+        if (searchStore.ageMin) {
+          params.set('age_min', searchStore.ageMin);
+        }
       }
 
       if (searchStore.ageMax) {
-        params.set('age_max', searchStore.ageMax);
+        if (searchStore.ageMax) {
+          params.set('age_max', searchStore.ageMax);
+        }
       }
 
       if (searchStore.desiredJobTypes?.length > 0) {
@@ -537,15 +550,21 @@ export default function SearchClient({
       }
 
       if (searchStore.education) {
-        params.set('education', searchStore.education);
+        if (searchStore.education) {
+          params.set('education', searchStore.education);
+        }
       }
 
       if (searchStore.englishLevel) {
-        params.set('english_level', searchStore.englishLevel);
+        if (searchStore.englishLevel) {
+          params.set('english_level', searchStore.englishLevel);
+        }
       }
 
       if (searchStore.qualifications) {
-        params.set('qualifications', searchStore.qualifications);
+        if (searchStore.qualifications) {
+          params.set('qualifications', searchStore.qualifications);
+        }
       }
 
       // URLを更新
@@ -576,19 +595,24 @@ export default function SearchClient({
 
       const results = await searchCandidatesWithConditions(searchConditions);
 
-      console.log('✅ [SearchClient] 検索結果を受信:', results.length, '件');
+      const safeResults = Array.isArray(results) ? results : [];
+      console.log(
+        '✅ [SearchClient] 検索結果を受信:',
+        safeResults.length,
+        '件'
+      );
 
-      if (results.length > 0) {
+      if (safeResults.length > 0) {
         console.log('👥 [SearchClient] 検索結果サンプル:', {
-          id: results[0].id,
-          companyName: results[0].companyName,
-          position: results[0].position,
+          id: safeResults[0]?.id,
+          companyName: (safeResults[0] as any)?.companyName,
+          position: (safeResults[0] as any)?.position,
         });
       } else {
         console.log('⚠️ [SearchClient] 検索結果が0件です');
       }
 
-      setCandidates(results);
+      setCandidates(safeResults as any);
 
       // 検索ボックスを閉じる
       setIsSearchBoxOpen(false);
@@ -699,18 +723,21 @@ export default function SearchClient({
           console.log(
             '📊 [SearchClient] 初期データがないため、getCandidatesFromDatabaseを呼び出し中...'
           );
-          const candidatesData = await getCandidatesFromDatabase();
+          const candidatesDataRaw = await getCandidatesFromDatabase();
+          const candidatesData = Array.isArray(candidatesDataRaw)
+            ? candidatesDataRaw
+            : [];
           console.log(
             '✅ [SearchClient] 初期候補者データを取得:',
             candidatesData.length,
             '件'
           );
 
-          if (candidatesData.length > 0) {
+          if (candidatesData && candidatesData.length > 0) {
             console.log('👥 [SearchClient] 初期データサンプル:', {
-              id: candidatesData[0].id,
-              companyName: candidatesData[0].companyName,
-              position: candidatesData[0].position,
+              id: candidatesData[0]?.id,
+              companyName: (candidatesData[0] as any)?.companyName,
+              position: (candidatesData[0] as any)?.position,
             });
           }
 
@@ -720,19 +747,36 @@ export default function SearchClient({
 
         // グループIDが設定されていない場合、ユーザーのデフォルトグループIDを取得
         if (!searchStore.searchGroup) {
-          console.log('🔍 [SearchClient] グループIDが未設定のため、デフォルトグループIDを取得中...');
+          console.log(
+            '🔍 [SearchClient] グループIDが未設定のため、デフォルトグループIDを取得中...'
+          );
           try {
-            const { getUserDefaultGroupId } = await import('@/lib/actions/search-history');
+            const { getUserDefaultGroupId } = await import(
+              '@/lib/actions/search-history'
+            );
             const defaultGroupResult = await getUserDefaultGroupId();
-            
-            if (defaultGroupResult.success && defaultGroupResult.data) {
-              console.log('✅ [SearchClient] デフォルトグループIDを取得:', defaultGroupResult.data.id);
-              searchStore.setSearchGroup(defaultGroupResult.data.id);
+
+            if (
+              defaultGroupResult &&
+              (defaultGroupResult as any).success &&
+              (defaultGroupResult as any).data
+            ) {
+              console.log(
+                '✅ [SearchClient] デフォルトグループIDを取得:',
+                (defaultGroupResult as any).data.id
+              );
+              searchStore.setSearchGroup((defaultGroupResult as any).data.id);
             } else {
-              console.error('❌ [SearchClient] デフォルトグループIDの取得に失敗:', defaultGroupResult.error);
+              console.error(
+                '⚠️ [SearchClient] デフォルトグループIDの取得に失敗:',
+                defaultGroupResult
+              );
             }
           } catch (error) {
-            console.error('❌ [SearchClient] デフォルトグループID取得時エラー:', error);
+            console.error(
+              '❌ [SearchClient] デフォルトグループID取得時エラー:',
+              error
+            );
           }
         }
 
@@ -819,7 +863,7 @@ export default function SearchClient({
     }
 
     try {
-      const currentCandidate = candidates.find(c => c.id === candidateId);
+      const currentCandidate = candidates.find(c => c?.id === candidateId);
       const isSaved = savedCandidateIds.includes(candidateId);
 
       if (isSaved) {
@@ -911,14 +955,24 @@ export default function SearchClient({
       locations: searchStore.desiredLocations.map(l => l.name),
       work_styles: searchStore.workStyles.map(w => w.name),
       education_levels: searchStore.education ? [searchStore.education] : [],
-      skills: searchStore.qualifications ? searchStore.qualifications.split(',').filter(Boolean) : [],
-      salary_min: searchStore.currentSalaryMin ? parseInt(searchStore.currentSalaryMin) : undefined,
-      salary_max: searchStore.currentSalaryMax ? parseInt(searchStore.currentSalaryMax) : undefined,
+      skills: searchStore.qualifications
+        ? searchStore.qualifications.split(',').filter(Boolean)
+        : [],
+      salary_min: searchStore.currentSalaryMin
+        ? parseInt(searchStore.currentSalaryMin)
+        : undefined,
+      salary_max: searchStore.currentSalaryMax
+        ? parseInt(searchStore.currentSalaryMax)
+        : undefined,
       language_skills: [],
       desired_job_types: searchStore.desiredJobTypes.map(j => j.name),
       desired_industries: searchStore.desiredIndustries.map(i => i.name),
-      desired_salary_min: searchStore.desiredSalaryMin ? parseInt(searchStore.desiredSalaryMin) : undefined,
-      desired_salary_max: searchStore.desiredSalaryMax ? parseInt(searchStore.desiredSalaryMax) : undefined,
+      desired_salary_min: searchStore.desiredSalaryMin
+        ? parseInt(searchStore.desiredSalaryMin)
+        : undefined,
+      desired_salary_max: searchStore.desiredSalaryMax
+        ? parseInt(searchStore.desiredSalaryMax)
+        : undefined,
       current_company: searchStore.currentCompany || '',
       english_level: searchStore.englishLevel || '',
       other_language: searchStore.otherLanguage || '',
@@ -935,12 +989,14 @@ export default function SearchClient({
 
     try {
       // ブックマーク付きで検索履歴に保存
-      const { saveSearchHistory } = await import('@/lib/actions/search-history');
+      const { saveSearchHistory } = await import(
+        '@/lib/actions/search-history'
+      );
       const result = await saveSearchHistory({
         group_id: searchStore.searchGroup,
         search_conditions: searchData,
         search_title: searchTitle,
-        is_saved: true  // ブックマークとして保存
+        is_saved: true, // ブックマークとして保存
       });
 
       if (result.success) {
@@ -1308,7 +1364,7 @@ export default function SearchClient({
                               onChange={(value: string) =>
                                 searchStore.setOtherLanguage(value)
                               }
-                              className="w-48"
+                              className='w-48'
                               options={[
                                 { value: '', label: '指定なし' },
                                 { value: 'chinese', label: '中国語' },
@@ -1335,7 +1391,7 @@ export default function SearchClient({
                               onChange={(value: string) =>
                                 searchStore.setOtherLanguageLevel(value)
                               }
-                              className="w-52"
+                              className='w-52'
                               options={[
                                 { value: '', label: 'レベルの指定なし' },
                                 { value: 'native', label: 'ネイティブ' },
@@ -2419,7 +2475,7 @@ export default function SearchClient({
                               className='text-[#323232] text-[12px] font-medium tracking-[1.2px]'
                               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                             >
-                              英語／{candidate.languageLevel}
+                              英語／{(candidate as any)?.languageLevel ?? '-'}
                             </span>
                           </div>
                         </div>
@@ -2427,7 +2483,7 @@ export default function SearchClient({
                           className='text-[#999999] text-[12px] font-medium tracking-[1.2px]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
-                          最終ログイン：{candidate.lastLogin}
+                          最終ログイン：{(candidate as any)?.lastLogin ?? '-'}
                         </div>
                       </div>
 
@@ -2679,7 +2735,6 @@ export default function SearchClient({
         candidateId={selectedCandidateId || undefined}
         companyGroupId={searchStore.searchGroup}
       />
-
     </>
   );
 }
