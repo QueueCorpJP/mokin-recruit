@@ -1,7 +1,6 @@
 import React from 'react';
 import { ScoutTemplateClient } from './ScoutTemplateClient';
 import { getScoutTemplates, getJobPostings } from './actions';
-import { redirect } from 'next/navigation';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 
 export const dynamic = 'force-dynamic';
