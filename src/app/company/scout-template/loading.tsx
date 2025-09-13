@@ -1,22 +1,81 @@
 export default function Loading() {
   return (
-    <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
-      <main className='w-full max-w-[960px] mx-auto'>
-        <div className='h-7 w-48 bg-gray-200 rounded animate-pulse mb-6' />
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className='bg-white rounded-xl p-6 shadow-sm'>
-              <div className='flex items-center justify-between'>
-                <div className='h-5 w-1/3 bg-gray-200 rounded animate-pulse' />
-                <div className='h-6 w-16 bg-gray-200 rounded-full animate-pulse' />
-              </div>
-              <div className='mt-3 h-4 w-2/3 bg-gray-100 rounded animate-pulse' />
-              <div className='mt-4 h-4 w-1/2 bg-gray-100 rounded animate-pulse' />
-            </div>
-          ))}
+    <>
+      {/* ヒーロー */}
+      <div
+        className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10'
+        style={{ background: 'linear-gradient(to top, #17856f, #229a4e)' }}
+      >
+        <div className='w-full max-w-[1200px] mx-auto'>
+          <div className='flex items-center gap-4'>
+            <div className='w-8 h-8 bg-white/40 rounded animate-pulse' />
+            <div className='h-7 w-56 bg-white/60 rounded animate-pulse' />
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* フィルター */}
+        <div className='w-full max-w-[1200px] mx-auto mt-10'>
+          <div className='flex flex-col bg-white rounded-[10px] p-6 min-[1200px]:p-10 gap-4'>
+            <div className='flex flex-col min-[1200px]:flex-row gap-6 min-[1200px]:gap-10 items-start'>
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <div className='h-5 w-16 bg-gray-200 rounded animate-pulse' />
+                <div className='h-10 w-60 bg-gray-100 rounded-lg animate-pulse' />
+              </div>
+              <div className='flex flex-col min-[1200px]:flex-row items-start min-[1200px]:items-center gap-2 min-[1200px]:gap-4 w-full min-[1200px]:w-auto'>
+                <div className='h-5 w-24 bg-gray-200 rounded animate-pulse' />
+                <div className='h-10 w-60 bg-gray-100 rounded-lg animate-pulse' />
+              </div>
+            </div>
+            <div className='flex gap-4 w-[700px]'>
+              <div className='h-5 w-64 bg-gray-200 rounded animate-pulse' />
+              <div className='flex-1 h-10 bg-gray-100 rounded-[8px] animate-pulse' />
+              <div className='h-8 w-20 bg-[#D2F1DA] rounded animate-pulse' />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 本文 */}
+      <div className='bg-[#f9f9f9] px-20 pt-10 pb-20 min-h-[577px]'>
+        <div className='w-full max-w-[1200px] mx-auto'>
+          {/* 上部アクション */}
+          <div className='flex justify-between items-center mb-10'>
+            <div className='min-w-[200px] h-[42px] rounded-[32px] bg-[#BFDFF5] animate-pulse' />
+            <div className='flex items-center gap-2'>
+              <div className='h-4 w-4 bg-gray-200 rounded animate-pulse' />
+              <div className='h-4 w-28 bg-gray-200 rounded animate-pulse' />
+              <div className='h-4 w-4 bg-gray-200 rounded animate-pulse' />
+            </div>
+          </div>
+
+          {/* テーブルヘッダー */}
+          <div className='flex items-center px-10 pb-2 border-b border-[#dcdcdc]'>
+            <div className='w-[164px] h-5 bg-gray-200 rounded animate-pulse' />
+            <div className='w-[180px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+            <div className='w-[180px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+            <div className='w-[200px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+            <div className='w-[180px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+            <div className='flex-1 h-5 bg-gray-200 rounded animate-pulse ml-6' />
+            <div className='w-[24px]' />
+          </div>
+
+          {/* 行 */}
+          <div className='flex flex-col gap-2 mt-2'>
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+                <div className='w-[164px] h-[28px] bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] animate-pulse' />
+                <div className='w-[180px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+                <div className='w-[180px] h-5 bg-gray-100 rounded animate-pulse ml-6' />
+                <div className='w-[200px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+                <div className='w-[180px] h-5 bg-gray-200 rounded animate-pulse ml-6' />
+                <div className='flex-1 h-5 bg-gray-200 rounded animate-pulse ml-6' />
+                <div className='w-[24px] h-6 bg-gray-200 rounded ml-6 animate-pulse' />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

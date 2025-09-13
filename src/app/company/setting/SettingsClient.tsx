@@ -43,8 +43,8 @@ export default function SettingsClient({ initialUserSettings, initialNotificatio
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <SettingsHeader
-        breadcrumbs={[{ label: '各種設定' }]}
-        title="各種設定"
+        breadcrumbs={[{ label: '' }]}
+        title="プロフィール・設定"
         icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
 
@@ -242,6 +242,7 @@ export default function SettingsClient({ initialUserSettings, initialNotificatio
             </div>
 
           </div>
+          <p className="text-sm md:text-base text-[#323232] tracking-[1.2px] md:tracking-[1.6px] font-medium">休会・退会をご希望の場合は、<a href="/company/contact" className="text-[#0f9058]">お問い合わせフォーム</a>よりご連絡ください</p>
         </div>
       </div>
     </div>

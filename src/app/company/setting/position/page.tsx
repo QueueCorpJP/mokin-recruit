@@ -71,10 +71,10 @@ export default function PositionPage() {
       <div className="min-h-screen bg-[#f9f9f9]">
         <SettingsHeader
           breadcrumbs={[
-            { label: '各種設定', href: '/company/setting' },
-            { label: '部署・役職変更' }
+            { label: 'プロフィール・設定', href: '/company/setting' },
+            { label: '部署・役職名変更' }
           ]}
-          title="部署・役職変更"
+          title="部署・役職名変更"
           icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
         />
         <div className="px-4 md:px-20 py-10">
@@ -94,10 +94,10 @@ export default function PositionPage() {
     <div className="min-h-screen bg-[#f9f9f9]">
       <SettingsHeader
         breadcrumbs={[
-          { label: '各種設定', href: '/company/setting' },
-          { label: '部署・役職変更' }
+          { label: 'プロフィール・設定', href: '/company/setting' },
+          { label: '部署・役職名変更' }
         ]}
-        title="部署・役職変更"
+        title="部署・役職名変更"
         icon={<Image src="/images/setting.svg" alt="設定" width={32} height={32} />}
       />
       

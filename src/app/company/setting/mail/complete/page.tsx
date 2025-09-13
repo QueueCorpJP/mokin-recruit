@@ -45,7 +45,7 @@ export default function MailCompletePage() {
     <div className="min-h-screen bg-[#f9f9f9]">
       <SettingsHeader
         breadcrumbs={[
-          { label: '各種設定', href: '/company/setting' },
+          { label: 'プロフィール・設定', href: '/company/setting' },
           { label: 'メールアドレス変更', href: '/company/setting/mail' },
           { label: 'メールアドレス変更完了' }
         ]}

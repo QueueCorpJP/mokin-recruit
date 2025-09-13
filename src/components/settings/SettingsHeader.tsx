@@ -19,7 +19,7 @@ export function SettingsHeader({ breadcrumbs, title, icon }: SettingsHeaderProps
   return (
     <div className="bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 md:px-20 py-6 md:py-10">
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {breadcrumbs.map((item, index) => (
+        {breadcrumbs?.map((item, index) => (
           <React.Fragment key={index}>
             {index > 0 && (
               <ChevronRight className="w-3 h-3 text-white" />
