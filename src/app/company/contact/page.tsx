@@ -10,15 +10,34 @@ export default async function ContactPage() {
   // 親レイアウト（CompanyLayoutClient）で認証処理が統一されているため、
   // ここでは認証チェックを削除
   const user = await getCachedCompanyUser();
-  
+
   // ユーザーが存在しない場合のデフォルト値を設定
   if (!user) {
     return (
-      <div className='pt-10 px-20 pb-20 flex justify-center w-full' style={{ background: '#F9F9F9' }}>
+      <div
+        className='pt-10 px-20 pb-20 flex justify-center w-full'
+        style={{ background: '#F9F9F9' }}
+      >
         <div className='w-full max-w-[800px]'>
-          <div className='w-full bg-white flex flex-col gap-10' style={{ borderRadius: '10px', boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)', padding: '80px 87px' }}>
+          <div
+            className='w-full bg-white flex flex-col gap-10'
+            style={{
+              borderRadius: '10px',
+              boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+              padding: '80px 87px',
+            }}
+          >
             <div className='flex flex-col items-center gap-6 w-full'>
-              <h1 className='w-full font-bold text-center' style={{ fontSize: '32px', lineHeight: '160%', color: '#0F9058', fontWeight: 'bold', textAlign: 'center' }}>
+              <h1
+                className='w-full font-bold text-center'
+                style={{
+                  fontSize: '32px',
+                  lineHeight: '160%',
+                  color: '#0F9058',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                }}
+              >
                 お問い合わせ／申請
               </h1>
               <p>認証が必要です。</p>
@@ -35,41 +54,64 @@ export default async function ContactPage() {
   const companyUserId = user.user_metadata?.company_user_id || user.id;
   const { data: companyUser, error: userError } = await supabase
     .from('company_users')
-    .select(`
+    .select(
+      `
       email,
       full_name,
       company_accounts!inner(
         company_name
       )
-    `)
+    `
+    )
     .eq('id', companyUserId)
     .single();
 
   // ユーザーが所属するグループを取得
   const { data: userGroups, error: groupsError } = await supabase
     .from('company_user_group_permissions')
-    .select(`
+    .select(
+      `
       company_groups(
         id,
         group_name
       )
-    `)
+    `
+    )
     .eq('company_user_id', companyUserId);
 
-  const groups = userGroups?.map(item => item.company_groups).filter(Boolean) || [];
+  const groups =
+    userGroups?.map(item => item.company_groups).filter(Boolean) || [];
 
   if (groupsError) {
-    console.error('グループ情報取得エラー:', groupsError);
+    // Handle error silently
   }
 
   if (userError || !companyUser) {
-    console.error('企業ユーザー情報取得エラー:', userError);
     return (
-      <div className='pt-10 px-20 pb-20 flex justify-center w-full' style={{ background: '#F9F9F9' }}>
+      <div
+        className='pt-10 px-20 pb-20 flex justify-center w-full'
+        style={{ background: '#F9F9F9' }}
+      >
         <div className='w-full max-w-[800px]'>
-          <div className='w-full bg-white flex flex-col gap-10' style={{ borderRadius: '10px', boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)', padding: '80px 87px' }}>
+          <div
+            className='w-full bg-white flex flex-col gap-10'
+            style={{
+              borderRadius: '10px',
+              boxShadow: '0px 0px 20px 0px rgba(0,0,0,0.05)',
+              padding: '80px 87px',
+            }}
+          >
             <div className='flex flex-col items-center gap-6 w-full'>
-              <h1 className='w-full font-bold text-center' style={{ fontSize: '32px', lineHeight: '160%', color: '#0F9058', fontWeight: 'bold', textAlign: 'center' }}>
+              <h1
+                className='w-full font-bold text-center'
+                style={{
+                  fontSize: '32px',
+                  lineHeight: '160%',
+                  color: '#0F9058',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                }}
+              >
                 お問い合わせ／申請
               </h1>
               <p>企業情報の取得に失敗しました。</p>
@@ -127,7 +169,7 @@ export default async function ContactPage() {
                 サービスに登録されているメールアドレス宛に担当者よりご返信いたします。
               </p>
             </div>
-            
+
             {/* 企業情報の表示 */}
             <div className='flex flex-col gap-6 w-full'>
               <div className='flex w-full justify-end'>
@@ -155,7 +197,9 @@ export default async function ContactPage() {
                     }}
                   >
                     {(() => {
-                      const accounts = companyUser.company_accounts as any;
+                      const accounts = companyUser.company_accounts as
+                        | { company_name?: string }
+                        | { company_name?: string }[];
                       if (Array.isArray(accounts) && accounts.length > 0) {
                         return accounts[0]?.company_name || 'データなし';
                       } else if (accounts && accounts.company_name) {
@@ -195,9 +239,11 @@ export default async function ContactPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* フォーム部分はクライアントコンポーネントに移管 */}
-            <ContactFormClient groups={groups as any} />
+            <ContactFormClient
+              groups={groups as { id: string; name: string }[]}
+            />
           </div>
         </div>
       </div>

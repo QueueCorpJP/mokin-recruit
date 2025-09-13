@@ -25,14 +25,18 @@ const JobPostCard = lazy(() =>
 // フッター部分をdynamic importで遅延読み込み
 const FooterSection = lazy(() =>
   Promise.resolve({
-    default: ({ notices, router }: { notices: Notice[], router: any }) => (
+    default: ({
+      notices,
+      router,
+    }: {
+      notices: Notice[];
+      router: ReturnType<typeof useRouter>;
+    }) => (
       <div className='w-full md:max-w-[320px] md:flex-none'>
         {/* 3セクションをflex縦並びでラップ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
           {/* お知らせ一覧セクション */}
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <SectionHeading
               iconSrc='/images/oshirase.svg'
               iconAlt='お知らせアイコン'
@@ -40,9 +44,7 @@ const FooterSection = lazy(() =>
               お知らせ一覧
             </SectionHeading>
             {notices.length === 0 ? (
-              <div
-                style={{ padding: 24, textAlign: 'center', color: '#999' }}
-              >
+              <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>
                 現在お知らせはありません。
               </div>
             ) : (
@@ -148,9 +150,7 @@ const FooterSection = lazy(() =>
             quality={75}
           />
           {/* FAQ/QAセクション */}
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <SectionHeading
               iconSrc='/images/question.svg'
               iconAlt='よくある質問アイコン'
@@ -228,7 +228,7 @@ const FooterSection = lazy(() =>
           </div>
         </div>
       </div>
-    )
+    ),
   })
 );
 
@@ -254,7 +254,7 @@ interface JobPosting {
   job_type?: string[];
   industry?: string[];
   starred?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Task {
@@ -323,13 +323,11 @@ export function CandidateDashboardClient({
             )
           );
         } else {
-          console.error('お気に入り操作エラー:', response.error);
           alert(response.error || 'お気に入り操作に失敗しました');
         }
         setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
       });
-    } catch (error) {
-      console.error('お気に入り操作エラー:', error);
+    } catch {
       alert(
         'ネットワークエラーが発生しました。インターネット接続を確認してください。'
       );
@@ -707,11 +705,17 @@ export function CandidateDashboardClient({
           <Suspense
             fallback={
               <div className='w-full md:max-w-[320px] md:flex-none'>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 80 }}
+                >
                   <div className='h-7 w-40 bg-gray-200 rounded animate-pulse mb-4' />
                   <div className='space-y-3 mb-6'>
-                    {[0,1,2].map(i => (
-                      <div key={i} className='bg-white p-4 rounded-lg' style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}>
+                    {[0, 1, 2].map(i => (
+                      <div
+                        key={i}
+                        className='bg-white p-4 rounded-lg'
+                        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
+                      >
                         <div className='h-3 w-24 bg-gray-100 rounded animate-pulse mb-2' />
                         <div className='h-5 w-3/4 bg-gray-200 rounded animate-pulse' />
                       </div>
@@ -720,8 +724,12 @@ export function CandidateDashboardClient({
                   <div className='w-full h-[200px] bg-gray-200 rounded-lg animate-pulse mb-20' />
                   <div className='h-7 w-40 bg-gray-200 rounded animate-pulse mb-4' />
                   <div className='space-y-3'>
-                    {[0,1].map(i => (
-                      <div key={i} className='bg-white p-4 rounded-lg' style={{ boxShadow: "0 0 20px rgba(0,0,0,0.05)" }}>
+                    {[0, 1].map(i => (
+                      <div
+                        key={i}
+                        className='bg-white p-4 rounded-lg'
+                        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
+                      >
                         <div className='h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2' />
                         <div className='h-4 w-2/3 bg-gray-100 rounded animate-pulse' />
                       </div>
