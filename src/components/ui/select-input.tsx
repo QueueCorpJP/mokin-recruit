@@ -11,7 +11,6 @@ interface SelectOption {
 
 interface SelectInputProps {
   options: SelectOption[];
-  value?: string;
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;
@@ -19,7 +18,7 @@ interface SelectInputProps {
   className?: string;
   style?: React.CSSProperties;
   radius?: number;
-  onChange?: (value: string) => void;
+  onChange?: (selectedValue: string) => void;
   onBlur?: () => void;
   onFocus?: () => void;
   onOpen?: () => void;
@@ -67,7 +66,6 @@ const DropdownIcon = ({
 
 export function SelectInput({
   options = [],
-  value = '',
   placeholder = '選択してください',
   disabled = false,
   error = false,
@@ -84,10 +82,11 @@ export function SelectInput({
   'data-testid': testId,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(value);
+  const [selectedValue, setSelectedValue] = useState('');
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const selectRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+
 
   // 選択された項目のラベルを取得
   const selectedOption = options.find(option => option.value === selectedValue);
@@ -128,10 +127,6 @@ export function SelectInput({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onBlur, onClose, isOpen]);
 
-  // propsのvalueが変更された時に内部状態を同期
-  useEffect(() => {
-    setSelectedValue(value);
-  }, [value]);
 
   // ドロップダウンの位置を計算
   useEffect(() => {
@@ -190,7 +185,7 @@ export function SelectInput({
 
     switch (event.key) {
       case 'Enter':
-      case ' ':
+      case ' ': {
         event.preventDefault();
         const newIsOpen = !isOpen;
         setIsOpen(newIsOpen);
@@ -200,6 +195,7 @@ export function SelectInput({
           onClose?.();
         }
         break;
+      }
       case 'Escape':
         setIsOpen(false);
         onClose?.();
@@ -316,7 +312,7 @@ export function SelectInput({
           ref={listRef}
           className={cn(
             // 基本スタイル
-            'absolute left-0 right-0 z-[9999]',
+            'absolute left-0 right-0 z-[99999]',
             'bg-white border border-[#999999] rounded-[8px]',
             'shadow-[0_4px_12px_0_rgba(0,0,0,0.15)]',
             'max-h-60 overflow-y-auto',

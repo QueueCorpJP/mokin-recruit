@@ -2,7 +2,14 @@ import { Suspense } from 'react';
 import CompanyLayoutClient from './CompanyLayoutClient';
 import { getServerAuth } from '@/lib/auth/server';
 import { CompanyNavigationWrapper } from '@/components/layout/CompanyNavigationWrapper';
-import { CompanyFooterWrapper } from '@/components/layout/CompanyFooterWrapper';
+import dynamic from 'next/dynamic';
+
+const CompanyFooterWrapper = dynamic(
+  () => import('@/components/layout/CompanyFooterWrapper').then(mod => ({ default: mod.CompanyFooterWrapper })),
+  {
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
+  }
+);
 
 // dynamic はデフォルト挙動に委譲（不要な再レンダリング抑制）
 

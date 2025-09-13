@@ -22,6 +22,216 @@ const JobPostCard = lazy(() =>
   }))
 );
 
+// フッター部分をdynamic importで遅延読み込み
+const FooterSection = lazy(() =>
+  Promise.resolve({
+    default: ({
+      notices,
+      router,
+    }: {
+      notices: Notice[];
+      router: ReturnType<typeof useRouter>;
+    }) => (
+      <div className='w-full md:max-w-[320px] md:flex-none'>
+        {/* 3セクションをflex縦並びでラップ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
+          {/* お知らせ一覧セクション */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <SectionHeading
+              iconSrc='/images/oshirase.svg'
+              iconAlt='お知らせアイコン'
+            >
+              お知らせ一覧
+            </SectionHeading>
+            {notices.length === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>
+                現在お知らせはありません。
+              </div>
+            ) : (
+              notices.map(notice => (
+                <div
+                  key={notice.id}
+                  style={{
+                    background: '#fff',
+                    padding: '15px 24px',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      lineHeight: '160%',
+                      color: '#999999',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                      display: 'block',
+                      marginBottom: 4,
+                    }}
+                  >
+                    {new Date(
+                      notice.published_at || notice.created_at
+                    ).toLocaleDateString('ja-JP')}
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: '#323232',
+                      lineHeight: '200%',
+                      fontFamily:
+                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                    }}
+                  >
+                    {notice.title}
+                  </div>
+                </div>
+              ))
+            )}
+            {/* お知らせ一覧を見るリンクボックス */}
+            <div
+              style={{
+                background: '#fff',
+                padding: '15px 24px',
+                borderRadius: '8px',
+                boxSizing: 'border-box',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                fontWeight: 700,
+                boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                gap: 8,
+              }}
+              onClick={() => router.push('/candidate/news')}
+            >
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#0F9058',
+                  lineHeight: '200%',
+                  fontFamily:
+                    'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                  whiteSpace: 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  wordBreak: 'break-word',
+                }}
+              >
+                お知らせ一覧を見る
+              </span>
+              <Image
+                src='/images/arrow.svg'
+                alt='arrow'
+                width={12}
+                height={12}
+                loading='lazy'
+                style={{ display: 'block' }}
+              />
+            </div>
+          </div>
+          {/* バナー画像を表示 */}
+          <Image
+            src='/images/banner01.png'
+            alt='バナー画像01'
+            width={800}
+            height={200}
+            className='w-full h-auto block rounded-lg'
+            loading='lazy'
+            priority={false}
+            sizes='(max-width: 768px) 100vw, 320px'
+            quality={75}
+          />
+          {/* FAQ/QAセクション */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <SectionHeading
+              iconSrc='/images/question.svg'
+              iconAlt='よくある質問アイコン'
+            >
+              よくある質問
+            </SectionHeading>
+            {/* FAQボックス（ダミー） */}
+            <Suspense
+              fallback={
+                <div
+                  style={{
+                    padding: 24,
+                    textAlign: 'center',
+                    color: '#999',
+                  }}
+                >
+                  FAQ読み込み中...
+                </div>
+              }
+            >
+              <FaqBox
+                title='退会したい場合はどうすればいいですか？'
+                body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
+              />
+              <FaqBox
+                title='パスワードを忘れた場合はどうすればいいですか？'
+                body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
+              />
+            </Suspense>
+            {/* QA一覧を見るリンクボックス（ダミー） */}
+            <div
+              style={{
+                background: '#fff',
+                padding: '15px 24px',
+                borderRadius: '8px',
+                boxSizing: 'border-box',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                fontWeight: 700,
+                boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#0F9058',
+                  lineHeight: '200%',
+                  fontFamily:
+                    'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                  whiteSpace: 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  wordBreak: 'break-word',
+                }}
+              >
+                Q&A一覧を見る
+              </span>
+              <Image
+                src='/images/arrow.svg'
+                alt='arrow'
+                width={12}
+                height={12}
+                loading='lazy'
+                style={{ display: 'block' }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  })
+);
+
 interface User {
   id: string;
   email: string;
@@ -44,7 +254,7 @@ interface JobPosting {
   job_type?: string[];
   industry?: string[];
   starred?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Task {
@@ -82,7 +292,7 @@ export function CandidateDashboardClient({
   notices,
 }: CandidateDashboardClientProps) {
   const router = useRouter();
-  const [_isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [jobList, setJobList] = useState<JobPosting[]>(jobs);
   const [favoriteLoading, setFavoriteLoading] = useState<
     Record<string, boolean>
@@ -113,13 +323,11 @@ export function CandidateDashboardClient({
             )
           );
         } else {
-          console.error('お気に入り操作エラー:', response.error);
           alert(response.error || 'お気に入り操作に失敗しました');
         }
         setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
       });
-    } catch (error) {
-      console.error('お気に入り操作エラー:', error);
+    } catch {
       alert(
         'ネットワークエラーが発生しました。インターネット接続を確認してください。'
       );
@@ -494,208 +702,45 @@ export function CandidateDashboardClient({
             </div>
           </div>
           {/* 右カラム（FAQ/バナー） */}
-          <div className='w-full md:max-w-[320px] md:flex-none'>
-            {/* 3セクションをflex縦並びでラップ */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 80 }}>
-              {/* お知らせ一覧セクション */}
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <SectionHeading
-                  iconSrc='/images/oshirase.svg'
-                  iconAlt='お知らせアイコン'
+          <Suspense
+            fallback={
+              <div className='w-full md:max-w-[320px] md:flex-none'>
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 80 }}
                 >
-                  お知らせ一覧
-                </SectionHeading>
-                {notices.length === 0 ? (
-                  <div
-                    style={{ padding: 24, textAlign: 'center', color: '#999' }}
-                  >
-                    現在お知らせはありません。
-                  </div>
-                ) : (
-                  notices.map(notice => (
-                    <div
-                      key={notice.id}
-                      style={{
-                        background: '#fff',
-                        padding: '15px 24px',
-                        borderRadius: '8px',
-                        boxSizing: 'border-box',
-                        width: '100%',
-                        boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          lineHeight: '160%',
-                          color: '#999999',
-                          fontFamily:
-                            'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                          display: 'block',
-                          marginBottom: 4,
-                        }}
-                      >
-                        {new Date(
-                          notice.published_at || notice.created_at
-                        ).toLocaleDateString('ja-JP')}
-                      </span>
+                  <div className='h-7 w-40 bg-gray-200 rounded animate-pulse mb-4' />
+                  <div className='space-y-3 mb-6'>
+                    {[0, 1, 2].map(i => (
                       <div
-                        style={{
-                          fontSize: '16px',
-                          fontWeight: 700,
-                          color: '#323232',
-                          lineHeight: '200%',
-                          fontFamily:
-                            'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                        }}
+                        key={i}
+                        className='bg-white p-4 rounded-lg'
+                        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
                       >
-                        {notice.title}
+                        <div className='h-3 w-24 bg-gray-100 rounded animate-pulse mb-2' />
+                        <div className='h-5 w-3/4 bg-gray-200 rounded animate-pulse' />
                       </div>
-                    </div>
-                  ))
-                )}
-                {/* お知らせ一覧を見るリンクボックス */}
-                <div
-                  style={{
-                    background: '#fff',
-                    padding: '15px 24px',
-                    borderRadius: '8px',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                    gap: 8,
-                  }}
-                  onClick={() => router.push('/candidate/news')}
-                >
-                  <span
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      color: '#0F9058',
-                      lineHeight: '200%',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                      whiteSpace: 'normal',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    お知らせ一覧を見る
-                  </span>
-                  <Image
-                    src='/images/arrow.svg'
-                    alt='arrow'
-                    width={12}
-                    height={12}
-                    loading='lazy'
-                    style={{ display: 'block' }}
-                  />
+                    ))}
+                  </div>
+                  <div className='w-full h-[200px] bg-gray-200 rounded-lg animate-pulse mb-20' />
+                  <div className='h-7 w-40 bg-gray-200 rounded animate-pulse mb-4' />
+                  <div className='space-y-3'>
+                    {[0, 1].map(i => (
+                      <div
+                        key={i}
+                        className='bg-white p-4 rounded-lg'
+                        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.05)' }}
+                      >
+                        <div className='h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2' />
+                        <div className='h-4 w-2/3 bg-gray-100 rounded animate-pulse' />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              {/* バナー画像を表示 */}
-              <Image
-                src='/images/banner01.png'
-                alt='バナー画像01'
-                width={800}
-                height={200}
-                className='w-full h-auto block rounded-lg'
-                loading='lazy'
-                priority={false}
-                sizes='(max-width: 768px) 100vw, 320px'
-                quality={75}
-              />
-              {/* FAQ/QAセクション */}
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <SectionHeading
-                  iconSrc='/images/question.svg'
-                  iconAlt='よくある質問アイコン'
-                >
-                  よくある質問
-                </SectionHeading>
-                {/* FAQボックス（ダミー） */}
-                <Suspense
-                  fallback={
-                    <div
-                      style={{
-                        padding: 24,
-                        textAlign: 'center',
-                        color: '#999',
-                      }}
-                    >
-                      FAQ読み込み中...
-                    </div>
-                  }
-                >
-                  <FaqBox
-                    title='退会したい場合はどうすればいいですか？'
-                    body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
-                  />
-                  <FaqBox
-                    title='パスワードを忘れた場合はどうすればいいですか？'
-                    body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
-                  />
-                </Suspense>
-                {/* QA一覧を見るリンクボックス（ダミー） */}
-                <div
-                  style={{
-                    background: '#fff',
-                    padding: '15px 24px',
-                    borderRadius: '8px',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      color: '#0F9058',
-                      lineHeight: '200%',
-                      fontFamily:
-                        'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                      whiteSpace: 'normal',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    Q&A一覧を見る
-                  </span>
-                  <Image
-                    src='/images/arrow.svg'
-                    alt='arrow'
-                    width={12}
-                    height={12}
-                    loading='lazy'
-                    style={{ display: 'block' }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+            }
+          >
+            <FooterSection notices={notices} router={router} />
+          </Suspense>
         </div>
         {/* --- ここまでやることリスト＋FAQ/バナー --- */}
       </main>

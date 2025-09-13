@@ -7,15 +7,27 @@ import { Button } from '@/components/ui/button';
 import { sendContactForm } from './actions';
 import { useRouter } from 'next/navigation';
 
-export function ContactFormClient() {
+interface Group {
+  id: string;
+  group_name: string;
+}
+
+interface ContactFormClientProps {
+  groups: Group[];
+}
+
+export function ContactFormClient({ groups }: ContactFormClientProps) {
   const [formData, setFormData] = useState({
     group: '',
     inquiryType: '',
     ticketCount: '',
-    content: ''
+    content: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,14 +37,13 @@ export function ContactFormClient() {
 
     try {
       const result = await sendContactForm(formData);
-      
+
       if (result.error) {
         setMessage({ type: 'error', text: result.error });
       } else {
         router.push('/company/contact/complete');
       }
-    } catch (error) {
-      console.error('送信エラー:', error);
+    } catch {
       setMessage({ type: 'error', text: 'システムエラーが発生しました。' });
     } finally {
       setIsSubmitting(false);
@@ -40,13 +51,13 @@ export function ContactFormClient() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+    <form onSubmit={handleSubmit} className='flex flex-col gap-6 w-full'>
       {/* メッセージ表示 */}
       {message && (
         <div
           className={`p-4 rounded-md ${
-            message.type === 'success' 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}
         >
@@ -71,15 +82,16 @@ export function ContactFormClient() {
           <SelectInput
             options={[
               { value: '', label: '選択してください' },
-              { value: 'group1', label: 'グループ1' },
-              { value: 'group2', label: 'グループ2' },
-              { value: 'group3', label: 'グループ3' },
+              ...groups.map(group => ({
+                value: group.id,
+                label: group.group_name,
+              })),
             ]}
             placeholder='選択してください'
             className='w-[400px] h-[54px]'
             style={{ width: '400px', height: '54px' }}
             value={formData.group}
-            onChange={(value) => setFormData({...formData, group: value})}
+            onChange={value => setFormData({ ...formData, group: value })}
           />
         </div>
       </div>
@@ -109,7 +121,7 @@ export function ContactFormClient() {
             className='w-[400px] h-[54px]'
             style={{ width: '400px', height: '54px' }}
             value={formData.inquiryType}
-            onChange={(value) => setFormData({...formData, inquiryType: value})}
+            onChange={value => setFormData({ ...formData, inquiryType: value })}
           />
         </div>
       </div>
@@ -150,7 +162,9 @@ export function ContactFormClient() {
                 boxShadow: 'none',
               }}
               value={formData.ticketCount}
-              onChange={(e) => setFormData({...formData, ticketCount: e.target.value})}
+              onChange={e =>
+                setFormData({ ...formData, ticketCount: e.target.value })
+              }
             />
             <span
               className='flex items-center justify-center font-bold'
@@ -185,34 +199,38 @@ export function ContactFormClient() {
           >
             お問い合わせ内容
           </span>
-          <textarea
-            style={{
-              width: '400px',
-              height: '147px',
-              fontSize: '16px',
-              lineHeight: '200%',
-              letterSpacing: '0.1em',
-              fontWeight: 'normal',
-              color: '#323232',
-              border: '1px solid #999999',
-              outline: 'none',
-              background: 'none',
-              boxShadow: 'none',
-              resize: 'none',
-              padding: '11px',
-              borderRadius: '5px',
-            }}
-            value={formData.content}
-            onChange={(e) => setFormData({...formData, content: e.target.value})}
-            required
-          />
+          <div className='border border-[#999999] rounded-[8px]'>
+            <textarea
+              style={{
+                width: '400px',
+                height: '147px',
+                fontSize: '16px',
+                lineHeight: '200%',
+                letterSpacing: '0.1em',
+                fontWeight: 'normal',
+                color: '#323232',
+                border: '1px solid #999999',
+                outline: 'none',
+                background: 'none',
+                boxShadow: 'none',
+                resize: 'none',
+                padding: '11px',
+                borderRadius: '5px',
+              }}
+              value={formData.content}
+              onChange={e =>
+                setFormData({ ...formData, content: e.target.value })
+              }
+              required
+            />
+          </div>
         </div>
       </div>
 
       {/* 送信ボタン */}
       <div className='flex w-full justify-center mt-10'>
         <Button
-          type="submit"
+          type='submit'
           variant='green-gradient'
           disabled={isSubmitting}
           style={{

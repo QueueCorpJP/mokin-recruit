@@ -1,6 +1,13 @@
 import { Suspense } from 'react';
 import { CompanyNavigationWrapper } from '@/components/layout/CompanyNavigationWrapper';
-import { CompanyFooterWrapper } from '@/components/layout/CompanyFooterWrapper';
+import dynamicImport from 'next/dynamic';
+
+const CompanyFooterWrapper = dynamicImport(
+  () => import('@/components/layout/CompanyFooterWrapper').then(mod => ({ default: mod.CompanyFooterWrapper })),
+  {
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
+  }
+);
 
 // 静的レンダリングを許可（認証不要のため）
 export const dynamic = 'force-static';
@@ -10,12 +17,6 @@ export default async function ContactCompleteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 静的ページなので認証なし状態
-  const initialAuth = {
-    isAuthenticated: false,
-    user: null,
-    userType: null
-  };
 
   return (
     <>

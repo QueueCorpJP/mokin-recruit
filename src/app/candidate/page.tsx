@@ -17,39 +17,6 @@ export const metadata: Metadata = {
 };
 
 export default function CandidateLandingPage() {
-  const columnData = [
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-    {
-      imageUrl: '/company.jpg',
-      title: 'テキストが入ります。テキストが入ります。テキストが入ります。',
-      categories: ['カテゴリ', 'カテゴリ'],
-    },
-  ];
-
   return (
     <div className="relative w-full">
       <div className="w-full">
