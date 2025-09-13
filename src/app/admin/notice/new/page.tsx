@@ -9,7 +9,7 @@ export default async function AdminNoticeNewPage() {
   const categoriesResult = await supabase.from('notice_categories').select('*').order('name');
 
   if (categoriesResult.error) {
-    console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
   }
 
   return (

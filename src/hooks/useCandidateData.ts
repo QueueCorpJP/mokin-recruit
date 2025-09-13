@@ -152,7 +152,7 @@ export function useCandidateData() {
           errors.push('このメールアドレスはすでに登録されています。');
         }
       } catch (error) {
-        console.error('Email duplication check failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Email duplication check failed:', error);
         // ネットワークエラーなどの場合は重複チェックをスキップ
       }
     }

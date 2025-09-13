@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
+import { safeLog, maskObjectPII } from '@/lib/utils/pii-safe-logger';
 import { LocationModal } from '@/app/company/job/LocationModal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
@@ -138,14 +139,14 @@ export default function AdminJobEditClient({
         throw new Error(result.error || '更新に失敗しました');
       }
       
-      console.log('Job update successful, result:', result);
+      safeLog('info', '求人情報更新成功', { jobId, result: maskObjectPII(result, ['email', 'phone', 'userId']) });
       
       // 成功時に確認画面にリダイレクト
       if (typeof window !== 'undefined') {
         window.location.href = `/admin/job/${jobId}/edit/confirm`;
       }
     } catch (error) {
-      console.error('Update error:', error);
+      safeLog('error', 'Update error:', error);
       alert('更新に失敗しました');
       setIsUpdating(false);
     }
@@ -153,9 +154,9 @@ export default function AdminJobEditClient({
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
-    console.log('AdminJobEditClient: Setting up event listener');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'AdminJobEditClient: Setting up event listener');
     const handleJobEditUpdate = () => {
-      console.log('AdminJobEditClient: Received job-edit-update event');
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'AdminJobEditClient: Received job-edit-update event');
       handleUpdate();
     };
 

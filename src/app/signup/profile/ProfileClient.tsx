@@ -94,7 +94,7 @@ export default function SignupProfilePage() {
       };
 
       const userIdFromCookie = getCookieValue('signup_user_id');
-      console.log('Cookie signup_user_id:', userIdFromCookie);
+      if (process.env.NODE_ENV === 'development') console.log('Cookie signup_user_id:', userIdFromCookie);
 
       if (userIdFromCookie) {
         setUserId(userIdFromCookie);
@@ -114,8 +114,8 @@ export default function SignupProfilePage() {
   ];
 
   const handleFormSubmit = async () => {
-    console.log('Form submitted with data:', formData);
-    console.log('User ID:', userId);
+    if (process.env.NODE_ENV === 'development') console.log('Form submitted with data:', formData);
+    if (process.env.NODE_ENV === 'development') console.log('User ID:', userId);
 
     // フリガナのバリデーション
     const lastNameKanaError = validateKatakana(formData.lastNameKana);
@@ -173,22 +173,22 @@ export default function SignupProfilePage() {
     try {
       if (userId) {
         const result = await saveProfileData({ ...formData, userId });
-        console.log('Save result:', result);
+        if (process.env.NODE_ENV === 'development') console.log('Save result:', result);
 
         if (result.success) {
           localStorage.setItem('signupProfile', JSON.stringify(formData));
           router.push('/signup/career-status');
         } else {
-          console.error('Profile save error:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Profile save error:', result.error);
           setIsSubmitting(false);
         }
       } else {
-        console.log('No userId, saving to localStorage only');
+        if (process.env.NODE_ENV === 'development') console.log('No userId, saving to localStorage only');
         localStorage.setItem('signupProfile', JSON.stringify(formData));
         router.push('/signup/career-status');
       }
     } catch (error) {
-      console.error('Profile submit error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Profile submit error:', error);
       setIsSubmitting(false);
     }
   };

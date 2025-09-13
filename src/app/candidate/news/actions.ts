@@ -65,7 +65,7 @@ export async function getNews(limit: number = 20, offset: number = 0): Promise<A
       tags: [] // noticesテーブルにはタグがないため空配列
     })) || [];
   } catch (error) {
-    console.error('お知らせ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ取得エラー:', error);
     return [];
   }
 }
@@ -92,7 +92,7 @@ export async function getNewsWithPagination(limit: number = 20, offset: number =
       totalCount: count || 0
     };
   } catch (error) {
-    console.error('お知らせ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ取得エラー:', error);
     return {
       articles: [],
       totalCount: 0
@@ -132,7 +132,7 @@ export async function getRelatedNews(currentArticleId: string, limit: number = 6
       tags: []
     })) || [];
   } catch (error) {
-    console.error('関連お知らせ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('関連お知らせ取得エラー:', error);
     return getNews(limit);
   }
 }
@@ -152,7 +152,7 @@ export async function getPopularNews(limit: number = 5): Promise<PopularArticle[
 
     return data || [];
   } catch (error) {
-    console.error('人気お知らせ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('人気お知らせ取得エラー:', error);
     return [];
   }
 }
@@ -190,7 +190,7 @@ export async function getNewsCategories(): Promise<ArticleCategory[]> {
       count
     }));
   } catch (error) {
-    console.error('お知らせカテゴリー取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせカテゴリー取得エラー:', error);
     return [{ name: 'お知らせ', count: 0 }];
   }
 }
@@ -218,7 +218,7 @@ export async function getSidebarData(): Promise<{
       tags
     };
   } catch (error) {
-    console.error('サイドバーデータ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('サイドバーデータ取得エラー:', error);
     return {
       popularArticles: [],
       categories: [],

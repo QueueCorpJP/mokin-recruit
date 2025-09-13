@@ -70,7 +70,7 @@ export function SetPasswordClient({ userType: initialUserType }: SetPasswordClie
 
       // 現在のURLを詳細にログ出力
       if (typeof window !== 'undefined') {
-        console.log('🌐 Current URL details:', {
+        if (process.env.NODE_ENV === 'development') console.log('🌐 Current URL details:', {
           fullUrl: window.location.href,
           pathname: window.location.pathname,
           search: window.location.search,
@@ -82,17 +82,17 @@ export function SetPasswordClient({ userType: initialUserType }: SetPasswordClie
       // クエリパラメータ（?以降）を収集
       for (const [key, value] of searchParams.entries()) {
         queryParams[key] = value;
-        console.log(`🔍 Query param found: ${key} = ${value}`);
+        if (process.env.NODE_ENV === 'development') console.log(`🔍 Query param found: ${key} = ${value}`);
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
       if (typeof window !== 'undefined') {
         const fragment = window.location.hash;
-        console.log('🔗 Fragment detected:', fragment);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 Fragment detected:', fragment);
         Object.assign(fragmentParams, parseFragmentParams(fragment));
         
         if (Object.keys(fragmentParams).length > 0) {
-          console.log('🔗 Fragment params parsed:', fragmentParams);
+          if (process.env.NODE_ENV === 'development') console.log('🔗 Fragment params parsed:', fragmentParams);
         }
       }
 
@@ -102,19 +102,19 @@ export function SetPasswordClient({ userType: initialUserType }: SetPasswordClie
       // 1. プロップスから取得（最優先）
       if (initialUserType === 'candidate' || initialUserType === 'company') {
         detectedUserType = initialUserType;
-        console.log('🔗 UserType from props:', detectedUserType);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 UserType from props:', detectedUserType);
       }
       
       // 2. URLクエリパラメータから取得
       if (!detectedUserType && (queryParams.userType === 'candidate' || queryParams.userType === 'company')) {
         detectedUserType = queryParams.userType;
-        console.log('🔗 UserType from URL query:', detectedUserType);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 UserType from URL query:', detectedUserType);
       }
       
       // 3. URLフラグメントパラメータから取得
       if (!detectedUserType && (fragmentParams.userType === 'candidate' || fragmentParams.userType === 'company')) {
         detectedUserType = fragmentParams.userType;
-        console.log('🔗 UserType from URL fragment:', detectedUserType);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 UserType from URL fragment:', detectedUserType);
       }
       
       // 4. ローカルストレージから取得
@@ -122,19 +122,19 @@ export function SetPasswordClient({ userType: initialUserType }: SetPasswordClie
         const savedUserType = localStorage.getItem('password_reset_user_type') as 'candidate' | 'company';
         if (savedUserType === 'candidate' || savedUserType === 'company') {
           detectedUserType = savedUserType;
-          console.log('🔄 UserType restored from localStorage:', detectedUserType);
+          if (process.env.NODE_ENV === 'development') console.log('🔄 UserType restored from localStorage:', detectedUserType);
         } else {
-          console.log('🔄 No valid userType in localStorage:', savedUserType);
+          if (process.env.NODE_ENV === 'development') console.log('🔄 No valid userType in localStorage:', savedUserType);
         }
       }
       
       // 5. デフォルト値（候補者ユーザー）
       if (!detectedUserType) {
         detectedUserType = 'candidate';
-        console.log('⚙️ UserType defaulted to candidate');
+        if (process.env.NODE_ENV === 'development') console.log('⚙️ UserType defaulted to candidate');
       }
       
-      console.log('🎯 Final userType decision:', detectedUserType);
+      if (process.env.NODE_ENV === 'development') console.log('🎯 Final userType decision:', detectedUserType);
       setUserType(detectedUserType);
 
       // 全パラメータをマージ（フラグメントパラメータを優先）

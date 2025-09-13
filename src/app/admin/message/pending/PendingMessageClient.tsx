@@ -81,7 +81,7 @@ export default function PendingMessageClient({ messages }: Props) {
     setIsProcessing(true);
     try {
       // TODO: メッセージステータス変更のAPI呼び出しを実装
-      console.log('Changing message status:', selectedRoom.id, status, reason, comment);
+      if (process.env.NODE_ENV === 'development') console.log('Changing message status:', selectedRoom.id, status, reason, comment);
       
       // 成功時の処理
       setApprovalModalOpen(false);
@@ -89,7 +89,7 @@ export default function PendingMessageClient({ messages }: Props) {
       // ページをリフレッシュ
       router.refresh();
     } catch (error) {
-      console.error('Status change failed:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Status change failed:', error);
       alert('ステータス変更に失敗しました');
     } finally {
       setIsProcessing(false);
@@ -211,7 +211,7 @@ export default function PendingMessageClient({ messages }: Props) {
                     if (messageId && typeof messageId === 'string' && messageId.length > 0) {
                       router.push(`/admin/message/pending/${messageId}`);
                     } else {
-                      console.error('Invalid message ID found for room:', room.id);
+                      if (process.env.NODE_ENV === 'development') console.error('Invalid message ID found for room:', room.id);
                     }
                   }}
                   columns={[

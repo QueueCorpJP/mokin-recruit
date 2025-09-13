@@ -6,7 +6,7 @@ import { ChatMessage } from '@/types/message';
 import { revalidatePath } from 'next/cache';
 
 export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
-  console.log('🔍 [getRoomMessages] Fetching messages for room:', roomId);
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomMessages] Fetching messages for room:', roomId);
   
   const supabase = getSupabaseAdminClient();
 
@@ -39,11 +39,11 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
       .order('sent_at', { ascending: true });
 
     if (error) {
-      console.error('❌ [getRoomMessages] Error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [getRoomMessages] Error:', error);
       return [];
     }
 
-    console.log('✅ [getRoomMessages] Messages fetched:', {
+    if (process.env.NODE_ENV === 'development') console.log('✅ [getRoomMessages] Messages fetched:', {
       roomId,
       messageCount: messages?.length || 0
     });
@@ -60,9 +60,9 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
       .eq('sender_type', 'CANDIDATE'); // 候補者からのメッセージのみ
 
     if (readUpdateError) {
-      console.warn('❌ [getRoomMessages] Failed to update read status:', readUpdateError);
+      if (process.env.NODE_ENV === 'development') console.warn('❌ [getRoomMessages] Failed to update read status:', readUpdateError);
     } else {
-      console.log('✅ [getRoomMessages] Updated read status for candidate messages in room:', roomId);
+      if (process.env.NODE_ENV === 'development') console.log('✅ [getRoomMessages] Updated read status for candidate messages in room:', roomId);
     }
 
     // file_urlsをJSONB形式からstring[]に変換
@@ -89,14 +89,14 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
     return formattedMessages;
 
   } catch (error) {
-    console.error('❌ [getRoomMessages] Unexpected error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [getRoomMessages] Unexpected error:', error);
     return [];
   }
 }
 
 // 企業ユーザー用: ルームのメッセージを既読にする専用関数
 export async function markRoomMessagesAsRead(roomId: string): Promise<{ success: boolean; error?: string }> {
-  console.log('🔍 [markRoomMessagesAsRead] Marking messages as read for room:', roomId);
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [markRoomMessagesAsRead] Marking messages as read for room:', roomId);
   
   const supabase = getSupabaseAdminClient();
 
@@ -113,7 +113,7 @@ export async function markRoomMessagesAsRead(roomId: string): Promise<{ success:
       .eq('sender_type', 'CANDIDATE'); // 候補者からのメッセージのみ
 
     if (readUpdateError) {
-      console.error('❌ [markRoomMessagesAsRead] Failed to update read status:', readUpdateError);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [markRoomMessagesAsRead] Failed to update read status:', readUpdateError);
       return { success: false, error: readUpdateError.message };
     }
 
@@ -126,16 +126,16 @@ export async function markRoomMessagesAsRead(roomId: string): Promise<{ success:
       .eq('message_id', (await supabase.from('messages').select('id').eq('room_id', roomId).eq('status', 'SENT').eq('sender_type', 'CANDIDATE')).data?.map(m => m.id) || []);
 
     if (notificationUpdateError) {
-      console.warn('❌ [markRoomMessagesAsRead] Failed to update notification read status:', notificationUpdateError);
+      if (process.env.NODE_ENV === 'development') console.warn('❌ [markRoomMessagesAsRead] Failed to update notification read status:', notificationUpdateError);
     } else {
-      console.log('✅ [markRoomMessagesAsRead] Successfully updated notification read status for room:', roomId);
+      if (process.env.NODE_ENV === 'development') console.log('✅ [markRoomMessagesAsRead] Successfully updated notification read status for room:', roomId);
     }
 
-    console.log('✅ [markRoomMessagesAsRead] Successfully updated read status for room:', roomId);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [markRoomMessagesAsRead] Successfully updated read status for room:', roomId);
     return { success: true };
 
   } catch (error) {
-    console.error('❌ [markRoomMessagesAsRead] Unexpected error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [markRoomMessagesAsRead] Unexpected error:', error);
     return { success: false, error: 'Internal server error' };
   }
 }
@@ -150,19 +150,19 @@ export interface SendCompanyMessageData {
 
 export async function sendCompanyMessage(data: SendCompanyMessageData) {
   try {
-    console.log('🚀 [sendCompanyMessage] Starting send process:', data);
+    if (process.env.NODE_ENV === 'development') console.log('🚀 [sendCompanyMessage] Starting send process:', data);
 
     // 企業ユーザー認証
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('❌ [sendCompanyMessage] Auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] Auth failed:', authResult.error);
       return { error: 'Unauthorized' };
     }
 
     const { companyUserId } = authResult.data;
     const supabase = getSupabaseAdminClient();
 
-    console.log('🔍 [sendCompanyMessage] Validating room access for user:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [sendCompanyMessage] Validating room access for user:', companyUserId);
 
     // ルームのアクセス権限を確認（企業ユーザーが権限を持つグループのルームかチェック）
     const { data: userGroups, error: userGroupsError } = await supabase
@@ -171,12 +171,12 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
       .eq('company_user_id', companyUserId);
 
     if (userGroupsError || !userGroups || userGroups.length === 0) {
-      console.error('❌ [sendCompanyMessage] User groups error:', userGroupsError);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] User groups error:', userGroupsError);
       return { error: 'No group permissions found' };
     }
 
     const groupIds = userGroups.map(g => g.company_group_id);
-    console.log('📋 [sendCompanyMessage] User group IDs:', groupIds);
+    if (process.env.NODE_ENV === 'development') console.log('📋 [sendCompanyMessage] User group IDs:', groupIds);
 
     // ルームが企業ユーザーのグループに属するかチェック
     const { data: room, error: roomError } = await supabase
@@ -187,11 +187,11 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
       .single();
 
     if (roomError || !room) {
-      console.error('❌ [sendCompanyMessage] Room validation error:', roomError);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] Room validation error:', roomError);
       return { error: 'Room not found or unauthorized' };
     }
 
-    console.log('✅ [sendCompanyMessage] Room validation passed:', room);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [sendCompanyMessage] Room validation passed:', room);
 
     // 企業ユーザー情報と企業名を取得
     const { data: companyUser, error: companyUserError } = await supabase
@@ -281,11 +281,11 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
       .single();
 
     if (messageError) {
-      console.error('❌ [sendCompanyMessage] Message insert error:', messageError);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] Message insert error:', messageError);
       return { error: 'Failed to send message' };
     }
 
-    console.log('✅ [sendCompanyMessage] Message inserted:', message.id);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [sendCompanyMessage] Message inserted:', message.id);
 
     // unread_notificationsテーブルに未読通知を挿入
     const { data: notification, error: notificationError } = await supabase
@@ -299,9 +299,9 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
       .single();
 
     if (notificationError) {
-      console.error('❌ [sendCompanyMessage] Unread notification insert error:', notificationError);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] Unread notification insert error:', notificationError);
     } else {
-      console.log('✅ [sendCompanyMessage] Unread notification inserted:', notification.id);
+      if (process.env.NODE_ENV === 'development') console.log('✅ [sendCompanyMessage] Unread notification inserted:', notification.id);
     }
 
     // roomのupdated_atを更新
@@ -315,7 +315,7 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
 
     return { message };
   } catch (error) {
-    console.error('❌ [sendCompanyMessage] Unexpected error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [sendCompanyMessage] Unexpected error:', error);
     return { error: 'Internal server error' };
   }
 }
@@ -342,7 +342,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
 
     // 認証されたユーザーIDと一致することを確認
     if (companyUserId !== userId) {
-      console.error('User ID mismatch:', {
+      if (process.env.NODE_ENV === 'development') console.error('User ID mismatch:', {
         authUserId: companyUserId,
         providedUserId: userId
       });
@@ -371,7 +371,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
     ];
     
     // デバッグ用：実際のファイル形式をログ出力
-    console.log('🔍 [COMPANY UPLOAD DEBUG] File info:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [COMPANY UPLOAD DEBUG] File info:', {
       name: file.name,
       type: file.type,
       size: file.size,
@@ -417,14 +417,14 @@ export async function uploadCompanyMessageFile(formData: FormData) {
     const fileName = `${timestamp}_${sanitizedFileName}`;
     const filePath = `company/${companyUserId}/messages/${fileName}`;
     
-    console.log('🔍 [COMPANY UPLOAD DEBUG] File path generation:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [COMPANY UPLOAD DEBUG] File path generation:', {
       original: file.name,
       sanitized: sanitizedFileName,
       final: fileName,
       filePath: filePath
     });
 
-    console.log('🔍 [SERVER ACTION] Uploading company message file:', filePath);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [SERVER ACTION] Uploading company message file:', filePath);
 
     const supabase = getSupabaseAdminClient();
     const fileBuffer = await file.arrayBuffer();
@@ -438,12 +438,12 @@ export async function uploadCompanyMessageFile(formData: FormData) {
       });
 
     if (error) {
-      console.error('Supabase company message file upload error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase company message file upload error:', error);
       // より詳細なエラーメッセージを提供
       let errorMessage = 'ファイルのアップロードに失敗しました';
       
       if (error.message) {
-        console.error('Detailed error:', error.message);
+        if (process.env.NODE_ENV === 'development') console.error('Detailed error:', error.message);
         
         // 一般的なSupabaseエラーを分類
         if (error.message.includes('Payload too large') || error.message.includes('Request entity too large')) {
@@ -467,7 +467,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
       .from('message-files')
       .getPublicUrl(filePath);
 
-    console.log('✅ [SERVER ACTION] Company message file uploaded successfully:', urlData.publicUrl);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [SERVER ACTION] Company message file uploaded successfully:', urlData.publicUrl);
 
     return {
       url: urlData.publicUrl,
@@ -476,7 +476,7 @@ export async function uploadCompanyMessageFile(formData: FormData) {
     };
 
   } catch (error) {
-    console.error('Upload company message file error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Upload company message file error:', error);
     return { error: 'ファイルのアップロード中にエラーが発生しました' };
   }
 }

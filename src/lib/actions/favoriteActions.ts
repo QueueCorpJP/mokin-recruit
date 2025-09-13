@@ -56,7 +56,7 @@ export async function getFavoriteListAction(params: {
       .eq('candidate_id', auth.data.candidateId);
 
     if (countError) {
-      console.error('お気に入り総数取得エラー:', countError);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り総数取得エラー:', countError);
       return {
         success: false,
         error: 'お気に入りの総数取得に失敗しました'
@@ -88,7 +88,7 @@ export async function getFavoriteListAction(params: {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('お気に入り取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り取得エラー:', error);
       return {
         success: false,
         error: 'お気に入りの取得に失敗しました'
@@ -108,7 +108,7 @@ export async function getFavoriteListAction(params: {
       }
     };
   } catch (error) {
-    console.error('お気に入り一覧取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お気に入り一覧取得エラー:', error);
     return {
       success: false,
       error: 'システムエラーが発生しました'
@@ -144,7 +144,7 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
       .in('job_posting_id', jobPostingIds);
 
     if (error) {
-      console.error('お気に入り状態取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り状態取得エラー:', error);
       return {
         success: false,
         error: 'お気に入り状態の取得に失敗しました'
@@ -165,7 +165,7 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
       data: result
     };
   } catch (error) {
-    console.error('お気に入り状態取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お気に入り状態取得エラー:', error);
     return {
       success: false,
       error: 'システムエラーが発生しました'
@@ -195,7 +195,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('お気に入りチェックエラー:', checkError);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入りチェックエラー:', checkError);
       return {
         success: false,
         error: 'お気に入り状態の確認に失敗しました'
@@ -220,7 +220,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       .single();
 
     if (error) {
-      console.error('お気に入り追加エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り追加エラー:', error);
       return {
         success: false,
         error: 'お気に入りの追加に失敗しました'
@@ -235,7 +235,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       message: 'お気に入りに追加しました'
     };
   } catch (error) {
-    console.error('お気に入り追加エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お気に入り追加エラー:', error);
     return {
       success: false,
       error: 'システムエラーが発生しました'
@@ -263,7 +263,7 @@ export async function removeFavoriteAction(jobPostingId: string): Promise<Favori
       .eq('job_posting_id', jobPostingId);
 
     if (error) {
-      console.error('お気に入り削除エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り削除エラー:', error);
       return {
         success: false,
         error: 'お気に入りの削除に失敗しました'
@@ -277,7 +277,7 @@ export async function removeFavoriteAction(jobPostingId: string): Promise<Favori
       message: 'お気に入りから削除しました'
     };
   } catch (error) {
-    console.error('お気に入り削除エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お気に入り削除エラー:', error);
     return {
       success: false,
       error: 'システムエラーが発生しました'

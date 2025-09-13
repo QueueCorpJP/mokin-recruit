@@ -31,7 +31,7 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
         try {
           setFormData(JSON.parse(storedData));
         } catch (error) {
-          console.error('Error parsing stored form data:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Error parsing stored form data:', error);
           router.push(`/admin/candidate/${candidate.id}/edit`);
         }
       } else {
@@ -104,7 +104,7 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
         alert('更新に失敗しました: ' + result.error);
       }
     } catch (error) {
-      console.error('Error updating candidate:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating candidate:', error);
       alert('更新に失敗しました');
     } finally {
       setIsSubmitting(false);
@@ -683,7 +683,7 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
                   {/* その他の言語はデータがある場合のみ表示 */}
                   {(() => {
                     const otherLanguages = formData.skills?.other_languages;
-                    console.log('Other languages debug:', otherLanguages, typeof otherLanguages);
+                    if (process.env.NODE_ENV === 'development') console.log('Other languages debug:', otherLanguages, typeof otherLanguages);
                     if (!otherLanguages) return null;
 
                     let languageArray = [];
@@ -698,7 +698,7 @@ export default function CandidateEditConfirmClient({ candidate, formData: initia
                           languageArray = [parsed];
                         }
                       } catch (e) {
-                        console.log('JSON parse failed:', e);
+                        if (process.env.NODE_ENV === 'development') console.log('JSON parse failed:', e);
                         // JSON parseに失敗した場合は、そのまま文字列として扱う
                         return (
                           <div className="flex gap-8">

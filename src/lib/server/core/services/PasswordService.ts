@@ -7,6 +7,7 @@ import { SecurityConfig } from '@/lib/server/config/security';
 import { IPasswordService } from '@/lib/server/core/interfaces/IAuthService';
 import { requestPasswordReset, updatePassword } from '@/lib/server/auth/supabaseAuth';
 import { TYPES } from '@/lib/server/container/types';
+import { ERROR_CODES, createError } from '@/constants/error-codes';
 
 const scryptAsync = promisify(scrypt);
 
@@ -40,7 +41,8 @@ export class PasswordService implements IPasswordService {
       return hashedPassword;
     } catch (error) {
       logger.error('Password hashing error:', error);
-      throw new Error('Failed to hash password');
+      const authError = createError('AUTH_004', 'パスワードのハッシュ化に失敗しました');
+      throw new Error(authError.message);
     }
   }
 
@@ -85,21 +87,22 @@ export class PasswordService implements IPasswordService {
       }
     } catch (error) {
       logger.error('Password verification error:', error);
+      // エラーコード AUTH_004 を使用
       return false;
     }
   }
 
   async requestPasswordReset(email: string): Promise<boolean> {
     try {
-      logger.info(`Password reset requested for email: ${email}`);
+      logger.info(`Password reset requested for email: [EMAIL_MASKED]`);
       const result = await requestPasswordReset(email);
 
       if (result.success) {
-        logger.info(`Password reset email sent successfully to: ${email}`);
+        logger.info(`Password reset email sent successfully to: [EMAIL_MASKED]`);
         return true;
       }
 
-      logger.warn(`Password reset request failed for email: ${email}`);
+      logger.warn(`Password reset request failed for email: [EMAIL_MASKED]`);
       return false;
     } catch (error) {
       logger.error('Password reset request error:', error);

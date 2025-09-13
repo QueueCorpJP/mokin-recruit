@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { updateJob } from '../../actions';
 import AttentionBanner from '@/components/ui/AttentionBanner';
 import Image from 'next/image';
@@ -161,7 +161,7 @@ export default function JobEditConfirmClient({
       // Navigate to scope page instead of saving directly
       router.push(`/company/job/${jobId}/scope`);
     } catch (error) {
-      console.error('Error navigating to scope:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error navigating to scope:', error);
       setModalMessage('ページの遷移に失敗しました');
       setShowModal(true);
     } finally {

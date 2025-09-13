@@ -165,11 +165,11 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
     const { data: jobs, error: dataError } = dataResult;
 
     if (countError) {
-      console.error('Failed to count jobs:', countError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to count jobs:', countError);
     }
 
     if (dataError || !jobs) {
-      console.error('Failed to search jobs:', dataError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to search jobs:', dataError);
       return {
         success: false,
         error: 'Failed to search jobs'
@@ -226,7 +226,7 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
     };
 
   } catch (error) {
-    console.error('Failed to search jobs from database:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to search jobs from database:', error);
     return {
       success: false,
       error: 'Database error occurred'
@@ -235,7 +235,7 @@ async function searchJobsServerOptimized(params: JobSearchParams): Promise<JobSe
 }
 
 export async function getJobSearchData(params: JobSearchParams): Promise<JobSearchResponse> {
-  console.log('[getJobSearchData] Called with params:', JSON.stringify(params));
+  if (process.env.NODE_ENV === 'development') console.log('[getJobSearchData] Called with params:', JSON.stringify(params));
   
   // キャッシュキーの生成
   const cacheKey = JSON.stringify(params);
@@ -285,7 +285,7 @@ export async function getFavoriteStatusServer(jobPostingIds: string[]): Promise<
     };
 
   } catch (error) {
-    console.error('Failed to get favorite status:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to get favorite status:', error);
     return {
       success: false,
       error: 'Failed to get favorite status'
@@ -295,7 +295,7 @@ export async function getFavoriteStatusServer(jobPostingIds: string[]): Promise<
 
 export async function addToFavoritesServer(jobPostingId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('Adding to favorites server-side:', jobPostingId);
+    if (process.env.NODE_ENV === 'development') console.log('Adding to favorites server-side:', jobPostingId);
     
     // For now, return success without actual database operation
     // This should be replaced with actual favorite add logic
@@ -303,7 +303,7 @@ export async function addToFavoritesServer(jobPostingId: string): Promise<{ succ
       success: true
     };
   } catch (error) {
-    console.error('Failed to add to favorites:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to add to favorites:', error);
     return {
       success: false,
       error: 'Failed to add to favorites'
@@ -313,7 +313,7 @@ export async function addToFavoritesServer(jobPostingId: string): Promise<{ succ
 
 export async function removeFromFavoritesServer(jobPostingId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('Removing from favorites server-side:', jobPostingId);
+    if (process.env.NODE_ENV === 'development') console.log('Removing from favorites server-side:', jobPostingId);
     
     // For now, return success without actual database operation
     // This should be replaced with actual favorite remove logic
@@ -321,7 +321,7 @@ export async function removeFromFavoritesServer(jobPostingId: string): Promise<{
       success: true
     };
   } catch (error) {
-    console.error('Failed to remove from favorites:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to remove from favorites:', error);
     return {
       success: false,
       error: 'Failed to remove from favorites'

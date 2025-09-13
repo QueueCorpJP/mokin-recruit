@@ -86,7 +86,7 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
         // sessionStorageをクリア（一度復元したらクリア）
         sessionStorage.removeItem('previewArticle');
       } catch (error) {
-        console.error('プレビューデータの復元に失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('プレビューデータの復元に失敗:', error);
       }
     }
 
@@ -250,7 +250,7 @@ export default function NewMediaForm({ categories, tags, saveArticle }: NewMedia
         router.push('/admin/media');
       }
     } catch (error) {
-      console.error('記事の保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('記事の保存に失敗:', error);
       if (error instanceof Error && error.message.includes('title')) {
         setTitleError('タイトルの保存に失敗しました');
       } else if (error instanceof Error && error.message.includes('category')) {

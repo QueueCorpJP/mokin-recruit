@@ -1,6 +1,8 @@
 'use server';
 
-import sgMail from '@sendgrid/mail';
+import { ERROR_CODES, createError } from '@/constants/error-codes';
+import nodemailer from 'nodemailer';
+import { maskEmail , safeLog} from '@/lib/utils/pii-safe-logger';
 
 export async function sendContactFormEmail(formData: {
   name: string;
@@ -11,22 +13,33 @@ export async function sendContactFormEmail(formData: {
   content: string;
 }) {
   try {
-    console.log('=== sendContactFormEmail開始 ===');
-    console.log('フォームデータ:', formData);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '=== sendContactFormEmail開始 ===');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'フォームデータ:', formData);
 
-    // SendGridでメール送信
-    console.log('メール送信設定を確認中...');
-    
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
-      console.log('SendGrid設定が不完全です');
+    // Gmail SMTPでメール送信
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'メール送信設定を確認中...');
+
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'Gmail設定が不完全です');
       return { error: 'メール送信設定が正しく構成されていません' };
     }
 
     try {
-      console.log('SendGrid APIキーを設定中...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'Gmail SMTPトランスポーターを作成中...');
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
       
-      console.log('メール送信中...');
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'メール送信中...');
       
       // 管理者への通知メール
       const adminMsg = {
@@ -87,17 +100,17 @@ export async function sendContactFormEmail(formData: {
       
       await sgMail.send(customerMsg);
       
-      console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
+      if (process.env.NODE_ENV === 'development') console.log(`✅ メール送信成功! 送信先: ${maskEmail(formData.email)}`);
       
     } catch (emailErr) {
-      console.error('❌ メール送信エラー:', emailErr);
+      safeLog('error', '❌ メール送信エラー:', emailErr);
       return { error: 'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。' };
     }
     
-    console.log('=== sendContactFormEmail完了 ===');
+    safeLog('info', '=== sendContactFormEmail完了 ===');
     return { success: true };
   } catch (error) {
-    console.error('❌ sendContactFormEmail全体エラー:', error);
+    safeLog('error', '❌ sendContactFormEmail全体エラー:', error);
     return { error: 'システムエラーが発生しました' };
   }
 }

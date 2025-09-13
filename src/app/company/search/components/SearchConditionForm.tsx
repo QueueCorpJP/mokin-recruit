@@ -19,14 +19,14 @@ export default function SearchConditionForm() {
   ]);
   const [loadingGroups, setLoadingGroups] = useState(true);
   
-  console.log('=== SearchConditionForm RENDER START ===');
-  console.log('SearchConditionForm render - experienceJobTypes:', searchStore.experienceJobTypes);
-  console.log('SearchConditionForm render - experienceJobTypes length:', searchStore.experienceJobTypes.length);
-  console.log('SearchConditionForm render - experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
-  console.log('SearchConditionForm render - experienceIndustries:', searchStore.experienceIndustries);
-  console.log('SearchConditionForm render - experienceIndustries length:', searchStore.experienceIndustries.length);
-  console.log('SearchConditionForm render - experienceIndustries JSON:', JSON.stringify(searchStore.experienceIndustries, null, 2));
-  console.log('=== SearchConditionForm RENDER END ===');
+  if (process.env.NODE_ENV === 'development') console.log('=== SearchConditionForm RENDER START ===');
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceJobTypes:', searchStore.experienceJobTypes);
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceJobTypes length:', searchStore.experienceJobTypes.length);
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceIndustries:', searchStore.experienceIndustries);
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceIndustries length:', searchStore.experienceIndustries.length);
+  if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm render - experienceIndustries JSON:', JSON.stringify(searchStore.experienceIndustries, null, 2));
+  if (process.env.NODE_ENV === 'development') console.log('=== SearchConditionForm RENDER END ===');
 
   // グループ一覧を取得
   useEffect(() => {
@@ -44,10 +44,10 @@ export default function SearchConditionForm() {
           ];
           setGroupOptions(options);
         } else {
-          console.error('Failed to fetch company groups:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to fetch company groups:', result.error);
         }
       } catch (error) {
-        console.error('Error fetching company groups:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching company groups:', error);
       } finally {
         setLoadingGroups(false);
       }
@@ -158,17 +158,17 @@ export default function SearchConditionForm() {
           </div>
 
           {(() => {
-            console.log('=== TAG RENDER CHECK - experienceJobTypes ===');
-            console.log('SearchConditionForm: experienceJobTypes for tag display:', searchStore.experienceJobTypes);
-            console.log('SearchConditionForm: experienceJobTypes length for tag display:', searchStore.experienceJobTypes.length);
-            console.log('SearchConditionForm: experienceJobTypes JSON for tag display:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
-            console.log('SearchConditionForm: Will render tags?', searchStore.experienceJobTypes.length > 0);
+            if (process.env.NODE_ENV === 'development') console.log('=== TAG RENDER CHECK - experienceJobTypes ===');
+            if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: experienceJobTypes for tag display:', searchStore.experienceJobTypes);
+            if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: experienceJobTypes length for tag display:', searchStore.experienceJobTypes.length);
+            if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: experienceJobTypes JSON for tag display:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
+            if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Will render tags?', searchStore.experienceJobTypes.length > 0);
             return null;
           })()}
           {searchStore.experienceJobTypes.length > 0 && (
             <div className="flex flex-col items-start gap-2 mt-4">
               {searchStore.experienceJobTypes.map((job) => {
-                console.log('SearchConditionForm: Rendering tag for job:', job);
+                if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Rendering tag for job:', job);
                 return (
                   <div
                   key={job.id}
@@ -462,19 +462,19 @@ export default function SearchConditionForm() {
     <JobTypeSelectModal
       isOpen={searchStore.isJobTypeModalOpen}
       onClose={() => {
-        console.log('🔥 JobType Modal onClose called');
+        if (process.env.NODE_ENV === 'development') console.log('🔥 JobType Modal onClose called');
         searchStore.setIsJobTypeModalOpen(false);
       }}
       onConfirm={(jobNames) => {
         try {
-        console.log('🔥 JobType Modal onConfirm CALLED!');
-        console.log('=== JobType Modal onConfirm START ===');
-        console.log('SearchConditionForm: JobType onConfirm called with:', jobNames);
-        console.log('SearchConditionForm: JobType onConfirm jobNames type:', typeof jobNames);
-        console.log('SearchConditionForm: JobType onConfirm jobNames length:', jobNames?.length);
-        console.log('SearchConditionForm: JobType onConfirm jobNames JSON:', JSON.stringify(jobNames, null, 2));
-        console.log('SearchConditionForm: Current experienceJobTypes before update:', searchStore.experienceJobTypes);
-        console.log('SearchConditionForm: Current experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
+        if (process.env.NODE_ENV === 'development') console.log('🔥 JobType Modal onConfirm CALLED!');
+        if (process.env.NODE_ENV === 'development') console.log('=== JobType Modal onConfirm START ===');
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: JobType onConfirm called with:', jobNames);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: JobType onConfirm jobNames type:', typeof jobNames);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: JobType onConfirm jobNames length:', jobNames?.length);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: JobType onConfirm jobNames JSON:', JSON.stringify(jobNames, null, 2));
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Current experienceJobTypes before update:', searchStore.experienceJobTypes);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Current experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
         
         // signup/educationと同じ方式でIDを生成
         const jobTypes = jobNames.map((jobName) => {
@@ -484,33 +484,33 @@ export default function SearchConditionForm() {
             name: jobName,
             experienceYears: existing?.experienceYears || '',
           };
-          console.log('SearchConditionForm: Creating jobType:', newJobType);
+          if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Creating jobType:', newJobType);
           return newJobType;
         });
-        console.log('SearchConditionForm: Final jobTypes array:', jobTypes);
-        console.log('SearchConditionForm: Final jobTypes JSON:', JSON.stringify(jobTypes, null, 2));
-        console.log('SearchConditionForm: About to call setExperienceJobTypes...');
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Final jobTypes array:', jobTypes);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: Final jobTypes JSON:', JSON.stringify(jobTypes, null, 2));
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: About to call setExperienceJobTypes...');
         
         searchStore.setExperienceJobTypes(jobTypes);
         
-        console.log('SearchConditionForm: setExperienceJobTypes called, immediate check:', searchStore.experienceJobTypes);
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: setExperienceJobTypes called, immediate check:', searchStore.experienceJobTypes);
         
         // モーダルを閉じる
-        console.log('SearchConditionForm: About to close modal...');
+        if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: About to close modal...');
         searchStore.setIsJobTypeModalOpen(false);
         
         setTimeout(() => {
-          console.log('SearchConditionForm: After timeout, experienceJobTypes:', searchStore.experienceJobTypes);
-          console.log('SearchConditionForm: After timeout, experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
+          if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: After timeout, experienceJobTypes:', searchStore.experienceJobTypes);
+          if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: After timeout, experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
         }, 100);
         
         setTimeout(() => {
-          console.log('SearchConditionForm: After 500ms timeout, experienceJobTypes:', searchStore.experienceJobTypes);
-          console.log('SearchConditionForm: After 500ms timeout, experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
+          if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: After 500ms timeout, experienceJobTypes:', searchStore.experienceJobTypes);
+          if (process.env.NODE_ENV === 'development') console.log('SearchConditionForm: After 500ms timeout, experienceJobTypes JSON:', JSON.stringify(searchStore.experienceJobTypes, null, 2));
         }, 500);
-        console.log('=== JobType Modal onConfirm END ===');
+        if (process.env.NODE_ENV === 'development') console.log('=== JobType Modal onConfirm END ===');
         } catch (error) {
-          console.error('🚨 Error in JobType Modal onConfirm:', error);
+          if (process.env.NODE_ENV === 'development') console.error('🚨 Error in JobType Modal onConfirm:', error);
         }
       }}
       initialSelected={searchStore.experienceJobTypes.map(j => j.name)}

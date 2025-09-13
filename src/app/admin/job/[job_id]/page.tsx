@@ -71,7 +71,7 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
     .single();
 
   if (error) {
-    console.error('Error fetching job detail:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching job detail:', error);
     return null;
   }
 
@@ -80,33 +80,42 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
 
 async function fetchScoutStats(jobId: string): Promise<ScoutStats> {
   const supabase = getSupabaseAdminClient();
-  
+
   const now = new Date();
   const date7DaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const date30DaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   // スカウト送信数（メッセージテーブルから）
-  const { data: scoutMessages, error: scoutError } = await supabase
+  // N+1問題を解決するため、JOINクエリで一括取得
+  const { data: statsData, error: statsError } = await supabase
     .from('messages')
-    .select('sent_at, read_at, status')
+    .select(`
+      sent_at,
+      read_at,
+      status,
+      message_type,
+      rooms!inner (
+        related_job_posting_id
+      )
+    `)
     .eq('message_type', 'SCOUT')
-    .in('room_id', (await supabase.from('rooms').select('id').eq('related_job_posting_id', jobId)).data?.map(room => room.id) || []);
+    .eq('rooms.related_job_posting_id', jobId);
 
-  if (scoutError) {
-    console.error('Error fetching scout messages:', scoutError);
+  if (statsError) {
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching scout messages:', statsError);
   }
 
-  // 応募数（applicationテーブルから）
+  // 応募数も同時に取得（別クエリでOK）
   const { data: applications, error: appError } = await supabase
     .from('application')
     .select('created_at, status')
     .eq('job_posting_id', jobId);
 
   if (appError) {
-    console.error('Error fetching applications:', appError);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching applications:', appError);
   }
 
-  const scoutMessagesData = scoutMessages || [];
+  const scoutMessagesData = statsData || [];
   const applicationsData = applications || [];
 
   // 統計を計算

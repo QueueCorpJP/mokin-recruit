@@ -29,11 +29,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Starting fetchData...');
+        if (process.env.NODE_ENV === 'development') console.log('Starting fetchData...');
         
         // Fetch company user settings
         const userSettingsData = await getCompanyUserSettings();
-        console.log('Company user settings data received:', userSettingsData);
+        if (process.env.NODE_ENV === 'development') console.log('Company user settings data received:', userSettingsData);
         setUserSettings(userSettingsData);
 
         // Fetch company notification settings
@@ -46,7 +46,7 @@ export default function SettingsPage() {
           });
         }
       } catch (error) {
-        console.error('設定の取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('設定の取得に失敗しました:', error);
       }
     };
 

@@ -56,10 +56,10 @@ export default function NGKeywordListClient({ ngKeywords }: Props) {
           window.location.reload();
         }, 2000); // 完了モーダル表示時間を考慮
       } else {
-        console.error('削除エラー:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('削除エラー:', result.error);
       }
     } catch (error) {
-      console.error('削除エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('削除エラー:', error);
     } finally {
       setDeletingId(null);
     }

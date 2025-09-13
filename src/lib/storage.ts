@@ -9,8 +9,8 @@ export interface UploadFileResult {
 
 export async function uploadFile(file: File, userId: string, userType: 'candidate' | 'company' = 'candidate'): Promise<UploadFileResult> {
   try {
-    console.log('🔍 [UPLOAD DEBUG] Starting server action upload...', { userType });
-    console.log('🔍 [UPLOAD DEBUG] File info:', { 
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [UPLOAD DEBUG] Starting server action upload...', { userType });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [UPLOAD DEBUG] File info:', { 
       name: file.name, 
       size: file.size, 
       type: file.type 
@@ -26,7 +26,7 @@ export async function uploadFile(file: File, userId: string, userType: 'candidat
       ? await uploadCompanyMessageFile(formData)
       : await uploadMessageFile(formData);
     
-    console.log('🔍 [UPLOAD DEBUG] Server action result:', result);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [UPLOAD DEBUG] Server action result:', result);
     
     if (result.error) {
       return {
@@ -42,7 +42,7 @@ export async function uploadFile(file: File, userId: string, userType: 'candidat
     };
 
   } catch (error) {
-    console.error('Upload file error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Upload file error:', error);
     return { 
       url: '', 
       path: '', 
@@ -52,7 +52,7 @@ export async function uploadFile(file: File, userId: string, userType: 'candidat
 }
 
 export async function uploadMultipleFiles(files: File[], userId: string, userType: 'candidate' | 'company' = 'candidate'): Promise<UploadFileResult[]> {
-  console.log('🔍 [MULTIPLE UPLOAD DEBUG] Starting multiple file upload:', {
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [MULTIPLE UPLOAD DEBUG] Starting multiple file upload:', {
     userId,
     userType,
     fileCount: files.length,
@@ -62,7 +62,7 @@ export async function uploadMultipleFiles(files: File[], userId: string, userTyp
   const uploadPromises = files.map(file => uploadFile(file, userId, userType));
   const results = await Promise.all(uploadPromises);
   
-  console.log('🔍 [MULTIPLE UPLOAD DEBUG] Upload results:', {
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [MULTIPLE UPLOAD DEBUG] Upload results:', {
     totalFiles: results.length,
     successful: results.filter(r => !r.error).length,
     failed: results.filter(r => r.error).length,

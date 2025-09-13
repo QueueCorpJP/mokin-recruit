@@ -7,6 +7,7 @@ import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import Link from 'next/link';
 import { loginAction, LoginResult } from './actions';
+import { maskEmail , safeLog} from '@/lib/utils/pii-safe-logger';
 
 interface LoginClientProps {
   userType: 'candidate' | 'company' | 'admin';
@@ -53,7 +54,7 @@ export function LoginClient({ userType }: LoginClientProps) {
       try {
         // クライアントサイドでのみログ出力
         if (typeof window !== 'undefined') {
-          console.log('🚀 Attempting login for:', email, 'userType:', userType);
+          if (process.env.NODE_ENV === 'development') safeLog('debug', '🚀 Attempting login for:', maskEmail(email), 'userType:', userType);
         }
 
         const result: LoginResult = await loginAction({
@@ -66,7 +67,7 @@ export function LoginClient({ userType }: LoginClientProps) {
           setError(result.error || 'ログインに失敗しました');
           
           if (typeof window !== 'undefined') {
-            console.error('❌ Login failed:', {
+            safeLog('error', '❌ Login failed:', {
               error: result.error,
               message: result.message,
               code: result.code,
@@ -77,7 +78,7 @@ export function LoginClient({ userType }: LoginClientProps) {
 
         // 成功時（実際にはredirectされるのでここには到達しない）
         if (typeof window !== 'undefined') {
-          console.log('✅ Login successful');
+          safeLog('info', '✅ Login successful');
         }
 
         setSuccess('ログインに成功しました！');
@@ -103,7 +104,7 @@ export function LoginClient({ userType }: LoginClientProps) {
         setError(errorMessage);
 
         if (typeof window !== 'undefined') {
-          console.error('❌ Login error:', errorInfo);
+          safeLog('error', '❌ Login error:', errorInfo);
         }
       }
     });

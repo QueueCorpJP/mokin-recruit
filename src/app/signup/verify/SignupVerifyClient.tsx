@@ -97,7 +97,7 @@ export function SignupVerifyClient() {
         );
       }
     } catch (error) {
-      console.error('Signup verify error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Signup verify error:', error);
       setSubmitStatus('error');
       setMessage(
         'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
@@ -130,7 +130,7 @@ export function SignupVerifyClient() {
         setMessage(result.error || '認証コードの再送信に失敗しました。');
       }
     } catch (error) {
-      console.error('Resend code error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Resend code error:', error);
       setSubmitStatus('error');
       setMessage('ネットワークエラーが発生しました。');
     } finally {

@@ -45,7 +45,7 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
       .eq('participant_type', userType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER');
 
     if (participantError) {
-      console.error('Error fetching room participants:', {
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching room participants:', {
         error: participantError,
         message: participantError.message,
         code: participantError.code,
@@ -58,7 +58,7 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
     }
 
     if (!participantData || participantData.length === 0) {
-      console.log('No room participants found for user:', userId, userType);
+      if (process.env.NODE_ENV === 'development') console.log('No room participants found for user:', userId, userType);
       return [];
     }
 
@@ -92,7 +92,7 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
       .order('created_at', { ascending: false });
 
     if (messagesError) {
-      console.error('Error fetching messages:', messagesError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', messagesError);
       return [];
     }
 
@@ -125,7 +125,7 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
 
     return messages;
   } catch (error) {
-    console.error('Error in getMessages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getMessages:', error);
     return [];
   }
 }
@@ -191,7 +191,7 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
       .order('created_at', { ascending: true });
 
     if (messagesError) {
-      console.error('Error fetching messages by room:', messagesError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching messages by room:', messagesError);
       return [];
     }
 
@@ -223,7 +223,7 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
 
     return messages;
   } catch (error) {
-    console.error('Error in getMessagesByRoomId:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getMessagesByRoomId:', error);
     return [];
   }
 }

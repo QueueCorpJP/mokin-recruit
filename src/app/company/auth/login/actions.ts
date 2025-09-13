@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { maskEmail, maskUserId, safeLog } from '@/lib/utils/pii-safe-logger';
 
 export interface LoginFormData {
   email: string;
@@ -36,7 +37,7 @@ async function createSupabaseServerClient() {
             });
           } catch (error) {
             // Server component context where cookies cannot be set
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -49,9 +50,9 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
   try {
     const { email, password, userType } = formData;
 
-    // デバッグ用ログ - パスワードは安全のためマスク
-    console.log('🔍 [COMPANY LOGIN DEBUG] Input:', {
-      email,
+    // デバッグ用ログ - PIIは安全のためマスク
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[COMPANY LOGIN] ログイン試行', {
+      email: maskEmail(email),
       password: password ? `[${password.length}文字]` : 'undefined',
       userType
     });
@@ -64,7 +65,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     });
 
     if (error) {
-      console.error('Supabase login error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase login error:', error);
       return {
         success: false,
         error: 'メールアドレスまたはパスワードが正しくありません',
@@ -90,7 +91,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       .single();
 
     if (companyUserError || !companyUser) {
-      console.log('Company user not found for auth user:', data.user.id);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '企業ユーザーアカウントが見つからない', { userId: maskUserId(data.user.id) });
       return {
         success: false,
         error: '企業ユーザーアカウントではありません',
@@ -99,7 +100,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       };
     }
 
-    console.log('✅ [COMPANY LOGIN] Success:', {
+    if (process.env.NODE_ENV === 'development') console.log('✅ [COMPANY LOGIN] Success:', {
       authUserId: data.user.id,
       email: data.user.email,
       companyUserId: companyUser.id,
@@ -116,7 +117,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     cookieStore.getAll().forEach(cookie => {
       if (cookie.name.startsWith('__Secure-next-auth') || cookie.name.includes('supabase')) {
         // 認証関連のクッキーを確実に設定
-        console.log('Cookie updated:', cookie.name);
+        if (process.env.NODE_ENV === 'development') console.log('Cookie updated:', cookie.name);
       }
     });
     
@@ -125,7 +126,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     redirect(redirectPath);
 
   } catch (error) {
-    console.error('Login action error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Login action error:', error);
     
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
       // Next.jsのredirectは内部的にエラーを投げるため、これは正常な動作

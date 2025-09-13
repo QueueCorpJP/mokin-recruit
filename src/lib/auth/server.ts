@@ -84,7 +84,7 @@ async function createSupabaseServerClient() {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -113,7 +113,7 @@ async function createSupabaseAdminClient() {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -169,7 +169,7 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
       userType,
     };
   } catch (error) {
-    console.error('❌ [AUTH] Server auth error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [AUTH] Server auth error:', error);
     return {
       isAuthenticated: false,
       user: null,
@@ -357,7 +357,7 @@ export async function requireCompanyAuthForAction(): Promise<
       companyAccountId = directUser.company_account_id;
     }
   } catch (error) {
-    console.warn('ID mapping failed, using original:', error);
+    if (process.env.NODE_ENV === 'development') console.warn('ID mapping failed, using original:', error);
   }
 
   if (!companyAccountId) {

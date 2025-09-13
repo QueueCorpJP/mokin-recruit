@@ -51,7 +51,7 @@ export default function SignupResumePage() {
 
   // ファイル選択処理
   const handleFileSelect = (type: 'resume' | 'career', file: File | null) => {
-    console.log('File selected:', type, file?.name, file?.size);
+    if (process.env.NODE_ENV === 'development') console.log('File selected:', type, file?.name, file?.size);
     
     const errorKey = type === 'resume' ? 'resumeFile' : 'careerSummaryFile';
     const error = validateFile(file, errorKey);
@@ -63,10 +63,10 @@ export default function SignupResumePage() {
     
     if (type === 'resume') {
       setFormData(prev => ({ ...prev, resumeFile: file }));
-      console.log('Resume file set:', file?.name);
+      if (process.env.NODE_ENV === 'development') console.log('Resume file set:', file?.name);
     } else {
       setFormData(prev => ({ ...prev, careerSummaryFile: file }));
-      console.log('Career file set:', file?.name);
+      if (process.env.NODE_ENV === 'development') console.log('Career file set:', file?.name);
     }
   };
 
@@ -159,7 +159,7 @@ export default function SignupResumePage() {
       await uploadResumeFiles(uploadFormData);
       // 成功時はactions.tsでリダイレクトされる
     } catch (error) {
-      console.error('Upload error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Upload error:', error);
       setUploadError(error instanceof Error ? error.message : 'アップロードに失敗しました');
     } finally {
       setIsUploading(false);

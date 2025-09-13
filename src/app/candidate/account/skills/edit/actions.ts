@@ -27,7 +27,7 @@ export async function getSkillsData() {
       qualifications: skillsData.qualifications || '',
     };
   } catch (error) {
-    console.error('スキルデータの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('スキルデータの取得に失敗しました:', error);
     return null;
   }
 }
@@ -57,7 +57,7 @@ export async function updateSkillsData(formData: FormData) {
       try {
         skills = JSON.parse(skillsJson);
       } catch (e) {
-        console.error('Skills JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Skills JSON parse error:', e);
       }
     }
     
@@ -65,11 +65,11 @@ export async function updateSkillsData(formData: FormData) {
       try {
         otherLanguages = JSON.parse(otherLanguagesJson);
       } catch (e) {
-        console.error('Other languages JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Other languages JSON parse error:', e);
       }
     }
 
-    console.log('Updating skills data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating skills data:', {
       candidateId,
       englishLevel,
       qualifications,
@@ -113,7 +113,7 @@ export async function updateSkillsData(formData: FormData) {
     }
 
     if (skillsError) {
-      console.error('Skills update error:', skillsError);
+      if (process.env.NODE_ENV === 'development') console.error('Skills update error:', skillsError);
       throw new Error('スキル情報の更新に失敗しました');
     }
 
@@ -127,16 +127,16 @@ export async function updateSkillsData(formData: FormData) {
       .eq('id', candidateId);
 
     if (candidateError) {
-      console.error('Candidate skills update error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Candidate skills update error:', candidateError);
       // これはエラーにしない（主要な情報は既にskillsテーブルに保存済み）
-      console.warn('候補者テーブルのスキル配列の更新に失敗しましたが、処理を続行します');
+      if (process.env.NODE_ENV === 'development') console.warn('候補者テーブルのスキル配列の更新に失敗しましたが、処理を続行します');
     }
 
-    console.log('Skills update success:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('Skills update success:', { candidateId });
     return { success: true };
 
   } catch (error) {
-    console.error('Skills update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Skills update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

@@ -32,7 +32,7 @@ export function ContactFormClient() {
         router.push('/company/contact/complete');
       }
     } catch (error) {
-      console.error('送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('送信エラー:', error);
       setMessage({ type: 'error', text: 'システムエラーが発生しました。' });
     } finally {
       setIsSubmitting(false);

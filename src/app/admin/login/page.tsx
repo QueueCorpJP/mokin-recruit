@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { loginAction } from '@/app/admin/auth/login/actions';
+// import { loginAction } from '@/app/admin/auth/login/actions'; // COMMENTED OUT: ログイン機能が無効化されています
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -12,16 +12,16 @@ export default function Home() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('email', email);
       formData.append('password', password);
       formData.append('userType', 'admin');
-      
+
       await loginAction(formData);
     } catch (error) {
-      console.error('Login error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

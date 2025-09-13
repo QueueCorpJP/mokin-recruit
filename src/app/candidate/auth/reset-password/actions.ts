@@ -20,7 +20,7 @@ async function createSupabaseServerClient() {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -67,7 +67,7 @@ export async function candidateResetPasswordRequestAction(
     );
 
     if (error) {
-      console.error('Supabase reset password error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase reset password error:', error);
       return {
         success: false,
         error: 'パスワードリセット要求の送信に失敗しました',
@@ -79,7 +79,7 @@ export async function candidateResetPasswordRequestAction(
       message: 'パスワード再設定のご案内のメールをお送りいたします。',
     };
   } catch (error) {
-    console.error('Candidate reset password request error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Candidate reset password request error:', error);
 
     return {
       success: false,

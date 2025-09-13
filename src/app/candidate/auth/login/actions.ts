@@ -35,7 +35,7 @@ async function createSupabaseServerClient() {
             });
           } catch (error) {
             // Server component context where cookies cannot be set
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -77,7 +77,7 @@ export async function candidateLoginAction(
     });
 
     if (error) {
-      console.error('Supabase login error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase login error:', error);
       return {
         success: false,
         error: 'メールアドレスまたはパスワードが正しくありません',
@@ -122,7 +122,7 @@ export async function candidateLoginAction(
       });
     }
 
-    console.log('✅ [CANDIDATE LOGIN] Success:', {
+    if (process.env.NODE_ENV === 'development') console.log('✅ [CANDIDATE LOGIN] Success:', {
       userId: data.user.id,
       email: data.user.email || '',
       userType,
@@ -138,7 +138,7 @@ export async function candidateLoginAction(
       success: true,
     };
   } catch (error) {
-    console.error('Candidate login error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Candidate login error:', error);
 
     // エラーメッセージを適切に処理
     if (error instanceof Error) {

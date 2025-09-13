@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 // import NewJobHeader from '@/app/company/job/NewJobHeader';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { CompanyGroup } from '@/app/company/job/types';
 import { LocationModal } from '@/app/company/job/LocationModal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -164,7 +164,7 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
 
           // 複製データ使用後は削除
           sessionStorage.removeItem('duplicateJobData');
-          console.log('複製データを復元しました');
+          if (process.env.NODE_ENV === 'development') console.log('複製データを復元しました');
           return;
         }
 
@@ -211,17 +211,17 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
           if (draftData.publicationType)
             setPublicationType(draftData.publicationType);
 
-          console.log('下書きデータを復元しました（旧形式）');
+          if (process.env.NODE_ENV === 'development') console.log('下書きデータを復元しました（旧形式）');
           // 旧形式の下書きデータを削除
           localStorage.removeItem(DRAFT_KEY);
         }
       } catch (error) {
-        console.error('データの復元に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('データの復元に失敗しました:', error);
         // エラー時はlocalStorageとsessionStorageの両方をクリア
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch (e) {
-          console.error('localStorage清理失敗:', e);
+          if (process.env.NODE_ENV === 'development') console.error('localStorage清理失敗:', e);
         }
         sessionStorage.removeItem('duplicateJobData');
       }
@@ -367,7 +367,7 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
         try {
           encodedImages = await encodeImagesToBase64(images);
         } catch (error) {
-          console.error('Image encoding failed for draft:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Image encoding failed for draft:', error);
           alert('画像の処理に失敗しました');
           return;
         }
@@ -415,11 +415,11 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
         // 求人一覧ページにリダイレクト（管理画面の場合）
         router.push('/admin/job');
       } else {
-        console.error('Draft save API Error:', result);
+        if (process.env.NODE_ENV === 'development') console.error('Draft save API Error:', result);
         alert(`下書き保存エラー: ${result.error}`);
       }
     } catch (error) {
-      console.error('Draft save Request Error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Draft save Request Error:', error);
       alert('下書き保存で通信エラーが発生しました');
     }
   };
@@ -475,7 +475,7 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
       try {
         encodedImages = await encodeImagesToBase64(images);
       } catch (error) {
-        console.error('Image encoding failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Image encoding failed:', error);
         alert('画像の処理に失敗しました');
         return;
       }
@@ -522,37 +522,37 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
         alert('求人を承認待ち状態で投稿しました');
         router.push(`/admin/job/${result.jobId}`);
       } else {
-        console.error('API Error:', result);
+        if (process.env.NODE_ENV === 'development') console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
       }
     } catch (error) {
-      console.error('Request Error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Request Error:', error);
       alert('通信エラーが発生しました');
     }
   };
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
-    console.log('JobNewClient: Setting up event listeners');
+    if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Setting up event listeners');
     const handleJobNewBack = () => {
-      console.log('JobNewClient: Received job-new-back event, isConfirmMode:', isConfirmMode);
+      if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Received job-new-back event, isConfirmMode:', isConfirmMode);
       if (isConfirmMode) {
-        console.log('JobNewClient: Calling handleBack()');
+        if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Calling handleBack()');
         handleBack();
       } else {
-        console.log('JobNewClient: Not in confirm mode, switching to confirm mode');
+        if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Not in confirm mode, switching to confirm mode');
         // 確認モードでない場合は確認モードに切り替える
         if (isFormValid()) {
           setIsConfirmMode(true);
         } else {
           setShowErrors(true);
-          console.log('JobNewClient: Form validation failed');
+          if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Form validation failed');
         }
       }
     };
 
     const handleJobNewCreate = () => {
-      console.log('JobNewClient: Received job-new-create event');
+      if (process.env.NODE_ENV === 'development') console.log('JobNewClient: Received job-new-create event');
       handleSubmit();
     };
 

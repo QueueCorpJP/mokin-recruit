@@ -80,7 +80,7 @@ const getCandidatesData = unstable_cache(
       .limit(10);
 
     if (error) {
-      console.error('Error fetching candidates:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching candidates:', error);
       return [];
     }
 
@@ -209,7 +209,7 @@ const getCandidatesData = unstable_cache(
       };
     });
     } catch (error) {
-      console.error('Error in getCandidatesData:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error in getCandidatesData:', error);
       // エラー時も空配列を返して、ページ表示を継続
       return [];
     }
@@ -317,7 +317,7 @@ async function getRecentMessagesUncached(companyUserId: string): Promise<Message
     const accessibleRoomIds = rooms.map(room => room.id);
     
     if (accessibleRoomIds.length === 0) {
-      console.log('No accessible rooms found for user:', companyUserId);
+      if (process.env.NODE_ENV === 'development') console.log('No accessible rooms found for user:', companyUserId);
       return [];
     }
     
@@ -356,11 +356,11 @@ async function getRecentMessagesUncached(companyUserId: string): Promise<Message
       .limit(3);
 
     if (error || !messages) {
-      console.error('Error fetching messages:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', error);
       return [];
     }
 
-    console.log('Recent unread messages fetched:', {
+    if (process.env.NODE_ENV === 'development') console.log('Recent unread messages fetched:', {
       companyUserId,
       accessibleRoomsCount: accessibleRoomIds.length,
       unreadMessagesCount: messages.length
@@ -379,7 +379,7 @@ async function getRecentMessagesUncached(companyUserId: string): Promise<Message
       room_id: msg.room_id
     }));
   } catch (error) {
-    console.error('Error in getRecentMessages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getRecentMessages:', error);
     return [];
   }
 }

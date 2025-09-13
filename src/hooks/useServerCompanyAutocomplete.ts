@@ -21,14 +21,14 @@ export function useServerCompanyAutocomplete(query: string, enabled = true) {
       setError(null);
 
       try {
-        console.log('Calling server action with query:', debouncedQuery);
+        if (process.env.NODE_ENV === 'development') console.log('Calling server action with query:', debouncedQuery);
         const results = await searchCompaniesAction(debouncedQuery);
-        console.log('Search results:', results);
+        if (process.env.NODE_ENV === 'development') console.log('Search results:', results);
         setSuggestions(results || []);
       } catch (err) {
         setError('企業検索に失敗しました');
         setSuggestions([]);
-        console.error('Company search error:', err);
+        if (process.env.NODE_ENV === 'development') console.error('Company search error:', err);
       } finally {
         setLoading(false);
       }

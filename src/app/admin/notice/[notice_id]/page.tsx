@@ -34,7 +34,7 @@ export default function AdminNoticeDetailPage() {
         setNotice(fetchedNotice);
         setError(null);
       } catch (err) {
-        console.error('お知らせの取得に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('お知らせの取得に失敗:', err);
         setError('お知らせの読み込みに失敗しました');
       } finally {
         setLoading(false);

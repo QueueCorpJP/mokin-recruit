@@ -14,7 +14,7 @@ interface ExpectationFormData {
 }
 
 export async function saveExpectationData(formData: ExpectationFormData) {
-  console.log('=== Start saveExpectationData ===');
+  if (process.env.NODE_ENV === 'development') console.log('=== Start saveExpectationData ===');
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +31,7 @@ export async function saveExpectationData(formData: ExpectationFormData) {
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
-    console.log('Using candidate ID for expectation data:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Using candidate ID for expectation data:', candidateId);
 
     // Save expectation data - use insert with manual conflict handling since no unique constraint on candidate_id
     const { data: existingExpectation } = await supabase
@@ -74,11 +74,11 @@ export async function saveExpectationData(formData: ExpectationFormData) {
       throw new Error(`Expectation data save failed: ${expectationError.message}`);
     }
 
-    console.log('Expectation data saved successfully');
+    if (process.env.NODE_ENV === 'development') console.log('Expectation data saved successfully');
     redirect('/signup/summary');
 
   } catch (error) {
-    console.error('Expectation data save error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Expectation data save error:', error);
     throw error;
   }
 }

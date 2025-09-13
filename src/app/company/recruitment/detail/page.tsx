@@ -3,7 +3,7 @@ import { getCandidatesData, getGroupOptions, getJobOptions } from '@/lib/server/
 import { getCompanyGroups } from '@/lib/actions/search-history';
 import { RecruitmentPageClient } from './RecruitmentPageClient';
 
-export default async function JobDetailPage() {
+export default async function RecruitmentDetailPage() {
   const [candidates, groupOptions, jobOptions, companyGroupsResult] = await Promise.all([
     getCandidatesData(),
     getGroupOptions(),

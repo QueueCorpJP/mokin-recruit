@@ -21,7 +21,7 @@ export function FontLoader() {
           document.documentElement.classList.add('font-loaded');
           document.documentElement.classList.remove('font-loading');
         } catch (error) {
-          console.warn('Font loading failed, using fallback fonts:', error);
+          if (process.env.NODE_ENV === 'development') console.warn('Font loading failed, using fallback fonts:', error);
           // フォント読み込みが失敗してもフォールバックを使用
           document.documentElement.classList.add('font-loaded');
           document.documentElement.classList.remove('font-loading');
@@ -37,7 +37,7 @@ export function FontLoader() {
       // タイムアウト設定（3秒でフォールバック）
       const timeout = setTimeout(() => {
         if (!document.documentElement.classList.contains('font-loaded')) {
-          console.warn('Font loading timeout, using fallback fonts');
+          if (process.env.NODE_ENV === 'development') console.warn('Font loading timeout, using fallback fonts');
           document.documentElement.classList.add('font-loaded');
           document.documentElement.classList.remove('font-loading');
         }

@@ -97,7 +97,9 @@ export default function CandidateCareerStatusEditPage() {
                 ],
         });
       } catch (error) {
-        globalThis.console.error('初期データの取得に失敗しました:', error);
+        globalThis.if (process.env.NODE_ENV === 'development') console.error('初期データの取得に失敗しました:', error);
+      } finally {
+        // setIsLoading(false); // isLoading自体未使用なので削除
       }
     };
     fetchInitialData();
@@ -139,11 +141,11 @@ export default function CandidateCareerStatusEditPage() {
       if (result.success) {
         router.push('/candidate/account/career-status');
       } else {
-        globalThis.console.error('更新エラー:', result.error);
+        globalThis.if (process.env.NODE_ENV === 'development') console.error('更新エラー:', result.error);
         globalThis.alert('更新に失敗しました。もう一度お試しください。');
       }
     } catch (error) {
-      globalThis.console.error('送信エラー:', error);
+      globalThis.if (process.env.NODE_ENV === 'development') console.error('送信エラー:', error);
       globalThis.alert('更新に失敗しました。もう一度お試しください。');
     } finally {
       // setIsSubmitting(false); // isSubmitting自体未使用なので削除

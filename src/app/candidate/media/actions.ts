@@ -48,7 +48,7 @@ export async function getPopularArticles(limit: number = 5): Promise<PopularArti
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('人気記事の取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('人気記事の取得エラー:', error);
     return [];
   }
 }
@@ -84,7 +84,7 @@ export async function getMediaCategories(): Promise<ArticleCategory[]> {
       count
     }));
   } catch (error) {
-    console.error('カテゴリー取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー取得エラー:', error);
     return [];
   }
 }
@@ -120,7 +120,7 @@ export async function getMediaTags(): Promise<ArticleTag[]> {
       count
     }));
   } catch (error) {
-    console.error('タグ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ取得エラー:', error);
     return [];
   }
 }
@@ -157,7 +157,7 @@ export async function getArticles(limit: number = 20, offset: number = 0): Promi
       tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
     })) || [];
   } catch (error) {
-    console.error('記事取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('記事取得エラー:', error);
     return [];
   }
 }
@@ -182,7 +182,7 @@ export async function getArticlesWithPagination(limit: number = 20, offset: numb
       total: count || 0
     };
   } catch (error) {
-    console.error('ページネーション記事取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ページネーション記事取得エラー:', error);
     return {
       articles: [],
       hasMore: false,
@@ -209,7 +209,7 @@ export async function getSidebarData(): Promise<{
       tags
     };
   } catch (error) {
-    console.error('サイドバーデータ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('サイドバーデータ取得エラー:', error);
     return {
       popularArticles: [],
       categories: [],
@@ -251,7 +251,7 @@ export async function getRelatedArticles(currentArticleId: string, limit: number
       tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
     })) || [];
   } catch (error) {
-    console.error('関連記事取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('関連記事取得エラー:', error);
     return getArticles(limit);
   }
 }

@@ -26,7 +26,7 @@ export default function CompanyConfirmClient({ companyData: initialCompanyData }
           const parsedData = JSON.parse(storedData);
           setCompanyData(parsedData);
         } catch (error) {
-          console.error('Failed to parse company form data from sessionStorage:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to parse company form data from sessionStorage:', error);
         }
       }
     }
@@ -50,7 +50,7 @@ export default function CompanyConfirmClient({ companyData: initialCompanyData }
         setSaveError(result.error || '保存に失敗しました');
       }
     } catch (error) {
-      console.error('Save error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Save error:', error);
       setSaveError('保存中にエラーが発生しました');
     } finally {
       setIsSaving(false);

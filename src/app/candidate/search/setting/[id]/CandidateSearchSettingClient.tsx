@@ -178,7 +178,7 @@ export default function CandidateSearchSettingClient({
         isFavorite: isFavorite,
       });
     } catch (error) {
-      console.error('お気に入りの切り替えに失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入りの切り替えに失敗しました:', error);
       // エラーの場合は元の状態に戻す
       setIsFavorite(!newFavoriteState);
     }

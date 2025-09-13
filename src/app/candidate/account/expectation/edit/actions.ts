@@ -36,7 +36,7 @@ export async function getExpectationData() {
           workStyles: [],
         };
       }
-      console.error('希望条件データの取得に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('希望条件データの取得に失敗しました:', error);
       return null;
     }
 
@@ -67,7 +67,7 @@ export async function getExpectationData() {
 
     return result;
   } catch (error) {
-    console.error('希望条件データの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('希望条件データの取得に失敗しました:', error);
     return null;
   }
 }
@@ -115,7 +115,7 @@ export async function updateExpectationData(formData: FormData) {
       try {
         industries = JSON.parse(industriesJson);
       } catch (e) {
-        console.error('Industries JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Industries JSON parse error:', e);
       }
     }
     
@@ -123,7 +123,7 @@ export async function updateExpectationData(formData: FormData) {
       try {
         jobTypes = JSON.parse(jobTypesJson);
       } catch (e) {
-        console.error('Job types JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Job types JSON parse error:', e);
       }
     }
     
@@ -131,7 +131,7 @@ export async function updateExpectationData(formData: FormData) {
       try {
         workLocations = JSON.parse(workLocationsJson);
       } catch (e) {
-        console.error('Work locations JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Work locations JSON parse error:', e);
       }
     }
     
@@ -139,11 +139,11 @@ export async function updateExpectationData(formData: FormData) {
       try {
         workStyles = JSON.parse(workStylesJson);
       } catch (e) {
-        console.error('Work styles JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Work styles JSON parse error:', e);
       }
     }
 
-    console.log('Updating expectation data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating expectation data:', {
       candidateId,
       desiredIncome,
       industries,
@@ -191,15 +191,15 @@ export async function updateExpectationData(formData: FormData) {
     }
 
     if (expectationError) {
-      console.error('Expectation update error:', expectationError);
+      if (process.env.NODE_ENV === 'development') console.error('Expectation update error:', expectationError);
       throw new Error('希望条件の更新に失敗しました');
     }
 
-    console.log('Expectation update success:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('Expectation update success:', { candidateId });
     return { success: true };
 
   } catch (error) {
-    console.error('Expectation update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Expectation update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

@@ -73,7 +73,7 @@ export default function EditPreviewPage() {
             }
           }
         } catch (error) {
-          console.error('カテゴリの取得に失敗:', error);
+          if (process.env.NODE_ENV === 'development') console.error('カテゴリの取得に失敗:', error);
         }
         
         // プレビューデータを設定（editフォームのデータをそのまま使用）
@@ -131,7 +131,7 @@ export default function EditPreviewPage() {
               .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
             formData.append('thumbnail', thumbnailFile);
           } catch (error) {
-            console.warn('サムネイル画像の処理に失敗しました:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('サムネイル画像の処理に失敗しました:', error);
           }
         } else {
           // 既存の画像URLの場合
@@ -148,7 +148,7 @@ export default function EditPreviewPage() {
       sessionStorage.removeItem('previewArticle');
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('記事の保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('記事の保存に失敗:', error);
       setError(error instanceof Error ? error.message : '記事の保存に失敗しました');
     } finally {
       setIsLoading(false);
@@ -278,7 +278,7 @@ export default function EditPreviewPage() {
                                          categories.find(cat => cat.id === categoryId)?.name;
                       
                       if (!categoryName) {
-                        console.log('No category name found for:', categoryId);
+                        if (process.env.NODE_ENV === 'development') console.log('No category name found for:', categoryId);
                         return null;
                       }
                       

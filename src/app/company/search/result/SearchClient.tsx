@@ -25,6 +25,7 @@ import {
 import { useSearchStore } from '../../../../stores/searchStore';
 import { useAuth } from '@/contexts/AuthContext';
 import ExperienceSearchConditionForm from '../components/ExperienceSearchConditionForm';
+import { maskUserId, safeLog } from '@/lib/utils/pii-safe-logger';
 import SelectableTagWithYears from '../components/SelectableTagWithYears';
 import { JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
@@ -446,10 +447,10 @@ export default function SearchClient({
 
   // 検索実行ハンドラー
   const handleSearch = async () => {
-    console.log('🔍 [SearchClient] 検索実行を開始');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[SearchClient] 検索実行を開始');
 
     if (!user) {
-      console.log('⚠️ [SearchClient] 認証されたユーザーが存在しません');
+      safeLog('warn', '⚠️ [SearchClient] 認証されたユーザーが存在しません');
       setError('認証が必要です。ページを更新してください。');
       return;
     }
@@ -566,23 +567,22 @@ export default function SearchClient({
         qualifications: searchStore.qualifications,
       };
 
-      console.log('🔍 [SearchClient] 検索条件:', searchConditions);
-      console.log(
-        '📡 [SearchClient] searchCandidatesWithConditionsを呼び出し中...'
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '🔍 [SearchClient] 検索条件:', searchConditions);
+      if (process.env.NODE_ENV === 'development') console.log('📡 [SearchClient] searchCandidatesWithConditionsを呼び出し中...'
       );
 
       const results = await searchCandidatesWithConditions(searchConditions);
 
-      console.log('✅ [SearchClient] 検索結果を受信:', results.length, '件');
+      safeLog('info', '✅ [SearchClient] 検索結果を受信:', results.length, '件');
 
       if (results.length > 0) {
-        console.log('👥 [SearchClient] 検索結果サンプル:', {
+        if (process.env.NODE_ENV === 'development') safeLog('debug', '👥 [SearchClient] 検索結果サンプル:', {
           id: results[0].id,
           companyName: results[0].companyName,
           position: results[0].position,
         });
       } else {
-        console.log('⚠️ [SearchClient] 検索結果が0件です');
+        safeLog('warn', '⚠️ [SearchClient] 検索結果が0件です');
       }
 
       setCandidates(results);
@@ -594,7 +594,7 @@ export default function SearchClient({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError('検索に失敗しました。もう一度お試しください。');
-      console.error('❌ [SearchClient] 検索エラー:', err);
+      safeLog('error', '❌ [SearchClient] 検索エラー:', err);
     } finally {
       setLoading(false);
     }
@@ -620,37 +620,36 @@ export default function SearchClient({
 
     const loadSavedCandidates = async () => {
       try {
-        console.log(
-          '[DEBUG] Loading saved candidates for group:',
+        if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Loading saved candidates for group:',
           searchStore.searchGroup
         );
         const result = await getSavedCandidatesAction(searchStore.searchGroup);
         if (result.success) {
           setSavedCandidateIds(result.data);
-          console.log('[DEBUG] Loaded saved candidate IDs:', result.data);
+          if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Loaded saved candidate IDs:', result.data);
         } else {
-          console.error('Failed to load saved candidates');
+          if (process.env.NODE_ENV === 'development') console.error('Failed to load saved candidates');
         }
       } catch (error) {
-        console.error('Error loading saved candidates:', error);
+        safeLog('error', 'Error loading saved candidates:', error);
       }
     };
 
     const loadHiddenCandidates = async () => {
       try {
-        console.log(
+        if (process.env.NODE_ENV === 'development') console.log(
           '[DEBUG] Loading hidden candidates for group:',
           searchStore.searchGroup
         );
         const result = await getHiddenCandidatesAction(searchStore.searchGroup);
         if (result.success) {
           setHiddenCandidateIds(result.data);
-          console.log('[DEBUG] Loaded hidden candidate IDs:', result.data);
+          if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Loaded hidden candidate IDs:', result.data);
         } else {
-          console.error('Failed to load hidden candidates');
+          if (process.env.NODE_ENV === 'development') console.error('Failed to load hidden candidates');
         }
       } catch (error) {
-        console.error('Error loading hidden candidates:', error);
+        safeLog('error', 'Error loading hidden candidates:', error);
       }
     };
 
@@ -676,12 +675,12 @@ export default function SearchClient({
 
     // 認証が必要だが、ユーザーが存在しない場合は処理を停止
     if (!user) {
-      console.log('⚠️ [SearchClient] 認証されたユーザーが存在しません');
+      safeLog('warn', '⚠️ [SearchClient] 認証されたユーザーが存在しません');
       setLoading(false);
       return;
     }
 
-    console.log('✅ [SearchClient] 認証済みユーザーを確認:', user.id);
+    safeLog('info', '✅ [SearchClient] 認証済みユーザーを確認:', maskUserId(user.id));
 
     const loadInitialData = async () => {
       try {
@@ -693,18 +692,18 @@ export default function SearchClient({
           setAllCandidates(initialCandidates);
           setCandidates(initialCandidates);
         } else {
-          console.log(
+          if (process.env.NODE_ENV === 'development') console.log(
             '📊 [SearchClient] 初期データがないため、getCandidatesFromDatabaseを呼び出し中...'
           );
           const candidatesData = await getCandidatesFromDatabase();
-          console.log(
+          if (process.env.NODE_ENV === 'development') console.log(
             '✅ [SearchClient] 初期候補者データを取得:',
             candidatesData.length,
             '件'
           );
 
           if (candidatesData.length > 0) {
-            console.log('👥 [SearchClient] 初期データサンプル:', {
+            if (process.env.NODE_ENV === 'development') safeLog('debug', '👥 [SearchClient] 初期データサンプル:', {
               id: candidatesData[0].id,
               companyName: candidatesData[0].companyName,
               position: candidatesData[0].position,
@@ -735,7 +734,7 @@ export default function SearchClient({
 
         // グループ情報は初期データで設定済み
       } catch (error) {
-        console.error('Failed to load initial data:', error);
+        safeLog('error', 'Failed to load initial data:', error);
         setError('データの読み込みに失敗しました');
       } finally {
         setLoading(false);
@@ -753,7 +752,7 @@ export default function SearchClient({
 
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
-    console.log('[DEBUG] URL parameters changed, reloading search params');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] URL parameters changed, reloading search params');
   }, [searchParams, isHydrated]);
 
   // 初回のみ外部パラメータで検索実行
@@ -792,7 +791,7 @@ export default function SearchClient({
 
     if (hasUrlParams) {
       // 外部パラメータがある場合は自動検索実行
-      console.log('[DEBUG] URLパラメータを検出、自動検索を実行します');
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] URLパラメータを検出、自動検索を実行します');
       handleSearch();
     } else {
       // パラメータがない場合は全候補者を表示
@@ -805,13 +804,13 @@ export default function SearchClient({
     const candidateId = String(id);
     const currentGroupId = searchStore.searchGroup;
 
-    console.log('[DEBUG] togglePickup called with:', {
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] togglePickup called with:', {
       candidateId,
       currentGroupId,
     });
 
     if (!currentGroupId) {
-      console.error('No group selected');
+      if (process.env.NODE_ENV === 'development') console.error('No group selected');
       return;
     }
 
@@ -824,15 +823,15 @@ export default function SearchClient({
         if (result.success) {
           setSavedCandidateIds(prev => prev.filter(id => id !== candidateId));
         } else {
-          console.error('Failed to unsave candidate:', result.error);
+          safeLog('error', 'Failed to unsave candidate:', result.error);
         }
       } else {
         const result = await saveCandidateAction(candidateId, currentGroupId);
         if (result.success) {
           setSavedCandidateIds(prev => [...prev, candidateId]);
         } else {
-          console.error('Failed to save candidate:', result.error);
-          console.log('[DEBUG] Full save result:', result);
+          safeLog('error', 'Failed to save candidate:', result.error);
+          if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Full save result:', result);
         }
       }
 
@@ -844,14 +843,14 @@ export default function SearchClient({
         )
       );
     } catch (error) {
-      console.error('Error toggling pickup:', error);
+      safeLog('error', 'Error toggling pickup:', error);
     }
   };
 
   const toggleHidden = async (candidateId: string) => {
     const currentGroupId = searchStore.searchGroup;
     if (!currentGroupId) {
-      console.error('No group selected');
+      if (process.env.NODE_ENV === 'development') console.error('No group selected');
       return;
     }
 
@@ -877,7 +876,7 @@ export default function SearchClient({
         } else {
           setHiddenCandidateIds(prev => [...prev, candidateId]);
         }
-        console.error('Failed to toggle hidden status:', result.error);
+        safeLog('error', 'Failed to toggle hidden status:', result.error);
       }
     } catch (error) {
       // Revert on error
@@ -886,7 +885,7 @@ export default function SearchClient({
       } else {
         setHiddenCandidateIds(prev => [...prev, candidateId]);
       }
-      console.error('Error toggling hidden:', error);
+      safeLog('error', 'Error toggling hidden:', error);
     }
   };
 

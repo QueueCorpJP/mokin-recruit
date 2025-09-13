@@ -74,7 +74,7 @@ export async function getEducationData() {
       jobTypes: [],
     };
   } catch (error) {
-    console.error('学歴データの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('学歴データの取得に失敗しました:', error);
     return null;
   }
 }
@@ -119,7 +119,7 @@ export async function updateEducationData(formData: FormData) {
       try {
         data.industries = JSON.parse(industriesJson);
       } catch (e) {
-        console.error('Industries JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Industries JSON parse error:', e);
       }
     }
 
@@ -127,11 +127,11 @@ export async function updateEducationData(formData: FormData) {
       try {
         data.jobTypes = JSON.parse(jobTypesJson);
       } catch (e) {
-        console.error('Job types JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Job types JSON parse error:', e);
       }
     }
 
-    console.log('Updating education data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating education data:', {
       candidateId,
       ...data
     });
@@ -174,7 +174,7 @@ export async function updateEducationData(formData: FormData) {
     }
 
     if (educationError) {
-      console.error('Education update error:', educationError);
+      if (process.env.NODE_ENV === 'development') console.error('Education update error:', educationError);
       throw new Error('学歴情報の更新に失敗しました');
     }
 
@@ -187,9 +187,9 @@ export async function updateEducationData(formData: FormData) {
       .eq('id', candidateId);
 
     if (candidateError) {
-      console.error('Candidate updated_at update error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Candidate updated_at update error:', candidateError);
       // これはエラーにしない（主要な情報は既に保存済み）
-      console.warn('候補者テーブルの更新日時の更新に失敗しましたが、処理を続行します');
+      if (process.env.NODE_ENV === 'development') console.warn('候補者テーブルの更新日時の更新に失敗しましたが、処理を続行します');
     }
 
     // 業種データの更新（必要に応じて）
@@ -213,8 +213,8 @@ export async function updateEducationData(formData: FormData) {
         .insert(industriesData);
 
       if (industriesError) {
-        console.error('Industries update error:', industriesError);
-        console.error('Industries data that failed to insert:', industriesData);
+        if (process.env.NODE_ENV === 'development') console.error('Industries update error:', industriesError);
+        if (process.env.NODE_ENV === 'development') console.error('Industries data that failed to insert:', industriesData);
       }
     }
 
@@ -239,15 +239,15 @@ export async function updateEducationData(formData: FormData) {
         .insert(jobTypesData);
 
       if (jobTypesError) {
-        console.error('Job types update error:', jobTypesError);
+        if (process.env.NODE_ENV === 'development') console.error('Job types update error:', jobTypesError);
       }
     }
 
-    console.log('Education update success:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('Education update success:', { candidateId });
     return { success: true };
 
   } catch (error) {
-    console.error('Education update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Education update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

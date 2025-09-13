@@ -134,7 +134,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           }
         }
       } catch (error) {
-        console.error('Signup request error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Signup request error:', error);
         setSubmitStatus('error');
         setMessage(
           'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'

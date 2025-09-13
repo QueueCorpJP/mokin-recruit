@@ -46,7 +46,7 @@ export default async function ContactPage() {
     .single();
 
   if (userError || !companyUser) {
-    console.error('企業ユーザー情報取得エラー:', userError);
+    if (process.env.NODE_ENV === 'development') console.error('企業ユーザー情報取得エラー:', userError);
     return (
       <div className='pt-10 px-20 pb-20 flex justify-center w-full' style={{ background: '#F9F9F9' }}>
         <div className='w-full max-w-[800px]'>

@@ -172,7 +172,7 @@ export default function SignupSkillsPage() {
         });
         // Redirect is handled in the server action
       } catch (error) {
-        console.error('Failed to save skills data:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to save skills data:', error);
         // Optionally show an error message to the user
       } finally {
         setIsSubmitting(false);

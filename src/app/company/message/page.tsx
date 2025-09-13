@@ -26,7 +26,7 @@ async function MessageServerComponent({
 
   const companyUserId = user.id;
   const fullName = user.name || '';
-  console.log('🔍 [STEP 1] Auth success:', { 
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [STEP 1] Auth success:', { 
     companyUserId, 
     fullName,
     roomId: params.room,
@@ -34,7 +34,7 @@ async function MessageServerComponent({
   });
   
   const rooms = await getRooms(companyUserId, 'company');
-  console.log('🔍 [STEP 2] Rooms returned:', { 
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [STEP 2] Rooms returned:', { 
     roomsCount: rooms.length,
     initialRoomId: params.room,
     rooms: rooms.map(r => ({

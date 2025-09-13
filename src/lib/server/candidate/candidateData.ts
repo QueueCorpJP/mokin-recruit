@@ -54,86 +54,92 @@ export interface EducationData {
   graduation_month?: number;
 }
 
-// 候補者の基本データを取得する関数
+// 候補者の基本データを取得する関数（N+1問題を解決）
 export async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    
-    const { data, error } = await supabase
-      .from('candidates')
-      .select(`
-        id,
-        email,
-        last_name,
-        first_name,
-        last_name_kana,
-        first_name_kana,
-        phone_number,
-        current_residence,
-        prefecture,
-        gender,
-        birth_date,
-        current_income,
-        has_career_change,
-        job_change_timing,
-        current_activity_status,
-        recent_job_company_name,
-        recent_job_department_position,
-        recent_job_start_year,
-        recent_job_start_month,
-        recent_job_end_year,
-        recent_job_end_month,
-        recent_job_is_currently_working,
-        recent_job_industries,
-        recent_job_types,
-        recent_job_description,
-        job_summary,
-        self_pr,
-        management_experience_count,
-        interested_work_styles,
-        skills,
-        experience_years,
-        desired_industries,
-        desired_job_types,
-        desired_salary,
-        desired_locations,
-        resume_filename,
-        resume_uploaded_at
-      `)
-      .eq('id', candidateId)
-      .single();
 
-    if (error) {
-      console.error('候補者データの取得に失敗しました:', error);
+    // N+1問題を解決するため、3つのクエリを並列実行
+    const [
+      candidateResult,
+      industriesResult,
+      jobTypesResult
+    ] = await Promise.all([
+      // 候補者基本情報
+      supabase
+        .from('candidates')
+        .select(`
+          id,
+          email,
+          last_name,
+          first_name,
+          last_name_kana,
+          first_name_kana,
+          phone_number,
+          current_residence,
+          prefecture,
+          gender,
+          birth_date,
+          current_income,
+          has_career_change,
+          job_change_timing,
+          current_activity_status,
+          recent_job_company_name,
+          recent_job_department_position,
+          recent_job_start_year,
+          recent_job_start_month,
+          recent_job_end_year,
+          recent_job_end_month,
+          recent_job_is_currently_working,
+          recent_job_industries,
+          recent_job_types,
+          recent_job_description,
+          job_summary,
+          self_pr,
+          management_experience_count,
+          interested_work_styles,
+          skills,
+          experience_years,
+          desired_industries,
+          desired_job_types,
+          desired_salary,
+          desired_locations,
+          resume_filename,
+          resume_uploaded_at
+        `)
+        .eq('id', candidateId)
+        .single(),
+
+      // 業種経験データ
+      supabase
+        .from('work_experience')
+        .select('industry_name, experience_years')
+        .eq('candidate_id', candidateId),
+
+      // 職種経験データ
+      supabase
+        .from('job_type_experience')
+        .select('job_type_name, experience_years')
+        .eq('candidate_id', candidateId),
+    ]);
+
+    const { data: candidateData, error: candidateError } = candidateResult;
+    const { data: industriesData } = industriesResult;
+    const { data: jobTypesData } = jobTypesResult;
+
+    if (candidateError) {
+      if (process.env.NODE_ENV === 'development') console.error('候補者データの取得に失敗しました:', candidateError);
       return null;
     }
 
-    // 業種データを取得
-    const { data: industriesData } = await supabase
-      .from('work_experience')
-      .select(`
-        industry_name,
-        experience_years
-      `)
-      .eq('candidate_id', candidateId);
-
-    // 職種データを取得
-    const { data: jobTypesData } = await supabase
-      .from('job_type_experience')
-      .select(`
-        job_type_name,
-        experience_years
-      `)
-      .eq('candidate_id', candidateId);
-
     // 業種・職種の名前を配列として格納
-    const candidateData = data as CandidateData;
-    candidateData.desired_industries = industriesData?.map(item => item.industry_name).filter(Boolean) || [];
-    candidateData.desired_job_types = jobTypesData?.map(item => item.job_type_name).filter(Boolean) || [];
+    const result = candidateData as CandidateData;
+    result.desired_industries = industriesData?.map(item => item.industry_name).filter(Boolean) || [];
+    result.desired_job_types = jobTypesData?.map(item => item.job_type_name).filter(Boolean) || [];
 
-    return candidateData;
+    return result;
   } catch (error) {
-    console.error('データベースエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('データベースエラー:', error);
     return null;
   }
 }
@@ -172,13 +178,13 @@ export async function getEducationData(candidateId: string): Promise<EducationDa
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('学歴データの取得に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('学歴データの取得に失敗しました:', error);
       return null;
     }
 
     return data as EducationData;
   } catch (error) {
-    console.error('データベースエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('データベースエラー:', error);
     return null;
   }
 }
@@ -206,13 +212,13 @@ export async function getSkillsData(candidateId: string): Promise<SkillsData | n
       if (error.code === 'PGRST116') {
         return null;
       }
-      console.error('スキルデータの取得に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('スキルデータの取得に失敗しました:', error);
       return null;
     }
 
     return data as SkillsData;
   } catch (error) {
-    console.error('データベースエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('データベースエラー:', error);
     return null;
   }
 }

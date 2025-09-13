@@ -35,7 +35,7 @@ export const fontOptimizer = {
           document.documentElement.classList.add('fonts-loaded');
         },
         () => {
-          console.warn(`Font ${font.family} ${font.weight} failed to load`);
+          if (process.env.NODE_ENV === 'development') console.warn(`Font ${font.family} ${font.weight} failed to load`);
         }
       );
     });

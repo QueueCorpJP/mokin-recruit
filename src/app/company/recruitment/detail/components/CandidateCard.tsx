@@ -143,7 +143,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
   };
 
   // デバッグ用ログ
-  console.log('🎯 [CandidateCard] 候補者データ:', {
+  if (process.env.NODE_ENV === 'development') console.log('🎯 [CandidateCard] 候補者データ:', {
     id: candidate.id,
     name: candidate.name,
     jobPostingId: candidate.jobPostingId,

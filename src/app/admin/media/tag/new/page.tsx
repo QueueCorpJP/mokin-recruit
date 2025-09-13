@@ -32,7 +32,7 @@ export default function NewTagPage() {
       setCreatedTagName(tagName.trim());
       setShowSuccessModal(true);
     } catch (err) {
-      console.error('タグの作成に失敗:', err);
+      if (process.env.NODE_ENV === 'development') console.error('タグの作成に失敗:', err);
       setError(err instanceof Error ? err.message : 'タグの作成に失敗しました');
     } finally {
       setLoading(false);

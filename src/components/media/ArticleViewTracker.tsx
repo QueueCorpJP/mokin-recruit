@@ -35,10 +35,10 @@ export function ArticleViewTracker({ articleId }: ArticleViewTrackerProps) {
           viewedArticles.push(articleId);
           sessionStorage.setItem(viewedArticlesKey, JSON.stringify(viewedArticles));
         } else {
-          console.warn('訪問数の更新に失敗:', result.error);
+          if (process.env.NODE_ENV === 'development') console.warn('訪問数の更新に失敗:', result.error);
         }
       } catch (error) {
-        console.error('訪問数追跡エラー:', error);
+        if (process.env.NODE_ENV === 'development') console.error('訪問数追跡エラー:', error);
       }
     };
 

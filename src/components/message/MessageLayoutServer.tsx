@@ -84,7 +84,7 @@ export function MessageLayoutServer({
           }
           
           if (markAsReadResult.success) {
-            console.log('✅ Messages marked as read successfully');
+            if (process.env.NODE_ENV === 'development') console.log('✅ Messages marked as read successfully');
             // データベース更新が成功した場合のみローカル状態を更新
             setRooms(prevRooms => 
               prevRooms.map(room => 
@@ -94,10 +94,10 @@ export function MessageLayoutServer({
               )
             );
           } else {
-            console.warn('⚠️ Failed to mark messages as read:', markAsReadResult.error);
+            if (process.env.NODE_ENV === 'development') console.warn('⚠️ Failed to mark messages as read:', markAsReadResult.error);
           }
         } catch (error) {
-          console.error('Failed to load messages:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to load messages:', error);
           setRoomMessages([]);
         }
       };
@@ -220,7 +220,7 @@ export function MessageLayoutServer({
 
   // メッセージ送信処理
   const handleSendMessage = async (content: string, fileUrls?: string[]) => {
-    console.log('🔍 [MESSAGE SEND] Starting send process:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Starting send process:', {
       selectedRoomId,
       userType,
       isCandidatePage,
@@ -233,13 +233,13 @@ export function MessageLayoutServer({
     });
 
     if (!selectedRoomId) {
-      console.error('🔍 [MESSAGE SEND] No room selected');
+      if (process.env.NODE_ENV === 'development') console.error('🔍 [MESSAGE SEND] No room selected');
       return;
     }
 
     // メッセージまたはファイルのいずれかが必要
     if (!content.trim() && (!fileUrls || fileUrls.length === 0)) {
-      console.error('🔍 [MESSAGE SEND] No content or files to send');
+      if (process.env.NODE_ENV === 'development') console.error('🔍 [MESSAGE SEND] No content or files to send');
       return;
     }
     
@@ -247,7 +247,7 @@ export function MessageLayoutServer({
       let result;
       
       if (userType === 'candidate') {
-        console.log('🔍 [MESSAGE SEND] Using candidate sendMessage with data:', {
+        if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Using candidate sendMessage with data:', {
           room_id: selectedRoomId,
           content,
           message_type: 'GENERAL',
@@ -262,7 +262,7 @@ export function MessageLayoutServer({
           file_urls: fileUrls || []
         });
       } else {
-        console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage with data:', {
+        if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Using company sendCompanyMessage with data:', {
           room_id: selectedRoomId,
           content,
           message_type: 'GENERAL',
@@ -271,7 +271,7 @@ export function MessageLayoutServer({
           userType,
           userId
         });
-        console.log('🔍 [MESSAGE SEND] Calling sendCompanyMessage from company interface');
+        if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Calling sendCompanyMessage from company interface');
         // 企業用の送信関数を使用
         result = await sendCompanyMessage({
           room_id: selectedRoomId,
@@ -279,24 +279,24 @@ export function MessageLayoutServer({
           message_type: 'GENERAL',
           file_urls: fileUrls || []
         });
-        console.log('🔍 [MESSAGE SEND] sendCompanyMessage result:', result);
+        if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] sendCompanyMessage result:', result);
       }
 
-      console.log('🔍 [MESSAGE SEND] Send result:', result);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Send result:', result);
 
       if (result.error) {
-        console.error('Failed to send message:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', result.error);
         showToast('メッセージの送信に失敗しました。しばらく時間をおいてから再度お試しください。', 'error');
         return;
       }
 
       // メッセージ送信成功後、メッセージリストを再読み込み
-      console.log('🔍 [MESSAGE SEND] Reloading messages');
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Reloading messages');
       const updatedMessages = await getRoomMessages(selectedRoomId);
       setRoomMessages(updatedMessages);
-      console.log('🔍 [MESSAGE SEND] Messages reloaded:', updatedMessages.length);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE SEND] Messages reloaded:', updatedMessages.length);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', error);
       showToast('メッセージの送信中にエラーが発生しました。ネットワーク接続を確認してから再度お試しください。', 'error');
     }
   };

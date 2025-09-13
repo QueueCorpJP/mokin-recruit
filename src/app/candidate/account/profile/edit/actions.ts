@@ -92,14 +92,14 @@ export async function updateCandidateProfile(
       .eq('id', candidateId);
 
     if (error) {
-      console.error('プロフィール更新エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('プロフィール更新エラー:', error);
       return {
         success: false,
         message: 'プロフィールの更新に失敗しました',
       };
     }
 
-    console.log('プロフィール更新成功:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('プロフィール更新成功:', { candidateId });
     
     return {
       success: true,
@@ -107,7 +107,7 @@ export async function updateCandidateProfile(
     };
 
   } catch (error) {
-    console.error('プロフィール更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('プロフィール更新エラー:', error);
     return {
       success: false,
       message: 'プロフィールの更新中にエラーが発生しました',

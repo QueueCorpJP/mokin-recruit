@@ -69,7 +69,7 @@ export async function getRecentJobData() {
       ],
     };
   } catch (error) {
-    console.error('職務経歴データの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('職務経歴データの取得に失敗しました:', error);
     return null;
   }
 }
@@ -92,7 +92,7 @@ export async function updateRecentJobData(formData: FormData) {
       try {
         jobHistories = JSON.parse(jobHistoriesJson);
       } catch (e) {
-        console.error('Job histories JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Job histories JSON parse error:', e);
         throw new Error('職歴データの解析に失敗しました');
       }
     }
@@ -116,7 +116,7 @@ export async function updateRecentJobData(formData: FormData) {
       };
     });
 
-    console.log('Updating job histories data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating job histories data:', {
       candidateId,
       jobHistories: processedJobHistories
     });
@@ -165,15 +165,15 @@ export async function updateRecentJobData(formData: FormData) {
       .eq('id', candidateId);
 
     if (candidateError) {
-      console.error('Recent job update error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Recent job update error:', candidateError);
       throw new Error('職務経歴の更新に失敗しました');
     }
 
-    console.log('Recent job update success:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('Recent job update success:', { candidateId });
     return { success: true };
 
   } catch (error) {
-    console.error('Job history update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job history update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

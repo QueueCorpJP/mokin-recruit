@@ -45,7 +45,7 @@ export function useCandidateModals() {
         context.updateSelectionEntry(entryIndex, 'jobTypes', selectedJobTypes);
       } else {
         // Selection entriesの職種を更新 (選考状況用)
-        console.warn('Selection entriesには職種フィールドがありません');
+        if (process.env.NODE_ENV === 'development') console.warn('Selection entriesには職種フィールドがありません');
       }
     }
     context.closeModal();

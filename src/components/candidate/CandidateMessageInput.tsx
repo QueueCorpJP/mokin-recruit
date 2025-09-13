@@ -30,11 +30,11 @@ export function CandidateMessageInput({
         // ページを再読み込みしてメッセージを表示更新
         window.location.reload();
       } else {
-        console.error('Failed to send message:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', result.error);
         alert('メッセージの送信に失敗しました');
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', error);
       alert('メッセージの送信に失敗しました');
     } finally {
       setIsSending(false);
@@ -130,7 +130,7 @@ export function CandidateMessageInput({
           const additionalHeight = target.scrollHeight - initialHeight;
           const currentLines = Math.floor(additionalHeight / lineHeight) + 1;
           
-          console.log('CandidateMessageInput Height calculation:', {
+          if (process.env.NODE_ENV === 'development') console.log('CandidateMessageInput Height calculation:', {
             scrollHeight: target.scrollHeight,
             currentLines,
             shouldExpand: currentLines >= 3

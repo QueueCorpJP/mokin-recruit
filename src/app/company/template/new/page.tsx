@@ -24,7 +24,7 @@ export default async function TemplateNewPage() {
     groupOptions = await getCompanyGroups();
   } catch (err) {
     error = 'グループ情報の取得に失敗しました';
-    console.error('Failed to fetch company groups:', err);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch company groups:', err);
     groupOptions = [{ value: '', label: '未選択' }];
   }
 

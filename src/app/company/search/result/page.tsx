@@ -54,8 +54,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   // 検索履歴を保存（バックグラウンドで実行）
-  console.log('[DEBUG] Search params:', Object.fromEntries(urlParams.entries()));
-  console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
+  if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Search params:', Object.fromEntries(urlParams.entries()));
+  if (process.env.NODE_ENV === 'development') console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
   
   try {
     const keyword = urlParams.get('keyword') || '';
@@ -119,14 +119,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       searchConditions.selection_status;
       
 
-    console.log('[DEBUG] searchConditions:', JSON.stringify(searchConditions, null, 2));
-    console.log('[DEBUG] hasValidConditions:', hasValidConditions);
-    console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
-    console.log('[DEBUG] Will save history?:', urlParams.get('search_group') && hasValidConditions);
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] searchConditions:', JSON.stringify(searchConditions, null, 2));
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] hasValidConditions:', hasValidConditions);
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] search_group param:', urlParams.get('search_group'));
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Will save history?:', urlParams.get('search_group') && hasValidConditions);
 
     // 検索条件が存在し、かつユーザーがグループを明示的に選択し、保存ボタンから来ていない場合のみ履歴保存
     if (urlParams.get('search_group') && hasValidConditions && !urlParams.get('from_save')) {
-      console.log('[DEBUG] Saving search history...');
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Saving search history...');
       const searchTitle = generateSearchTitle(searchConditions);
 
       // 履歴保存（エラーが発生しても処理を続行）
@@ -136,19 +136,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         search_title: searchTitle,
         is_saved: true  // 一時的にtrueに変更してテスト
       }).catch(error => {
-        console.error('Failed to save search history:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to save search history:', error);
         return { success: false, error: error.message };
       });
       
-      console.log('[DEBUG] Save result:', result);
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Save result:', result);
       
     } else {
-      console.log('[DEBUG] Not saving search history - グループが選択されていないか、有効な検索条件がありません');
-      console.log('[DEBUG] search_group:', urlParams.get('search_group'));
-      console.log('[DEBUG] hasValidConditions:', hasValidConditions);
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Not saving search history - グループが選択されていないか、有効な検索条件がありません');
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] search_group:', urlParams.get('search_group'));
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] hasValidConditions:', hasValidConditions);
     }
   } catch (error) {
-    console.error('Error processing search history:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error processing search history:', error);
   }
 
   return (

@@ -186,15 +186,15 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
       const result = await updateCompanyData(company.id, formData);
 
       if (result.success) {
-        console.log('Company updated successfully:', result.company);
+        if (process.env.NODE_ENV === 'development') console.log('Company updated successfully:', result.company);
         // 保存完了モーダルを表示
         setSaveCompleteModalOpen(true);
       } else {
         setSaveError(result.error || '保存に失敗しました');
-        console.error('Company update failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Company update failed:', result.error);
       }
     } catch (error) {
-      console.error('Save error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Save error:', error);
       setSaveError('保存中にエラーが発生しました');
     } finally {
       setIsSaving(false);

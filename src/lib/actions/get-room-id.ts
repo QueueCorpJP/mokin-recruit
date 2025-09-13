@@ -10,7 +10,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server-client';
  */
 export async function getRoomIdAction(candidateId: string, companyGroupId: string): Promise<string | null> {
   try {
-    console.log('🔍 [getRoomIdAction] 検索条件:', { candidateId, companyGroupId });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomIdAction] 検索条件:', { candidateId, companyGroupId });
     // 修正されたRLSポリシーによりServer clientを使用可能
     const supabase = await getSupabaseServerClient();
     
@@ -20,7 +20,7 @@ export async function getRoomIdAction(candidateId: string, companyGroupId: strin
       .select('id, candidate_id, company_group_id, type')
       .limit(10);
     
-    console.log('🔍 [getRoomIdAction] 全室情報:', { allRooms, allRoomsError });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomIdAction] 全室情報:', { allRooms, allRoomsError });
     
     // candidateIdに一致するroomを確認
     const { data: candidateRooms, error: candidateRoomsError } = await supabase
@@ -28,7 +28,7 @@ export async function getRoomIdAction(candidateId: string, companyGroupId: strin
       .select('id, candidate_id, company_group_id, type')
       .eq('candidate_id', candidateId);
     
-    console.log('🔍 [getRoomIdAction] 候補者一致rooms:', { candidateRooms, candidateRoomsError });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomIdAction] 候補者一致rooms:', { candidateRooms, candidateRoomsError });
     
     // companyGroupIdに一致するroomを確認
     const { data: companyRooms, error: companyRoomsError } = await supabase
@@ -36,7 +36,7 @@ export async function getRoomIdAction(candidateId: string, companyGroupId: strin
       .select('id, candidate_id, company_group_id, type')
       .eq('company_group_id', companyGroupId);
     
-    console.log('🔍 [getRoomIdAction] 企業グループ一致rooms:', { companyRooms, companyRoomsError });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomIdAction] 企業グループ一致rooms:', { companyRooms, companyRoomsError });
     
     const { data: room, error } = await supabase
       .from('rooms')
@@ -46,21 +46,21 @@ export async function getRoomIdAction(candidateId: string, companyGroupId: strin
       .eq('type', 'direct')
       .single();
     
-    console.log('🔍 [getRoomIdAction] 厳密一致結果:', { room, error });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [getRoomIdAction] 厳密一致結果:', { room, error });
     
     if (error) {
       if (error.code === 'PGRST116') {
-        console.log('❌ [getRoomIdAction] Room not found:', { candidateId, companyGroupId });
+        if (process.env.NODE_ENV === 'development') console.log('❌ [getRoomIdAction] Room not found:', { candidateId, companyGroupId });
         return null;
       }
-      console.error('❌ [getRoomIdAction] Room lookup error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [getRoomIdAction] Room lookup error:', error);
       return null;
     }
     
-    console.log('✅ [getRoomIdAction] Found room:', room?.id);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [getRoomIdAction] Found room:', room?.id);
     return room?.id || null;
   } catch (error) {
-    console.error('❌ [getRoomIdAction] Error getting room ID:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [getRoomIdAction] Error getting room ID:', error);
     return null;
   }
 }

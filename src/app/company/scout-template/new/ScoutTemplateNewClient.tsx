@@ -87,12 +87,12 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
 
   // グループ選択時の処理
   useEffect(() => {
-    console.log('🔍 Group changed to:', group);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Group changed to:', group);
     
     if (group === '') {
       setTargetJob('');
       setJobOptions([{ value: '', label: '未選択' }]);
-      console.log('🔍 Reset job options to default');
+      if (process.env.NODE_ENV === 'development') console.log('🔍 Reset job options to default');
     } else {
       // グループが変更されたら対象の求人をリセット
       setTargetJob('');
@@ -100,12 +100,12 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
       // サーバーアクションを使用して求人一覧を取得
       const fetchJobOptions = async () => {
         try {
-          console.log('🔍 Fetching job options for group:', group);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 Fetching job options for group:', group);
           const jobs = await getJobPostingsByGroup(group);
-          console.log('🔍 Received job options:', jobs);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 Received job options:', jobs);
           setJobOptions(jobs);
         } catch (error) {
-          console.error('Failed to fetch job options:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job options:', error);
           setJobOptions([{ value: '', label: '未選択' }]);
         }
       };
@@ -257,11 +257,11 @@ export default function ScoutTemplateNewClient({ initialGroupOptions }: ScoutTem
         router.push('/company/scout-template');
       } else {
         // エラーメッセージを表示
-        console.error('Failed to create scout template:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to create scout template:', result.error);
         alert(result.error || 'テンプレートの作成に失敗しました');
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Unexpected error:', error);
       alert('予期しないエラーが発生しました');
     } finally {
       // 保存終了

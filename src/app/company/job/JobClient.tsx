@@ -196,11 +196,11 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
         sessionStorage.setItem('duplicateJobData', JSON.stringify(duplicateData));
         router.push('/company/job/new');
       } else {
-        console.error('求人データの取得に失敗しました:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('求人データの取得に失敗しました:', result.error);
         alert('求人データの取得に失敗しました');
       }
     } catch (error) {
-      console.error('複製処理でエラーが発生しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('複製処理でエラーが発生しました:', error);
       alert('複製処理でエラーが発生しました');
     }
   };
@@ -214,11 +214,11 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
         // ページを再読み込みして最新データを取得
         router.refresh();
       } else {
-        console.error('求人の停止に失敗しました:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('求人の停止に失敗しました:', result.error);
         alert('求人の停止に失敗しました');
       }
     } catch (error) {
-      console.error('求人停止処理でエラーが発生しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('求人停止処理でエラーが発生しました:', error);
       alert('求人停止処理でエラーが発生しました');
     }
   };

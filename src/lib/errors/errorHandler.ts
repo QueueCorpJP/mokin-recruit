@@ -129,11 +129,11 @@ export const logError = (error: AppError, context?: string) => {
   };
 
   if (process.env.NODE_ENV === 'development') {
-    console.error('App Error:', logData);
+    if (process.env.NODE_ENV === 'development') console.error('App Error:', logData);
   } else {
     // 本番環境では外部ログサービスに送信
     // 例: Sentry, LogRocket, など
-    console.error('App Error:', {
+    if (process.env.NODE_ENV === 'development') console.error('App Error:', {
       type: error.type,
       message: error.message,
       context,

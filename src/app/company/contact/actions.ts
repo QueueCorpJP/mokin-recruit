@@ -2,7 +2,8 @@
 
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
+import { maskEmail, maskUserId, safeLog } from '@/lib/utils/pii-safe-logger';
 
 export async function sendContactForm(formData: {
   group: string;
@@ -11,20 +12,20 @@ export async function sendContactForm(formData: {
   content: string;
 }) {
   try {
-    console.log('=== sendContactForm開始 ===');
-    console.log('フォームデータ:', formData);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '=== sendContactForm開始 ===');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'フォームデータ:', formData);
     
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.log('認証エラー:', authResult.error);
+      safeLog('error', '認証エラー:', authResult.error);
       return { error: 'Unauthorized' };
     }
-    console.log('認証成功 - ユーザーID:', authResult.data.companyUserId);
+    safeLog('info', '認証成功', { userId: maskUserId(authResult.data.companyUserId) });
     
     const supabase = await createClient();
     
     // 企業ユーザー情報を取得
-    console.log('企業ユーザー情報を取得中...');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '企業ユーザー情報を取得中...');
     const { data: companyUser, error: userError } = await supabase
       .from('company_users')
       .select(`
@@ -38,27 +39,42 @@ export async function sendContactForm(formData: {
       .single();
 
     if (userError || !companyUser) {
-      console.error('企業ユーザー情報取得エラー:', userError);
+      safeLog('error', '企業ユーザー情報取得エラー:', userError);
       return { error: '企業ユーザー情報の取得に失敗しました' };
     }
-    console.log('企業ユーザー情報:', companyUser);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '企業ユーザー情報取得完了', {
+      email: maskEmail(companyUser.email),
+      fullName: companyUser.full_name,
+      companyName: companyUser.company_accounts?.company_name
+    });
 
-    // SendGridでメール送信
-    console.log('メール送信設定を確認中...');
-    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
+    // Gmail SMTPでメール送信
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'メール送信設定を確認中...');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'GMAIL_USER:', process.env.GMAIL_USER);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
-      console.log('SendGrid設定が不完全です');
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'Gmail設定が不完全です');
       return { error: 'メール送信設定が正しく構成されていません' };
     }
 
     try {
-      console.log('SendGrid APIキーを設定中...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'Gmail SMTPトランスポーターを作成中...');
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
       
-      console.log('メール送信中...');
-      console.log('送信元:', process.env.SENDGRID_FROM_EMAIL);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'メール送信中...');
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '送信元:', process.env.GMAIL_USER);
       
       const msg = {
         to: companyUser.email, // 企業ユーザーにメール送信
@@ -97,17 +113,17 @@ export async function sendContactForm(formData: {
       
       await sgMail.send(msg);
       
-      console.log(`✅ メール送信成功! 送信先: ${companyUser.email}`);
+      safeLog('info', 'メール送信成功', { recipient: maskEmail(companyUser.email) });
       
     } catch (emailErr) {
-      console.error('❌ メール送信エラー:', emailErr);
+      safeLog('error', '❌ メール送信エラー:', emailErr);
       return { error: 'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。' };
     }
     
-    console.log('=== sendContactForm完了 ===');
+    safeLog('info', '=== sendContactForm完了 ===');
     return { success: true };
   } catch (error) {
-    console.error('❌ sendContactForm全体エラー:', error);
+    safeLog('error', '❌ sendContactForm全体エラー:', error);
     return { error: 'システムエラーが発生しました' };
   }
 }

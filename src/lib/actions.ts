@@ -53,7 +53,7 @@ export async function sendMessage(
       .single();
 
     if (messageError) {
-      console.error('Error sending message:', messageError);
+      if (process.env.NODE_ENV === 'development') console.error('Error sending message:', messageError);
       throw new Error('メッセージの送信に失敗しました');
     }
 
@@ -63,7 +63,7 @@ export async function sendMessage(
 
     return { success: true, message: messageData };
   } catch (error) {
-    console.error('Error in sendMessage:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in sendMessage:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'メッセージの送信に失敗しました'
@@ -107,7 +107,7 @@ export async function createOrGetRoom(
       .eq('participant_type', 'CANDIDATE');
 
     if (candidateRoomsError) {
-      console.error('Error searching candidate rooms:', candidateRoomsError);
+      if (process.env.NODE_ENV === 'development') console.error('Error searching candidate rooms:', candidateRoomsError);
     }
 
     if (candidateRooms && candidateRooms.length > 0) {
@@ -138,7 +138,7 @@ export async function createOrGetRoom(
       .single();
 
     if (roomError) {
-      console.error('Error creating room:', roomError);
+      if (process.env.NODE_ENV === 'development') console.error('Error creating room:', roomError);
       throw new Error('ルームの作成に失敗しました');
     }
 
@@ -161,13 +161,13 @@ export async function createOrGetRoom(
       .insert(participantsToAdd);
 
     if (participantsError) {
-      console.error('Error adding room participants:', participantsError);
+      if (process.env.NODE_ENV === 'development') console.error('Error adding room participants:', participantsError);
       throw new Error('ルーム参加者の追加に失敗しました');
     }
 
     return { success: true, roomId: newRoom.id };
   } catch (error) {
-    console.error('Error in createOrGetRoom:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in createOrGetRoom:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'ルームの作成・取得に失敗しました'
@@ -225,7 +225,7 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
       .order('sent_at', { ascending: true });
 
     if (messagesError) {
-      console.error('Error fetching room messages:', messagesError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', messagesError);
       return [];
     }
 
@@ -253,7 +253,7 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
 
     return messages;
   } catch (error) {
-    console.error('Error in getRoomMessages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getRoomMessages:', error);
     return [];
   }
 }
@@ -288,7 +288,7 @@ export async function markMessageAsRead(messageId: string) {
       .eq('id', messageId);
 
     if (error) {
-      console.error('Error marking message as read:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error marking message as read:', error);
       throw new Error('メッセージの既読処理に失敗しました');
     }
 
@@ -298,7 +298,7 @@ export async function markMessageAsRead(messageId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error('Error in markMessageAsRead:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in markMessageAsRead:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '既読処理に失敗しました'

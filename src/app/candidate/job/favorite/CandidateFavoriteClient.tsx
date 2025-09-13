@@ -91,7 +91,7 @@ export default function CandidateFavoriteClient({
       });
 
     } catch (error) {
-      console.error('お気に入り削除エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り削除エラー:', error);
       setError('お気に入りの削除に失敗しました。再度お試しください。');
     } finally {
       setRemovingFavoriteId(null);

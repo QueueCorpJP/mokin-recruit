@@ -104,7 +104,7 @@ export interface CandidateDetailData {
 }
 
 async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetailData> {
-  console.log('fetchCandidateDetail called with ID:', candidateId, 'Type:', typeof candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('fetchCandidateDetail called with ID:', candidateId, 'Type:', typeof candidateId);
   const supabase = getSupabaseAdminClient();
   
   // IDの形式を確認してみる
@@ -176,10 +176,10 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
   const { data: expectations } = expectationsResult;
   const { data: rooms } = roomsResult;
 
-  console.log('Candidate query result:', { candidate, candidateError, candidateId });
+  if (process.env.NODE_ENV === 'development') console.log('Candidate query result:', { candidate, candidateError, candidateId });
 
   if (candidateError) {
-    console.error('Candidate query error:', candidateError);
+    if (process.env.NODE_ENV === 'development') console.error('Candidate query error:', candidateError);
     
     // Try a simple query to see if the candidate exists at all
     const simpleQuery = await supabase
@@ -188,20 +188,20 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
       .eq('id', candidateId)
       .single();
     
-    console.log('Simple query result:', simpleQuery);
+    if (process.env.NODE_ENV === 'development') console.log('Simple query result:', simpleQuery);
     
     throw new Error(`候補者データ取得エラー: ${candidateError.message} (詳細: ${candidateError.details || 'なし'}, hint: ${candidateError.hint || 'なし'})`);
   }
 
   if (!candidate) {
-    console.error('Candidate not found for ID:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.error('Candidate not found for ID:', candidateId);
     
     // Check if any candidates exist
     const countQuery = await supabase
       .from('candidates')
       .select('id', { count: 'exact' });
     
-    console.log('Total candidates count:', countQuery.count);
+    if (process.env.NODE_ENV === 'development') console.log('Total candidates count:', countQuery.count);
     
     // Try to find candidate with string conversion
     const stringQuery = await supabase
@@ -210,7 +210,7 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
       .eq('id', String(candidateId))
       .single();
     
-    console.log('String query result:', stringQuery);
+    if (process.env.NODE_ENV === 'development') console.log('String query result:', stringQuery);
     
     throw new Error('候補者が見つかりません');
   }
@@ -302,7 +302,7 @@ async function fetchCandidateDetail(candidateId: string): Promise<CandidateDetai
     try {
       return JSON.parse(value);
     } catch (e) {
-      console.warn('JSON parse error for value:', value);
+      if (process.env.NODE_ENV === 'development') console.warn('JSON parse error for value:', value);
       return defaultValue;
     }
   };
@@ -407,7 +407,7 @@ interface PageProps {
 
 export default async function CandidateDetailPage({ params }: PageProps) {
   const { id } = await params;
-  console.log('Page received candidate ID:', id);
+  if (process.env.NODE_ENV === 'development') console.log('Page received candidate ID:', id);
   
   if (!id) {
     throw new Error('候補者IDが指定されていません');

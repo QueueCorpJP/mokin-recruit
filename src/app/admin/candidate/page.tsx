@@ -56,18 +56,18 @@ async function fetchAdminCandidateList(): Promise<CandidateListItem[]> {
       .order('last_login_at', { ascending: false });
     
     if (error) {
-      console.error('Supabase error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase error:', error);
       throw new Error(`Database error: ${error.message}`);
     }
     
     if (!data) {
-      console.error('No data returned from candidates query');
+      if (process.env.NODE_ENV === 'development') console.error('No data returned from candidates query');
       return [];
     }
     
     return data as unknown as CandidateListItem[];
   } catch (error) {
-    console.error('Error fetching candidates:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching candidates:', error);
     throw error;
   }
 }
@@ -98,7 +98,7 @@ export default async function CandidatePage() {
       </Suspense>
     );
   } catch (error) {
-    console.error('Error in CandidatePage:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in CandidatePage:', error);
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center mt-20">

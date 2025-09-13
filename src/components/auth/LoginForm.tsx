@@ -81,7 +81,7 @@ export function LoginForm({ userType }: LoginFormProps) {
           setError(result.error || 'ログインに失敗しました');
         }
       } catch (error) {
-        console.error('Login error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Login error:', error);
         setError('ネットワークエラーが発生しました');
       }
     });

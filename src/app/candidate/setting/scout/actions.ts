@@ -20,11 +20,11 @@ export async function saveScoutSettings(formData: FormData) {
   // Use custom auth system instead of Supabase auth
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('スカウト設定保存の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('スカウト設定保存の認証エラー:', authResult.error);
     throw new Error(authResult.error);
   }
 
-  console.log('Saving scout settings for candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Saving scout settings for candidate_id:', authResult.data.candidateId);
 
   const settings = {
     scout_status: scoutStatus as 'receive' | 'not-receive',
@@ -45,7 +45,7 @@ export async function saveScoutSettings(formData: FormData) {
       .eq('candidate_id', authResult.data.candidateId);
 
     if (updateError) {
-      console.error('スカウト設定の更新に失敗しました:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト設定の更新に失敗しました:', updateError);
       throw new Error('スカウト設定の更新に失敗しました');
     }
   } else {
@@ -58,7 +58,7 @@ export async function saveScoutSettings(formData: FormData) {
       });
 
     if (insertError) {
-      console.error('スカウト設定の保存に失敗しました:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト設定の保存に失敗しました:', insertError);
       throw new Error('スカウト設定の保存に失敗しました');
     }
   }
@@ -71,11 +71,11 @@ export async function getScoutSettings(): Promise<ScoutSettings | null> {
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('スカウト設定取得の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('スカウト設定取得の認証エラー:', authResult.error);
     return null;
   }
 
-  console.log('Getting scout settings for candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Getting scout settings for candidate_id:', authResult.data.candidateId);
 
   const { data, error } = await supabase
     .from('scout_settings')
@@ -84,7 +84,7 @@ export async function getScoutSettings(): Promise<ScoutSettings | null> {
     .maybeSingle();
 
   if (error) {
-    console.error('スカウト設定の取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('スカウト設定の取得に失敗しました:', error);
     
     // Try with string conversion since scout_settings.candidate_id is TEXT
     const { data: dataStr, error: errorStr } = await supabase
@@ -94,14 +94,14 @@ export async function getScoutSettings(): Promise<ScoutSettings | null> {
       .maybeSingle();
     
     if (errorStr) {
-      console.error('String変換でもスカウト設定の取得に失敗しました:', errorStr);
+      if (process.env.NODE_ENV === 'development') console.error('String変換でもスカウト設定の取得に失敗しました:', errorStr);
       return null;
     } else {
-      console.log('String変換でスカウト設定を取得:', dataStr);
+      if (process.env.NODE_ENV === 'development') console.log('String変換でスカウト設定を取得:', dataStr);
       return dataStr;
     }
   }
 
-  console.log('スカウト設定を取得:', data);
+  if (process.env.NODE_ENV === 'development') console.log('スカウト設定を取得:', data);
   return data;
 }

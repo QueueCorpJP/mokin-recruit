@@ -23,7 +23,7 @@ export function useCompanySuggestions(): UseCompanySuggestionsResult {
       const results = await gbizApiClient.searchCompanies(query, 10);
       setSuggestions(results);
     } catch (error) {
-      console.error('Failed to search companies:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to search companies:', error);
       setSuggestions([]);
     } finally {
       setIsLoading(false);

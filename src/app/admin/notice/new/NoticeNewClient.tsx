@@ -57,7 +57,7 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
         // sessionStorageをクリア（一度復元したらクリア）
         sessionStorage.removeItem('previewNotice');
       } catch (error) {
-        console.error('プレビューデータの復元に失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('プレビューデータの復元に失敗:', error);
       }
     }
 
@@ -215,7 +215,7 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
         router.push('/admin/notice');
       }
     } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お知らせの保存に失敗:', error);
       if (error instanceof Error && error.message.includes('title')) {
         setTitleError('タイトルの保存に失敗しました');
       } else if (error instanceof Error && error.message.includes('category')) {

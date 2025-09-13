@@ -61,7 +61,7 @@ export default function CandidateDetailClient({ candidate }: Props) {
         setShowDeleteModal(false);
       }
     } catch (error) {
-      console.error('Error deleting candidate:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error deleting candidate:', error);
       alert('削除に失敗しました');
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -83,7 +83,7 @@ export default function CandidateDetailClient({ candidate }: Props) {
         alert(result.error || 'メモの保存に失敗しました');
       }
     } catch (error) {
-      console.error('Error saving memo:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error saving memo:', error);
       alert('メモの保存に失敗しました');
     } finally {
       setIsSavingMemo(false);

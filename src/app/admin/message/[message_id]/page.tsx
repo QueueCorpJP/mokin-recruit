@@ -91,7 +91,7 @@ const DisplayValue: React.FC<{ value: string; className?: string }> = ({
 async function fetchMessageDetail(messageId: string): Promise<MessageDetail | null> {
   const supabase = getSupabaseAdminClient();
   
-  console.log('Fetching message with ID:', messageId);
+  if (process.env.NODE_ENV === 'development') console.log('Fetching message with ID:', messageId);
   
   // まず基本的なメッセージ情報を取得
   const { data: messageData, error: messageError } = await supabase
@@ -101,12 +101,12 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     .single();
 
   if (messageError) {
-    console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
     return null;
   }
 
   if (!messageData) {
-    console.error('No message data found');
+    if (process.env.NODE_ENV === 'development') console.error('No message data found');
     return null;
   }
 
@@ -125,7 +125,7 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     .single();
 
   if (roomError) {
-    console.warn('Warning: Could not fetch room data:', roomError);
+    if (process.env.NODE_ENV === 'development') console.warn('Warning: Could not fetch room data:', roomError);
   }
 
   // 企業グループ情報を取得（企業からのメッセージの場合のみ）
@@ -150,7 +150,7 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     companyGroupError = result.error;
     
     if (companyGroupError) {
-      console.warn('Warning: Could not fetch company group data:', companyGroupError);
+      if (process.env.NODE_ENV === 'development') console.warn('Warning: Could not fetch company group data:', companyGroupError);
     }
   }
 
@@ -199,7 +199,7 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching room messages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', error);
     return [];
   }
 
@@ -246,7 +246,7 @@ async function fetchApplicationDetail(candidateId: string, jobPostingId: string 
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching application detail:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching application detail:', error);
     return null;
   }
 
@@ -268,7 +268,7 @@ async function fetchCareerStatusEntry(candidateId: string): Promise<CareerStatus
     .limit(1);
 
   if (error) {
-    console.error('Error fetching career status entry:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching career status entry:', error);
     return null;
   }
 
@@ -282,8 +282,8 @@ async function fetchCareerStatusEntry(candidateId: string): Promise<CareerStatus
 export default async function MessageDetailPage({ params }: MessageDetailPageProps) {
   const resolvedParams = await params;
   const { message_id } = resolvedParams;
-  console.log('Page params:', resolvedParams);
-  console.log('Message ID from params:', message_id);
+  if (process.env.NODE_ENV === 'development') console.log('Page params:', resolvedParams);
+  if (process.env.NODE_ENV === 'development') console.log('Message ID from params:', message_id);
   
   // pendingの場合はリダイレクト
   if (message_id === 'pending') {

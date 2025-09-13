@@ -179,11 +179,11 @@ export default function TemplateNewClient({ initialGroupOptions }: TemplateNewCl
         router.push('/company/template');
       } else {
         // エラーメッセージを表示
-        console.error('Failed to create message template:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to create message template:', result.error);
         alert(result.error || 'テンプレートの作成に失敗しました');
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Unexpected error:', error);
       alert('予期しないエラーが発生しました');
     } finally {
       // 保存終了

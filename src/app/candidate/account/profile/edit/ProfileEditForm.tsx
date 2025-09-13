@@ -69,11 +69,11 @@ export default function ProfileEditForm({ candidateData }: ProfileEditFormProps)
       if (result.success) {
         router.push('/candidate/account/profile');
       } else {
-        console.error('プロフィール更新エラー:', result.message);
+        if (process.env.NODE_ENV === 'development') console.error('プロフィール更新エラー:', result.message);
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('フォーム送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('フォーム送信エラー:', error);
       setIsSubmitting(false);
       // エラー処理（必要に応じてトーストやエラーメッセージを表示）
     }

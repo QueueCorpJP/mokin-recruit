@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
   const supabase = getSupabaseAdminClient();
 
-  console.log(`[Company Detail] Fetching company data for ID: ${id}`);
+  if (process.env.NODE_ENV === 'development') console.log(`[Company Detail] Fetching company data for ID: ${id}`);
 
   const { data, error } = await supabase
     .from('company_accounts')
@@ -38,12 +38,12 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     .single();
 
   if (data) {
-    console.log(`[Company Detail] Successfully fetched company: ${data.company_name}, Plan: ${data.plan}`);
+    if (process.env.NODE_ENV === 'development') console.log(`[Company Detail] Successfully fetched company: ${data.company_name}, Plan: ${data.plan}`);
   }
 
   if (error) {
-    console.error('Error fetching company:', error);
-    console.error('Error details:', {
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching company:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error details:', {
       code: error.code,
       message: error.message,
       details: error.details
@@ -76,7 +76,7 @@ interface CompanyDetailPageProps {
 export default async function CompanyDetailPage({ params, searchParams }: CompanyDetailPageProps) {
   // refreshパラメータがある場合はログ出力（デバッグ用）
   if (searchParams?.refresh) {
-    console.log(`[Company Detail Page] Refresh requested at: ${searchParams.refresh}`);
+    if (process.env.NODE_ENV === 'development') console.log(`[Company Detail Page] Refresh requested at: ${searchParams.refresh}`);
   }
 
   const company = await fetchCompanyById(params.id);

@@ -7,7 +7,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // 一時的に初期化を無効化（起動問題の調査のため）
-    console.log('🚀 Server initialization skipped for debugging');
+    if (process.env.NODE_ENV === 'development') console.log('🚀 Server initialization skipped for debugging');
     // const { initializeServer } = await import('@/lib/server/init');
     // initializeServer();
   }

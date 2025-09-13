@@ -309,7 +309,7 @@ if (typeof window === 'undefined') {
   try {
     getValidatedEnv();
   } catch (error) {
-    console.error('🚨 Environment validation failed on startup:', error);
+    if (process.env.NODE_ENV === 'development') console.error('🚨 Environment validation failed on startup:', error);
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }

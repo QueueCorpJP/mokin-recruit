@@ -16,7 +16,7 @@ interface EducationFormData {
 }
 
 export async function saveEducationData(formData: EducationFormData) {
-  console.log('=== Start saveEducationData ===');
+  if (process.env.NODE_ENV === 'development') console.log('=== Start saveEducationData ===');
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,7 +33,7 @@ export async function saveEducationData(formData: EducationFormData) {
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
-    console.log('Using candidate ID for education data:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Using candidate ID for education data:', candidateId);
 
     // Save education data - use insert with manual conflict handling since no unique constraint on candidate_id
     const { data: existingEducation } = await supabase
@@ -126,11 +126,11 @@ export async function saveEducationData(formData: EducationFormData) {
       }
     }
 
-    console.log('Education data saved successfully');
+    if (process.env.NODE_ENV === 'development') console.log('Education data saved successfully');
     redirect('/signup/skills');
 
   } catch (error) {
-    console.error('Education data save error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Education data save error:', error);
     throw error;
   }
 }

@@ -3,7 +3,7 @@
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -144,7 +144,7 @@ export default function SignupRecentJobPage() {
 
   const handleSubmit = async () => {
     if (!userId) {
-      console.error('User ID not found');
+      if (process.env.NODE_ENV === 'development') console.error('User ID not found');
       return;
     }
 
@@ -155,11 +155,11 @@ export default function SignupRecentJobPage() {
       if (result.success) {
         router.push('/signup/resume');
       } else {
-        console.error('Recent job save failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Recent job save failed:', result.error);
         // You could add error state handling here
       }
     } catch (error) {
-      console.error('Recent job save error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Recent job save error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -177,13 +177,13 @@ export default function SignupRecentJobPage() {
   };
 
   const handleJobTypeConfirm = (selectedJobTypeNames: string[]) => {
-    console.log('Selected job type names from modal:', selectedJobTypeNames);
+    if (process.env.NODE_ENV === 'development') console.log('Selected job type names from modal:', selectedJobTypeNames);
     // Convert selectedJobTypes to the expected format
     const jobTypes = selectedJobTypeNames.map((jobTypeName, index) => ({
       id: `jobtype_${index}_${jobTypeName}`,
       name: jobTypeName
     }));
-    console.log('Job types to save:', jobTypes);
+    if (process.env.NODE_ENV === 'development') console.log('Job types to save:', jobTypes);
     updateJobHistory(editingIndex, { jobTypes });
     setIsJobTypeModalOpen(false);
   };

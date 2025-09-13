@@ -133,7 +133,7 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
         // 使用後は削除
         sessionStorage.removeItem('jobPreviewData');
       } catch (error) {
-        console.error('Failed to parse preview data:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to parse preview data:', error);
       }
     }
   }, []);
@@ -164,7 +164,7 @@ export default function JobDetailClient({ jobData }: JobDetailClientProps) {
         alert('求人データの取得に失敗しました');
       }
     } catch (error) {
-      console.error('複製処理でエラーが発生しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('複製処理でエラーが発生しました:', error);
       alert('複製処理でエラーが発生しました');
     }
   };

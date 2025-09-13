@@ -76,12 +76,12 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
 
   const handleApply = () => {
     // TODO: 応募処理を実装
-    console.log('応募処理:', jobDetail.id);
+    if (process.env.NODE_ENV === 'development') console.log('応募処理:', jobDetail.id);
   };
 
   const handleFavorite = () => {
     // TODO: お気に入り処理を実装
-    console.log('お気に入り処理:', jobDetail.id);
+    if (process.env.NODE_ENV === 'development') console.log('お気に入り処理:', jobDetail.id);
   };
 
   return (

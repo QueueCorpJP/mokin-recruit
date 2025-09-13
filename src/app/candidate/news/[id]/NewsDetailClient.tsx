@@ -34,7 +34,7 @@ export default function NewsDetailClient({
         const latest = await getNews(6);
         setNewArticles(latest.filter(item => item.id !== article.id));
       } catch (error) {
-        console.error('関連データ取得エラー:', error);
+        if (process.env.NODE_ENV === 'development') console.error('関連データ取得エラー:', error);
       }
     };
 

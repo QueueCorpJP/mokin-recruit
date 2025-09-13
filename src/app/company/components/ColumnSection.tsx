@@ -97,7 +97,7 @@ export function ColumnSection() {
 
     try {
       const result = await sendContactFormEmail(data);
-      console.log('サーバーアクションの結果:', result);
+      if (process.env.NODE_ENV === 'development') console.log('サーバーアクションの結果:', result);
       
       if (result?.success) {
         setSubmitMessage('お問い合わせを送信しました。ありがとうございました。');
@@ -112,7 +112,7 @@ export function ColumnSection() {
         setSubmitMessage(result?.error || 'エラーが発生しました。');
       }
     } catch (error) {
-      console.error('フロントエンドでのエラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('フロントエンドでのエラー:', error);
       setSubmitMessage('エラーが発生しました。しばらく時間をおいて再度お試しください。');
     } finally {
       setIsSubmitting(false);

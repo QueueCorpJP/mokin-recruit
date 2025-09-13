@@ -53,7 +53,7 @@ export default function NewsPage() {
         setTotalPages(Math.ceil(paginationResult.totalCount / ITEMS_PER_PAGE));
         
       } catch (error) {
-        console.error('ニュースデータの取得に失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('ニュースデータの取得に失敗:', error);
         setArticles([]);
         setCategories([]);
       } finally {

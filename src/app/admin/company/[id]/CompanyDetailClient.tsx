@@ -41,8 +41,8 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
   // デバッグ用: コンポーネントがマウントされたときの情報をログ出力
   useEffect(() => {
-    console.log(`[Company Detail Client] Company: ${company.company_name}, Plan: ${company.plan}`);
-    console.log(`[Company Detail Client] Groups:`, company.company_groups?.map(g => `${g.group_name} (${g.id})`) || []);
+    if (process.env.NODE_ENV === 'development') console.log(`[Company Detail Client] Company: ${company.company_name}, Plan: ${company.plan}`);
+    if (process.env.NODE_ENV === 'development') console.log(`[Company Detail Client] Groups:`, company.company_groups?.map(g => `${g.group_name} (${g.id})`) || []);
   }, [company.company_name, company.plan, company.company_groups]);
 
   const [memoText, setMemoText] = useState('自由にメモを記入できます。\n同一グループ内の方が閲覧可能です。');
@@ -88,7 +88,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const handleDelete = () => {
     if (confirm('本当にこの企業を削除しますか？')) {
       // TODO: 実際の削除処理を実装
-      console.log('Deleting company:', company.id);
+      if (process.env.NODE_ENV === 'development') console.log('Deleting company:', company.id);
       // 削除完了ページに遷移
       router.push('/admin/company/delete');
     }
@@ -102,7 +102,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const handleUserDeleteConfirm = () => {
     if (selectedUser) {
       // TODO: 実際の企業ユーザー削除処理を実装
-      console.log('Deleting user:', selectedUser.id, selectedUser.name);
+      if (process.env.NODE_ENV === 'development') console.log('Deleting user:', selectedUser.id, selectedUser.name);
       setDeleteModalOpen(false);
       setSelectedUser(null);
 
@@ -127,21 +127,21 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
 
   const handleNewGroupConfirm = async (groupName: string, members: any[]) => {
     try {
-    console.log('Creating new group:', groupName, 'with members:', members);
+    if (process.env.NODE_ENV === 'development') console.log('Creating new group:', groupName, 'with members:', members);
 
       const result = await createNewGroup(company.id, groupName, members);
 
       if (result.success) {
-        console.log('New group created successfully:', result.group);
+        if (process.env.NODE_ENV === 'development') console.log('New group created successfully:', result.group);
         alert(result.message || `グループ「${groupName}」を作成しました`);
     setNewGroupModalOpen(false);
       } else {
-        console.error('New group creation failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('New group creation failed:', result.error);
         alert(`グループの作成に失敗しました: ${result.error}`);
         setNewGroupModalOpen(false);
       }
     } catch (error) {
-      console.error('New group creation error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('New group creation error:', error);
       alert('グループ作成中にエラーが発生しました');
       setNewGroupModalOpen(false);
     }
@@ -164,7 +164,7 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const handleRoleChangeConfirm = () => {
     if (roleChangeData) {
       // TODO: 実際の権限変更処理を実装
-      console.log('Changing role for user:', roleChangeData.userId, 'from', roleChangeData.currentRole, 'to', roleChangeData.newRole);
+      if (process.env.NODE_ENV === 'development') console.log('Changing role for user:', roleChangeData.userId, 'from', roleChangeData.currentRole, 'to', roleChangeData.newRole);
       alert(`${roleChangeData.userName}さんの権限を${roleChangeData.newRole}に変更しました（デバッグモード）`);
       setRoleChangeModalOpen(false);
       setRoleChangeData(null);
@@ -190,20 +190,20 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
         const result = await updateGroupName(selectedGroupData.groupId, newGroupName);
 
         if (result.success) {
-          console.log('Group name updated successfully:', result.updatedGroup);
-          console.log(`Group name changed: ${selectedGroupData?.currentName} → ${newGroupName}`);
+          if (process.env.NODE_ENV === 'development') console.log('Group name updated successfully:', result.updatedGroup);
+          if (process.env.NODE_ENV === 'development') console.log(`Group name changed: ${selectedGroupData?.currentName} → ${newGroupName}`);
           // 成功したら完了モーダルを表示
           setUpdatedGroupName(newGroupName);
           setGroupNameChangeModalOpen(false);
           setGroupNameChangeCompleteModalOpen(true);
         } else {
-          console.error('Group name update failed:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Group name update failed:', result.error);
           alert(`グループ名の変更に失敗しました: ${result.error}`);
       setGroupNameChangeModalOpen(false);
       setSelectedGroupData(null);
         }
       } catch (error) {
-        console.error('Group name change error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Group name change error:', error);
         alert('グループ名変更中にエラーが発生しました');
         setGroupNameChangeModalOpen(false);
         setSelectedGroupData(null);
@@ -234,25 +234,25 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
   const handleAddMemberConfirm = async (members: any[]) => {
     if (selectedGroupForMember) {
       try {
-        console.log('Inviting members to group:', selectedGroupForMember.groupId, 'members:', members);
+        if (process.env.NODE_ENV === 'development') console.log('Inviting members to group:', selectedGroupForMember.groupId, 'members:', members);
 
         const result = await inviteMembersToGroup(selectedGroupForMember.groupId, members);
 
         if (result.success) {
-          console.log('Members invited successfully:', result.invitedMembers);
+          if (process.env.NODE_ENV === 'development') console.log('Members invited successfully:', result.invitedMembers);
 
       // 招待完了モーダルを開く
           setInvitedMembersCount(result.invitedMembers?.length || 0);
       setAddMemberModalOpen(false);
       setInvitationCompleteModalOpen(true);
         } else {
-          console.error('Member invitation failed:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Member invitation failed:', result.error);
           alert(`メンバー招待に失敗しました: ${result.error}`);
           setAddMemberModalOpen(false);
           setSelectedGroupForMember(null);
         }
       } catch (error) {
-        console.error('Member invitation error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Member invitation error:', error);
         alert('メンバー招待中にエラーが発生しました');
         setAddMemberModalOpen(false);
         setSelectedGroupForMember(null);
@@ -280,18 +280,18 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
       const result = await suspendCompany(company.id);
 
       if (result.success) {
-        console.log('Company suspended successfully:', result.company);
-        console.log(`Company ${company.company_name} suspended with status: ${result.company?.status}`);
+        if (process.env.NODE_ENV === 'development') console.log('Company suspended successfully:', result.company);
+        if (process.env.NODE_ENV === 'development') console.log(`Company ${company.company_name} suspended with status: ${result.company.status}`);
     // 休会確認モーダルを閉じて、完了モーダルを表示
     setWithdrawalConfirmModalOpen(false);
     setWithdrawalCompleteModalOpen(true);
       } else {
-        console.error('Company suspension failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Company suspension failed:', result.error);
         alert(`休会処理に失敗しました: ${result.error}`);
         setWithdrawalConfirmModalOpen(false);
       }
     } catch (error) {
-      console.error('Suspension error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Suspension error:', error);
       alert('休会処理中にエラーが発生しました');
       setWithdrawalConfirmModalOpen(false);
     }
@@ -315,18 +315,18 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
       const result = await updateCompanyPlan(company.id, newPlan);
 
       if (result.success) {
-        console.log('Company plan updated successfully:', result.company);
+        if (process.env.NODE_ENV === 'development') console.log('Company plan updated successfully:', result.company);
     // プラン変更確認モーダルを閉じて、完了モーダルを表示
     setNewSelectedPlan(newPlan);
     setPlanChangeModalOpen(false);
     setPlanChangeCompleteModalOpen(true);
       } else {
-        console.error('Company plan update failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Company plan update failed:', result.error);
         alert(`プラン変更に失敗しました: ${result.error}`);
         setPlanChangeModalOpen(false);
       }
     } catch (error) {
-      console.error('Plan change error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Plan change error:', error);
       alert('プラン変更中にエラーが発生しました');
       setPlanChangeModalOpen(false);
     }
@@ -351,18 +351,18 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
       const result = await updateCompanyScoutLimit(company.id, newLimit);
 
       if (result.success) {
-        console.log('Company scout limit updated successfully:', result.company);
+        if (process.env.NODE_ENV === 'development') console.log('Company scout limit updated successfully:', result.company);
     // スカウト上限数変更確認モーダルを閉じて、完了モーダルを表示
     setNewSelectedScoutLimit(newLimit);
     setScoutLimitChangeModalOpen(false);
     setScoutLimitChangeCompleteModalOpen(true);
       } else {
-        console.error('Company scout limit update failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Company scout limit update failed:', result.error);
         alert(`スカウト上限数変更に失敗しました: ${result.error}`);
         setScoutLimitChangeModalOpen(false);
       }
     } catch (error) {
-      console.error('Scout limit change error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Scout limit change error:', error);
       alert('スカウト上限数変更中にエラーが発生しました');
       setScoutLimitChangeModalOpen(false);
     }
@@ -387,17 +387,17 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
       const result = await deleteCompany(company.id);
 
       if (result.success) {
-        console.log('Company physically deleted successfully:', result.deletedCompany);
+        if (process.env.NODE_ENV === 'development') console.log('Company physically deleted successfully:', result.deletedCompany);
         // 退会確認モーダルを閉じて、完了モーダルを表示
         setDeletionConfirmModalOpen(false);
         setDeletionCompleteModalOpen(true);
       } else {
-        console.error('Company deletion failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Company deletion failed:', result.error);
         alert(`退会処理に失敗しました: ${result.error}`);
         setDeletionConfirmModalOpen(false);
       }
     } catch (error) {
-      console.error('Deletion error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Deletion error:', error);
       alert('退会処理中にエラーが発生しました');
       setDeletionConfirmModalOpen(false);
     }
@@ -714,17 +714,17 @@ export default function CompanyDetailClient({ company, onUserDeleteComplete }: C
                             const result = await deleteGroup(group.id);
 
                             if (result.success) {
-                              console.log('Group deleted successfully:', result.deletedGroup);
+                              if (process.env.NODE_ENV === 'development') console.log('Group deleted successfully:', result.deletedGroup);
                               alert(`グループ「${group.group_name}」を削除しました`);
 
                               // 削除成功後に /admin/company/delete に遷移
                               router.push('/admin/company/delete');
                             } else {
-                              console.error('Group deletion failed:', result.error);
+                              if (process.env.NODE_ENV === 'development') console.error('Group deletion failed:', result.error);
                               alert(`グループの削除に失敗しました: ${result.error}`);
                             }
                           } catch (error) {
-                            console.error('Group deletion error:', error);
+                            if (process.env.NODE_ENV === 'development') console.error('Group deletion error:', error);
                             alert('グループ削除中にエラーが発生しました');
                           }
                         }

@@ -33,7 +33,7 @@ async function fetchNgKeywords(): Promise<string[]> {
     .order('keyword');
 
   if (error) {
-    console.error('Error fetching NG keywords:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching NG keywords:', error);
     return [];
   }
 
@@ -84,7 +84,7 @@ async function fetchMessagesWithNgKeywords(): Promise<MessageListItem[]> {
 
   const { data, error } = allMessages;
   if (error) {
-    console.error('Error fetching messages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', error);
     throw new Error(error.message);
   }
 
@@ -128,7 +128,7 @@ async function fetchMessagesWithNgKeywords(): Promise<MessageListItem[]> {
         applicationMap.set(`${app.candidate_id}|${app.job_posting_id}`, app.status);
       });
     } catch (error) {
-      console.warn('Application lookup failed:', error);
+      if (process.env.NODE_ENV === 'development') console.warn('Application lookup failed:', error);
     }
   }
 

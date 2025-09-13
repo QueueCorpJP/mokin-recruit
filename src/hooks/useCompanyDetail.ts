@@ -52,7 +52,7 @@ export function useCompanyDetail(companyId: string): CompanyDataState {
           .maybeSingle();
 
         if (companyError) {
-          console.error('Failed to fetch company:', companyError);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to fetch company:', companyError);
           setState({
             data: null,
             loading: false,
@@ -62,7 +62,7 @@ export function useCompanyDetail(companyId: string): CompanyDataState {
         }
 
         if (!company) {
-          console.warn(`Company not found for id: ${companyId}`);
+          if (process.env.NODE_ENV === 'development') console.warn(`Company not found for id: ${companyId}`);
           setState({
             data: null,
             loading: false,
@@ -123,7 +123,7 @@ export function useCompanyDetail(companyId: string): CompanyDataState {
           error: null,
         });
       } catch (error) {
-        console.error('Error fetching company data:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching company data:', error);
         setState({
           data: null,
           loading: false,

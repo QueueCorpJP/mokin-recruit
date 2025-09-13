@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import { logger } from '@/lib/server/utils/logger';
 import { UserSupabaseRepository } from './UserSupabaseRepository';
+import { maskEmail } from '@/lib/utils/pii-safe-logger';
 
 // MVPスキーマに対応した企業ユーザーエンティティ
 export interface CompanyUserEntity {
@@ -57,14 +58,14 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
 
       if (error) {
         if (error.code === 'PGRST116') {
-          logger.debug(`Company user not found with email: ${email}`);
+          logger.debug(`Company user not found with email: ${maskEmail(email)}`);
           return null;
         }
         logger.error('Error finding company user by email for signup:', error);
         return null;
       }
 
-      logger.debug(`Found company user for signup check: ${email}`);
+      logger.debug(`Found company user for signup check: ${maskEmail(email)}`);
       return data;
     } catch (error) {
       logger.error('Exception in findByEmailForSignup:', error);
@@ -86,7 +87,7 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
         throw new Error('Failed to create company user');
       }
 
-      logger.info(`Created company user: ${result.email}`);
+      logger.info(`Created company user: ${maskEmail(result.email)}`);
       return result;
     } catch (error) {
       logger.error('Exception in create company user:', error);

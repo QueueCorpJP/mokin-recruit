@@ -8,8 +8,9 @@ import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { logoutAction } from '@/lib/auth/actions';
-import { Modal } from './mo-dal';
+import { Modal } from './Modal';
 import { CandidateProfileModal } from './candidate-profile-modal';
+import { safeLog } from '@/lib/utils/pii-safe-logger';
 
 // Custom Icon Components
 
@@ -262,10 +263,10 @@ export function Navigation({
           router.push('/');
         }
       } else {
-        console.error('❌ ログアウトに失敗しました:', result.error);
+        safeLog('error', 'ログアウト失敗', { error: result.error });
       }
     } catch (error) {
-      console.error('❌ ログアウト処理でエラーが発生しました:', error);
+      safeLog('error', 'ログアウト処理エラー', { error: error instanceof Error ? error.message : String(error) });
       setOpenDropdown(null);
     }
   }, [variant, router]);

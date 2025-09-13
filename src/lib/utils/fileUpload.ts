@@ -125,7 +125,7 @@ export async function uploadApplicationDocument(
     };
 
   } catch (error) {
-    console.error('File upload error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('File upload error:', error);
     return {
       success: false,
       error: 'ファイルのアップロードに失敗しました'

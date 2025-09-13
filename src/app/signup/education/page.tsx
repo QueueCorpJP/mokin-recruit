@@ -156,7 +156,7 @@ export default function SignupEducationPage() {
 
       await saveEducationData(formattedData);
     } catch (error) {
-      console.error('Education data save failed:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Education data save failed:', error);
     } finally {
       setIsSubmitting(false);
     }

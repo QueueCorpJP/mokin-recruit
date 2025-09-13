@@ -30,7 +30,7 @@ async function getRoomsForCandidate(candidateId: string): Promise<CandidateRoom[
     .order('updated_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching rooms:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching rooms:', error);
     return [];
   }
 

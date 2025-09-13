@@ -127,7 +127,7 @@ async function fetchAdminRoomList(
         });
         return statusMap;
       } catch (error) {
-        console.warn('Application lookup failed:', error);
+        if (process.env.NODE_ENV === 'development') console.warn('Application lookup failed:', error);
         return new Map();
       }
     })()

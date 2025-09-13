@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { X } from 'lucide-react';
 import { useServerCompanyAutocomplete } from '@/hooks/useServerCompanyAutocomplete';
@@ -62,7 +62,7 @@ function AddBlockCompanyModal({ isOpen, onClose, onAddCompany, existingCompanies
       setCompanyName('');
       onClose();
     } catch (error) {
-      console.error('企業の保存に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('企業の保存に失敗しました:', error);
     }
   };
 
@@ -185,7 +185,7 @@ export default function NgCompanyPage() {
           setBlockedCompanies(companies);
         }
       } catch (error) {
-        console.error('設定の取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('設定の取得に失敗しました:', error);
       }
     };
 
@@ -197,7 +197,7 @@ export default function NgCompanyPage() {
       await removeBlockedCompany(companyName);
       setBlockedCompanies(prev => prev.filter(company => company.name !== companyName));
     } catch (error) {
-      console.error('企業の削除に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('企業の削除に失敗しました:', error);
       // エラーハンドリング
     }
   };
@@ -218,7 +218,7 @@ export default function NgCompanyPage() {
       };
       setBlockedCompanies(prev => [...prev, newCompany]);
     } catch (error) {
-      console.error('企業の追加に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('企業の追加に失敗しました:', error);
       // エラーハンドリング
     }
   };

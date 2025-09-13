@@ -20,7 +20,7 @@ const messageAPI = {
       const data = await response.json();
       return data.messages || [];
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', error);
       throw error;
     }
   },
@@ -48,7 +48,7 @@ const messageAPI = {
       const data = await response.json();
       return data.message;
     } catch (error) {
-      console.error('Error sending message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error sending message:', error);
       throw error;
     }
   },
@@ -68,7 +68,7 @@ const messageAPI = {
         throw new Error(`Failed to mark message as read: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error marking message as read:', error);
       throw error;
     }
   },

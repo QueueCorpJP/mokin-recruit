@@ -72,7 +72,7 @@ export default function SignupCareerStatusPage() {
 
   const handleSubmit = async () => {
     if (!userId) {
-      console.error('User ID not found');
+      if (process.env.NODE_ENV === 'development') console.error('User ID not found');
       return;
     }
 
@@ -89,10 +89,10 @@ export default function SignupCareerStatusPage() {
       if (result.success) {
         router.push('/signup/recent-job');
       } else {
-        console.error('Career status save failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Career status save failed:', result.error);
       }
     } catch (error) {
-      console.error('Career status save error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Career status save error:', error);
     } finally {
       setIsSubmitting(false);
     }

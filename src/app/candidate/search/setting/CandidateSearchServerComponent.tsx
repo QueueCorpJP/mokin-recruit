@@ -73,10 +73,10 @@ export default async function CandidateSearchServerComponent({
         jobsWithFavorites = jobs as JobSearchResult[];
       }
     } else {
-      console.error('Failed to get jobs:', jobSearchResponse.error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to get jobs:', jobSearchResponse.error);
     }
   } catch (error) {
-    console.error('Error in CandidateSearchServerComponent:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in CandidateSearchServerComponent:', error);
     // エラー時もコンポーネントを描画（空の状態で）
   }
 

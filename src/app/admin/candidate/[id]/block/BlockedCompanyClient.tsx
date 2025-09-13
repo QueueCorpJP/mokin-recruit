@@ -70,7 +70,7 @@ export default function BlockedCompanyClient({ blockedCompanies, candidateId }: 
         alert(result.error || '削除に失敗しました');
       }
     } catch (error) {
-      console.error('Error deleting company:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error deleting company:', error);
       alert('削除中にエラーが発生しました');
     } finally {
       setIsDeleting(null);
@@ -102,7 +102,7 @@ export default function BlockedCompanyClient({ blockedCompanies, candidateId }: 
         alert(result.error || '追加に失敗しました');
       }
     } catch (error) {
-      console.error('Error adding company:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error adding company:', error);
       alert('追加中にエラーが発生しました');
     } finally {
       setIsAdding(false);

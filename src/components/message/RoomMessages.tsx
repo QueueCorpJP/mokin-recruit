@@ -31,7 +31,7 @@ export function RoomMessages({ roomId, isMobile = false, currentUserId, currentU
         const roomMessages = await getRoomMessages(roomId, currentUserId, currentUserType);
         setMessages(roomMessages);
       } catch (error) {
-        console.error('Failed to fetch messages:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to fetch messages:', error);
         setMessages([]);
       } finally {
         setLoading(false);

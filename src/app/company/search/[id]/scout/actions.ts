@@ -27,7 +27,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('スカウト送信の認証エラー:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト送信の認証エラー:', authResult.error);
       return { success: false, error: authResult.error };
     }
 
@@ -41,7 +41,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       .single();
 
     if (candidateError || !candidate) {
-      console.error('候補者情報の取得エラー:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('候補者情報の取得エラー:', candidateError);
       return { success: false, error: '候補者情報が見つかりませんでした' };
     }
 
@@ -54,7 +54,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
 
     // エラーが発生した場合や、明示的にスカウト拒否設定の場合はスカウト送信を拒否
     if (settingsError) {
-      console.error('スカウト設定の確認エラー:', settingsError);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト設定の確認エラー:', settingsError);
     }
     
     if (scoutSettings && scoutSettings.scout_status === 'not-receive') {
@@ -69,7 +69,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       .single();
 
     if (groupError || !group) {
-      console.error('グループ情報の取得エラー:', groupError);
+      if (process.env.NODE_ENV === 'development') console.error('グループ情報の取得エラー:', groupError);
       return { success: false, error: 'グループ情報が見つかりませんでした' };
     }
 
@@ -128,7 +128,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       .single();
 
     if (insertError) {
-      console.error('スカウト送信データの保存エラー:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト送信データの保存エラー:', insertError);
       return { success: false, error: 'スカウト送信データの保存に失敗しました' };
     }
 
@@ -158,7 +158,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
         .single();
 
       if (roomInsertError) {
-        console.error('ルーム作成エラー:', roomInsertError);
+        if (process.env.NODE_ENV === 'development') console.error('ルーム作成エラー:', roomInsertError);
         return { success: false, error: 'メッセージルームの作成に失敗しました' };
       }
       roomId = newRoom.id;
@@ -181,9 +181,9 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
       .insert(messageData);
 
     if (messageInsertError) {
-      console.error('メッセージ作成エラー:', messageInsertError);
+      if (process.env.NODE_ENV === 'development') console.error('メッセージ作成エラー:', messageInsertError);
       // スカウト送信は成功したが、メッセージ作成に失敗した場合は警告
-      console.warn('スカウト送信は成功しましたが、メッセージ作成に失敗しました');
+      if (process.env.NODE_ENV === 'development') console.warn('スカウト送信は成功しましたが、メッセージ作成に失敗しました');
     }
 
     // 通知テーブルに追加
@@ -215,7 +215,7 @@ export async function sendScout(formData: ScoutSendFormData): Promise<ScoutSendR
     return { success: true, scoutSendId: scoutSend.id };
 
   } catch (error) {
-    console.error('スカウト送信処理中のエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('スカウト送信処理中のエラー:', error);
     return { success: false, error: 'スカウト送信処理中にエラーが発生しました' };
   }
 }
@@ -227,7 +227,7 @@ export async function getCompanyGroupOptions() {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('グループ取得の認証エラー:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('グループ取得の認証エラー:', authResult.error);
       return [];
     }
 
@@ -245,7 +245,7 @@ export async function getCompanyGroupOptions() {
       .eq('company_user_id', companyUserId);
 
     if (error || !userPermissions) {
-      console.error('グループ取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('グループ取得エラー:', error);
       return [];
     }
 
@@ -260,7 +260,7 @@ export async function getCompanyGroupOptions() {
 
     return groups;
   } catch (error) {
-    console.error('グループオプション取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('グループオプション取得エラー:', error);
     return [];
   }
 }
@@ -277,7 +277,7 @@ export async function getJobPostingOptions(groupId: string) {
       .order('title');
 
     if (error) {
-      console.error('求人取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('求人取得エラー:', error);
       return [];
     }
 
@@ -286,7 +286,7 @@ export async function getJobPostingOptions(groupId: string) {
       label: job.title,
     }));
   } catch (error) {
-    console.error('求人オプション取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('求人オプション取得エラー:', error);
     return [];
   }
 }
@@ -307,7 +307,7 @@ export async function getCompanyUserOptions(groupId: string) {
       .eq('company_group_id', groupId);
 
     if (error) {
-      console.error('ユーザー取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('ユーザー取得エラー:', error);
       return [];
     }
 
@@ -319,7 +319,7 @@ export async function getCompanyUserOptions(groupId: string) {
         label: user.full_name,
       }));
   } catch (error) {
-    console.error('ユーザーオプション取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ユーザーオプション取得エラー:', error);
     return [];
   }
 }
@@ -335,7 +335,7 @@ export async function getScoutTemplateOptions(groupId: string) {
       .order('template_name');
 
     if (error) {
-      console.error('テンプレート取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('テンプレート取得エラー:', error);
       return [];
     }
 
@@ -346,7 +346,7 @@ export async function getScoutTemplateOptions(groupId: string) {
       body: template.body || '',
     }));
   } catch (error) {
-    console.error('テンプレートオプション取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('テンプレートオプション取得エラー:', error);
     return [];
   }
 }

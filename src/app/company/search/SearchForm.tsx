@@ -43,19 +43,19 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                 size="figma-default"
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 onClick={async () => {
-                  console.log('[DEBUG SearchForm] Search button clicked');
-                  console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Search button clicked');
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
                   
                   // タッチ済みにしてバリデーションをトリガー
                   searchStore.setSearchGroupTouched(true);
 
                   // バリデーションチェック
                   const isValid = searchStore.validateForm();
-                  console.log('[DEBUG SearchForm] Validation result:', isValid);
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Validation result:', isValid);
                   if (isValid) {
                     try {
-                      console.log('[DEBUG SearchForm] About to save search history from form');
-                      console.log('[DEBUG SearchForm] Search store values:', {
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] About to save search history from form');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Search store values:', {
                         searchGroup: searchStore.searchGroup,
                         keyword: searchStore.keyword,
                         experienceJobTypes: searchStore.experienceJobTypes,
@@ -95,8 +95,8 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                       };
 
                       const searchTitle = generateSearchTitle(searchConditions);
-                      console.log('[DEBUG SearchForm] Generated search title:', searchTitle);
-                      console.log('[DEBUG SearchForm] About to call saveSearchHistory');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Generated search title:', searchTitle);
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] About to call saveSearchHistory');
 
                       await saveSearchHistory({
                         group_id: searchStore.searchGroup,
@@ -105,9 +105,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         is_saved: false
                       });
                       
-                      console.log('[DEBUG SearchForm] saveSearchHistory completed');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] saveSearchHistory completed');
                     } catch (error) {
-                      console.error('Failed to save search history:', error);
+                      if (process.env.NODE_ENV === 'development') console.error('Failed to save search history:', error);
                       // エラーが発生しても検索は続行
                     }
 
@@ -160,8 +160,8 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     
                     router.push(`/company/search/result?${searchParams.toString()}`);
                   } else {
-                    console.log('[DEBUG SearchForm] Validation failed - not navigating to results');
-                    console.log('[DEBUG SearchForm] searchGroup error:', searchStore.searchGroupError);
+                    if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Validation failed - not navigating to results');
+                    if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] searchGroup error:', searchStore.searchGroupError);
                     // エラーフィールドまでスクロール
                     const element = document.querySelector(
                       '[data-field="search-group"]',
@@ -182,19 +182,19 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                 size="figma-outline"
                 style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 onClick={async () => {
-                  console.log('[DEBUG SearchForm] Save button clicked');
-                  console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Save button clicked');
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] searchGroup before validation:', searchStore.searchGroup);
                   
                   // タッチ済みにしてバリデーションをトリガー
                   searchStore.setSearchGroupTouched(true);
 
                   // バリデーションチェック
                   const isValid = searchStore.validateForm();
-                  console.log('[DEBUG SearchForm] Validation result:', isValid);
+                  if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Validation result:', isValid);
                   if (isValid) {
                     try {
-                      console.log('[DEBUG SearchForm] About to save search history from save button');
-                      console.log('[DEBUG SearchForm] Search store values:', {
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] About to save search history from save button');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Search store values:', {
                         searchGroup: searchStore.searchGroup,
                         keyword: searchStore.keyword,
                         experienceJobTypes: searchStore.experienceJobTypes,
@@ -234,8 +234,8 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                       };
 
                       const searchTitle = generateSearchTitle(searchConditions);
-                      console.log('[DEBUG SearchForm] Generated search title:', searchTitle);
-                      console.log('[DEBUG SearchForm] About to call saveSearchHistory with is_saved: true');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Generated search title:', searchTitle);
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] About to call saveSearchHistory with is_saved: true');
 
                       await saveSearchHistory({
                         group_id: searchStore.searchGroup,
@@ -244,9 +244,9 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                         is_saved: true
                       });
                       
-                      console.log('[DEBUG SearchForm] saveSearchHistory completed');
+                      if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] saveSearchHistory completed');
                     } catch (error) {
-                      console.error('Failed to save search history:', error);
+                      if (process.env.NODE_ENV === 'development') console.error('Failed to save search history:', error);
                       // エラーが発生しても検索は続行
                     }
 
@@ -302,8 +302,8 @@ export default function SearchForm({ companyId }: SearchFormProps) {
                     
                     router.push(`/company/search/result?${searchParams.toString()}`);
                   } else {
-                    console.log('[DEBUG SearchForm] Validation failed - not navigating to results');
-                    console.log('[DEBUG SearchForm] searchGroup error:', searchStore.searchGroupError);
+                    if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] Validation failed - not navigating to results');
+                    if (process.env.NODE_ENV === 'development') console.log('[DEBUG SearchForm] searchGroup error:', searchStore.searchGroupError);
                     // エラーフィールドまでスクロール
                     const element = document.querySelector(
                       '[data-field="search-group"]',

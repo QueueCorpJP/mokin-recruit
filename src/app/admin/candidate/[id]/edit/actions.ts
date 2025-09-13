@@ -25,7 +25,7 @@ export async function checkEmailDuplication(email: string, excludeCandidateId?: 
     
     return { isDuplicate: data && data.length > 0 };
   } catch (error) {
-    console.error('Error checking email duplication:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error checking email duplication:', error);
     return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -243,7 +243,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
           .insert(workExpData);
 
         if (workExpError) {
-          console.error('Work experience error:', workExpError);
+          if (process.env.NODE_ENV === 'development') console.error('Work experience error:', workExpError);
         }
       }
     }
@@ -270,7 +270,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
           .insert(jobTypeExpData);
 
         if (jobTypeExpError) {
-          console.error('Job type experience error:', jobTypeExpError);
+          if (process.env.NODE_ENV === 'development') console.error('Job type experience error:', jobTypeExpError);
         }
       }
     }
@@ -347,7 +347,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
         .insert(careerStatusData);
 
       if (careerStatusError) {
-        console.error('Career status entries error:', careerStatusError);
+        if (process.env.NODE_ENV === 'development') console.error('Career status entries error:', careerStatusError);
       }
     }
 
@@ -357,7 +357,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
 
     return { success: true };
   } catch (error) {
-    console.error('Update error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Update error:', error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }

@@ -79,7 +79,7 @@ export async function checkCompanyNameDuplication(companyName: string) {
 
     return { isDuplicate: data && data.length > 0 };
   } catch (error) {
-    console.error('Error checking company name duplication:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error checking company name duplication:', error);
     return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -145,11 +145,11 @@ export async function createCompanyData(formData: CompanyFormData) {
       .single();
 
     if (companyError) {
-      console.error('Company creation error:', companyError);
+      if (process.env.NODE_ENV === 'development') console.error('Company creation error:', companyError);
       throw companyError;
     }
 
-    console.log('Created company:', company);
+    if (process.env.NODE_ENV === 'development') console.log('Created company:', company);
     const companyId = String(company.id);
 
     // Step 5: Create company group (required for company structure)
@@ -164,18 +164,18 @@ export async function createCompanyData(formData: CompanyFormData) {
       });
 
     if (groupError) {
-      console.error('Company group creation error:', groupError);
+      if (process.env.NODE_ENV === 'development') console.error('Company group creation error:', groupError);
       // Don't throw here as company is already created
-      console.warn('Failed to create company group, but company was created successfully');
+      if (process.env.NODE_ENV === 'development') console.warn('Failed to create company group, but company was created successfully');
     }
 
     // Step 6: Revalidate the company list page
     revalidatePath('/admin/company');
 
-    console.log('Company creation completed successfully with ID:', companyId);
+    if (process.env.NODE_ENV === 'development') console.log('Company creation completed successfully with ID:', companyId);
     return { success: true, companyId };
   } catch (error) {
-    console.error('Error creating company:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error creating company:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

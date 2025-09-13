@@ -82,7 +82,7 @@ export const useMessageStore = create<MessageState>()(
     getFilteredMessages: (isCandidatePage = false) => {
       const { messages, statusFilter, groupFilter, companyFilter, keyword } = get();
       
-      console.log('getFilteredMessages debug:', {
+      if (process.env.NODE_ENV === 'development') console.log('getFilteredMessages debug:', {
         isCandidatePage,
         messagesCount: messages.length,
         statusFilter,
@@ -96,7 +96,7 @@ export const useMessageStore = create<MessageState>()(
         // Candidate page filtering
         if (isCandidatePage) {
           if (companyFilter !== 'all' && message.companyName !== companyFilter) {
-            console.log('Filtered out by companyFilter:', message.companyName, 'vs', companyFilter);
+            if (process.env.NODE_ENV === 'development') console.log('Filtered out by companyFilter:', message.companyName, 'vs', companyFilter);
             return false;
           }
           if (keyword && 
@@ -104,7 +104,7 @@ export const useMessageStore = create<MessageState>()(
               .toLowerCase()
               .includes(keyword.toLowerCase())
           ) {
-            console.log('Filtered out by keyword:', keyword);
+            if (process.env.NODE_ENV === 'development') console.log('Filtered out by keyword:', keyword);
             return false;
           }
           return true;
@@ -113,17 +113,17 @@ export const useMessageStore = create<MessageState>()(
         // Company page filtering
         if (statusFilter !== 'all') {
           if (statusFilter === 'unread' && !message.isUnread) {
-            console.log('Filtered out by statusFilter (unread):', message.id, message.isUnread);
+            if (process.env.NODE_ENV === 'development') console.log('Filtered out by statusFilter (unread):', message.id, message.isUnread);
             return false;
           }
           if (statusFilter === 'read' && message.isUnread) {
-            console.log('Filtered out by statusFilter (read):', message.id, message.isUnread);
+            if (process.env.NODE_ENV === 'development') console.log('Filtered out by statusFilter (read):', message.id, message.isUnread);
             return false;
           }
         }
         
         if (groupFilter !== 'all' && message.groupName !== groupFilter) {
-          console.log('Filtered out by groupFilter:', message.groupName, 'vs', groupFilter);
+          if (process.env.NODE_ENV === 'development') console.log('Filtered out by groupFilter:', message.groupName, 'vs', groupFilter);
           return false;
         }
         
@@ -132,16 +132,16 @@ export const useMessageStore = create<MessageState>()(
             `${message.companyName} ${message.candidateName} ${message.messagePreview} ${message.jobTitle}`
               .toLowerCase();
           if (!searchText.includes(keyword.toLowerCase())) {
-            console.log('Filtered out by keyword search:', keyword, 'in', searchText);
+            if (process.env.NODE_ENV === 'development') console.log('Filtered out by keyword search:', keyword, 'in', searchText);
             return false;
           }
         }
         
-        console.log('Message passed all filters:', message.id);
+        if (process.env.NODE_ENV === 'development') console.log('Message passed all filters:', message.id);
         return true;
       });
       
-      console.log('Filtered result count:', filtered.length);
+      if (process.env.NODE_ENV === 'development') console.log('Filtered result count:', filtered.length);
       return filtered;
     },
     

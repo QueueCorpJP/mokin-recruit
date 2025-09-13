@@ -48,7 +48,7 @@ export function useSearchHistory(groupId?: string) {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Search history fetch error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Search history fetch error:', error);
         setError('検索履歴の取得に失敗しました');
         return;
       }
@@ -56,7 +56,7 @@ export function useSearchHistory(groupId?: string) {
       setSearchHistory(data || []);
       setError(null);
     } catch (err) {
-      console.error('Unexpected error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Unexpected error:', err);
       setError('予期しないエラーが発生しました');
     } finally {
       setLoading(false);
@@ -78,8 +78,8 @@ export function useSearchHistory(groupId?: string) {
 
       console.log('[updateSavedStatus] Update結果:', updateResult);
 
-      if (updateResult.error) {
-        console.error('Update saved status error:', updateResult.error);
+      if (error) {
+        if (process.env.NODE_ENV === 'development') console.error('Update saved status error:', error);
         throw new Error('保存状態の更新に失敗しました');
       }
 
@@ -109,7 +109,7 @@ export function useSearchHistory(groupId?: string) {
         .eq('id', historyId);
 
       if (error) {
-        console.error('Delete search history error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Delete search history error:', error);
         throw new Error('検索履歴の削除に失敗しました');
       }
 

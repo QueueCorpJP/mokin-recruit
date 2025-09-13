@@ -42,7 +42,7 @@ export default async function ProfileServerComponent() {
 
     return <ProfileClient />;
   } catch (error) {
-    console.error('ProfileServerComponent error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ProfileServerComponent error:', error);
     redirect('/signup');
   }
 }

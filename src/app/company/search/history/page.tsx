@@ -24,11 +24,11 @@ export default async function SearchHistoryPage() {
       initialSearchHistory = result.data;
     } else {
       error = result.error;
-      console.error('Failed to fetch search history:', result.error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch search history:', result.error);
     }
   } catch (err) {
     error = 'サーバーエラーが発生しました';
-    console.error('Failed to fetch initial search history:', err);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch initial search history:', err);
   }
 
   return (

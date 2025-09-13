@@ -161,7 +161,7 @@ export default function MediaPage() {
 
         setSidebarData(sidebarDataResult);
       } catch (error) {
-        console.error('データの取得に失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('データの取得に失敗:', error);
         setArticles([]);
         setFilteredArticles([]);
         setSidebarData({ popularArticles: [], categories: [], tags: [] });
@@ -204,7 +204,7 @@ export default function MediaPage() {
       setFilteredArticles(prev => [...prev, ...newArticles]);
       setHasMore(paginationResult.hasMore);
     } catch (error) {
-      console.error('追加記事の取得に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('追加記事の取得に失敗:', error);
     } finally {
       setLoadingMore(false);
     }

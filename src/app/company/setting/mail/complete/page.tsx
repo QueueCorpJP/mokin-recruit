@@ -11,7 +11,7 @@ export default function MailCompletePage() {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        console.log('認証状態を確認中...');
+        if (process.env.NODE_ENV === 'development') console.log('認証状態を確認中...');
         
 
         const cacheKeys = [
@@ -26,15 +26,15 @@ export default function MailCompletePage() {
             if (typeof window !== 'undefined') {
               sessionStorage.removeItem(key);
             }
-            console.log(`キャッシュクリア: ${key}`);
+            if (process.env.NODE_ENV === 'development') console.log(`キャッシュクリア: ${key}`);
           } catch (error) {
-            console.log(`キャッシュクリアスキップ: ${key}`);
+            if (process.env.NODE_ENV === 'development') console.log(`キャッシュクリアスキップ: ${key}`);
           }
         });
         
-        console.log('✅ 認証状態確認完了（ログイン状態維持）');
+        if (process.env.NODE_ENV === 'development') console.log('✅ 認証状態確認完了（ログイン状態維持）');
       } catch (error) {
-        console.error('認証状態確認エラー:', error);
+        if (process.env.NODE_ENV === 'development') console.error('認証状態確認エラー:', error);
       }
     };
     
@@ -69,7 +69,7 @@ export default function MailCompletePage() {
           <Button
             onClick={async () => {
               try {
-                console.log('設定ページに移動前の最終クリーンアップ...');
+                if (process.env.NODE_ENV === 'development') console.log('設定ページに移動前の最終クリーンアップ...');
                 
                 // 追加のクリーンアップ
                 const additionalKeys = [
@@ -97,12 +97,12 @@ export default function MailCompletePage() {
                   );
                 }
                 
-                console.log('✅ 最終クリーンアップ完了');
+                if (process.env.NODE_ENV === 'development') console.log('✅ 最終クリーンアップ完了');
                 
                 // ページを完全に再読み込みしてヘッダーフッターの表示を更新
                 window.location.href = '/company/setting';
               } catch (error) {
-                console.error('クリーンアップエラー:', error);
+                if (process.env.NODE_ENV === 'development') console.error('クリーンアップエラー:', error);
                 // エラーがあってもページ遷移は実行
                 window.location.href = '/company/setting';
               }

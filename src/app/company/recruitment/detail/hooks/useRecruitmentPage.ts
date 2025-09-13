@@ -168,7 +168,7 @@ export function useRecruitmentPage({
 
   const handleJobChange = (candidateId: string, jobId: string) => {
     // TODO: ここで実際のAPIを呼び出して候補者の求人を変更する
-    console.log('🔄 求人変更:', { candidateId, jobId });
+    if (process.env.NODE_ENV === 'development') console.log('🔄 求人変更:', { candidateId, jobId });
     // 実装例:
     // - applicationテーブルのjob_posting_idを更新
     // - 成功したら候補者データを再取得

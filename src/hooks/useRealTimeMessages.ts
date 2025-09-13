@@ -10,7 +10,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
 
   // メッセージ状態の変化をログ
   useEffect(() => {
-    console.log('Messages state changed:', messages);
+    if (process.env.NODE_ENV === 'development') console.log('Messages state changed:', messages);
   }, [messages]);
 
   // メッセージの初期読み込み
@@ -23,17 +23,17 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     const loadMessages = async () => {
       setIsLoading(true);
       try {
-        console.log('Loading messages for room:', roomId);
+        if (process.env.NODE_ENV === 'development') console.log('Loading messages for room:', roomId);
         const result = await getRoomMessages(roomId);
-        console.log('getRoomMessages result:', result);
+        if (process.env.NODE_ENV === 'development') console.log('getRoomMessages result:', result);
         if (result.messages) {
-          console.log('Setting messages:', result.messages);
+          if (process.env.NODE_ENV === 'development') console.log('Setting messages:', result.messages);
           setMessages(result.messages);
         } else if (result.error) {
-          console.error('Error from getRoomMessages:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Error from getRoomMessages:', result.error);
         }
       } catch (error) {
-        console.error('Error loading messages:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error loading messages:', error);
       } finally {
         setIsLoading(false);
       }
@@ -52,8 +52,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     const channel = supabase
       .channel(`messages-${roomId}`)
       .on(
-        'postgres_changes',
-        {
+        'postgres_changes', {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
@@ -61,7 +60,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
         },
         (payload) => {
           const newMessage = payload.new as ChatMessage;
-          console.log('New message received:', newMessage);
+          if (process.env.NODE_ENV === 'development') console.log('New message received:', newMessage);
           
           setMessages(prev => {
             // 重複チェック
@@ -82,7 +81,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
         },
         (payload) => {
           const updatedMessage = payload.new as ChatMessage;
-          console.log('Message updated:', updatedMessage);
+          if (process.env.NODE_ENV === 'development') console.log('Message updated:', updatedMessage);
           
           setMessages(prev => prev.map(msg => 
             msg.id === updatedMessage.id ? updatedMessage : msg
@@ -156,7 +155,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
 
       return result.message;
     } catch (error) {
-      console.error('Error sending message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error sending message:', error);
       // エラー時は楽観的更新を元に戻す
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
       throw error;

@@ -76,7 +76,7 @@ export function useClientAuth(): AuthState {
           loading: false,
         });
       } catch (error) {
-        console.error('Auth check failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Auth check failed:', error);
         setAuthState({
           isAuthenticated: false,
           user: null,

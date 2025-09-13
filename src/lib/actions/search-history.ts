@@ -54,7 +54,7 @@ export interface SearchHistoryItem {
  * 検索履歴を保存する（RLS有効・サーバーサイドでクライアントキー使用）
  */
 export async function saveSearchHistory(data: SaveSearchHistoryData) {
-  console.log('[saveSearchHistory] Called with data:', JSON.stringify(data, null, 2));
+  if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Called with data:', JSON.stringify(data, null, 2));
   
   try {
     // 企業ユーザー認証（従来通り）
@@ -67,7 +67,7 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[saveSearchHistory] Company User ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Company User ID:', companyUserId);
     
     // RLS有効なサーバークライアントを作成
     const cookieStore = await cookies();
@@ -98,7 +98,7 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       .eq('id', companyUserId);
 
     if (userError || !companyUsers || companyUsers.length === 0) {
-      console.error('[saveSearchHistory] Error fetching company user:', userError);
+      if (process.env.NODE_ENV === 'development') console.error('[saveSearchHistory] Error fetching company user:', userError);
       return {
         success: false,
         error: '企業ユーザー情報の取得に失敗しました: ' + (userError?.message || 'ユーザーが見つかりません')
@@ -109,28 +109,28 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
 
     // 指定されたグループにユーザーがアクセス権限を持っているかチェック
     const userGroups = companyUser.company_user_group_permissions || [];
-    console.log('[saveSearchHistory] User groups:', JSON.stringify(userGroups, null, 2));
-    console.log('[saveSearchHistory] Looking for group_id:', data.group_id);
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] User groups:', JSON.stringify(userGroups, null, 2));
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Looking for group_id:', data.group_id);
     
     const targetGroup = userGroups.find((perm: any) => 
       perm.company_group?.id === data.group_id
     );
 
-    console.log('[saveSearchHistory] Found target group:', JSON.stringify(targetGroup, null, 2));
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Found target group:', JSON.stringify(targetGroup, null, 2));
     
     // グループ名の取得状況をログ出力
     if (targetGroup) {
       const groupName = targetGroup.company_group?.group_name;
       if (groupName) {
-        console.log('[saveSearchHistory] ✅ グループ名が正常に取得されました:', groupName);
+        if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] ✅ グループ名が正常に取得されました:', groupName);
       } else {
-        console.warn('[saveSearchHistory] ⚠️ グループ名が取得できませんでした');
+        if (process.env.NODE_ENV === 'development') console.warn('[saveSearchHistory] ⚠️ グループ名が取得できませんでした');
       }
     }
 
     if (!targetGroup) {
-      console.log('[saveSearchHistory] No matching group found for group_id:', data.group_id);
-      console.log('[saveSearchHistory] Available group IDs:', userGroups.map((perm: any) => perm.company_group?.id));
+      if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] No matching group found for group_id:', data.group_id);
+      if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Available group IDs:', userGroups.map((perm: any) => perm.company_group?.id));
       return {
         success: false,
         error: '指定されたグループへのアクセス権限がありません'
@@ -149,7 +149,7 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       searched_at: new Date().toISOString(),
     };
     
-    console.log('[saveSearchHistory] Inserting data:', JSON.stringify(insertData, null, 2));
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Inserting data:', JSON.stringify(insertData, null, 2));
     
     const { data: searchHistory, error: insertError } = await supabase
       .from('search_history')
@@ -158,14 +158,14 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
       .single();
 
     if (insertError) {
-      console.error('[saveSearchHistory] Insert error:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('[saveSearchHistory] Insert error:', insertError);
       return {
         success: false,
         error: '検索履歴の保存に失敗しました'
       };
     }
 
-    console.log('[saveSearchHistory] Successfully saved:', searchHistory?.id);
+    if (process.env.NODE_ENV === 'development') console.log('[saveSearchHistory] Successfully saved:', searchHistory?.id);
     
     return {
       success: true,
@@ -173,7 +173,7 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     };
 
   } catch (error) {
-    console.error('Save search history error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Save search history error:', error);
     return {
       success: false,
       error: 'サーバーエラーが発生しました'
@@ -189,13 +189,13 @@ export async function getSearchHistory(
   limit: number = 50,
   offset: number = 0
 ) {
-  console.log('[getSearchHistory] Called with params:', { groupId, limit, offset });
+  if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Called with params:', { groupId, limit, offset });
   
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[getSearchHistory] Company auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('[getSearchHistory] Company auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error
@@ -203,7 +203,7 @@ export async function getSearchHistory(
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[getSearchHistory] Company auth successful, user ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Company auth successful, user ID:', companyUserId);
 
     // Supabase管理者クライアントを使用（RLS無効でWHEREで手動フィルタリング）
     const supabase = getSupabaseAdminClient();
@@ -215,7 +215,7 @@ export async function getSearchHistory(
       .eq('company_user_id', companyUserId);
 
     if (userError || !userPermissions) {
-      console.error('[getSearchHistory] Failed to get user permissions:', userError);
+      if (process.env.NODE_ENV === 'development') console.error('[getSearchHistory] Failed to get user permissions:', userError);
       return {
         success: false,
         error: '企業ユーザー情報の取得に失敗しました'
@@ -228,14 +228,14 @@ export async function getSearchHistory(
     );
 
     if (accessibleGroupIds.length === 0) {
-      console.log('[getSearchHistory] User has no group permissions');
+      if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] User has no group permissions');
       return {
         success: true,
         data: []
       };
     }
 
-    console.log('[getSearchHistory] User has access to groups:', accessibleGroupIds);
+    if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] User has access to groups:', accessibleGroupIds);
 
     // 手動でWHEREフィルタリングを適用
     let query = supabase
@@ -253,15 +253,15 @@ export async function getSearchHistory(
           error: '指定されたグループへのアクセス権限がありません'
         };
       }
-      console.log('[getSearchHistory] Filtering by specific group:', groupId);
+      if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Filtering by specific group:', groupId);
       query = query.eq('group_id', groupId);
     }
 
-    console.log('[getSearchHistory] Executing query with manual WHERE filtering...');
+    if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Executing query with manual WHERE filtering...');
     const { data: searchHistories, error: fetchError } = await query;
 
     if (fetchError) {
-      console.error('[getSearchHistory] Database query error:', {
+      if (process.env.NODE_ENV === 'development') console.error('[getSearchHistory] Database query error:', {
         message: fetchError.message,
         details: fetchError.details,
         hint: fetchError.hint,
@@ -273,9 +273,9 @@ export async function getSearchHistory(
       };
     }
 
-    console.log('[getSearchHistory] Query successful, found items:', searchHistories?.length || 0);
+    if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Query successful, found items:', searchHistories?.length || 0);
     if (searchHistories && searchHistories.length > 0) {
-      console.log('[getSearchHistory] Sample item:', JSON.stringify(searchHistories[0], null, 2));
+      if (process.env.NODE_ENV === 'development') console.log('[getSearchHistory] Sample item:', JSON.stringify(searchHistories[0], null, 2));
     }
 
     return {
@@ -284,7 +284,7 @@ export async function getSearchHistory(
     };
 
   } catch (error) {
-    console.error('[getSearchHistory] Unexpected error:', {
+    if (process.env.NODE_ENV === 'development') console.error('[getSearchHistory] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       error
@@ -300,13 +300,13 @@ export async function getSearchHistory(
  * 検索履歴の保存状態を更新する（サーバーサイドでWHEREによる手動フィルタリング）
  */
 export async function updateSearchHistorySavedStatus(historyId: string, isSaved: boolean) {
-  console.log('[updateSearchHistorySavedStatus] Called with:', { historyId, isSaved });
+  if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistorySavedStatus] Called with:', { historyId, isSaved });
   
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[updateSearchHistorySavedStatus] Company auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistorySavedStatus] Company auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error
@@ -314,7 +314,7 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[updateSearchHistorySavedStatus] Company auth successful, user ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistorySavedStatus] Company auth successful, user ID:', companyUserId);
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -334,7 +334,7 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
 
     const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
 
-    console.log('[updateSearchHistorySavedStatus] Executing update query with access control...');
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistorySavedStatus] Executing update query with access control...');
     // 手動でアクセス制御を適用して更新
     const { data: updated, error: updateError } = await supabase
       .from('search_history')
@@ -348,7 +348,7 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
       .single();
 
     if (updateError) {
-      console.error('[updateSearchHistorySavedStatus] Update error:', {
+      if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistorySavedStatus] Update error:', {
         message: updateError.message,
         details: updateError.details,
         hint: updateError.hint,
@@ -360,14 +360,14 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
       };
     }
 
-    console.log('[updateSearchHistorySavedStatus] Update successful');
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistorySavedStatus] Update successful');
     return {
       success: true,
       data: updated
     };
 
   } catch (error) {
-    console.error('[updateSearchHistorySavedStatus] Unexpected error:', {
+    if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistorySavedStatus] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       error
@@ -383,13 +383,13 @@ export async function updateSearchHistorySavedStatus(historyId: string, isSaved:
  * ユーザーがアクセス可能な会社グループを取得する
  */
 export async function getCompanyGroups() {
-  console.log('[getCompanyGroups] Called');
+  if (process.env.NODE_ENV === 'development') console.log('[getCompanyGroups] Called');
   
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[getCompanyGroups] Company auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('[getCompanyGroups] Company auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error,
@@ -398,7 +398,7 @@ export async function getCompanyGroups() {
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[getCompanyGroups] Company auth successful, user ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[getCompanyGroups] Company auth successful, user ID:', companyUserId);
 
     // Supabase管理者クライアントを使用
     const supabase = getSupabaseAdminClient();
@@ -415,7 +415,7 @@ export async function getCompanyGroups() {
       .eq('company_user_id', companyUserId);
 
     if (userError || !userPermissions) {
-      console.error('[getCompanyGroups] Failed to get user permissions:', userError);
+      if (process.env.NODE_ENV === 'development') console.error('[getCompanyGroups] Failed to get user permissions:', userError);
       return {
         success: false,
         error: '企業ユーザー情報の取得に失敗しました',
@@ -424,7 +424,7 @@ export async function getCompanyGroups() {
     }
 
     // グループデータを整形
-    console.log('[getCompanyGroups] Raw userPermissions:', JSON.stringify(userPermissions, null, 2));
+    if (process.env.NODE_ENV === 'development') console.log('[getCompanyGroups] Raw userPermissions:', JSON.stringify(userPermissions, null, 2));
     
     const groups = userPermissions
       .map((perm: any) => perm.company_group)
@@ -434,14 +434,14 @@ export async function getCompanyGroups() {
         name: group.group_name
       }));
 
-    console.log('[getCompanyGroups] Successfully retrieved groups:', groups);
+    if (process.env.NODE_ENV === 'development') console.log('[getCompanyGroups] Successfully retrieved groups:', groups);
     return {
       success: true,
       data: groups
     };
 
   } catch (error) {
-    console.error('[getCompanyGroups] Unexpected error:', {
+    if (process.env.NODE_ENV === 'development') console.error('[getCompanyGroups] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       error
@@ -458,13 +458,13 @@ export async function getCompanyGroups() {
  * 検索条件名を更新する（サーバーサイドでWHEREによる手動フィルタリング）
  */
 export async function updateSearchHistoryTitle(historyId: string, searchTitle: string) {
-  console.log('[updateSearchHistoryTitle] Called with:', { historyId, searchTitle });
+  if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistoryTitle] Called with:', { historyId, searchTitle });
   
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[updateSearchHistoryTitle] Company auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistoryTitle] Company auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error
@@ -472,7 +472,7 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[updateSearchHistoryTitle] Company auth successful, user ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistoryTitle] Company auth successful, user ID:', companyUserId);
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -492,7 +492,7 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
 
     const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
 
-    console.log('[updateSearchHistoryTitle] Executing update query with access control...');
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistoryTitle] Executing update query with access control...');
     // 手動でアクセス制御を適用して更新
     const { data: updated, error: updateError } = await supabase
       .from('search_history')
@@ -506,7 +506,7 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
       .single();
 
     if (updateError) {
-      console.error('[updateSearchHistoryTitle] Update error:', {
+      if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistoryTitle] Update error:', {
         message: updateError.message,
         details: updateError.details,
         hint: updateError.hint,
@@ -518,14 +518,14 @@ export async function updateSearchHistoryTitle(historyId: string, searchTitle: s
       };
     }
 
-    console.log('[updateSearchHistoryTitle] Update successful');
+    if (process.env.NODE_ENV === 'development') console.log('[updateSearchHistoryTitle] Update successful');
     return {
       success: true,
       data: updated
     };
 
   } catch (error) {
-    console.error('[updateSearchHistoryTitle] Unexpected error:', {
+    if (process.env.NODE_ENV === 'development') console.error('[updateSearchHistoryTitle] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       error
@@ -620,13 +620,13 @@ export async function getUserDefaultGroupId() {
  * 検索履歴を削除する（サーバーサイドでWHEREによる手動フィルタリング）
  */
 export async function deleteSearchHistory(historyId: string) {
-  console.log('[deleteSearchHistory] Called with:', { historyId });
+  if (process.env.NODE_ENV === 'development') console.log('[deleteSearchHistory] Called with:', { historyId });
   
   try {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('[deleteSearchHistory] Company auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.error('[deleteSearchHistory] Company auth failed:', authResult.error);
       return {
         success: false,
         error: authResult.error
@@ -634,7 +634,7 @@ export async function deleteSearchHistory(historyId: string) {
     }
 
     const { companyUserId } = authResult.data;
-    console.log('[deleteSearchHistory] Company auth successful, user ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('[deleteSearchHistory] Company auth successful, user ID:', companyUserId);
 
     // Supabase管理者クライアントを使用（手動でアクセス制御）
     const supabase = getSupabaseAdminClient();
@@ -654,7 +654,7 @@ export async function deleteSearchHistory(historyId: string) {
 
     const accessibleGroupIds = userPermissions.map((perm: any) => perm.company_group_id);
 
-    console.log('[deleteSearchHistory] Executing delete query with access control...');
+    if (process.env.NODE_ENV === 'development') console.log('[deleteSearchHistory] Executing delete query with access control...');
     // 手動でアクセス制御を適用して削除
     const { error: deleteError } = await supabase
       .from('search_history')
@@ -663,7 +663,7 @@ export async function deleteSearchHistory(historyId: string) {
       .in('group_id', accessibleGroupIds); // アクセス可能なグループのみ
 
     if (deleteError) {
-      console.error('[deleteSearchHistory] Delete error:', {
+      if (process.env.NODE_ENV === 'development') console.error('[deleteSearchHistory] Delete error:', {
         message: deleteError.message,
         details: deleteError.details,
         hint: deleteError.hint,
@@ -675,13 +675,13 @@ export async function deleteSearchHistory(historyId: string) {
       };
     }
 
-    console.log('[deleteSearchHistory] Delete successful');
+    if (process.env.NODE_ENV === 'development') console.log('[deleteSearchHistory] Delete successful');
     return {
       success: true
     };
 
   } catch (error) {
-    console.error('[deleteSearchHistory] Unexpected error:', {
+    if (process.env.NODE_ENV === 'development') console.error('[deleteSearchHistory] Unexpected error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       error

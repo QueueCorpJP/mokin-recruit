@@ -463,7 +463,7 @@ export default function CandidateEditClient({ candidate }: Props) {
             errors.push('このメールアドレスはすでに登録されています。');
           }
         } catch (error) {
-          console.error('Email duplication check failed:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Email duplication check failed:', error);
         }
       }
     }
@@ -534,8 +534,8 @@ export default function CandidateEditClient({ candidate }: Props) {
       };
 
       // デバッグ用
-      console.log('FormData desired_work_styles:', formData.desired_work_styles);
-      console.log('ConfirmData expectations:', confirmData.expectations);
+      if (process.env.NODE_ENV === 'development') console.log('FormData desired_work_styles:', formData.desired_work_styles);
+      if (process.env.NODE_ENV === 'development') console.log('ConfirmData expectations:', confirmData.expectations);
 
       // Store data in sessionStorage instead of URL params to avoid 431 error
       if (typeof window !== 'undefined') {
@@ -544,7 +544,7 @@ export default function CandidateEditClient({ candidate }: Props) {
       router.push(`/admin/candidate/${candidate.id}/edit/confirm`);
       
     } catch (error) {
-      console.error('Error preparing candidate data:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error preparing candidate data:', error);
       alert('データの準備に失敗しました');
     } finally {
       setIsSubmitting(false);

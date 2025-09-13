@@ -37,7 +37,7 @@ async function getNewsData(newsId: string) {
       categories: data.notice_category_relations?.map(rel => (rel.notice_categories as any)?.name) || []
     };
   } catch (error) {
-    console.error('ニュース記事取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ニュース記事取得エラー:', error);
     return null;
   }
 }

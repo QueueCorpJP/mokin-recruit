@@ -59,7 +59,7 @@ export default function PreviewClient({ categories, saveArticleAction }: Preview
             .then(blob => new File([blob], data.thumbnailName!, { type: blob.type }));
           formData.append('thumbnail', thumbnailFile);
         } catch (error) {
-          console.warn('サムネイル画像の処理に失敗しました:', error);
+          if (process.env.NODE_ENV === 'development') console.warn('サムネイル画像の処理に失敗しました:', error);
         }
       }
 
@@ -74,7 +74,7 @@ export default function PreviewClient({ categories, saveArticleAction }: Preview
       
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('記事の保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('記事の保存に失敗:', error);
       setError(error instanceof Error ? error.message : '記事の保存に失敗しました');
     } finally {
       setIsLoading(false);

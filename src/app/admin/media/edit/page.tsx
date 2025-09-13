@@ -74,11 +74,11 @@ async function fetchDataForEdit(articleId?: string): Promise<{
   ]);
 
   if (categoriesResult.error) {
-    console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
   }
 
   if (tagsResult.error) {
-    console.error('タグの読み込みに失敗:', tagsResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('タグの読み込みに失敗:', tagsResult.error);
   }
 
   // 記事IDがある場合は記事データを取得
@@ -92,7 +92,7 @@ async function fetchDataForEdit(articleId?: string): Promise<{
       .single();
 
     if (articleError) {
-      console.error('記事の読み込みに失敗:', articleError);
+      if (process.env.NODE_ENV === 'development') console.error('記事の読み込みに失敗:', articleError);
     } else {
       // カテゴリとタグを並列取得
       const [categoryRelationsResult, tagRelationsResult] = await Promise.all([

@@ -22,8 +22,8 @@ export function MessageDetailContent({
   companyName,
   isMobile = false,
 }: MessageDetailContentProps) {
-  console.log('MessageDetailContent received messages:', messages);
-  console.log('Messages count:', messages.length);
+  if (process.env.NODE_ENV === 'development') console.log('MessageDetailContent received messages:', messages);
+  if (process.env.NODE_ENV === 'development') console.log('Messages count:', messages.length);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);

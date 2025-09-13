@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BaseInput } from '@/components/ui/base-input';
 import { SelectInput } from '@/components/ui/select-input';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/job/LocationModal';
 import { IndustryModal } from '@/app/company/job/IndustryModal';

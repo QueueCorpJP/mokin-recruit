@@ -105,7 +105,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         const groups = await getCompanyGroupOptions();
         setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
       } catch (error) {
-        console.error('初期データの読み込みに失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('初期データの読み込みに失敗:', error);
       } finally {
         setIsLoading(false);
       }
@@ -143,7 +143,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         setCompanyUserOptions([{ value: currentUserName, label: currentUserName }, ...users]);
         setTemplateOptions([{ value: '', label: '未選択' }, ...templates]);
       } catch (error) {
-        console.error('グループ関連データの読み込みに失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('グループ関連データの読み込みに失敗:', error);
       }
     };
 
@@ -256,7 +256,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         alert(result.error || 'スカウト送信に失敗しました');
       }
     } catch (error) {
-      console.error('スカウト送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('スカウト送信エラー:', error);
       alert('スカウト送信中にエラーが発生しました');
     } finally {
       setIsLoading(false);

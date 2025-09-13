@@ -88,7 +88,7 @@ export const DeclineConfirmModal: React.FC<DeclineConfirmModalProps> = ({
         throw new Error(result.error || '辞退理由の送信に失敗しました');
       }
     } catch (error) {
-      console.error('辞退理由の送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('辞退理由の送信エラー:', error);
       alert('辞退理由の送信に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);

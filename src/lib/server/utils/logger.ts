@@ -74,7 +74,7 @@ const createTransports = () => {
       );
     } catch (error) {
       // ファイル書き込みに失敗してもログ機能は継続
-      console.warn('File logging disabled:', error);
+      if (process.env.NODE_ENV === 'development') console.warn('File logging disabled:', error);
     }
   }
 
@@ -95,7 +95,7 @@ export const logger = winston.createLogger({
 // 本番環境でのエラーハンドリング強化
 if (process.env.NODE_ENV === 'production') {
   logger.on('error', error => {
-    console.error('Logger error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Logger error:', error);
   });
 }
 

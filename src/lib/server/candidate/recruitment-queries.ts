@@ -57,7 +57,7 @@ function calculateAge(birthDate: string): number {
 async function getCurrentCompanyAccountId(): Promise<string | null> {
   try {
     // 環境変数の確認
-    console.log('🔍 Environment check:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Environment check:', {
       SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
         ? 'SET'
@@ -74,7 +74,7 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
       error: authError,
     } = await supabase.auth.getUser();
 
-    console.log('🔍 Auth User:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Auth User:', {
       userId: user?.id,
       email: user?.email,
       metadata: user?.user_metadata,
@@ -82,19 +82,19 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
     });
 
     if (!user) {
-      console.log('🔍 No authenticated user found');
+      if (process.env.NODE_ENV === 'development') console.log('🔍 No authenticated user found');
       return null;
     }
 
     // user_metadataからcompany_account_idを取得
     const companyAccountId = user.user_metadata?.company_account_id;
     if (companyAccountId) {
-      console.log('🔍 Company Account ID from metadata:', companyAccountId);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 Company Account ID from metadata:', companyAccountId);
       return companyAccountId;
     }
 
     // fallback: emailからcompany_usersテーブルを検索
-    console.log(
+    if (process.env.NODE_ENV === 'development') console.log(
       '🔍 Fallback: Searching company_users table for email:',
       user.email
     );
@@ -106,7 +106,7 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
     const { data: allCompanyUsers } = await authenticatedSupabase
       .from('company_users')
       .select('email, company_account_id, auth_user_id');
-    console.log('🔍 All company users:', allCompanyUsers);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 All company users:', allCompanyUsers);
 
     const { data: companyUser, error: companyUserError } =
       await authenticatedSupabase
@@ -115,15 +115,14 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
         .eq('email', user.email)
         .single();
 
-    console.log('🔍 Company User Query Result:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Company User Query Result:', {
       companyUser,
       companyUserError,
     });
 
     // 追加のフォールバック: auth_user_idで検索
     if (!companyUser && user.id) {
-      console.log(
-        '🔍 Additional fallback: Searching by auth_user_id:',
+      if (process.env.NODE_ENV === 'development') console.log('🔍 Additional fallback: Searching by auth_user_id:',
         user.id
       );
       const { data: companyUserByAuthId, error: authIdError } =
@@ -132,7 +131,7 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
           .select('company_account_id')
           .eq('auth_user_id', user.id)
           .single();
-      console.log('🔍 Company User by auth_user_id:', {
+      if (process.env.NODE_ENV === 'development') console.log('🔍 Company User by auth_user_id:', {
         companyUserByAuthId,
         authIdError,
       });
@@ -144,13 +143,13 @@ async function getCurrentCompanyAccountId(): Promise<string | null> {
 
     // 一時的なハードコード修正（テスト用）- 本番では削除すること
     if (user.email === 'test@gmail.com') {
-      console.log('🔍 Temporary hardcode for test@gmail.com');
+      if (process.env.NODE_ENV === 'development') console.log('🔍 Temporary hardcode for test@gmail.com');
       return '8926f65d-0524-4f8a-8c5e-9f8e1d186587';
     }
 
     return companyUser?.company_account_id || null;
   } catch (error) {
-    console.error('現在の企業アカウントIDの取得に失敗:', error);
+    if (process.env.NODE_ENV === 'development') console.error('現在の企業アカウントIDの取得に失敗:', error);
     return null;
   }
 }
@@ -310,75 +309,117 @@ export async function getCandidatesDataWithQuery(
   const { data: candidatesData, error: candidatesError } = await query;
   if (candidatesError || !candidatesData) return [];
 
-  // 6. 各候補者の追加情報を並列取得（既存ロジック流用）
-  const candidatesWithDetails = await Promise.all(
-    candidatesData.map(async (app: any) => {
-      const candidateId = app.candidate_id;
-      const [jobExperience, workExperience, careerStatus] = await Promise.all([
-        supabase
-          .from('job_type_experience')
-          .select('job_type_name')
-          .eq('candidate_id', candidateId),
-        supabase
-          .from('work_experience')
-          .select('industry_name')
-          .eq('candidate_id', candidateId),
-        supabase
-          .from('career_status_entries')
-          .select('company_name')
-          .eq('candidate_id', candidateId)
-          .limit(1),
-      ]);
-      const candidate = app.candidates;
-      const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
-      
-      // 担当者を取得
-      const assignedUsers = await getAssignedUsersForCandidate(
-        supabase,
-        candidateId,
-        app.company_group_id
-      );
-      
-      // 選考進捗を取得
-      const { data: selectionProgress } = await supabase
-        .from('selection_progress')
-        .select('*')
-        .eq('candidate_id', candidateId)
-        .eq('company_group_id', app.company_group_id)
-        .single();
-      
-      return {
-        id: candidateId,
-        name: `${candidate.first_name} ${candidate.last_name}`,
-        company: candidate.recent_job_company_name || candidate.current_company || '',
-        location: candidate.prefecture || '',
-        age,
-        gender: candidate.gender || '',
-        experience:
-          jobExperience.data?.map((exp: any) => exp.job_type_name) || [],
-        industry:
-          workExperience.data?.map((ind: any) => ind.industry_name) || [],
-        targetCompany: careerStatus.data?.[0]?.company_name || '',
-        targetJob: app.job_postings?.job_type || '',
-        jobPostingId: app.job_posting_id || '',
-        jobPostingTitle: app.job_postings?.title || '',
-        group: app.company_groups?.group_name || '',
-        groupId: app.company_group_id || '',
-        applicationDate: app.created_at
-          ? new Date(app.created_at).toLocaleDateString('ja-JP')
-          : '',
-        firstScreening:
-          app.status === 'document_screening' ? 'ready' : undefined,
-        secondScreening:
-          app.status === 'second_interview' ? 'ready' : undefined,
-        finalScreening: app.status === 'final_interview' ? 'ready' : undefined,
-        offer: app.status === 'offer' ? 'ready' : undefined,
-        assignedUsers,
-        type: app.type || 'application',
-        selectionProgress: selectionProgress || null,
-      };
-    })
-  );
+  // 6. N+1問題を解決するため、JOINで一括取得
+  // まず、必要なcandidate_idを収集
+  const candidateIds = candidatesData.map((app: any) => app.candidate_id);
+  const companyGroupIds = candidatesData.map((app: any) => app.company_group_id);
+
+  // 並列で関連データを一括取得
+  const [
+    jobExperienceResult,
+    workExperienceResult,
+    careerStatusResult,
+    selectionProgressResult
+  ] = await Promise.all([
+    supabase
+      .from('job_type_experience')
+      .select('candidate_id, job_type_name')
+      .in('candidate_id', candidateIds),
+    supabase
+      .from('work_experience')
+      .select('candidate_id, industry_name')
+      .in('candidate_id', candidateIds),
+    supabase
+      .from('career_status_entries')
+      .select('candidate_id, company_name')
+      .in('candidate_id', candidateIds)
+      .limit(1),
+    supabase
+      .from('selection_progress')
+      .select('candidate_id, company_group_id, *')
+      .in('candidate_id', candidateIds)
+      .in('company_group_id', companyGroupIds),
+  ]);
+
+  // データをMap形式で整理
+  const jobExperienceMap = new Map<string, string[]>();
+  const workExperienceMap = new Map<string, string[]>();
+  const careerStatusMap = new Map<string, string>();
+  const selectionProgressMap = new Map<string, any>();
+
+  // job_type_experienceのデータを整理
+  jobExperienceResult.data?.forEach((exp: any) => {
+    if (!jobExperienceMap.has(exp.candidate_id)) {
+      jobExperienceMap.set(exp.candidate_id, []);
+    }
+    jobExperienceMap.get(exp.candidate_id)!.push(exp.job_type_name);
+  });
+
+  // work_experienceのデータを整理
+  workExperienceResult.data?.forEach((exp: any) => {
+    if (!workExperienceMap.has(exp.candidate_id)) {
+      workExperienceMap.set(exp.candidate_id, []);
+    }
+    workExperienceMap.get(exp.candidate_id)!.push(exp.industry_name);
+  });
+
+  // career_status_entriesのデータを整理
+  careerStatusResult.data?.forEach((status: any) => {
+    careerStatusMap.set(status.candidate_id, status.company_name);
+  });
+
+  // selection_progressのデータを整理
+  selectionProgressResult.data?.forEach((progress: any) => {
+    const key = `${progress.candidate_id}-${progress.company_group_id}`;
+    selectionProgressMap.set(key, progress);
+  });
+
+  // 担当者情報を並列取得（スカウト・応募両方に対応）
+  const assignedUsersPromises = candidatesData.map(async (app: any) => {
+    return await getAssignedUsersForCandidate(
+      supabase,
+      app.candidate_id,
+      app.company_group_id
+    );
+  });
+  const assignedUsersResults = await Promise.all(assignedUsersPromises);
+
+  // データを統合
+  const candidatesWithDetails = candidatesData.map((app: any, index: number) => {
+    const candidateId = app.candidate_id;
+    const candidate = app.candidates;
+    const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+    const selectionProgressKey = `${candidateId}-${app.company_group_id}`;
+
+    return {
+      id: candidateId,
+      name: `${candidate.first_name} ${candidate.last_name}`,
+      company: candidate.recent_job_company_name || candidate.current_company || '',
+      location: candidate.prefecture || '',
+      age,
+      gender: candidate.gender || '',
+      experience: jobExperienceMap.get(candidateId) || [],
+      industry: workExperienceMap.get(candidateId) || [],
+      targetCompany: careerStatusMap.get(candidateId) || '',
+      targetJob: app.job_postings?.job_type || '',
+      jobPostingId: app.job_posting_id || '',
+      jobPostingTitle: app.job_postings?.title || '',
+      group: app.company_groups?.group_name || '',
+      groupId: app.company_group_id || '',
+      applicationDate: app.created_at
+        ? new Date(app.created_at).toLocaleDateString('ja-JP')
+        : '',
+      firstScreening:
+        app.status === 'document_screening' ? 'ready' : undefined,
+      secondScreening:
+        app.status === 'second_interview' ? 'ready' : undefined,
+      finalScreening: app.status === 'final_interview' ? 'ready' : undefined,
+      offer: app.status === 'offer' ? 'ready' : undefined,
+      assignedUsers: assignedUsersResults[index],
+      type: app.type || 'application',
+      selectionProgress: selectionProgressMap.get(selectionProgressKey) || null,
+    };
+  });
   return candidatesWithDetails;
 }
 
@@ -422,7 +463,7 @@ async function getAssignedUsersForCandidate(
       
       if (uniqueSenders.size > 0) {
         const result = Array.from(uniqueSenders);
-        console.log('✅ [担当者取得] スカウト担当者:', result);
+        if (process.env.NODE_ENV === 'development') console.log('✅ [担当者取得] スカウト担当者:', result);
         return result;
       }
     }
@@ -436,14 +477,14 @@ async function getAssignedUsersForCandidate(
 
     if (!groupError && companyGroup) {
       const result = [`${companyGroup.group_name}グループ`];
-      console.log('✅ [担当者取得] 応募グループ:', result);
+      if (process.env.NODE_ENV === 'development') console.log('✅ [担当者取得] 応募グループ:', result);
       return result;
     }
 
-    console.log('❌ [担当者取得] ルーム、スカウト、応募グループすべて見つかりません');
+    if (process.env.NODE_ENV === 'development') console.log('❌ [担当者取得] スカウトも応募グループも見つかりません');
     return [];
   } catch (error) {
-    console.error('❌ [担当者取得エラー]:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [担当者取得エラー]:', error);
     return [];
   }
 }
@@ -455,9 +496,9 @@ export async function getCandidatesData(): Promise<CandidateData[]> {
 
   // 現在の企業アカウントIDを取得
   const companyAccountId = await getCurrentCompanyAccountId();
-  console.log('🔍 Company Account ID:', companyAccountId);
+  if (process.env.NODE_ENV === 'development') console.log('🔍 Company Account ID:', companyAccountId);
   if (!companyAccountId) {
-    console.error('企業アカウントIDが見つかりません');
+    if (process.env.NODE_ENV === 'development') console.error('企業アカウントIDが見つかりません');
     return [];
   }
 
@@ -468,28 +509,28 @@ export async function getCandidatesData(): Promise<CandidateData[]> {
       .select('id')
       .eq('company_account_id', companyAccountId);
 
-    console.log('🔍 Company Groups Query Result:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Company Groups Query Result:', {
       companyGroups,
       groupError,
     });
 
     if (groupError) {
-      console.error('Company groups query error:', groupError);
+      if (process.env.NODE_ENV === 'development') console.error('Company groups query error:', groupError);
       return [];
     }
 
     if (!companyGroups || companyGroups.length === 0) {
-      console.log('🔍 No company groups found for account:', companyAccountId);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 No company groups found for account:', companyAccountId);
       return [];
     }
 
     const groupIds = companyGroups.map(g => g.id);
-    console.log('🔍 Group IDs:', groupIds);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Group IDs:', groupIds);
 
     // 自分の企業への応募のみを取得（RLS適用）
     return await getCandidatesDataFallback(supabase, groupIds);
   } catch (error) {
-    console.error('候補者データ取得中にエラーが発生:', error);
+    if (process.env.NODE_ENV === 'development') console.error('候補者データ取得中にエラーが発生:', error);
     return [];
   }
 }
@@ -500,7 +541,7 @@ async function getCandidatesDataFallback(
   groupIds: string[]
 ): Promise<CandidateData[]> {
   try {
-    console.log('🔍 Querying applications and scout_sends with group IDs:', groupIds);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Querying applications and scout_sends with group IDs:', groupIds);
     
     // applicationとscout_sendsの両方を並列取得
     const [applicationResult, scoutSendsResult] = await Promise.all([
@@ -572,7 +613,7 @@ async function getCandidatesDataFallback(
     const { data: applicationsData, error: applicationsError } = applicationResult;
     const { data: scoutSendsData, error: scoutSendsError } = scoutSendsResult;
 
-    console.log('🔍 Applications and Scout Sends Query Result:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Applications and Scout Sends Query Result:', {
       applicationsCount: applicationsData?.length || 0,
       applicationsError,
       scoutSendsCount: scoutSendsData?.length || 0,
@@ -580,7 +621,7 @@ async function getCandidatesDataFallback(
     });
 
     if (applicationsError && scoutSendsError) {
-      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
+      if (process.env.NODE_ENV === 'development') console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
       return [];
     }
 
@@ -600,7 +641,7 @@ async function getCandidatesDataFallback(
 
     const candidatesData = allCandidatesData;
 
-    console.log('🔍 Combined Applications and Scout Sends Result:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Combined Applications and Scout Sends Result:', {
       count: candidatesData?.length || 0,
       applicationsError,
       scoutSendsError,
@@ -608,12 +649,12 @@ async function getCandidatesDataFallback(
     });
 
     if (applicationsError && scoutSendsError) {
-      console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
+      if (process.env.NODE_ENV === 'development') console.error('Both Applications and Scout Sends queries failed:', { applicationsError, scoutSendsError });
       return [];
     }
 
     if (!candidatesData) {
-      console.log('🔍 No applications data returned');
+      if (process.env.NODE_ENV === 'development') console.log('🔍 No applications data returned');
       return [];
     }
 
@@ -628,90 +669,128 @@ async function getCandidatesDataFallback(
     });
     const uniqueCandidatesData = Array.from(uniqueCandidatesMap.values());
 
-    console.log('🔍 Deduplication result:', {
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Deduplication result:', {
       originalCount: candidatesData.length,
       uniqueCount: uniqueCandidatesData.length,
     });
 
-    // 各候補者の追加情報を並列取得（最小限に抑制）
-    const candidatesWithDetails = await Promise.all(
-      uniqueCandidatesData.map(async (app: any) => {
-        const candidateId = app.candidate_id;
+    // N+1問題を解決するため、一括で関連データを取得
+    const uniqueCandidateIds = uniqueCandidatesData.map((app: any) => app.candidate_id);
+    const uniqueCompanyGroupIds = uniqueCandidatesData.map((app: any) => app.company_group_id);
 
-        // 必要最小限のクエリのみ実行（RLS適用）
-        const [jobExperience, workExperience, careerStatus] = await Promise.all(
-          [
-            supabase
-              .from('job_type_experience')
-              .select('job_type_name')
-              .eq('candidate_id', candidateId),
-            supabase
-              .from('work_experience')
-              .select('industry_name')
-              .eq('candidate_id', candidateId),
-            supabase
-              .from('career_status_entries')
-              .select('company_name')
-              .eq('candidate_id', candidateId)
-              .limit(1),
-          ]
-        );
+    // 並列で関連データを一括取得
+    const [
+      jobExperienceResult,
+      workExperienceResult,
+      careerStatusResult,
+      selectionProgressResult
+    ] = await Promise.all([
+      supabase
+        .from('job_type_experience')
+        .select('candidate_id, job_type_name')
+        .in('candidate_id', uniqueCandidateIds),
+      supabase
+        .from('work_experience')
+        .select('candidate_id, industry_name')
+        .in('candidate_id', uniqueCandidateIds),
+      supabase
+        .from('career_status_entries')
+        .select('candidate_id, company_name')
+        .in('candidate_id', uniqueCandidateIds)
+        .limit(1),
+      supabase
+        .from('selection_progress')
+        .select('candidate_id, company_group_id, *')
+        .in('candidate_id', uniqueCandidateIds)
+        .in('company_group_id', uniqueCompanyGroupIds),
+    ]);
 
-        const candidate = app.candidates;
-        const age = candidate.birth_date
-          ? calculateAge(candidate.birth_date)
-          : 0;
+    // データをMap形式で整理
+    const jobExperienceMap = new Map<string, string[]>();
+    const workExperienceMap = new Map<string, string[]>();
+    const careerStatusMap = new Map<string, string>();
+    const selectionProgressMap = new Map<string, any>();
 
-        // 担当者を取得
-        const assignedUsers = await getAssignedUsersForCandidate(
-          supabase,
-          candidateId,
-          app.company_group_id
-        );
+    // job_type_experienceのデータを整理
+    jobExperienceResult.data?.forEach((exp: any) => {
+      if (!jobExperienceMap.has(exp.candidate_id)) {
+        jobExperienceMap.set(exp.candidate_id, []);
+      }
+      jobExperienceMap.get(exp.candidate_id)!.push(exp.job_type_name);
+    });
 
-        // 選考進捗を取得
-        const { data: selectionProgress } = await supabase
-          .from('selection_progress')
-          .select('*')
-          .eq('candidate_id', candidateId)
-          .eq('company_group_id', app.company_group_id)
-          .single();
+    // work_experienceのデータを整理
+    workExperienceResult.data?.forEach((exp: any) => {
+      if (!workExperienceMap.has(exp.candidate_id)) {
+        workExperienceMap.set(exp.candidate_id, []);
+      }
+      workExperienceMap.get(exp.candidate_id)!.push(exp.industry_name);
+    });
 
-        return {
-          id: candidateId,
-          name: `${candidate.first_name} ${candidate.last_name}`,
-          company: candidate.recent_job_company_name || candidate.current_company || '',
-          location: candidate.prefecture || '',
-          age,
-          gender: candidate.gender || '',
-          experience: jobExperience.data?.map(exp => exp.job_type_name) || [],
-          industry: workExperience.data?.map(ind => ind.industry_name) || [],
-          targetCompany: careerStatus.data?.[0]?.company_name || '',
-          targetJob: app.job_postings?.job_type || '',
-          jobPostingId: app.job_posting_id || '',
-          jobPostingTitle: app.job_postings?.title || '',
-          group: app.company_groups?.group_name || '',
-          groupId: app.company_group_id || '',
-          applicationDate: app.created_at
-            ? new Date(app.created_at).toLocaleDateString('ja-JP')
-            : '',
-          firstScreening:
-            app.status === 'document_screening' ? 'ready' : undefined,
-          secondScreening:
-            app.status === 'second_interview' ? 'ready' : undefined,
-          finalScreening:
-            app.status === 'final_interview' ? 'ready' : undefined,
-          offer: app.status === 'offer' ? 'ready' : undefined,
-          assignedUsers,
-          type: app.type || 'application',
-          selectionProgress: selectionProgress || null,
-        };
-      })
-    );
+    // career_status_entriesのデータを整理
+    careerStatusResult.data?.forEach((status: any) => {
+      careerStatusMap.set(status.candidate_id, status.company_name);
+    });
+
+    // selection_progressのデータを整理
+    selectionProgressResult.data?.forEach((progress: any) => {
+      const key = `${progress.candidate_id}-${progress.company_group_id}`;
+      selectionProgressMap.set(key, progress);
+    });
+
+    // 担当者情報を並列取得
+    const assignedUsersPromises = uniqueCandidatesData.map(async (app: any) => {
+      return await getAssignedUsersForCandidate(
+        supabase,
+        app.candidate_id,
+        app.company_group_id
+      );
+    });
+    const assignedUsersResults = await Promise.all(assignedUsersPromises);
+
+    // データを統合
+    const candidatesWithDetails = uniqueCandidatesData.map((app: any, index: number) => {
+      const candidateId = app.candidate_id;
+      const candidate = app.candidates;
+      const age = candidate.birth_date
+        ? calculateAge(candidate.birth_date)
+        : 0;
+      const selectionProgressKey = `${candidateId}-${app.company_group_id}`;
+
+      return {
+        id: candidateId,
+        name: `${candidate.first_name} ${candidate.last_name}`,
+        company: candidate.recent_job_company_name || candidate.current_company || '',
+        location: candidate.prefecture || '',
+        age,
+        gender: candidate.gender || '',
+        experience: jobExperienceMap.get(candidateId) || [],
+        industry: workExperienceMap.get(candidateId) || [],
+        targetCompany: careerStatusMap.get(candidateId) || '',
+        targetJob: app.job_postings?.job_type || '',
+        jobPostingId: app.job_posting_id || '',
+        jobPostingTitle: app.job_postings?.title || '',
+        group: app.company_groups?.group_name || '',
+        groupId: app.company_group_id || '',
+        applicationDate: app.created_at
+          ? new Date(app.created_at).toLocaleDateString('ja-JP')
+          : '',
+        firstScreening:
+          app.status === 'document_screening' ? 'ready' : undefined,
+        secondScreening:
+          app.status === 'second_interview' ? 'ready' : undefined,
+        finalScreening:
+          app.status === 'final_interview' ? 'ready' : undefined,
+        offer: app.status === 'offer' ? 'ready' : undefined,
+        assignedUsers: assignedUsersResults[index],
+        type: app.type || 'application',
+        selectionProgress: selectionProgressMap.get(selectionProgressKey) || null,
+      };
+    });
 
     return candidatesWithDetails;
   } catch (error) {
-    console.error('フォールバック候補者データ取得中にエラーが発生:', error);
+    if (process.env.NODE_ENV === 'development') console.error('フォールバック候補者データ取得中にエラーが発生:', error);
     return [];
   }
 }
@@ -737,7 +816,7 @@ export async function getGroupOptions(): Promise<
       .order('group_name');
 
     if (error) {
-      console.error('グループ選択肢の取得に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('グループ選択肢の取得に失敗:', error);
       return [{ value: '', label: 'すべて' }];
     }
 
@@ -751,7 +830,7 @@ export async function getGroupOptions(): Promise<
 
     return options;
   } catch (error) {
-    console.error('グループ選択肢取得中にエラーが発生:', error);
+    if (process.env.NODE_ENV === 'development') console.error('グループ選択肢取得中にエラーが発生:', error);
     return [{ value: '', label: 'すべて' }];
   }
 }
@@ -789,7 +868,7 @@ export async function getJobOptions(): Promise<
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('求人選択肢の取得に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('求人選択肢の取得に失敗:', error);
       return [{ value: '', label: 'すべて' }];
     }
 
@@ -804,7 +883,7 @@ export async function getJobOptions(): Promise<
 
     return options;
   } catch (error) {
-    console.error('求人選択肢取得中にエラーが発生:', error);
+    if (process.env.NODE_ENV === 'development') console.error('求人選択肢取得中にエラーが発生:', error);
     return [{ value: '', label: 'すべて' }];
   }
 }
@@ -954,45 +1033,59 @@ export async function getCandidateDetailData(
     }
   }
 
-  // 2. 職種経験
-  const { data: jobExp } = await supabase
-    .from('job_type_experience')
-    .select('job_type_name, experience_years')
-    .eq('candidate_id', candidateId);
+  // N+1問題を解決するため、関連データを並列取得
+  const [
+    jobExpResult,
+    industryExpResult,
+    selectionStatusResult,
+    skillsResult,
+    educationResult
+  ] = await Promise.all([
+    // 2. 職種経験
+    supabase
+      .from('job_type_experience')
+      .select('job_type_name, experience_years')
+      .eq('candidate_id', candidateId),
 
-  // 3. 業種経験
-  const { data: industryExp } = await supabase
-    .from('work_experience')
-    .select('industry_name, experience_years')
-    .eq('candidate_id', candidateId);
+    // 3. 業種経験
+    supabase
+      .from('work_experience')
+      .select('industry_name, experience_years')
+      .eq('candidate_id', candidateId),
 
-  // 4. 選考状況 - 自分の会社グループのもののみ取得
-  let selectionStatusQuery = supabase
-    .from('career_status_entries')
-    .select(
-      'company_name, industries, progress_status, decline_reason'
-    )
-    .eq('candidate_id', candidateId);
-    
-  // companyGroupIdが指定されている場合はそのグループの進捗のみ取得
-  if (companyGroupId) {
-    selectionStatusQuery = selectionStatusQuery.eq('company_group_id', companyGroupId);
-  }
-  
-  const { data: selectionStatus } = await selectionStatusQuery;
+    // 4. 選考状況 - 自分の会社グループのもののみ取得
+    (() => {
+      let query = supabase
+        .from('career_status_entries')
+        .select('company_name, industries, progress_status, decline_reason, company_group_id')
+        .eq('candidate_id', candidateId);
 
-  // 5. スキル情報
-  const { data: skillsData } = await supabase
-    .from('skills')
-    .select('english_level, other_languages, skills_list, qualifications')
-    .eq('candidate_id', candidateId)
-    .single();
+      // companyGroupIdが指定されている場合はそのグループの進捗のみ取得
+      if (companyGroupId) {
+        query = query.eq('company_group_id', companyGroupId);
+      }
+      return query;
+    })(),
 
-  // 6. 学歴
-  const { data: education } = await supabase
-    .from('education')
-    .select('school_name, department, graduation_year, graduation_month')
-    .eq('candidate_id', candidateId);
+    // 5. スキル情報
+    supabase
+      .from('skills')
+      .select('english_level, other_languages, skills_list, qualifications')
+      .eq('candidate_id', candidateId)
+      .single(),
+
+    // 6. 学歴
+    supabase
+      .from('education')
+      .select('school_name, department, graduation_year, graduation_month')
+      .eq('candidate_id', candidateId),
+  ]);
+
+  const { data: jobExp } = jobExpResult;
+  const { data: industryExp } = industryExpResult;
+  const { data: selectionStatus } = selectionStatusResult;
+  const { data: skillsData } = skillsResult;
+  const { data: education } = educationResult;
 
   // 7. 担当者情報を取得
   const assignedUsers = companyGroupId ? await getAssignedUsersForCandidate(
@@ -1005,7 +1098,7 @@ export async function getCandidateDetailData(
   const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
   
   // デバッグ: 希望勤務地データを確認
-  console.log('🔍 [希望勤務地デバッグ]:', {
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [希望勤務地デバッグ]:', {
     candidateId,
     desired_locations: candidate.desired_locations,
     type: typeof candidate.desired_locations,

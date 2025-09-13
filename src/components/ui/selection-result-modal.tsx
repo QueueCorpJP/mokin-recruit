@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from './mo-dal';
+import { Modal } from './Modal';
 import { Button } from './button';
 
 interface SelectionResultModalProps {

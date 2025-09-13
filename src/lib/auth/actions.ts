@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { revalidatePath } from 'next/cache';
+import { ERROR_CODES, createError } from '@/constants/error-codes';
 
 export interface AuthResult {
   success: boolean;
@@ -61,14 +62,14 @@ export async function signInAction(
 ): Promise<AuthResult> {
   try {
     if (!email || !password) {
-      return { 
-        success: false, 
-        error: 'メールアドレスとパスワードは必須です' 
+      return {
+        success: false,
+        error: 'メールアドレスとパスワードは必須です'
       };
     }
 
     const supabase = await createSupabaseServerClient();
-    
+
     // Supabaseでサインイン
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
@@ -77,7 +78,7 @@ export async function signInAction(
 
     if (error) {
       let errorMessage = 'ログインに失敗しました';
-      
+
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'メールアドレスまたはパスワードが正しくありません';
       } else if (error.message.includes('Email not confirmed')) {
@@ -115,7 +116,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (candidateData) {
           userInfo = {
             ...userInfo,
@@ -130,7 +131,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (companyData) {
           userInfo = {
             ...userInfo,
@@ -145,7 +146,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (adminData) {
           userInfo = {
             ...userInfo,
@@ -157,23 +158,23 @@ export async function signInAction(
       }
     } catch (dbError) {
       // データベースエラーはログイン成功を妨げない
-      console.warn('Failed to fetch user profile:', dbError);
+      if (process.env.NODE_ENV === 'development') console.warn('Failed to fetch user profile:', dbError);
     }
 
     // パスの再検証
     revalidatePath('/', 'layout');
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       user: userInfo,
       message: 'ログインに成功しました'
     };
 
   } catch (error) {
-    console.error('Sign in action error:', error);
-    return { 
-      success: false, 
-      error: 'システムエラーが発生しました' 
+    if (process.env.NODE_ENV === 'development') console.error('Sign in action error:', error);
+    return {
+      success: false,
+      error: 'システムエラーが発生しました'
     };
   }
 }
@@ -182,7 +183,7 @@ export async function getServerAuth() {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     if (error || !user) {
       return null;
     }
@@ -192,7 +193,7 @@ export async function getServerAuth() {
       isAuthenticated: true,
     };
   } catch (error) {
-    console.error('Get server auth error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Get server auth error:', error);
     return null;
   }
 }
@@ -204,7 +205,7 @@ export async function logoutAction(): Promise<LogoutResult> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Supabase logout error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase logout error:', error);
       return {
         success: false,
         error: 'ログアウトに失敗しました',
@@ -212,7 +213,7 @@ export async function logoutAction(): Promise<LogoutResult> {
       };
     }
 
-    console.log('✅ [LOGOUT] Success');
+    if (process.env.NODE_ENV === 'development') console.log('✅ [LOGOUT] Success');
 
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
@@ -221,10 +222,10 @@ export async function logoutAction(): Promise<LogoutResult> {
       success: true,
       message: 'ログアウトしました'
     };
-    
+
   } catch (error) {
-    console.error('Logout action error:', error);
-    
+    if (process.env.NODE_ENV === 'development') console.error('Logout action error:', error);
+
     return {
       success: false,
       error: 'システムエラーが発生しました',

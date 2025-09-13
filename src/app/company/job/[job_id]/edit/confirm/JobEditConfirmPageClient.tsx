@@ -69,7 +69,7 @@ export default function JobEditConfirmPageClient({ jobData, jobId }: JobEditConf
         return;
       }
     } catch (error) {
-      console.error('Failed to load edit data:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to load edit data:', error);
       router.push(`/company/job/${jobId}/edit`);
       return;
     }

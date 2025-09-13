@@ -22,7 +22,7 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
       .single();
 
     if (fetchError) {
-      console.error('記事の取得に失敗:', fetchError);
+      if (process.env.NODE_ENV === 'development') console.error('記事の取得に失敗:', fetchError);
       return { success: false, error: 'Article not found' };
     }
 
@@ -43,7 +43,7 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
       .eq('id', articleId);
 
     if (updateError) {
-      console.error('訪問数の更新に失敗:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('訪問数の更新に失敗:', updateError);
       return { success: false, error: 'Failed to update view count' };
     }
 
@@ -53,7 +53,7 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
     };
 
   } catch (error) {
-    console.error('サーバーアクションエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('サーバーアクションエラー:', error);
     return { 
       success: false, 
       error: 'Internal server error' 

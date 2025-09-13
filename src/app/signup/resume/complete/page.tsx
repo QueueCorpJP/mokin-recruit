@@ -24,7 +24,7 @@ export default function SignupResumeCompletePage() {
         }
         // 成功の場合はautoLoginAction内でリダイレクトされる
       } catch (error) {
-        console.error('Auto-login error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Auto-login error:', error);
         // エラーの場合は手動でマイページに遷移
         router.push('/candidate/mypage');
       }

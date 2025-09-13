@@ -45,13 +45,13 @@ async function getCandidateData(candidateId: string): Promise<CandidateData | nu
       .single();
 
     if (error) {
-      console.error('候補者データの取得に失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('候補者データの取得に失敗しました:', error);
       return null;
     }
 
     return data as CandidateData;
   } catch (error) {
-    console.error('データベースエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('データベースエラー:', error);
     return null;
   }
 }

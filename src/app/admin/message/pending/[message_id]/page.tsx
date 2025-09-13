@@ -100,7 +100,7 @@ async function fetchNGKeywords(): Promise<string[]> {
     .eq('is_active', true);
     
   if (error) {
-    console.error('Error fetching NG keywords:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching NG keywords:', error);
     return [];
   }
   
@@ -153,7 +153,7 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
   // UUIDの形式をチェック
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   if (!uuidRegex.test(messageId)) {
-    console.error('Invalid UUID format for message ID:', messageId);
+    if (process.env.NODE_ENV === 'development') console.error('Invalid UUID format for message ID:', messageId);
     return null;
   }
 
@@ -167,12 +167,12 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
       .single();
 
     if (messageError) {
-      console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
       return null;
     }
 
     if (!messageData) {
-      console.error('No message data found for ID:', messageId);
+      if (process.env.NODE_ENV === 'development') console.error('No message data found for ID:', messageId);
       return null;
     }
 
@@ -232,7 +232,7 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     } as MessageDetail;
 
   } catch (error) {
-    console.error('Exception in fetchMessageDetail:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Exception in fetchMessageDetail:', error);
     return null;
   }
 }

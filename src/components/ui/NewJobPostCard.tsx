@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 
-interface JobPostCardProps {
+interface NewJobPostCardProps {
   imageUrl: string;
   imageAlt: string;
   className?: string;
@@ -28,7 +28,7 @@ interface JobPostCardProps {
   showStar?: boolean;
 }
 
-export function JobPostCard({
+export function NewJobPostCard({
   imageUrl,
   imageAlt,
   className = '',
@@ -51,7 +51,7 @@ export function JobPostCard({
   showLocation = true,
   showSalary = true,
   showStar = true,
-}: JobPostCardProps) {
+}: NewJobPostCardProps) {
   // simple判定: variantがsimpleまたは画像サイズが小さい場合
   const isSimple =
     variant === 'simple' || (imageWidth === 103.5 && imageHeight === 69);

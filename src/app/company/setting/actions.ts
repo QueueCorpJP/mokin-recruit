@@ -16,7 +16,7 @@ export interface CompanyUserSettings {
 export async function getCompanyUserSettings(): Promise<CompanyUserSettings | null> {
   const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
-    console.error('認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('認証エラー:', authResult.error);
     return null;
   }
 
@@ -32,7 +32,7 @@ export async function getCompanyUserSettings(): Promise<CompanyUserSettings | nu
   } else if (cached) {
     return cached.data;
   }
-  console.log('Fetching company user settings for companyUserId:', companyUserId);
+  if (process.env.NODE_ENV === 'development') console.log('Fetching company user settings for companyUserId:', companyUserId);
 
   const supabase = await createClient();
 
@@ -44,16 +44,16 @@ export async function getCompanyUserSettings(): Promise<CompanyUserSettings | nu
     .maybeSingle();
 
   if (companyUserError) {
-    console.error('企業ユーザー情報の取得に失敗しました:', companyUserError);
+    if (process.env.NODE_ENV === 'development') console.error('企業ユーザー情報の取得に失敗しました:', companyUserError);
     return null;
   }
 
   if (!companyUserData) {
-    console.log('企業ユーザーデータが見つかりません');
+    if (process.env.NODE_ENV === 'development') console.log('企業ユーザーデータが見つかりません');
     return null;
   }
 
-  console.log('Company user data:', companyUserData);
+  if (process.env.NODE_ENV === 'development') console.log('Company user data:', companyUserData);
 
   const result = {
     email: companyUserData.email,
@@ -61,7 +61,7 @@ export async function getCompanyUserSettings(): Promise<CompanyUserSettings | nu
     position_title: companyUserData.position_title || '',
   };
 
-  console.log('Final company user settings result:', result);
+  if (process.env.NODE_ENV === 'development') console.log('Final company user settings result:', result);
 
   // 成功した場合のみキャッシュに保存
   companyUserSettingsCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -97,11 +97,11 @@ export async function saveCompanyNotificationSettings(formData: FormData) {
   // Use custom auth system instead of Supabase auth
   const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
-    console.error('企業通知設定保存の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('企業通知設定保存の認証エラー:', authResult.error);
     throw new Error(authResult.error);
   }
 
-  console.log('Saving notification settings for company_user_id:', authResult.data.companyUserId);
+  if (process.env.NODE_ENV === 'development') console.log('Saving notification settings for company_user_id:', authResult.data.companyUserId);
 
   const settings = {
     application_notification: applicationNotification as 'receive' | 'not-receive',
@@ -123,7 +123,7 @@ export async function saveCompanyNotificationSettings(formData: FormData) {
     });
 
   if (error) {
-    console.error('企業通知設定の保存に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('企業通知設定の保存に失敗しました:', error);
     throw new Error('企業通知設定の保存に失敗しました');
   }
 
@@ -133,11 +133,11 @@ export async function saveCompanyNotificationSettings(formData: FormData) {
 export async function getCompanyNotificationSettings(): Promise<CompanyNotificationSettings | null> {
   const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
-    console.error('企業通知設定取得の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('企業通知設定取得の認証エラー:', authResult.error);
     return null;
   }
 
-  console.log('Getting notification settings for company_user_id:', authResult.data.companyUserId);
+  if (process.env.NODE_ENV === 'development') console.log('Getting notification settings for company_user_id:', authResult.data.companyUserId);
 
   const supabase = await createClient();
 
@@ -151,19 +151,19 @@ export async function getCompanyNotificationSettings(): Promise<CompanyNotificat
   if (error) {
     if (error.code === 'PGRST116') {
       // レコードが存在しない場合はデフォルト値を返す
-      console.log('企業通知設定が見つかりません。デフォルト値を返します');
+      if (process.env.NODE_ENV === 'development') console.log('企業通知設定が見つかりません。デフォルト値を返します');
       return {
         application_notification: 'receive',
         message_notification: 'receive',
         system_notification: 'receive'
       };
     }
-    console.error('企業通知設定の取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('企業通知設定の取得に失敗しました:', error);
     return null;
   }
 
   if (!data) {
-    console.log('企業通知設定が見つかりません。デフォルト値を返します');
+    if (process.env.NODE_ENV === 'development') console.log('企業通知設定が見つかりません。デフォルト値を返します');
     // デフォルト値を返す
     return {
       application_notification: 'receive',
@@ -172,14 +172,14 @@ export async function getCompanyNotificationSettings(): Promise<CompanyNotificat
     };
   }
 
-  console.log('企業通知設定を取得:', data);
+  if (process.env.NODE_ENV === 'development') console.log('企業通知設定を取得:', data);
   return data as CompanyNotificationSettings;
 }
 
 export async function updateCompanyProfile(fullName: string, positionTitle: string): Promise<{ error?: string }> {
   const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
-    console.error('認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('認証エラー:', authResult.error);
     return { error: '認証に失敗しました' };
   }
 
@@ -196,17 +196,17 @@ export async function updateCompanyProfile(fullName: string, positionTitle: stri
       .eq('id', companyUserId);
 
     if (error) {
-      console.error('プロフィール更新エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('プロフィール更新エラー:', error);
       return { error: 'プロフィールの更新に失敗しました' };
     }
 
     // キャッシュをクリア
     companyUserSettingsCache.delete(companyUserId);
 
-    console.log('プロフィール更新完了');
+    if (process.env.NODE_ENV === 'development') console.log('プロフィール更新完了');
     return {};
   } catch (error) {
-    console.error('プロフィール更新例外:', error);
+    if (process.env.NODE_ENV === 'development') console.error('プロフィール更新例外:', error);
     return { error: 'プロフィールの更新に失敗しました' };
   }
 }

@@ -107,7 +107,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     const { data: favorites, count, error: favoritesError } = await favoritesDataQuery;
 
     if (favoritesError) {
-      console.error('お気に入り取得エラー:', favoritesError);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り取得エラー:', favoritesError);
       return {
         success: false,
         error: 'お気に入りの取得に失敗しました'
@@ -158,7 +158,7 @@ export async function getFavoriteList(params: FavoriteListParams = {}): Promise<
     return result;
 
   } catch (error) {
-    console.error('getFavoriteList エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('getFavoriteList エラー:', error);
     return {
       success: false,
       error: 'サーバーエラーが発生しました'
@@ -228,7 +228,7 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
       });
 
     if (insertError) {
-      console.error('お気に入り追加エラー:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り追加エラー:', insertError);
       return {
         success: false,
         error: 'お気に入りの追加に失敗しました'
@@ -241,7 +241,7 @@ export async function addFavorite(jobPostingId: string): Promise<FavoriteActionR
     };
 
   } catch (error) {
-    console.error('addFavorite エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('addFavorite エラー:', error);
     return {
       success: false,
       error: 'サーバーエラーが発生しました'
@@ -286,7 +286,7 @@ export async function removeFavorite(jobPostingId: string): Promise<FavoriteActi
       .eq('job_posting_id', jobPostingId);
 
     if (deleteError) {
-      console.error('お気に入り削除エラー:', deleteError);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り削除エラー:', deleteError);
       return {
         success: false,
         error: 'お気に入りの削除に失敗しました'
@@ -299,7 +299,7 @@ export async function removeFavorite(jobPostingId: string): Promise<FavoriteActi
     };
 
   } catch (error) {
-    console.error('removeFavorite エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('removeFavorite エラー:', error);
     return {
       success: false,
       error: 'サーバーエラーが発生しました'

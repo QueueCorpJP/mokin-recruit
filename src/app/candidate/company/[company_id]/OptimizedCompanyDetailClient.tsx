@@ -168,7 +168,7 @@ export default function OptimizedCompanyDetailClient({
   // ハンドラー関数をメモ化
   const handleFavoriteToggle = useCallback(async () => {
     setIsFavorite(prev => !prev);
-    console.log('企業お気に入り切り替え:', { companyId, isFavorite: !isFavorite });
+    if (process.env.NODE_ENV === 'development') console.log('企業お気に入り切り替え:', { companyId, isFavorite: !isFavorite });
   }, [companyId, isFavorite]);
 
   const handleJobFavoriteToggle = useCallback((jobId: string) => {

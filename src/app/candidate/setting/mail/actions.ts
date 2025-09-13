@@ -1,5 +1,6 @@
 'use server';
 
+import { maskEmail, maskUserId, safeLog } from '@/lib/utils/pii-safe-logger';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { requireCandidateAuth } from '@/lib/auth/server';
@@ -10,7 +11,7 @@ import sgMail from '@sendgrid/mail';
 export async function refreshAuthState() {
   'use server';
   
-  console.log('認証状態をリフレッシュ中...');
+  if (process.env.NODE_ENV === 'development') console.log('認証状態をリフレッシュ中...');
   try {
     const cookieStore = await cookies();
     
@@ -26,36 +27,36 @@ export async function refreshAuthState() {
     authCookies.forEach(cookieName => {
       try {
         cookieStore.delete(cookieName);
-        console.log(`クッキー削除: ${cookieName}`);
+        if (process.env.NODE_ENV === 'development') console.log(`クッキー削除: ${cookieName}`);
       } catch (error) {
-        console.log(`クッキー削除スキップ: ${cookieName}`);
+        if (process.env.NODE_ENV === 'development') console.log(`クッキー削除スキップ: ${cookieName}`);
       }
     });
     
-    console.log('✅ 認証状態リフレッシュ完了');
+    if (process.env.NODE_ENV === 'development') console.log('✅ 認証状態リフレッシュ完了');
     return { success: true };
   } catch (error) {
-    console.error('認証状態リフレッシュエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('認証状態リフレッシュエラー:', error);
     return { success: false, error: 'リフレッシュに失敗しました' };
   }
 }
 
 export async function sendVerificationCode(email: string) {
   try {
-    console.log('=== sendVerificationCode開始 ===');
-    console.log('入力されたメールアドレス:', email);
+    if (process.env.NODE_ENV === 'development') console.log('=== sendVerificationCode開始 ===');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'メールアドレス検証コード送信開始', { email: maskEmail(email) });
     
     const user = await requireCandidateAuth();
     if (!user) {
-      console.log('認証エラー: ユーザーが見つかりません');
+      if (process.env.NODE_ENV === 'development') console.log('認証エラー: ユーザーが見つかりません');
       return { error: 'Unauthorized' };
     }
-    console.log('認証成功 - ユーザーID:', user.id);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '認証成功', { userId: maskUserId(user.id) });
 
     const supabase = await getSupabaseServerClient();
 
     // 現在のメールアドレスを取得
-    console.log('現在のメールアドレスを取得中...');
+    if (process.env.NODE_ENV === 'development') console.log('現在のメールアドレスを取得中...');
     const { data: currentUser, error: userError } = await supabase
       .from('candidates')
       .select('email')
@@ -63,20 +64,20 @@ export async function sendVerificationCode(email: string) {
       .single();
 
     if (userError) {
-      console.error('現在のメールアドレス取得エラー:', userError);
+      if (process.env.NODE_ENV === 'development') console.error('現在のメールアドレス取得エラー:', userError);
       return { error: '現在のメールアドレスの取得に失敗しました' };
     }
-    console.log('現在のメールアドレス:', currentUser.email);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '現在のメールアドレス確認完了', { email: maskEmail(currentUser.email) });
 
     // 同じメールアドレスかチェック
-    console.log('メールアドレス同一性チェック...');
+    if (process.env.NODE_ENV === 'development') console.log('メールアドレス同一性チェック...');
     if (currentUser.email === email) {
-      console.log('現在と同じメールアドレスが入力されました');
+      if (process.env.NODE_ENV === 'development') console.log('現在と同じメールアドレスが入力されました');
       return { error: '現在のメールアドレスと同じです。変更の必要はありません。' };
     }
 
     // メールアドレス重複チェック（自分以外で同じメールアドレスが使用されていないか）
-    console.log('他ユーザーの重複チェック中...');
+    if (process.env.NODE_ENV === 'development') console.log('他ユーザーの重複チェック中...');
     const { data: existingUser, error: checkError } = await supabase
       .from('candidates')
       .select('id, email')
@@ -85,21 +86,21 @@ export async function sendVerificationCode(email: string) {
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('重複チェックエラー:', checkError);
+      if (process.env.NODE_ENV === 'development') console.error('重複チェックエラー:', checkError);
       return { error: 'メールアドレスの確認に失敗しました' };
     }
 
     if (existingUser) {
-      console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
+      if (process.env.NODE_ENV === 'development') console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
       return { error: 'このメールアドレスは既に他のユーザーによって使用されています' };
     }
-    console.log('重複チェック完了 - 使用可能なメールアドレス');
+    if (process.env.NODE_ENV === 'development') console.log('重複チェック完了 - 使用可能なメールアドレス');
 
     const verificationCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-    console.log('生成された認証コード:', verificationCode);
+    if (process.env.NODE_ENV === 'development') console.log('生成された認証コード:', verificationCode);
     
     // データベースに認証コードを保存
-    console.log('認証コードをデータベースに保存中...');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードをデータベースに保存中...');
     const { error: saveError } = await supabase
       .from('email_verification_codes')
       .upsert({
@@ -115,28 +116,39 @@ export async function sendVerificationCode(email: string) {
       });
 
     if (saveError) {
-      console.error('認証コード保存エラー:', saveError);
+      if (process.env.NODE_ENV === 'development') console.error('認証コード保存エラー:', saveError);
       return { error: '認証コードの生成に失敗しました' };
     }
-    console.log('認証コードをデータベースに保存完了');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードをデータベースに保存完了');
 
-    // SendGridでメール送信
-    console.log('メール送信設定を確認中...');
-    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
+    // Gmail SMTPでメール送信
+    if (process.env.NODE_ENV === 'development') console.log('メール送信設定を確認中...');
+    if (process.env.NODE_ENV === 'development') console.log('GMAIL_USER:', process.env.GMAIL_USER);
+    if (process.env.NODE_ENV === 'development') console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
-      console.log('SendGrid設定が不完全です');
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      if (process.env.NODE_ENV === 'development') console.log('Gmail設定が不完全です');
       return { error: 'メール送信設定が正しく構成されていません' };
     }
 
     try {
-      console.log('SendGrid APIキーを設定中...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      if (process.env.NODE_ENV === 'development') console.log('Gmail SMTPトランスポーターを作成中...');
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') // スペースを削除
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
       
-      console.log('メール送信中...');
-      console.log('送信先:', currentUser.email);
-      console.log('送信元:', process.env.SENDGRID_FROM_EMAIL);
+      if (process.env.NODE_ENV === 'development') console.log('メール送信中...');
+      if (process.env.NODE_ENV === 'development') safeLog('debug', 'メール送信準備完了', { recipient: maskEmail(currentUser.email) });
+      if (process.env.NODE_ENV === 'development') console.log('送信元:', process.env.GMAIL_USER);
       
       const msg = {
         to: currentUser.email,
@@ -157,36 +169,36 @@ export async function sendVerificationCode(email: string) {
       
       await sgMail.send(msg);
       
-      console.log(`✅ メール送信成功! 送信先: ${currentUser.email}`);
+      safeLog('info', 'メール送信成功', { recipient: maskEmail(currentUser.email) });
       
     } catch (emailErr) {
-      console.error('❌ メール送信エラー:', emailErr);
+      if (process.env.NODE_ENV === 'development') console.error('❌ メール送信エラー:', emailErr);
       return { error: 'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。' };
     }
     
-    console.log('=== sendVerificationCode完了 ===');
+    if (process.env.NODE_ENV === 'development') console.log('=== sendVerificationCode完了 ===');
     return { success: true };
   } catch (error) {
-    console.error('❌ sendVerificationCode全体エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ sendVerificationCode全体エラー:', error);
     return { error: 'システムエラーが発生しました' };
   }
 }
 
 export async function verifyCode(code: string) {
   try {
-    console.log('=== verifyCode開始 ===');
-    console.log('入力された認証コード:', code);
+    if (process.env.NODE_ENV === 'development') console.log('=== verifyCode開始 ===');
+    if (process.env.NODE_ENV === 'development') console.log('入力された認証コード:', code);
     
     const user = await requireCandidateAuth();
     if (!user) {
-      console.log('認証エラー: ユーザーが見つかりません');
+      if (process.env.NODE_ENV === 'development') console.log('認証エラー: ユーザーが見つかりません');
       return { error: 'Unauthorized' };
     }
-    console.log('認証成功 - ユーザーID:', user.id);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '認証成功', { userId: maskUserId(user.id) });
 
     const supabase = await getSupabaseServerClient();
     
-    console.log('認証コードをデータベースから検索中...');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードをデータベースから検索中...');
     const { data: verification, error: fetchError } = await supabase
       .from('email_verification_codes')
       .select('*')
@@ -196,19 +208,19 @@ export async function verifyCode(code: string) {
       .single();
 
     if (fetchError || !verification) {
-      console.log('認証コード検索エラーまたは見つからない:', fetchError);
+      if (process.env.NODE_ENV === 'development') console.log('認証コード検索エラーまたは見つからない:', fetchError);
       return { error: '認証コードが正しくありません' };
     }
-    console.log('認証コード見つかりました:', verification);
+    if (process.env.NODE_ENV === 'development') console.log('認証コード見つかりました:', verification);
 
     if (new Date() > new Date(verification.expires_at)) {
-      console.log('認証コードが期限切れです');
+      if (process.env.NODE_ENV === 'development') console.log('認証コードが期限切れです');
       return { error: '認証コードの有効期限が切れています' };
     }
-    console.log('認証コードは有効です');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードは有効です');
 
     // メールアドレス更新前に再度重複チェック（認証コード送信後に他の人が同じメールを使った可能性）
-    console.log('最終重複チェックを実行中...');
+    if (process.env.NODE_ENV === 'development') console.log('最終重複チェックを実行中...');
     const { data: existingUser, error: finalCheckError } = await supabase
       .from('candidates')
       .select('id, email')
@@ -217,27 +229,27 @@ export async function verifyCode(code: string) {
       .single();
 
     if (finalCheckError && finalCheckError.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('最終重複チェックエラー:', finalCheckError);
+      if (process.env.NODE_ENV === 'development') console.error('最終重複チェックエラー:', finalCheckError);
       return { error: 'メールアドレスの確認に失敗しました' };
     }
 
     if (existingUser) {
-      console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
+      if (process.env.NODE_ENV === 'development') console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
       return { error: 'このメールアドレスは既に他のユーザーによって使用されています' };
     }
-    console.log('最終重複チェック完了 - 使用可能');
+    if (process.env.NODE_ENV === 'development') console.log('最終重複チェック完了 - 使用可能');
 
-    console.log('認証コードを使用済みにマーク中...');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードを使用済みにマーク中...');
     const { error: markUsedError } = await supabase
       .from('email_verification_codes')
       .update({ used: true })
       .eq('id', verification.id);
 
     if (markUsedError) {
-      console.error('認証コード使用済みマークエラー:', markUsedError);
+      if (process.env.NODE_ENV === 'development') console.error('認証コード使用済みマークエラー:', markUsedError);
       return { error: '認証処理に失敗しました' };
     }
-    console.log('認証コードを使用済みにマーク完了');
+    if (process.env.NODE_ENV === 'development') console.log('認証コードを使用済みにマーク完了');
 
     // 更新前の現在のメールアドレスを取得
     const { data: beforeUpdate, error: beforeError } = await supabase
@@ -246,9 +258,11 @@ export async function verifyCode(code: string) {
       .eq('id', user.id)
       .single();
     
-    console.log('メールアドレスを更新中...');
-    console.log('更新前のメールアドレス:', beforeUpdate?.email);
-    console.log('更新予定のメールアドレス:', verification.email);
+    if (process.env.NODE_ENV === 'development') console.log('メールアドレスを更新中...');
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'メールアドレス更新開始', {
+      before: maskEmail(beforeUpdate?.email || ''),
+      after: maskEmail(verification.email)
+    });
     
     const { data: updateResult, error: updateEmailError } = await supabase
       .from('candidates')
@@ -260,15 +274,15 @@ export async function verifyCode(code: string) {
       .select('email');
 
     if (updateEmailError) {
-      console.error('メールアドレス更新エラー:', updateEmailError);
+      if (process.env.NODE_ENV === 'development') console.error('メールアドレス更新エラー:', updateEmailError);
       return { error: 'メールアドレスの更新に失敗しました' };
     }
 
-    console.log('✅ candidatesテーブルのメールアドレス更新成功!');
-    console.log('更新結果:', updateResult);
+    if (process.env.NODE_ENV === 'development') console.log('✅ candidatesテーブルのメールアドレス更新成功!');
+    if (process.env.NODE_ENV === 'development') console.log('更新結果:', updateResult);
     
     // Supabase Authのメールアドレスも更新
-    console.log('Supabase Authのメールアドレスを更新中...');
+    if (process.env.NODE_ENV === 'development') console.log('Supabase Authのメールアドレスを更新中...');
     try {
       const { data: authUpdateResult, error: authUpdateError } = await supabase.auth.admin.updateUserById(
         user.id,
@@ -276,16 +290,16 @@ export async function verifyCode(code: string) {
       );
 
       if (authUpdateError) {
-        console.error('Supabase Auth メールアドレス更新エラー:', authUpdateError);
+        if (process.env.NODE_ENV === 'development') console.error('Supabase Auth メールアドレス更新エラー:', authUpdateError);
         // candidatesテーブルは更新されているので、警告として扱う
-        console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+        if (process.env.NODE_ENV === 'development') console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
       } else {
-        console.log('✅ Supabase Authのメールアドレス更新成功!');
-        console.log('Auth更新結果:', authUpdateResult);
+        if (process.env.NODE_ENV === 'development') console.log('✅ Supabase Authのメールアドレス更新成功!');
+        if (process.env.NODE_ENV === 'development') console.log('Auth更新結果:', authUpdateResult);
       }
     } catch (authError) {
-      console.error('Supabase Auth更新エラー:', authError);
-      console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+      if (process.env.NODE_ENV === 'development') console.error('Supabase Auth更新エラー:', authError);
+      if (process.env.NODE_ENV === 'development') console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
     }
     
     // 更新後の確認
@@ -295,10 +309,10 @@ export async function verifyCode(code: string) {
       .eq('id', user.id)
       .single();
     
-    console.log('更新後のメールアドレス確認:', afterUpdate?.email);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'メールアドレス更新完了確認', { email: maskEmail(afterUpdate?.email || '') });
     
     // 古いセッションを無効化してから新しいセッションを作成
-    console.log('古いセッションを無効化中...');
+    if (process.env.NODE_ENV === 'development') console.log('古いセッションを無効化中...');
     try {
       const cookieStore = await cookies();
       
@@ -314,25 +328,25 @@ export async function verifyCode(code: string) {
       authCookies.forEach(cookieName => {
         try {
           cookieStore.delete(cookieName);
-          console.log(`古いクッキー削除: ${cookieName}`);
+          if (process.env.NODE_ENV === 'development') console.log(`古いクッキー削除: ${cookieName}`);
         } catch (error) {
-          console.log(`クッキー削除スキップ: ${cookieName}`);
+          if (process.env.NODE_ENV === 'development') console.log(`クッキー削除スキップ: ${cookieName}`);
         }
       });
       
       // Supabaseが新しいメールアドレスでセッションを再作成する
-      console.log('Supabaseセッションが自動的に更新されます');
+      if (process.env.NODE_ENV === 'development') console.log('Supabaseセッションが自動的に更新されます');
       
-      console.log('✅ セッション再生成完了!');
+      if (process.env.NODE_ENV === 'development') console.log('✅ セッション再生成完了!');
     } catch (sessionError) {
-      console.error('セッション再生成エラー:', sessionError);
-      console.warn('メールアドレスは更新されましたが、セッション再生成に失敗しました');
+      if (process.env.NODE_ENV === 'development') console.error('セッション再生成エラー:', sessionError);
+      if (process.env.NODE_ENV === 'development') console.warn('メールアドレスは更新されましたが、セッション再生成に失敗しました');
     }
     
-    console.log('=== verifyCode完了 ===');
+    if (process.env.NODE_ENV === 'development') console.log('=== verifyCode完了 ===');
     return { success: true, newEmail: verification.email };
   } catch (error) {
-    console.error('❌ verifyCode全体エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ verifyCode全体エラー:', error);
     return { error: 'システムエラーが発生しました' };
   }
 }

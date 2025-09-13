@@ -218,14 +218,14 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
-    console.log('PendingTableClient: Setting up event listeners');
+    if (process.env.NODE_ENV === 'development') console.log('PendingTableClient: Setting up event listeners');
     const handlePendingCsvDownload = () => {
-      console.log('PendingTableClient: Received pending-csv-download event');
+      if (process.env.NODE_ENV === 'development') console.log('PendingTableClient: Received pending-csv-download event');
       handleCSVDownload();
     };
 
     const handlePendingBulkApprove = () => {
-      console.log('PendingTableClient: Received pending-bulk-approve event');
+      if (process.env.NODE_ENV === 'development') console.log('PendingTableClient: Received pending-bulk-approve event');
       handleBulkApprove();
     };
 

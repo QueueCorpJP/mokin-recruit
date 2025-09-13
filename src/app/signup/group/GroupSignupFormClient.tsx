@@ -71,7 +71,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
         router.push(`/signup/group/verify?email=${encodeURIComponent(currentUser.email)}`);
       }
     } catch (error) {
-      console.error('送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('送信エラー:', error);
       setMessage({ type: 'error', text: 'システムエラーが発生しました。' });
     } finally {
       setIsSubmitting(false);

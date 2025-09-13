@@ -34,7 +34,7 @@ async function fetchNoticeDetail(noticeId: string): Promise<NoticeDetail | null>
     .single();
 
   if (error) {
-    console.error('Error fetching notice detail:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching notice detail:', error);
     return null;
   }
 

@@ -28,7 +28,7 @@ export async function RoomMessagesServer({
       <RoomMessagesDisplay messages={messages} isMobile={isMobile} />
     );
   } catch (error) {
-    console.error('Error fetching room messages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', error);
     return (
       <RoomMessagesDisplay messages={[]} isMobile={isMobile} />
     );

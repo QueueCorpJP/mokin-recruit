@@ -21,7 +21,7 @@ export async function getSummaryData() {
       selfPr: candidateData.self_pr || '',
     };
   } catch (error) {
-    console.error('概要データの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('概要データの取得に失敗しました:', error);
     return null;
   }
 }
@@ -40,7 +40,7 @@ export async function updateSummaryData(formData: FormData) {
     const jobSummary = formData.get('jobSummary')?.toString() || '';
     const selfPr = formData.get('selfPr')?.toString() || '';
 
-    console.log('Updating summary data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating summary data:', {
       candidateId,
       jobSummary,
       selfPr
@@ -59,15 +59,15 @@ export async function updateSummaryData(formData: FormData) {
       .eq('id', candidateId);
 
     if (candidateError) {
-      console.error('Summary update error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Summary update error:', candidateError);
       throw new Error('概要の更新に失敗しました');
     }
 
-    console.log('Summary update success:', { candidateId });
+    if (process.env.NODE_ENV === 'development') console.log('Summary update success:', { candidateId });
     return { success: true };
 
   } catch (error) {
-    console.error('Summary update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Summary update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

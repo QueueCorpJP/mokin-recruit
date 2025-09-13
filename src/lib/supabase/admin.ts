@@ -10,14 +10,14 @@ export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  console.log('Environment check:', {
+  if (process.env.NODE_ENV === 'development') console.log('Environment check:', {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseServiceRoleKey,
     url: supabaseUrl?.substring(0, 30) + '...',
   });
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    console.error('Missing environment variables:', {
+    if (process.env.NODE_ENV === 'development') console.error('Missing environment variables:', {
       NEXT_PUBLIC_SUPABASE_URL: !!supabaseUrl,
       SUPABASE_SERVICE_ROLE_KEY: !!supabaseServiceRoleKey,
     });
@@ -32,10 +32,10 @@ export function createAdminClient() {
       },
     });
 
-    console.log('Admin client created successfully');
+    if (process.env.NODE_ENV === 'development') console.log('Admin client created successfully');
     return supabaseAdminClient;
   } catch (error) {
-    console.error('Failed to create admin client:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to create admin client:', error);
     throw error;
   }
 }

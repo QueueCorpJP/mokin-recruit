@@ -27,11 +27,11 @@ async function fetchCategoriesAndTags(): Promise<{ categories: Category[], tags:
   ]);
 
   if (categoriesResult.error) {
-    console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
   }
 
   if (tagsResult.error) {
-    console.error('タグの読み込みに失敗:', tagsResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('タグの読み込みに失敗:', tagsResult.error);
   }
 
   return {

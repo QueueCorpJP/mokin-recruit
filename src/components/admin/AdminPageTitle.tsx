@@ -36,7 +36,7 @@ const pageTitleConfig: PageTitleConfig = {
         text: '確認する', 
         variant: 'green-outline', 
         onClick: () => {
-          console.log('AdminPageTitle: Dispatching job-new-back event');
+          if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching job-new-back event');
           const event = new CustomEvent('job-new-back');
           window.dispatchEvent(event);
         }
@@ -45,7 +45,7 @@ const pageTitleConfig: PageTitleConfig = {
         text: '保存', 
         variant: 'green-gradient', 
         onClick: () => {
-          console.log('AdminPageTitle: Dispatching job-new-create event');
+          if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching job-new-create event');
           const event = new CustomEvent('job-new-create');
           window.dispatchEvent(event);
         }
@@ -60,7 +60,7 @@ const pageTitleConfig: PageTitleConfig = {
         text: 'CSVダウンロード', 
         variant: 'green-outline', 
         onClick: () => {
-          console.log('AdminPageTitle: Dispatching pending-csv-download event');
+          if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching pending-csv-download event');
           const event = new CustomEvent('pending-csv-download');
           window.dispatchEvent(event);
         }
@@ -69,7 +69,7 @@ const pageTitleConfig: PageTitleConfig = {
         text: '一括承認', 
         variant: 'green-gradient', 
         onClick: () => {
-          console.log('AdminPageTitle: Dispatching pending-bulk-approve event');
+          if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching pending-bulk-approve event');
           const event = new CustomEvent('pending-bulk-approve');
           window.dispatchEvent(event);
         }
@@ -169,7 +169,7 @@ const pageTitleConfig: PageTitleConfig = {
               sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
               window.location.href = `/admin/media/edit?id=${previewData.id}`;
             } catch (error) {
-              console.error('Preview data parsing error:', error);
+              if (process.env.NODE_ENV === 'development') console.error('Preview data parsing error:', error);
               window.location.href = '/admin/media/edit';
             }
           } else {
@@ -208,7 +208,7 @@ const pageTitleConfig: PageTitleConfig = {
 export function AdminPageTitle() {
   const pathname = usePathname();
   
-  // console.log('AdminPageTitle: Current pathname:', pathname);
+  // if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Current pathname:', pathname);
   
   // 現在のパスに対応する設定を取得
   const getPageConfig = (): PageConfig => {
@@ -236,7 +236,7 @@ export function AdminPageTitle() {
           text: '更新する',
           variant: 'green-gradient',
           onClick: () => {
-            console.log('AdminPageTitle: Dispatching job-edit-update event');
+            if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching job-edit-update event');
             const event = new CustomEvent('job-edit-update');
             window.dispatchEvent(event);
           }
@@ -286,7 +286,7 @@ export function AdminPageTitle() {
             text: '下書き保存',
             variant: 'green-outline',
             onClick: () => {
-              console.log('AdminPageTitle: Dispatching candidate-new-draft event');
+              if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching candidate-new-draft event');
               const event = new CustomEvent('candidate-new-draft');
               window.dispatchEvent(event);
             }
@@ -295,7 +295,7 @@ export function AdminPageTitle() {
             text: '確認する',
             variant: 'green-gradient',
             onClick: () => {
-              console.log('AdminPageTitle: Dispatching candidate-new-confirm event');
+              if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching candidate-new-confirm event');
               const event = new CustomEvent('candidate-new-confirm');
               window.dispatchEvent(event);
             }
@@ -331,7 +331,7 @@ export function AdminPageTitle() {
             text: '候補者情報削除',
             variant: 'green-outline',
             onClick: () => {
-              console.log('AdminPageTitle: Dispatching candidate-delete-modal event');
+              if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Dispatching candidate-delete-modal event');
               const event = new CustomEvent('candidate-delete-modal');
               window.dispatchEvent(event);
             }
@@ -360,7 +360,7 @@ export function AdminPageTitle() {
   };
 
   const config = getPageConfig();
-  // console.log('AdminPageTitle: Matched config:', config);
+  // if (process.env.NODE_ENV === 'development') console.log('AdminPageTitle: Matched config:', config);
 
   // タイトルのスタイル
   const titleStyle = {

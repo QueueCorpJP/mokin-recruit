@@ -22,7 +22,7 @@ export const AdminNotificationModal: React.FC<AdminNotificationModalProps> = ({
   confirmText = "確認",
   secondaryText
 }) => {
-  console.log('AdminNotificationModal render - isOpen:', isOpen, 'title:', title);
+  if (process.env.NODE_ENV === 'development') console.log('AdminNotificationModal render - isOpen:', isOpen, 'title:', title);
   
   if (!isOpen) return null;
 

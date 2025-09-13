@@ -45,7 +45,7 @@ export function NewPasswordContent() {
 
       // 現在のURLを詳細にログ出力
       if (typeof window !== 'undefined') {
-        console.log('🌐 Current URL details:', {
+        if (process.env.NODE_ENV === 'development') console.log('🌐 Current URL details:', {
           fullUrl: window.location.href,
           pathname: window.location.pathname,
           search: window.location.search,
@@ -57,17 +57,17 @@ export function NewPasswordContent() {
       // クエリパラメータ（?以降）を収集
       for (const [key, value] of searchParams.entries()) {
         queryParams[key] = value;
-        console.log(`🔍 Query param found: ${key} = ${value}`);
+        if (process.env.NODE_ENV === 'development') console.log(`🔍 Query param found: ${key} = ${value}`);
       }
 
       // フラグメントパラメータ（#以降）を収集（クライアントサイドでのみ）
       if (typeof window !== 'undefined') {
         const fragment = window.location.hash;
-        console.log('🔗 Fragment detected:', fragment);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 Fragment detected:', fragment);
         Object.assign(fragmentParams, parseFragmentParams(fragment));
         
         if (Object.keys(fragmentParams).length > 0) {
-          console.log('🔗 Fragment params parsed:', fragmentParams);
+          if (process.env.NODE_ENV === 'development') console.log('🔗 Fragment params parsed:', fragmentParams);
         }
       }
 
@@ -77,13 +77,13 @@ export function NewPasswordContent() {
       // 1. URLクエリパラメータから取得（最優先）
       if (queryParams.userType === 'candidate' || queryParams.userType === 'company') {
         detectedUserType = queryParams.userType;
-        console.log('🔗 UserType from URL query:', detectedUserType);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 UserType from URL query:', detectedUserType);
       }
       
       // 2. URLフラグメントパラメータから取得
       if (!detectedUserType && (fragmentParams.userType === 'candidate' || fragmentParams.userType === 'company')) {
         detectedUserType = fragmentParams.userType;
-        console.log('🔗 UserType from URL fragment:', detectedUserType);
+        if (process.env.NODE_ENV === 'development') console.log('🔗 UserType from URL fragment:', detectedUserType);
       }
       
       // 3. ローカルストレージから取得
@@ -91,29 +91,29 @@ export function NewPasswordContent() {
         const savedUserType = localStorage.getItem('password_reset_user_type') as 'candidate' | 'company';
         if (savedUserType === 'candidate' || savedUserType === 'company') {
           detectedUserType = savedUserType;
-          console.log('🔄 UserType restored from localStorage:', detectedUserType);
+          if (process.env.NODE_ENV === 'development') console.log('🔄 UserType restored from localStorage:', detectedUserType);
         } else {
-          console.log('🔄 No valid userType in localStorage:', savedUserType);
+          if (process.env.NODE_ENV === 'development') console.log('🔄 No valid userType in localStorage:', savedUserType);
         }
       }
       
       // 4. デフォルト値（企業ユーザー）
       if (!detectedUserType) {
         detectedUserType = 'company';
-        console.log('⚙️ UserType defaulted to company');
+        if (process.env.NODE_ENV === 'development') console.log('⚙️ UserType defaulted to company');
       }
       
-      console.log('🎯 Final userType decision:', detectedUserType);
+      if (process.env.NODE_ENV === 'development') console.log('🎯 Final userType decision:', detectedUserType);
       setUserType(detectedUserType);
       
       // ローカルストレージのクリア条件を改善（userTypeが正しく検出できた場合のみ）
       if (typeof window !== 'undefined' && detectedUserType && detectedUserType !== 'company') {
         // candidateの場合、またはURLパラメータから正しく取得できた場合のみクリア
         if (queryParams.userType || fragmentParams.userType) {
-          console.log('🧹 Clearing localStorage password_reset_user_type (URL params detected)');
+          if (process.env.NODE_ENV === 'development') console.log('🧹 Clearing localStorage password_reset_user_type (URL params detected)');
           localStorage.removeItem('password_reset_user_type');
         } else if (detectedUserType === 'candidate') {
-          console.log('🧹 Clearing localStorage password_reset_user_type (candidate type confirmed)');
+          if (process.env.NODE_ENV === 'development') console.log('🧹 Clearing localStorage password_reset_user_type (candidate type confirmed)');
           localStorage.removeItem('password_reset_user_type');
         }
       }
@@ -129,7 +129,7 @@ export function NewPasswordContent() {
       const error = combinedParams.error;
 
       // デバッグ情報を出力
-      console.log('🔍 NewPasswordContent - Parameter analysis:', {
+      if (process.env.NODE_ENV === 'development') console.log('🔍 NewPasswordContent - Parameter analysis:', {
         currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
         queryParams,
         fragmentParams,

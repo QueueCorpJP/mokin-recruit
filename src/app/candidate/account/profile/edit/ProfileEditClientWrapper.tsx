@@ -52,7 +52,7 @@ function ProfileEditClientWrapper({ profile }: { profile: ProfileFormData }) {
 
   useEffect(() => {
     // デバッグ用: formActionの型・値を出力
-    console.log('formAction:', formAction);
+    if (process.env.NODE_ENV === 'development') console.log('formAction:', formAction);
     // 保存成功時にprofileページへ遷移
     if (state.success) {
       router.push('/candidate/account/profile');
@@ -98,7 +98,7 @@ function ProfileEditClientWrapper({ profile }: { profile: ProfileFormData }) {
         {/* デバッグ用: 保存ボタンtype出力 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `console.log('保存ボタンtype: submit');`,
+            __html: `if (process.env.NODE_ENV === 'development') console.log('保存ボタンtype: submit');`,
           }}
         />
       </form>

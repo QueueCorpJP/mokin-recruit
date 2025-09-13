@@ -90,10 +90,10 @@ export default function NoticeEditClient({ initialNotice }: Props) {
       if (result.success) {
         router.push(`/admin/notice/${initialNotice.id}`);
       } else {
-        console.error('Failed to update notice:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to update notice:', result.error);
       }
     } catch (error) {
-      console.error('Error updating notice:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating notice:', error);
     } finally {
       setIsSubmitting(false);
     }

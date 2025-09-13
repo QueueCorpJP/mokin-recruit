@@ -22,7 +22,7 @@ async function fetchCategories(): Promise<ArticleCategory[]> {
     .order('name');
     
   if (error) {
-    console.error('カテゴリの取得に失敗:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリの取得に失敗:', error);
     return [];
   }
   

@@ -44,7 +44,7 @@ export async function getCandidateTasks() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching tasks:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching tasks:', error);
     return { tasks: [] };
   }
 
@@ -109,7 +109,7 @@ export async function getCandidateMessages() {
     .order('sent_at', { ascending: false });
 
   if (messageError) {
-    console.error('Error fetching messages:', messageError);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', messageError);
     return { messages: [] };
   }
 
@@ -141,7 +141,7 @@ export async function getCandidateNotices() {
     .limit(2);
 
   if (error) {
-    console.error('Error fetching notices:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching notices:', error);
     return { notices: [] };
   }
 

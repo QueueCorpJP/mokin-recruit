@@ -19,11 +19,11 @@ export async function saveBlockedCompanies(companyNames: string[]) {
   // Use custom auth system instead of Supabase auth
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('ブロック企業保存の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('ブロック企業保存の認証エラー:', authResult.error);
     throw new Error(authResult.error);
   }
 
-  console.log('Saving blocked companies for candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Saving blocked companies for candidate_id:', authResult.data.candidateId);
 
   // First, try to update existing settings
   const { data: existingSettings, error: selectError } = await supabase
@@ -41,7 +41,7 @@ export async function saveBlockedCompanies(companyNames: string[]) {
         .eq('candidate_id', authResult.data.candidateId);
 
       if (deleteError) {
-        console.error('ブロック企業設定の削除に失敗しました:', deleteError);
+        if (process.env.NODE_ENV === 'development') console.error('ブロック企業設定の削除に失敗しました:', deleteError);
         throw new Error('ブロック企業設定の削除に失敗しました');
       }
     }
@@ -61,7 +61,7 @@ export async function saveBlockedCompanies(companyNames: string[]) {
       .eq('candidate_id', authResult.data.candidateId);
 
     if (updateError) {
-      console.error('ブロック企業設定の更新に失敗しました:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('ブロック企業設定の更新に失敗しました:', updateError);
       throw new Error('ブロック企業設定の更新に失敗しました');
     }
   } else {
@@ -74,7 +74,7 @@ export async function saveBlockedCompanies(companyNames: string[]) {
       });
 
     if (insertError) {
-      console.error('ブロック企業設定の保存に失敗しました:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('ブロック企業設定の保存に失敗しました:', insertError);
       throw new Error('ブロック企業設定の保存に失敗しました');
     }
   }
@@ -126,11 +126,11 @@ export async function getBlockedCompanies(): Promise<BlockedCompanySettings | nu
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('ブロック企業取得の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('ブロック企業取得の認証エラー:', authResult.error);
     return null;
   }
 
-  console.log('Searching blocked_companies with candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Searching blocked_companies with candidate_id:', authResult.data.candidateId);
 
   const { data, error } = await supabase
     .from('blocked_companies')
@@ -139,7 +139,7 @@ export async function getBlockedCompanies(): Promise<BlockedCompanySettings | nu
     .maybeSingle();
 
   if (error) {
-    console.error('ブロック企業設定の取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ブロック企業設定の取得に失敗しました:', error);
     
     // Try with string conversion
     const { data: dataStr, error: errorStr } = await supabase
@@ -149,14 +149,14 @@ export async function getBlockedCompanies(): Promise<BlockedCompanySettings | nu
       .maybeSingle();
     
     if (errorStr) {
-      console.error('String変換でもブロック企業設定の取得に失敗しました:', errorStr);
+      if (process.env.NODE_ENV === 'development') console.error('String変換でもブロック企業設定の取得に失敗しました:', errorStr);
       return null;
     } else {
-      console.log('String変換でブロック企業設定を取得:', dataStr);
+      if (process.env.NODE_ENV === 'development') console.log('String変換でブロック企業設定を取得:', dataStr);
       return dataStr;
     }
   }
 
-  console.log('ブロック企業設定を取得:', data);
+  if (process.env.NODE_ENV === 'development') console.log('ブロック企業設定を取得:', data);
   return data;
 }

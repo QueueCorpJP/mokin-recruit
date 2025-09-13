@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { safeLog } from '@/lib/utils/pii-safe-logger';
 
 interface SignupContextType {
   candidateId: string | null;
@@ -77,6 +78,6 @@ export async function setServerCandidateId(candidateId: string) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
   } catch (error) {
-    console.error('Failed to set candidate ID cookie:', error);
+    safeLog('error', 'Failed to set candidate ID cookie', { error: error instanceof Error ? error.message : String(error) });
   }
 }

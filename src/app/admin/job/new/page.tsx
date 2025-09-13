@@ -18,7 +18,7 @@ async function fetchCompanyGroups(): Promise<CompanyGroup[]> {
     .order('group_name');
 
   if (error) {
-    console.error('Error fetching company groups:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching company groups:', error);
     return [];
   }
 

@@ -27,7 +27,7 @@ export const MessageInputBoxServer: React.FC<{
   const [isExpanded, setIsExpanded] = useState(false);
 
   // デバッグ用：props の値を確認
-  console.log('MessageInputBoxServer props:', { 
+  if (process.env.NODE_ENV === 'development') console.log('MessageInputBoxServer props:', { 
     userId, 
     userType, 
     roomId, 
@@ -36,7 +36,7 @@ export const MessageInputBoxServer: React.FC<{
   });
 
   const handleSendMessage = async () => {
-    console.log('Send button clicked! Checking conditions:', {
+    if (process.env.NODE_ENV === 'development') console.log('Send button clicked! Checking conditions:', {
       messageEmpty: !message.trim(),
       isSending,
       noRoomId: !roomId,
@@ -63,7 +63,7 @@ export const MessageInputBoxServer: React.FC<{
     
     try {
       setIsSending(true);
-      console.log('Sending message with params:', {
+      if (process.env.NODE_ENV === 'development') console.log('Sending message with params:', {
         roomId,
         message: message.trim(),
         userType,
@@ -77,17 +77,17 @@ export const MessageInputBoxServer: React.FC<{
         userId
       );
       
-      console.log('Send message result:', result);
+      if (process.env.NODE_ENV === 'development') console.log('Send message result:', result);
       
       if (result.success) {
         setMessage(''); // 送信後にメッセージをクリア
         alert('メッセージを送信しました');
       } else {
-        console.error('Failed to send message:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', result.error);
         alert(`送信に失敗しました: ${result.error}`);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', error);
       alert(`送信エラー: ${error}`);
     } finally {
       setIsSending(false);
@@ -185,7 +185,7 @@ export const MessageInputBoxServer: React.FC<{
           const additionalHeight = target.scrollHeight - initialHeight;
           const currentLines = Math.floor(additionalHeight / lineHeight) + 1;
           
-          console.log('MessageInputBoxServer Height calculation:', {
+          if (process.env.NODE_ENV === 'development') console.log('MessageInputBoxServer Height calculation:', {
             scrollHeight: target.scrollHeight,
             currentLines,
             shouldExpand: currentLines >= 3

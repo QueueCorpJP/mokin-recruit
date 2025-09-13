@@ -23,7 +23,7 @@ export default function PositionPage() {
         }
         setIsDataLoaded(true);
       } catch (error) {
-        console.error('現在のデータ取得エラー:', error);
+        if (process.env.NODE_ENV === 'development') console.error('現在のデータ取得エラー:', error);
         setIsDataLoaded(true);
       }
     };

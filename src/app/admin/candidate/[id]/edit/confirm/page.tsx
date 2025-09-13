@@ -29,13 +29,13 @@ async function getCandidateData(id: string): Promise<CandidateDetailData | null>
       .single();
 
     if (error) {
-      console.error('Error fetching candidate:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching candidate:', error);
       return null;
     }
 
     return candidate;
   } catch (error) {
-    console.error('Error fetching candidate data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching candidate data:', error);
     return null;
   }
 }

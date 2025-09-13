@@ -90,7 +90,7 @@ async function getJobDetailServer(jobId: string) {
       .maybeSingle();
 
     if (jobError || !job) {
-      console.error('Failed to fetch job:', jobError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job:', jobError);
       throw new Error('求人情報が見つかりませんでした');
     }
 
@@ -112,11 +112,11 @@ async function getJobDetailServer(jobId: string) {
       .maybeSingle();
 
     if (companyError) {
-      console.error('Failed to fetch company:', companyError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch company:', companyError);
     }
 
     if (!company) {
-      console.warn(`Company not found for job ${jobId}, company_account_id: ${job.company_account_id}`);
+      if (process.env.NODE_ENV === 'development') console.warn(`Company not found for job ${jobId}, company_account_id: ${job.company_account_id}`);
     }
 
     // 求人データに会社情報を追加
@@ -136,7 +136,7 @@ async function getJobDetailServer(jobId: string) {
       data: jobWithCompany
     };
   } catch (error) {
-    console.error('Failed to fetch job detail from database:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job detail from database:', error);
     throw error;
   }
 }
@@ -216,11 +216,11 @@ export async function getJobDetailData(jobId: string): Promise<JobDetailData | n
       };
       return mappedJobData;
     } else {
-      console.error('Failed to fetch job data: Invalid response');
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job data: Invalid response');
       return null;
     }
   } catch (error) {
-    console.error('Failed to fetch job data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job data:', error);
     return null;
   }
 }

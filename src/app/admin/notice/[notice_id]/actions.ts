@@ -24,13 +24,13 @@ export async function getNotice(id: string): Promise<Notice | null> {
       .single();
 
     if (error) {
-      console.error('お知らせ取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お知らせ取得エラー:', error);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('お知らせ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ取得エラー:', error);
     return null;
   }
 }
@@ -47,7 +47,7 @@ export async function getAllNotices(limit: number = 50, offset: number = 0): Pro
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('お知らせ一覧取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ一覧取得エラー:', error);
     return [];
   }
 }
@@ -64,7 +64,7 @@ export async function createNotice(notice: Omit<Notice, 'id' | 'created_at' | 'u
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('お知らせ作成エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ作成エラー:', error);
     throw error;
   }
 }
@@ -79,7 +79,7 @@ export async function updateNotice(id: string, notice: Partial<Notice>): Promise
 
     if (error) throw error;
   } catch (error) {
-    console.error('お知らせ更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ更新エラー:', error);
     throw error;
   }
 }
@@ -94,7 +94,7 @@ export async function deleteNotice(id: string): Promise<void> {
 
     if (error) throw error;
   } catch (error) {
-    console.error('お知らせ削除エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ削除エラー:', error);
     throw error;
   }
 }

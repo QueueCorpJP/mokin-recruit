@@ -61,7 +61,7 @@ export default function PreviewPage() {
             thumbnailUrl = uploadResult.url;
           }
         } catch (error) {
-          console.warn('サムネイル画像の処理に失敗しました:', error);
+          if (process.env.NODE_ENV === 'development') console.warn('サムネイル画像の処理に失敗しました:', error);
         }
       }
 
@@ -96,7 +96,7 @@ export default function PreviewPage() {
         throw new Error(result.error || 'お知らせの保存に失敗しました');
       }
     } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お知らせの保存に失敗:', error);
       setError(error instanceof Error ? error.message : 'お知らせの保存に失敗しました');
     } finally {
       setIsLoading(false);
@@ -119,8 +119,8 @@ export default function PreviewPage() {
       const storedData = sessionStorage.getItem('previewNotice');
       if (storedData) {
         const data = JSON.parse(storedData);
-        console.log('Preview data content:', data.content);
-        console.log('Preview data categoryIds:', data.categoryIds);
+        if (process.env.NODE_ENV === 'development') console.log('Preview data content:', data.content);
+        if (process.env.NODE_ENV === 'development') console.log('Preview data categoryIds:', data.categoryIds);
         
         // カテゴリデータを先に取得
         try {
@@ -131,7 +131,7 @@ export default function PreviewPage() {
             .order('name');
           
           if (categoriesData) {
-            console.log('Fetched categories:', categoriesData);
+            if (process.env.NODE_ENV === 'development') console.log('Fetched categories:', categoriesData);
             setCategories(categoriesData as unknown as NoticeCategory[]);
           }
           
@@ -148,10 +148,10 @@ export default function PreviewPage() {
                 
                 if (categoryData && (categoryData as any).name) {
                   names[categoryId] = (categoryData as any).name as string;
-                  console.log('Individual category fetch:', { categoryId, name: (categoryData as any).name });
+                  if (process.env.NODE_ENV === 'development') console.log('Individual category fetch:', { categoryId, name: (categoryData as any).name });
                 }
               } catch (err) {
-                console.error('Individual category fetch failed:', categoryId, err);
+                if (process.env.NODE_ENV === 'development') console.error('Individual category fetch failed:', categoryId, err);
               }
             }
             setCategoryNames(names);
@@ -160,7 +160,7 @@ export default function PreviewPage() {
           // カテゴリデータ取得後にプレビューデータを設定
           setPreviewData(data);
         } catch (error) {
-          console.error('カテゴリの取得に失敗:', error);
+          if (process.env.NODE_ENV === 'development') console.error('カテゴリの取得に失敗:', error);
           // エラーが発生してもプレビューデータは設定
           setPreviewData(data);
         }
@@ -175,15 +175,15 @@ export default function PreviewPage() {
   // イベントリスナー用のuseEffect
   useEffect(() => {
     const handleCancelPreview = () => {
-      console.log('Cancel preview event triggered');
+      if (process.env.NODE_ENV === 'development') console.log('Cancel preview event triggered');
       handleCancel();
     };
     const handleSaveDraft = () => {
-      console.log('Save draft event triggered');
+      if (process.env.NODE_ENV === 'development') console.log('Save draft event triggered');
       handleSave('DRAFT');
     };
     const handlePublishNotice = () => {
-      console.log('Publish notice event triggered');
+      if (process.env.NODE_ENV === 'development') console.log('Publish notice event triggered');
       handleSave('PUBLISHED');
     };
 
@@ -264,7 +264,7 @@ export default function PreviewPage() {
                                          categories.find(cat => cat.id === categoryId)?.name;
                       
                       if (!categoryName) {
-                        console.log('No category name found for:', categoryId);
+                        if (process.env.NODE_ENV === 'development') console.log('No category name found for:', categoryId);
                         return null;
                       }
                       

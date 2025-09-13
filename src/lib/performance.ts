@@ -11,7 +11,7 @@ export class PerformanceMonitor {
   static endMeasure(name: string): number {
     const startTime = this.measurements.get(name);
     if (!startTime) {
-      console.warn(`No start time found for measurement: ${name}`);
+      if (process.env.NODE_ENV === 'development') console.warn(`No start time found for measurement: ${name}`);
       return 0;
     }
     
@@ -19,7 +19,7 @@ export class PerformanceMonitor {
     this.measurements.delete(name);
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
+      if (process.env.NODE_ENV === 'development') console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
     }
     
     return duration;
@@ -46,10 +46,10 @@ export class PerformanceMonitor {
 export function reportWebVitals(metric: any) {
   if (process.env.NODE_ENV === 'production') {
     // プロダクションでは実際の分析ツールに送信
-    console.log(metric);
+    if (process.env.NODE_ENV === 'development') console.log(metric);
   } else {
     // 開発時はコンソールログ
-    console.log(`🚀 ${metric.name}: ${metric.value.toFixed(2)}`);
+    if (process.env.NODE_ENV === 'development') console.log(`🚀 ${metric.name}: ${metric.value.toFixed(2)}`);
   }
 }
 

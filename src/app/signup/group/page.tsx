@@ -39,7 +39,7 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
     .single();
 
   if (userError || !currentUser) {
-    console.error('企業ユーザー情報取得エラー:', userError);
+    if (process.env.NODE_ENV === 'development') console.error('企業ユーザー情報取得エラー:', userError);
     redirect('/company/auth/login');
   }
   

@@ -189,7 +189,7 @@ export default function CandidateEducationEditPage() {
           });
         }
       } catch (error) {
-        console.error('初期データの取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('初期データの取得に失敗しました:', error);
       } finally {
         setIsLoading(false);
       }
@@ -223,12 +223,12 @@ export default function CandidateEducationEditPage() {
       if (result.success) {
         router.push('/candidate/account/education');
       } else {
-        console.error('保存エラー:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('保存エラー:', result.error);
         alert('保存に失敗しました。もう一度お試しください。');
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('保存処理でエラーが発生しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('保存処理でエラーが発生しました:', error);
       alert('保存に失敗しました。もう一度お試しください。');
       setIsSubmitting(false);
     }

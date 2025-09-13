@@ -21,7 +21,7 @@ export default function CandidateNewConfirmClient() {
         const parsedData = JSON.parse(data);
         setFormData(parsedData);
       } catch (error) {
-        console.error('Error parsing form data:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error parsing form data:', error);
         router.push('/admin/candidate/new');
       }
     } else {
@@ -52,19 +52,19 @@ export default function CandidateNewConfirmClient() {
         formData.memo
       );
 
-      console.log('Create candidate result:', result);
+      if (process.env.NODE_ENV === 'development') console.log('Create candidate result:', result);
       
       if (result.success) {
-        console.log('Setting candidateId:', result.candidateId);
-        console.log('Setting showModal to true');
+        if (process.env.NODE_ENV === 'development') console.log('Setting candidateId:', result.candidateId);
+        if (process.env.NODE_ENV === 'development') console.log('Setting showModal to true');
         setCandidateId(result.candidateId);
         setShowModal(true);
       } else {
-        console.error('Creation failed:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Creation failed:', result.error);
         alert('候補者の作成に失敗しました: ' + result.error);
       }
     } catch (error) {
-      console.error('Error creating candidate:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error creating candidate:', error);
       alert('候補者の作成に失敗しました');
     } finally {
       setIsSubmitting(false);
@@ -89,7 +89,7 @@ export default function CandidateNewConfirmClient() {
     return <div>Loading...</div>;
   }
 
-  console.log('Render - showModal:', showModal, 'candidateId:', candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Render - showModal:', showModal, 'candidateId:', candidateId);
 
   return (
     <>

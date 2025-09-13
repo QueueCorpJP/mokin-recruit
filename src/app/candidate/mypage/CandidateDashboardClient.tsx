@@ -103,7 +103,7 @@ export function CandidateDashboardClient({
             )
           );
         } else {
-          console.error('お気に入り操作エラー:', response.error);
+          if (process.env.NODE_ENV === 'development') console.error('お気に入り操作エラー:', response.error);
           alert(response.error || 'お気に入り操作に失敗しました');
         }
         
@@ -111,7 +111,7 @@ export function CandidateDashboardClient({
         setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
       });
     } catch (error) {
-      console.error('お気に入り操作エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り操作エラー:', error);
       alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
       setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
     }

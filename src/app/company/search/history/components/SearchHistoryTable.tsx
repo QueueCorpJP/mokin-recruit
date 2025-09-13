@@ -166,7 +166,7 @@ export function SearchHistoryTable({
       await onUpdateSavedStatus(item.id, !item.is_saved);
       console.log('[SearchHistoryTable] onUpdateSavedStatus実行後 - 成功');
     } catch (error) {
-      console.error('[SearchHistoryTable] Failed to update saved status:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to update saved status:', error);
     } finally {
       setLoadingItems(prev => {
         const newSet = new Set(prev);
@@ -182,17 +182,17 @@ export function SearchHistoryTable({
       await onDeleteHistory(item.id);
       setDeleteModal({ isOpen: false, item: null });
     } catch (error) {
-      console.error('Failed to delete search history:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to delete search history:', error);
     }
   };
 
   const handleHistoryClick = (item: SearchHistoryItem) => {
-    console.log('History clicked:', item);
-    console.log('Search conditions:', item.search_conditions);
-    console.log('Group ID:', item.group_id);
+    if (process.env.NODE_ENV === 'development') console.log('History clicked:', item);
+    if (process.env.NODE_ENV === 'development') console.log('Search conditions:', item.search_conditions);
+    if (process.env.NODE_ENV === 'development') console.log('Group ID:', item.group_id);
     
     const searchUrl = buildSearchUrl(item.search_conditions, item.group_id);
-    console.log('Generated URL:', searchUrl);
+    if (process.env.NODE_ENV === 'development') console.log('Generated URL:', searchUrl);
     
     router.push(searchUrl);
   };

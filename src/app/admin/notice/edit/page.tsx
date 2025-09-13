@@ -45,7 +45,7 @@ export default async function EditNoticePage({ searchParams }: EditNoticePagePro
   const categoriesResult = await supabase.from('notice_categories').select('*').order('name');
 
   if (categoriesResult.error) {
-    console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリの読み込みに失敗:', categoriesResult.error);
   }
 
   // お知らせIDがある場合はお知らせデータを取得
@@ -59,7 +59,7 @@ export default async function EditNoticePage({ searchParams }: EditNoticePagePro
       .single();
 
     if (noticeError) {
-      console.error('お知らせの読み込みに失敗:', noticeError);
+      if (process.env.NODE_ENV === 'development') console.error('お知らせの読み込みに失敗:', noticeError);
     } else {
       // カテゴリの取得
       const { data: categoryRelations } = await supabase

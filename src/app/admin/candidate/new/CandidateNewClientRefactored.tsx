@@ -83,7 +83,7 @@ export default function CandidateNewClientRefactored() {
       router.push(`/admin/candidate/new/confirm?${params.toString()}`);
       
     } catch (error) {
-      console.error('Error preparing candidate data:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error preparing candidate data:', error);
       alert('データの準備に失敗しました');
     } finally {
       setSubmitting(false);
@@ -93,7 +93,7 @@ export default function CandidateNewClientRefactored() {
   // イベントリスナーの設定
   useEffect(() => {
     const handleDraftSave = () => {
-      console.log('Saving draft...');
+      if (process.env.NODE_ENV === 'development') console.log('Saving draft...');
       alert('下書きを保存しました（実装予定）');
     };
 

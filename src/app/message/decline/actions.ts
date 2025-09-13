@@ -35,7 +35,7 @@ export async function submitDeclineReason(data: DeclineReasonSubmission) {
       });
 
     if (insertError) {
-      console.error('Failed to insert decline reason:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to insert decline reason:', insertError);
       return {
         success: false,
         error: '辞退理由の保存に失敗しました'
@@ -46,7 +46,7 @@ export async function submitDeclineReason(data: DeclineReasonSubmission) {
       success: true
     };
   } catch (error) {
-    console.error('Error submitting decline reason:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error submitting decline reason:', error);
     return {
       success: false,
       error: '辞退理由の送信に失敗しました'

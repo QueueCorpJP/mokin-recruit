@@ -93,7 +93,7 @@ function CustomDropdown({
                 option.value === value && 'bg-gray-50'
               )}
               onClick={() => {
-                console.log('Option clicked:', option.value, option.label);
+                if (process.env.NODE_ENV === 'development') console.log('Option clicked:', option.value, option.label);
                 onChange?.(option.value);
                 setIsOpen(false);
               }}
@@ -156,7 +156,7 @@ export function MessageSearchFilterCandidate({
             value={searchTarget}
             placeholder='検索対象'
             onChange={(value) => {
-              console.log('Search target changed to:', value);
+              if (process.env.NODE_ENV === 'development') console.log('Search target changed to:', value);
               if (value === 'company' || value === 'job') {
                 onSearchTargetChange?.(value);
               }

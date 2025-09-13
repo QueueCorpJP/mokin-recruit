@@ -25,13 +25,13 @@ async function getCareerStatusEntries(candidateId: string) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      globalThis.console.error('Career status entries fetch error:', error);
+      globalThis.if (process.env.NODE_ENV === 'development') console.error('Career status entries fetch error:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    globalThis.console.error('Career status entries fetch failed:', error);
+    globalThis.if (process.env.NODE_ENV === 'development') console.error('Career status entries fetch failed:', error);
     return [];
   }
 }

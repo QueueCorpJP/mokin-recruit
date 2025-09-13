@@ -7,11 +7,11 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function TemplatePage() {
-  console.log('🚀 TemplatePage loading...');
+  if (process.env.NODE_ENV === 'development') console.log('🚀 TemplatePage loading...');
   
   // 企業ユーザー認証
   const companyUser = await getCachedCompanyUser();
-  console.log('👤 Page companyUser:', companyUser ? {
+  if (process.env.NODE_ENV === 'development') console.log('👤 Page companyUser:', companyUser ? {
     id: companyUser.id,
     email: companyUser.email,
     userType: companyUser.userType,
@@ -19,7 +19,7 @@ export default async function TemplatePage() {
   } : 'not found');
   
   if (!companyUser) {
-    console.log('🔄 Redirecting to login...');
+    if (process.env.NODE_ENV === 'development') console.log('🔄 Redirecting to login...');
     redirect('/company/auth/login');
   }
 
@@ -28,20 +28,20 @@ export default async function TemplatePage() {
   let error = null;
   
   try {
-    console.log('📡 Calling getMessageTemplates...');
+    if (process.env.NODE_ENV === 'development') console.log('📡 Calling getMessageTemplates...');
     const result = await getMessageTemplates(50, 0);
-    console.log('📊 getMessageTemplates result:', result);
+    if (process.env.NODE_ENV === 'development') console.log('📊 getMessageTemplates result:', result);
     
     if (result.success) {
       initialMessageTemplates = result.data;
-      console.log('✅ Templates loaded:', initialMessageTemplates.length);
+      if (process.env.NODE_ENV === 'development') console.log('✅ Templates loaded:', initialMessageTemplates.length);
     } else {
       error = result.error;
-      console.error('❌ Failed to fetch message templates:', result.error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ Failed to fetch message templates:', result.error);
     }
   } catch (err) {
     error = 'サーバーエラーが発生しました';
-    console.error('💥 Exception fetching message templates:', err);
+    if (process.env.NODE_ENV === 'development') console.error('💥 Exception fetching message templates:', err);
   }
 
   return (

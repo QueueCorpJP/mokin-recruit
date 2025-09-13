@@ -42,7 +42,7 @@ export default function WithdrawalReasonPage() {
       await processWithdrawal(selectedReason);
       // processWithdrawal内でredirectが実行されるため、ここには到達しない
     } catch (error) {
-      console.error('退会処理エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('退会処理エラー:', error);
       alert('退会処理中にエラーが発生しました。もう一度お試しください。');
       setIsProcessing(false);
     }

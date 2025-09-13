@@ -70,7 +70,7 @@ export default function EditPreviewPage() {
                   names[categoryId] = (categoryData as any).name as string;
                 }
               } catch (err) {
-                console.error('Individual category fetch failed:', categoryId, err);
+                if (process.env.NODE_ENV === 'development') console.error('Individual category fetch failed:', categoryId, err);
               }
             }
             setCategoryNames(names);
@@ -79,7 +79,7 @@ export default function EditPreviewPage() {
           setPreviewData(data);
           setCurrentStatus(data.status || 'DRAFT');
         } catch (error) {
-          console.error('カテゴリの取得に失敗:', error);
+          if (process.env.NODE_ENV === 'development') console.error('カテゴリの取得に失敗:', error);
           setPreviewData(data);
         }
       } else {
@@ -128,7 +128,7 @@ export default function EditPreviewPage() {
             .then(blob => new File([blob], previewData.thumbnailName!, { type: blob.type }));
           formData.append('thumbnail', thumbnailFile);
         } catch (error) {
-          console.warn('サムネイル画像の処理に失敗しました:', error);
+          if (process.env.NODE_ENV === 'development') console.warn('サムネイル画像の処理に失敗しました:', error);
         }
       } else if (previewData.thumbnail && !previewData.thumbnailName) {
         formData.append('thumbnail_url', previewData.thumbnail);
@@ -143,7 +143,7 @@ export default function EditPreviewPage() {
       sessionStorage.removeItem('previewNotice');
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お知らせの保存に失敗:', error);
       setError(error instanceof Error ? error.message : 'お知らせの保存に失敗しました');
     } finally {
       setIsLoading(false);

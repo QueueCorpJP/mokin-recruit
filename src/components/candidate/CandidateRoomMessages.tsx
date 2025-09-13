@@ -24,7 +24,7 @@ export function CandidateRoomMessages({
         const roomMessages = await getCandidateRoomMessages(roomId, candidateId);
         setMessages(roomMessages);
       } catch (error) {
-        console.error('Failed to fetch candidate messages:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Failed to fetch candidate messages:', error);
         setMessages([]);
       }
     };

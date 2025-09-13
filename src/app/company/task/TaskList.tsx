@@ -79,8 +79,8 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
   const FORCE_SHOW_ALL_TASKS = true; // ← これを true/false で切り替え
   
   // デバッグ用ログ
-  console.log('🎨 TaskList received data:', initialTaskData);
-  console.log('🎨 Force show all tasks:', FORCE_SHOW_ALL_TASKS);
+  if (process.env.NODE_ENV === 'development') console.log('🎨 TaskList received data:', initialTaskData);
+  if (process.env.NODE_ENV === 'development') console.log('🎨 Force show all tasks:', FORCE_SHOW_ALL_TASKS);
   
   // 仮データ（デザインテスト用）
   const mockTaskData: TaskData = {
@@ -206,8 +206,8 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
   const visibleItems = taskItems.filter(item => item.triggerFunction());
   
   // デバッグ用ログ
-  console.log('🎨 Visible tasks:', visibleItems.length);
-  console.log('🎨 Task triggers:', {
+  if (process.env.NODE_ENV === 'development') console.log('🎨 Visible tasks:', visibleItems.length);
+  if (process.env.NODE_ENV === 'development') console.log('🎨 Task triggers:', {
     hasNoJobPostings: checkNoJobPostings(),
     hasNewApplication: checkNewApplication(),
     hasUnreadApplication: checkUnreadApplication(),

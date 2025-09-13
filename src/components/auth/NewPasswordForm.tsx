@@ -32,7 +32,7 @@ export function NewPasswordForm({
         setConfirmPassword('');
       } catch (error) {
         // エラーハンドリングは上位コンポーネントで行う
-        console.error('Password reset error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Password reset error:', error);
       }
     });
   };

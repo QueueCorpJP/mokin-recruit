@@ -17,12 +17,12 @@ export function ensureSupabaseInitialized(): void {
     isInitialized = true;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Supabase client initialized for API route');
+      if (process.env.NODE_ENV === 'development') console.log('✅ Supabase client initialized for API route');
     }
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    console.error(
+    if (process.env.NODE_ENV === 'development') console.error(
       '❌ Failed to initialize Supabase client for API route:',
       error
     );
@@ -43,7 +43,7 @@ export function withSupabaseInit<T extends (...args: any[]) => any>(
       ensureSupabaseInitialized();
       return handler(...args);
     } catch (error) {
-      console.error('Supabase initialization error in wrapper:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase initialization error in wrapper:', error);
       throw error;
     }
   }) as T;

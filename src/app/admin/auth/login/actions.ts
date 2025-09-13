@@ -23,7 +23,7 @@ async function createSupabaseServerClient() {
             });
           } catch (error) {
             // Server component context where cookies cannot be set
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -52,7 +52,7 @@ export async function loginAction(formData: FormData) {
     });
 
     if (error) {
-      console.error('Admin Supabase login error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Admin Supabase login error:', error);
       const query = encodeQuery({
         error: 'メールアドレスまたはパスワードが正しくありません',
         email,
@@ -78,7 +78,7 @@ export async function loginAction(formData: FormData) {
       redirect(`/admin/auth/login?${query}`);
     }
 
-    console.log('✅ [ADMIN LOGIN] Success:', {
+    if (process.env.NODE_ENV === 'development') console.log('✅ [ADMIN LOGIN] Success:', {
       userId: data.user.id,
       email: data.user.email || '',
       userType: actualUserType
@@ -115,7 +115,7 @@ export async function loginAction(formData: FormData) {
 
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
-    
+
     // ログイン成功時は /admin へリダイレクト
     redirect('/admin');
 

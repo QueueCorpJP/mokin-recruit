@@ -27,7 +27,7 @@ export interface UserSettings {
 export async function getUserSettings(): Promise<UserSettings | null> {
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('認証エラー:', authResult.error);
     return null;
   }
 
@@ -43,7 +43,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   } else if (cached) {
     return cached.data;
   }
-  console.log('Fetching user settings for candidateId:', candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Fetching user settings for candidateId:', candidateId);
 
   const supabase = await getSupabaseServerClient();
 
@@ -55,19 +55,19 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     .maybeSingle();
 
   if (candidateError) {
-    console.error('ユーザー情報の取得に失敗しました:', candidateError);
+    if (process.env.NODE_ENV === 'development') console.error('ユーザー情報の取得に失敗しました:', candidateError);
     return null;
   }
 
   if (!candidateData) {
-    console.log('候補者データが見つかりません');
+    if (process.env.NODE_ENV === 'development') console.log('候補者データが見つかりません');
     return null;
   }
 
-  console.log('Candidate data:', candidateData);
+  if (process.env.NODE_ENV === 'development') console.log('Candidate data:', candidateData);
 
   // Get notification settings from notification_settings table
-  console.log('Searching notification_settings with candidate_id:', candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Searching notification_settings with candidate_id:', candidateId);
   const { data: notificationData, error: notificationError } = await supabase
     .from('notification_settings')
     .select('scout_notification, message_notification, recommendation_notification')
@@ -75,20 +75,20 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     .maybeSingle();
 
   if (notificationError) {
-    console.error('通知設定の取得エラー:', notificationError);
+    if (process.env.NODE_ENV === 'development') console.error('通知設定の取得エラー:', notificationError);
     // Try with string conversion for scout_settings
     const { data: notificationDataStr, error: notificationErrorStr } = await supabase
       .from('notification_settings')
       .select('scout_notification, message_notification, recommendation_notification')
       .eq('candidate_id', String(candidateId))
       .maybeSingle();
-    console.log('Notification settings with string conversion:', notificationDataStr, notificationErrorStr);
+    if (process.env.NODE_ENV === 'development') console.log('Notification settings with string conversion:', notificationDataStr, notificationErrorStr);
   } else {
-    console.log('Notification settings found:', notificationData);
+    if (process.env.NODE_ENV === 'development') console.log('Notification settings found:', notificationData);
   }
 
   // Get scout settings from scout_settings table  
-  console.log('Searching scout_settings with candidate_id:', candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Searching scout_settings with candidate_id:', candidateId);
   const { data: scoutData, error: scoutError } = await supabase
     .from('scout_settings')
     .select('scout_status')
@@ -96,16 +96,16 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     .maybeSingle();
 
   if (scoutError) {
-    console.error('スカウト設定の取得エラー:', scoutError);
+    if (process.env.NODE_ENV === 'development') console.error('スカウト設定の取得エラー:', scoutError);
     // Try with string conversion for scout_settings since candidate_id is TEXT
     const { data: scoutDataStr, error: scoutErrorStr } = await supabase
       .from('scout_settings')
       .select('scout_status')
       .eq('candidate_id', String(candidateId))
       .maybeSingle();
-    console.log('Scout settings with string conversion:', scoutDataStr, scoutErrorStr);
+    if (process.env.NODE_ENV === 'development') console.log('Scout settings with string conversion:', scoutDataStr, scoutErrorStr);
   } else {
-    console.log('Scout settings found:', scoutData);
+    if (process.env.NODE_ENV === 'development') console.log('Scout settings found:', scoutData);
   }
 
   // Use the successfully retrieved data, prioritizing string conversion attempts if needed
@@ -137,7 +137,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
     scout_settings: finalScoutData || undefined,
   };
 
-  console.log('Final user settings result:', result);
+  if (process.env.NODE_ENV === 'development') console.log('Final user settings result:', result);
 
   // 成功した場合のみキャッシュに保存
   userSettingsCache.set(cacheKey, { data: result, timestamp: Date.now() });

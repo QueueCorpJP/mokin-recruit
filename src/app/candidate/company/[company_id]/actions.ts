@@ -125,13 +125,13 @@ export async function getCompanyDetailData(company_id: string): Promise<CompanyD
       .maybeSingle();
 
     if (companyError) {
-      console.error('Failed to fetch company:', companyError);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch company:', companyError);
       // エラーの場合はデフォルトデータを返す
       return getDefaultCompanyData(company_id);
     }
 
     if (!company) {
-      console.warn(`Company not found for id ${company_id}`);
+      if (process.env.NODE_ENV === 'development') console.warn(`Company not found for id ${company_id}`);
       // 企業が見つからない場合もデフォルトデータを返す
       return getDefaultCompanyData(company_id);
     }
@@ -183,7 +183,7 @@ export async function getCompanyDetailData(company_id: string): Promise<CompanyD
 
     return companyData;
   } catch (error) {
-    console.error('Error fetching company data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching company data:', error);
     // エラーの場合はデフォルトデータを返す
     return getDefaultCompanyData(company_id);
   }
@@ -216,12 +216,12 @@ export async function getCompanyJobPostings(company_id: string): Promise<JobPost
       .limit(10); // パフォーマンスのため最大10件に制限
 
     if (error) {
-      console.error('Failed to fetch job postings:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch job postings:', error);
       return [];
     }
 
     if (!jobs || jobs.length === 0) {
-      console.log(`No job postings found for company ${company_id}`);
+      if (process.env.NODE_ENV === 'development') console.log(`No job postings found for company ${company_id}`);
       return [];
     }
 
@@ -238,7 +238,7 @@ export async function getCompanyJobPostings(company_id: string): Promise<JobPost
       required_documents: job.required_documents || [],
     }));
   } catch (error) {
-    console.error('Error fetching company job postings:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching company job postings:', error);
     return [];
   }
 }

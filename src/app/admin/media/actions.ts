@@ -53,7 +53,7 @@ export async function getArticle(id: string): Promise<Article | null> {
       .single();
 
     if (error) {
-      console.error('記事取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('記事取得エラー:', error);
       return null;
     }
 
@@ -72,7 +72,7 @@ export async function getArticle(id: string): Promise<Article | null> {
       tags: data.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
     };
   } catch (error) {
-    console.error('記事取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('記事取得エラー:', error);
     return null;
   }
 }
@@ -111,7 +111,7 @@ export async function getAllArticles(limit: number = 50, offset: number = 0): Pr
       tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
     })) || [];
   } catch (error) {
-    console.error('記事一覧取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('記事一覧取得エラー:', error);
     return [];
   }
 }
@@ -128,7 +128,7 @@ export async function getCategories(): Promise<ArticleCategory[]> {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('カテゴリー取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー取得エラー:', error);
     return [];
   }
 }
@@ -145,7 +145,7 @@ export async function createCategory(name: string): Promise<ArticleCategory | nu
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('カテゴリー作成エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー作成エラー:', error);
     throw error;
   }
 }
@@ -160,7 +160,7 @@ export async function updateCategory(id: string, name: string): Promise<void> {
 
     if (error) throw error;
   } catch (error) {
-    console.error('カテゴリー更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー更新エラー:', error);
     throw error;
   }
 }
@@ -182,7 +182,7 @@ export async function deleteCategory(id: string): Promise<void> {
 
     if (error) throw error;
   } catch (error) {
-    console.error('カテゴリー削除エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー削除エラー:', error);
     throw error;
   }
 }
@@ -198,7 +198,7 @@ export async function getCategoryArticleCount(categoryId: string): Promise<numbe
     if (error) throw error;
     return count || 0;
   } catch (error) {
-    console.error('カテゴリー記事数取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('カテゴリー記事数取得エラー:', error);
     return 0;
   }
 }
@@ -215,7 +215,7 @@ export async function getTags(): Promise<ArticleTag[]> {
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('タグ取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ取得エラー:', error);
     return [];
   }
 }
@@ -232,7 +232,7 @@ export async function createTag(name: string): Promise<ArticleTag | null> {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('タグ作成エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ作成エラー:', error);
     throw error;
   }
 }
@@ -247,7 +247,7 @@ export async function updateTag(id: string, name: string): Promise<void> {
 
     if (error) throw error;
   } catch (error) {
-    console.error('タグ更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ更新エラー:', error);
     throw error;
   }
 }
@@ -269,7 +269,7 @@ export async function deleteTag(id: string): Promise<void> {
 
     if (error) throw error;
   } catch (error) {
-    console.error('タグ削除エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ削除エラー:', error);
     throw error;
   }
 }
@@ -285,7 +285,7 @@ export async function getTagArticleCount(tagId: string): Promise<number> {
     if (error) throw error;
     return count || 0;
   } catch (error) {
-    console.error('タグ記事数取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('タグ記事数取得エラー:', error);
     return 0;
   }
 }

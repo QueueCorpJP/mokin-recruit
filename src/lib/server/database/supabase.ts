@@ -24,7 +24,7 @@ function getSupabaseConfig(): SupabaseConfig {
     process.env.NODE_ENV === undefined ||
     process.env.NEXT_PHASE === 'phase-production-build'
   ) {
-    console.log(
+    if (process.env.NODE_ENV === 'development') console.log(
       '🔧 Skipping Supabase environment variable check during build phase'
     );
     return {
@@ -96,7 +96,7 @@ export function initializeSupabase(): void {
     }
 
   } catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to initialize Supabase client:', error);
     throw error;
   }
 }
@@ -110,7 +110,7 @@ export function getSupabaseClient(): SupabaseClient {
     try {
       initializeSupabase();
     } catch (error) {
-      console.error('Failed to auto-initialize Supabase:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to auto-initialize Supabase:', error);
       throw new Error(
         'Supabase client is not initialized. Call initializeSupabase() first.'
       );
@@ -128,7 +128,7 @@ export function getSupabaseAdminClient(): SupabaseClient {
     try {
       initializeSupabase();
     } catch (error) {
-      console.error('Failed to auto-initialize Supabase:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to auto-initialize Supabase:', error);
     }
     
     if (!supabaseAdmin) {
@@ -174,14 +174,14 @@ export async function testSupabaseConnection(): Promise<boolean> {
       // フォールバック: RPC呼び出しでテスト
       const { error: rpcError } = await client.rpc('version');
       if (rpcError) {
-        console.error('Supabase connection test failed:', rpcError.message);
+        if (process.env.NODE_ENV === 'development') console.error('Supabase connection test failed:', rpcError.message);
         return false;
       }
     }
 
     return true;
   } catch (error) {
-    console.error('Supabase connection test error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Supabase connection test error:', error);
     return false;
   }
 }
@@ -218,7 +218,7 @@ export async function checkDatabaseSchema(): Promise<{
       }
     } catch (error) {
       // スキーマチェックに失敗しても継続
-      console.warn('Schema check failed, assuming tables exist:', error);
+      if (process.env.NODE_ENV === 'development') console.warn('Schema check failed, assuming tables exist:', error);
       return { tablesExist: true, missingTables: [] };
     }
 
@@ -232,7 +232,7 @@ export async function checkDatabaseSchema(): Promise<{
       missingTables,
     };
   } catch (error) {
-    console.error('Database schema check error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Database schema check error:', error);
     return { tablesExist: false, missingTables: [] };
   }
 }

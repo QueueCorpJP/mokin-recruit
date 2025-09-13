@@ -75,7 +75,7 @@ export async function createNotice(formData: NoticeFormData) {
     
     return { success: true, data: notice };
   } catch (error) {
-    console.error('お知らせ作成エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ作成エラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'お知らせの作成に失敗しました' 
@@ -159,7 +159,7 @@ export async function updateNotice(noticeId: string, formData: NoticeFormData) {
     
     return { success: true, data: notice };
   } catch (error) {
-    console.error('お知らせ更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ更新エラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'お知らせの更新に失敗しました' 
@@ -194,7 +194,7 @@ export async function deleteNotice(noticeId: string) {
     
     return { success: true };
   } catch (error) {
-    console.error('お知らせ削除エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ削除エラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'お知らせの削除に失敗しました' 
@@ -237,7 +237,7 @@ export async function uploadNoticeThumbnail(file: FormData) {
       url: publicUrl 
     };
   } catch (error) {
-    console.error('サムネイルアップロードエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('サムネイルアップロードエラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'サムネイルのアップロードに失敗しました' 
@@ -281,7 +281,7 @@ export async function getAdminNotices() {
       data: transformedNotices 
     };
   } catch (error) {
-    console.error('お知らせ一覧取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('お知らせ一覧取得エラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'お知らせ一覧の取得に失敗しました',
@@ -324,7 +324,7 @@ export async function updateNoticeStatus(noticeId: string, status: 'DRAFT' | 'PU
     
     return { success: true };
   } catch (error) {
-    console.error('ステータス更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('ステータス更新エラー:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'ステータスの更新に失敗しました' 

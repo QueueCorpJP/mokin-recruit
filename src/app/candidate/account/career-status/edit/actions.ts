@@ -68,7 +68,7 @@ export async function getCareerStatusData() {
       selectionCompanies,
     };
   } catch (error) {
-    console.error('キャリアステータスデータの取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('キャリアステータスデータの取得に失敗しました:', error);
     return null;
   }
 }
@@ -102,11 +102,11 @@ export async function updateCareerStatusData(formData: FormData) {
       try {
         selectionCompanies = JSON.parse(selectionCompaniesJson);
       } catch (e) {
-        console.error('Selection companies JSON parse error:', e);
+        if (process.env.NODE_ENV === 'development') console.error('Selection companies JSON parse error:', e);
       }
     }
     
-    console.log('Updating career status:', {
+    if (process.env.NODE_ENV === 'development') console.log('Updating career status:', {
       candidateId,
       transferDesiredTime,
       currentActivityStatus,
@@ -127,7 +127,7 @@ export async function updateCareerStatusData(formData: FormData) {
       .select();
 
     if (candidateError) {
-      console.error('Candidate update error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Candidate update error:', candidateError);
       throw new Error('転職活動状況の更新に失敗しました');
     }
 
@@ -140,9 +140,9 @@ export async function updateCareerStatusData(formData: FormData) {
         .eq('candidate_id', candidateId);
 
       if (deleteError) {
-        console.error('Career status entries delete error:', deleteError);
+        if (process.env.NODE_ENV === 'development') console.error('Career status entries delete error:', deleteError);
         // エラーでも処理を続行（主要な情報は既に保存済み）
-        console.warn('既存の選考状況エントリの削除に失敗しましたが、処理を続行します');
+        if (process.env.NODE_ENV === 'development') console.warn('既存の選考状況エントリの削除に失敗しましたが、処理を続行します');
       }
 
       // 新しい選考状況エントリを挿入
@@ -161,17 +161,17 @@ export async function updateCareerStatusData(formData: FormData) {
         .insert(careerEntries);
 
       if (insertError) {
-        console.error('Career status entries insert error:', insertError);
+        if (process.env.NODE_ENV === 'development') console.error('Career status entries insert error:', insertError);
         // エラーでも処理を続行（主要な情報は既に保存済み）
-        console.warn('選考状況エントリの挿入に失敗しましたが、処理を続行します');
+        if (process.env.NODE_ENV === 'development') console.warn('選考状況エントリの挿入に失敗しましたが、処理を続行します');
       }
     }
 
-    console.log('Career status update success:', { candidateId, updatedData: data });
+    if (process.env.NODE_ENV === 'development') console.log('Career status update success:', { candidateId, updatedData: data });
     return { success: true };
 
   } catch (error) {
-    console.error('Career status update failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Career status update failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 

@@ -55,10 +55,10 @@ export function UserTypeBasedNewPasswordPage() {
   const searchParams = useSearchParams();
   const userType = searchParams.get('userType');
   
-  console.log('🔍 UserTypeBasedNewPasswordPage rendered - userType:', userType);
+  if (process.env.NODE_ENV === 'development') console.log('🔍 UserTypeBasedNewPasswordPage rendered - userType:', userType);
   
   if (userType === 'candidate') {
-    console.log('📱 Rendering candidate view');
+    if (process.env.NODE_ENV === 'development') console.log('📱 Rendering candidate view');
     return (
       <CandidateAuthBackground>
         <Navigation />
@@ -74,7 +74,7 @@ export function UserTypeBasedNewPasswordPage() {
     );
   }
 
-  console.log('🏢 Rendering company view');
+  if (process.env.NODE_ENV === 'development') console.log('🏢 Rendering company view');
   // デフォルト（company）または不明なユーザータイプの場合も CandidateAuthBackground を使用
   return (
     <CandidateAuthBackground>

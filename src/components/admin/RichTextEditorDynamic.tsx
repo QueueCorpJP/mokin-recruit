@@ -212,7 +212,7 @@ export function RichTextEditorDynamic({ content, onChange, placeholder = '' }: R
         setEditor(editorInstance);
         setIsLoaded(true);
       } catch (error) {
-        console.error('TipTap editor initialization failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('TipTap editor initialization failed:', error);
       }
     };
 

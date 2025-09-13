@@ -15,7 +15,7 @@ export default function SignupCompletePage() {
       // 自動ログインを実行してマイページにリダイレクト
       await autoLoginAction();
     } catch (error) {
-      console.error('Auto-login error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Auto-login error:', error);
       // エラーの場合はログインページにリダイレクト
       router.push('/candidate/auth/login?signup_complete=true');
     } finally {

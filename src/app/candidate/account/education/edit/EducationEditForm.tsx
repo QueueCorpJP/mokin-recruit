@@ -147,7 +147,7 @@ export default function CandidateEducationEditPage() {
     setIsSubmitting(true);
     try {
       // TODO: APIを通じてデータを保存
-      console.log('Saving education data:', data);
+      if (process.env.NODE_ENV === 'development') console.log('Saving education data:', data);
       router.push('/account/education');
     } catch {
       setIsSubmitting(false);

@@ -9,7 +9,7 @@ export async function getCompanyGroups() {
     // 現在のユーザーのセッションから会社情報を取得
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      if (process.env.NODE_ENV === 'development') console.error('Auth error:', authError);
       return [];
     }
 
@@ -21,7 +21,7 @@ export async function getCompanyGroups() {
       .single();
 
     if (userError || !companyUser) {
-      console.error('Error fetching company user:', userError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching company user:', userError);
       return [];
     }
     
@@ -37,7 +37,7 @@ export async function getCompanyGroups() {
       .eq('company_user_id', companyUser.id);
 
     if (error) {
-      console.error('Error fetching groups:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching groups:', error);
       return [];
     }
 
@@ -50,7 +50,7 @@ export async function getCompanyGroups() {
         label: group.group_name
       }));
   } catch (error) {
-    console.error('Error in getCompanyGroups:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getCompanyGroups:', error);
     return [];
   }
 }

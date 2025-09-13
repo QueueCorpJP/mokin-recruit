@@ -19,11 +19,11 @@ export async function processWithdrawal(withdrawalReason: string) {
   // 認証確認
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('退会処理の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('退会処理の認証エラー:', authResult.error);
     throw new Error('認証に失敗しました。');
   }
 
-  console.log('退会処理開始 - candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('退会処理開始 - candidate_id:', authResult.data.candidateId);
 
   try {
     // 候補者の情報を取得
@@ -34,7 +34,7 @@ export async function processWithdrawal(withdrawalReason: string) {
       .single();
 
     if (candidateError || !candidate) {
-      console.error('候補者情報の取得に失敗:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('候補者情報の取得に失敗:', candidateError);
       throw new Error('候補者情報の取得に失敗しました。');
     }
 
@@ -64,17 +64,17 @@ export async function processWithdrawal(withdrawalReason: string) {
       });
 
     if (withdrawnError) {
-      console.error('退会者リストへの記録に失敗:', withdrawnError);
+      if (process.env.NODE_ENV === 'development') console.error('退会者リストへの記録に失敗:', withdrawnError);
       throw new Error('退会処理中にエラーが発生しました。');
     }
 
     // TODO: 実際の退会処理（候補者アカウントの無効化など）をここで実行
     // 例: candidatesテーブルのis_activeをfalseにする、関連データの削除など
     
-    console.log('退会処理完了 - candidate_id:', authResult.data.candidateId, 'reason:', reasonLabel);
+    if (process.env.NODE_ENV === 'development') console.log('退会処理完了 - candidate_id:', authResult.data.candidateId, 'reason:', reasonLabel);
 
   } catch (error) {
-    console.error('退会処理でエラー発生:', error);
+    if (process.env.NODE_ENV === 'development') console.error('退会処理でエラー発生:', error);
     throw new Error('退会処理中にエラーが発生しました。');
   }
 

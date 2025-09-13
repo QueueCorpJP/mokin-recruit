@@ -26,7 +26,7 @@ export default function SignupSummaryPage() {
       });
       // リダイレクトはServer Action内で処理される
     } catch (error) {
-      console.error('Summary data save error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Summary data save error:', error);
       // エラーの場合は手動でページ遷移
       router.push('/signup/complete');
     } finally {

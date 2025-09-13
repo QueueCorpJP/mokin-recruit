@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import NewJobHeader from '@/app/company/job/NewJobHeader';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { CompanyGroup } from '@/app/company/job/types';
 import { LocationModal } from '@/app/company/job/LocationModal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -166,7 +166,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
 
           // 複製データ使用後は削除
           sessionStorage.removeItem('duplicateJobData');
-          console.log('複製データを復元しました');
+          if (process.env.NODE_ENV === 'development') console.log('複製データを復元しました');
           return;
         }
 
@@ -213,17 +213,17 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
           if (draftData.publicationType)
             setPublicationType(draftData.publicationType);
 
-          console.log('下書きデータを復元しました（旧形式）');
+          if (process.env.NODE_ENV === 'development') console.log('下書きデータを復元しました（旧形式）');
           // 旧形式の下書きデータを削除
           localStorage.removeItem(DRAFT_KEY);
         }
       } catch (error) {
-        console.error('データの復元に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('データの復元に失敗しました:', error);
         // エラー時はlocalStorageとsessionStorageの両方をクリア
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch (e) {
-          console.error('localStorage清理失敗:', e);
+          if (process.env.NODE_ENV === 'development') console.error('localStorage清理失敗:', e);
         }
         sessionStorage.removeItem('duplicateJobData');
       }
@@ -368,7 +368,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
         try {
           encodedImages = await encodeImagesToBase64(images);
         } catch (error) {
-          console.error('Image encoding failed for draft:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Image encoding failed for draft:', error);
           alert('画像の処理に失敗しました');
           return;
         }
@@ -416,11 +416,11 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
         // 求人一覧ページにリダイレクト
         router.push('/company/job');
       } else {
-        console.error('Draft save API Error:', result);
+        if (process.env.NODE_ENV === 'development') console.error('Draft save API Error:', result);
         alert(`下書き保存エラー: ${result.error}`);
       }
     } catch (error) {
-      console.error('Draft save Request Error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Draft save Request Error:', error);
       alert('下書き保存で通信エラーが発生しました');
     }
   };
@@ -476,7 +476,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
       try {
         encodedImages = await encodeImagesToBase64(images);
       } catch (error) {
-        console.error('Image encoding failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Image encoding failed:', error);
         alert('画像の処理に失敗しました');
         return;
       }
@@ -523,11 +523,11 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
         // 完了ページにリダイレクト
         router.push('/company/job/complete');
       } else {
-        console.error('API Error:', result);
+        if (process.env.NODE_ENV === 'development') console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
       }
     } catch (error) {
-      console.error('Request Error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Request Error:', error);
       alert('通信エラーが発生しました');
     }
   };

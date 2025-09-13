@@ -54,8 +54,8 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     .single();
 
   if (error) {
-    console.error('Error fetching company:', error);
-    console.error('Error details:', {
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching company:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error details:', {
       code: error.code,
       message: error.message,
       details: error.details

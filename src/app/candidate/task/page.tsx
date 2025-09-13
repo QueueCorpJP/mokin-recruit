@@ -80,7 +80,7 @@ async function getTaskData(): Promise<TaskData> {
     
     return taskData;
   } catch (error) {
-    console.error('Failed to fetch task data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch task data:', error);
     return {
       hasNewMessage: false,
       hasUnreadMessage: false,

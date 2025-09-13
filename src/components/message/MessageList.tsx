@@ -77,7 +77,7 @@ export function MessageList({
 
   const handleSearch = () => {
     // 検索ロジックを実装
-    console.log('検索実行:', { statusFilter, groupFilter, keyword });
+    if (process.env.NODE_ENV === 'development') console.log('検索実行:', { statusFilter, groupFilter, keyword });
   };
 
   const filteredMessages = messages.filter(message => {

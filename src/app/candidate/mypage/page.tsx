@@ -51,7 +51,7 @@ async function getTaskData(candidateId: string) {
     
     return tasks;
   } catch (error) {
-    console.error('Failed to fetch task data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch task data:', error);
     return [];
   }
 }
@@ -69,7 +69,7 @@ async function getRecentMessages(candidateId: string) {
       date: room.lastMessageTime || new Date().toISOString()
     }));
   } catch (error) {
-    console.error('Failed to fetch messages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to fetch messages:', error);
     return [];
   }
 }
@@ -77,20 +77,20 @@ async function getRecentMessages(candidateId: string) {
 
 // おすすめ求人取得用の関数（最適化版）
 async function getRecommendedJobsInternal(candidateId: string) {
-  console.log('🎯 [RECOMMENDED JOBS] Starting getRecommendedJobsInternal for candidate:', candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('🎯 [RECOMMENDED JOBS] Starting getRecommendedJobsInternal for candidate:', candidateId);
   
   try {
     const candidateRepo = new CandidateRepository();
     const candidate = await candidateRepo.findById(candidateId);
 
     if (!candidate) {
-      console.log('❌ [RECOMMENDED JOBS] Candidate not found:', candidateId);
+      if (process.env.NODE_ENV === 'development') console.log('❌ [RECOMMENDED JOBS] Candidate not found:', candidateId);
       return [];
     }
 
-    console.log('✅ [RECOMMENDED JOBS] Candidate found:', candidate.id);
+    if (process.env.NODE_ENV === 'development') console.log('✅ [RECOMMENDED JOBS] Candidate found:', candidate.id);
     const client = await getSupabaseServerClient();
-    console.log('✅ [RECOMMENDED JOBS] Supabase client created');
+    if (process.env.NODE_ENV === 'development') console.log('✅ [RECOMMENDED JOBS] Supabase client created');
     
     // 必要最小限のフィールドのみ取得
     let query: any = client
@@ -132,14 +132,14 @@ async function getRecommendedJobsInternal(candidateId: string) {
       .order('created_at', { ascending: false })
       .limit(5); // 5件に減らして初期ロードを高速化
 
-    console.log('📊 [RECOMMENDED JOBS] Query result:', { 
+    if (process.env.NODE_ENV === 'development') console.log('📊 [RECOMMENDED JOBS] Query result:', { 
       jobsCount: jobs?.length || 0, 
       error: error?.message,
       conditions: conditions.length
     });
 
     if (error || !jobs) {
-      console.error('❌ [RECOMMENDED JOBS] Failed to get jobs:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [RECOMMENDED JOBS] Failed to get jobs:', error);
       return [];
     }
 
@@ -156,10 +156,10 @@ async function getRecommendedJobsInternal(candidateId: string) {
       starred: false
     }));
 
-    console.log('🎉 [RECOMMENDED JOBS] Success! Transformed jobs:', transformedJobs.length);
+    if (process.env.NODE_ENV === 'development') console.log('🎉 [RECOMMENDED JOBS] Success! Transformed jobs:', transformedJobs.length);
     return transformedJobs;
   } catch (error) {
-    console.error('❌ [RECOMMENDED JOBS] Error in getRecommendedJobs:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ [RECOMMENDED JOBS] Error in getRecommendedJobs:', error);
     return [];
   }
 }

@@ -32,7 +32,7 @@ async function _getCompanyJobs(params: {
   search?: string;
 }, companyAccountId: string, supabase: any) {
   try {
-    console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
+    if (process.env.NODE_ENV === 'development') console.log('[_getCompanyJobs] Fetching company jobs data for company:', companyAccountId);
 
     // 基本クエリ：同じ会社アカウントの求人のみ（グループ情報もJOINで取得）
     let query = supabase
@@ -129,7 +129,7 @@ async function _getCompanyJobs(params: {
     const { data: jobs, error: jobsError } = await query;
 
     if (jobsError) {
-      console.error('Failed to fetch jobs:', {
+      if (process.env.NODE_ENV === 'development') console.error('Failed to fetch jobs:', {
         error: jobsError,
         message: jobsError.message,
         details: jobsError.details,
@@ -180,7 +180,7 @@ async function _getCompanyJobs(params: {
 
     return { success: true, data: formattedJobs };
   } catch (e: any) {
-    console.error('Company jobs error:', e);
+    if (process.env.NODE_ENV === 'development') console.error('Company jobs error:', e);
     return { success: false, error: e.message };
   }
 }
@@ -255,7 +255,7 @@ export async function createJob(data: any) {
         
         imageUrls = await Promise.all(uploadPromises);
       } catch (error) {
-        console.error('Image upload process failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Image upload process failed:', error);
         return { 
           success: false, 
           error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
@@ -336,13 +336,13 @@ export async function createJob(data: any) {
     const { data: insertResult, error } = await supabase.from('job_postings').insert([insertData]);
 
     if (error) {
-      console.error('Supabase insert error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Supabase insert error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true, data: insertResult };
   } catch (e: any) {
-    console.error('Job creation error:', e);
+    if (process.env.NODE_ENV === 'development') console.error('Job creation error:', e);
     return { success: false, error: e.message };
   }
 }
@@ -500,12 +500,12 @@ export async function updateJob(jobId: string, updateData: any) {
             base64Data = imageData;
             contentType = 'image/jpeg';
           } else {
-            console.error('Invalid image data structure:', imageData);
+            if (process.env.NODE_ENV === 'development') console.error('Invalid image data structure:', imageData);
             throw new Error('画像データの形式が正しくありません');
           }
 
           if (!base64Data) {
-            console.error('Missing base64Data in imageData:', imageData);
+            if (process.env.NODE_ENV === 'development') console.error('Missing base64Data in imageData:', imageData);
             throw new Error('画像データが見つかりません');
           }
 
@@ -546,7 +546,7 @@ export async function updateJob(jobId: string, updateData: any) {
           
           uploadedUrls = await Promise.all(uploadPromises);
         } catch (error) {
-          console.error('Image upload process failed:', error);
+          if (process.env.NODE_ENV === 'development') console.error('Image upload process failed:', error);
           return { 
             success: false, 
             error: `画像のアップロードに失敗しました: ${error instanceof Error ? error.message : String(error)}` 
@@ -951,7 +951,7 @@ export async function getCompanyJobs(params: {
 
     return await getCachedJobs(params, companyAccountId, supabase);
   } catch (error: any) {
-    console.error('getCompanyJobs error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('getCompanyJobs error:', error);
     return { success: false, error: error.message };
   }
 }
@@ -967,7 +967,7 @@ export async function revalidateCompanyJobs() {
     const { companyAccountId } = authResult.data;
     revalidateTag(`company-jobs-${companyAccountId}`);
   } catch (error) {
-    console.error('Failed to revalidate company jobs cache:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Failed to revalidate company jobs cache:', error);
   }
 }
 
@@ -980,9 +980,9 @@ export async function getCompanyGroups() {
   try {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
-    console.log('🔍 getCompanyGroups - Auth result:', authResult);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 getCompanyGroups - Auth result:', authResult);
     if (!authResult.success) {
-      console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
       return { success: false, error: authResult.error };
     }
 
@@ -1041,7 +1041,7 @@ export async function getCompanyGroups() {
 
     return result;
   } catch (e: any) {
-    console.error('Company groups error:', e);
+    if (process.env.NODE_ENV === 'development') console.error('Company groups error:', e);
     return { success: false, error: e.message };
   }
 }

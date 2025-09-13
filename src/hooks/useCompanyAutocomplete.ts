@@ -26,7 +26,7 @@ export function useCompanyAutocomplete(query: string, enabled = true) {
       } catch (err) {
         setError('企業検索に失敗しました');
         setSuggestions([]);
-        console.error('Company search error:', err);
+        if (process.env.NODE_ENV === 'development') console.error('Company search error:', err);
       } finally {
         setLoading(false);
       }

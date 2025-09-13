@@ -34,7 +34,7 @@ class PerformanceMonitor {
         navigationObserver.observe({ entryTypes: ['navigation'] });
         this.observers.push(navigationObserver);
       } catch (e) {
-        console.warn('Navigation timing observer not supported');
+        if (process.env.NODE_ENV === 'development') console.warn('Navigation timing observer not supported');
       }
 
       // Resource Timing
@@ -50,7 +50,7 @@ class PerformanceMonitor {
         resourceObserver.observe({ entryTypes: ['resource'] });
         this.observers.push(resourceObserver);
       } catch (e) {
-        console.warn('Resource timing observer not supported');
+        if (process.env.NODE_ENV === 'development') console.warn('Resource timing observer not supported');
       }
 
       // Largest Contentful Paint
@@ -63,7 +63,7 @@ class PerformanceMonitor {
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
         this.observers.push(lcpObserver);
       } catch (e) {
-        console.warn('LCP observer not supported');
+        if (process.env.NODE_ENV === 'development') console.warn('LCP observer not supported');
       }
 
       // First Input Delay
@@ -78,7 +78,7 @@ class PerformanceMonitor {
         fidObserver.observe({ entryTypes: ['first-input'] });
         this.observers.push(fidObserver);
       } catch (e) {
-        console.warn('FID observer not supported');
+        if (process.env.NODE_ENV === 'development') console.warn('FID observer not supported');
       }
 
       // Cumulative Layout Shift
@@ -95,7 +95,7 @@ class PerformanceMonitor {
         clsObserver.observe({ entryTypes: ['layout-shift'] });
         this.observers.push(clsObserver);
       } catch (e) {
-        console.warn('CLS observer not supported');
+        if (process.env.NODE_ENV === 'development') console.warn('CLS observer not supported');
       }
     }
   }
@@ -258,7 +258,7 @@ export function measureAsync<T>(
 
   return asyncFn().finally(() => {
     const duration = performance.now() - start;
-    console.log(`${name}: ${duration.toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') console.log(`${name}: ${duration.toFixed(2)}ms`);
   });
 }
 
@@ -266,7 +266,7 @@ export function measureSync<T>(name: string, syncFn: () => T): T {
   const start = performance.now();
   const result = syncFn();
   const duration = performance.now() - start;
-  console.log(`${name}: ${duration.toFixed(2)}ms`);
+  if (process.env.NODE_ENV === 'development') console.log(`${name}: ${duration.toFixed(2)}ms`);
   return result;
 }
 
@@ -277,7 +277,7 @@ export const performanceMonitor = new PerformanceMonitor();
 export function reportWebVitals(metric: WebVitalsMetric) {
   // 開発環境でのログ出力
   if (process.env.NODE_ENV === 'development') {
-    console.log(`${metric.name}: ${metric.value.toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') console.log(`${metric.name}: ${metric.value.toFixed(2)}ms`);
   }
 
   // プロダクション環境では分析サービスに送信

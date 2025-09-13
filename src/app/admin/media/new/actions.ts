@@ -160,7 +160,7 @@ export async function saveArticle(formData: FormData) {
     // redirect('/admin/media'); // モーダル表示のためリダイレクトを削除
     return { success: true, article };
   } catch (error) {
-    console.error('記事の保存に失敗:', error);
+    if (process.env.NODE_ENV === 'development') console.error('記事の保存に失敗:', error);
     throw error;
   }
 }
@@ -191,7 +191,7 @@ export async function uploadImageToSupabase(formData: FormData): Promise<{succes
       .upload(finalPath, file);
 
     if (uploadError) {
-      console.error('画像アップロードエラー:', uploadError);
+      if (process.env.NODE_ENV === 'development') console.error('画像アップロードエラー:', uploadError);
       return { success: false, error: 'ファイルのアップロードに失敗しました' };
     }
 
@@ -201,7 +201,7 @@ export async function uploadImageToSupabase(formData: FormData): Promise<{succes
 
     return { success: true, url: urlData.publicUrl };
   } catch (error) {
-    console.error('画像アップロードエラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('画像アップロードエラー:', error);
     return { success: false, error: 'サーバーエラーが発生しました' };
   }
 }

@@ -32,11 +32,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Starting fetchData...');
+        if (process.env.NODE_ENV === 'development') console.log('Starting fetchData...');
         
         // Fetch blocked companies
         const blockedSettings = await getBlockedCompanies();
-        console.log('Blocked companies result:', blockedSettings);
+        if (process.env.NODE_ENV === 'development') console.log('Blocked companies result:', blockedSettings);
         if (blockedSettings && blockedSettings.company_names) {
           const companies = blockedSettings.company_names.map(name => ({ name }));
           setBlockedCompanies(companies);
@@ -44,10 +44,10 @@ export default function SettingsPage() {
 
         // Fetch user settings
         const userSettingsData = await getUserSettings();
-        console.log('User settings data received:', userSettingsData);
+        if (process.env.NODE_ENV === 'development') console.log('User settings data received:', userSettingsData);
         setUserSettings(userSettingsData);
       } catch (error) {
-        console.error('設定の取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('設定の取得に失敗しました:', error);
       }
     };
 

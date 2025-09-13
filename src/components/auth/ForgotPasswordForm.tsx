@@ -96,7 +96,7 @@ export default function ForgotPasswordForm({
         );
       }
     } catch (error) {
-      console.error('Password reset request error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Password reset request error:', error);
       setSubmitStatus('error');
       setMessage(
         'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'

@@ -9,7 +9,7 @@ import { useFavoriteStatusQuery } from '@/hooks/useFavoriteApi';
 
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { LocationModal } from '@/app/company/job/LocationModal';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { X } from 'lucide-react';
 import { SelectInput } from '@/components/ui/select-input';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
@@ -129,7 +129,7 @@ function CandidateSearchClient({
                 setPagination(result.data.pagination);
               }
             } catch (error) {
-              console.error('Initial search error:', error);
+              if (process.env.NODE_ENV === 'development') console.error('Initial search error:', error);
             } finally {
               setLoading(false);
             }
@@ -175,7 +175,7 @@ function CandidateSearchClient({
         updateURL(conditions);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
@@ -223,11 +223,11 @@ function CandidateSearchClient({
         // お気に入り状態を再取得
         await refetchFavoriteStatus();
       } else {
-        console.error('お気に入り操作エラー:', response.error);
+        if (process.env.NODE_ENV === 'development') console.error('お気に入り操作エラー:', response.error);
         alert(response.error || 'お気に入り操作に失敗しました');
       }
     } catch (error) {
-      console.error('お気に入り操作エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入り操作エラー:', error);
       alert('ネットワークエラーが発生しました。インターネット接続を確認してください。');
     } finally {
       // ローディング状態を解除

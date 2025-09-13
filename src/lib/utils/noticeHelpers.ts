@@ -44,13 +44,13 @@ export const getPublishedNotices = unstable_cache(
         .limit(limit);
 
       if (error) {
-        console.error('Error fetching notices:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching notices:', error);
         return [];
       }
 
       return notices || [];
     } catch (error) {
-      console.error('Error in getPublishedNotices:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error in getPublishedNotices:', error);
       return [];
     }
   },
@@ -102,13 +102,13 @@ export const getNoticeById = unstable_cache(
         .single();
 
       if (error) {
-        console.error('Error fetching notice:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching notice:', error);
         return null;
       }
 
       return notice;
     } catch (error) {
-      console.error('Error in getNoticeById:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error in getNoticeById:', error);
       return null;
     }
   },

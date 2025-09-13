@@ -184,9 +184,9 @@ export default function CompanyDetailClient({
       //   companyId: companyId,
       //   isFavorite: isFavorite,
       // });
-      console.log('企業お気に入り切り替え:', { companyId, newFavoriteState });
+      if (process.env.NODE_ENV === 'development') console.log('企業お気に入り切り替え:', { companyId, newFavoriteState });
     } catch (error) {
-      console.error('お気に入りの切り替えに失敗しました:', error);
+      if (process.env.NODE_ENV === 'development') console.error('お気に入りの切り替えに失敗しました:', error);
       // エラーの場合は元の状態に戻す
       setIsFavorite(!newFavoriteState);
     }

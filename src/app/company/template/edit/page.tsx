@@ -32,17 +32,17 @@ export default async function TemplateEditPage({ searchParams }: TemplateEditPag
   let error: string | null = null;
   
   try {
-    console.log('📋 Fetching template data for ID:', templateId);
-    console.log('👤 Company user ID:', companyUser.id);
-    console.log('🏢 Company account ID:', companyUser.user_metadata?.company_account_id);
+    if (process.env.NODE_ENV === 'development') console.log('📋 Fetching template data for ID:', templateId);
+    if (process.env.NODE_ENV === 'development') console.log('👤 Company user ID:', companyUser.id);
+    if (process.env.NODE_ENV === 'development') console.log('🏢 Company account ID:', companyUser.user_metadata?.company_account_id);
 
     const [groups, template] = await Promise.all([
       getCompanyGroups(),
       getMessageTemplateById(templateId)
     ]);
     
-    console.log('📊 Groups result:', groups);
-    console.log('📝 Template result:', template);
+    if (process.env.NODE_ENV === 'development') console.log('📊 Groups result:', groups);
+    if (process.env.NODE_ENV === 'development') console.log('📝 Template result:', template);
     
     groupOptions = groups;
     
@@ -50,16 +50,16 @@ export default async function TemplateEditPage({ searchParams }: TemplateEditPag
       templateData = template.data;
     } else {
       error = template.error || 'テンプレートが見つかりません';
-      console.error('❌ Template fetch failed:', template.error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ Template fetch failed:', template.error);
     }
   } catch (err) {
     error = 'データの取得に失敗しました';
-    console.error('💥 Exception in data fetch:', err);
+    if (process.env.NODE_ENV === 'development') console.error('💥 Exception in data fetch:', err);
     groupOptions = [{ value: '', label: '未選択' }];
   }
 
   if (error) {
-    console.log('🔄 Redirecting due to error:', error);
+    if (process.env.NODE_ENV === 'development') console.log('🔄 Redirecting due to error:', error);
     redirect('/company/template');
   }
 

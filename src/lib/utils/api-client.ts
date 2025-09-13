@@ -1,3 +1,6 @@
+import { safeLog, maskObjectPII } from '@/lib/utils/pii-safe-logger';
+import { ERROR_CODES, createError } from '@/constants/error-codes';
+
 interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -144,7 +147,7 @@ export const getAuthInfo = async () => {
       user: session.user
     };
   } catch (error) {
-    console.warn('Failed to get Supabase session:', error);
+    safeLog('warn', 'Supabaseセッション取得失敗', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 };
@@ -319,10 +322,12 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResp
     });
     return await response.json();
   } catch (error) {
-    console.error('Failed to search jobs:', error);
+    const apiError = createError('API_001', '求人検索に失敗しました');
+    safeLog('error', '求人検索APIエラー', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -348,10 +353,12 @@ export async function getJobDetail(jobId: string): Promise<JobDetailResponse> {
 
     return await response.json();
   } catch (error) {
-    console.error('Failed to fetch job detail:', error);
+    safeLog('error', '求人詳細取得APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -404,10 +411,12 @@ export async function getFavorites(page: number = 1, limit: number = 20): Promis
 
     return await response.json();
   } catch (error) {
-    console.error('Failed to get favorites:', error);
+    safeLog('error', 'お気に入り取得APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -420,11 +429,11 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
     const authHeaders = getAuthHeaders();
     const userType = getCurrentUserType();
     
-    console.log('お気に入り追加API呼び出し:', {
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'お気に入り追加API呼び出し', {
       jobPostingId,
       userType,
       hasAuthHeaders: Object.keys(authHeaders).length > 0,
-      authHeaders: Object.keys(authHeaders)
+      authHeaderCount: Object.keys(authHeaders).length
     });
 
     // ユーザータイプに応じてAPIエンドポイントを決定
@@ -434,16 +443,20 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
       endpoint = '/api/candidate/favorite';
     } else if (resolvedUserType === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
-      console.warn('企業ユーザー用のお気に入り機能は未実装です。');
-      return {
-        success: false,
-        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
-      };
+      safeLog('warn', '企業ユーザー用のお気に入り機能は未実装です');
+          const apiError = createError('API_001', '企業ユーザーはお気に入り機能をご利用いただけません。');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     } else {
-      return {
-        success: false,
-        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
-      };
+          const apiError = createError('AUTH_001', 'ログインが必要です。適切なユーザータイプでログインしてください。');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const response = await fetch(endpoint, {
@@ -458,17 +471,19 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
       }),
     });
 
-    console.log('API応答ステータス:', response.status);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'API応答ステータス', { status: response.status });
     
     const result = await response.json();
-    console.log('API応答内容:', result);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'API応答受信', { result: maskObjectPII(result, ['email', 'password', 'phone', 'userId']) });
     
     return result;
   } catch (error) {
-    console.error('Failed to add to favorites:', error);
+    safeLog('error', 'お気に入り追加APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -481,7 +496,7 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
     const authHeaders = getAuthHeaders();
     const userType = getCurrentUserType();
 
-    console.log('お気に入り削除API呼び出し:', {
+    if (process.env.NODE_ENV === 'development') safeLog('debug', 'お気に入り削除API呼び出し', {
       jobPostingId,
       userType,
       hasAuthHeaders: Object.keys(authHeaders).length > 0
@@ -494,16 +509,20 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
       endpoint = `/api/candidate/favorite?job_posting_id=${jobPostingId}`;
     } else if (resolvedUserType2 === 'company_user') {
       // 企業ユーザーの場合はお気に入り機能を無効化
-      console.warn('企業ユーザー用のお気に入り機能は未実装です。');
-      return {
-        success: false,
-        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
-      };
+      safeLog('warn', '企業ユーザー用のお気に入り機能は未実装です');
+          const apiError = createError('API_001', '企業ユーザーはお気に入り機能をご利用いただけません。');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     } else {
-      return {
-        success: false,
-        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
-      };
+          const apiError = createError('AUTH_001', 'ログインが必要です。適切なユーザータイプでログインしてください。');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const response = await fetch(endpoint, {
@@ -516,14 +535,16 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
     });
 
     const result = await response.json();
-    console.log('削除API応答:', result);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '削除API応答受信', { result: maskObjectPII(result, ['email', 'password', 'phone', 'userId']) });
     
     return result;
   } catch (error) {
-    console.error('Failed to remove from favorites:', error);
+    safeLog('error', 'お気に入り削除APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -553,7 +574,7 @@ export async function checkFavoriteStatus(jobPostingIds: string[]): Promise<Reco
 
     return result;
   } catch (error) {
-    console.error('Failed to check favorite status:', error);
+    safeLog('error', 'お気に入り状態確認APIエラー', { error: error instanceof Error ? error.message : String(error) });
     return {};
   }
 }
@@ -600,10 +621,12 @@ export async function submitApplication(applicationData: ApplicationRequest): Pr
 
     return await response.json();
   } catch (error) {
-    console.error('Failed to submit application:', error);
+    safeLog('error', '応募APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }
@@ -623,10 +646,12 @@ export async function getApplicationHistory(): Promise<ApplicationResponse> {
 
     return await response.json();
   } catch (error) {
-    console.error('Failed to fetch application history:', error);
+    safeLog('error', '応募履歴取得APIエラー', { error: error instanceof Error ? error.message : String(error) });
+        const apiError = createError('API_002', 'ネットワークエラーが発生しました');
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: apiError.message,
+      code: apiError.code
     };
   }
 }

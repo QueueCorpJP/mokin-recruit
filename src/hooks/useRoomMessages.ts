@@ -33,7 +33,7 @@ export function useRoomMessages(roomId: string | undefined) {
         const data = await response.json();
         setMessages(data.messages || []);
       } catch (err) {
-        console.error('Error fetching room messages:', err);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', err);
         setError(err instanceof Error ? err.message : 'メッセージの取得に失敗しました');
         setMessages([]);
       } finally {

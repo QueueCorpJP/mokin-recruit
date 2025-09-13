@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { updateJob } from '../../actions';
 import AttentionBanner from '@/components/ui/AttentionBanner';
 
@@ -80,7 +80,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
         return;
       }
     } catch (error) {
-      console.error('Failed to load edit data:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to load edit data:', error);
       router.push(`/company/job/${jobId}/edit`);
       return;
     }
@@ -110,7 +110,7 @@ export default function JobScopeClient({ jobData, jobId }: JobScopeClientProps) 
         setShowModal(true);
       }
     } catch (error) {
-      console.error('Error updating job:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating job:', error);
       setModalMessage('更新に失敗しました');
       setShowModal(true);
     } finally {

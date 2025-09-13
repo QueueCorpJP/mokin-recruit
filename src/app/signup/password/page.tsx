@@ -153,7 +153,7 @@ export default function SignupPasswordPage() {
         setError(result.error || 'パスワードの設定に失敗しました。');
       }
     } catch (error) {
-      console.error('Set password error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Set password error:', error);
       setError(
         'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
       );

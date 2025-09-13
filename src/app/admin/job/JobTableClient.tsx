@@ -119,7 +119,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
       setDeleteModalJobId(null);
     } catch (error) {
-      console.error('Delete error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Delete error:', error);
       alert('削除に失敗しました');
     } finally {
       setIsDeleting(false);

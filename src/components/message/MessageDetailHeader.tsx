@@ -43,7 +43,7 @@ export const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
 
   const handleDeclineConfirm = () => {
     // TODO: 辞退処理を実装
-    console.log('辞退処理を実行');
+    if (process.env.NODE_ENV === 'development') console.log('辞退処理を実行');
     setIsDeclineModalOpen(false);
   };
 

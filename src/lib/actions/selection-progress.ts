@@ -92,7 +92,7 @@ export async function updateSelectionProgressAction({
     }
 
     if (response.error) {
-      console.error('進捗更新エラー:', response.error);
+      if (process.env.NODE_ENV === 'development') console.error('進捗更新エラー:', response.error);
       return {
         success: false,
         error: response.error.message,
@@ -105,7 +105,7 @@ export async function updateSelectionProgressAction({
     };
 
   } catch (error) {
-    console.error('進捗更新エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('進捗更新エラー:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : '不明なエラーが発生しました',
@@ -136,7 +136,7 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
-      console.error('進捗取得エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('進捗取得エラー:', error);
       return {
         success: false,
         error: error.message,
@@ -156,7 +156,7 @@ export async function getSelectionProgressAction(candidateId: string, companyGro
     };
 
   } catch (error) {
-    console.error('進捗取得エラー:', error);
+    if (process.env.NODE_ENV === 'development') console.error('進捗取得エラー:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : '不明なエラーが発生しました',

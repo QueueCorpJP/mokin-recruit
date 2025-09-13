@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, startTransition } from 'react';
 import { type User } from '@supabase/supabase-js';
+import { safeLog, maskEmail } from '@/lib/utils/pii-safe-logger';
 
 const createClientLazy = () => import('@/lib/supabase/client').then(mod => mod.createClient);
 
@@ -30,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const createClient = await createClientLazy();
         if (!createClient) {
           if (!mounted) return;
-          console.error('🔍 [AUTH CONTEXT] Failed to load Supabase client');
+          safeLog('error', '[AUTH CONTEXT] Failed to load Supabase client');
           startTransition(() => {
             setUser(null);
             setAccessToken(null);
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const supabase = createClient();
         if (!supabase) {
           if (!mounted) return;
-          console.error('🔍 [AUTH CONTEXT] Failed to create Supabase instance');
+          safeLog('error', '[AUTH CONTEXT] Failed to create Supabase instance');
           startTransition(() => {
             setUser(null);
             setAccessToken(null);
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             subscription = authSubscription;
           } catch (error) {
             if (mounted) {
-              console.error('🔍 [AUTH CONTEXT] Auth listener setup error:', error);
+              safeLog('error', '[AUTH CONTEXT] Auth listener setup error', { error: error instanceof Error ? error.message : String(error) });
             }
           }
         };
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         startTransition(() => {
           if (error) {
-            console.error('🔍 [AUTH CONTEXT] Session error:', error);
+            safeLog('error', '[AUTH CONTEXT] Session error', { error: error instanceof Error ? error.message : String(error) });
             setUser(null);
             setAccessToken(null);
           } else if (session?.user) {
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } catch (error) {
         if (!mounted) return;
-        console.error('🔍 [AUTH CONTEXT] Auth initialization error:', error);
+        safeLog('error', '[AUTH CONTEXT] Auth initialization error', { error: error instanceof Error ? error.message : String(error) });
         startTransition(() => {
           setUser(null);
           setAccessToken(null);
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           subscription.unsubscribe();
         } catch (error) {
-          console.error('🔍 [AUTH CONTEXT] Cleanup error:', error);
+          safeLog('error', '[AUTH CONTEXT] Cleanup error', { error: error instanceof Error ? error.message : String(error) });
         }
       }
     };
@@ -142,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { success: false, error: result.error || 'ログインに失敗しました' };
     } catch (error) {
-      console.error('Sign in error:', error);
+      safeLog('error', 'Sign in error', { error: error instanceof Error ? error.message : String(error) });
       return { success: false, error: 'ネットワークエラーが発生しました' };
     }
   };
@@ -152,18 +153,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Server Actionを使用
       const { logoutAction } = await import('@/lib/auth/actions');
       await logoutAction();
-      
+
       // クライアントサイドの状態をクリア
       const createClient = await createClientLazy();
       if (createClient) {
         const supabase = createClient();
         await supabase.auth.signOut();
       }
-      
+
       setUser(null);
       setAccessToken(null);
     } catch (error) {
-      console.error('Sign out error:', error);
+      safeLog('error', 'Sign out error', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -183,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('Refresh auth error:', error);
+      safeLog('error', 'Refresh auth error', { error: error instanceof Error ? error.message : String(error) });
     }
   };
   

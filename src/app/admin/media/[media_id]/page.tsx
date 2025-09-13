@@ -38,7 +38,7 @@ export default function AdminMediaDetailPage() {
         setArticle(fetchedArticle);
         setError(null);
       } catch (err) {
-        console.error('記事の取得に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('記事の取得に失敗:', err);
         setError('記事の読み込みに失敗しました');
       } finally {
         setLoading(false);

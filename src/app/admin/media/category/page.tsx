@@ -81,7 +81,7 @@ export default function CategoryPage() {
 
       setCategories(categoriesWithCount);
     } catch (err) {
-      console.error('カテゴリの取得に失敗:', err);
+      if (process.env.NODE_ENV === 'development') console.error('カテゴリの取得に失敗:', err);
       setError(err instanceof Error ? err.message : 'カテゴリの取得に失敗しました');
     } finally {
       setDataLoading(false);
@@ -105,7 +105,7 @@ export default function CategoryPage() {
         // リストを再取得
         fetchCategories();
       } catch (err) {
-        console.error('カテゴリの更新に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('カテゴリの更新に失敗:', err);
         setError(err instanceof Error ? err.message : 'カテゴリの更新に失敗しました');
       }
     }
@@ -143,7 +143,7 @@ export default function CategoryPage() {
         // リストを再取得
         fetchCategories();
       } catch (err) {
-        console.error('カテゴリの削除に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('カテゴリの削除に失敗:', err);
         setError(err instanceof Error ? err.message : 'カテゴリの削除に失敗しました');
       }
     }
@@ -173,7 +173,7 @@ export default function CategoryPage() {
         // リストを再取得
         fetchCategories();
       } catch (err) {
-        console.error('カテゴリの作成に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('カテゴリの作成に失敗:', err);
         setError(err instanceof Error ? err.message : 'カテゴリの作成に失敗しました');
       }
     }

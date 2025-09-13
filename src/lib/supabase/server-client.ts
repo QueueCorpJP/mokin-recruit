@@ -54,7 +54,7 @@ export async function getSupabaseServerClient() {
             });
           } catch (error) {
             // Ignore cookie setting errors in Server Actions
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -138,7 +138,7 @@ export async function withSupabaseClient<T>(
     const data = await handler(supabase);
     return { success: true, data };
   } catch (error) {
-    console.error('Supabase operation failed:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Supabase operation failed:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : '操作に失敗しました'

@@ -25,11 +25,11 @@ export async function saveNotificationSettings(formData: FormData) {
   // Use custom auth system instead of Supabase auth
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('通知設定保存の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('通知設定保存の認証エラー:', authResult.error);
     throw new Error(authResult.error);
   }
 
-  console.log('Saving notification settings for candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Saving notification settings for candidate_id:', authResult.data.candidateId);
 
   const settings = {
     scout_notification: scoutNotification as 'receive' | 'not-receive',
@@ -52,7 +52,7 @@ export async function saveNotificationSettings(formData: FormData) {
       .eq('candidate_id', authResult.data.candidateId);
 
     if (updateError) {
-      console.error('通知設定の更新に失敗しました:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('通知設定の更新に失敗しました:', updateError);
       throw new Error('通知設定の更新に失敗しました');
     }
   } else {
@@ -65,7 +65,7 @@ export async function saveNotificationSettings(formData: FormData) {
       });
 
     if (insertError) {
-      console.error('通知設定の保存に失敗しました:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('通知設定の保存に失敗しました:', insertError);
       throw new Error('通知設定の保存に失敗しました');
     }
   }
@@ -79,11 +79,11 @@ export async function getNotificationSettings(): Promise<NotificationSettings | 
   
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('通知設定取得の認証エラー:', authResult.error);
+    if (process.env.NODE_ENV === 'development') console.error('通知設定取得の認証エラー:', authResult.error);
     return null;
   }
 
-  console.log('Getting notification settings for candidate_id:', authResult.data.candidateId);
+  if (process.env.NODE_ENV === 'development') console.log('Getting notification settings for candidate_id:', authResult.data.candidateId);
 
   const { data, error } = await supabase
     .from('notification_settings')
@@ -92,7 +92,7 @@ export async function getNotificationSettings(): Promise<NotificationSettings | 
     .single();
 
   if (error) {
-    console.error('通知設定の取得に失敗しました:', error);
+    if (process.env.NODE_ENV === 'development') console.error('通知設定の取得に失敗しました:', error);
     
     // Try with string conversion
     const { data: dataStr, error: errorStr } = await supabase
@@ -102,14 +102,14 @@ export async function getNotificationSettings(): Promise<NotificationSettings | 
       .single();
     
     if (errorStr) {
-      console.error('String変換でも通知設定の取得に失敗しました:', errorStr);
+      if (process.env.NODE_ENV === 'development') console.error('String変換でも通知設定の取得に失敗しました:', errorStr);
       return null;
     } else {
-      console.log('String変換で通知設定を取得:', dataStr);
+      if (process.env.NODE_ENV === 'development') console.log('String変換で通知設定を取得:', dataStr);
       return dataStr;
     }
   }
 
-  console.log('通知設定を取得:', data);
+  if (process.env.NODE_ENV === 'development') console.log('通知設定を取得:', data);
   return data;
 }

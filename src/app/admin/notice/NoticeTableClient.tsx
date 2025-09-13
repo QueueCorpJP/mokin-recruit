@@ -140,11 +140,11 @@ export default function NoticePageClient({
           setShowDeletedModal(true);
           setNotices(notices.filter(a => a.id !== noticeToDelete.id));
         } else {
-          console.error('削除に失敗しました:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('削除に失敗しました:', result.error);
           alert(`削除に失敗しました: ${result.error}`);
         }
       } catch (error) {
-        console.error('削除エラー:', error);
+        if (process.env.NODE_ENV === 'development') console.error('削除エラー:', error);
         alert('削除中にエラーが発生しました');
       }
     }

@@ -15,7 +15,7 @@ export async function deleteBlockedCompany(candidateId: string, companyName: str
       .single();
     
     if (fetchError) {
-      console.error('Error fetching blocked companies:', fetchError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching blocked companies:', fetchError);
       return { success: false, error: 'ブロック企業データの取得に失敗しました' };
     }
     
@@ -36,7 +36,7 @@ export async function deleteBlockedCompany(candidateId: string, companyName: str
         .eq('candidate_id', candidateId);
         
       if (deleteError) {
-        console.error('Error deleting blocked company record:', deleteError);
+        if (process.env.NODE_ENV === 'development') console.error('Error deleting blocked company record:', deleteError);
         return { success: false, error: 'ブロック企業レコードの削除に失敗しました' };
       }
     } else {
@@ -50,7 +50,7 @@ export async function deleteBlockedCompany(candidateId: string, companyName: str
         .eq('candidate_id', candidateId);
         
       if (updateError) {
-        console.error('Error updating blocked companies:', updateError);
+        if (process.env.NODE_ENV === 'development') console.error('Error updating blocked companies:', updateError);
         return { success: false, error: 'ブロック企業の更新に失敗しました' };
       }
     }
@@ -60,7 +60,7 @@ export async function deleteBlockedCompany(candidateId: string, companyName: str
     
     return { success: true };
   } catch (error) {
-    console.error('Error in deleteBlockedCompany:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in deleteBlockedCompany:', error);
     return { success: false, error: 'システムエラーが発生しました' };
   }
 }
@@ -77,7 +77,7 @@ export async function addBlockedCompany(candidateId: string, companyName: string
       .single();
     
     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('Error fetching blocked companies:', fetchError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching blocked companies:', fetchError);
       return { success: false, error: 'ブロック企業データの取得に失敗しました' };
     }
     
@@ -99,7 +99,7 @@ export async function addBlockedCompany(candidateId: string, companyName: string
         .eq('candidate_id', candidateId);
         
       if (updateError) {
-        console.error('Error updating blocked companies:', updateError);
+        if (process.env.NODE_ENV === 'development') console.error('Error updating blocked companies:', updateError);
         return { success: false, error: 'ブロック企業の追加に失敗しました' };
       }
     } else {
@@ -114,7 +114,7 @@ export async function addBlockedCompany(candidateId: string, companyName: string
         });
         
       if (insertError) {
-        console.error('Error inserting blocked company:', insertError);
+        if (process.env.NODE_ENV === 'development') console.error('Error inserting blocked company:', insertError);
         return { success: false, error: 'ブロック企業の追加に失敗しました' };
       }
     }
@@ -124,7 +124,7 @@ export async function addBlockedCompany(candidateId: string, companyName: string
     
     return { success: true };
   } catch (error) {
-    console.error('Error in addBlockedCompany:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in addBlockedCompany:', error);
     return { success: false, error: 'システムエラーが発生しました' };
   }
 }

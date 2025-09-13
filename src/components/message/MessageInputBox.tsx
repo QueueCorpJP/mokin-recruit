@@ -63,31 +63,31 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         
         // ファイルがある場合はStorageにアップロード
         if (attachedFiles.length > 0) {
-          console.log('🔍 [MESSAGE INPUT DEBUG] Starting file upload:', {
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE INPUT DEBUG] Starting file upload:', {
             candidateId,
             fileCount: attachedFiles.length,
             files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
           });
           
           if (!candidateId) {
-            console.error('🔍 [MESSAGE INPUT DEBUG] candidateId is missing!');
+            if (process.env.NODE_ENV === 'development') console.error('🔍 [MESSAGE INPUT DEBUG] candidateId is missing!');
             showToast('ユーザーIDが取得できませんでした。ページを再読み込みしてください。', 'error');
             return;
           }
           
           const uploadResults = await uploadMultipleFiles(attachedFiles, candidateId, userType);
-          console.log('🔍 [MESSAGE INPUT DEBUG] Upload results received:', uploadResults);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE INPUT DEBUG] Upload results received:', uploadResults);
           
           fileUrls = uploadResults
             .filter(result => !result.error)
             .map(result => result.url);
           
-          console.log('🔍 [MESSAGE INPUT DEBUG] Filtered file URLs:', fileUrls);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [MESSAGE INPUT DEBUG] Filtered file URLs:', fileUrls);
           
           // エラーがあった場合はユーザーに通知
           const errors = uploadResults.filter(result => result.error);
           if (errors.length > 0) {
-            console.error('🔍 [MESSAGE INPUT DEBUG] File upload errors:', errors);
+            if (process.env.NODE_ENV === 'development') console.error('🔍 [MESSAGE INPUT DEBUG] File upload errors:', errors);
             // ユーザーフレンドリーなエラーメッセージを表示
             showToast('ファイルのアップロードに失敗しました。ファイルの合計サイズは5MB以下にしてください。', 'error');
             // エラーがある場合は送信を停止
@@ -96,7 +96,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
           
           // すべてのファイルがアップロードに成功しているか確認
           if (fileUrls.length !== attachedFiles.length) {
-            console.error('🔍 [MESSAGE INPUT DEBUG] Mismatch between uploaded files and attached files:', {
+            if (process.env.NODE_ENV === 'development') console.error('🔍 [MESSAGE INPUT DEBUG] Mismatch between uploaded files and attached files:', {
               attachedCount: attachedFiles.length,
               uploadedCount: fileUrls.length
             });
@@ -117,7 +117,7 @@ export const MessageInputBox: React.FC<MessageInputBoxProps> = ({
         }
         setCurrentLines(1);
       } catch (error) {
-        console.error('Send message error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Send message error:', error);
         showToast('メッセージの送信に失敗しました', 'error');
       } finally {
         setIsUploading(false);

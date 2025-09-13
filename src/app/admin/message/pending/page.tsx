@@ -45,7 +45,7 @@ async function fetchNGKeywords(): Promise<string[]> {
     .eq('is_active', true);
     
   if (error) {
-    console.error('Error fetching NG keywords:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching NG keywords:', error);
     return [];
   }
   
@@ -107,14 +107,14 @@ async function fetchPendingMessages(
   ]);
   
   if (ngKeywords.length === 0) {
-    console.log('No NG keywords found');
+    if (process.env.NODE_ENV === 'development') console.log('No NG keywords found');
     return [];
   }
   
   const { data: rooms, error } = roomsResult;
 
   if (error) {
-    console.error('Error fetching rooms:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching rooms:', error);
     return [];
   }
 

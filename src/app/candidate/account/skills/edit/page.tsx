@@ -107,7 +107,7 @@ export default function CandidateSkillsEditPage() {
           });
         }
       } catch (error) {
-        console.error('初期データの取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('初期データの取得に失敗しました:', error);
       } finally {
         setIsLoading(false);
       }
@@ -131,11 +131,11 @@ export default function CandidateSkillsEditPage() {
       if (result.success) {
         router.push('/candidate/account/skills');
       } else {
-        console.error('更新エラー:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('更新エラー:', result.error);
         alert('更新に失敗しました。もう一度お試しください。');
       }
     } catch (error) {
-      console.error('送信エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('送信エラー:', error);
       alert('更新に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);

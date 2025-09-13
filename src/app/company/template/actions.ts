@@ -19,34 +19,34 @@ export interface MessageTemplate {
 // メッセージテンプレート一覧を取得
 export async function getMessageTemplates(limit: number = 50, offset: number = 0) {
   try {
-    console.log('🔍 Starting getMessageTemplates function');
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Starting getMessageTemplates function');
     
     // より厳密な企業認証を使用
     const authResult = await requireCompanyAuthForAction();
-    console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
+    if (process.env.NODE_ENV === 'development') console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
     
     if (!authResult.success) {
-      console.log('❌ Authentication failed');
+      if (process.env.NODE_ENV === 'development') console.log('❌ Authentication failed');
       return { success: false, error: '認証が必要です', data: [] };
     }
     
     const { companyAccountId, companyUserId } = authResult.data;
-    console.log('🏢 Company Account ID:', companyAccountId);
-    console.log('👤 Company User ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('🏢 Company Account ID:', companyAccountId);
+    if (process.env.NODE_ENV === 'development') console.log('👤 Company User ID:', companyUserId);
 
     const supabase = await createClient();
-    console.log('✅ Supabase client created');
+    if (process.env.NODE_ENV === 'development') console.log('✅ Supabase client created');
 
     // 現在の認証情報を確認
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('🔐 Current auth user:', user ? {
+    if (process.env.NODE_ENV === 'development') console.log('🔐 Current auth user:', user ? {
       id: user.id,
       email: user.email,
       user_metadata: user.user_metadata
     } : 'not authenticated');
     
     if (userError) {
-      console.log('❌ User auth error:', userError);
+      if (process.env.NODE_ENV === 'development') console.log('❌ User auth error:', userError);
     }
 
     // 企業のメッセージテンプレートを取得（RLSで自動的にアクセス制御）
@@ -65,19 +65,19 @@ export async function getMessageTemplates(limit: number = 50, offset: number = 0
       .range(offset, offset + limit - 1);
 
     // RLS依存なのでcompany_idフィルターは削除
-    console.log('🔎 Using RLS for data access control (no manual company_id filter)');
+    if (process.env.NODE_ENV === 'development') console.log('🔎 Using RLS for data access control (no manual company_id filter)');
 
-    console.log('📡 Executing Supabase query...');
+    if (process.env.NODE_ENV === 'development') console.log('📡 Executing Supabase query...');
     const { data: templates, error } = await query;
     
-    console.log('📊 Query result:', {
+    if (process.env.NODE_ENV === 'development') console.log('📊 Query result:', {
       templates_count: templates?.length || 0,
       error: error || 'none',
       templates: templates
     });
 
     if (error) {
-      console.error('❌ Error fetching message templates:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ Error fetching message templates:', error);
       return { 
         success: false, 
         error: 'メッセージテンプレートの取得に失敗しました', 
@@ -85,9 +85,9 @@ export async function getMessageTemplates(limit: number = 50, offset: number = 0
       };
     }
 
-    console.log('🔄 Processing templates data...');
+    if (process.env.NODE_ENV === 'development') console.log('🔄 Processing templates data...');
     const formattedTemplates: MessageTemplate[] = templates?.map(template => {
-      console.log('📝 Processing template:', {
+      if (process.env.NODE_ENV === 'development') console.log('📝 Processing template:', {
         id: template.id,
         template_name: template.template_name,
         group_id: template.group_id,
@@ -107,13 +107,13 @@ export async function getMessageTemplates(limit: number = 50, offset: number = 0
       };
     }) || [];
 
-    console.log('✅ Formatted templates count:', formattedTemplates.length);
+    if (process.env.NODE_ENV === 'development') console.log('✅ Formatted templates count:', formattedTemplates.length);
     return { 
       success: true, 
       data: formattedTemplates
     };
   } catch (error) {
-    console.error('💥 Exception in getMessageTemplates:', error);
+    if (process.env.NODE_ENV === 'development') console.error('💥 Exception in getMessageTemplates:', error);
     return { success: false, error: 'メッセージテンプレートの取得に失敗しました', data: [] };
   }
 }
@@ -150,13 +150,13 @@ export async function deleteMessageTemplate(templateId: string) {
       .eq('id', templateId);
 
     if (deleteError) {
-      console.error('Error deleting message template:', deleteError);
+      if (process.env.NODE_ENV === 'development') console.error('Error deleting message template:', deleteError);
       return { success: false, error: 'テンプレートの削除に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in deleteMessageTemplate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in deleteMessageTemplate:', error);
     return { success: false, error: 'テンプレートの削除に失敗しました' };
   }
 }
@@ -200,13 +200,13 @@ export async function updateMessageTemplateName(templateId: string, newName: str
       .eq('id', templateId);
 
     if (updateError) {
-      console.error('Error updating message template name:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating message template name:', updateError);
       return { success: false, error: 'テンプレート名の更新に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in updateMessageTemplateName:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in updateMessageTemplateName:', error);
     return { success: false, error: 'テンプレート名の更新に失敗しました' };
   }
 }
@@ -238,11 +238,11 @@ export async function updateMessageTemplateSavedStatus(templateId: string, isSav
 
     // 保存状態を更新 (message_templatesテーブルにis_savedカラムがない場合はスキップ)
     // 今回はis_savedカラムがないため、この関数は何もしない
-    console.log('ℹ️ message_templates table does not have is_saved column, skipping update');
+    if (process.env.NODE_ENV === 'development') console.log('ℹ️ message_templates table does not have is_saved column, skipping update');
 
     return { success: true };
   } catch (error) {
-    console.error('Error in updateMessageTemplateSavedStatus:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in updateMessageTemplateSavedStatus:', error);
     return { success: false, error: '保存状態の更新に失敗しました' };
   }
 }
@@ -272,7 +272,7 @@ export async function getMessageTemplateById(templateId: string) {
       .single();
 
     if (error || !template) {
-      console.error('Error fetching message template:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching message template:', error);
       return { success: false, error: 'テンプレートが見つかりません' };
     }
 
@@ -285,7 +285,7 @@ export async function getMessageTemplateById(templateId: string) {
       }
     };
   } catch (error) {
-    console.error('Error in getMessageTemplateById:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getMessageTemplateById:', error);
     return { success: false, error: 'テンプレートの取得に失敗しました' };
   }
 }
@@ -355,7 +355,7 @@ export async function updateMessageTemplate(templateId: string, data: MessageTem
       .eq('id', templateId);
 
     if (updateError) {
-      console.error('Error updating message template:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating message template:', updateError);
       return { success: false, error: 'メッセージテンプレートの更新に失敗しました' };
     }
 
@@ -364,7 +364,7 @@ export async function updateMessageTemplate(templateId: string, data: MessageTem
     
     return { success: true };
   } catch (error) {
-    console.error('Error in updateMessageTemplate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in updateMessageTemplate:', error);
     return { success: false, error: 'メッセージテンプレートの更新に失敗しました' };
   }
 }

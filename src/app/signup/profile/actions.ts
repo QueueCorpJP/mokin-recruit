@@ -57,7 +57,7 @@ export async function saveProfileData(data: ProfileFormData & { userId?: string 
       .eq('id', userId);
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Profile update error:', updateError);
       return { 
         success: false, 
         error: 'プロフィール情報の保存に失敗しました。' 
@@ -72,7 +72,7 @@ export async function saveProfileData(data: ProfileFormData & { userId?: string 
     };
 
   } catch (error) {
-    console.error('Save profile error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Save profile error:', error);
     return { 
       success: false, 
       error: 'システムエラーが発生しました。' 

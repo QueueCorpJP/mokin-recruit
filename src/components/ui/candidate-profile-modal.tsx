@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from './mo-dal';
+import { Modal } from './Modal';
 import Link from 'next/link';
 import styles from './candidate-profile-modal.module.css';
 

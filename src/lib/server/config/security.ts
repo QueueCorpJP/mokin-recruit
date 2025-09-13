@@ -18,7 +18,7 @@ export class SecurityConfig implements ISecurityConfig {
     // 本番環境でのデフォルト値警告
     if (process.env.NODE_ENV === 'production') {
       if (!process.env.SESSION_SECRET) {
-        console.warn('⚠️  SESSION_SECRET not set in production environment');
+        if (process.env.NODE_ENV === 'development') console.warn('⚠️  SESSION_SECRET not set in production environment');
       }
     }
   }

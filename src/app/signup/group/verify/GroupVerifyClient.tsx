@@ -49,7 +49,7 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
         router.push('/company/auth/login?signup=success&message=' + encodeURIComponent('グループ参加が完了しました。ログインしてください。'));
       }
     } catch (error) {
-      console.error('認証エラー:', error);
+      if (process.env.NODE_ENV === 'development') console.error('認証エラー:', error);
       setMessage({ type: 'error', text: 'システムエラーが発生しました。' });
     } finally {
       setIsSubmitting(false);

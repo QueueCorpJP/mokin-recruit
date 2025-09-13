@@ -180,7 +180,7 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      console.log('Generated HTML:', html);
+      if (process.env.NODE_ENV === 'development') console.log('Generated HTML:', html);
       onChange(html);
     },
   });
@@ -255,11 +255,11 @@ export function RichTextEditor({ content, onChange, placeholder = '' }: RichText
               })
               .run();
           } else {
-            console.error('画像アップロードに失敗:', result.error);
+            if (process.env.NODE_ENV === 'development') console.error('画像アップロードに失敗:', result.error);
             alert('画像のアップロードに失敗しました: ' + (result.error || '不明なエラー'));
           }
         } catch (error) {
-          console.error('画像アップロードエラー:', error);
+          if (process.env.NODE_ENV === 'development') console.error('画像アップロードエラー:', error);
           alert('画像のアップロードに失敗しました');
         }
       }

@@ -35,7 +35,7 @@ export default function ScoutSettingPage() {
           setOriginalStatus(settings.scout_status);
         }
       } catch (error) {
-        console.error('設定の取得に失敗しました:', error);
+        if (process.env.NODE_ENV === 'development') console.error('設定の取得に失敗しました:', error);
       }
     };
 

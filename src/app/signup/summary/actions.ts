@@ -11,7 +11,7 @@ interface SummaryFormData {
 }
 
 export async function saveSummaryData(formData: SummaryFormData) {
-  console.log('=== Start saveSummaryData ===');
+  if (process.env.NODE_ENV === 'development') console.log('=== Start saveSummaryData ===');
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +28,7 @@ export async function saveSummaryData(formData: SummaryFormData) {
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
-    console.log('Using candidate ID for summary data:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Using candidate ID for summary data:', candidateId);
 
     // Update candidates table with summary data
     const { error: summaryError } = await supabase
@@ -44,11 +44,11 @@ export async function saveSummaryData(formData: SummaryFormData) {
       throw new Error(`Summary data save failed: ${summaryError.message}`);
     }
 
-    console.log('Summary data saved successfully');
+    if (process.env.NODE_ENV === 'development') console.log('Summary data saved successfully');
     redirect('/signup/complete');
 
   } catch (error) {
-    console.error('Summary data save error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Summary data save error:', error);
     throw error;
   }
 }

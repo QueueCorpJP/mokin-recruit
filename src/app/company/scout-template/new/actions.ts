@@ -32,7 +32,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
     console.log('👤 Auth result for getCompanyGroups:', authResult.success ? 'success' : 'failed');
     
     if (!authResult.success) {
-      console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
       throw new Error('認証が必要です');
     }
 
@@ -51,7 +51,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
       .eq('company_user_id', companyUserId);
 
     if (error) {
-      console.error('Error fetching company groups:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching company groups:', error);
       throw new Error('グループの取得に失敗しました');
     }
 
@@ -69,7 +69,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
       ...formattedGroups
     ];
   } catch (error) {
-    console.error('Error in getCompanyGroups:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getCompanyGroups:', error);
     return [{ value: '', label: '未選択' }];
   }
 }
@@ -97,11 +97,11 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
       .order('title');
 
     if (error) {
-      console.error('Error fetching job postings:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching job postings:', error);
       throw new Error('求人の取得に失敗しました');
     }
 
-    console.log('🔍 Job postings for group', groupId, ':', jobPostings);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Job postings for group', groupId, ':', jobPostings);
 
     const formattedJobs = [
       { value: '', label: '未選択' },
@@ -111,11 +111,11 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
       })) || [])
     ];
 
-    console.log('🔍 Formatted job options:', formattedJobs);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Formatted job options:', formattedJobs);
     
     return formattedJobs;
   } catch (error) {
-    console.error('Error in getJobPostingsByGroup:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getJobPostingsByGroup:', error);
     return [{ value: '', label: '未選択' }];
   }
 }
@@ -192,7 +192,7 @@ export async function createScoutTemplate(data: ScoutTemplateData) {
       });
 
     if (insertError) {
-      console.error('Error creating scout template:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('Error creating scout template:', insertError);
       return { success: false, error: 'スカウトテンプレートの作成に失敗しました' };
     }
 
@@ -201,7 +201,7 @@ export async function createScoutTemplate(data: ScoutTemplateData) {
     
     return { success: true };
   } catch (error) {
-    console.error('Error in createScoutTemplate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in createScoutTemplate:', error);
     return { success: false, error: 'スカウトテンプレートの作成に失敗しました' };
   }
 }

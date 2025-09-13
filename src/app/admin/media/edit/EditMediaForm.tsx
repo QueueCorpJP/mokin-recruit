@@ -127,7 +127,7 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
           return;
         }
       } catch (error) {
-        console.error('プレビューデータの解析に失敗:', error);
+        if (process.env.NODE_ENV === 'development') console.error('プレビューデータの解析に失敗:', error);
       }
     }
     
@@ -292,7 +292,7 @@ export default function EditMediaForm({ categories, tags, saveArticle, initialAr
 
       await saveArticle(formData);
     } catch (error) {
-      console.error('記事の保存に失敗:', error);
+      if (process.env.NODE_ENV === 'development') console.error('記事の保存に失敗:', error);
       if (error instanceof Error && error.message.includes('title')) {
         setTitleError('タイトルの保存に失敗しました');
       } else if (error instanceof Error && error.message.includes('category')) {

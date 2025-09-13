@@ -212,7 +212,7 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
             )
           );
         } else {
-          console.error('Failed to update search title:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to update search title:', result.error);
           // エラーハンドリング - ユーザーに通知したい場合
         }
       });
@@ -241,7 +241,7 @@ export function SearchHistoryClient({ initialSearchHistory, initialError, compan
           setDeleteModalOpen(false);
           setDeletingItem(null);
         } else {
-          console.error('Failed to delete search history:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to delete search history:', result.error);
           // エラーハンドリング - ユーザーに通知したい場合
           // モーダルは開いたままにして、ユーザーに再試行の機会を与える
         }

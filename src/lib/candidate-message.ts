@@ -12,7 +12,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
     // 候補者認証チェック
     const user = await requireCandidateAuth();
     if (!user || user.id !== candidateId) {
-      console.error('Unauthorized access or candidate ID mismatch');
+      if (process.env.NODE_ENV === 'development') console.error('Unauthorized access or candidate ID mismatch');
       return [];
     }
 
@@ -26,7 +26,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       .single();
 
     if (blockedError && blockedError.code !== 'PGRST116') {
-      console.error('Error fetching blocked companies:', blockedError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching blocked companies:', blockedError);
     }
 
     const blockedCompanyNames = blockedCompanies?.company_names || [];
@@ -49,7 +49,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       .eq('participant_type', 'CANDIDATE');
 
     if (participantError) {
-      console.error('Error fetching candidate rooms:', participantError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching candidate rooms:', participantError);
       return [];
     }
 
@@ -79,7 +79,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       .eq('participant_type', 'COMPANY_USER');
 
     if (companyError) {
-      console.error('Error fetching company participants:', companyError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching company participants:', companyError);
     }
 
     // 各ルームの最新メッセージを取得
@@ -95,7 +95,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       .order('created_at', { ascending: false });
 
     if (messagesError) {
-      console.error('Error fetching latest messages:', messagesError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching latest messages:', messagesError);
     }
 
     // 未読メッセージ数を取得（企業からのメッセージで'SENT'ステータスのもの）
@@ -107,7 +107,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
       .eq('status', 'SENT');
 
     if (unreadError) {
-      console.error('Error fetching unread counts:', unreadError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching unread counts:', unreadError);
     }
 
     // データを組み立て
@@ -156,7 +156,7 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
 
     return rooms;
   } catch (error) {
-    console.error('Error in getCandidateRooms:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getCandidateRooms:', error);
     return [];
   }
 }
@@ -169,7 +169,7 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
     // 候補者認証チェック
     const user = await requireCandidateAuth();
     if (!user || user.id !== candidateId) {
-      console.error('Unauthorized access or candidate ID mismatch');
+      if (process.env.NODE_ENV === 'development') console.error('Unauthorized access or candidate ID mismatch');
       return [];
     }
 
@@ -197,7 +197,7 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
       .order('created_at', { ascending: true });
 
     if (messagesError) {
-      console.error('Error fetching room messages:', messagesError);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', messagesError);
       return [];
     }
 
@@ -233,7 +233,7 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
 
     return messages;
   } catch (error) {
-    console.error('Error in getCandidateRoomMessages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getCandidateRoomMessages:', error);
     return [];
   }
 }
@@ -250,7 +250,7 @@ export async function sendCandidateMessage(
     // 候補者認証チェック
     const user = await requireCandidateAuth();
     if (!user || user.id !== candidateId) {
-      console.error('Unauthorized access or candidate ID mismatch');
+      if (process.env.NODE_ENV === 'development') console.error('Unauthorized access or candidate ID mismatch');
       return { success: false, error: 'Unauthorized access' };
     }
 
@@ -268,13 +268,13 @@ export async function sendCandidateMessage(
       });
 
     if (messageError) {
-      console.error('Error sending candidate message:', messageError);
+      if (process.env.NODE_ENV === 'development') console.error('Error sending candidate message:', messageError);
       return { success: false, error: 'メッセージの送信に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in sendCandidateMessage:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in sendCandidateMessage:', error);
     return { success: false, error: 'メッセージの送信に失敗しました' };
   }
 }

@@ -67,7 +67,7 @@ export default function SignupExpectationPage() {
       await saveExpectationData(formData);
     } catch (error) {
       // eslint-disable-next-line
-      console.error('Expectation data save failed:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Expectation data save failed:', error);
     } finally {
       setIsSubmitting(false);
     }

@@ -42,7 +42,7 @@ export function MessageLayout({
   const [searchTarget, setSearchTarget] = useState<'company' | 'job'>('company');
   
   const handleSearchTargetChange = (target: 'company' | 'job') => {
-    console.log('MessageLayout - searchTarget changing from', searchTarget, 'to', target);
+    if (process.env.NODE_ENV === 'development') console.log('MessageLayout - searchTarget changing from', searchTarget, 'to', target);
     setSearchTarget(target);
   };
   // モバイル判定
@@ -80,7 +80,7 @@ export function MessageLayout({
     try {
       await sendRealTimeMessage(content, undefined, fileUrls);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to send message:', error);
       // エラーハンドリング（必要に応じてユーザーに通知）
     }
   };
@@ -160,7 +160,7 @@ export function MessageLayout({
           />
           <div className='flex-1 overflow-y-auto scrollbar-hide'>
             {(() => {
-              console.log('MessageLayout debug:', {
+              if (process.env.NODE_ENV === 'development') console.log('MessageLayout debug:', {
                 selectedMessageId,
                 chatMessagesLength: chatMessages?.length || 0,
                 chatMessages: chatMessages
@@ -513,7 +513,7 @@ export function MessageLayout({
             />
             <div className='flex-1 overflow-y-auto scrollbar-hide'>
               {(() => {
-                console.log('PC MessageLayout debug:', {
+                if (process.env.NODE_ENV === 'development') console.log('PC MessageLayout debug:', {
                   selectedMessageId,
                   chatMessagesLength: chatMessages?.length || 0,
                   chatMessages: chatMessages

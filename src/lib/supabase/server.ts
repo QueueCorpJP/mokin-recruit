@@ -18,7 +18,7 @@ export function createClient() {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('Cookie setting error:', error);
           }
         },
       },
@@ -37,17 +37,17 @@ export function createServerActionClient() {
       cookies: {
         getAll() {
           const allCookies = cookieStore.getAll();
-          console.log('🍪 [createServerActionClient] Available cookies:', allCookies.map(c => c.name));
+          if (process.env.NODE_ENV === 'development') console.log('🍪 [createServerActionClient] Available cookies:', allCookies.map(c => c.name));
           return allCookies;
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              console.log('🍪 [createServerActionClient] Setting cookie:', name);
+              if (process.env.NODE_ENV === 'development') console.log('🍪 [createServerActionClient] Setting cookie:', name);
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('🚫 [createServerActionClient] Cookie setting error:', error);
+            if (process.env.NODE_ENV === 'development') console.warn('🚫 [createServerActionClient] Cookie setting error:', error);
           }
         },
       },

@@ -1,7 +1,9 @@
 'use server';
 
+import { ERROR_CODES, createError } from '@/constants/error-codes';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { createClient } from '@/lib/supabase/server';
+import { maskUserId , safeLog} from '@/lib/utils/pii-safe-logger';
 
 export async function toggleCandidateHiddenAction(candidateId: string, companyGroupId: string) {
   try {
@@ -9,8 +11,13 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Auth error:', authError);
-      return { success: false, error: 'Authentication required' };
+      safeLog('error', 'Auth error:', authError);
+          const apiError = createError('API_001', 'Authentication required');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const { data: companyUser, error: userError } = await supabase
@@ -20,8 +27,13 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
       .single();
 
     if (userError || !companyUser) {
-      console.error('Error fetching company user:', userError);
-      return { success: false, error: 'Company user not found' };
+      safeLog('error', 'Error fetching company user:', userError);
+          const apiError = createError('API_001', 'Company user not found');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const adminSupabase = await createClient();
@@ -35,8 +47,13 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching hidden status:', fetchError);
-      return { success: false, error: 'Failed to check hidden status' };
+      safeLog('error', 'Error fetching hidden status:', fetchError);
+          const apiError = createError('API_001', 'Failed to check hidden status');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     if (existingHidden) {
@@ -50,8 +67,13 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
         .eq('id', existingHidden.id);
 
       if (updateError) {
-        console.error('Error updating hidden status:', updateError);
-        return { success: false, error: 'Failed to update hidden status' };
+        safeLog('error', 'Error updating hidden status:', updateError);
+            const apiError = createError('API_001', 'Failed to update hidden status');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
       }
       
       return { success: true, isHidden: !existingHidden.is_hidden };
@@ -68,15 +90,25 @@ export async function toggleCandidateHiddenAction(candidateId: string, companyGr
         });
 
       if (insertError) {
-        console.error('Error inserting hidden record:', insertError);
-        return { success: false, error: 'Failed to hide candidate' };
+        safeLog('error', 'Error inserting hidden record:', insertError);
+            const apiError = createError('API_001', 'Failed to hide candidate');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
       }
       
       return { success: true, isHidden: true };
     }
   } catch (error) {
-    console.error('Toggle hidden action failed:', error);
-    return { success: false, error: 'Internal error' };
+    safeLog('error', 'Toggle hidden action failed:', error);
+        const apiError = createError('API_001', 'Internal error');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
   }
 }
 
@@ -91,7 +123,7 @@ export async function getHiddenCandidatesAction(companyGroupId: string) {
       .eq('is_hidden', true);
 
     if (error) {
-      console.error('Error fetching hidden candidates:', error);
+      safeLog('error', 'Error fetching hidden candidates:', error);
       return { success: false, data: [] };
     }
 
@@ -100,22 +132,27 @@ export async function getHiddenCandidatesAction(companyGroupId: string) {
       data: data?.map(item => item.candidate_id) || [] 
     };
   } catch (error) {
-    console.error('Get hidden candidates action failed:', error);
+    safeLog('error', 'Get hidden candidates action failed:', error);
     return { success: false, data: [] };
   }
 }
 
 export async function saveCandidateAction(candidateId: string, companyGroupId: string) {
-  console.log('[DEBUG] saveCandidateAction called with:', { candidateId, companyGroupId });
+  if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] saveCandidateAction called with:', { candidateId, companyGroupId });
   try {
     const supabase = await getSupabaseServerClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Auth error:', authError);
-      return { success: false, error: 'Authentication required' };
+      safeLog('error', 'Auth error:', authError);
+          const apiError = createError('API_001', 'Authentication required');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
-    console.log('[DEBUG] Auth user ID:', user.id);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Auth user ID:', maskUserId(user.id));
 
     const { data: companyUser, error: userError } = await supabase
       .from('company_users')
@@ -124,11 +161,16 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
       .single();
 
     if (userError || !companyUser) {
-      console.error('Error fetching company user:', userError);
-      console.log('[DEBUG] User ID from auth:', user.id);
-      return { success: false, error: 'Company user not found' };
+      safeLog('error', 'Error fetching company user:', userError);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] User ID from auth:', maskUserId(user.id));
+          const apiError = createError('API_001', 'Company user not found');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
-    console.log('[DEBUG] Found company user:', companyUser);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Found company user:', companyUser);
 
     const adminSupabase = await createClient();
     
@@ -137,7 +179,7 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
       company_group_id: companyGroupId,
       candidate_id: candidateId,
     };
-    console.log('[DEBUG] Inserting saved_candidates with data:', insertData);
+    if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Inserting saved_candidates with data:', insertData);
     
     const { error: insertError } = await adminSupabase
       .from('saved_candidates')
@@ -145,11 +187,16 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
 
     if (insertError) {
       if (insertError.code === '23505') {
-        console.log('[DEBUG] Candidate already saved (duplicate key)');
-        return { success: false, error: 'Candidate already saved' };
+        if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Candidate already saved (duplicate key)');
+            const apiError = createError('API_001', 'Candidate already saved');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
       }
-      console.error('Error saving candidate:', insertError);
-      console.log('[DEBUG] Insert error details:', {
+      safeLog('error', 'Error saving candidate:', insertError);
+      if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] Insert error details:', {
         code: insertError.code,
         message: insertError.message,
         details: insertError.details,
@@ -157,24 +204,34 @@ export async function saveCandidateAction(candidateId: string, companyGroupId: s
       });
       return { success: false, error: `Failed to save candidate: ${insertError.message}` };
     }
-    console.log('[DEBUG] Successfully saved candidate');
+    safeLog('info', '[DEBUG] Successfully saved candidate');
 
     return { success: true };
   } catch (error) {
-    console.error('Save candidate action failed:', error);
-    return { success: false, error: 'Internal error' };
+    safeLog('error', 'Save candidate action failed:', error);
+        const apiError = createError('API_001', 'Internal error');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
   }
 }
 
 export async function unsaveCandidateAction(candidateId: string, companyGroupId: string) {
-  console.log('[DEBUG] unsaveCandidateAction called with:', { candidateId, companyGroupId });
+  if (process.env.NODE_ENV === 'development') safeLog('debug', '[DEBUG] unsaveCandidateAction called with:', { candidateId, companyGroupId });
   try {
     const supabase = await getSupabaseServerClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Auth error:', authError);
-      return { success: false, error: 'Authentication required' };
+      safeLog('error', 'Auth error:', authError);
+          const apiError = createError('API_001', 'Authentication required');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const { data: companyUser, error: userError } = await supabase
@@ -184,8 +241,13 @@ export async function unsaveCandidateAction(candidateId: string, companyGroupId:
       .single();
 
     if (userError || !companyUser) {
-      console.error('Error fetching company user:', userError);
-      return { success: false, error: 'Company user not found' };
+      safeLog('error', 'Error fetching company user:', userError);
+          const apiError = createError('API_001', 'Company user not found');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     const adminSupabase = await createClient();
@@ -198,14 +260,24 @@ export async function unsaveCandidateAction(candidateId: string, companyGroupId:
       .eq('candidate_id', candidateId);
 
     if (deleteError) {
-      console.error('Error unsaving candidate:', deleteError);
-      return { success: false, error: 'Failed to unsave candidate' };
+      safeLog('error', 'Error unsaving candidate:', deleteError);
+          const apiError = createError('API_001', 'Failed to unsave candidate');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Unsave candidate action failed:', error);
-    return { success: false, error: 'Internal error' };
+    safeLog('error', 'Unsave candidate action failed:', error);
+        const apiError = createError('API_001', 'Internal error');
+    return {
+      success: false,
+      error: apiError.message,
+      code: apiError.code
+    };
   }
 }
 
@@ -215,7 +287,7 @@ export async function getSavedCandidatesAction(companyGroupId: string) {
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      safeLog('error', 'Auth error:', authError);
       return { success: false, data: [] };
     }
 
@@ -226,7 +298,7 @@ export async function getSavedCandidatesAction(companyGroupId: string) {
       .single();
 
     if (userError || !companyUser) {
-      console.error('Error fetching company user:', userError);
+      safeLog('error', 'Error fetching company user:', userError);
       return { success: false, data: [] };
     }
 
@@ -239,7 +311,7 @@ export async function getSavedCandidatesAction(companyGroupId: string) {
       .eq('company_group_id', companyGroupId);
 
     if (fetchError) {
-      console.error('Error fetching saved candidates:', fetchError);
+      safeLog('error', 'Error fetching saved candidates:', fetchError);
       return { success: false, data: [] };
     }
 
@@ -248,7 +320,7 @@ export async function getSavedCandidatesAction(companyGroupId: string) {
       data: savedCandidates?.map(item => item.candidate_id) || [] 
     };
   } catch (error) {
-    console.error('Get saved candidates action failed:', error);
+    safeLog('error', 'Get saved candidates action failed:', error);
     return { success: false, data: [] };
   }
 }

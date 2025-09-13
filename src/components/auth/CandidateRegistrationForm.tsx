@@ -131,7 +131,7 @@ export default function CandidateRegistrationForm({
           }, 2000);
         }
       } catch (error) {
-        console.error('Registration error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Registration error:', error);
         setSubmitStatus('error');
         setSubmitMessage(
           error instanceof Error ? error.message : '登録に失敗しました'

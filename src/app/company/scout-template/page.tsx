@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function ScoutTemplatePage() {
-  console.log('🚀 ScoutTemplatePage loading...');
+  if (process.env.NODE_ENV === 'development') console.log('🚀 ScoutTemplatePage loading...');
   
   // より詳細な認証チェック
   try {
@@ -34,7 +34,7 @@ export default async function ScoutTemplatePage() {
     const { requireCompanyAuth } = await import('@/lib/auth/server');
     const companyUser = await requireCompanyAuth();
     
-    console.log('👤 Page companyUser (non-cached):', companyUser ? {
+    if (process.env.NODE_ENV === 'development') console.log('👤 Page companyUser (non-cached):', companyUser ? {
       id: companyUser.id,
       email: companyUser.email,
       userType: companyUser.userType,
@@ -42,7 +42,7 @@ export default async function ScoutTemplatePage() {
     } : 'not found');
     
     if (!companyUser) {
-      console.log('🔄 Redirecting to login...');
+      if (process.env.NODE_ENV === 'development') console.log('🔄 Redirecting to login...');
       redirect('/auth/company/signin');
     }
   } catch (error) {
@@ -81,7 +81,7 @@ export default async function ScoutTemplatePage() {
     }
   } catch (err) {
     error = 'サーバーエラーが発生しました';
-    console.error('💥 Exception fetching data:', err);
+    if (process.env.NODE_ENV === 'development') console.error('💥 Exception fetching scout templates:', err);
   }
 
   return (

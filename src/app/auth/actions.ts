@@ -52,7 +52,7 @@ export async function candidateLogin(email: string, password: string): Promise<L
 
     return { success: true, redirectTo: '/candidate/dashboard' };
   } catch (error) {
-    console.error('Login error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Login error:', error);
     return { success: false, error: 'ログイン処理中にエラーが発生しました' };
   }
 }
@@ -98,7 +98,7 @@ export async function companyLogin(email: string, password: string): Promise<Log
 
     return { success: true, redirectTo: '/company/dashboard' };
   } catch (error) {
-    console.error('Company login error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Company login error:', error);
     return { success: false, error: 'ログイン処理中にエラーが発生しました' };
   }
 }
@@ -149,7 +149,7 @@ export async function candidateRegister(data: RegistrationData): Promise<LoginRe
       .single();
 
     if (insertError) {
-      console.error('Candidate registration error:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('Candidate registration error:', insertError);
       return { success: false, error: '登録処理中にエラーが発生しました' };
     }
 
@@ -160,7 +160,7 @@ export async function candidateRegister(data: RegistrationData): Promise<LoginRe
       redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email)
     };
   } catch (error) {
-    console.error('Registration error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Registration error:', error);
     return { success: false, error: '登録処理中にエラーが発生しました' };
   }
 }
@@ -198,7 +198,7 @@ export async function companyRegister(data: RegistrationData): Promise<LoginResu
       .single();
 
     if (insertError) {
-      console.error('Company registration error:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('Company registration error:', insertError);
       return { success: false, error: '登録処理中にエラーが発生しました' };
     }
 
@@ -209,7 +209,7 @@ export async function companyRegister(data: RegistrationData): Promise<LoginResu
       redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email)
     };
   } catch (error) {
-    console.error('Company registration error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Company registration error:', error);
     return { success: false, error: '登録処理中にエラーが発生しました' };
   }
 }
@@ -237,7 +237,7 @@ export async function requestPasswordReset(email: string, userType: 'candidate' 
       redirectTo: '/auth/reset-password/sent?email=' + encodeURIComponent(email)
     };
   } catch (error) {
-    console.error('Password reset request error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Password reset request error:', error);
     return { success: false, error: 'パスワードリセット処理中にエラーが発生しました' };
   }
 }

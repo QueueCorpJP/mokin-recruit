@@ -10,11 +10,11 @@ export interface CompanySuggestion {
 }
 
 export async function searchCompaniesAction(query: string): Promise<CompanySuggestion[]> {
-  console.log('=== Server Action Called ===');
-  console.log('Query received:', query);
+  if (process.env.NODE_ENV === 'development') console.log('=== Server Action Called ===');
+  if (process.env.NODE_ENV === 'development') console.log('Query received:', query);
   
   if (!query || query.trim().length < 2) {
-    console.log('Query too short, returning empty array');
+    if (process.env.NODE_ENV === 'development') console.log('Query too short, returning empty array');
     return [];
   }
 
@@ -34,16 +34,16 @@ export async function searchCompaniesAction(query: string): Promise<CompanySugge
     });
 
     if (!response.ok) {
-      console.log('API request failed:', response.status, response.statusText);
+      if (process.env.NODE_ENV === 'development') console.log('API request failed:', response.status, response.statusText);
       return [];
     }
 
     const data = await response.json();
-    console.log('API Response data:', data);
+    if (process.env.NODE_ENV === 'development') console.log('API Response data:', data);
     
     // 正しいフィールド名: "hojin-infos" (ハイフンあり)
     if (!data['hojin-infos'] || !Array.isArray(data['hojin-infos'])) {
-      console.log('No hojin-infos found in response');
+      if (process.env.NODE_ENV === 'development') console.log('No hojin-infos found in response');
       return [];
     }
 
@@ -61,11 +61,11 @@ export async function searchCompaniesAction(query: string): Promise<CompanySugge
       index === self.findIndex(c => c.name === company.name)
     ).slice(0, 5);
     
-    console.log('Final results before return:', finalResults);
+    if (process.env.NODE_ENV === 'development') console.log('Final results before return:', finalResults);
     return finalResults;
     
   } catch (error) {
-    console.error('Error in server action:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in server action:', error);
     return [];
   }
 }

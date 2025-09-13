@@ -112,15 +112,15 @@ export async function updateCompanyData(
       .single();
 
     if (updateError) {
-      console.error('Company update error:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Company update error:', updateError);
       return {
         success: false,
         error: `企業情報の更新に失敗しました: ${updateError.message}`
       };
     }
 
-    console.log('Company updated successfully:', updatedCompany);
-    console.log(`[Company Edit] Revalidating paths: /admin/company/${companyId} and /admin/company`);
+    if (process.env.NODE_ENV === 'development') console.log('Company updated successfully:', updatedCompany);
+    if (process.env.NODE_ENV === 'development') console.log(`[Company Edit] Revalidating paths: /admin/company/${companyId} and /admin/company`);
 
     // Step 4: Revalidate the company detail page and company list page
     revalidatePath(`/admin/company/${companyId}`);
@@ -132,7 +132,7 @@ export async function updateCompanyData(
     };
 
   } catch (error) {
-    console.error('Error updating company:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error updating company:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

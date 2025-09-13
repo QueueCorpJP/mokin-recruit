@@ -79,7 +79,7 @@ export default function TagPage() {
 
       setTags(tagsWithCount);
     } catch (err) {
-      console.error('タグの取得に失敗:', err);
+      if (process.env.NODE_ENV === 'development') console.error('タグの取得に失敗:', err);
       setError(err instanceof Error ? err.message : 'タグの取得に失敗しました');
     } finally {
       setDataLoading(false);
@@ -103,7 +103,7 @@ export default function TagPage() {
         // リストを再取得
         fetchTags();
       } catch (err) {
-        console.error('タグの更新に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('タグの更新に失敗:', err);
         setError(err instanceof Error ? err.message : 'タグの更新に失敗しました');
       }
     }
@@ -141,7 +141,7 @@ export default function TagPage() {
         // リストを再取得
         fetchTags();
       } catch (err) {
-        console.error('タグの削除に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('タグの削除に失敗:', err);
         setError(err instanceof Error ? err.message : 'タグの削除に失敗しました');
       }
     }
@@ -171,7 +171,7 @@ export default function TagPage() {
         // リストを再取得
         fetchTags();
       } catch (err) {
-        console.error('タグの作成に失敗:', err);
+        if (process.env.NODE_ENV === 'development') console.error('タグの作成に失敗:', err);
         setError(err instanceof Error ? err.message : 'タグの作成に失敗しました');
       }
     }

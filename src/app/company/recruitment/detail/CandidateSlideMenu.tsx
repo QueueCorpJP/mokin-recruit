@@ -100,7 +100,7 @@ export function CandidateSlideMenu({
   jobOptions = [],
   onJobChange,
 }: CandidateSlideMenuProps) {
-  console.log('[DEBUG] CandidateSlideMenu props:', { candidateId, companyGroupId, isOpen });
+  if (process.env.NODE_ENV === 'development') console.log('[DEBUG] CandidateSlideMenu props:', { candidateId, companyGroupId, isOpen });
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'details' | 'progress'>('details');
   const [candidateData, setCandidateData] = useState<CandidateDetailData | null>(propsCandidateData || null);
@@ -117,7 +117,7 @@ export function CandidateSlideMenu({
     job.groupId === companyGroupId // 同じグループの求人のみ
   );
   
-  console.log('🔍 [CandidateSlideMenu] Job filtering debug:', {
+  if (process.env.NODE_ENV === 'development') console.log('🔍 [CandidateSlideMenu] Job filtering debug:', {
     allJobOptions: jobOptions,
     filteredJobOptions,
     candidateGroupId: candidateData?.groupId,
@@ -140,28 +140,28 @@ export function CandidateSlideMenu({
   // メッセージを確認ボタンのハンドラー
   const handleCheckMessage = async () => {
     if (!candidateId || !companyGroupId) {
-      console.error('❌ [handleCheckMessage] Missing required parameters:', { candidateId, companyGroupId });
+      if (process.env.NODE_ENV === 'development') console.error('❌ [handleCheckMessage] Missing required parameters:', { candidateId, companyGroupId });
       return;
     }
     
-    console.log('🔍 [handleCheckMessage] Starting message navigation:', { candidateId, companyGroupId });
+    if (process.env.NODE_ENV === 'development') console.log('🔍 [handleCheckMessage] Starting message navigation:', { candidateId, companyGroupId });
     
     try {
       const roomId = await getRoomIdAction(candidateId, companyGroupId);
-      console.log('🔍 [handleCheckMessage] getRoomIdAction result:', { roomId });
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [handleCheckMessage] getRoomIdAction result:', { roomId });
       
       if (roomId) {
-        console.log('✅ [handleCheckMessage] Navigating to room:', `/company/message?room=${roomId}`);
+        if (process.env.NODE_ENV === 'development') console.log('✅ [handleCheckMessage] Navigating to room:', `/company/message?room=${roomId}`);
         router.push(`/company/message?room=${roomId}`);
       } else {
         // roomが存在しない場合は、メッセージページに遷移（room指定なし）
         // メッセージページで新規メッセージ作成やroom一覧が表示される
-        console.log('❌ [handleCheckMessage] Room not found, showing alert');
+        if (process.env.NODE_ENV === 'development') console.log('❌ [handleCheckMessage] Room not found, showing alert');
         alert('この候補者とのメッセージルームがまだ作成されていません。\nメッセージページから新規でメッセージを送信してください。');
         router.push('/company/message');
       }
     } catch (error) {
-      console.error('❌ [handleCheckMessage] Error navigating to message room:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ [handleCheckMessage] Error navigating to message room:', error);
       alert('メッセージルームへの遷移でエラーが発生しました。');
     }
   };
@@ -185,14 +185,11 @@ export function CandidateSlideMenu({
         getRoomIdAction(candidateId, companyGroupId),
         getSelectionProgressAction(candidateId, companyGroupId)
       ])
-        .then(([candidateDetail, savedResult, hiddenResult, , progressResult]) => {
-          console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
-          console.log('🔍 [CandidateSlideMenu] group:', candidateDetail?.group);
-          console.log('🔍 [CandidateSlideMenu] jobPostingId:', candidateDetail?.jobPostingId);
-          console.log('🔍 [CandidateSlideMenu] jobPostingTitle:', candidateDetail?.jobPostingTitle);
-          console.log('🔍 [CandidateSlideMenu] assignedUsers:', candidateDetail?.assignedUsers);
-          console.log('🔍 [CandidateSlideMenu] experience:', candidateDetail?.experience);
-          console.log('🔍 [CandidateSlideMenu] industry:', candidateDetail?.industry);
+        .then(([candidateDetail, savedResult, hiddenResult, roomIdResult, progressResult]) => {
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [CandidateSlideMenu] experienceJobs:', candidateDetail?.experienceJobs);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [CandidateSlideMenu] experienceIndustries:', candidateDetail?.experienceIndustries);
+          if (process.env.NODE_ENV === 'development') console.log('🔍 [CandidateSlideMenu] jobPostingId:', candidateDetail?.jobPostingId);
           setCandidateData(candidateDetail);
           
           
@@ -214,7 +211,7 @@ export function CandidateSlideMenu({
           }
         })
         .catch((error) => {
-          console.error('候補者データの取得に失敗:', error);
+          if (process.env.NODE_ENV === 'development') console.error('候補者データの取得に失敗:', error);
         })
         .finally(() => {
           setLoading(false);
@@ -244,9 +241,9 @@ export function CandidateSlideMenu({
 
   // ピックアップ状態をトグルする関数
   const handlePickupToggle = async () => {
-    console.log('[DEBUG] handlePickupToggle called', { candidateId, companyGroupId, isPickedUp });
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] handlePickupToggle called', { candidateId, companyGroupId, isPickedUp });
     if (!candidateId || !companyGroupId) {
-      console.log('[DEBUG] Missing candidateId or companyGroupId');
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Missing candidateId or companyGroupId');
       return;
     }
     
@@ -257,7 +254,7 @@ export function CandidateSlideMenu({
         if (result.success) {
           setIsPickedUp(false);
         } else {
-          console.error('Error unsaving candidate:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Error unsaving candidate:', result.error);
         }
       } else {
         // 保存
@@ -268,19 +265,19 @@ export function CandidateSlideMenu({
           // 既に保存済みの場合は状態を更新
           setIsPickedUp(true);
         } else {
-          console.error('Error saving candidate:', result.error);
+          if (process.env.NODE_ENV === 'development') console.error('Error saving candidate:', result.error);
         }
       }
     } catch (error) {
-      console.error('Error toggling pickup:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error toggling pickup:', error);
     }
   };
 
   // 非表示状態をトグルする関数
   const handleHiddenToggle = async () => {
-    console.log('[DEBUG] handleHiddenToggle called', { candidateId, companyGroupId, isHidden });
+    if (process.env.NODE_ENV === 'development') console.log('[DEBUG] handleHiddenToggle called', { candidateId, companyGroupId, isHidden });
     if (!candidateId || !companyGroupId) {
-      console.log('[DEBUG] Missing candidateId or companyGroupId');
+      if (process.env.NODE_ENV === 'development') console.log('[DEBUG] Missing candidateId or companyGroupId');
       return;
     }
     
@@ -289,10 +286,10 @@ export function CandidateSlideMenu({
       if (result.success) {
         setIsHidden(result.isHidden ?? false);
       } else {
-        console.error('Error toggling hidden status:', result.error);
+        if (process.env.NODE_ENV === 'development') console.error('Error toggling hidden status:', result.error);
       }
     } catch (error) {
-      console.error('Error toggling hidden:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error toggling hidden:', error);
     }
   };
 

@@ -102,7 +102,7 @@ export async function getCompanyTaskData(): Promise<TaskData> {
   }
   
   if (!companyAccountId) {
-    console.error('❌ Company account ID not found');
+    if (process.env.NODE_ENV === 'development') console.error('❌ Company account ID not found');
     return {
       hasNoJobPostings: false,
       hasNewApplication: false,
@@ -148,7 +148,7 @@ export async function getCompanyTaskData(): Promise<TaskData> {
   };
 
   try {
-    console.log('🔍 Getting task data for company:', companyAccountId, 'groups:', companyGroupIds);
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Getting task data for company:', companyAccountId, 'groups:', companyGroupIds);
     
     // 並列でデータ取得を実行
     const [
@@ -163,14 +163,14 @@ export async function getCompanyTaskData(): Promise<TaskData> {
       getInterviewResults(companyAccountId, companyGroupIds)
     ]);
 
-    console.log('📊 Raw data fetched:', {
+    if (process.env.NODE_ENV === 'development') console.log('📊 Raw data fetched:', {
       jobPostings: jobPostings.length,
       applications: applications.length,
       messages: messages.length,
       interviewResults: interviewResults.length
     });
 
-    console.log('📊 Sample data for debugging:', {
+    if (process.env.NODE_ENV === 'development') console.log('📊 Sample data for debugging:', {
       sampleJobPosting: jobPostings[0] || 'No job postings',
       sampleApplication: applications[0] || 'No applications',
       sampleMessage: messages[0] || 'No messages',
@@ -179,29 +179,29 @@ export async function getCompanyTaskData(): Promise<TaskData> {
 
     // Task 1: 求人が0件かチェック
     taskData.hasNoJobPostings = jobPostings.length === 0;
-    console.log('🎯 Task 1 (No job postings):', taskData.hasNoJobPostings);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 1 (No job postings):', taskData.hasNoJobPostings);
 
     // デバッグ用：とりあえず求人作成タスクを表示
     if (jobPostings.length === 0) {
-      console.log('🔧 DEBUG: Forcing "No job postings" task to show');
+      if (process.env.NODE_ENV === 'development') console.log('🔧 DEBUG: Forcing "No job postings" task to show');
       taskData.hasNoJobPostings = true;
     }
 
     // Task 2 & 3: 応募の処理
     processApplications(applications, taskData);
-    console.log('🎯 Task 2 (New applications):', taskData.hasNewApplication);
-    console.log('🎯 Task 3 (Unread applications):', taskData.hasUnreadApplication);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 2 (New applications):', taskData.hasNewApplication);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 3 (Unread applications):', taskData.hasUnreadApplication);
 
     // Task 4 & 5: メッセージの処理
     processMessages(messages, taskData);
-    console.log('🎯 Task 4 (New messages):', taskData.hasNewMessage);
-    console.log('🎯 Task 5 (Unread messages):', taskData.hasUnreadMessage);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 4 (New messages):', taskData.hasNewMessage);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 5 (Unread messages):', taskData.hasUnreadMessage);
 
     // Task 6: 面接結果の処理
     processInterviewResults(interviewResults, taskData);
-    console.log('🎯 Task 6 (Interview results):', taskData.hasUnregisteredInterviewResult);
+    if (process.env.NODE_ENV === 'development') console.log('🎯 Task 6 (Interview results):', taskData.hasUnregisteredInterviewResult);
 
-    console.log('🏁 Final task data summary:', {
+    if (process.env.NODE_ENV === 'development') console.log('🏁 Final task data summary:', {
       hasNoJobPostings: taskData.hasNoJobPostings,
       hasNewApplication: taskData.hasNewApplication,
       hasUnreadApplication: taskData.hasUnreadApplication,
@@ -220,7 +220,7 @@ export async function getCompanyTaskData(): Promise<TaskData> {
 
     // デザインテスト用の強制表示機能
     if (FORCE_SHOW_TASKS_FOR_DESIGN_TEST) {
-      console.log('🎨 Design test mode: Forcing all tasks to show');
+      if (process.env.NODE_ENV === 'development') console.log('🎨 Design test mode: Forcing all tasks to show');
       taskData.hasNoJobPostings = true;
       taskData.hasNewApplication = true;
       taskData.hasUnreadApplication = true;
@@ -266,11 +266,11 @@ export async function getCompanyTaskData(): Promise<TaskData> {
         interviewDate: new Date()
       }];
 
-      console.log('🎨 Sample data added for design testing');
+      if (process.env.NODE_ENV === 'development') console.log('🎨 Sample data added for design testing');
     }
 
   } catch (error) {
-    console.error('❌ Failed to fetch task data:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ Failed to fetch task data:', error);
   }
 
   return taskData;
@@ -288,11 +288,11 @@ async function getJobPostings(companyAccountId: string) {
     .in('status', ['PUBLISHED', 'PENDING_APPROVAL']); // 公開中または承認待ちの求人のみ
 
   if (error) {
-    console.error('❌ Error fetching job postings:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ Error fetching job postings:', error);
     return [];
   }
 
-  console.log('📋 Job postings found:', data?.length || 0);
+  if (process.env.NODE_ENV === 'development') console.log('📋 Job postings found:', data?.length || 0);
   return data || [];
 }
 
@@ -331,12 +331,12 @@ async function getApplications(companyAccountId: string, companyGroupIds: string
   const { data, error } = await query;
 
   if (error) {
-    console.error('❌ Error fetching applications:', error);
-    console.error('Query details:', { companyAccountId, companyGroupIds });
+    if (process.env.NODE_ENV === 'development') console.error('❌ Error fetching applications:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Query details:', { companyAccountId, companyGroupIds });
     return [];
   }
 
-  console.log('📨 Applications found:', data?.length || 0);
+  if (process.env.NODE_ENV === 'development') console.log('📨 Applications found:', data?.length || 0);
   return data || [];
 }
 
@@ -394,7 +394,7 @@ async function getMessages(companyAccountId: string, companyGroupIds: string[]) 
     .order('sent_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching messages:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching messages:', error);
     return [];
   }
 
@@ -439,11 +439,11 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
   const { data, error } = await query;
 
   if (error) {
-    console.error('❌ Error fetching interview results:', error);
+    if (process.env.NODE_ENV === 'development') console.error('❌ Error fetching interview results:', error);
     return [];
   }
 
-  console.log('📋 Interview candidates found:', data?.length || 0);
+  if (process.env.NODE_ENV === 'development') console.log('📋 Interview candidates found:', data?.length || 0);
 
   // 72時間以上経過しているものをフィルタリング（実際のプラットフォームでは面接完了から72時間）
   const seventyTwoHoursAgo = new Date();
@@ -454,7 +454,7 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
     return respondedAt <= seventyTwoHoursAgo;
   });
 
-  console.log('📋 Overdue interview results (72h+):', overdueInterviews.length);
+  if (process.env.NODE_ENV === 'development') console.log('📋 Overdue interview results (72h+):', overdueInterviews.length);
   return overdueInterviews;
 }
 
@@ -462,7 +462,7 @@ async function getInterviewResults(companyAccountId: string, companyGroupIds: st
  * 応募データを処理してタスクデータに設定
  */
 function processApplications(applications: any[], taskData: TaskData) {
-  console.log('📨 Processing applications:', applications.length);
+  if (process.env.NODE_ENV === 'development') console.log('📨 Processing applications:', applications.length);
 
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -495,21 +495,21 @@ function processApplications(applications: any[], taskData: TaskData) {
     }
   }
 
-  console.log('📨 New applications (24h):', newApplications.length);
-  console.log('📨 Overdue applications (48h+):', overdueApplications.length);
+  if (process.env.NODE_ENV === 'development') console.log('📨 New applications (24h):', newApplications.length);
+  if (process.env.NODE_ENV === 'development') console.log('📨 Overdue applications (48h+):', overdueApplications.length);
 
   // Task 2: 新着応募（24時間以内）
   if (newApplications.length > 0) {
     taskData.hasNewApplication = true;
     taskData.newApplications = newApplications.slice(0, 5);
-    console.log('✅ New application task triggered');
+    if (process.env.NODE_ENV === 'development') console.log('✅ New application task triggered');
   }
 
   // Task 3: 遅延応募（48時間以上）
   if (overdueApplications.length > 0) {
     taskData.hasUnreadApplication = true;
     taskData.unreadApplications = overdueApplications.slice(0, 5);
-    console.log('⚠️ Overdue application task triggered');
+    if (process.env.NODE_ENV === 'development') console.log('⚠️ Overdue application task triggered');
   }
 }
 
@@ -517,7 +517,7 @@ function processApplications(applications: any[], taskData: TaskData) {
  * メッセージデータを処理してタスクデータに設定
  */
 function processMessages(messages: any[], taskData: TaskData) {
-  console.log('💬 Processing messages:', messages.length);
+  if (process.env.NODE_ENV === 'development') console.log('💬 Processing messages:', messages.length);
 
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -551,21 +551,21 @@ function processMessages(messages: any[], taskData: TaskData) {
     }
   }
 
-  console.log('💬 New messages (24h):', newMessages.length);
-  console.log('💬 Overdue messages (48h+):', overdueMessages.length);
+  if (process.env.NODE_ENV === 'development') console.log('💬 New messages (24h):', newMessages.length);
+  if (process.env.NODE_ENV === 'development') console.log('💬 Overdue messages (48h+):', overdueMessages.length);
 
   // Task 4: 新着メッセージ（24時間以内）
   if (newMessages.length > 0) {
     taskData.hasNewMessage = true;
     taskData.newMessages = newMessages.slice(0, 5);
-    console.log('✅ New message task triggered');
+    if (process.env.NODE_ENV === 'development') console.log('✅ New message task triggered');
   }
 
   // Task 5: 遅延メッセージ（48時間以上）
   if (overdueMessages.length > 0) {
     taskData.hasUnreadMessage = true;
     taskData.unreadMessages = overdueMessages.slice(0, 5);
-    console.log('⚠️ Overdue message task triggered');
+    if (process.env.NODE_ENV === 'development') console.log('⚠️ Overdue message task triggered');
   }
 }
 
@@ -573,7 +573,7 @@ function processMessages(messages: any[], taskData: TaskData) {
  * 面接結果データを処理してタスクデータに設定
  */
 function processInterviewResults(interviews: any[], taskData: TaskData) {
-  console.log('📋 Processing interview results:', interviews.length);
+  if (process.env.NODE_ENV === 'development') console.log('📋 Processing interview results:', interviews.length);
 
   if (interviews.length > 0) {
     taskData.hasUnregisteredInterviewResult = true;
@@ -590,8 +590,8 @@ function processInterviewResults(interviews: any[], taskData: TaskData) {
       };
     });
     
-    console.log('✅ Interview result task triggered');
-    console.log('📋 Overdue interviews:', taskData.unregisteredInterviews.length);
+    if (process.env.NODE_ENV === 'development') console.log('✅ Interview result task triggered');
+    if (process.env.NODE_ENV === 'development') console.log('📋 Overdue interviews:', taskData.unregisteredInterviews.length);
   }
 }
 
@@ -634,7 +634,7 @@ export async function markTasksAsRead(taskIds: string[], taskType: string) {
 
     return { success: true };
   } catch (error) {
-    console.error('Error marking tasks as read:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error marking tasks as read:', error);
     return { success: false, error: 'Failed to update task status' };
   }
 }
@@ -683,7 +683,7 @@ export async function getTaskDetails(taskId: string, taskType: string) {
         return null;
     }
   } catch (error) {
-    console.error('Error fetching task details:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching task details:', error);
     return null;
   }
 }

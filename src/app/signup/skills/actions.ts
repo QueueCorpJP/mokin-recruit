@@ -13,7 +13,7 @@ interface SkillsFormData {
 }
 
 export async function saveSkillsData(formData: SkillsFormData) {
-  console.log('=== Start saveSkillsData ===');
+  if (process.env.NODE_ENV === 'development') console.log('=== Start saveSkillsData ===');
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,7 +30,7 @@ export async function saveSkillsData(formData: SkillsFormData) {
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
-    console.log('Using candidate ID for skills data:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Using candidate ID for skills data:', candidateId);
 
     // Save skills data - use insert with manual conflict handling since no unique constraint on candidate_id
     const { data: existingSkills } = await supabase
@@ -71,11 +71,11 @@ export async function saveSkillsData(formData: SkillsFormData) {
       throw new Error(`Skills data save failed: ${skillsError.message}`);
     }
 
-    console.log('Skills data saved successfully');
+    if (process.env.NODE_ENV === 'development') console.log('Skills data saved successfully');
     redirect('/signup/expectation');
 
   } catch (error) {
-    console.error('Skills data save error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Skills data save error:', error);
     throw error;
   }
 }

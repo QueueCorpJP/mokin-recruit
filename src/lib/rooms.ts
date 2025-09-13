@@ -22,7 +22,7 @@ const roomsCache = new Map<string, { data: Room[]; timestamp: number }>();
 const CACHE_TTL = 15 * 1000; // 15秒 (メッセージは頻繁に更新される可能性があるため短めに設定)
 
 export async function getRooms(userId: string, userType: 'candidate' | 'company'): Promise<Room[]> {
-  console.log('🚀 [STEP A] getRooms called:', { userId, userType });
+  if (process.env.NODE_ENV === 'development') console.log('🚀 [STEP A] getRooms called:', { userId, userType });
   
   // キャッシュキーの生成
   const cacheKey = `${userId}-${userType}`;
@@ -42,7 +42,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
   try {
     if (userType === 'candidate') {
       // 候補者の場合: Supabase user.idを直接使用
-      console.log('🔍 [CANDIDATE] Using Supabase user ID:', userId);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [CANDIDATE] Using Supabase user ID:', userId);
      
       // 候補者のNG企業リストを取得
       const { data: blockedCompanies, error: blockedError } = await supabase
@@ -52,11 +52,11 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         .single();
 
       if (blockedError && blockedError.code !== 'PGRST116') {
-        console.error('Error fetching blocked companies:', blockedError);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching blocked companies:', blockedError);
       }
 
       const blockedCompanyNames = blockedCompanies?.company_names || [];
-      console.log('🚫 [BLOCKED COMPANIES]:', blockedCompanyNames);
+      if (process.env.NODE_ENV === 'development') console.log('🚫 [BLOCKED COMPANIES]:', blockedCompanyNames);
 
       // JOINで関連情報もまとめて取得
       const { data: rooms, error: roomsError } = await supabase
@@ -80,7 +80,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         .eq('candidate_id', userId);
 
       if (roomsError) {
-        console.error('Error fetching candidate rooms:', roomsError);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching candidate rooms:', roomsError);
         return [];
       }
 
@@ -101,7 +101,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
       
     } else {
       // 企業ユーザーの場合: 権限レベルに応じてアクセス可能なグループを決定
-      console.log('🏢 [STEP C] Company user - checking permissions for:', userId);
+      if (process.env.NODE_ENV === 'development') console.log('🏢 [STEP C] Company user - checking permissions for:', userId);
       
       // userIdがSupabase Auth IDの場合、company_usersテーブルから正しいIDを取得
       let companyUserId = userId;
@@ -125,12 +125,12 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
           
           if (companyUser && !companyUserError) {
             companyUserId = companyUser.id;
-            console.log('🔄 [ID MAPPING] Supabase Auth ID -> Company User ID:', { from: userId, to: companyUserId });
+            if (process.env.NODE_ENV === 'development') console.log('🔄 [ID MAPPING] Supabase Auth ID -> Company User ID:', { from: userId, to: companyUserId });
           }
         }
       }
       
-      console.log('🔍 [DEBUG] Using company_user_id for permissions:', companyUserId);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [DEBUG] Using company_user_id for permissions:', companyUserId);
       
       // ユーザーの権限情報を取得
       const { data: userPermissions, error: permissionsError } = await supabase
@@ -138,21 +138,21 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         .select('company_group_id, permission_level')
         .eq('company_user_id', companyUserId);
 
-      console.log('📊 [STEP D] User permissions query result:', {
+      if (process.env.NODE_ENV === 'development') console.log('📊 [STEP D] User permissions query result:', {
         userPermissions,
         permissionsError,
         count: userPermissions?.length || 0
       });
 
       if (permissionsError) {
-        console.error('❌ [ERROR] Error fetching user permissions:', permissionsError);
+        if (process.env.NODE_ENV === 'development') console.error('❌ [ERROR] Error fetching user permissions:', permissionsError);
         return [];
       }
 
       let groupIds: string[] = [];
 
       if (!userPermissions || userPermissions.length === 0) {
-        console.log('⚠️ [WARNING] No permissions found for user, treating as regular user with no groups');
+        if (process.env.NODE_ENV === 'development') console.log('⚠️ [WARNING] No permissions found for user, treating as regular user with no groups');
         return [];
       }
 
@@ -160,7 +160,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
       const hasAdminPermission = userPermissions.some(p => p.permission_level === 'ADMINISTRATOR');
       
       if (hasAdminPermission) {
-        console.log('👑 [ADMIN ACCESS] User has ADMINISTRATOR permission - fetching all company groups');
+        if (process.env.NODE_ENV === 'development') console.log('👑 [ADMIN ACCESS] User has ADMINISTRATOR permission - fetching all company groups');
         
         // まず企業ユーザーのcompany_account_idを取得
         const { data: companyUser, error: companyUserError } = await supabase
@@ -170,7 +170,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
           .single();
 
         if (companyUserError || !companyUser) {
-          console.error('❌ [ERROR] Company user not found:', companyUserError);
+          if (process.env.NODE_ENV === 'development') console.error('❌ [ERROR] Company user not found:', companyUserError);
           return [];
         }
 
@@ -181,24 +181,24 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
           .eq('company_account_id', companyUser.company_account_id);
 
         if (allGroupsError) {
-          console.error('❌ [ERROR] Error fetching all company groups:', allGroupsError);
+          if (process.env.NODE_ENV === 'development') console.error('❌ [ERROR] Error fetching all company groups:', allGroupsError);
           return [];
         }
 
         groupIds = allGroups?.map(g => g.id) || [];
-        console.log('🎯 [ADMIN] All group IDs for admin:', groupIds);
+        if (process.env.NODE_ENV === 'development') console.log('🎯 [ADMIN] All group IDs for admin:', groupIds);
       } else {
         // SCOUT_STAFFの場合は所属グループのみ
-        console.log('👤 [STAFF ACCESS] User has SCOUT_STAFF permission - fetching assigned groups only');
+        if (process.env.NODE_ENV === 'development') console.log('👤 [STAFF ACCESS] User has SCOUT_STAFF permission - fetching assigned groups only');
         groupIds = userPermissions.map(p => p.company_group_id);
-        console.log('🎯 [STAFF] Assigned group IDs:', groupIds);
+        if (process.env.NODE_ENV === 'development') console.log('🎯 [STAFF] Assigned group IDs:', groupIds);
       }
       
       if (groupIds.length === 0) {
-        console.error('❌ [ERROR] No accessible groups found for user:', userId);
+        if (process.env.NODE_ENV === 'development') console.error('❌ [ERROR] No accessible groups found for user:', userId);
         return [];
       }
-      console.log('🔍 [STEP F] Fetching rooms for group IDs:', groupIds);
+      if (process.env.NODE_ENV === 'development') console.log('🔍 [STEP F] Fetching rooms for group IDs:', groupIds);
       
       // JOINで関連情報もまとめて取得
       const { data: rooms, error: roomsError } = await supabase
@@ -221,7 +221,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
         `)
         .in('company_group_id', groupIds);
 
-      console.log('📋 [STEP G] Rooms query result:', {
+      if (process.env.NODE_ENV === 'development') console.log('📋 [STEP G] Rooms query result:', {
         rooms,
         roomsError,
         roomsCount: rooms?.length || 0,
@@ -229,11 +229,11 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
       });
 
       if (roomsError) {
-        console.error('❌ [ERROR] Error fetching company rooms:', roomsError);
+        if (process.env.NODE_ENV === 'development') console.error('❌ [ERROR] Error fetching company rooms:', roomsError);
         return [];
       }
 
-      console.log('🔨 [STEP H] Building rooms data with:', {
+      if (process.env.NODE_ENV === 'development') console.log('🔨 [STEP H] Building rooms data with:', {
         roomsLength: rooms?.length || 0,
         userId,
         userType
@@ -241,7 +241,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
 
       const result = await buildRoomsData(rooms || [], userType);
       
-      console.log('✅ [STEP I] Final result:', {
+      if (process.env.NODE_ENV === 'development') console.log('✅ [STEP I] Final result:', {
         resultCount: result.length,
         finalRooms: result.map(r => ({
           id: r.id,
@@ -267,7 +267,7 @@ export async function getRooms(userId: string, userType: 'candidate' | 'company'
     }
 
   } catch (error) {
-    console.error('Error in getRooms:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getRooms:', error);
     return [];
   }
 }
@@ -308,7 +308,7 @@ async function buildRoomsData(
       
       // 候補者の場合、NG企業をチェック
       if (blockedCompanyNames.includes(groupName)) {
-        console.log('🚫 [FILTERED] Blocked company room:', { roomId, groupName });
+        if (process.env.NODE_ENV === 'development') console.log('🚫 [FILTERED] Blocked company room:', { roomId, groupName });
         return null;
       }
     } else {

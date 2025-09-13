@@ -10,7 +10,7 @@ export default function MediaError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Media page error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Media page error:', error);
   }, [error]);
 
   return (

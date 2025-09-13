@@ -21,7 +21,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.log('❌ getCompanyGroups - Auth failed');
+      if (process.env.NODE_ENV === 'development') console.log('❌ getCompanyGroups - Auth failed');
       throw new Error('認証が必要です');
     }
 
@@ -40,7 +40,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
       .eq('company_user_id', companyUserId);
 
     if (error) {
-      console.error('Error fetching company groups:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching company groups:', error);
       throw new Error('グループの取得に失敗しました');
     }
 
@@ -58,7 +58,7 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
       ...formattedGroups
     ];
   } catch (error) {
-    console.error('Error in getCompanyGroups:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in getCompanyGroups:', error);
     return [{ value: '', label: '未選択' }];
   }
 }
@@ -112,7 +112,7 @@ export async function createMessageTemplate(data: MessageTemplateData) {
       });
 
     if (insertError) {
-      console.error('Error creating message template:', insertError);
+      if (process.env.NODE_ENV === 'development') console.error('Error creating message template:', insertError);
       return { success: false, error: 'メッセージテンプレートの作成に失敗しました' };
     }
 
@@ -121,7 +121,7 @@ export async function createMessageTemplate(data: MessageTemplateData) {
     
     return { success: true };
   } catch (error) {
-    console.error('Error in createMessageTemplate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in createMessageTemplate:', error);
     return { success: false, error: 'メッセージテンプレートの作成に失敗しました' };
   }
 }

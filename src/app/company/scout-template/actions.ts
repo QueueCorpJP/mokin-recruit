@@ -26,34 +26,34 @@ export interface JobPosting {
 // スカウトテンプレート一覧を取得
 export async function getScoutTemplates(limit: number = 50, offset: number = 0) {
   try {
-    console.log('🔍 Starting getScoutTemplates function');
+    if (process.env.NODE_ENV === 'development') console.log('🔍 Starting getScoutTemplates function');
     
     // より厳密な企業認証を使用
     const authResult = await requireCompanyAuthForAction();
-    console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
+    if (process.env.NODE_ENV === 'development') console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
     
     if (!authResult.success) {
-      console.log('❌ Authentication failed:', authResult.error);
+      if (process.env.NODE_ENV === 'development') console.log('❌ Authentication failed:', authResult.error);
       return { success: false, error: authResult.error, data: [] };
     }
     
     const { companyAccountId, companyUserId } = authResult.data;
-    console.log('🏢 Company Account ID:', companyAccountId);
-    console.log('👤 Company User ID:', companyUserId);
+    if (process.env.NODE_ENV === 'development') console.log('🏢 Company Account ID:', companyAccountId);
+    if (process.env.NODE_ENV === 'development') console.log('👤 Company User ID:', companyUserId);
 
-    const supabase = createServerActionClient();
-    console.log('✅ Supabase client created');
+    const supabase = await createClient();
+    if (process.env.NODE_ENV === 'development') console.log('✅ Supabase client created');
 
     // 現在の認証情報を確認
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('🔐 Current auth user:', user ? {
+    if (process.env.NODE_ENV === 'development') console.log('🔐 Current auth user:', user ? {
       id: user.id,
       email: user.email,
       user_metadata: user.user_metadata
     } : 'not authenticated');
     
     if (userError) {
-      console.log('❌ User auth error:', userError);
+      if (process.env.NODE_ENV === 'development') console.log('❌ User auth error:', userError);
     }
 
     // 企業のスカウトテンプレートを取得（RLSで自動的にアクセス制御）
@@ -76,19 +76,19 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
       .range(offset, offset + limit - 1);
 
     // RLS依存なのでcompany_idフィルターは削除
-    console.log('🔎 Using RLS for data access control (no manual company_id filter)');
+    if (process.env.NODE_ENV === 'development') console.log('🔎 Using RLS for data access control (no manual company_id filter)');
 
-    console.log('📡 Executing Supabase query...');
+    if (process.env.NODE_ENV === 'development') console.log('📡 Executing Supabase query...');
     const { data: templates, error } = await query;
     
-    console.log('📊 Query result:', {
+    if (process.env.NODE_ENV === 'development') console.log('📊 Query result:', {
       templates_count: templates?.length || 0,
       error: error || 'none',
       templates: templates
     });
 
     if (error) {
-      console.error('❌ Error fetching scout templates:', error);
+      if (process.env.NODE_ENV === 'development') console.error('❌ Error fetching scout templates:', error);
       return { 
         success: false, 
         error: 'スカウトテンプレートの取得に失敗しました', 
@@ -96,9 +96,9 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
       };
     }
 
-    console.log('🔄 Processing templates data...');
+    if (process.env.NODE_ENV === 'development') console.log('🔄 Processing templates data...');
     const formattedTemplates: ScoutTemplate[] = templates?.map(template => {
-      console.log('📝 Processing template:', {
+      if (process.env.NODE_ENV === 'development') console.log('📝 Processing template:', {
         id: template.id,
         template_name: template.template_name,
         group_id: template.group_id,
@@ -121,13 +121,13 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
       };
     }) || [];
 
-    console.log('✅ Formatted templates count:', formattedTemplates.length);
+    if (process.env.NODE_ENV === 'development') console.log('✅ Formatted templates count:', formattedTemplates.length);
     return { 
       success: true, 
       data: formattedTemplates
     };
   } catch (error) {
-    console.error('💥 Exception in getScoutTemplates:', error);
+    if (process.env.NODE_ENV === 'development') console.error('💥 Exception in getScoutTemplates:', error);
     return { success: false, error: 'スカウトテンプレートの取得に失敗しました', data: [] };
   }
 }
@@ -164,13 +164,13 @@ export async function deleteScoutTemplate(templateId: string) {
       .eq('id', templateId);
 
     if (deleteError) {
-      console.error('Error deleting scout template:', deleteError);
+      if (process.env.NODE_ENV === 'development') console.error('Error deleting scout template:', deleteError);
       return { success: false, error: 'テンプレートの削除に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in deleteScoutTemplate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in deleteScoutTemplate:', error);
     return { success: false, error: 'テンプレートの削除に失敗しました' };
   }
 }
@@ -214,13 +214,13 @@ export async function updateScoutTemplateName(templateId: string, newName: strin
       .eq('id', templateId);
 
     if (updateError) {
-      console.error('Error updating scout template name:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating scout template name:', updateError);
       return { success: false, error: 'テンプレート名の更新に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in updateScoutTemplateName:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in updateScoutTemplateName:', error);
     return { success: false, error: 'テンプレート名の更新に失敗しました' };
   }
 }
@@ -260,13 +260,13 @@ export async function updateScoutTemplateSavedStatus(templateId: string, isSaved
       .eq('id', templateId);
 
     if (updateError) {
-      console.error('Error updating scout template saved status:', updateError);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating scout template saved status:', updateError);
       return { success: false, error: '保存状態の更新に失敗しました' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in updateScoutTemplateSavedStatus:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in updateScoutTemplateSavedStatus:', error);
     return { success: false, error: '保存状態の更新に失敗しました' };
   }
 }

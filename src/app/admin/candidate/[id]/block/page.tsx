@@ -26,7 +26,7 @@ async function fetchBlockedCompanies(candidateId: string): Promise<BlockedCompan
   const supabase = getSupabaseAdminClient();
   
   try {
-    console.log('Fetching blocked companies for candidate_id:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Fetching blocked companies for candidate_id:', candidateId);
     
     const { data, error } = await supabase
       .from('blocked_companies')
@@ -35,8 +35,8 @@ async function fetchBlockedCompanies(candidateId: string): Promise<BlockedCompan
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Supabase error:', error);
-      console.error('Trying with string conversion...');
+      if (process.env.NODE_ENV === 'development') console.error('Supabase error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Trying with string conversion...');
       
       // Try with string conversion (same as candidate actions)
       const { data: dataStr, error: errorStr } = await supabase
@@ -46,15 +46,15 @@ async function fetchBlockedCompanies(candidateId: string): Promise<BlockedCompan
         .order('created_at', { ascending: false });
       
       if (errorStr) {
-        console.error('String conversion also failed:', errorStr);
+        if (process.env.NODE_ENV === 'development') console.error('String conversion also failed:', errorStr);
         throw new Error(`Database error: ${error.message}`);
       }
       
-      console.log('Found blocked companies with string conversion:', dataStr);
+      if (process.env.NODE_ENV === 'development') console.log('Found blocked companies with string conversion:', dataStr);
       return dataStr as BlockedCompanyItem[] || [];
     }
     
-    console.log('Found blocked companies:', data);
+    if (process.env.NODE_ENV === 'development') console.log('Found blocked companies:', data);
     
     if (!data) {
       return [];
@@ -62,7 +62,7 @@ async function fetchBlockedCompanies(candidateId: string): Promise<BlockedCompan
     
     return data as BlockedCompanyItem[];
   } catch (error) {
-    console.error('Error fetching blocked companies:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error fetching blocked companies:', error);
     throw error;
   }
 }
@@ -113,7 +113,7 @@ export default async function BlockedCompaniesPage({ params }: PageProps) {
       </Suspense>
     );
   } catch (error) {
-    console.error('Error in BlockedCompaniesPage:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error in BlockedCompaniesPage:', error);
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="text-center mt-20">

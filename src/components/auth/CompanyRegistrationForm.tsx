@@ -151,7 +151,7 @@ export default function CompanyRegistrationForm({
           }, 2000);
         }
       } catch (error) {
-        console.error('Company registration error:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Company registration error:', error);
         setSubmitStatus('error');
         setSubmitMessage(
           error instanceof Error ? error.message : '登録に失敗しました'

@@ -17,7 +17,7 @@ export async function approveJob(jobId: string) {
       .eq('id', jobId);
 
     if (error) {
-      console.error('Job approval error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Job approval error:', error);
       return { success: false, error: '承認に失敗しました' };
     }
 
@@ -27,7 +27,7 @@ export async function approveJob(jobId: string) {
     
     return { success: true };
   } catch (error) {
-    console.error('Job approval error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job approval error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '承認に失敗しました' 
@@ -48,7 +48,7 @@ export async function rejectJob(jobId: string) {
       .eq('id', jobId);
 
     if (error) {
-      console.error('Job rejection error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Job rejection error:', error);
       return { success: false, error: '却下に失敗しました' };
     }
 
@@ -57,7 +57,7 @@ export async function rejectJob(jobId: string) {
     
     return { success: true };
   } catch (error) {
-    console.error('Job rejection error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job rejection error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '却下に失敗しました' 
@@ -82,7 +82,7 @@ export async function bulkApproveJobs(jobIds: string[], reason?: string, comment
       .in('id', jobIds);
 
     if (error) {
-      console.error('Bulk approval error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Bulk approval error:', error);
       return { success: false, error: '一括承認に失敗しました' };
     }
 
@@ -91,7 +91,7 @@ export async function bulkApproveJobs(jobIds: string[], reason?: string, comment
     
     return { success: true };
   } catch (error) {
-    console.error('Bulk approval error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Bulk approval error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '一括承認に失敗しました' 
@@ -115,7 +115,7 @@ export async function bulkRejectJobs(jobIds: string[], reason?: string, comment?
       .in('id', jobIds);
 
     if (error) {
-      console.error('Bulk rejection error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Bulk rejection error:', error);
       return { success: false, error: '一括却下に失敗しました' };
     }
 
@@ -124,7 +124,7 @@ export async function bulkRejectJobs(jobIds: string[], reason?: string, comment?
     
     return { success: true };
   } catch (error) {
-    console.error('Bulk rejection error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Bulk rejection error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '一括却下に失敗しました' 
@@ -142,14 +142,14 @@ export async function deleteJob(jobId: string) {
       .eq('id', jobId);
 
     if (error) {
-      console.error('Job delete error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Job delete error:', error);
       return { success: false, error: '削除に失敗しました' };
     }
 
     revalidatePath('/admin/job');
     return { success: true };
   } catch (error) {
-    console.error('Job delete error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job delete error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '削除に失敗しました' 
@@ -161,7 +161,7 @@ export async function updateJob(jobId: string, jobData: any) {
   try {
     const supabase = getSupabaseAdminClient();
     
-    console.log('Updating job:', jobId, 'with data:', Object.keys(jobData));
+    if (process.env.NODE_ENV === 'development') console.log('Updating job:', jobId, 'with data:', Object.keys(jobData));
     
     const { data, error } = await supabase
       .from('job_postings')
@@ -197,7 +197,7 @@ export async function updateJob(jobId: string, jobData: any) {
       .select();
 
     if (error) {
-      console.error('Job update error details:', {
+      if (process.env.NODE_ENV === 'development') console.error('Job update error details:', {
         message: error.message,
         details: error.details,
         hint: error.hint,
@@ -206,7 +206,7 @@ export async function updateJob(jobId: string, jobData: any) {
       return { success: false, error: `更新に失敗しました: ${error.message}` };
     }
 
-    console.log('Job update successful:', data);
+    if (process.env.NODE_ENV === 'development') console.log('Job update successful:', data);
 
     revalidatePath('/admin/job');
     revalidatePath(`/admin/job/${jobId}`);
@@ -214,7 +214,7 @@ export async function updateJob(jobId: string, jobData: any) {
     // 成功を返す（リダイレクトはクライアント側で処理）
     return { success: true, jobId };
   } catch (error) {
-    console.error('Job update error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job update error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '更新に失敗しました' 
@@ -226,7 +226,7 @@ export async function createJob(jobData: any) {
   try {
     const supabase = getSupabaseAdminClient();
     
-    console.log('Creating job with data:', {
+    if (process.env.NODE_ENV === 'development') console.log('Creating job with data:', {
       company_group_id: jobData.company_group_id,
       title: jobData.title,
       work_locations: jobData.work_locations,
@@ -272,7 +272,7 @@ export async function createJob(jobData: any) {
       .single();
 
     if (error) {
-      console.error('Job create error details:', {
+      if (process.env.NODE_ENV === 'development') console.error('Job create error details:', {
         message: error.message,
         details: error.details,
         hint: error.hint,
@@ -284,7 +284,7 @@ export async function createJob(jobData: any) {
     revalidatePath('/admin/job');
     return { success: true, jobId: data.id };
   } catch (error) {
-    console.error('Job create error:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Job create error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '作成に失敗しました' 

@@ -19,7 +19,7 @@ export async function checkEmailDuplication(email: string) {
     
     return { isDuplicate: data && data.length > 0 };
   } catch (error) {
-    console.error('Error checking email duplication:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error checking email duplication:', error);
     return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -209,7 +209,7 @@ export async function createCandidateData(
               error: 'このメールアドレスは既に登録されています。'
             };
           }
-          console.error('Auth user creation error:', authError);
+          if (process.env.NODE_ENV === 'development') console.error('Auth user creation error:', authError);
           return {
             success: false,
             error: `ユーザー認証の作成に失敗しました: ${authError.message}`
@@ -217,9 +217,9 @@ export async function createCandidateData(
         }
 
         authUserId = authData.user?.id || null;
-        console.log('Auth user created:', authUserId);
+        if (process.env.NODE_ENV === 'development') console.log('Auth user created:', authUserId);
       } catch (authCreateError) {
-        console.error('Auth creation failed:', authCreateError);
+        if (process.env.NODE_ENV === 'development') console.error('Auth creation failed:', authCreateError);
         return {
           success: false,
           error: 'ユーザー認証の作成に失敗しました。'
@@ -292,18 +292,18 @@ export async function createCandidateData(
       if (authUserId) {
         try {
           await supabase.auth.admin.deleteUser(authUserId);
-          console.log('Cleaned up auth user after candidate creation failure');
+          if (process.env.NODE_ENV === 'development') console.log('Cleaned up auth user after candidate creation failure');
         } catch (cleanupError) {
-          console.error('Failed to cleanup auth user:', cleanupError);
+          if (process.env.NODE_ENV === 'development') console.error('Failed to cleanup auth user:', cleanupError);
         }
       }
-      console.error('Candidate creation error:', candidateError);
+      if (process.env.NODE_ENV === 'development') console.error('Candidate creation error:', candidateError);
       throw candidateError;
     }
 
-    console.log('Created candidate:', candidate);
+    if (process.env.NODE_ENV === 'development') console.log('Created candidate:', candidate);
     const candidateId = String(candidate.id);
-    console.log('Candidate ID:', candidateId, typeof candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('Candidate ID:', candidateId, typeof candidateId);
 
     // Insert education
     if (education.final_education || education.school_name) {
@@ -419,7 +419,7 @@ export async function createCandidateData(
           .insert(entriesData);
 
         if (entriesError && entriesError.code !== '42P01') { // Ignore table doesn't exist error for now
-          console.warn('Selection entries table may not exist:', entriesError);
+          if (process.env.NODE_ENV === 'development') console.warn('Selection entries table may not exist:', entriesError);
         }
       }
     }
@@ -432,17 +432,17 @@ export async function createCandidateData(
         .eq('id', candidateId);
 
       if (memoError) {
-        console.warn('Error updating memo:', memoError);
+        if (process.env.NODE_ENV === 'development') console.warn('Error updating memo:', memoError);
       }
     }
 
     // Revalidate the candidate list page
     revalidatePath('/admin/candidate');
 
-    console.log('About to return success with candidateId:', candidateId);
+    if (process.env.NODE_ENV === 'development') console.log('About to return success with candidateId:', candidateId);
     return { success: true, candidateId };
   } catch (error) {
-    console.error('Error creating candidate:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Error creating candidate:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

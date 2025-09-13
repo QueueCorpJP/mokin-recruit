@@ -57,7 +57,7 @@ export function RoomMessagesClient({ roomId, isMobile = false }: RoomMessagesCli
           throw new Error(data.error || 'メッセージの取得に失敗しました');
         }
       } catch (err) {
-        console.error('Error fetching room messages:', err);
+        if (process.env.NODE_ENV === 'development') console.error('Error fetching room messages:', err);
         setError(err instanceof Error ? err.message : 'メッセージの取得に失敗しました');
         setMessages([]);
       }

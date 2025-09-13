@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import JobEditHeader from './JobEditHeader';
-import { Modal } from '@/components/ui/mo-dal';
+import { Modal } from '@/components/ui/Modal';
 import { CompanyGroup } from '@/app/company/job/types';
 import { LocationModal } from '@/app/company/job/LocationModal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -150,10 +150,10 @@ export default function JobEditClient({
           setExistingImages(editData._existingImages);
         }
         
-        console.log('Edit data restored from sessionStorage');
+        if (process.env.NODE_ENV === 'development') console.log('Edit data restored from sessionStorage');
       }
     } catch (error) {
-      console.error('Failed to restore edit data from sessionStorage:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to restore edit data from sessionStorage:', error);
     }
   }, [jobId, jobData]);
 
@@ -333,7 +333,7 @@ export default function JobEditClient({
       try {
         encodedImages = await encodeImagesToBase64(images);
       } catch (error) {
-        console.error('Image encoding failed:', error);
+        if (process.env.NODE_ENV === 'development') console.error('Image encoding failed:', error);
         alert('画像の処理に失敗しました');
         return;
       }
@@ -380,7 +380,7 @@ export default function JobEditClient({
       sessionStorage.setItem(`editData-${jobId}`, JSON.stringify(editData));
       router.push(`/company/job/${jobId}/edit/confirm`);
     } catch (error) {
-      console.error('Failed to save edit data:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Failed to save edit data:', error);
       alert('データの保存に失敗しました');
     }
   };

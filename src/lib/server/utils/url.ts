@@ -48,7 +48,7 @@ export function getPasswordResetRedirectUrl(): string {
 
   // 開発環境でのデバッグログ
   if (process.env.NODE_ENV === 'development') {
-    console.log('Password reset redirect URL generated:', {
+    if (process.env.NODE_ENV === 'development') console.log('Password reset redirect URL generated:', {
       baseUrl: normalizedBaseUrl,
       resetPath,
       fullUrl,

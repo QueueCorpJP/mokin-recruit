@@ -106,13 +106,13 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
       .single();
 
     if (error) {
-      console.error('Error fetching job detail:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching job detail:', error);
       return null;
     }
 
     return data as JobPostingDetail;
   } catch (error) {
-    console.error('Unexpected error fetching job detail:', error);
+    if (process.env.NODE_ENV === 'development') console.error('Unexpected error fetching job detail:', error);
     return null;
   }
 }
