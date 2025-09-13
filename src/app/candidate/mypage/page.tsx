@@ -3,17 +3,8 @@ import { CandidateRepository } from '@/lib/server/infrastructure/database/Candid
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { getRooms } from '@/lib/rooms';
 import { redirect } from 'next/navigation';
-import dynamicImport from 'next/dynamic';
 import { getCandidateNotices } from './actions';
-
-// Client component を dynamic import で遅延読み込み
-const CandidateDashboardClient = dynamicImport(
-  () => import('./CandidateDashboardClient').then(mod => mod.CandidateDashboardClient),
-  { 
-    ssr: true,
-    loading: () => <div style={{ padding: '40px', textAlign: 'center' }}>読み込み中...</div>
-  }
-);
+import { CandidateDashboardClient } from './CandidateDashboardClient';
 
 
 // やることリスト取得用の関数（candidate/taskと同じロジック）

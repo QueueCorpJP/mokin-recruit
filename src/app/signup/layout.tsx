@@ -1,6 +1,13 @@
 import { Navigation } from '@/components/ui/navigation';
-import { AuthAwareFooter } from '@/components/layout/AuthAwareFooter';
 import { SignupProvider } from '@/contexts/SignupContext';
+import dynamic from 'next/dynamic';
+
+const AuthAwareFooter = dynamic(
+  () => import('@/components/layout/AuthAwareFooter').then(mod => ({ default: mod.AuthAwareFooter })),
+  {
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
+  }
+);
 
 export default function SignupLayout({
   children,

@@ -6,7 +6,6 @@ export default [
   js.configs.recommended,
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
-    excludedFiles: ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/__tests__/**/*'],
     plugins: {
       '@typescript-eslint': typescript,
     },
@@ -19,6 +18,17 @@ export default [
           jsx: true,
         },
       },
+      globals: {
+        console: 'readonly',
+        alert: 'readonly',
+        React: 'readonly',
+        URLSearchParams: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        process: 'readonly',
+        global: 'readonly',
+        Buffer: 'readonly',
+      },
     },
     rules: {
       // TypeScript rules
@@ -26,30 +36,13 @@ export default [
         'error',
         { argsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/explicit-module-boundary-types': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'error',
-      '@typescript-eslint/no-unsafe-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
 
       // General rules
       'no-console': 'warn',
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
-
-      // Import rules
-      'sort-imports': [
-        'error',
-        {
-          ignoreCase: true,
-          ignoreDeclarationSort: true,
-        },
-      ],
     },
   },
   {

@@ -1,6 +1,13 @@
 import { getServerAuth } from '@/lib/auth/server';
 import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
+import dynamicImport from 'next/dynamic';
+
+const AuthAwareFooterServer = dynamicImport(
+  () => import('@/components/layout/AuthAwareFooterServer').then(mod => ({ default: mod.AuthAwareFooterServer })),
+  {
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

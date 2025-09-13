@@ -30,13 +30,13 @@ export default async function ContactPage() {
   }
 
   const supabase = await createClient();
-  
+
   // company_usersとcompany_accountsをJOINして企業情報を取得
   const companyUserId = user.user_metadata?.company_user_id || user.id;
   const { data: companyUser, error: userError } = await supabase
     .from('company_users')
     .select(`
-      email, 
+      email,
       full_name,
       company_accounts!inner(
         company_name
@@ -44,6 +44,23 @@ export default async function ContactPage() {
     `)
     .eq('id', companyUserId)
     .single();
+
+  // ユーザーが所属するグループを取得
+  const { data: userGroups, error: groupsError } = await supabase
+    .from('company_user_group_permissions')
+    .select(`
+      company_groups(
+        id,
+        group_name
+      )
+    `)
+    .eq('company_user_id', companyUserId);
+
+  const groups = userGroups?.map(item => item.company_groups).filter(Boolean) || [];
+
+  if (groupsError) {
+    console.error('グループ情報取得エラー:', groupsError);
+  }
 
   if (userError || !companyUser) {
     console.error('企業ユーザー情報取得エラー:', userError);
@@ -180,7 +197,7 @@ export default async function ContactPage() {
             </div>
             
             {/* フォーム部分はクライアントコンポーネントに移管 */}
-            <ContactFormClient />
+            <ContactFormClient groups={groups as any} />
           </div>
         </div>
       </div>

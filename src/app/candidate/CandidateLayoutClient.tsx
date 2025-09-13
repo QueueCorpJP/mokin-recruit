@@ -1,8 +1,15 @@
 'use client';
 
 import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 import { UserProvider } from '@/contexts/UserContext';
+import dynamic from 'next/dynamic';
+
+const AuthAwareFooterServer = dynamic(
+  () => import('@/components/layout/AuthAwareFooterServer').then(mod => mod.AuthAwareFooterServer),
+  {
+    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
+  }
+);
 
 export default function CandidateLayoutClient({
   children,

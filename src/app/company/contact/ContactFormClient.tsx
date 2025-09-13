@@ -7,7 +7,16 @@ import { Button } from '@/components/ui/button';
 import { sendContactForm } from './actions';
 import { useRouter } from 'next/navigation';
 
-export function ContactFormClient() {
+interface Group {
+  id: string;
+  group_name: string;
+}
+
+interface ContactFormClientProps {
+  groups: Group[];
+}
+
+export function ContactFormClient({ groups }: ContactFormClientProps) {
   const [formData, setFormData] = useState({
     group: '',
     inquiryType: '',
@@ -71,9 +80,10 @@ export function ContactFormClient() {
           <SelectInput
             options={[
               { value: '', label: '選択してください' },
-              { value: 'group1', label: 'グループ1' },
-              { value: 'group2', label: 'グループ2' },
-              { value: 'group3', label: 'グループ3' },
+              ...groups.map(group => ({
+                value: group.id,
+                label: group.group_name
+              }))
             ]}
             placeholder='選択してください'
             className='w-[400px] h-[54px]'
@@ -185,6 +195,7 @@ export function ContactFormClient() {
           >
             お問い合わせ内容
           </span>
+          <div className='border border-[#999999] rounded-[8px]'>
           <textarea
             style={{
               width: '400px',
@@ -206,6 +217,7 @@ export function ContactFormClient() {
             onChange={(e) => setFormData({...formData, content: e.target.value})}
             required
           />
+          </div>
         </div>
       </div>
 
