@@ -1044,122 +1044,169 @@ export async function getCandidateDetailData(
   supabase: any,
   companyGroupId?: string
 ): Promise<CandidateDetailData | null> {
-  // 1. 基本情報
-  const { data: candidate, error: candidateError } = await supabase
+  // 1. 主要クエリを並列実行
+  const candidatePromise = supabase
     .from('candidates')
     .select(
       `id, first_name, last_name, current_company, prefecture, current_residence, birth_date, gender, current_income, current_salary, desired_salary, last_login_at, updated_at, created_at, job_summary, self_pr, skills, recent_job_company_name, recent_job_department_position, recent_job_start_year, recent_job_start_month, recent_job_end_year, recent_job_end_month, recent_job_is_currently_working, recent_job_industries, recent_job_types, recent_job_description, desired_industries, desired_job_types, desired_locations, job_change_timing, interested_work_styles`
     )
     .eq('id', candidateId)
     .single();
-  if (candidateError || !candidate) return null;
 
-  // 1.5. 求人情報とグループ情報を取得（CandidateCardと同じ情報を取得）
-  let jobPostingId = '';
-  let jobPostingTitle = '';
-  let group = '';
-  let groupId = '';
-
-  if (companyGroupId) {
-    // applicationテーブルから求人情報を取得
-    const { data: applicationData, error: appError } = await supabase
-      .from('application')
-      .select(
+  const appPromise = companyGroupId
+    ? supabase
+        .from('application')
+        .select(
+          `
+          job_posting_id,
+          company_group_id,
+          job_postings ( title ),
+          company_groups ( group_name )
         `
-        job_posting_id,
-        company_group_id,
-        job_postings (
-          title
-        ),
-        company_groups (
-          group_name
         )
-      `
-      )
-      .eq('candidate_id', candidateId)
-      .eq('company_group_id', companyGroupId)
-      .maybeSingle();
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', companyGroupId)
+        .maybeSingle()
+    : Promise.resolve({ data: null, error: null } as any);
 
-    if (applicationData && !appError) {
-      jobPostingId = applicationData.job_posting_id || '';
-      jobPostingTitle = applicationData.job_postings?.title || '';
-      group = applicationData.company_groups?.group_name || '';
-      groupId = applicationData.company_group_id || '';
-    } else {
-      // scout_sendsテーブルからも確認
-      const { data: scoutData, error: scoutError } = await supabase
+  const scoutPromise = companyGroupId
+    ? supabase
         .from('scout_sends')
         .select(
           `
           job_posting_id,
           company_group_id,
-          job_postings (
-            title
-          ),
-          company_groups (
-            id,
-            group_name
-          )
+          job_postings ( title ),
+          company_groups ( id, group_name )
         `
         )
         .eq('candidate_id', candidateId)
         .eq('company_group_id', companyGroupId)
-        .maybeSingle();
+        .maybeSingle()
+    : Promise.resolve({ data: null, error: null } as any);
 
-      if (scoutData && !scoutError) {
-        jobPostingId = scoutData.job_posting_id || '';
-        jobPostingTitle = scoutData.job_postings?.title || '';
-        group = scoutData.company_groups?.group_name || '';
-        groupId = scoutData.company_group_id || '';
-      }
-    }
-  }
-
-  // 2. 職種経験
-  const { data: jobExp } = await supabase
+  const jobExpPromise = supabase
     .from('job_type_experience')
     .select('job_type_name, experience_years')
     .eq('candidate_id', candidateId);
 
-  // 3. 業種経験
-  const { data: industryExp } = await supabase
+  const industryExpPromise = supabase
     .from('work_experience')
     .select('industry_name, experience_years')
     .eq('candidate_id', candidateId);
 
-  // 4. 選考状況 - 自分の会社グループのもののみ取得
-  let selectionStatusQuery = supabase
-    .from('career_status_entries')
-    .select('company_name, industries, progress_status, decline_reason')
-    .eq('candidate_id', candidateId);
+  const selectionPromise = (() => {
+    let q = supabase
+      .from('career_status_entries')
+      .select('company_name, industries, progress_status, decline_reason')
+      .eq('candidate_id', candidateId);
+    if (companyGroupId) q = q.eq('company_group_id', companyGroupId);
+    return q;
+  })();
 
-  // companyGroupIdが指定されている場合はそのグループの進捗のみ取得
-  if (companyGroupId) {
-    selectionStatusQuery = selectionStatusQuery.eq(
-      'company_group_id',
-      companyGroupId
-    );
-  }
-
-  const { data: selectionStatus } = await selectionStatusQuery;
-
-  // 5. スキル情報
-  const { data: skillsData } = await supabase
+  const skillsPromise = supabase
     .from('skills')
     .select('english_level, other_languages, skills_list, qualifications')
     .eq('candidate_id', candidateId)
     .single();
 
-  // 6. 学歴
-  const { data: education } = await supabase
+  const educationPromise = supabase
     .from('education')
     .select('school_name, department, graduation_year, graduation_month')
     .eq('candidate_id', candidateId);
 
-  // 7. 担当者情報を取得
-  const assignedUsers = companyGroupId
-    ? await getAssignedUsersForCandidate(supabase, candidateId, companyGroupId)
+  // 担当者情報関連（rooms / scout_sends / company_groups）を並列で取得
+  const roomsPromise = companyGroupId
+    ? supabase
+        .from('rooms')
+        .select('participating_company_users')
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', companyGroupId)
+        .maybeSingle()
+    : Promise.resolve({ data: null } as any);
+
+  const scoutSendersPromise = companyGroupId
+    ? supabase
+        .from('scout_sends')
+        .select('sender_name')
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', companyGroupId)
+    : Promise.resolve({ data: [] } as any);
+
+  const groupNamePromise = companyGroupId
+    ? supabase
+        .from('company_groups')
+        .select('group_name')
+        .eq('id', companyGroupId)
+        .maybeSingle()
+    : Promise.resolve({ data: null } as any);
+
+  const [
+    { data: candidate, error: candidateError },
+    { data: applicationData },
+    { data: scoutData },
+    { data: jobExp },
+    { data: industryExp },
+    { data: selectionStatus },
+    { data: skillsData },
+    { data: education },
+    { data: roomData },
+    { data: scoutSenders },
+    { data: groupRow },
+  ] = await Promise.all([
+    candidatePromise,
+    appPromise,
+    scoutPromise,
+    jobExpPromise,
+    industryExpPromise,
+    selectionPromise,
+    skillsPromise,
+    educationPromise,
+    roomsPromise,
+    scoutSendersPromise,
+    groupNamePromise,
+  ]);
+
+  if (candidateError || !candidate) return null;
+
+  // 1.5 求人・グループ情報の決定
+  let jobPostingId = '';
+  let jobPostingTitle = '';
+  let group = '';
+  let groupId = '';
+  if (companyGroupId) {
+    if (applicationData) {
+      jobPostingId = applicationData.job_posting_id || '';
+      jobPostingTitle = applicationData.job_postings?.title || '';
+      group = applicationData.company_groups?.group_name || '';
+      groupId = applicationData.company_group_id || '';
+    } else if (scoutData) {
+      jobPostingId = scoutData.job_posting_id || '';
+      jobPostingTitle = scoutData.job_postings?.title || '';
+      group = scoutData.company_groups?.group_name || '';
+      groupId = scoutData.company_group_id || '';
+    }
+  }
+
+  // 7. 担当者情報の決定（優先度: rooms → scout_sends → group名）
+  let assignedUsers: string[] = [];
+  const roomUsers = Array.isArray(roomData?.participating_company_users)
+    ? roomData.participating_company_users
     : [];
+  if (roomUsers.length) {
+    assignedUsers = roomUsers;
+  } else if (Array.isArray(scoutSenders) && scoutSenders.length > 0) {
+    const uniqueSenders = Array.from(
+      new Set(
+        scoutSenders
+          .map((s: any) => s?.sender_name)
+          .filter((v: any) => typeof v === 'string' && v)
+      )
+    );
+    if (uniqueSenders.length) assignedUsers = uniqueSenders;
+  } else if (groupRow?.group_name) {
+    assignedUsers = [`${groupRow.group_name}グループ`];
+  }
 
   // 年齢計算
   const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
