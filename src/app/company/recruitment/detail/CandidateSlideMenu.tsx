@@ -193,16 +193,21 @@ export function CandidateSlideMenu({
       const isValidUUID = candidateId.length >= 30 && candidateId.includes('-');
       
       if (!isValidUUID) {
-        // 数値IDの場合はpropsで渡されたcandidateDataを使用し、APIは呼ばない
+        // 数値IDの場合はpropsで渡されたcandidateDataを使用
         console.log('🔍 [CandidateSlideMenu] Using props candidateData for numeric ID:', candidateId);
-        setCandidateData(propsCandidateData);
+        setCandidateData(propsCandidateData || null);
         setDetailsLoading(false);
         setSecondaryDataLoading(false);
         setLoading(false);
         return;
       }
+
+      // propsCandidateData が既にある場合は即表示しつつ、裏で最新化
+      if (propsCandidateData) {
+        setCandidateData(propsCandidateData || null);
+      }
       
-      // 第1段階: 最優先データ（候補者詳細）を先に取得・表示
+      // 第1段階: 最優先データ（候補者詳細）を取得（短期キャッシュ適用済）
       getCandidateDetailAction(candidateId, companyGroupId)
         .then((candidateDetail) => {
           console.log('🔍 [CandidateSlideMenu] Retrieved candidate detail:', candidateDetail);
