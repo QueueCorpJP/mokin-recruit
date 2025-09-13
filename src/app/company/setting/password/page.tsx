@@ -171,7 +171,7 @@ export default function PasswordChangePage() {
               href="/company/setting"
               className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] border border-[#0f9058] rounded-[32px] text-[#0f9058] font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] text-center hover:bg-[#0F9058]/20 transition-colors duration-200"
             >
-              保存せず戻る
+              キャンセル
             </Link>
             <Button
               type="submit"

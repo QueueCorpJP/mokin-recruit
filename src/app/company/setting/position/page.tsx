@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { useRouter } from 'next/navigation';
 import { updateCompanyProfile, getCompanyUserSettings } from '../actions';
@@ -131,13 +132,23 @@ export default function PositionPage() {
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center mt-10">
-            <button
+            <Button
+              asChild
+              variant="green-outline"
+              size="figma-default"
+              className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
+            >
+              <Link href="/company/setting">保存せず戻る</Link>
+            </Button>
+            <Button
               type="submit"
               disabled={isLoading}
-              className="px-6 md:px-10 py-3.5 min-w-[120px] md:min-w-[160px] bg-gradient-to-r from-[#0f9058] to-[#229a4e] text-white font-bold text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px] rounded-[32px] shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)] hover:shadow-[0px_8px_15px_0px_rgba(0,0,0,0.2)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="green-gradient"
+              size="figma-default"
+              className="min-w-[120px] md:min-w-[160px] text-sm md:text-base tracking-[1.2px] md:tracking-[1.6px]"
             >
               {isLoading ? '更新中...' : '変更を保存'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
