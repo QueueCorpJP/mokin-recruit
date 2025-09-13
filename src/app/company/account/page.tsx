@@ -23,7 +23,7 @@ export default async function AccountPage() {
   // 企業情報
   const companyPromise = supabase
     .from('company_accounts')
-    .select(`id, company_name, representative_name, representative_position, industry, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, company_attractions`)
+    .select(`id, company_name, representative_name, representative_position, industry, industries, company_overview, headquarters_address, icon_image_url, company_images, company_urls, established_year, capital_amount, capital_unit, employees_count, company_phase, company_attractions`)
     .eq('id', companyAccountId)
     .maybeSingle();
 
@@ -97,12 +97,6 @@ export default async function AccountPage() {
     } as const;
   });
 
-  // 企業基本情報のマッピング
-  const industryList = (company?.industry ?? '')
-    .split(/[、,\s]+/)
-    .filter((s: string) => s.length > 0)
-    .slice(0, 6); // バッジは多くても控えめに
-
   // JSONフィールドの安全な解析
   const parseJsonField = (field: any, defaultValue: any) => {
     if (typeof field === 'string') {
@@ -114,6 +108,34 @@ export default async function AccountPage() {
     }
     return field ?? defaultValue;
   };
+
+  // 企業基本情報のマッピング
+  let industryList: string[] = [];
+  
+  if (company?.industries) {
+    // industries フィールドがある場合（新しい形式）
+    const industriesData = parseJsonField(company.industries, []);
+    if (Array.isArray(industriesData) && industriesData.length > 0) {
+      // industriesが業種名の配列の場合
+      if (typeof industriesData[0] === 'string') {
+        industryList = industriesData;
+      }
+      // industriesが {id, name} オブジェクトの配列の場合
+      else if (typeof industriesData[0] === 'object' && industriesData[0].name) {
+        industryList = industriesData.map((item: any) => item.name);
+      }
+    }
+  }
+  
+  // industries が空で、古い industry フィールドがある場合は fallback
+  if (industryList.length === 0 && company?.industry) {
+    industryList = (company.industry ?? '')
+      .split(/[、,\s]+/)
+      .filter((s: string) => s.length > 0);
+  }
+  
+  // バッジは多くても控えめに
+  industryList = industryList.slice(0, 6);
 
   const companyProps = company
     ? {

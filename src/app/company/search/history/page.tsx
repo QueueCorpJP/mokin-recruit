@@ -2,7 +2,6 @@ import React from 'react';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { SearchHistoryClient } from './SearchHistoryClient';
 import { getSearchHistory } from '@/lib/actions/search-history';
-import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 

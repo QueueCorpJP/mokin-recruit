@@ -2,7 +2,6 @@ import React from 'react';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { TemplateClient } from './TemplateClient';
 import { getMessageTemplates } from './actions';
-import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 

@@ -2,7 +2,6 @@ import React from 'react';
 import ScoutTemplateNewClient from './ScoutTemplateNewClient';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyGroups, type GroupOption } from './actions';
-import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
