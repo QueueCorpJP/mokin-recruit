@@ -327,7 +327,8 @@ export async function createNewGroup(
 
           if (createUserError) {
             console.error(
-              `Failed to create user ${member.email}:`,
+              'Failed to create user %s:',
+              member.email,
               createUserError
             );
             continue; // Skip this member and continue with others
@@ -513,7 +514,8 @@ export async function inviteMembersToGroup(
 
         if (permissionError) {
           console.error(
-            `Failed to add permissions for ${member.email}:`,
+            'Failed to add permissions for %s:',
+            member.email,
             permissionError
           );
           continue; // Skip this member and continue with others
@@ -538,7 +540,7 @@ export async function inviteMembersToGroup(
           status: 'invited',
         });
       } catch (error) {
-        console.error(`Error processing member ${member.email}:`, error);
+        console.error('Error processing member %s:', member.email, error);
         continue; // Skip this member and continue with others
       }
     }
