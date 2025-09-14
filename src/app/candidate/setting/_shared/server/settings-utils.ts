@@ -85,7 +85,7 @@ export async function upsertByCandidateId<T extends object>(
     .from(table)
     .insert({ candidate_id: candidateId, ...payload });
   if (insertError) {
-    console.error(`[settings-utils] insert error on ${table}:`, insertError);
+    console.error('[settings-utils] insert error on %s:', table, insertError);
     return { success: false, error: '保存に失敗しました' };
   }
   return { success: true };
