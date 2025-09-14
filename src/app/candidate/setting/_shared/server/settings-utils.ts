@@ -66,7 +66,7 @@ export async function upsertByCandidateId<T extends object>(
 
   if (selectError) {
     // select失敗時もinsertで回復できるケースがあるため続行しない
-    console.error(`[settings-utils] select error on ${table}:`, selectError);
+    console.error('[settings-utils] select error on %s:', table, selectError);
   }
 
   if (existing) {
