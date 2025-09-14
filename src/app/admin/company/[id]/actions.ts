@@ -488,7 +488,8 @@ export async function inviteMembersToGroup(
 
           if (createUserError) {
             console.error(
-              `Failed to create user ${member.email}:`,
+              'Failed to create user %s:',
+              member.email,
               createUserError
             );
             continue; // Skip this member and continue with others
