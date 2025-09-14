@@ -1,4 +1,5 @@
 // セキュリティ設定インターフェース
+import * as crypto from 'crypto';
 export interface ISecurityConfig {
   bcryptRounds: number;
   sessionSecret: string;
@@ -24,10 +25,7 @@ export class SecurityConfig implements ISecurityConfig {
   }
 
   private generateDefaultSecret(): string {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    );
+    return crypto.randomBytes(32).toString('hex');
   }
 
   get isSecure(): boolean {

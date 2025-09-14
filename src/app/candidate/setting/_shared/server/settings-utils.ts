@@ -66,7 +66,7 @@ export async function upsertByCandidateId<T extends object>(
 
   if (selectError) {
     // select失敗時もinsertで回復できるケースがあるため続行しない
-    console.error(`[settings-utils] select error on ${table}:`, selectError);
+    console.error('[settings-utils] select error on %s:', table, selectError);
   }
 
   if (existing) {
@@ -75,7 +75,7 @@ export async function upsertByCandidateId<T extends object>(
       .update(payload)
       .eq('candidate_id', candidateId);
     if (updateError) {
-      console.error(`[settings-utils] update error on ${table}:`, updateError);
+      console.error('[settings-utils] update error on %s:', table, updateError);
       return { success: false, error: '更新に失敗しました' };
     }
     return { success: true };
@@ -85,7 +85,7 @@ export async function upsertByCandidateId<T extends object>(
     .from(table)
     .insert({ candidate_id: candidateId, ...payload });
   if (insertError) {
-    console.error(`[settings-utils] insert error on ${table}:`, insertError);
+    console.error('[settings-utils] insert error on %s:', table, insertError);
     return { success: false, error: '保存に失敗しました' };
   }
   return { success: true };
