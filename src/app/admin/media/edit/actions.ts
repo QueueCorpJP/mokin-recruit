@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import sanitizeHtml from 'sanitize-html';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 
 // Supabase URLを変数形式に変換する関数
@@ -103,7 +104,7 @@ export async function saveArticle(formData: FormData) {
           content,
           status,
           thumbnail_url: thumbnailUrl,
-          excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
+          excerpt: sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).substring(0, 200),
           published_at: status === 'PUBLISHED' ? new Date().toISOString() : null,
           updated_at: new Date().toISOString()
         })
