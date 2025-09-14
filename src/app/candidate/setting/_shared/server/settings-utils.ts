@@ -75,7 +75,7 @@ export async function upsertByCandidateId<T extends object>(
       .update(payload)
       .eq('candidate_id', candidateId);
     if (updateError) {
-      console.error(`[settings-utils] update error on ${table}:`, updateError);
+      console.error('[settings-utils] update error on %s:', table, updateError);
       return { success: false, error: '更新に失敗しました' };
     }
     return { success: true };
