@@ -375,7 +375,7 @@ export async function createNewGroup(
           status: 'invited',
         });
       } catch (error) {
-        console.error(`Error processing member ${member.email}:`, error);
+        console.error('Error processing member %s:', member.email, error);
         continue; // Skip this member and continue with others
       }
     }
