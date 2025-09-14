@@ -311,7 +311,7 @@ export async function createNewGroup(
           console.log(`[Group Creation] User already exists: ${member.email}`);
         } else {
           // Create new user account
-          const tempPassword = Math.random().toString(36).slice(-12); // Generate temporary password
+          const tempPassword = crypto.randomBytes(12).toString('hex'); // Generate temporary password
 
           const { data: newUser, error: createUserError } = await supabase
             .from('company_users')
