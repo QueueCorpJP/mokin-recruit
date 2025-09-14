@@ -71,7 +71,14 @@ export const fontOptimizer = {
     if (typeof window === 'undefined' || !window.performance) return;
 
     const fontLoadEntries = performance.getEntriesByType('resource')
-      .filter(entry => entry.name.includes('fonts.googleapis.com') || entry.name.includes('fonts.gstatic.com')) as PerformanceResourceTiming[];
+      .filter(entry => {
+        try {
+          const hostname = new URL(entry.name).hostname;
+          return hostname === 'fonts.googleapis.com' || hostname === 'fonts.gstatic.com';
+        } catch {
+          return false;
+        }
+      }) as PerformanceResourceTiming[];
 
     const totalLoadTime = fontLoadEntries.reduce((total, entry) => {
       return total + (entry.responseEnd - entry.startTime);
