@@ -3,40 +3,32 @@
 import { z } from 'zod';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
+import crypto from 'crypto';
 
 // プラン変更のバリデーションスキーマ
 const PlanChangeSchema = z.object({
   plan: z.enum(['basic', 'standard'], {
-    errorMap: () => ({ message: '有効なプランを選択してください' })
+    errorMap: () => ({ message: '有効なプランを選択してください' }),
   }),
 });
 
 // スカウト上限数変更のバリデーションスキーマ
 const ScoutLimitChangeSchema = z.object({
   scoutLimit: z.number().min(1).max(1000, {
-    message: 'スカウト上限数は1〜1000の範囲で入力してください'
+    message: 'スカウト上限数は1〜1000の範囲で入力してください',
   }),
 });
 
-// 企業ステータス変更のバリデーションスキーマ
-const StatusChangeSchema = z.object({
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], {
-    errorMap: () => ({ message: '有効なステータスを選択してください' })
-  }),
-});
-
-export async function updateCompanyPlan(
-  companyId: string,
-  newPlan: string
-) {
+export async function updateCompanyPlan(companyId: string, newPlan: string) {
   try {
     // Step 1: Validate input data
     const validation = PlanChangeSchema.safeParse({ plan: newPlan });
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error?.issues?.[0]?.message || 'プランが正しくありません',
-        validationErrors: validation.error?.issues
+        error:
+          validation.error?.issues?.[0]?.message || 'プランが正しくありません',
+        validationErrors: validation.error?.issues,
       };
     }
 
@@ -57,7 +49,7 @@ export async function updateCompanyPlan(
       console.error('Company plan update error:', updateError);
       return {
         success: false,
-        error: `プランの更新に失敗しました: ${updateError.message}`
+        error: `プランの更新に失敗しました: ${updateError.message}`,
       };
     }
 
@@ -68,14 +60,13 @@ export async function updateCompanyPlan(
 
     return {
       success: true,
-      company: updatedCompany
+      company: updatedCompany,
     };
-
   } catch (error) {
     console.error('Error updating company plan:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -86,12 +77,16 @@ export async function updateCompanyScoutLimit(
 ) {
   try {
     // Step 1: Validate input data
-    const validation = ScoutLimitChangeSchema.safeParse({ scoutLimit: newScoutLimit });
+    const validation = ScoutLimitChangeSchema.safeParse({
+      scoutLimit: newScoutLimit,
+    });
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error?.issues?.[0]?.message || 'スカウト上限数が正しくありません',
-        validationErrors: validation.error?.issues
+        error:
+          validation.error?.issues?.[0]?.message ||
+          'スカウト上限数が正しくありません',
+        validationErrors: validation.error?.issues,
       };
     }
 
@@ -112,12 +107,14 @@ export async function updateCompanyScoutLimit(
       console.error('Company scout limit update error:', updateError);
       return {
         success: false,
-        error: `スカウト上限数の更新に失敗しました: ${updateError.message}`
+        error: `スカウト上限数の更新に失敗しました: ${updateError.message}`,
       };
     }
 
     console.log('Company scout limit updated successfully:', updatedCompany);
-    console.log(`New scout limit for ${updatedCompany.company_name}: ${newScoutLimit}`);
+    console.log(
+      `New scout limit for ${updatedCompany.company_name}: ${newScoutLimit}`
+    );
 
     // Step 3: Revalidate the company detail page
     revalidatePath(`/admin/company/${companyId}`);
@@ -125,21 +122,18 @@ export async function updateCompanyScoutLimit(
     return {
       success: true,
       company: updatedCompany,
-      newScoutLimit
+      newScoutLimit,
     };
-
   } catch (error) {
     console.error('Error updating company scout limit:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-export async function suspendCompany(
-  companyId: string
-) {
+export async function suspendCompany(companyId: string) {
   try {
     const supabase = getSupabaseAdminClient();
 
@@ -158,7 +152,7 @@ export async function suspendCompany(
       console.error('Company suspension error:', updateError);
       return {
         success: false,
-        error: `企業休会処理に失敗しました: ${updateError.message}`
+        error: `企業休会処理に失敗しました: ${updateError.message}`,
       };
     }
 
@@ -170,35 +164,31 @@ export async function suspendCompany(
 
     return {
       success: true,
-      company: updatedCompany
+      company: updatedCompany,
     };
-
   } catch (error) {
     console.error('Error suspending company:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-export async function updateGroupName(
-  groupId: string,
-  newGroupName: string
-) {
+export async function updateGroupName(groupId: string, newGroupName: string) {
   try {
     // Step 1: Validate input data
     if (!newGroupName || newGroupName.trim().length === 0) {
       return {
         success: false,
-        error: 'グループ名を入力してください'
+        error: 'グループ名を入力してください',
       };
     }
 
     if (newGroupName.length > 100) {
       return {
         success: false,
-        error: 'グループ名は100文字以内で入力してください'
+        error: 'グループ名は100文字以内で入力してください',
       };
     }
 
@@ -215,7 +205,7 @@ export async function updateGroupName(
       console.error('Group fetch error:', fetchError);
       return {
         success: false,
-        error: `グループ情報の取得に失敗しました: ${fetchError.message}`
+        error: `グループ情報の取得に失敗しました: ${fetchError.message}`,
       };
     }
 
@@ -234,11 +224,13 @@ export async function updateGroupName(
       console.error('Group name update error:', updateError);
       return {
         success: false,
-        error: `グループ名の更新に失敗しました: ${updateError.message}`
+        error: `グループ名の更新に失敗しました: ${updateError.message}`,
       };
     }
 
-    console.log(`[Group Name Update] Successfully updated group: ${currentGroup.group_name} → ${updatedGroup.group_name} (ID: ${groupId})`);
+    console.log(
+      `[Group Name Update] Successfully updated group: ${currentGroup.group_name} → ${updatedGroup.group_name} (ID: ${groupId})`
+    );
 
     // Step 4: Return success without revalidatePath - will be handled by client
     // revalidatePath will be called when modal is closed to prevent modal from disappearing
@@ -246,14 +238,13 @@ export async function updateGroupName(
     return {
       success: true,
       updatedGroup: updatedGroup,
-      companyAccountId: currentGroup.company_account_id
+      companyAccountId: currentGroup.company_account_id,
     };
-
   } catch (error) {
     console.error('Error updating group name:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -266,7 +257,9 @@ export async function createNewGroup(
   try {
     const supabase = getSupabaseAdminClient();
 
-    console.log(`[Group Creation] Creating new group: ${groupName} for company: ${companyId}`);
+    console.log(
+      `[Group Creation] Creating new group: ${groupName} for company: ${companyId}`
+    );
     console.log(`[Group Creation] Members to invite:`, members);
 
     // Step 1: Create new group
@@ -277,7 +270,7 @@ export async function createNewGroup(
         group_name: groupName.trim(),
         description: '',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select('id, group_name')
       .single();
@@ -286,19 +279,25 @@ export async function createNewGroup(
       console.error('Group creation error:', groupError);
       return {
         success: false,
-        error: `グループの作成に失敗しました: ${groupError.message}`
+        error: `グループの作成に失敗しました: ${groupError.message}`,
       };
     }
 
-    console.log(`[Group Creation] Successfully created group: ${newGroup.group_name} (ID: ${newGroup.id})`);
+    console.log(
+      `[Group Creation] Successfully created group: ${newGroup.group_name} (ID: ${newGroup.id})`
+    );
 
-    const invitedMembers: Array<{ email: string; role: string; status: string }> = [];
+    const invitedMembers: Array<{
+      email: string;
+      role: string;
+      status: string;
+    }> = [];
 
     // Step 2: Process each member invitation
     for (const member of members) {
       try {
         // Check if user already exists
-        const { data: existingUser, error: userCheckError } = await supabase
+        const { data: existingUser } = await supabase
           .from('company_users')
           .select('id, email')
           .eq('email', member.email)
@@ -321,18 +320,23 @@ export async function createNewGroup(
               password_hash: tempPassword, // In real implementation, this should be hashed
               full_name: '', // Will be filled during registration
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .select('id')
             .single();
 
           if (createUserError) {
-            console.error(`Failed to create user ${member.email}:`, createUserError);
+            console.error(
+              `Failed to create user ${member.email}:`,
+              createUserError
+            );
             continue; // Skip this member and continue with others
           }
 
           userId = newUser.id;
-          console.log(`[Group Creation] Created new user: ${member.email} (ID: ${userId})`);
+          console.log(
+            `[Group Creation] Created new user: ${member.email} (ID: ${userId})`
+          );
         }
 
         // Step 3: Add user to group with specified role
@@ -341,16 +345,22 @@ export async function createNewGroup(
           .upsert({
             company_user_id: userId,
             company_group_id: newGroup.id,
-            permission_level: member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF'
+            permission_level:
+              member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF',
           });
 
         if (permissionError) {
-          console.error(`Failed to add permissions for ${member.email}:`, permissionError);
+          console.error(
+            `Failed to add permissions for ${member.email}:`,
+            permissionError
+          );
           continue; // Skip this member and continue with others
         }
 
         // Step 4: Send invitation email (simulated)
-        console.log(`[Group Creation] Sending invitation email to: ${member.email}`);
+        console.log(
+          `[Group Creation] Sending invitation email to: ${member.email}`
+        );
         console.log(`[Group Creation] Email content:
           Subject: ${groupName}グループへの招待
           Body: ${groupName}グループへの招待が届いています。
@@ -362,16 +372,17 @@ export async function createNewGroup(
         invitedMembers.push({
           email: member.email,
           role: member.role,
-          status: 'invited'
+          status: 'invited',
         });
-
       } catch (error) {
         console.error(`Error processing member ${member.email}:`, error);
         continue; // Skip this member and continue with others
       }
     }
 
-    console.log(`[Group Creation] Successfully processed ${invitedMembers.length} members`);
+    console.log(
+      `[Group Creation] Successfully processed ${invitedMembers.length} members`
+    );
 
     // Step 5: Revalidate the company detail page
     revalidatePath(`/admin/company/${companyId}`);
@@ -380,14 +391,13 @@ export async function createNewGroup(
       success: true,
       group: newGroup,
       invitedMembers,
-      message: `グループ「${groupName}」を作成し、${invitedMembers.length}人のメンバーを招待しました`
+      message: `グループ「${groupName}」を作成し、${invitedMembers.length}人のメンバーを招待しました`,
     };
-
   } catch (error) {
     console.error('Error creating new group:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -399,13 +409,17 @@ export async function inviteMembersToGroup(
   try {
     const supabase = getSupabaseAdminClient();
 
-    console.log(`[Member Invitation] Starting invitation for group: ${groupId}`);
+    console.log(
+      `[Member Invitation] Starting invitation for group: ${groupId}`
+    );
     console.log(`[Member Invitation] Members to invite:`, members);
 
     // Step 1: Get group and company information
     const { data: groupData, error: groupError } = await supabase
       .from('company_groups')
-      .select('id, group_name, company_account_id, company_accounts(id, company_name)')
+      .select(
+        'id, group_name, company_account_id, company_accounts(id, company_name)'
+      )
       .eq('id', groupId)
       .single();
 
@@ -413,26 +427,32 @@ export async function inviteMembersToGroup(
       console.error('Group fetch error:', groupError);
       return {
         success: false,
-        error: `グループ情報の取得に失敗しました: ${groupError.message}`
+        error: `グループ情報の取得に失敗しました: ${groupError.message}`,
       };
     }
 
-    const companyData = Array.isArray(groupData.company_accounts) ? groupData.company_accounts[0] : groupData.company_accounts;
-    
+    const companyData = Array.isArray(groupData.company_accounts)
+      ? groupData.company_accounts[0]
+      : groupData.company_accounts;
+
     if (!companyData) {
       return {
         success: false,
-        error: '企業情報の取得に失敗しました'
+        error: '企業情報の取得に失敗しました',
       };
     }
-    
-    const invitedMembers: Array<{ email: string; role: string; status: string }> = [];
+
+    const invitedMembers: Array<{
+      email: string;
+      role: string;
+      status: string;
+    }> = [];
 
     // Step 2: Process each member invitation
     for (const member of members) {
       try {
         // Check if user already exists
-        const { data: existingUser, error: userCheckError } = await supabase
+        const { data: existingUser } = await supabase
           .from('company_users')
           .select('id, email')
           .eq('email', member.email)
@@ -443,10 +463,15 @@ export async function inviteMembersToGroup(
         if (existingUser) {
           // User already exists
           userId = existingUser.id;
-          console.log(`[Member Invitation] User already exists: ${member.email}`);
+          console.log(
+            `[Member Invitation] User already exists: ${member.email}`
+          );
         } else {
           // Create new user account
-          const tempPassword = Math.random().toString(36).slice(-12); // Generate temporary password
+          const tempPassword = crypto
+            .randomBytes(9)
+            .toString('base64')
+            .slice(0, 12); // Generate temporary password
 
           const { data: newUser, error: createUserError } = await supabase
             .from('company_users')
@@ -455,18 +480,23 @@ export async function inviteMembersToGroup(
               password_hash: tempPassword, // In real implementation, this should be hashed
               full_name: '', // Will be filled during registration
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .select('id')
             .single();
 
           if (createUserError) {
-            console.error(`Failed to create user ${member.email}:`, createUserError);
+            console.error(
+              `Failed to create user ${member.email}:`,
+              createUserError
+            );
             continue; // Skip this member and continue with others
           }
 
           userId = newUser.id;
-          console.log(`[Member Invitation] Created new user: ${member.email} (ID: ${userId})`);
+          console.log(
+            `[Member Invitation] Created new user: ${member.email} (ID: ${userId})`
+          );
         }
 
         // Step 3: Add user to group with specified role
@@ -475,17 +505,23 @@ export async function inviteMembersToGroup(
           .upsert({
             company_user_id: userId,
             company_group_id: groupId,
-            permission_level: member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF'
+            permission_level:
+              member.role === 'admin' ? 'ADMINISTRATOR' : 'SCOUT_STAFF',
           });
 
         if (permissionError) {
-          console.error(`Failed to add permissions for ${member.email}:`, permissionError);
+          console.error(
+            `Failed to add permissions for ${member.email}:`,
+            permissionError
+          );
           continue; // Skip this member and continue with others
         }
 
         // Step 4: Send invitation email (simulated)
         // In a real implementation, you would use an email service like SendGrid, AWS SES, etc.
-        console.log(`[Member Invitation] Sending invitation email to: ${member.email}`);
+        console.log(
+          `[Member Invitation] Sending invitation email to: ${member.email}`
+        );
         console.log(`[Member Invitation] Email content:
           Subject: ${companyData.company_name} - グループ招待
           Body: ${groupData.group_name}グループへの招待が届いています。
@@ -497,16 +533,17 @@ export async function inviteMembersToGroup(
         invitedMembers.push({
           email: member.email,
           role: member.role,
-          status: 'invited'
+          status: 'invited',
         });
-
       } catch (error) {
         console.error(`Error processing member ${member.email}:`, error);
         continue; // Skip this member and continue with others
       }
     }
 
-    console.log(`[Member Invitation] Successfully processed ${invitedMembers.length} members`);
+    console.log(
+      `[Member Invitation] Successfully processed ${invitedMembers.length} members`
+    );
 
     // Step 5: Revalidate the company detail page
     revalidatePath(`/admin/company/${groupData.company_account_id}`);
@@ -517,22 +554,19 @@ export async function inviteMembersToGroup(
       groupData: {
         id: groupData.id,
         group_name: groupData.group_name,
-        company_name: companyData.company_name
-      }
+        company_name: companyData.company_name,
+      },
     };
-
   } catch (error) {
     console.error('Error inviting members to group:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-export async function deleteGroup(
-  groupId: string
-) {
+export async function deleteGroup(groupId: string) {
   try {
     // Step 1: Get group information before deletion
     const supabase = getSupabaseAdminClient();
@@ -547,7 +581,7 @@ export async function deleteGroup(
       console.error('Group fetch error before deletion:', fetchError);
       return {
         success: false,
-        error: `グループ情報の取得に失敗しました: ${fetchError.message}`
+        error: `グループ情報の取得に失敗しました: ${fetchError.message}`,
       };
     }
 
@@ -595,11 +629,13 @@ export async function deleteGroup(
       console.error('Group deletion error:', deleteError);
       return {
         success: false,
-        error: `グループの削除に失敗しました: ${deleteError.message}`
+        error: `グループの削除に失敗しました: ${deleteError.message}`,
       };
     }
 
-    console.log(`[Group Deletion] Successfully deleted group: ${groupData.group_name} (ID: ${groupId})`);
+    console.log(
+      `[Group Deletion] Successfully deleted group: ${groupData.group_name} (ID: ${groupId})`
+    );
 
     // Step 4: Revalidate the company detail page
     revalidatePath(`/admin/company/${groupData.company_account_id}`);
@@ -609,26 +645,25 @@ export async function deleteGroup(
       deletedGroup: {
         id: groupData.id,
         group_name: groupData.group_name,
-        company_account_id: groupData.company_account_id
-      }
+        company_account_id: groupData.company_account_id,
+      },
     };
-
   } catch (error) {
     console.error('Error deleting group:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-export async function deleteCompany(
-  companyId: string
-) {
+export async function deleteCompany(companyId: string) {
   try {
     const supabase = getSupabaseAdminClient();
 
-    console.log(`[Company Deletion] Starting physical deletion for company: ${companyId}`);
+    console.log(
+      `[Company Deletion] Starting physical deletion for company: ${companyId}`
+    );
 
     // Step 1: Get company information before deletion for logging
     const { data: companyData, error: fetchError } = await supabase
@@ -641,7 +676,7 @@ export async function deleteCompany(
       console.error('Company fetch error before deletion:', fetchError);
       return {
         success: false,
-        error: `企業情報の取得に失敗しました: ${fetchError.message}`
+        error: `企業情報の取得に失敗しました: ${fetchError.message}`,
       };
     }
 
@@ -659,11 +694,13 @@ export async function deleteCompany(
       console.error('Company physical deletion error:', deleteError);
       return {
         success: false,
-        error: `企業アカウントの削除に失敗しました: ${deleteError.message}`
+        error: `企業アカウントの削除に失敗しました: ${deleteError.message}`,
       };
     }
 
-    console.log(`[Company Deletion] Successfully deleted company: ${companyData.company_name} (ID: ${companyId})`);
+    console.log(
+      `[Company Deletion] Successfully deleted company: ${companyData.company_name} (ID: ${companyId})`
+    );
 
     // Step 4: Revalidate the company list page
     revalidatePath('/admin/company');
@@ -672,15 +709,14 @@ export async function deleteCompany(
       success: true,
       deletedCompany: {
         id: companyData.id,
-        company_name: companyData.company_name
-      }
+        company_name: companyData.company_name,
+      },
     };
-
   } catch (error) {
     console.error('Error deleting company:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

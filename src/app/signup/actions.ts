@@ -1,7 +1,8 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import * as crypto from 'crypto';
 
 export interface SignupFormData {
   email: string;
@@ -18,7 +19,9 @@ const SignupSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
 });
 
-export async function signupRequestAction(formData: SignupFormData): Promise<SignupResult> {
+export async function signupRequestAction(
+  formData: SignupFormData
+): Promise<SignupResult> {
   try {
     logger.info('Signup request received at:', new Date().toISOString());
 
@@ -114,11 +117,12 @@ export async function signupRequestAction(formData: SignupFormData): Promise<Sig
     // ステップ6: 通常のsignUpでConfirmation emailを送信
     try {
       logger.info('Creating user with signUp for confirmation email');
-      
+
       // 一時パスワードを生成
-      const tempPassword = 'temp_signup_' + Math.random().toString(36).substring(2, 15);
-      
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+      const tempPassword =
+        'temp_signup_' + crypto.randomBytes(12).toString('base64url');
+
+      const { error: signupError } = await supabase.auth.signUp({
         email: email,
         password: tempPassword,
         options: {
@@ -127,19 +131,22 @@ export async function signupRequestAction(formData: SignupFormData): Promise<Sig
             user_type: 'candidate',
             signup_step: 'verification_pending',
             email_verification_required: true,
-            temp_password: true
-          }
-        }
+            temp_password: true,
+          },
+        },
       });
 
       if (signupError) {
-        if (signupError.message?.includes('already registered') || signupError.message?.includes('User already registered')) {
+        if (
+          signupError.message?.includes('already registered') ||
+          signupError.message?.includes('User already registered')
+        ) {
           return {
             success: false,
             error: 'このメールアドレスは既に登録されています。',
           };
         }
-        
+
         logger.error('Failed to signup:', signupError);
         return {
           success: false,
@@ -147,11 +154,14 @@ export async function signupRequestAction(formData: SignupFormData): Promise<Sig
         };
       }
 
-      logger.info(`Signup confirmation email sent to: ${email.substring(0, 3)}***`);
+      logger.info(
+        `Signup confirmation email sent to: ${email.substring(0, 3)}***`
+      );
 
       return {
         success: true,
-        message: '認証コードをメールで送信しました。メールをご確認いただき、認証を完了してください。',
+        message:
+          '認証コードをメールで送信しました。メールをご確認いただき、認証を完了してください。',
       };
     } catch (signupError) {
       logger.error('Signup operation failed:', signupError);
@@ -165,7 +175,8 @@ export async function signupRequestAction(formData: SignupFormData): Promise<Sig
 
     return {
       success: false,
-      message: 'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
+      message:
+        'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
     };
   }
 }
