@@ -351,7 +351,8 @@ export async function createNewGroup(
 
         if (permissionError) {
           console.error(
-            `Failed to add permissions for ${member.email}:`,
+            'Failed to add permissions for %s:',
+            member.email,
             permissionError
           );
           continue; // Skip this member and continue with others
