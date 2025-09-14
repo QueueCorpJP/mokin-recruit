@@ -28,6 +28,10 @@ export default [
         process: 'readonly',
         global: 'readonly',
         Buffer: 'readonly',
+        // Web APIs for Next.js Server Actions
+        FormData: 'readonly',
+        File: 'readonly',
+        FormDataEntryValue: 'readonly',
       },
     },
     rules: {
