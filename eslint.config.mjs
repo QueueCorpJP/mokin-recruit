@@ -32,6 +32,11 @@ export default [
         FormData: 'readonly',
         File: 'readonly',
         FormDataEntryValue: 'readonly',
+        // Browser APIs
+        sessionStorage: 'readonly',
+        localStorage: 'readonly',
+        fetch: 'readonly',
+        confirm: 'readonly',
       },
     },
     rules: {
