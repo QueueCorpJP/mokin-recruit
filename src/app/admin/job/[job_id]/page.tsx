@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
@@ -246,6 +247,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   return (
     <div className='bg-gray-50 min-h-screen'>
+      {/* 求人タイトルをブレッドクラム用に設定するスクリプト */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.jobTitle = ${JSON.stringify(jobDetail.title)};`,
+        }}
+      />
       <div className='mx-auto'>
         {/* 上部テーブル */}
         <div className='mb-6 flex-col justify-center w-full'>

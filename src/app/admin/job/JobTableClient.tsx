@@ -81,7 +81,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     { value: '求人タイトル', label: '求人タイトル' },
     { value: '求人本文', label: '求人本文' },
     { value: '職種', label: '職種' },
-    { value: '求人ID', label: '求人ID' },
   ];
 
   const handleSort = (column: string) => {
@@ -135,7 +134,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
       '公開範囲',
       '企業名',
       '職種',
-      '求人ID',
       '求人タイトル',
       '求人URL',
     ];
@@ -150,7 +148,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
         publicationTypeMap[job.publication_type] || job.publication_type,
         `"${(job.company_accounts?.company_name || '不明').replace(/"/g, '""')}"`,
         `"${job.job_type && job.job_type.length > 0 ? job.job_type.join(', ').replace(/"/g, '""') : '未設定'}"`,
-        job.id,
         `"${job.title.replace(/"/g, '""')}"`, // ダブルクォートをエスケープ
         jobUrl,
       ];
@@ -198,8 +195,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
           return job.job_type?.some(type =>
             type.toLowerCase().includes(searchLower)
           );
-        case '求人ID':
-          return job.id.toLowerCase().includes(searchLower);
         default:
           return false; // セレクトで選択されていない場合は何も表示しない
       }
@@ -241,10 +236,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
         bValue =
           b.job_type && b.job_type.length > 0 ? b.job_type.join(', ') : '';
         break;
-      case 'jobId':
-        aValue = a.id;
-        bValue = b.id;
-        break;
       case 'publicStatus':
         aValue = publicationTypeMap[a.publication_type] || a.publication_type;
         bValue = publicationTypeMap[b.publication_type] || b.publication_type;
@@ -276,7 +267,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     },
     { key: 'company', label: '企業名', sortable: true, width: 'w-[100px]' },
     { key: 'position', label: '職種', sortable: true, width: 'w-[150px]' },
-    { key: 'jobId', label: '求人ID', sortable: true, width: 'w-[140px]' },
     { key: 'title', label: '求人タイトル', sortable: true, width: 'flex-1' },
     {
       key: 'actions',
@@ -415,16 +405,6 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
                           </div>
                         ),
                         width: 'w-[150px]',
-                      },
-                      {
-                        content: (
-                          <div>
-                            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                              {truncateText(job.id, 14)}
-                            </div>
-                          </div>
-                        ),
-                        width: 'w-[140px]',
                       },
                       {
                         content: truncateText(job.title, 20),

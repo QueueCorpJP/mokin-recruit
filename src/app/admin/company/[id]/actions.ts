@@ -319,6 +319,7 @@ export async function createNewGroup(
               email: member.email,
               password_hash: tempPassword, // In real implementation, this should be hashed
               full_name: '', // Will be filled during registration
+              company_account_id: companyId,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
@@ -481,6 +482,7 @@ export async function inviteMembersToGroup(
               email: member.email,
               password_hash: tempPassword, // In real implementation, this should be hashed
               full_name: '', // Will be filled during registration
+              company_account_id: groupData.company_account_id,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })

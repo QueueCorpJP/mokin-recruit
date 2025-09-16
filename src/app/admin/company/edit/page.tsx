@@ -13,7 +13,7 @@ const dummyCompany: CompanyEditData = {
     'デバッグ用の企業概要です。革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。',
   appeal_points: '働きやすい環境\n成長できる機会\n充実した福利厚生',
   logo_image_path: null,
-  plan: 'スタンダードプラン',
+  plan: 'スタンダード',
   contract_plan: {
     plan_name: 'スタンダードプラン',
     max_job_postings: 10,
