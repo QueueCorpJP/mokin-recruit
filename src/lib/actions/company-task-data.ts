@@ -45,7 +45,7 @@ export async function getCompanyAccountData(companyUserId: string): Promise<Comp
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
-      }).replace(/\//g, '/')
+      })
     };
   } catch (error) {
     console.error('Error in getCompanyAccountData:', error);
