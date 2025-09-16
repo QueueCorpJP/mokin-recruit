@@ -66,7 +66,13 @@ async function decryptString(encryptedStr) {
 }
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/admin/ui/select';
 import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { Button } from '@/components/ui/button';
@@ -83,7 +89,10 @@ interface NewNoticeFormProps {
   saveNotice: (formData: FormData) => Promise<any>;
 }
 
-export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFormProps) {
+export default function NoticeNewClient({
+  categories,
+  saveNotice,
+}: NewNoticeFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -96,13 +105,12 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
   const [thumbnailError, setThumbnailError] = useState('');
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
-  
 
   // プレビューからの戻り時にデータを復元
   useEffect(() => {
     // クライアントサイドでのみ実行
     if (typeof window === 'undefined') return;
-    
+
     const storedData = sessionStorage.getItem('previewNotice');
     if (storedData) {
       (async () => {
@@ -113,13 +121,13 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
           setTitle(data.title || '');
           setSelectedCategoryIds(data.categoryIds || []);
           setContent(data.content || '');
-          
+
           // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
           if (data.thumbnail && data.thumbnailName) {
             // URLから復元する場合は表示のみで実際のFileオブジェクトは作成しない
             // 代わりにプレビュー時と同じ形式でデータを保持
           }
-          
+
           // sessionStorageをクリア（一度復元したらクリア）
           sessionStorage.removeItem('previewNotice');
         } catch (error) {
@@ -150,17 +158,24 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-      
+
       // 画像ファイルかどうかをMIMEタイプでチェック
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+      ];
       if (!allowedTypes.includes(file.type)) {
-        setThumbnailError('jpeg、jpg、png、gif形式の画像ファイルのみアップロード可能です');
+        setThumbnailError(
+          'jpeg、jpg、png、gif形式の画像ファイルのみアップロード可能です'
+        );
         setThumbnail(null);
         // ファイル入力をクリア
         e.target.value = '';
         return;
       }
-      
+
       if (file.size > maxSize) {
         setThumbnailError('ファイルサイズは10MB以下にしてください');
         setThumbnail(null);
@@ -168,7 +183,7 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
         e.target.value = '';
         return;
       }
-      
+
       setThumbnailError('');
       setThumbnail(file);
     }
@@ -179,7 +194,9 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
     setThumbnailError('');
     // ファイル入力をクリア
     if (typeof document !== 'undefined') {
-      const fileInput = document.getElementById('thumbnail-input') as HTMLInputElement;
+      const fileInput = document.getElementById(
+        'thumbnail-input'
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -221,7 +238,7 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
       categoryIds: selectedCategoryIds,
       content: content || '<p>お知らせ内容がここに表示されます</p>',
       thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
-      thumbnailName: thumbnail?.name || null
+      thumbnailName: thumbnail?.name || null,
     };
 
     if (typeof window !== 'undefined') {
@@ -273,14 +290,17 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
       const formData = new FormData();
       formData.append('title', title);
       formData.append('categoryId', selectedCategoryIds[0] || ''); // actions.tsはcategoryIdを期待している
-      formData.append('content', content || '<p>お知らせ内容がここに表示されます</p>');
+      formData.append(
+        'content',
+        content || '<p>お知らせ内容がここに表示されます</p>'
+      );
       formData.append('status', status);
       if (thumbnail) {
         formData.append('thumbnail', thumbnail);
       }
 
       const result = await saveNotice(formData);
-      
+
       if (status === 'PUBLISHED' && result?.success) {
         // 公開時は成功後にリダイレクト
         router.push('/admin/notice');
@@ -315,37 +335,34 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
   };
 
   return (
-    <div className="min-h-screen">
-
-      <div className="space-y-6">
+    <div className='min-h-screen'>
+      <div className='space-y-6'>
         {/* タイトル */}
         <div>
-          <FormFieldHeader>
-            タイトル
-          </FormFieldHeader>
+          <FormFieldHeader>タイトル</FormFieldHeader>
           <AdminTextarea
             value={title}
-            onChange={(value) => {
+            onChange={value => {
               if (value.length <= 60) {
                 setTitle(value);
                 setTitleError('');
               }
             }}
-            placeholder="お知らせのタイトルを入力してください"
-            height="h-20"
+            placeholder='お知らせのタイトルを入力してください'
+            height='h-20'
             rows={2}
           />
-          <div className="flex justify-between items-center mt-1">
+          <div className='flex justify-between items-center mt-1'>
             <div>
               {titleError && (
-                <p className="text-red-500 text-sm">
-                  {titleError}
-                </p>
+                <p className='text-red-500 text-sm'>{titleError}</p>
               )}
             </div>
-            <p className={`text-sm ${
-              title.length > 50 ? 'text-red-500' : 'text-gray-500'
-            }`}>
+            <p
+              className={`text-sm ${
+                title.length > 50 ? 'text-red-500' : 'text-gray-500'
+              }`}
+            >
               {title.length}/60文字
             </p>
           </div>
@@ -353,26 +370,28 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
 
         {/* カテゴリ */}
         <div>
-          <FormFieldHeader>
-            カテゴリ
-          </FormFieldHeader>
-          <div className="relative">
+          <FormFieldHeader>カテゴリ</FormFieldHeader>
+          <div className='relative'>
             <input
-              type="text"
+              type='text'
               value={categoryInput}
-              onChange={(e) => {
+              onChange={e => {
                 setCategoryInput(e.target.value);
                 setShowCategorySuggestions(e.target.value.length > 0);
               }}
-              onKeyDown={(e) => {
+              onKeyDown={e => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   const matchedCategory = categories.find(
-                    cat => cat.name.toLowerCase() === categoryInput.toLowerCase() && 
-                    !selectedCategoryIds.includes(cat.id)
+                    cat =>
+                      cat.name.toLowerCase() === categoryInput.toLowerCase() &&
+                      !selectedCategoryIds.includes(cat.id)
                   );
                   if (matchedCategory && selectedCategoryIds.length < 3) {
-                    setSelectedCategoryIds(prev => [...prev, matchedCategory.id]);
+                    setSelectedCategoryIds(prev => [
+                      ...prev,
+                      matchedCategory.id,
+                    ]);
                     setCategoryInput('');
                     setShowCategorySuggestions(false);
                   }
@@ -386,40 +405,48 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
                   setShowCategorySuggestions(true);
                 }
               }}
-              placeholder="カテゴリ名を入力してください"
-              className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]"
+              placeholder='カテゴリ名を入力してください'
+              className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]'
               disabled={selectedCategoryIds.length >= 3}
             />
             {showCategorySuggestions && categoryInput && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto">
+              <div className='absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto'>
                 {categories
-                  .filter(category => 
-                    category.name.toLowerCase().includes(categoryInput.toLowerCase()) &&
-                    !selectedCategoryIds.includes(category.id)
+                  .filter(
+                    category =>
+                      category.name
+                        .toLowerCase()
+                        .includes(categoryInput.toLowerCase()) &&
+                      !selectedCategoryIds.includes(category.id)
                   )
-                  .map((category) => (
+                  .map(category => (
                     <button
                       key={category.id}
-                      type="button"
+                      type='button'
                       onClick={() => {
                         if (selectedCategoryIds.length < 3) {
-                          setSelectedCategoryIds(prev => [...prev, category.id]);
+                          setSelectedCategoryIds(prev => [
+                            ...prev,
+                            category.id,
+                          ]);
                           setCategoryInput('');
                           setShowCategorySuggestions(false);
                           setCategoryError('');
                         }
                       }}
-                      className="w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0"
+                      className='w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0'
                     >
                       {category.name}
                     </button>
-                  ))
-                }
-                {categories.filter(category => 
-                  category.name.toLowerCase().includes(categoryInput.toLowerCase()) &&
-                  !selectedCategoryIds.includes(category.id)
+                  ))}
+                {categories.filter(
+                  category =>
+                    category.name
+                      .toLowerCase()
+                      .includes(categoryInput.toLowerCase()) &&
+                    !selectedCategoryIds.includes(category.id)
                 ).length === 0 && (
-                  <div className="px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]">
+                  <div className='px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
                     一致するカテゴリがありません
                   </div>
                 )}
@@ -427,31 +454,38 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
             )}
           </div>
           {selectedCategoryIds.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className='flex flex-wrap gap-2 mt-3'>
               {selectedCategoryIds.map(categoryId => {
                 const category = categories.find(cat => cat.id === categoryId);
                 return (
                   <div
                     key={categoryId}
-                    className="bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0"
+                    className='bg-[#d2f1da] flex flex-row gap-2.5 h-10 items-center justify-center px-6 py-0'
                     style={{ borderRadius: '10px' }}
                   >
                     <span className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058]">
                       {category?.name || ''}
                     </span>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => {
-                        setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
+                        setSelectedCategoryIds(prev =>
+                          prev.filter(id => id !== categoryId)
+                        );
                       }}
-                      className="ml-2 text-[#0f9058] hover:text-[#0a7a46]"
+                      className='ml-2 text-[#0f9058] hover:text-[#0a7a46]'
                     >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <svg
+                        width='12'
+                        height='12'
+                        viewBox='0 0 12 12'
+                        fill='none'
+                      >
                         <path
-                          d="M1 1L11 11M1 11L11 1"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
+                          d='M1 1L11 11M1 11L11 1'
+                          stroke='currentColor'
+                          strokeWidth='1.5'
+                          strokeLinecap='round'
                         />
                       </svg>
                     </button>
@@ -460,17 +494,19 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
               })}
             </div>
           )}
-          <div className="flex justify-between items-center mt-1">
+          <div className='flex justify-between items-center mt-1'>
             <div>
               {categoryError && (
-                <p className="text-red-500 text-sm">
-                  {categoryError}
-                </p>
+                <p className='text-red-500 text-sm'>{categoryError}</p>
               )}
             </div>
-            <p className={`text-sm ${
-              selectedCategoryIds.length >= 3 ? 'text-red-500' : 'text-gray-500'
-            }`}>
+            <p
+              className={`text-sm ${
+                selectedCategoryIds.length >= 3
+                  ? 'text-red-500'
+                  : 'text-gray-500'
+              }`}
+            >
               {selectedCategoryIds.length}/3個
             </p>
           </div>
@@ -478,55 +514,51 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
 
         {/* サムネイル */}
         <div>
-          <FormFieldHeader>
-            サムネイル
-          </FormFieldHeader>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-4">
+          <FormFieldHeader>サムネイル</FormFieldHeader>
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center gap-4'>
               <button
-                type="button"
+                type='button'
                 onClick={() => {
                   if (typeof document !== 'undefined') {
                     document.getElementById('thumbnail-input')?.click();
                   }
                 }}
-                className="px-10 h-[50px] border border-[#999999] rounded-[32px] text-[#323232] text-[16px] font-bold tracking-[1.6px] bg-white w-fit"
+                className='px-10 h-[50px] border border-[#999999] rounded-[32px] text-[#323232] text-[16px] font-bold tracking-[1.6px] bg-white w-fit'
               >
                 画像をアップロード
               </button>
               <button
-                type="button"
+                type='button'
                 onClick={handleClearThumbnail}
-                className="text-[#323232] text-[16px] font-medium underline hover:text-[#666666] transition-colors"
+                className='text-[#323232] text-[16px] font-medium underline hover:text-[#666666] transition-colors'
               >
                 アップロードされた画像を削除する
               </button>
             </div>
             <input
-              id="thumbnail-input"
-              type="file"
-              accept="image/*"
+              id='thumbnail-input'
+              type='file'
+              accept='image/*'
               onChange={handleThumbnailChange}
-              className="hidden"
+              className='hidden'
             />
-            <span 
-              className="text-gray-500 text-sm"
+            <span
+              className='text-gray-500 text-sm'
               style={{
                 fontFamily: 'Inter',
                 fontSize: '12px',
                 fontWeight: 400,
-                lineHeight: 1.6
+                lineHeight: 1.6,
               }}
             >
               ファイル形式：jpeg、jpg、png、gif（最大10MB）
             </span>
             {thumbnailError && (
-              <span className="text-red-500 text-sm">
-                {thumbnailError}
-              </span>
+              <span className='text-red-500 text-sm'>{thumbnailError}</span>
             )}
             {thumbnail && !thumbnailError && (
-              <span className="text-green-600 text-xs">
+              <span className='text-green-600 text-xs'>
                 選択中: {thumbnail.name}
               </span>
             )}
@@ -535,30 +567,26 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
 
         {/* 内容 */}
         <div>
-          <FormFieldHeader>
-            内容
-          </FormFieldHeader>
+          <FormFieldHeader>内容</FormFieldHeader>
           <RichTextEditor
             content={content}
             onChange={setContent}
-            placeholder="お知らせの内容を入力してください。"
+            placeholder='お知らせの内容を入力してください。'
           />
-         
+
           {contentError && (
-            <p className="text-red-500 text-sm mt-1">
-              {contentError}
-            </p>
+            <p className='text-red-500 text-sm mt-1'>{contentError}</p>
           )}
         </div>
       </div>
 
       {/* 下部ボタン */}
-      <div className="flex justify-center gap-4 mt-8 mb-8">
+      <div className='flex justify-center gap-4 mt-8 mb-8'>
         <div style={{ width: '170px' }}>
           <Button
             onClick={handleCancel}
-            variant="green-outline"
-            size="figma-default"
+            variant='green-outline'
+            size='figma-default'
           >
             一覧に戻る
           </Button>
@@ -566,9 +594,9 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
         <div style={{ width: '170px' }}>
           <Button
             onClick={handlePreview}
-            variant="green-gradient"
-            size="figma-default"
-            className="w-full"
+            variant='green-gradient'
+            size='figma-default'
+            className='w-full'
           >
             お知らせを確認する
           </Button>

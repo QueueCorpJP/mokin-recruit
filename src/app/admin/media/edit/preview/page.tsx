@@ -13,21 +13,20 @@ import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { sanitizeHtml } from '@/lib/utils/sanitizer';
 
-
 // Encryption helpers for sessionStorage.
 async function encrypt(text: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
   const keyMaterial = await window.crypto.subtle.importKey(
-    "raw",
-    encoder.encode("a-very-secret-key-32b"),
-    "AES-GCM",
+    'raw',
+    encoder.encode('a-very-secret-key-32b'),
+    'AES-GCM',
     false,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt']
   );
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    { name: 'AES-GCM', iv },
     keyMaterial,
     data
   );
@@ -44,14 +43,14 @@ async function decrypt(stored: string): Promise<string> {
   const data = raw.slice(12);
   const encoder = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
-    "raw",
-    encoder.encode("a-very-secret-key-32b"),
-    "AES-GCM",
+    'raw',
+    encoder.encode('a-very-secret-key-32b'),
+    'AES-GCM',
     false,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt']
   );
   const decrypted = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
+    { name: 'AES-GCM', iv },
     keyMaterial,
     data
   );

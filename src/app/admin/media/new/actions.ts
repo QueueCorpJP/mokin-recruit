@@ -6,31 +6,37 @@ import { createServerAdminClient } from '@/lib/supabase/server-admin';
 // Supabase URLを変数形式に変換する関数
 function convertUrlsToVariables(content: string): string {
   if (!content) return content;
-  
+
   // src属性内のSupabase URLを変数形式に変換
   const supabaseUrlPattern = new RegExp(
     `src=["']?${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/blog/content/images/([^"'>\\s]+)["']?`,
     'g'
   );
-  
-  let processedContent = content.replace(supabaseUrlPattern, (match, filename) => {
-    // ファイル名からタイムスタンプを除去
-    const cleanFilename = filename.replace(/^\d+-/, '');
-    return `src="{{image:${cleanFilename}}}"`;
-  });
-  
+
+  let processedContent = content.replace(
+    supabaseUrlPattern,
+    (match, filename) => {
+      // ファイル名からタイムスタンプを除去
+      const cleanFilename = filename.replace(/^\d+-/, '');
+      return `src="{{image:${cleanFilename}}}"`;
+    }
+  );
+
   // 単体のSupabase URLも変数形式に変換
   const singleUrlPattern = new RegExp(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/blog/content/images/([^"'>\\s]+)`,
     'g'
   );
-  
-  processedContent = processedContent.replace(singleUrlPattern, (match, filename) => {
-    // ファイル名からタイムスタンプを除去
-    const cleanFilename = filename.replace(/^\d+-/, '');
-    return `{{image:${cleanFilename}}}`;
-  });
-  
+
+  processedContent = processedContent.replace(
+    singleUrlPattern,
+    (match, filename) => {
+      // ファイル名からタイムスタンプを除去
+      const cleanFilename = filename.replace(/^\d+-/, '');
+      return `{{image:${cleanFilename}}}`;
+    }
+  );
+
   return processedContent;
 }
 
@@ -55,22 +61,25 @@ export async function saveArticle(formData: FormData) {
     if (thumbnail && thumbnail.size > 0) {
       const fileExtension = thumbnail.name.split('.').pop() || 'jpg';
       const fileName = `thumbnails/${Date.now()}-thumbnail.${fileExtension}`;
-      
+
       // ファイル名をサニタイズ
-      const sanitizedFilename = thumbnail.name
-        .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '')
-        .replace(/[^a-zA-Z0-9._-]/g, '-')
-        .replace(/[-]{2,}/g, '-')
-        .replace(/^-+|-+$/g, '') || `image-${Date.now()}.${fileExtension}`;
-      
+      const sanitizedFilename =
+        thumbnail.name
+          .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '')
+          .replace(/[^a-zA-Z0-9._-]/g, '-')
+          .replace(/[-]{2,}/g, '-')
+          .replace(/^-+|-+$/g, '') || `image-${Date.now()}.${fileExtension}`;
+
       const finalPath = `thumbnails/${sanitizedFilename}`;
-      
+
       const { data, error: uploadError } = await supabase.storage
         .from('blog')
         .upload(finalPath, thumbnail);
 
       if (uploadError) {
-        throw new Error(`ファイルのアップロードに失敗しました: ${uploadError.message}`);
+        throw new Error(
+          `ファイルのアップロードに失敗しました: ${uploadError.message}`
+        );
       }
 
       const { data: urlData } = supabase.storage
@@ -81,12 +90,14 @@ export async function saveArticle(formData: FormData) {
     }
 
     // スラッグを生成
-    const slug = title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      + '-' + Date.now();
+    const slug =
+      title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '') +
+      '-' +
+      Date.now();
 
     // 記事を作成
     const { data: article, error: createError } = await supabase
@@ -97,7 +108,15 @@ export async function saveArticle(formData: FormData) {
         content,
         status,
         thumbnail_url: thumbnailUrl,
-        excerpt: (() => { let s = content; let prev; do { prev = s; s = s.replace(/<[^>]*>/g, ''); } while (s !== prev); return s.substring(0, 200); })(),
+        excerpt: (() => {
+          let s = content;
+          let prev;
+          do {
+            prev = s;
+            s = s.replace(/<[^>]*>/g, '');
+          } while (s !== prev);
+          return s.substring(0, 200);
+        })(),
         published_at: status === 'PUBLISHED' ? new Date().toISOString() : null,
       })
       .select()
@@ -114,13 +133,18 @@ export async function saveArticle(formData: FormData) {
         .upsert({ article_id: article.id, category_id: categoryId });
 
       if (categoryError) {
-        throw new Error(`カテゴリの関連付けに失敗しました: ${categoryError.message}`);
+        throw new Error(
+          `カテゴリの関連付けに失敗しました: ${categoryError.message}`
+        );
       }
     }
 
     // タグを処理
     if (tags.trim()) {
-      const tagNames = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+      const tagNames = tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean);
       for (const tagName of tagNames) {
         // 既存のタグを検索
         const { data: existingTag } = await supabase
@@ -152,7 +176,9 @@ export async function saveArticle(formData: FormData) {
           .upsert({ article_id: article.id, tag_id: tagId });
 
         if (tagRelationError) {
-          throw new Error(`タグの関連付けに失敗しました: ${tagRelationError.message}`);
+          throw new Error(
+            `タグの関連付けに失敗しました: ${tagRelationError.message}`
+          );
         }
       }
     }
@@ -165,10 +191,11 @@ export async function saveArticle(formData: FormData) {
   }
 }
 
-
-export async function uploadImageToSupabase(formData: FormData): Promise<{success: boolean, url?: string, error?: string}> {
+export async function uploadImageToSupabase(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   const file = formData.get('file') as File;
-  
+
   if (!file) {
     return { success: false, error: 'ファイルが選択されていません' };
   }
@@ -178,14 +205,16 @@ export async function uploadImageToSupabase(formData: FormData): Promise<{succes
   try {
     // ファイル名をサニタイズ
     const fileExtension = file.name.split('.').pop() || 'jpg';
-    const sanitizedFilename = file.name
-      .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '')
-      .replace(/[^a-zA-Z0-9._-]/g, '-')
-      .replace(/[-]{2,}/g, '-')
-      .replace(/^-+|-+$/g, '') || `content-image-${Date.now()}.${fileExtension}`;
-    
+    const sanitizedFilename =
+      file.name
+        .replace(/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '-')
+        .replace(/[-]{2,}/g, '-')
+        .replace(/^-+|-+$/g, '') ||
+      `content-image-${Date.now()}.${fileExtension}`;
+
     const finalPath = `content/${sanitizedFilename}`;
-    
+
     const { data, error: uploadError } = await supabase.storage
       .from('blog')
       .upload(finalPath, file);

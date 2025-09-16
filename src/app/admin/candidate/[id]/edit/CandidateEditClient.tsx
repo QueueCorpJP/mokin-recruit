@@ -33,23 +33,6 @@ import {
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
 
-  id: string;
-  isPrivate: boolean;
-  industries: string[];
-  companyName: string;
-  department: string;
-  progressStatus: string;
-  declineReason?: string;
-  // Job history fields
-  startYear?: string;
-  startMonth?: string;
-  endYear?: string;
-  endMonth?: string;
-  isCurrentlyWorking?: boolean;
-  jobDescription?: string;
-  jobTypes?: string[];
-};
-
 interface Props {
   candidate: CandidateDetailData;
 }
@@ -643,11 +626,11 @@ export default function CandidateEditClient({ candidate }: Props) {
 
       // Store data in sessionStorage instead of URL params to avoid 431 error
       if (typeof window !== 'undefined') {
-        const encrypted = CryptoJS.AES.encrypt(JSON.stringify(confirmData), ENCRYPTION_KEY).toString();
-        sessionStorage.setItem(
-          'candidateEditData',
-          encrypted
-        );
+        const encrypted = CryptoJS.AES.encrypt(
+          JSON.stringify(confirmData),
+          ENCRYPTION_KEY
+        ).toString();
+        sessionStorage.setItem('candidateEditData', encrypted);
       }
       router.push(`/admin/candidate/${candidate.id}/edit/confirm`);
     } catch (error) {
