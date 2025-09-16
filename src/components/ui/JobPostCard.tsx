@@ -28,6 +28,9 @@ interface JobPostCardProps {
   showLocation?: boolean;
   showSalary?: boolean;
   showStar?: boolean;
+  // 企業関連の追加プロパティ
+  companyIconUrl?: string;
+  showCompanyInfo?: boolean;
 }
 
 export function JobPostCard({
@@ -54,6 +57,8 @@ export function JobPostCard({
   showLocation = true,
   showSalary = true,
   showStar = true,
+  companyIconUrl,
+  showCompanyInfo = true,
   jobId,
 }: JobPostCardProps) {
   // simple判定: variantがsimpleまたは画像サイズが小さい場合
@@ -62,8 +67,8 @@ export function JobPostCard({
   const cardClass = `bg-white h-auto ${className} rounded-[10px] overflow-hidden transition-all duration-200 hover:bg-[#E9E9E9] hover:shadow-[0_0_20px_0_rgba(0,0,0,0.05)] cursor-pointer`;
 
   // 画像サイズをレスポンシブで切り替え
-  let imgWidth = imageWidth;
-  let imgHeight = imageHeight;
+  const imgWidth = imageWidth;
+  const imgHeight = imageHeight;
   let imgClass = 'object-cover rounded-[5px]';
   if (isSimple) {
     // スマホ: w-full + aspect-[3/2], デスクトップ: 150x100px
@@ -106,16 +111,16 @@ export function JobPostCard({
           >
             <svg
               width='32'
-                height='32'
-                viewBox='0 0 32 32'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
-                  fill={starred ? '#FFDA5F' : '#DCDCDC'}
-                />
-              </svg>
+              height='32'
+              viewBox='0 0 32 32'
+              fill='none'
+              xmlns='http://www.w3.org/2000/svg'
+            >
+              <path
+                d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
+                fill={starred ? '#FFDA5F' : '#DCDCDC'}
+              />
+            </svg>
           </button>
         )}
         <Image
@@ -136,14 +141,18 @@ export function JobPostCard({
               : 318
           }
           style={{
-            height: isSimple ? undefined : imgHeight ?? 318,
+            height: isSimple ? undefined : (imgHeight ?? 318),
             objectFit: 'cover',
             borderRadius: 5,
           }}
           className={imgClass}
           priority={true}
           loading='eager'
-          sizes={isSimple ? "(max-width: 768px) 100vw, 150px" : "(max-width: 768px) 100vw, 477px"}
+          sizes={
+            isSimple
+              ? '(max-width: 768px) 100vw, 150px'
+              : '(max-width: 768px) 100vw, 477px'
+          }
           quality={85}
         />
         <div
@@ -245,18 +254,18 @@ export function JobPostCard({
                     aria-label='お気に入り'
                     disabled={isFavoriteLoading}
                   >
-                      <svg
-                        width='24'
-                        height='24'
-                        viewBox='0 0 32 32'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <path
-                          d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
-                          fill={starred ? '#FFDA5F' : '#DCDCDC'}
-                        />
-                      </svg>
+                    <svg
+                      width='24'
+                      height='24'
+                      viewBox='0 0 32 32'
+                      fill='none'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M17.7409 1.4809C17.4197 0.809848 16.741 0.382812 15.9956 0.382812C15.2503 0.382812 14.5776 0.809848 14.2504 1.4809L10.3538 9.55188L1.65173 10.8452C0.924534 10.955 0.318538 11.4674 0.0943199 12.169C-0.129899 12.8706 0.0519 13.6453 0.573056 14.1639L6.88753 20.4535L5.39678 29.3419C5.27558 30.074 5.57858 30.8182 6.17852 31.2514C6.77845 31.6845 7.57231 31.7394 8.22678 31.3917L16.0017 27.2128L23.7766 31.3917C24.4311 31.7394 25.225 31.6906 25.8249 31.2514C26.4248 30.8121 26.7278 30.074 26.6066 29.3419L25.1098 20.4535L31.4243 14.1639C31.9455 13.6453 32.1333 12.8706 31.903 12.169C31.6728 11.4674 31.0728 10.955 30.3456 10.8452L21.6375 9.55188L17.7409 1.4809Z'
+                        fill={starred ? '#FFDA5F' : '#DCDCDC'}
+                      />
+                    </svg>
                   </button>
                 )}
               </div>
@@ -342,6 +351,23 @@ export function JobPostCard({
                 </div>
               )}
             </>
+          )}
+
+          {/* 企業情報セクション - 求人カード下部に表示 */}
+          {showCompanyInfo && companyIconUrl && (
+            <div className='w-full mt-4 pt-4 border-t border-gray-200'>
+              <div className='flex items-center gap-3'>
+                <div
+                  className='w-8 h-8 rounded-full bg-center bg-cover bg-no-repeat flex-shrink-0'
+                  style={{
+                    backgroundImage: `url(${companyIconUrl})`,
+                  }}
+                />
+                <span className='text-[14px] font-medium text-[#323232]'>
+                  {companyName}
+                </span>
+              </div>
+            </div>
           )}
         </div>
       </div>

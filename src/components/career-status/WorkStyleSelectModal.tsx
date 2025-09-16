@@ -4,11 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/mo-dal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Checkbox } from '@/components/ui/checkbox';
-
-interface WorkStyle {
-  id: string;
-  name: string;
-}
+import type { WorkStyle } from '@/types';
 
 const workStyles: WorkStyle[] = [
   { id: 'business-leader', name: '事業責任者や事業部長を目指したい' },
@@ -36,7 +32,8 @@ export default function WorkStyleSelectModal({
   initialSelected = [],
   maxSelections = workStyles.length,
 }: WorkStyleSelectModalProps) {
-  const [selectedStyles, setSelectedStyles] = useState<WorkStyle[]>(initialSelected);
+  const [selectedStyles, setSelectedStyles] =
+    useState<WorkStyle[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => {
@@ -61,36 +58,39 @@ export default function WorkStyleSelectModal({
 
   return (
     <Modal
-      title="興味のある働き方を選択"
+      title='興味のある働き方を選択'
       isOpen={isOpen}
       onClose={onClose}
-      primaryButtonText="決定"
+      primaryButtonText='決定'
       onPrimaryAction={handleConfirm}
-      width={isDesktop ? "800px" : "100%"}
-      height={isDesktop ? "680px" : "90vh"}
+      width={isDesktop ? '800px' : '100%'}
+      height={isDesktop ? '680px' : '90vh'}
       selectedCount={selectedStyles.length}
       totalCount={maxSelections}
       customHeader={{
-        title: "希望する役割・責任範囲",
-        description: "どんな立場で、どのように価値を発揮したいか"
+        title: '希望する役割・責任範囲',
+        description: 'どんな立場で、どのように価値を発揮したいか',
       }}
     >
-      <div className="space-y-6">
-        {maxSelections < workStyles.length && selectedStyles.length >= maxSelections && (
-          <div className="p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md">
-            <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
-              最大{maxSelections}個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
-            </p>
-          </div>
-        )}
+      <div className='space-y-6'>
+        {maxSelections < workStyles.length &&
+          selectedStyles.length >= maxSelections && (
+            <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md'>
+              <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
+                最大{maxSelections}
+                個まで選択できます。他の項目を選択する場合は、既存の選択を解除してください。
+              </p>
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 gap-4">
-          {workStyles.map((style) => {
+        <div className='grid grid-cols-1 gap-4'>
+          {workStyles.map(style => {
             const isSelected = selectedStyles.some(s => s.id === style.id);
-            const isDisabled = !isSelected && selectedStyles.length >= maxSelections;
+            const isDisabled =
+              !isSelected && selectedStyles.length >= maxSelections;
 
             return (
-              <div key={style.id} className="flex items-center">
+              <div key={style.id} className='flex items-center'>
                 <Checkbox
                   label={style.name}
                   checked={isSelected}

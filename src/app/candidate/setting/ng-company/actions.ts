@@ -6,7 +6,7 @@ import {
   getSingleByCandidateId,
   getCandidateIdOrNull,
 } from '@/app/candidate/setting/_shared/server/settings-utils';
-import type { BlockedCompanySettings } from '@/app/candidate/setting/_shared/types';
+import type { BlockedCompanySettings } from '@/types';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export async function saveBlockedCompanies(companyNames: string[]) {

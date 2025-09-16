@@ -1,13 +1,4 @@
-export interface JobType {
-  id: string;
-  name: string;
-}
-
-export interface JobTypeGroup {
-  id: string;
-  name: string;
-  jobTypes: JobType[];
-}
+import type { JobType, JobTypeGroup } from '@/types';
 
 export const JOB_TYPE_GROUPS: JobTypeGroup[] = [
   {

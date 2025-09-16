@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
-import sgMail from '@sendgrid/mail';
+import { sendEmailViaSendGrid } from '@/lib/email/sender';
 
 interface GroupSignupData {
   email: string;
@@ -16,22 +16,25 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
   try {
     console.log('=== sendGroupSignupVerification開始 ===');
     console.log('フォームデータ:', { ...formData, password: '[HIDDEN]' });
-    
+
     const supabase = getSupabaseAdminClient();
-    
+
     // 既存ユーザーが同じグループにすでに参加しているかチェック
     console.log('グループ参加済みチェック中...');
     const { data: existingPermission, error: permissionError } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         id,
         company_users!inner(email)
-      `)
+      `
+      )
       .eq('company_users.email', formData.email)
       .eq('company_group_id', formData.groupId)
       .single();
 
-    if (permissionError && permissionError.code !== 'PGRST116') { // PGRST116 = No rows found
+    if (permissionError && permissionError.code !== 'PGRST116') {
+      // PGRST116 = No rows found
       console.error('グループ参加チェックエラー:', permissionError);
       return { error: 'グループ参加状況の確認に失敗しました' };
     }
@@ -60,23 +63,26 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     // 4桁の認証コード生成
     const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
     console.log('生成された認証コード:', verificationCode);
-    
+
     // signup_verification_codesテーブルにユーザーデータも含めて保存
     // 注意: 実際の実装では専用のテーブルを作成することを推奨
     console.log('認証コードとユーザーデータをデータベースに保存中...');
-    
+
     // パスワードをハッシュ化
     const bcrypt = await import('bcrypt');
     const saltRounds = 10;
-    const passwordHash = await (bcrypt as any).hash(formData.password, saltRounds);
-    
+    const passwordHash = await (bcrypt as any).hash(
+      formData.password,
+      saltRounds
+    );
+
     const userData = {
       name: formData.name,
       password_hash: passwordHash,
       group_id: formData.groupId,
-      company_id: formData.companyId
+      company_id: formData.companyId,
     };
-    
+
     const { error: saveError } = await supabase
       .from('signup_verification_codes')
       .insert({
@@ -87,7 +93,7 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
         used_at: null,
         // user_dataカラムが存在しない場合は、テーブル構造の拡張が必要
         // 暫定的にupdated_atカラムにJSONとして保存（本来は推奨されない）
-        updated_at: JSON.stringify(userData)
+        updated_at: JSON.stringify(userData),
       });
 
     if (saveError) {
@@ -100,52 +106,40 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     // 今回は簡単のため、signup_verification_codesテーブルを拡張して使用
     // 実際の実装では別テーブルを作成することを推奨
 
-    // SendGridでメール送信
-    console.log('メール送信設定を確認中...');
-    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
-    
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
-      console.log('SendGrid設定が不完全です');
-      return { error: 'メール送信設定が正しく構成されていません' };
+    // メール送信
+    console.log('メール送信中...');
+    console.log('送信先:', formData.email);
+
+    const emailResult = await sendEmailViaSendGrid({
+      to: formData.email,
+      subject: 'グループ参加の認証コード',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0f9058;">グループ参加の認証コード</h2>
+          <p>以下の4桁の認証コードを入力してください：</p>
+          <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+            <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 8px;">${verificationCode}</h3>
+          </div>
+          <p><strong>お名前:</strong> ${formData.name}</p>
+          <p><strong>グループ:</strong> ${groupCheck.group_name}</p>
+          <p style="color: #666;">このコードは10分間有効です。</p>
+          <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
+        </div>
+      `,
+    });
+
+    if (!emailResult.success) {
+      console.error('❌ メール送信エラー:', emailResult.error);
+      return {
+        error:
+          emailResult.error ||
+          'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。',
+      };
     }
 
-    try {
-      console.log('SendGrid APIキーを設定中...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      
-      console.log('メール送信中...');
-      console.log('送信先:', formData.email);
-      console.log('送信元:', process.env.SENDGRID_FROM_EMAIL);
-      
-      const msg = {
-        to: formData.email,
-        from: process.env.SENDGRID_FROM_EMAIL,
-        subject: 'グループ参加の認証コード',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #0f9058;">グループ参加の認証コード</h2>
-            <p>以下の4桁の認証コードを入力してください：</p>
-            <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
-              <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 8px;">${verificationCode}</h3>
-            </div>
-            <p><strong>お名前:</strong> ${formData.name}</p>
-            <p><strong>グループ:</strong> ${groupCheck.group_name}</p>
-            <p style="color: #666;">このコードは10分間有効です。</p>
-            <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
-          </div>
-        `
-      };
-      
-      await sgMail.send(msg);
-      
-      console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
-      
-    } catch (emailErr) {
-      console.error('❌ メール送信エラー:', emailErr);
-      return { error: 'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。' };
-    }
-    
+    console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
+    console.log('メッセージID:', emailResult.messageId);
+
     console.log('=== sendGroupSignupVerification完了 ===');
     return { success: true };
   } catch (error) {
@@ -159,9 +153,9 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     console.log('=== verifyGroupSignupCode開始 ===');
     console.log('入力されたメール:', email);
     console.log('入力された認証コード:', code);
-    
+
     const supabase = getSupabaseAdminClient();
-    
+
     console.log('認証コードをデータベースから検索中...');
     const { data: verification, error: fetchError } = await supabase
       .from('signup_verification_codes')
@@ -197,12 +191,15 @@ export async function verifyGroupSignupCode(email: string, code: string) {
 
     // ここでユーザーアカウント作成を実行
     console.log('ユーザーアカウント作成を開始...');
-    
+
     // 保存されたユーザーデータを復元
     let userData;
     try {
       userData = JSON.parse(verification.updated_at);
-      console.log('ユーザーデータ復元完了:', { ...userData, password_hash: '[HIDDEN]' });
+      console.log('ユーザーデータ復元完了:', {
+        ...userData,
+        password_hash: '[HIDDEN]',
+      });
     } catch (parseError) {
       console.error('ユーザーデータ復元エラー:', parseError);
       return { error: 'ユーザーデータの復元に失敗しました' };
@@ -231,7 +228,7 @@ export async function verifyGroupSignupCode(email: string, code: string) {
         company_group_id: userData.group_id,
         permission_level: 'SCOUT_STAFF', // デフォルトで一般スタッフ権限
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       });
 
     if (permissionError) {
@@ -240,7 +237,7 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     } else {
       console.log('グループ権限設定完了');
     }
-    
+
     console.log('=== verifyGroupSignupCode完了（グループ参加完了） ===');
     return { success: true, email: verification.email, userId: currentUser.id };
   } catch (error) {
@@ -248,4 +245,3 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     return { error: 'システムエラーが発生しました' };
   }
 }
-

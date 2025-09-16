@@ -2,7 +2,7 @@
 
 import { getRooms } from '@/lib/rooms';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import type { TaskData } from '@/app/candidate/task/_shared/types';
+import type { TaskData } from '@/types';
 import { runAction, type ActionResult } from '@/lib/server/actions/utils';
 
 export async function getCandidateTaskData(): Promise<TaskData> {

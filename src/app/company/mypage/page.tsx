@@ -1,18 +1,89 @@
 import React from 'react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { MessageButton } from './MessageButton';
-import { CompanyTaskSidebar } from '@/components/company/CompanyTaskSidebar';
 import { getPublishedNotices } from '@/lib/utils/noticeHelpers';
 import { getCompanyAccountData } from '@/lib/actions/company-task-data';
-import NewMessagesSectionClient from './NewMessagesSectionClient';
-import SavedSearchRecommendationsClient from './SavedSearchRecommendationsClient';
+import dynamic from 'next/dynamic';
 
-export const dynamic = 'force-dynamic';
+const CompanyTaskSidebar = dynamic(
+  () =>
+    import('@/components/company/CompanyTaskSidebar').then(mod => ({
+      default: mod.CompanyTaskSidebar,
+    })),
+  {
+    loading: () => (
+      <div className='md:flex-none'>
+        <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+          <div className='animate-pulse'>
+            <div className='h-6 bg-gray-200 rounded w-32 mb-6'></div>
+            <div className='space-y-4'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className='h-16 bg-gray-200 rounded'></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
+
+const NewMessagesSectionClient = dynamic(
+  () => import('./NewMessagesSectionClient'),
+  {
+    loading: () => (
+      <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+        <div className='animate-pulse space-y-4'>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className='flex items-center p-4 border border-gray-200 rounded'
+            >
+              <div className='w-8 h-8 bg-gray-200 rounded-full mr-4'></div>
+              <div className='flex-1'>
+                <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
+                <div className='h-3 bg-gray-200 rounded w-1/2'></div>
+              </div>
+              <div className='w-16 h-4 bg-gray-200 rounded'></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
+
+const SavedSearchRecommendationsClient = dynamic(
+  () => import('./SavedSearchRecommendationsClient'),
+  {
+    loading: () => (
+      <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+        <div className='animate-pulse'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className='border border-gray-200 rounded-lg p-4'>
+                <div className='h-6 bg-gray-200 rounded w-3/4 mb-3'></div>
+                <div className='space-y-2'>
+                  <div className='h-4 bg-gray-200 rounded w-full'></div>
+                  <div className='h-4 bg-gray-200 rounded w-2/3'></div>
+                </div>
+                <div className='flex gap-2 mt-4'>
+                  <div className='h-3 bg-gray-200 rounded w-16'></div>
+                  <div className='h-3 bg-gray-200 rounded w-20'></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
 
 // サーバー側での重い候補者データ取得は行わない（RLSのためクライアントで取得・先出）
 
 // 相対時間表示のヘルパー関数
-function formatRelativeTime(date: Date): string {
+function _formatRelativeTime(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -40,11 +111,10 @@ function formatRelativeTime(date: Date): string {
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'numeric',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 }
-
 
 // メッセージはクライアントセクション（NewMessagesSectionClient）で取得する
 
@@ -52,7 +122,7 @@ export default async function CompanyMypage() {
   // 企業ユーザー認証情報を取得
   const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
   const authResult = await requireCompanyAuthForAction();
-  
+
   if (!authResult.success) {
     // 認証エラーの場合は空のデータを返す（レイアウトでリダイレクト処理される）
     return (
@@ -71,10 +141,19 @@ export default async function CompanyMypage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const { getCompanyGroups, getUserDefaultGroupId, getSearchHistory } = await import('@/lib/actions/search-history');
-  const { getJobOptions } = await import('@/lib/server/candidate/recruitment-queries');
+  const { getCompanyGroups, getUserDefaultGroupId, getSearchHistory } =
+    await import('@/lib/actions/search-history');
+  const { getJobOptions } = await import(
+    '@/lib/server/candidate/recruitment-queries'
+  );
 
-  const [notices, companyAccountData, companyGroupsResult, defaultGroupResult, jobOptions] = await Promise.all([
+  const [
+    notices,
+    companyAccountData,
+    companyGroupsResult,
+    defaultGroupResult,
+    jobOptions,
+  ] = await Promise.all([
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData),
     getCompanyAccountData(authResult.data.companyUserId),
     getCompanyGroups(),
@@ -85,26 +164,39 @@ export default async function CompanyMypage() {
   console.log('[DEBUG] Default group result:', defaultGroupResult);
   console.log('[DEBUG] Notices fetched:', notices);
   console.log('[DEBUG] Company Account Data:', companyAccountData);
-  
-  const companyGroups = companyGroupsResult.success 
+
+  const companyGroups = companyGroupsResult.success
     ? companyGroupsResult.data.map(group => ({
         value: group.id,
-        label: group.name
+        label: group.name,
       }))
     : [];
-    
-  const companyGroupId = companyGroups[0]?.value ?? (defaultGroupResult.success && defaultGroupResult.data ? (defaultGroupResult.data as any).id : undefined);
+
+  const companyGroupId =
+    companyGroups[0]?.value ??
+    (defaultGroupResult.success && defaultGroupResult.data
+      ? (defaultGroupResult.data as any).id
+      : undefined);
 
   // おすすめ候補者セクション用にサーバー側で検索履歴（保存済みが0件なら直近履歴でフォールバック）を取得
-  let initialSavedSearches: Array<{ id: string; group_name: string; search_title: string; search_conditions: any }> = [];
+  let initialSavedSearches: Array<{
+    id: string;
+    group_name: string;
+    search_title: string;
+    search_conditions: any;
+  }> = [];
   try {
     const savedHistoryResult = await getSearchHistory(companyGroupId, 20, 0);
     if (savedHistoryResult.success) {
       const all = (savedHistoryResult.data as any[]) || [];
-      const saved = all.filter((h) => h.is_saved === true || String(h.is_saved).toLowerCase() === 'true');
+      const saved = all.filter(
+        h => h.is_saved === true || String(h.is_saved).toLowerCase() === 'true'
+      );
       initialSavedSearches = (saved.length > 0 ? saved : all).slice(0, 3);
     }
-  } catch (_) {}
+  } catch (_) {
+    // エラー時は初期化処理をスキップ
+  }
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -138,14 +230,14 @@ export default async function CompanyMypage() {
                     alt='おすすめの候補者アイコン'
                     width={24}
                     height={25}
-                    loading="lazy"
+                    loading='lazy'
                   />
-                  <span 
+                  <span
                     className='text-[18px] font-bold text-[#222]'
-                    style={{ 
+                    style={{
                       fontFamily: 'Noto Sans JP, sans-serif',
                       letterSpacing: '0.04em',
-                      lineHeight: 1.4
+                      lineHeight: 1.4,
                     }}
                   >
                     おすすめの候補者
@@ -153,29 +245,29 @@ export default async function CompanyMypage() {
                 </div>
                 <div className='relative ml-2 group'>
                   <div className='flex items-center justify-center cursor-pointer'>
-                    <img 
-                      src='/images/question.svg' 
-                      alt='クエスチョンアイコン' 
+                    <img
+                      src='/images/question.svg'
+                      alt='クエスチョンアイコン'
                       width={16}
                       height={16}
                       className='hover:opacity-70 filter grayscale'
-                      loading="lazy" 
+                      loading='lazy'
                     />
                   </div>
-                  <div 
+                  <div
                     className='absolute left-8 -top-2 z-10 w-80 flex flex-col items-start justify-center rounded-[5px] bg-[#F0F9F3] p-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200'
-                    style={{ 
+                    style={{
                       boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.05)',
-                      border: '1px solid #E5E5E5'
+                      border: '1px solid #E5E5E5',
                     }}
                   >
-                    <h3 
+                    <h3
                       className='font-bold text-[14px] text-[#323232] mb-2'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
                       おすすめの候補者
                     </h3>
-                    <p 
+                    <p
                       className='text-[12px] text-[#323232] leading-relaxed'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                     >
@@ -193,7 +285,12 @@ export default async function CompanyMypage() {
             />
           </div>
           {/* 右カラム（サブ） */}
-          <CompanyTaskSidebar className="md:flex-none" showTodoAndNews={true} notices={notices} companyAccountData={companyAccountData} />
+          <CompanyTaskSidebar
+            className='md:flex-none'
+            showTodoAndNews={true}
+            notices={notices}
+            companyAccountData={companyAccountData}
+          />
         </div>
       </main>
     </div>

@@ -68,7 +68,7 @@ export function useEducationForm(initialData?: Partial<EducationFormData>) {
         setIsLoading(false);
       }
     };
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

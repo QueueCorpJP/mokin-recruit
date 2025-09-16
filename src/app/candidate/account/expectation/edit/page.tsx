@@ -47,9 +47,6 @@ export default function CandidateExpectationEditPage() {
     );
   }
 
-  if (!isAuthenticated || !candidateUser) {
-    return null;
-  }
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
 
@@ -209,6 +206,10 @@ export default function CandidateExpectationEditPage() {
   const jobTypes = watch('jobTypes');
   const workLocations = watch('workLocations');
   const workStyles = watch('workStyles');
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
 
   return (
     <>

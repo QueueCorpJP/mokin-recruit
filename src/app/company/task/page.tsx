@@ -2,56 +2,62 @@ import { ChevronRightIcon } from 'lucide-react';
 import { FaqBox } from '@/components/ui/FaqBox';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
-import { getCachedCompanyUser, requireCompanyAuthForAction } from '@/lib/auth/server';
-import TaskList from './TaskList';
-import { CompanyTaskSidebar } from '@/components/company/CompanyTaskSidebar';
+import {
+  getCachedCompanyUser,
+  requireCompanyAuthForAction,
+} from '@/lib/auth/server';
 import { getCompanyTaskData } from './action';
 import { getCompanyAccountData } from '@/lib/actions/company-task-data';
+import dynamic from 'next/dynamic';
 
-interface Room {
-  id: string;
-  candidateName: string;
-  jobTitle: string;
-  lastMessageTime?: string;
-  unreadCount?: number;
-}
+const TaskList = dynamic(() => import('./TaskList'), {
+  loading: () => (
+    <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+      <div className='animate-pulse space-y-4'>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className='flex items-center p-4 border border-gray-200 rounded'
+          >
+            <div className='w-4 h-4 bg-gray-200 rounded mr-4'></div>
+            <div className='flex-1'>
+              <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
+              <div className='h-3 bg-gray-200 rounded w-1/2'></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+});
+
+const CompanyTaskSidebar = dynamic(
+  () =>
+    import('@/components/company/CompanyTaskSidebar').then(mod => ({
+      default: mod.CompanyTaskSidebar,
+    })),
+  {
+    loading: () => (
+      <div className='w-full md:max-w-[320px] md:flex-none'>
+        <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+          <div className='animate-pulse'>
+            <div className='h-6 bg-gray-200 rounded w-32 mb-6'></div>
+            <div className='space-y-4'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className='h-16 bg-gray-200 rounded'></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
+
+import type { Room, LegacyTaskData } from '@/types';
 
 // TaskDataインターフェースはaction.tsからインポートされるため、ここでの定義は不要
-// ただし、旧形式との互換性のため、変換用のインターフェースを定義
-interface LegacyTaskData {
-  // Task 1: 求人作成が0件
-  hasNoJobPostings: boolean;
-  
-  // Task 2 & 3: 応募への対応
-  hasNewApplication: boolean;
-  newApplicationCandidateName?: string;
-  newApplicationJobTitle?: string;
-  newApplicationId?: string;
-  
-  hasUnreadApplication: boolean;
-  unreadApplicationCandidateName?: string;
-  unreadApplicationJobTitle?: string;
-  unreadApplicationId?: string;
-  
-  // Task 4 & 5: メッセージ対応
-  hasNewMessage: boolean;
-  newMessageDate?: Date;
-  newMessageCandidateName?: string;
-  newMessageJobTitle?: string;
-  newMessageRoomId?: string;
-  
-  hasUnreadMessage: boolean;
-  unreadMessageDate?: Date;
-  unreadMessageCandidateName?: string;
-  unreadMessageJobTitle?: string;
-  unreadMessageRoomId?: string;
-  
-  // Task 6: 選考結果未登録
-  hasUnregisteredInterviewResult: boolean;
-  unregisteredInterviewCandidateName?: string;
-  unregisteredInterviewJobTitle?: string;
-  unregisteredInterviewId?: string;
-}
+// ただし、旧形式との互換性のため、変換用のインターフェースを使用
 
 /**
  * 新しいaction.tsのデータを旧形式に変換
@@ -59,7 +65,7 @@ interface LegacyTaskData {
 async function getTaskData(): Promise<LegacyTaskData> {
   // 新しいサーバーアクションを呼び出し
   const taskData = await getCompanyTaskData();
-  
+
   // 旧形式に変換して返す
   const legacyData: LegacyTaskData = {
     hasNoJobPostings: taskData.hasNoJobPostings,
@@ -105,9 +111,13 @@ async function getTaskData(): Promise<LegacyTaskData> {
   }
 
   // 面接結果未登録の最初のデータを設定
-  if (taskData.unregisteredInterviews && taskData.unregisteredInterviews.length > 0) {
+  if (
+    taskData.unregisteredInterviews &&
+    taskData.unregisteredInterviews.length > 0
+  ) {
     const firstInterview = taskData.unregisteredInterviews[0];
-    legacyData.unregisteredInterviewCandidateName = firstInterview.candidateName;
+    legacyData.unregisteredInterviewCandidateName =
+      firstInterview.candidateName;
     legacyData.unregisteredInterviewJobTitle = firstInterview.jobTitle;
     legacyData.unregisteredInterviewId = firstInterview.id;
   }
@@ -119,8 +129,8 @@ export default async function CompanyTaskPage() {
   const authResult = await requireCompanyAuthForAction();
   if (!authResult.success) {
     return (
-      <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20">
-        <main className="w-full max-w-[1280px] mx-auto">
+      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
+        <main className='w-full max-w-[1280px] mx-auto'>
           <p>認証が必要です。</p>
         </main>
       </div>
@@ -156,7 +166,8 @@ export default async function CompanyTaskPage() {
   const qaLinkTextStyle: React.CSSProperties = {
     fontSize: '16px',
     fontWeight: 700,
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
+    fontFamily:
+      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
     color: '#0F9058',
     lineHeight: '200%',
     margin: 0,
@@ -170,10 +181,10 @@ export default async function CompanyTaskPage() {
   };
 
   return (
-    <div className="min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10">
-      <main className="w-full max-w-[1280px] mx-auto">
-        <div className="flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start">
-          <div className="max-w-[880px] md:px-6 flex-1 box-border w-full">
+    <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10'>
+      <main className='w-full max-w-[1280px] mx-auto'>
+        <div className='flex flex-col md:flex-row gap-10 md:gap-20 w-full justify-center items-stretch md:items-start'>
+          <div className='max-w-[880px] md:px-6 flex-1 box-border w-full'>
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
                 iconSrc='/images/list.svg'
@@ -182,15 +193,16 @@ export default async function CompanyTaskPage() {
                 やることリスト
               </SectionHeading>
             </div>
-            
+
             <TaskList initialTaskData={taskData} />
           </div>
-          
-          <CompanyTaskSidebar className="md:flex-none" companyAccountData={companyAccountData} />
+
+          <CompanyTaskSidebar
+            className='md:flex-none'
+            companyAccountData={companyAccountData}
+          />
         </div>
       </main>
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

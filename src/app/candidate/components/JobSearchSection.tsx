@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
 import { Modal } from '@/components/ui/mo-dal';
@@ -8,6 +9,7 @@ import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
 
 export function JobSearchSection() {
+  const router = useRouter();
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedSalary, setSelectedSalary] = useState('');
@@ -26,8 +28,39 @@ export function JobSearchSection() {
     { value: '3000-5000', label: '3,000~5,000万' },
     { value: '5000+', label: '5,000万~' },
   ];
+
+  // 求人を探すボタンのクリックハンドラー
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams();
+
+    // 職種を追加
+    if (selectedJobTypes.length > 0) {
+      searchParams.set('jobTypes', selectedJobTypes.join(','));
+    }
+
+    // 業種を追加
+    if (selectedIndustries.length > 0) {
+      searchParams.set('industries', selectedIndustries.join(','));
+    }
+
+    // 年収を追加（最低年収として扱う）
+    if (selectedSalary) {
+      // 年収の値から最低年収を抽出（例：'500-600' → '500'）
+      const salaryRange = selectedSalary.split('-');
+      if (salaryRange[0]) {
+        searchParams.set('salaryMin', salaryRange[0]);
+      }
+    }
+
+    // search/settingページに遷移
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `/candidate/search/setting?${queryString}`
+      : '/candidate/search/setting';
+    router.push(url);
+  };
   return (
-    <section className='relative py-20 flex flex-col items-center overflow-hidden px-[24px] md:px-0 z-40'>
+    <section className='relative py-20 flex flex-col items-center overflow-visible px-[24px] md:px-0 z-40'>
       {/* 背景グラデーションレイヤー */}
       <div
         className='absolute inset-0 w-full h-full z-0 pointer-events-none'
@@ -163,13 +196,18 @@ export function JobSearchSection() {
           </div>
           {/* 求人を探すボタン */}
           <div className='md:w-full w-[100%] flex justify-center mt-0'>
-            <Button variant='green-gradient' size='figma-default' className='md:w-auto w-[100%]'>
+            <Button
+              variant='green-gradient'
+              size='figma-default'
+              className='md:w-auto w-[100%]'
+              onClick={handleSearch}
+            >
               求人を探す
             </Button>
           </div>
         </div>
       </div>
-      
+
       {/* モーダル */}
       {jobTypeModalOpen && (
         <Modal
@@ -187,7 +225,7 @@ export function JobSearchSection() {
           />
         </Modal>
       )}
-      
+
       {industryModalOpen && (
         <Modal
           title='業種を選択'

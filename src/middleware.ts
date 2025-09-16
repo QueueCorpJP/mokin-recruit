@@ -3,6 +3,19 @@ import type { NextRequest } from 'next/server';
 import { getNonce } from '@/lib/server/utils/nonce';
 import { verifyJwtEdge } from '@/lib/edge/utils/jwt';
 
+interface SupabaseJWTPayload {
+  sub: string;
+  email?: string;
+  user_metadata?: {
+    user_type?: 'candidate' | 'company_user';
+    userType?: 'candidate' | 'company_user';
+    company_account_id?: string;
+    companyAccountId?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
@@ -10,6 +23,32 @@ export async function middleware(request: NextRequest) {
   const nonce = getNonce();
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
+
+  // Handle root domain redirect based on user type
+  if (path === '/') {
+    const userType = await getUserTypeFromSession(request);
+
+    if (userType === 'company_user') {
+      const redirectResponse = NextResponse.redirect(
+        new URL('/company/mypage', request.url)
+      );
+      redirectResponse.headers.set('x-nonce', nonce);
+      return redirectResponse;
+    } else if (userType === 'candidate') {
+      const redirectResponse = NextResponse.redirect(
+        new URL('/candidate/mypage', request.url)
+      );
+      redirectResponse.headers.set('x-nonce', nonce);
+      return redirectResponse;
+    } else {
+      // Not authenticated or unknown user type -> redirect to candidate LP
+      const redirectResponse = NextResponse.redirect(
+        new URL('/candidate', request.url)
+      );
+      redirectResponse.headers.set('x-nonce', nonce);
+      return redirectResponse;
+    }
+  }
 
   // admin配下のルートをチェック
   if (path.startsWith('/admin') && !path.startsWith('/admin/login')) {
@@ -78,7 +117,9 @@ export async function middleware(request: NextRequest) {
 
     if (!accessToken && !hasSupabaseSession) {
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[MW:/company] redirect -> /company/auth/login (no accessToken)');
+        console.log(
+          '[MW:/company] redirect -> /company/auth/login (no accessToken)'
+        );
       }
       const redirectResponse = NextResponse.redirect(
         new URL('/company/auth/login', request.url)
@@ -131,6 +172,68 @@ export async function middleware(request: NextRequest) {
     );
   } catch {}
   return response;
+}
+
+/**
+ * Get user type from Supabase session cookies
+ */
+async function getUserTypeFromSession(
+  request: NextRequest
+): Promise<'candidate' | 'company_user' | null> {
+  try {
+    // Check for sb-access-token first
+    let accessToken = request.cookies.get('sb-access-token')?.value;
+
+    // Check for sb-<project-ref>-auth-token.0 (base64 JSON)
+    if (!accessToken) {
+      const all = request.cookies.getAll();
+      const v2Cookie = all.find(c => /sb-.*-auth-token\.0/.test(c.name));
+      if (v2Cookie) {
+        try {
+          const decoded = JSON.parse(atob(v2Cookie.value));
+          accessToken = decoded.access_token;
+        } catch {
+          // Ignore decode errors
+        }
+      }
+    }
+
+    // Check for legacy supabase-auth-token
+    if (!accessToken) {
+      const legacy = request.cookies.get('supabase-auth-token')?.value;
+      if (legacy && legacy.split('.').length === 3) {
+        accessToken = legacy;
+      }
+    }
+
+    if (!accessToken) {
+      return null;
+    }
+
+    // Decode JWT without verification (we just need the payload)
+    // In edge middleware, we can't easily verify the JWT signature
+    const parts = accessToken.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const payload = JSON.parse(atob(parts[1])) as SupabaseJWTPayload;
+    const meta = payload.user_metadata || {};
+
+    // Determine user type from metadata
+    let userType = meta.user_type || meta.userType;
+
+    // Fallback: if company_account_id exists, it's a company user
+    if (!userType && (meta.company_account_id || meta.companyAccountId)) {
+      userType = 'company_user';
+    }
+
+    // Default to candidate if no explicit type
+    return userType || 'candidate';
+  } catch (error) {
+    // If any error occurs, return null (not authenticated)
+    return null;
+  }
 }
 
 export const config = {

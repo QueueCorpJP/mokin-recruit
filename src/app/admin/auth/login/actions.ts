@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 
 async function createSupabaseServerClient() {
   const cookieStore = await nextCookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -41,7 +41,6 @@ function encodeQuery(obj: Record<string, string | null | undefined>): string {
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
-  const userType = formData.get('userType') as string;
 
   try {
     // Supabase認証
@@ -81,28 +80,28 @@ export async function loginAction(formData: FormData) {
     console.log('✅ [ADMIN LOGIN] Success:', {
       userId: data.user.id,
       email: data.user.email || '',
-      userType: actualUserType
+      userType: actualUserType,
     });
 
     // 管理者認証用のクッキーを設定
     const { cookies } = await import('next/headers');
     const cookieStore = cookies();
-    
+
     // セキュアなクッキー設定
     cookieStore.set('auth_token', data.session?.access_token || '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7日間
-      path: '/'
+      path: '/',
     });
-    
+
     cookieStore.set('admin_user', 'true', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7日間
-      path: '/'
+      path: '/',
     });
 
     cookieStore.set('user_id', data.user.id, {
@@ -110,26 +109,26 @@ export async function loginAction(formData: FormData) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7日間
-      path: '/'
+      path: '/',
     });
 
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
-    
+
     // ログイン成功時は /admin へリダイレクト
     redirect('/admin');
-
   } catch (error) {
     // Next.jsのredirectは内部的にエラーを投げるため、これをまず確認
-    if (error instanceof Error && (
-      error.message === 'NEXT_REDIRECT' || 
-      error.message.includes('NEXT_REDIRECT') ||
-      'digest' in error && String(error.digest).includes('NEXT_REDIRECT')
-    )) {
+    if (
+      error instanceof Error &&
+      (error.message === 'NEXT_REDIRECT' ||
+        error.message.includes('NEXT_REDIRECT') ||
+        ('digest' in error && String(error.digest).includes('NEXT_REDIRECT')))
+    ) {
       // これは正常な動作（リダイレクト成功）なので、エラーログを出力せずに再スロー
       throw error;
     }
-    
+
     // 実際のエラーの場合のみログ出力
     console.error('Admin login action error:', error);
 

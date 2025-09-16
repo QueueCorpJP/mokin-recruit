@@ -1,7 +1,9 @@
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';
+import type { AuthUser } from '@/types';
 
+// Legacy User type for backward compatibility
 export interface User {
   id: string;
   email: string;
@@ -16,7 +18,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType>({
   user: null,
-  isAuthenticated: false
+  isAuthenticated: false,
 });
 
 interface UserProviderProps {
@@ -27,14 +29,10 @@ interface UserProviderProps {
 export function UserProvider({ children, user }: UserProviderProps) {
   const value: UserContextType = {
     user,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
 export function useUser() {

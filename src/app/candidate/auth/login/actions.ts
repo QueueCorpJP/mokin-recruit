@@ -1,7 +1,7 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+// import { redirect } from 'next/navigation';
+// import { createClient } from '@/lib/supabase/client';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath, revalidateTag } from 'next/cache';
@@ -110,9 +110,10 @@ export async function candidateLoginAction(
     // 既存チェック
     const { data: existingCandidate } = await supabaseAdmin
       .from('candidates')
-      .select('id')
+      .select('id, status')
       .eq('id', data.user.id)
       .single();
+
     if (!existingCandidate) {
       await supabaseAdmin.from('candidates').insert({
         id: data.user.id,
@@ -120,6 +121,14 @@ export async function candidateLoginAction(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
+    } else {
+      // 退会済みユーザーのログインを拒否
+      if (existingCandidate.status === 'withdrawn') {
+        return {
+          success: false,
+          error: '退会済みユーザーです',
+        };
+      }
     }
 
     console.log('✅ [CANDIDATE LOGIN] Success:', {

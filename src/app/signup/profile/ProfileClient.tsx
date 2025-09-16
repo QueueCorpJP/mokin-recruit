@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import { saveProfileData } from './actions';
 import { Button } from '@/components/ui/button';
+import { SelectInput } from '@/components/ui/select-input';
 
 export default function SignupProfilePage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function SignupProfilePage() {
     phoneNumber: '',
   });
   const [formData, setFormData] = useState<ProfileFormData>({
-    gender: 'unspecified',
+    gender: '未回答',
     lastName: '',
     firstName: '',
     lastNameKana: '',
@@ -237,7 +238,7 @@ export default function SignupProfilePage() {
                 </div>
 
                 <div className='flex flex-row w-full h-[45px]'>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -256,7 +257,7 @@ export default function SignupProfilePage() {
                       基本情報
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='25'
@@ -275,7 +276,7 @@ export default function SignupProfilePage() {
                       転職活動状況
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='25'
@@ -447,45 +448,22 @@ export default function SignupProfilePage() {
                       </label>
                     </div>
                     <div className='w-[400px]'>
-                      <div className='flex flex-col gap-1'>
-                        <div className='relative'>
-                          <select
-                            value={formData.prefecture}
-                            onChange={e =>
-                              setFormData(prev => ({
-                                ...prev,
-                                prefecture: e.target.value,
-                              }))
-                            }
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                            }}
-                            className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            {PREFECTURES.map(prefecture => (
-                              <option key={prefecture} value={prefecture}>
-                                {prefecture}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-[16px] top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={PREFECTURES.map(prefecture => ({
+                          value: prefecture,
+                          label: prefecture,
+                        }))}
+                        value={formData.prefecture}
+                        onChange={value =>
+                          setFormData(prev => ({
+                            ...prev,
+                            prefecture: value,
+                          }))
+                        }
+                        placeholder='都道府県を選択'
+                        radius={5}
+                        className='w-full'
+                      />
                     </div>
                   </div>
 
@@ -498,134 +476,83 @@ export default function SignupProfilePage() {
                     </div>
                     <div className='w-[400px]'>
                       <div className='flex flex-col gap-2'>
-                        <div className='flex flex-wrap gap-2 items-center'>
-                          <div className='relative flex-1'>
-                            <select
+                        <div className='flex flex-nowrap gap-2 items-center'>
+                          <div className='min-w-[100px] flex-1'>
+                            <SelectInput
+                              options={[
+                                { value: '', label: '未選択' },
+                                ...yearOptions
+                                  .filter(year => year !== '未選択')
+                                  .map(year => ({
+                                    value: year,
+                                    label: year,
+                                  })),
+                              ]}
                               value={formData.birthYear}
-                              onChange={e =>
+                              onChange={value =>
                                 setFormData(prev => ({
                                   ...prev,
-                                  birthYear: e.target.value,
+                                  birthYear: value,
                                 }))
                               }
-                              style={{
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              className='w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                            >
-                              <option value=''>未選択</option>
-                              {yearOptions
-                                .filter(year => year !== '未選択')
-                                .map(year => (
-                                  <option key={year} value={year}>
-                                    {year}
-                                  </option>
-                                ))}
-                            </select>
-                            <div className='absolute right-[10px] top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              placeholder='未選択'
+                              radius={5}
+                              className='w-full'
+                            />
                           </div>
-                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] flex-shrink-0'>
                             年
                           </span>
-                          <div className='relative flex-1'>
-                            <select
+                          <div className='min-w-[80px] flex-1'>
+                            <SelectInput
+                              options={[
+                                { value: '', label: '未選択' },
+                                ...monthOptions
+                                  .filter(month => month !== '未選択')
+                                  .map(month => ({
+                                    value: month,
+                                    label: month,
+                                  })),
+                              ]}
                               value={formData.birthMonth}
-                              onChange={e =>
+                              onChange={value =>
                                 setFormData(prev => ({
                                   ...prev,
-                                  birthMonth: e.target.value,
+                                  birthMonth: value,
                                 }))
                               }
-                              style={{
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              className='w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                            >
-                              <option value=''>未選択</option>
-                              {monthOptions
-                                .filter(month => month !== '未選択')
-                                .map(month => (
-                                  <option key={month} value={month}>
-                                    {month}
-                                  </option>
-                                ))}
-                            </select>
-                            <div className='absolute right-[10px] top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              placeholder='未選択'
+                              radius={5}
+                              className='w-full'
+                            />
                           </div>
-                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] flex-shrink-0'>
                             月
                           </span>
-                          <div className='relative flex-1'>
-                            <select
+                          <div className='min-w-[80px] flex-1'>
+                            <SelectInput
+                              options={[
+                                { value: '', label: '未選択' },
+                                ...dayOptions
+                                  .filter(day => day !== '未選択')
+                                  .map(day => ({
+                                    value: day,
+                                    label: day,
+                                  })),
+                              ]}
                               value={formData.birthDay}
-                              onChange={e =>
+                              onChange={value =>
                                 setFormData(prev => ({
                                   ...prev,
-                                  birthDay: e.target.value,
+                                  birthDay: value,
                                 }))
                               }
-                              style={{
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              className='w-full py-3 pl-3 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                            >
-                              <option value=''>未選択</option>
-                              {dayOptions
-                                .filter(day => day !== '未選択')
-                                .map(day => (
-                                  <option key={day} value={day}>
-                                    {day}
-                                  </option>
-                                ))}
-                            </select>
-                            <div className='absolute right-[10px] top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              placeholder='未選択'
+                              radius={5}
+                              className='w-full'
+                            />
                           </div>
-                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                          <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] flex-shrink-0'>
                             日
                           </span>
                         </div>
@@ -672,45 +599,22 @@ export default function SignupProfilePage() {
                       </label>
                     </div>
                     <div className='w-[400px]'>
-                      <div className='flex flex-col gap-1'>
-                        <div className='relative'>
-                          <select
-                            value={formData.currentIncome}
-                            onChange={e =>
-                              setFormData(prev => ({
-                                ...prev,
-                                currentIncome: e.target.value,
-                              }))
-                            }
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                            }}
-                            className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            {INCOME_RANGES.map(income => (
-                              <option key={income.value} value={income.value}>
-                                {income.label}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-[16px] top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={INCOME_RANGES.map(income => ({
+                          value: income.value,
+                          label: income.label,
+                        }))}
+                        value={formData.currentIncome}
+                        onChange={value =>
+                          setFormData(prev => ({
+                            ...prev,
+                            currentIncome: value,
+                          }))
+                        }
+                        placeholder='年収を選択'
+                        radius={5}
+                        className='w-full'
+                      />
                     </div>
                   </div>
                 </div>
@@ -929,45 +833,22 @@ export default function SignupProfilePage() {
                     <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                       現在の住まい
                     </label>
-                    <div className='flex flex-col gap-1'>
-                      <div className='relative'>
-                        <select
-                          value={formData.prefecture}
-                          onChange={e =>
-                            setFormData(prev => ({
-                              ...prev,
-                              prefecture: e.target.value,
-                            }))
-                          }
-                          style={{
-                            appearance: 'none',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                          }}
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          {PREFECTURES.map(prefecture => (
-                            <option key={prefecture} value={prefecture}>
-                              {prefecture}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={PREFECTURES.map(prefecture => ({
+                        value: prefecture,
+                        label: prefecture,
+                      }))}
+                      value={formData.prefecture}
+                      onChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          prefecture: value,
+                        }))
+                      }
+                      placeholder='都道府県を選択'
+                      radius={5}
+                      className='w-full'
+                    />
                   </div>
 
                   {/* Birth Date */}
@@ -977,45 +858,28 @@ export default function SignupProfilePage() {
                     </label>
                     <div className='flex flex-col gap-2'>
                       <div className='flex gap-2 items-center'>
-                        <div className='relative flex-1'>
-                          <select
+                        <div className='flex-1'>
+                          <SelectInput
+                            options={[
+                              { value: '', label: '未選択' },
+                              ...yearOptions
+                                .filter(year => year !== '未選択')
+                                .map(year => ({
+                                  value: year,
+                                  label: year,
+                                })),
+                            ]}
                             value={formData.birthYear}
-                            onChange={e =>
+                            onChange={value =>
                               setFormData(prev => ({
                                 ...prev,
-                                birthYear: e.target.value,
+                                birthYear: value,
                               }))
                             }
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                            }}
-                            className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            <option value=''>未選択</option>
-                            {yearOptions
-                              .filter(year => year !== '未選択')
-                              .map(year => (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              ))}
-                          </select>
-                          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
+                            placeholder='未選択'
+                            radius={5}
+                            className='w-full'
+                          />
                         </div>
                         <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                           年
@@ -1023,90 +887,56 @@ export default function SignupProfilePage() {
                       </div>
                       <div className='flex gap-2'>
                         <div className='flex gap-2 items-center flex-1'>
-                          <div className='relative flex-1'>
-                            <select
+                          <div className='flex-1'>
+                            <SelectInput
+                              options={[
+                                { value: '', label: '未選択' },
+                                ...monthOptions
+                                  .filter(month => month !== '未選択')
+                                  .map(month => ({
+                                    value: month,
+                                    label: month,
+                                  })),
+                              ]}
                               value={formData.birthMonth}
-                              onChange={e =>
+                              onChange={value =>
                                 setFormData(prev => ({
                                   ...prev,
-                                  birthMonth: e.target.value,
+                                  birthMonth: value,
                                 }))
                               }
-                              style={{
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                            >
-                              <option value=''>未選択</option>
-                              {monthOptions
-                                .filter(month => month !== '未選択')
-                                .map(month => (
-                                  <option key={month} value={month}>
-                                    {month}
-                                  </option>
-                                ))}
-                            </select>
-                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              placeholder='未選択'
+                              radius={5}
+                              className='w-full'
+                            />
                           </div>
                           <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                             月
                           </span>
                         </div>
                         <div className='flex gap-2 items-center flex-1'>
-                          <div className='relative flex-1'>
-                            <select
+                          <div className='flex-1'>
+                            <SelectInput
+                              options={[
+                                { value: '', label: '未選択' },
+                                ...dayOptions
+                                  .filter(day => day !== '未選択')
+                                  .map(day => ({
+                                    value: day,
+                                    label: day,
+                                  })),
+                              ]}
                               value={formData.birthDay}
-                              onChange={e =>
+                              onChange={value =>
                                 setFormData(prev => ({
                                   ...prev,
-                                  birthDay: e.target.value,
+                                  birthDay: value,
                                 }))
                               }
-                              style={{
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                              }}
-                              className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                            >
-                              <option value=''>未選択</option>
-                              {dayOptions
-                                .filter(day => day !== '未選択')
-                                .map(day => (
-                                  <option key={day} value={day}>
-                                    {day}
-                                  </option>
-                                ))}
-                            </select>
-                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                              <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width='14'
-                                height='10'
-                                viewBox='0 0 14 10'
-                                fill='none'
-                              >
-                                <path
-                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                  fill='#0F9058'
-                                />
-                              </svg>
-                            </div>
+                              placeholder='未選択'
+                              radius={5}
+                              className='w-full'
+                            />
                           </div>
                           <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                             日
@@ -1148,45 +978,22 @@ export default function SignupProfilePage() {
                     <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                       現在の年収
                     </label>
-                    <div className='flex flex-col gap-1'>
-                      <div className='relative'>
-                        <select
-                          value={formData.currentIncome}
-                          onChange={e =>
-                            setFormData(prev => ({
-                              ...prev,
-                              currentIncome: e.target.value,
-                            }))
-                          }
-                          style={{
-                            appearance: 'none',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                          }}
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          {INCOME_RANGES.map(income => (
-                            <option key={income.value} value={income.value}>
-                              {income.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={INCOME_RANGES.map(income => ({
+                        value: income.value,
+                        label: income.label,
+                      }))}
+                      value={formData.currentIncome}
+                      onChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          currentIncome: value,
+                        }))
+                      }
+                      placeholder='年収を選択'
+                      radius={5}
+                      className='w-full'
+                    />
                   </div>
                 </div>
 

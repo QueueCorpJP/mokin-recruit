@@ -86,7 +86,7 @@ export function PasswordFormField({
           <div className='bg-white h-[44px] md:h-[50px] relative rounded-[5px] w-full'>
             <div className='absolute border border-[#999999] border-solid inset-0 pointer-events-none rounded-[5px]' />
             <div className='flex flex-row items-center relative h-full'>
-              <div className='flex flex-row h-[44px] md:h-[50px] items-center justify-between p-[11px] relative w-full'>
+              <div className='flex flex-row h-[44px] md:h-[50px] items-center justify-between relative w-full'>
                 <input
                   id={id}
                   type={showPassword ? 'text' : 'password'}

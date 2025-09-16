@@ -6,7 +6,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
+  // TableHeader,
   TableRow,
 } from '@/components/admin/ui/table';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
@@ -49,10 +49,11 @@ interface JobDetail {
 
 async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('job_postings')
-    .select(`
+    .select(
+      `
       *,
       company_accounts (
         company_name
@@ -60,7 +61,8 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
       company_groups (
         group_name
       )
-    `)
+    `
+    )
     .eq('id', jobId)
     .single();
 
@@ -72,18 +74,22 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   return data as JobDetail;
 }
 
-export default async function PendingJobDetailPage({ params }: PendingJobDetailPageProps) {
+export default async function PendingJobDetailPage({
+  params,
+}: PendingJobDetailPageProps) {
   const { job_id } = await params;
   const jobDetail = await fetchJobDetail(job_id);
 
   if (!jobDetail) {
     return (
-      <div className="p-8 bg-gray-50 min-h-screen">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mt-20">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">求人が見つかりません</h1>
-            <Link href="/admin/job/pending">
-              <Button variant="green-gradient">承認待ち一覧に戻る</Button>
+      <div className='p-8 bg-gray-50 min-h-screen'>
+        <div className='max-w-6xl mx-auto'>
+          <div className='text-center mt-20'>
+            <h1 className='text-2xl font-bold text-gray-900 mb-4'>
+              求人が見つかりません
+            </h1>
+            <Link href='/admin/job/pending'>
+              <Button variant='green-gradient'>承認待ち一覧に戻る</Button>
             </Link>
           </div>
         </div>
@@ -150,29 +156,32 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <nav className="mb-8 text-sm text-gray-600">
+    <div className='p-8 bg-gray-50 min-h-screen'>
+      <div className='max-w-6xl mx-auto'>
+        <nav className='mb-8 text-sm text-gray-600'>
           <span>管理画面トップ</span>
-          <span className="mx-2">&gt;</span>
+          <span className='mx-2'>&gt;</span>
           <span>承認待ち一覧</span>
-          <span className="mx-2">&gt;</span>
-          <span className="text-gray-900 font-medium">求人詳細</span>
+          <span className='mx-2'>&gt;</span>
+          <span className='text-gray-900 font-medium'>求人詳細</span>
         </nav>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <div className="flex items-start justify-between">
+        <div className='bg-white rounded-lg shadow'>
+          <div className='p-6 border-b'>
+            <div className='flex items-start justify-between'>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className='text-2xl font-bold text-gray-900 mb-2'>
                   {jobDetail.title}
                 </h1>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}>
+                <div className='flex items-center gap-4 mt-2'>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}
+                  >
                     {statusMap[jobDetail.status] || jobDetail.status}
                   </span>
-                  <span className="text-sm text-gray-600">
-                    申請日時: {new Date(jobDetail.updated_at).toLocaleString('ja-JP')}
+                  <span className='text-sm text-gray-600'>
+                    申請日時:{' '}
+                    {new Date(jobDetail.updated_at).toLocaleString('ja-JP')}
                   </span>
                 </div>
               </div>
@@ -180,25 +189,32 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="mb-8">
+          <div className='p-6'>
+            <div className='mb-8'>
               <Table>
                 <TableBody>
                   <TableRow>
-                    <TableHead className="w-32">会社名</TableHead>
-                    <TableCell>{jobDetail.company_accounts?.company_name || '不明'}</TableCell>
+                    <TableHead className='w-32'>会社名</TableHead>
+                    <TableCell>
+                      {jobDetail.company_accounts?.company_name || '不明'}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableHead>ステータス</TableHead>
                     <TableCell>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(jobDetail.status)}`}
+                      >
                         {statusMap[jobDetail.status] || jobDetail.status}
                       </span>
                     </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableHead>公開タイプ</TableHead>
-                    <TableCell>{publicationTypeMap[jobDetail.publication_type] || jobDetail.publication_type}</TableCell>
+                    <TableCell>
+                      {publicationTypeMap[jobDetail.publication_type] ||
+                        jobDetail.publication_type}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableHead>職種</TableHead>
@@ -215,10 +231,12 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
                   <TableRow>
                     <TableHead>想定年収</TableHead>
                     <TableCell>
-                      {jobDetail.salary_min && jobDetail.salary_max 
-                        ? formatSalary(jobDetail.salary_min, jobDetail.salary_max)
-                        : '未設定'
-                      }
+                      {jobDetail.salary_min && jobDetail.salary_max
+                        ? formatSalary(
+                            jobDetail.salary_min,
+                            jobDetail.salary_max
+                          )
+                        : '未設定'}
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -233,19 +251,29 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
                   </TableRow>
                   <TableRow>
                     <TableHead>作成日</TableHead>
-                    <TableCell>{new Date(jobDetail.created_at).toLocaleDateString('ja-JP')}</TableCell>
+                    <TableCell>
+                      {new Date(jobDetail.created_at).toLocaleDateString(
+                        'ja-JP'
+                      )}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableHead>更新日</TableHead>
-                    <TableCell>{new Date(jobDetail.updated_at).toLocaleDateString('ja-JP')}</TableCell>
+                    <TableCell>
+                      {new Date(jobDetail.updated_at).toLocaleDateString(
+                        'ja-JP'
+                      )}
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </div>
 
-            <div className="border-t pt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">求人詳細</h2>
-              
+            <div className='border-t pt-8'>
+              <h2 className='text-lg font-semibold text-gray-900 mb-6'>
+                求人詳細
+              </h2>
+
               <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
                 <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                   <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -285,7 +313,10 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       スキル・経験
                     </label>
-                    <DisplayValue value={jobDetail.required_skills || ''} className='whitespace-pre-wrap' />
+                    <DisplayValue
+                      value={jobDetail.required_skills || ''}
+                      className='whitespace-pre-wrap'
+                    />
                   </div>
                   <div className='w-full'>
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
@@ -311,10 +342,12 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
                       想定年収
                     </label>
                     <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                      {jobDetail.salary_min && jobDetail.salary_max 
-                        ? formatSalary(jobDetail.salary_min, jobDetail.salary_max)
-                        : '未設定'
-                      }
+                      {jobDetail.salary_min && jobDetail.salary_max
+                        ? formatSalary(
+                            jobDetail.salary_min,
+                            jobDetail.salary_max
+                          )
+                        : '未設定'}
                     </div>
                   </div>
                   <div
@@ -334,7 +367,10 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
                     <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
                       休日・休暇
                     </label>
-                    <DisplayValue value={jobDetail.holidays || ''} className='whitespace-pre-wrap' />
+                    <DisplayValue
+                      value={jobDetail.holidays || ''}
+                      className='whitespace-pre-wrap'
+                    />
                   </div>
                 </div>
               </div>
@@ -369,12 +405,12 @@ export default async function PendingJobDetailPage({ params }: PendingJobDetailP
               </div>
             </div>
 
-            <div className="mt-8 pt-8 border-t flex justify-center gap-4">
-              <Link href="/admin/job/pending">
+            <div className='mt-8 pt-8 border-t flex justify-center gap-4'>
+              <Link href='/admin/job/pending'>
                 <Button
-                  variant="green-outline"
-                  size="figma-outline"
-                  className="px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
+                  variant='green-outline'
+                  size='figma-outline'
+                  className='px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10'
                 >
                   承認待ち一覧に戻る
                 </Button>

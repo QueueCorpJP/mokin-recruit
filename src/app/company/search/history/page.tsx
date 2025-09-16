@@ -3,8 +3,6 @@ import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { SearchHistoryClient } from './SearchHistoryClient';
 import { getSearchHistory } from '@/lib/actions/search-history';
 
-export const dynamic = 'force-dynamic';
-
 export default async function SearchHistoryPage() {
   // 企業ユーザー認証（統一パターン）
   const auth = await requireCompanyAuthForAction();
@@ -21,7 +19,7 @@ export default async function SearchHistoryPage() {
   // サーバーサイドで検索履歴を取得（WHEREによる手動フィルタリング）
   let initialSearchHistory = [];
   let error = null;
-  
+
   try {
     const result = await getSearchHistory(undefined, 50, 0);
     if (result.success) {
@@ -36,7 +34,7 @@ export default async function SearchHistoryPage() {
   }
 
   return (
-    <SearchHistoryClient 
+    <SearchHistoryClient
       initialSearchHistory={initialSearchHistory}
       initialError={error}
       companyUserId={auth.data.companyUserId}

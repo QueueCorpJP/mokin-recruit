@@ -1,27 +1,37 @@
 import React, { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { getJobDetailData } from './actions';
-import CandidateSearchSettingClient from './CandidateSearchSettingClient';
+import Loading from './loading';
+
+// クライアントコンポーネントを動的インポート
+const CandidateSearchSettingClient = dynamic(
+  () => import('./CandidateSearchSettingClient'),
+  {
+    loading: () => <Loading />,
+    ssr: false,
+  }
+);
 
 interface CandidateSearchSettingPageProps {
   params: Promise<{ id: string }>;
 }
 
-function LoadingSpinner() {
-  return (
-    <div className='w-full h-screen flex items-center justify-center bg-[#f9f9f9]'>
-      <div className='text-center'>
-        <p className='text-gray-500'>読み込み中...</p>
-      </div>
-    </div>
-  );
-}
-
-export default async function CandidateSearchSettingPage({ params }: CandidateSearchSettingPageProps) {
+export default async function CandidateSearchSettingPage({
+  params,
+}: CandidateSearchSettingPageProps) {
   const { id } = await params;
-  const jobData = await getJobDetailData(id);
+
+  // 初期データを非同期で取得し、エラーハンドリングを改善
+  let jobData;
+  try {
+    jobData = await getJobDetailData(id);
+  } catch (error) {
+    console.error('Failed to fetch job data:', error);
+    jobData = null;
+  }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<Loading />}>
       <CandidateSearchSettingClient initialJobData={jobData} />
     </Suspense>
   );

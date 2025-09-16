@@ -26,7 +26,7 @@ export async function updateJoiningDateAction({
     const supabase = await getSupabaseServerClient();
 
     // 既存の進捗レコードを確認
-    let { data: existingProgress } = await supabase
+    const { data: existingProgress } = await supabase
       .from('selection_progress')
       .select('*')
       .eq('candidate_id', candidateId)
@@ -47,7 +47,7 @@ export async function updateJoiningDateAction({
     };
 
     let response;
-    
+
     if (existingProgress) {
       // 既存レコードを更新
       response = await supabase
@@ -78,12 +78,12 @@ export async function updateJoiningDateAction({
       success: true,
       data: response.data,
     };
-
   } catch (error) {
     console.error('入社日更新エラー:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : '不明なエラーが発生しました',
+      error:
+        error instanceof Error ? error.message : '不明なエラーが発生しました',
     };
   }
 }

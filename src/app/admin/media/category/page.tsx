@@ -11,9 +11,16 @@ import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { AdminModal } from '@/components/admin/ui/AdminModal';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
-import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
+// import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
-import { getCategories, createCategory, updateCategory, deleteCategory, getCategoryArticleCount, ArticleCategory } from '@/app/admin/media/actions';
+import {
+  getCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getCategoryArticleCount,
+  ArticleCategory,
+} from '@/app/admin/media/actions';
 
 interface Category extends ArticleCategory {
   articleCount: number;
@@ -29,20 +36,26 @@ export default function CategoryPage() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [deletedCategoryName, setDeletedCategoryName] = useState('');
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+    null
+  );
+  const [deletedCategoryName, __setDeletedCategoryName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const itemsPerPage = 10;
 
   useEffect(() => {
     if (isAdmin) {
       fetchCategories();
-      
+
       // URLパラメーターでモーダル開閉を制御
       const modalParam = searchParams.get('modal');
       if (modalParam === 'add') {
@@ -63,18 +76,17 @@ export default function CategoryPage() {
     };
   }, []);
 
-
   const fetchCategories = async () => {
     try {
       setDataLoading(true);
       const categoryData = await getCategories();
-      
+
       const categoriesWithCount = await Promise.all(
-        categoryData.map(async (category) => {
+        categoryData.map(async category => {
           const articleCount = await getCategoryArticleCount(category.id!);
           return {
             ...category,
-            articleCount
+            articleCount,
           };
         })
       );
@@ -82,12 +94,14 @@ export default function CategoryPage() {
       setCategories(categoriesWithCount);
     } catch (err) {
       console.error('カテゴリの取得に失敗:', err);
-      setError(err instanceof Error ? err.message : 'カテゴリの取得に失敗しました');
+      setError(
+        err instanceof Error ? err.message : 'カテゴリの取得に失敗しました'
+      );
     } finally {
       setDataLoading(false);
     }
   };
-  
+
   const handleEdit = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
     if (category) {
@@ -106,7 +120,9 @@ export default function CategoryPage() {
         fetchCategories();
       } catch (err) {
         console.error('カテゴリの更新に失敗:', err);
-        setError(err instanceof Error ? err.message : 'カテゴリの更新に失敗しました');
+        setError(
+          err instanceof Error ? err.message : 'カテゴリの更新に失敗しました'
+        );
       }
     }
   };
@@ -136,7 +152,7 @@ export default function CategoryPage() {
     if (categoryToDelete) {
       try {
         await deleteCategory(categoryToDelete.id!);
-        setDeletedCategoryName(categoryToDelete.name);
+        _setDeletedCategoryName(categoryToDelete.name);
         setShowDeleteModal(false);
         setCategoryToDelete(null);
         setShowDeletedModal(true);
@@ -144,7 +160,9 @@ export default function CategoryPage() {
         fetchCategories();
       } catch (err) {
         console.error('カテゴリの削除に失敗:', err);
-        setError(err instanceof Error ? err.message : 'カテゴリの削除に失敗しました');
+        setError(
+          err instanceof Error ? err.message : 'カテゴリの削除に失敗しました'
+        );
       }
     }
   };
@@ -156,7 +174,7 @@ export default function CategoryPage() {
 
   const handleCloseDeletedModal = () => {
     setShowDeletedModal(false);
-    setDeletedCategoryName('');
+    _setDeletedCategoryName('');
   };
 
   const handleAddCategory = () => {
@@ -174,7 +192,9 @@ export default function CategoryPage() {
         fetchCategories();
       } catch (err) {
         console.error('カテゴリの作成に失敗:', err);
-        setError(err instanceof Error ? err.message : 'カテゴリの作成に失敗しました');
+        setError(
+          err instanceof Error ? err.message : 'カテゴリの作成に失敗しました'
+        );
       }
     }
   };
@@ -215,17 +235,22 @@ export default function CategoryPage() {
   };
 
   const columns = [
-    { key: 'categoryName', label: 'カテゴリ名', sortable: true, width: 'flex-1' },
-    { key: 'actions', label: '', sortable: false, width: 'w-[200px]' }
+    {
+      key: 'categoryName',
+      label: 'カテゴリ名',
+      sortable: true,
+      width: 'flex-1',
+    },
+    { key: 'actions', label: '', sortable: false, width: 'w-[200px]' },
   ];
 
   // ソート処理
   const sortedCategories = [...categories].sort((a, b) => {
     if (!sortColumn || !sortDirection) return 0;
-    
+
     let aValue: string;
     let bValue: string;
-    
+
     switch (sortColumn) {
       case 'categoryName':
         aValue = a.name;
@@ -234,18 +259,18 @@ export default function CategoryPage() {
       default:
         return 0;
     }
-    
+
     if (sortDirection === 'asc') {
       return aValue.localeCompare(bValue, 'ja', {
         numeric: true,
         sensitivity: 'base',
-        ignorePunctuation: true
+        ignorePunctuation: true,
       });
     } else {
       return bValue.localeCompare(aValue, 'ja', {
         numeric: true,
         sensitivity: 'base',
-        ignorePunctuation: true
+        ignorePunctuation: true,
       });
     }
   });
@@ -259,53 +284,52 @@ export default function CategoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">認証状態を確認中...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg'>認証状態を確認中...</div>
       </div>
     );
   }
 
   if (!isAdmin) {
-    return <AccessRestricted userType="admin" />;
+    return <AccessRestricted userType='admin' />;
   }
 
   if (dataLoading) {
-    return <div className="min-h-screen flex items-center justify-center">読み込み中...</div>;
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        読み込み中...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-600">エラー: {error}</div>;
+    return (
+      <div className='min-h-screen flex items-center justify-center text-red-600'>
+        エラー: {error}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
+    <div className='min-h-screen bg-gray-50'>
       {/* テーブルコンテナ */}
-      <div className="bg-white rounded-lg overflow-x-auto">
+      <div className='bg-white rounded-lg overflow-x-auto'>
         {/* テーブルヘッダー */}
-        <div className="flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]">
-          {columns.map((column) => (
+        <div className='flex items-center px-5 py-3 bg-[#F8F8F8] border-b border-[#E5E5E5]'>
+          {columns.map(column => (
             <div
               key={column.key}
               className={`${column.width || 'flex-1'} px-3 ${column.sortable ? 'cursor-pointer select-none' : ''}`}
               onClick={() => column.sortable && handleSort(column.key)}
             >
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <span className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px]">
                   {column.label}
                 </span>
                 {column.sortable && (
-                  <div className="flex flex-col gap-0.5">
-                    <ArrowIcon
-                      direction="up"
-                      size={8}
-                      color="#0F9058"
-                    />
-                    <ArrowIcon
-                      direction="down"
-                      size={8}
-                      color="#0F9058"
-                    />
+                  <div className='flex flex-col gap-0.5'>
+                    <ArrowIcon direction='up' size={8} color='#0F9058' />
+                    <ArrowIcon direction='down' size={8} color='#0F9058' />
                   </div>
                 )}
               </div>
@@ -314,42 +338,65 @@ export default function CategoryPage() {
         </div>
 
         {/* カテゴリ一覧 */}
-        <div className="mt-2 space-y-2">
-          {paginatedCategories.map((category) => (
+        <div className='mt-2 space-y-2'>
+          {paginatedCategories.map(category => (
             <AdminTableRow
               key={category.id}
               columns={[
                 {
-                  content: editingCategoryId === category.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={editingCategoryName}
-                        onChange={(e) => setEditingCategoryName(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']"
-                        autoFocus
-                      />
-                      <span className="text-[14px] font-medium text-[#666] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']">
-                        （該当記事{category.articleCount}件）
+                  content:
+                    editingCategoryId === category.id ? (
+                      <div className='flex items-center gap-2'>
+                        <input
+                          type='text'
+                          value={editingCategoryName}
+                          onChange={e => setEditingCategoryName(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']"
+                          autoFocus
+                        />
+                        <span className="text-[14px] font-medium text-[#666] leading-[1.6] tracking-[1.4px] font-['Noto_Sans_JP']">
+                          （該当記事{category.articleCount}件）
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                        {category.name}（該当記事{category.articleCount}件）
                       </span>
-                    </div>
-                  ) : (
-                    <span className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                      {category.name}（該当記事{category.articleCount}件）
-                    </span>
-                  ),
-                  width: 'flex-1'
-                }
+                    ),
+                  width: 'flex-1',
+                },
               ]}
               actions={
-                editingCategoryId === category.id ? [
-                  <ActionButton key="save" text="保存" variant="edit" onClick={handleSaveEdit} />,
-                  <ActionButton key="cancel" text="キャンセル" variant="delete" onClick={handleCancelEdit} />
-                ] : [
-                  <ActionButton key="edit" text="編集" variant="edit" onClick={() => handleEdit(category.id!)} />,
-                  <ActionButton key="delete" text="削除" variant="delete" onClick={() => handleDelete(category.id!)} />
-                ]
+                editingCategoryId === category.id
+                  ? [
+                      <ActionButton
+                        key='save'
+                        text='保存'
+                        variant='edit'
+                        onClick={handleSaveEdit}
+                      />,
+                      <ActionButton
+                        key='cancel'
+                        text='キャンセル'
+                        variant='delete'
+                        onClick={handleCancelEdit}
+                      />,
+                    ]
+                  : [
+                      <ActionButton
+                        key='edit'
+                        text='編集'
+                        variant='edit'
+                        onClick={() => handleEdit(category.id!)}
+                      />,
+                      <ActionButton
+                        key='delete'
+                        text='削除'
+                        variant='delete'
+                        onClick={() => handleDelete(category.id!)}
+                      />,
+                    ]
               }
             />
           ))}
@@ -357,17 +404,17 @@ export default function CategoryPage() {
       </div>
 
       {/* ページネーション */}
-      <div className="flex justify-center gap-[74px] mt-8">
+      <div className='flex justify-center gap-[74px] mt-8'>
         <AdminButton
           onClick={handlePrevious}
-          text="前へ"
-          variant="primary"
+          text='前へ'
+          variant='primary'
           disabled={currentPage === 1}
         />
         <AdminButton
           onClick={handleNext}
-          text="次へ"
-          variant="primary"
+          text='次へ'
+          variant='primary'
           disabled={currentPage === totalPages || totalPages === 0}
         />
       </div>
@@ -377,11 +424,11 @@ export default function CategoryPage() {
         isOpen={showModal}
         onClose={handleCloseModal}
         onConfirm={handleConfirmAdd}
-        title="カテゴリ追加"
-        description="追加したいカテゴリ名を入力してください。"
+        title='カテゴリ追加'
+        description='追加したいカテゴリ名を入力してください。'
         inputValue={newCategoryName}
         onInputChange={setNewCategoryName}
-        placeholder="カテゴリ名を入力してください"
+        placeholder='カテゴリ名を入力してください'
       />
 
       {/* 削除確認モーダル */}
@@ -389,19 +436,19 @@ export default function CategoryPage() {
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
-        title="カテゴリ削除"
-        description={"このカテゴリを削除してよいですか？"}
-        confirmText="削除する"
-        cancelText="閉じる"
+        title='カテゴリ削除'
+        description={'このカテゴリを削除してよいですか？'}
+        confirmText='削除する'
+        cancelText='閉じる'
       />
 
       {/* 削除完了通知モーダル */}
       <AdminNotificationModal
         isOpen={showDeletedModal}
         onConfirm={handleCloseDeletedModal}
-        title="カテゴリ削除完了"
-        description={"カテゴリの削除が完了しました。"}
-        confirmText="カテゴリ一覧に戻る"
+        title='カテゴリ削除完了'
+        description={'カテゴリの削除が完了しました。'}
+        confirmText='カテゴリ一覧に戻る'
       />
     </div>
   );

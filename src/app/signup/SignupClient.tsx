@@ -2,7 +2,6 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Loading } from '@/components/ui/Loading';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -149,8 +148,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   if (isCheckingProgress) {
     return (
       <div className='flex flex-col gap-6 items-center w-full text-center'>
-        <Loading size='lg' />
-        <p className='text-[#323232] text-[16px]'>登録状況を確認中...</p>
+        <p className='text-[#323232] text-[16px]'>...登録状況を確認中</p>
       </div>
     );
   }
@@ -279,14 +277,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
             size='figma-default'
             className='w-full md:w-auto min-w-40 py-[17px] text-[16px]'
           >
-            {isPending ? (
-              <>
-                <Loading inline size='sm' variant='white' />
-                送信中...
-              </>
-            ) : (
-              '会員登録（無料）'
-            )}
+            {isPending ? '...送信中' : '会員登録（無料）'}
           </Button>
         </div>
       </form>

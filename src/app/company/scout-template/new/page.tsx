@@ -3,8 +3,6 @@ import ScoutTemplateNewClient from './ScoutTemplateNewClient';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyGroups, type GroupOption } from './actions';
 
-export const dynamic = 'force-dynamic';
-
 export default async function ScoutTemplateNewPage() {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
@@ -19,12 +17,12 @@ export default async function ScoutTemplateNewPage() {
 
   // サーバーサイドでグループ一覧を取得
   let groupOptions: GroupOption[] = [];
-  let error: string | null = null;
-  
+  let _error: string | null = null;
+
   try {
     groupOptions = await getCompanyGroups();
   } catch (err) {
-    error = 'グループ情報の取得に失敗しました';
+    _error = 'グループ情報の取得に失敗しました';
     console.error('Failed to fetch company groups:', err);
     groupOptions = [{ value: '', label: '未選択' }];
   }

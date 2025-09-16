@@ -1,66 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
-
-// 型定義
-interface JobPosting {
-  id: string;
-  title: string;
-  company_name: string;
-  location: string;
-  salary_min?: number;
-  salary_max?: number;
-  description: string;
-  requirements?: string;
-  benefits?: string;
-  employment_type: string;
-  experience_level: string;
-  industry: string;
-  created_at: string;
-  updated_at: string;
-  status: 'active' | 'inactive' | 'draft';
-}
-
-interface JobSearchParams {
-  keyword?: string;
-  location?: string;
-  salaryMin?: string;
-  industries?: string[];
-  jobTypes?: string[];
-  page?: number;
-  limit?: number;
-}
-
-interface JobSearchResponse {
-  success: boolean;
-  data?: {
-    jobs: JobPosting[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
-  error?: string;
-}
-
-interface JobCreateData {
-  title: string;
-  description: string;
-  requirements?: string;
-  benefits?: string;
-  salary_min?: number;
-  salary_max?: number;
-  location: string;
-  employment_type: string;
-  experience_level: string;
-  industry: string;
-}
-
-interface JobUpdateData extends Partial<JobCreateData> {
-  id: string;
-}
+import type {
+  JobPosting,
+  JobSearchParams,
+  JobSearchResponse,
+  JobCreateData,
+  JobUpdateData,
+} from '@/types';
 
 // 求人検索
 export const useJobSearchQuery = (params: JobSearchParams = {}) => {

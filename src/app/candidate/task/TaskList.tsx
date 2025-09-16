@@ -5,44 +5,22 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/Pagination';
-
-interface TaskData {
-  hasNewMessage: boolean;
-  newMessageDate?: Date;
-  newMessageCompanyName?: string;
-  newMessageJobTitle?: string;
-  newMessageRoomId?: string;
-  
-  hasUnreadMessage: boolean;
-  unreadMessageDate?: Date;
-  unreadMessageCompanyName?: string;
-  unreadMessageJobTitle?: string;
-  unreadMessageRoomId?: string;
-}
-
-interface TaskItem {
-  id: string;
-  title: string;
-  description: string;
-  iconSrc?: string;
-  completed?: boolean;
-  triggerFunction: () => boolean;
-  navigateTo?: string;
-}
+import type { TaskData, TaskItem } from '@/types';
 
 interface TaskListProps {
-  initialTaskData: TaskData;
+  initialTaskData?: TaskData;
+  tasks?: any[];
 }
 
-export default function TaskList({ initialTaskData }: TaskListProps) {
+export default function TaskList({ initialTaskData, tasks }: TaskListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
-  
+
   const userState = {
     profileIncomplete: false,
     hasNewScout: false,
     hasUnreadScout: false,
-    ...initialTaskData
+    ...initialTaskData,
   };
 
   const is72HoursPassed = (date?: Date): boolean => {
@@ -60,8 +38,10 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
   const checkProfileIncomplete = () => userState.profileIncomplete;
   const checkNewScout = () => false;
   const checkUnreadScout = () => false;
-  const checkNewMessage = () => userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
-  const checkUnreadMessage = () => userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
+  const checkNewMessage = () =>
+    userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
+  const checkUnreadMessage = () =>
+    userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
 
   const generateSubText = (companyName?: string, jobTitle?: string): string => {
     if (companyName && jobTitle) {
@@ -98,7 +78,10 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
     {
       id: '4',
       title: '企業からメッセージが届きました！内容を確認しましょう。',
-      description: generateSubText(userState.newMessageCompanyName, userState.newMessageJobTitle),
+      description: generateSubText(
+        userState.newMessageCompanyName,
+        userState.newMessageJobTitle
+      ),
       iconSrc: '/images/check.svg',
       triggerFunction: checkNewMessage,
       navigateTo: `/candidate/message`,
@@ -106,14 +89,19 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
     {
       id: '5',
       title: '未読のメッセージがあります。早めに確認しましょう。',
-      description: generateSubText(userState.unreadMessageCompanyName, userState.unreadMessageJobTitle),
+      description: generateSubText(
+        userState.unreadMessageCompanyName,
+        userState.unreadMessageJobTitle
+      ),
       iconSrc: '/images/check.svg',
       triggerFunction: checkUnreadMessage,
       navigateTo: `/candidate/message`,
     },
   ];
 
-  const visibleItems = taskItems.filter(item => item.triggerFunction());
+  const visibleItems = tasks
+    ? tasks
+    : taskItems.filter(item => item.triggerFunction());
 
   const itemsPerPage = 5;
   const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
@@ -122,7 +110,35 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
     currentPage * itemsPerPage
   );
 
-  const handleTaskItemClick = (item: TaskItem) => {
+  const handleTaskItemClick = (item: TaskItem | any) => {
+    // 新しい形式のタスクアイテムの場合
+    if (item.id && typeof item.id === 'string') {
+      const taskRoutes: Record<string, string> = {
+        'profile-name': '/candidate/account/profile',
+        'profile-phone': '/candidate/account/profile',
+        'profile-current-job': '/candidate/account/career-status',
+        'profile-expectations': '/candidate/account/expectation',
+        'profile-summary': '/candidate/account/summary',
+        'resume-upload': '/candidate/account/resume',
+        'education-info': '/candidate/account/education',
+        'skills-info': '/candidate/account/skills',
+        'work-experience': '/candidate/account/recent-job',
+        'expectations-settings': '/candidate/account/expectation',
+        'scout-reply': '/candidate/message',
+        'application-response': '/candidate/message',
+        'selection-status': '/candidate/message',
+        'notification-settings': '/candidate/setting/notification',
+        'unread-messages': '/candidate/message',
+      };
+
+      const route = taskRoutes[item.id];
+      if (route) {
+        router.push(route);
+      }
+      return;
+    }
+
+    // 既存の形式のタスクアイテムの場合
     if (item.navigateTo) {
       if (item.id === '4' && userState.newMessageRoomId) {
         router.push(`/candidate/message?room=${userState.newMessageRoomId}`);
@@ -173,7 +189,8 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
   const qaLinkTextStyle: React.CSSProperties = {
     fontSize: '16px',
     fontWeight: 700,
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
+    fontFamily:
+      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
     color: '#0F9058',
     lineHeight: '200%',
     margin: 0,
@@ -190,17 +207,17 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
     <div style={todoListWrapperStyle}>
       {displayedItems.length > 0 ? (
         <>
-          {displayedItems.map((item) => (
+          {displayedItems.map(item => (
             <div
               key={item.id}
               style={{
                 ...todoItemStyle,
                 cursor: 'pointer',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 e.currentTarget.style.background = '#E9E9E9';
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 e.currentTarget.style.background = '#FFFFFF';
               }}
               onClick={() => handleTaskItemClick(item)}
@@ -211,22 +228,30 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
                   alt={item.completed ? '完了チェック' : 'タスクアイコン'}
                   width={48}
                   height={48}
-                  loading="lazy"
+                  loading='lazy'
                 />
                 <div style={todoTextsWrapperStyle}>
-                  <span style={{
-                    ...qaLinkTextStyle,
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word'
-                  }}>{item.title}</span>
-                  <p style={{
-                    ...todoBodyTextStyle,
-                    fontSize: '10px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>{item.description}</p>
+                  <span
+                    style={{
+                      ...qaLinkTextStyle,
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                  <p
+                    style={{
+                      ...todoBodyTextStyle,
+                      fontSize: '10px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {item.description}
+                  </p>
                 </div>
               </div>
             </div>
@@ -240,39 +265,47 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
           </div>
         </>
       ) : (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: '80px',
-          padding: '0',
-          width: '100%',
-        }}>
-          <div style={{
+        <div
+          style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '40px',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '80px 0',
+            gap: '80px',
+            padding: '0',
             width: '100%',
-          }}>
-            <div style={{
-              position: 'relative',
-              width: '120px',
-              height: '120px',
-            }}>
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                height: 'auto',
-                aspectRatio: '50.0049/42.1957',
-                left: '0',
-                right: '0',
-                top: 'calc(50% + 0.293px)',
-                transform: 'translateY(-50%)',
-              }}>
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '40px',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              padding: '80px 0',
+              width: '100%',
+            }}
+          >
+            <div
+              style={{
+                position: 'relative',
+                width: '120px',
+                height: '120px',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: 'auto',
+                  aspectRatio: '50.0049/42.1957',
+                  left: '0',
+                  right: '0',
+                  top: 'calc(50% + 0.293px)',
+                  transform: 'translateY(-50%)',
+                }}
+              >
                 <Image
                   src='/images/list.svg'
                   alt=''
@@ -282,50 +315,57 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
                     maxWidth: 'none',
                     width: '100%',
                     height: '100%',
-                    filter: 'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(95%)',
+                    filter:
+                      'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(95%)',
                   }}
-                  loading="lazy"
+                  loading='lazy'
                 />
               </div>
             </div>
-            
-            <div style={{
-              fontFamily: "'Noto Sans JP', sans-serif",
-              fontWeight: 500,
-              lineHeight: 2,
-              fontStyle: 'normal',
-              position: 'relative',
-              color: '#323232',
-              fontSize: '16px',
-              textAlign: 'center',
-              whiteSpace: 'normal',
-              letterSpacing: '1.6px',
-            }}>
-              <p style={{
-                display: 'block',
-                margin: 0,
-                marginBottom: '0',
-              }}>
+
+            <div
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontWeight: 500,
+                lineHeight: 2,
+                fontStyle: 'normal',
+                position: 'relative',
+                color: '#323232',
+                fontSize: '16px',
+                textAlign: 'center',
+                whiteSpace: 'normal',
+                letterSpacing: '1.6px',
+              }}
+            >
+              <p
+                style={{
+                  display: 'block',
+                  margin: 0,
+                  marginBottom: '0',
+                }}
+              >
                 企業からの新しいスカウトやメッセージがあると、
               </p>
-              <p style={{
-                display: 'block',
-                margin: 0,
-              }}>
+              <p
+                style={{
+                  display: 'block',
+                  margin: 0,
+                }}
+              >
                 こちらに一覧で表示されます。
               </p>
             </div>
 
             <Button
-              variant="blue-gradient"
-              size="figma-default"
+              variant='blue-gradient'
+              size='figma-default'
               onClick={() => router.push('/candidate/search/setting')}
-              style={{ 
-                paddingTop: '20px', 
+              style={{
+                paddingTop: '20px',
                 paddingBottom: '20px',
-                fontSize: '16px'
+                fontSize: '16px',
               }}
-              className="w-full md:w-auto"
+              className='w-full md:w-auto'
             >
               求人を探す
             </Button>

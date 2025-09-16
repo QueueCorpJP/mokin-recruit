@@ -9,12 +9,7 @@ import Image from 'next/image';
 import { saveNotificationSettings, getNotificationSettings } from './actions';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
 import { useSettingsForm } from '@/app/candidate/setting/_shared/hooks/useSettingsForm';
-
-interface NotificationSetting {
-  scoutNotification: string;
-  messageNotification: string;
-  recommendationNotification: string;
-}
+import type { NotificationSetting } from '@/types';
 
 export default function NotificationSettingPage() {
   const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
@@ -311,5 +306,3 @@ export default function NotificationSettingPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

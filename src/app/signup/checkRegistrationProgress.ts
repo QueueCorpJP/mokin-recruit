@@ -20,7 +20,9 @@ export interface RegistrationProgress {
   };
 }
 
-export async function checkRegistrationProgress(email: string): Promise<RegistrationProgress> {
+export async function checkRegistrationProgress(
+  email: string
+): Promise<RegistrationProgress> {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -37,10 +39,12 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
   // Check if candidate exists
   const { data: candidate, error: candidateError } = await supabase
     .from('candidates')
-    .select(`
+    .select(
+      `
       id,
       email,
       password_hash,
+      status,
       first_name,
       last_name,
       first_name_kana,
@@ -60,7 +64,8 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
       recent_job_types,
       recent_job_description,
       resume_url
-    `)
+    `
+    )
     .eq('email', email)
     .single();
 
@@ -101,12 +106,17 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
   // Check expectations
   const { data: expectations } = await supabase
     .from('expectations')
-    .select('id, desired_income, desired_industries, desired_job_types, desired_work_locations, desired_work_styles')
+    .select(
+      'id, desired_income, desired_industries, desired_job_types, desired_work_locations, desired_work_styles'
+    )
     .eq('candidate_id', candidateId)
     .single();
 
   // Helper function to check if a step is completed based on its data or if later steps are completed
-  const isStepCompleted = (stepData: boolean, laterStepsData: boolean[]): boolean => {
+  const isStepCompleted = (
+    stepData: boolean,
+    laterStepsData: boolean[]
+  ): boolean => {
     return stepData || laterStepsData.some(laterStep => laterStep);
   };
 
@@ -175,7 +185,7 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
       baseCompletedSteps.resumeUploaded,
       baseCompletedSteps.educationCompleted,
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     passwordSet: isStepCompleted(baseCompletedSteps.passwordSet, [
       baseCompletedSteps.profileCompleted,
@@ -184,7 +194,7 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
       baseCompletedSteps.resumeUploaded,
       baseCompletedSteps.educationCompleted,
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     profileCompleted: isStepCompleted(baseCompletedSteps.profileCompleted, [
       baseCompletedSteps.careerStatusCompleted,
@@ -192,32 +202,35 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
       baseCompletedSteps.resumeUploaded,
       baseCompletedSteps.educationCompleted,
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
-    careerStatusCompleted: isStepCompleted(baseCompletedSteps.careerStatusCompleted, [
-      baseCompletedSteps.recentJobCompleted,
-      baseCompletedSteps.resumeUploaded,
-      baseCompletedSteps.educationCompleted,
-      baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
-    ]),
+    careerStatusCompleted: isStepCompleted(
+      baseCompletedSteps.careerStatusCompleted,
+      [
+        baseCompletedSteps.recentJobCompleted,
+        baseCompletedSteps.resumeUploaded,
+        baseCompletedSteps.educationCompleted,
+        baseCompletedSteps.skillsCompleted,
+        baseCompletedSteps.expectationCompleted,
+      ]
+    ),
     recentJobCompleted: isStepCompleted(baseCompletedSteps.recentJobCompleted, [
       baseCompletedSteps.resumeUploaded,
       baseCompletedSteps.educationCompleted,
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     resumeUploaded: isStepCompleted(baseCompletedSteps.resumeUploaded, [
       baseCompletedSteps.educationCompleted,
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     educationCompleted: isStepCompleted(baseCompletedSteps.educationCompleted, [
       baseCompletedSteps.skillsCompleted,
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     skillsCompleted: isStepCompleted(baseCompletedSteps.skillsCompleted, [
-      baseCompletedSteps.expectationCompleted
+      baseCompletedSteps.expectationCompleted,
     ]),
     expectationCompleted: baseCompletedSteps.expectationCompleted,
   };
@@ -229,12 +242,21 @@ export async function checkRegistrationProgress(email: string): Promise<Registra
     { completed: completedSteps.emailVerified, path: '/signup/verify' },
     { completed: completedSteps.passwordSet, path: '/signup/password' },
     { completed: completedSteps.profileCompleted, path: '/signup/profile' },
-    { completed: completedSteps.careerStatusCompleted, path: '/signup/career-status' },
-    { completed: completedSteps.recentJobCompleted, path: '/signup/recent-job' },
+    {
+      completed: completedSteps.careerStatusCompleted,
+      path: '/signup/career-status',
+    },
+    {
+      completed: completedSteps.recentJobCompleted,
+      path: '/signup/recent-job',
+    },
     { completed: completedSteps.resumeUploaded, path: '/signup/resume' },
     { completed: completedSteps.educationCompleted, path: '/signup/education' },
     { completed: completedSteps.skillsCompleted, path: '/signup/skills' },
-    { completed: completedSteps.expectationCompleted, path: '/signup/expectation' },
+    {
+      completed: completedSteps.expectationCompleted,
+      path: '/signup/expectation',
+    },
   ];
 
   // Find the first incomplete step

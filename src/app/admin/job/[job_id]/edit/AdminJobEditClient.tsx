@@ -56,38 +56,65 @@ interface AdminJobEditClientProps {
   jobId: string;
 }
 
-export default function AdminJobEditClient({ 
-  jobDetail, 
+export default function AdminJobEditClient({
+  jobDetail,
   companyGroups,
-  jobId
+  jobId,
 }: AdminJobEditClientProps) {
-  
   // フォーム状態の初期化
   const [group, setGroup] = useState(jobDetail.company_group_id);
   const [title, setTitle] = useState(jobDetail.title);
   const [images, setImages] = useState<File[]>([]);
   const [jobTypes, setJobTypes] = useState(jobDetail.job_type || []);
   const [industries, setIndustries] = useState(jobDetail.industry || []);
-  const [jobDescription, setJobDescription] = useState(jobDetail.job_description);
-  const [positionSummary, setPositionSummary] = useState(jobDetail.position_summary || '');
+  const [jobDescription, setJobDescription] = useState(
+    jobDetail.job_description
+  );
+  const [positionSummary, setPositionSummary] = useState(
+    jobDetail.position_summary || ''
+  );
   const [skills, setSkills] = useState(jobDetail.required_skills || '');
-  const [otherRequirements, setOtherRequirements] = useState(jobDetail.preferred_skills || '');
-  const [salaryMin, setSalaryMin] = useState(jobDetail.salary_min?.toString() || '');
-  const [salaryMax, setSalaryMax] = useState(jobDetail.salary_max?.toString() || '');
+  const [otherRequirements, setOtherRequirements] = useState(
+    jobDetail.preferred_skills || ''
+  );
+  const [salaryMin, setSalaryMin] = useState(
+    jobDetail.salary_min?.toString() || ''
+  );
+  const [salaryMax, setSalaryMax] = useState(
+    jobDetail.salary_max?.toString() || ''
+  );
   const [salaryNote, setSalaryNote] = useState(jobDetail.salary_note || '');
   const [locations, setLocations] = useState(jobDetail.work_location || []);
-  const [locationNote, setLocationNote] = useState(jobDetail.location_note || '');
-  const [selectionProcess, setSelectionProcess] = useState(jobDetail.selection_process || '');
-  const [employmentType, setEmploymentType] = useState(jobDetail.employment_type);
-  const [employmentTypeNote, setEmploymentTypeNote] = useState(jobDetail.employment_type_note || '');
-  const [workingHours, setWorkingHours] = useState(jobDetail.working_hours || '');
+  const [locationNote, setLocationNote] = useState(
+    jobDetail.location_note || ''
+  );
+  const [selectionProcess, setSelectionProcess] = useState(
+    jobDetail.selection_process || ''
+  );
+  const [employmentType, setEmploymentType] = useState(
+    jobDetail.employment_type
+  );
+  const [employmentTypeNote, setEmploymentTypeNote] = useState(
+    jobDetail.employment_type_note || ''
+  );
+  const [workingHours, setWorkingHours] = useState(
+    jobDetail.working_hours || ''
+  );
   const [overtime, setOvertime] = useState(jobDetail.overtime || 'なし');
-  const [overtimeMemo, setOvertimeMemo] = useState(jobDetail.overtime_info || '');
+  const [overtimeMemo, setOvertimeMemo] = useState(
+    jobDetail.overtime_info || ''
+  );
   const [holidays, setHolidays] = useState(jobDetail.holidays || '');
-  const [appealPoints, setAppealPoints] = useState(jobDetail.appeal_points || []);
+  const [appealPoints, setAppealPoints] = useState(
+    jobDetail.appeal_points || []
+  );
   const [smoke, setSmoke] = useState(jobDetail.smoking_policy || '屋内禁煙');
-  const [smokeNote, setSmokeNote] = useState(jobDetail.smoking_policy_note || '');
-  const [resumeRequired, setResumeRequired] = useState(jobDetail.required_documents || []);
+  const [smokeNote, setSmokeNote] = useState(
+    jobDetail.smoking_policy_note || ''
+  );
+  const [resumeRequired, setResumeRequired] = useState(
+    jobDetail.required_documents || []
+  );
   const [memo, setMemo] = useState(jobDetail.internal_memo || '');
 
   // Modal states
@@ -96,8 +123,8 @@ export default function AdminJobEditClient({
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
 
   // Error state
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showErrors, setShowErrors] = useState(false);
+  const [errors, _setErrors] = useState<Record<string, string>>({});
+  const [showErrors, _setShowErrors] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdate = useCallback(async () => {
@@ -128,18 +155,18 @@ export default function AdminJobEditClient({
         smoking_policy: smoke,
         smoking_policy_note: smokeNote,
         required_documents: resumeRequired,
-        internal_memo: memo
+        internal_memo: memo,
       };
 
       const { updateJob } = await import('../../pending/actions');
       const result = await updateJob(jobId, updateData);
-      
+
       if (result && !result.success) {
         throw new Error(result.error || '更新に失敗しました');
       }
-      
+
       console.log('Job update successful, result:', result);
-      
+
       // 成功時に確認画面にリダイレクト
       if (typeof window !== 'undefined') {
         window.location.href = `/admin/job/${jobId}/edit/confirm`;
@@ -149,7 +176,34 @@ export default function AdminJobEditClient({
       alert('更新に失敗しました');
       setIsUpdating(false);
     }
-  }, [group, title, jobDescription, positionSummary, skills, otherRequirements, salaryMin, salaryMax, salaryNote, employmentType, employmentTypeNote, locations, locationNote, workingHours, overtime, overtimeMemo, holidays, jobTypes, industries, selectionProcess, appealPoints, smoke, smokeNote, resumeRequired, memo, jobId]);
+  }, [
+    group,
+    title,
+    jobDescription,
+    positionSummary,
+    skills,
+    otherRequirements,
+    salaryMin,
+    salaryMax,
+    salaryNote,
+    employmentType,
+    employmentTypeNote,
+    locations,
+    locationNote,
+    workingHours,
+    overtime,
+    overtimeMemo,
+    holidays,
+    jobTypes,
+    industries,
+    selectionProcess,
+    appealPoints,
+    smoke,
+    smokeNote,
+    resumeRequired,
+    memo,
+    jobId,
+  ]);
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
@@ -169,38 +223,75 @@ export default function AdminJobEditClient({
   return (
     <div className='flex justify-start'>
       <div className='mr-0 max-w-5xl'>
-
         {/* 選考メモテーブル - 独立して中央配置 */}
-        <div className="mb-6 flex justify-center w-full">
-          <table className="border-collapse border border-gray-400">
+        <div className='mb-6 flex justify-center w-full'>
+          <table className='border-collapse border border-gray-400'>
             <tbody>
               <tr>
                 <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]"></td>
-                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">スカウト送信数</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">開封数</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">返信数(返信率)</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">応募数(応募率)</td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                  スカウト送信数
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                  開封数
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                  返信数(返信率)
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                  応募数(応募率)
+                </td>
               </tr>
               <tr>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去7日合計</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                  過去7日合計
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
               </tr>
               <tr>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去30日合計</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                  過去30日合計
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
               </tr>
               <tr>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">累計</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                  累計
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
+                <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                  0 (0%)
+                </td>
               </tr>
             </tbody>
           </table>
@@ -217,7 +308,7 @@ export default function AdminJobEditClient({
             <div className='flex-1'>
               <textarea
                 value={memo}
-                onChange={(e) => setMemo(e.target.value)}
+                onChange={e => setMemo(e.target.value)}
                 rows={4}
                 className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
                 placeholder='選考に関するメモを入力してください'
@@ -234,7 +325,7 @@ export default function AdminJobEditClient({
           </div>
 
           {/* 編集フォーム */}
-          <div className="w-full">
+          <div className='w-full'>
             <FormFields
               group={group}
               setGroup={setGroup}
@@ -299,9 +390,9 @@ export default function AdminJobEditClient({
         </div>
 
         {/* モーダルコンポーネント */}
-        <Modal 
-          title="勤務地を選択"
-          isOpen={locationModalOpen} 
+        <Modal
+          title='勤務地を選択'
+          isOpen={locationModalOpen}
           onClose={() => setLocationModalOpen(false)}
           onPrimaryAction={() => setLocationModalOpen(false)}
         >
@@ -311,9 +402,9 @@ export default function AdminJobEditClient({
           />
         </Modal>
 
-        <Modal 
-          title="職種を選択"
-          isOpen={jobTypeModalOpen} 
+        <Modal
+          title='職種を選択'
+          isOpen={jobTypeModalOpen}
           onClose={() => setJobTypeModalOpen(false)}
           onPrimaryAction={() => setJobTypeModalOpen(false)}
         >
@@ -323,9 +414,9 @@ export default function AdminJobEditClient({
           />
         </Modal>
 
-        <Modal 
-          title="業種を選択"
-          isOpen={industryModalOpen} 
+        <Modal
+          title='業種を選択'
+          isOpen={industryModalOpen}
           onClose={() => setIndustryModalOpen(false)}
           onPrimaryAction={() => setIndustryModalOpen(false)}
         >
@@ -340,9 +431,9 @@ export default function AdminJobEditClient({
         <div className='flex justify-center gap-4 mt-8 mb-8'>
           <Link href={`/admin/job/${jobId}`}>
             <Button
-              variant="green-outline"
-              size="figma-outline"
-              className="px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10"
+              variant='green-outline'
+              size='figma-outline'
+              className='px-10 py-3 rounded-[32px] border-[#0f9058] text-[#0f9058] bg-white hover:bg-[#0f9058]/10'
             >
               キャンセル
             </Button>
@@ -357,7 +448,6 @@ export default function AdminJobEditClient({
           </button>
         </div>
       </div>
-     
     </div>
   );
 }

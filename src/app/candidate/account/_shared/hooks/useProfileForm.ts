@@ -10,18 +10,10 @@ import {
   generateYearOptions,
 } from '@/constants/profile';
 
-// CandidateData型（ProfileEditFormから移植）
-export interface CandidateData {
-  last_name?: string;
-  first_name?: string;
-  last_name_kana?: string;
-  first_name_kana?: string;
-  gender?: string;
-  prefecture?: string;
-  birth_date?: string;
-  phone_number?: string;
-  current_income?: string;
-}
+import type { Tables } from '@/types';
+
+// Use Supabase generated type for candidate data
+type CandidateData = Partial<Tables<'candidates'>>;
 
 /**
  * プロフィール編集フォーム用の共通カスタムフック
@@ -72,7 +64,7 @@ export function useProfileForm(candidateData: CandidateData) {
     formState: { errors },
     setValue,
     watch,
-    reset,
+    reset: _reset,
   } = useForm<ProfileFormUiFields>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -135,7 +127,7 @@ export function useProfileForm(candidateData: CandidateData) {
       } else {
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch {
       setIsSubmitting(false);
     }
   };

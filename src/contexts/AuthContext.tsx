@@ -1,18 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, startTransition } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  startTransition,
+} from 'react';
 import { type User } from '@supabase/supabase-js';
+import type { AuthContextType, UserType } from '@/types';
 
-const createClientLazy = () => import('@/lib/supabase/client').then(mod => mod.createClient);
-
-export interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  accessToken: string | null;
-  signIn: (email: string, password: string, userType?: 'candidate' | 'company' | 'admin') => Promise<{ success: boolean; error?: string }>;
-  signOut: () => Promise<void>;
-  refreshAuth: () => Promise<void>;
-}
+const createClientLazy = () =>
+  import('@/lib/supabase/client').then(mod => mod.createClient);
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -20,11 +19,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  
+
   useEffect(() => {
     let mounted = true;
     let subscription: { unsubscribe: () => void } | null = null;
-    
+
     async function initializeAuth() {
       try {
         const createClient = await createClientLazy();
@@ -50,18 +49,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           return;
         }
-        
+
         const setupListener = async () => {
           try {
             const createClient = await createClientLazy();
             if (!createClient || !mounted) return;
-            
+
             const supabaseForListener = createClient();
             if (!supabaseForListener || !mounted) return;
 
-            const { data: { subscription: authSubscription } } = supabaseForListener.auth.onAuthStateChange((event, session) => {
+            const {
+              data: { subscription: authSubscription },
+            } = supabaseForListener.auth.onAuthStateChange((event, session) => {
               if (!mounted) return;
-              
+
               startTransition(() => {
                 if (session?.user) {
                   setUser(session.user);
@@ -72,24 +73,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
               });
             });
-            
+
             subscription = authSubscription;
           } catch (error) {
             if (mounted) {
-              console.error('🔍 [AUTH CONTEXT] Auth listener setup error:', error);
+              console.error(
+                '🔍 [AUTH CONTEXT] Auth listener setup error:',
+                error
+              );
             }
           }
         };
 
         const [sessionResult] = await Promise.all([
           supabase.auth.getSession(),
-          setupListener()
+          setupListener(),
         ]);
-        
+
         if (!mounted) return;
-        
-        const { data: { session }, error } = sessionResult;
-        
+
+        const {
+          data: { session },
+          error,
+        } = sessionResult;
+
         startTransition(() => {
           if (error) {
             console.error('🔍 [AUTH CONTEXT] Session error:', error);
@@ -114,9 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-    
+
     initializeAuth();
-    
+
     return () => {
       mounted = false;
       if (subscription) {
@@ -129,7 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string, userType?: 'candidate' | 'company' | 'admin') => {
+  const signIn = async (
+    email: string,
+    password: string,
+    userType?: 'candidate' | 'company' | 'admin'
+  ) => {
     try {
       // Server Actionを動的インポート
       const { signInAction } = await import('@/lib/auth/actions');
@@ -140,7 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true };
       }
 
-      return { success: false, error: result.error || 'ログインに失敗しました' };
+      return {
+        success: false,
+        error: result.error || 'ログインに失敗しました',
+      };
     } catch (error) {
       console.error('Sign in error:', error);
       return { success: false, error: 'ネットワークエラーが発生しました' };
@@ -152,14 +166,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Server Actionを使用
       const { logoutAction } = await import('@/lib/auth/actions');
       await logoutAction();
-      
+
       // クライアントサイドの状態をクリア
       const createClient = await createClientLazy();
       if (createClient) {
         const supabase = createClient();
         await supabase.auth.signOut();
       }
-      
+
       setUser(null);
       setAccessToken(null);
     } catch (error) {
@@ -172,8 +186,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const createClient = await createClientLazy();
       if (createClient) {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
         if (session?.user) {
           setUser(session.user);
           setAccessToken(session.access_token);
@@ -186,9 +202,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Refresh auth error:', error);
     }
   };
-  
+
   return (
-    <AuthContext.Provider value={{ user, loading, accessToken, signIn, signOut, refreshAuth }}>
+    <AuthContext.Provider
+      value={{ user, loading, accessToken, signIn, signOut, refreshAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -202,4 +220,4 @@ export function useAuth() {
   return context;
 }
 
-export type UserType = 'candidate' | 'company' | 'admin'; 
+export type UserType = 'candidate' | 'company' | 'admin';

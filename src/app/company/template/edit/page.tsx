@@ -1,20 +1,23 @@
-
 import React from 'react';
 import TemplateEditClient from './TemplateEditClient';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
-import { getCompanyGroups, type GroupOption, type MessageTemplateData } from '../new/actions';
+import {
+  getCompanyGroups,
+  type GroupOption,
+  type MessageTemplateData,
+} from '../new/actions';
 import { getMessageTemplateById } from '../actions';
 import { redirect } from 'next/navigation';
-
-export const dynamic = 'force-dynamic';
 
 interface TemplateEditPageProps {
   searchParams: { id?: string };
 }
 
-export default async function TemplateEditPage({ searchParams }: TemplateEditPageProps) {
+export default async function TemplateEditPage({
+  searchParams,
+}: TemplateEditPageProps) {
   const templateId = searchParams.id;
-  
+
   if (!templateId) {
     redirect('/company/template');
   }
@@ -34,20 +37,20 @@ export default async function TemplateEditPage({ searchParams }: TemplateEditPag
   let groupOptions: GroupOption[] = [];
   let templateData: MessageTemplateData | null = null;
   let error: string | null = null;
-  
+
   try {
     console.log('📋 Fetching template data for ID:', templateId);
 
     const [groups, template] = await Promise.all([
       getCompanyGroups(),
-      getMessageTemplateById(templateId)
+      getMessageTemplateById(templateId),
     ]);
-    
+
     console.log('📊 Groups result:', groups);
     console.log('📝 Template result:', template);
-    
+
     groupOptions = groups;
-    
+
     if (template.success) {
       templateData = (template.data || null) as MessageTemplateData | null;
     } else {
@@ -66,7 +69,7 @@ export default async function TemplateEditPage({ searchParams }: TemplateEditPag
   }
 
   return (
-    <TemplateEditClient 
+    <TemplateEditClient
       initialGroupOptions={groupOptions}
       templateData={templateData}
       templateId={templateId}

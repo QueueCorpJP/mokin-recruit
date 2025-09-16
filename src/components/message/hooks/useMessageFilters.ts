@@ -56,7 +56,7 @@ export function useMessageFilters(
   }, [rooms]);
 
   const filteredRooms = React.useMemo(() => {
-    let filtered = rooms.filter(room => {
+    const filtered = rooms.filter(room => {
       if (isCandidatePage) {
         if (companyFilter !== 'all' && room.companyName !== companyFilter)
           return false;

@@ -38,14 +38,17 @@ export default function AutocompleteInput({
   const listRef = useRef<HTMLUListElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const displayedSuggestions = useMemo(() => 
-    suggestions.slice(0, maxSuggestions), 
+  const displayedSuggestions = useMemo(
+    () => suggestions.slice(0, maxSuggestions),
     [suggestions, maxSuggestions]
   );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setSelectedIndex(-1);
       }
@@ -64,7 +67,7 @@ export default function AutocompleteInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
-    
+
     // Only show suggestions when user is actively typing
     if (newValue.trim().length > 0 && displayedSuggestions.length > 0) {
       setIsOpen(true);
@@ -79,13 +82,13 @@ export default function AutocompleteInput({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev < displayedSuggestions.length - 1 ? prev + 1 : 0
         );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev > 0 ? prev - 1 : displayedSuggestions.length - 1
         );
         break;
@@ -112,10 +115,10 @@ export default function AutocompleteInput({
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className='relative'>
       <input
         ref={inputRef}
-        type="text"
+        type='text'
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
@@ -127,36 +130,39 @@ export default function AutocompleteInput({
         }}
         placeholder={placeholder}
         disabled={disabled}
-        className={className || `w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058]`}
+        className={
+          className ||
+          `w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] placeholder:font-medium focus:outline-none focus:border-[#0f9058]`
+        }
       />
-      
+
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 bg-white border border-[#999999] rounded-[5px] mt-1 shadow-lg max-h-60 overflow-auto">
+        <div className='absolute top-full left-0 right-0 z-50 bg-white border border-[#999999] rounded-[5px] mt-1 shadow-lg max-h-60 overflow-auto'>
           {loading ? (
-            <div className="p-3 text-[#999999] text-center">
-              検索中...
-            </div>
-          ) : displayedSuggestions.length > 0 && (
-            <ul ref={listRef}>
-              {displayedSuggestions.map((suggestion, index) => (
-                <li
-                  key={suggestion.id}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className={`px-3 py-2 cursor-pointer text-[14px] hover:bg-[#f5f5f5] ${
-                    index === selectedIndex ? 'bg-[#e8f5e8]' : ''
-                  }`}
-                >
-                  <div className="font-medium text-[#323232]">
-                    {suggestion.name}
-                  </div>
-                  {suggestion.category && (
-                    <div className="text-[12px] text-[#999999] mt-1">
-                      {suggestion.category}
+            <div className='p-3 text-[#999999] text-center'>検索中...</div>
+          ) : (
+            displayedSuggestions.length > 0 && (
+              <ul ref={listRef}>
+                {displayedSuggestions.map((suggestion, index) => (
+                  <li
+                    key={suggestion.id}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className={`px-3 py-2 cursor-pointer text-[14px] hover:bg-[#f5f5f5] ${
+                      index === selectedIndex ? 'bg-[#e8f5e8]' : ''
+                    }`}
+                  >
+                    <div className='font-medium text-[#323232]'>
+                      {suggestion.name}
                     </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+                    {suggestion.category && (
+                      <div className='text-[12px] text-[#999999] mt-1'>
+                        {suggestion.category}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )
           )}
         </div>
       )}

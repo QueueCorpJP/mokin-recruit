@@ -23,7 +23,7 @@ export function ScoutServiceSection() {
   ];
 
   return (
-    <section className='py-16 flex flex-col items-center relative overflow-hidden px-[24px] md:px-0 bg-[#F9F9F9] md:bg-[#FFF]'>
+    <section className='py-16 flex flex-col items-center relative overflow-hidden px-[24px] md:px-0 bg-[#F9F9F9] md:bg-[#FFF] z-0'>
       {/* セクション全体を最大幅1200pxで中央寄せ */}
       <div className='w-full max-w-[1200px] flex flex-col items-center z-20'>
         {/* メインキャッチ＋背景帯＋ドット装飾 */}
@@ -77,7 +77,7 @@ export function ScoutServiceSection() {
                 alt='カードイメージ'
                 fill
                 className='rounded-full object-cover'
-                loading="lazy"
+                loading='lazy'
               />
               {/* サブ円（グラデーション） */}
               <div
@@ -101,9 +101,9 @@ export function ScoutServiceSection() {
           </div>
         ))}
       </div>
-      {/* === グラデーション円（装飾） === */}
+      {/* === グラデーション円（装飾） - 一時的に無効化 === */}
       <div
-        className='absolute left-1/2 -translate-x-1/2 bottom-[-2630px] w-[3000px] h-[3000px] z-10 block'
+        className='hidden'
         style={{
           background:
             'linear-gradient(180deg, #1CA74F 0%, #198D76 10%, #198D76 100%)',

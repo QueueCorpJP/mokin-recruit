@@ -10,7 +10,10 @@ export default function Loading() {
       <div className='bg-[#f9f9f9] box-border flex flex-col gap-10 items-center pb-20 pt-10 px-4 md:px-20 w-full'>
         <div className='bg-white flex flex-col gap-4 items-start p-4 md:p-[40px] rounded-[10px] w-full'>
           {[...Array(3)].map((_, i) => (
-            <div key={i} className='flex flex-col md:flex-row gap-4 items-start w-full'>
+            <div
+              key={i}
+              className='flex flex-col md:flex-row gap-4 items-start w-full'
+            >
               <div className='text-[#323232] text-sm md:text-[16px] font-medium min-w-[120px]'>
                 <div className='h-5 w-24 bg-gray-200 rounded animate-pulse' />
               </div>
@@ -33,6 +36,3 @@ export default function Loading() {
     </div>
   );
 }
-
-
-

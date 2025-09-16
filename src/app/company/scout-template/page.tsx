@@ -3,11 +3,9 @@ import { ScoutTemplateClient } from './ScoutTemplateClient';
 import { getScoutTemplates, getJobPostings } from './actions';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 
-export const dynamic = 'force-dynamic';
-
 export default async function ScoutTemplatePage() {
   console.log('🚀 ScoutTemplatePage loading...');
-  
+
   // 統一パターンの認証チェック
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
@@ -24,7 +22,7 @@ export default async function ScoutTemplatePage() {
   let initialScoutTemplates: any[] = [];
   let initialJobPostings: any[] = [];
   let error: string | null = null;
-  
+
   try {
     const [templatesResult, jobPostingsResult] = await Promise.all([
       getScoutTemplates(50, 0).catch(() => null),
@@ -34,7 +32,8 @@ export default async function ScoutTemplatePage() {
     if (templatesResult?.success) {
       initialScoutTemplates = templatesResult.data;
     } else {
-      error = templatesResult?.error || 'スカウトテンプレートの取得に失敗しました';
+      error =
+        templatesResult?.error || 'スカウトテンプレートの取得に失敗しました';
     }
 
     if (jobPostingsResult?.success) {
@@ -42,12 +41,12 @@ export default async function ScoutTemplatePage() {
     } else {
       // 求人の取得に失敗してもスカウトテンプレートは表示する
     }
-  } catch (err) {
+  } catch (_err) {
     error = 'サーバーエラーが発生しました';
   }
 
   return (
-    <ScoutTemplateClient 
+    <ScoutTemplateClient
       initialScoutTemplates={initialScoutTemplates}
       initialJobPostings={initialJobPostings}
       initialError={error}

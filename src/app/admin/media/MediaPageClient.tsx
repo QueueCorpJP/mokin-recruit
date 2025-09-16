@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Article } from '@/app/admin/media/actions';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
-import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
+// import { NewArticleButton } from '@/components/admin/ui/NewArticleButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
@@ -24,7 +24,7 @@ export default function MediaPageClient({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
-  const [deletedArticleTitle, setDeletedArticleTitle] = useState('');
+  const [deletedArticleTitle, __setDeletedArticleTitle] = useState('');
   const itemsPerPage = 10;
 
   const getStatusBadge = (status: Article['status']) => {
@@ -87,7 +87,7 @@ export default function MediaPageClient({
     }
   };
 
-  const handleNewArticle = () => {
+  const _handleNewArticle = () => {
     window.location.href = '/admin/media/new';
   };
 
@@ -108,7 +108,7 @@ export default function MediaPageClient({
   const handleConfirmDelete = async () => {
     // 仮実装: ローカル状態のみ更新
     if (articleToDelete) {
-      setDeletedArticleTitle(articleToDelete.title);
+      _setDeletedArticleTitle(articleToDelete.title);
       setShowDeleteModal(false);
       setArticleToDelete(null);
       setShowDeletedModal(true);
@@ -123,7 +123,7 @@ export default function MediaPageClient({
 
   const handleCloseDeletedModal = () => {
     setShowDeletedModal(false);
-    setDeletedArticleTitle('');
+    _setDeletedArticleTitle('');
   };
 
   const handlePrevious = () => {
@@ -174,15 +174,11 @@ export default function MediaPageClient({
       case 'category':
         aValue =
           a.categories && a.categories.length > 0
-            ? a.categories
-                .sort((x, y) => x.localeCompare(y, 'ja'))
-                .join(', ')
+            ? a.categories.sort((x, y) => x.localeCompare(y, 'ja')).join(', ')
             : '';
         bValue =
           b.categories && b.categories.length > 0
-            ? b.categories
-                .sort((x, y) => x.localeCompare(y, 'ja'))
-                .join(', ')
+            ? b.categories.sort((x, y) => x.localeCompare(y, 'ja')).join(', ')
             : '';
         break;
       case 'title':

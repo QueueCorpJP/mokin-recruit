@@ -3,19 +3,252 @@ import { FaqBox } from '@/components/ui/FaqBox';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 // import { Button } from '@/components/ui/button';
 import { getCachedCandidateUser } from '@/lib/auth/server';
-import TaskList from './TaskList';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { getRooms } from '@/lib/rooms';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { getCandidateTaskDataResult } from '@/app/candidate/task/_shared/server/getTaskData';
-import type { TaskData } from '@/app/candidate/task/_shared/types';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-// Room 型は getRooms 側の戻り値型を参照しており、ここでは未使用
+const TaskList = dynamic(() => import('./TaskList'), {
+  loading: () => (
+    <div className='bg-white rounded-[10px] p-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
+      <div className='animate-pulse space-y-4'>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className='flex items-center p-4 border border-gray-200 rounded'
+          >
+            <div className='w-4 h-4 bg-gray-200 rounded mr-4'></div>
+            <div className='flex-1'>
+              <div className='h-4 bg-gray-200 rounded w-3/4 mb-2'></div>
+              <div className='h-3 bg-gray-200 rounded w-1/2'></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+});
 
-async function getTaskData(): Promise<TaskData> {
-  // レイアウトでSSR認証済みのため、ここでのリダイレクトは不要
-  const result = await getCandidateTaskDataResult();
-  if (result.success && result.data) return result.data;
-  return { hasNewMessage: false, hasUnreadMessage: false };
+// 包括的なやることリスト取得関数（mypageから移植）
+async function getTaskData(candidateId: string) {
+  const tasks: unknown[] = [];
+  const client = await getSupabaseServerClient();
+
+  try {
+    // 1. プロフィール完成度チェック
+    const { data: candidate } = await client
+      .from('candidates')
+      .select('*')
+      .eq('id', candidateId)
+      .single();
+
+    if (candidate) {
+      // 基本情報チェック
+      if (!candidate.last_name || !candidate.first_name) {
+        tasks.push({
+          id: 'profile-name',
+          title: '氏名を登録してください',
+          description: 'プロフィールの基本情報から氏名を入力してください',
+        });
+      }
+
+      if (!candidate.phone_number) {
+        tasks.push({
+          id: 'profile-phone',
+          title: '電話番号を登録してください',
+          description: '企業からの連絡に必要な電話番号を登録してください',
+        });
+      }
+
+      // 現在の職務情報チェック
+      if (!candidate.current_company || !candidate.current_position) {
+        tasks.push({
+          id: 'profile-current-job',
+          title: '現在の職務情報を入力してください',
+          description: '現在の会社名と役職を登録してください',
+        });
+      }
+
+      // 希望条件チェック
+      if (
+        !candidate.desired_salary ||
+        candidate.desired_industries?.length === 0 ||
+        candidate.desired_job_types?.length === 0 ||
+        candidate.desired_locations?.length === 0
+      ) {
+        tasks.push({
+          id: 'profile-expectations',
+          title: '希望条件を設定してください',
+          description: '希望年収・業界・職種・勤務地を設定してください',
+        });
+      }
+
+      // 自己PR・職務要約チェック
+      if (!candidate.job_summary || !candidate.self_pr) {
+        tasks.push({
+          id: 'profile-summary',
+          title: '職務要約・自己PRを入力してください',
+          description: 'あなたの経験とアピールポイントを記載してください',
+        });
+      }
+
+      // 履歴書チェック
+      if (!candidate.resume_url) {
+        tasks.push({
+          id: 'resume-upload',
+          title: '履歴書をアップロードしてください',
+          description: '応募時に必要な履歴書ファイルをアップロードしてください',
+        });
+      }
+    }
+
+    // 2. 学歴情報チェック
+    const { data: education } = await client
+      .from('education')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    if (!education) {
+      tasks.push({
+        id: 'education-info',
+        title: '学歴情報を登録してください',
+        description: '最終学歴を入力してください',
+      });
+    }
+
+    // 3. スキル情報チェック
+    const { data: skills } = await client
+      .from('skills')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    if (!skills || skills.skills_list?.length === 0) {
+      tasks.push({
+        id: 'skills-info',
+        title: 'スキル情報を登録してください',
+        description: '保有スキルや資格を入力してください',
+      });
+    }
+
+    // 4. 職歴経験チェック
+    const { data: workExperience } = await client
+      .from('work_experience')
+      .select('*')
+      .eq('candidate_id', candidateId);
+
+    if (!workExperience || workExperience.length === 0) {
+      tasks.push({
+        id: 'work-experience',
+        title: '職歴・業界経験を登録してください',
+        description: '経験のある業界と年数を入力してください',
+      });
+    }
+
+    // 5. 期待条件テーブルチェック
+    const { data: expectations } = await client
+      .from('expectations')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    if (!expectations) {
+      tasks.push({
+        id: 'expectations-settings',
+        title: '詳細な希望条件を設定してください',
+        description: '希望の働き方や条件を詳しく設定してください',
+      });
+    }
+
+    // 6. 未返信スカウトチェック
+    const seventyTwoHoursAgo = new Date(
+      Date.now() - 72 * 60 * 60 * 1000
+    ).toISOString();
+    const { data: unrepliedScouts } = await client
+      .from('scout_sends')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .in('status', ['sent', 'read'])
+      .gte('sent_at', seventyTwoHoursAgo);
+
+    if (unrepliedScouts && unrepliedScouts.length > 0) {
+      tasks.push({
+        id: 'scout-reply',
+        title: `${unrepliedScouts.length}件のスカウトに返信してください`,
+        description: '72時間以内の返信を推奨します',
+      });
+    }
+
+    // 7. 応募後の対応チェック
+    const { data: applications } = await client
+      .from('application')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .eq('status', 'RESPONDED');
+
+    if (applications && applications.length > 0) {
+      tasks.push({
+        id: 'application-response',
+        title: `${applications.length}件の応募に企業から返信があります`,
+        description: '企業からの返信を確認してください',
+      });
+    }
+
+    // 8. 選考中のステータス確認
+    const { data: selections } = await client
+      .from('selection_progress')
+      .select('*, job_postings(title)')
+      .eq('candidate_id', candidateId)
+      .or(
+        'document_screening_result.eq.pending,first_interview_result.eq.pending,secondary_interview_result.eq.pending,final_interview_result.eq.pending'
+      );
+
+    if (selections && selections.length > 0) {
+      tasks.push({
+        id: 'selection-status',
+        title: `${selections.length}件の選考が進行中です`,
+        description: '選考状況を確認してください',
+      });
+    }
+
+    // 9. 通知設定チェック
+    const { data: notificationSettings } = await client
+      .from('notification_settings')
+      .select('*')
+      .eq('candidate_id', candidateId)
+      .single();
+
+    if (!notificationSettings) {
+      tasks.push({
+        id: 'notification-settings',
+        title: '通知設定を確認してください',
+        description: '重要な通知を見逃さないよう設定を確認してください',
+      });
+    }
+
+    // 10. 未読メッセージチェック
+    const rooms = await getRooms(candidateId, 'candidate');
+    const unreadRooms = rooms.filter(
+      (room: { unreadCount?: number }) =>
+        room.unreadCount && room.unreadCount > 0
+    );
+
+    if (unreadRooms.length > 0) {
+      tasks.push({
+        id: 'unread-messages',
+        title: `${unreadRooms.length}件の未読メッセージがあります`,
+        description: '企業からのメッセージを確認してください',
+      });
+    }
+
+    return tasks;
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return [];
+  }
 }
 
 export default async function CandidateTaskPage() {
@@ -25,7 +258,7 @@ export default async function CandidateTaskPage() {
     redirect('/candidate/auth/login');
   }
 
-  const taskData = await getTaskData();
+  const tasks = await getTaskData(user.id);
 
   const headingListStyle: React.CSSProperties = {
     display: 'flex',
@@ -78,17 +311,22 @@ export default async function CandidateTaskPage() {
               </SectionHeading>
             </div>
 
-            <TaskList initialTaskData={taskData} />
+            <TaskList tasks={tasks} />
           </div>
 
           <div className='w-full md:max-w-[320px] md:flex-none'>
-            <Image
-              src='/images/banner01.png'
-              alt='バナー画像1'
-              width={320}
-              height={200}
-              className='w-full h-auto block rounded-lg mb-20'
-            />
+            <Link
+              href='/candidate/account/resume'
+              className='block cursor-pointer mb-20'
+            >
+              <Image
+                src='/images/banner01.png'
+                alt='バナー画像1'
+                width={320}
+                height={200}
+                className='w-full h-auto block rounded-lg transition-opacity hover:opacity-90'
+              />
+            </Link>
             <div style={headingListStyle}>
               <SectionHeading
                 iconSrc='/images/question.svg'
@@ -147,5 +385,3 @@ export default async function CandidateTaskPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

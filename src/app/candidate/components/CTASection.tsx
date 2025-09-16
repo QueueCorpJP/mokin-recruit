@@ -4,10 +4,19 @@ import Link from 'next/link';
 
 export function CTASection() {
   return (
-    <section className='py-0 flex justify-center items-center relative overflow-visible'>
-      <div className='relative w-full max-w-[1360px]'>
+    <section
+      className='cta-section-container py-0 flex justify-center items-center relative z-20'
+      style={{ overflow: 'visible', overflowX: 'visible' }}
+    >
+      <div
+        className='relative w-full max-w-[1360px]'
+        style={{ overflow: 'visible', overflowX: 'visible' }}
+      >
         {/* メインコンテナ - グラデーション背景 */}
-        <div className='bg-gradient-to-t from-[#1ca74f] to-[#198d76] md:rounded-[40px] rounded-[0] md:py-[80px] md:px-[80px] py-[40px] px-[24px] flex flex-col items-center gap-10 relative overflow-visible'>
+        <div
+          className='bg-gradient-to-t from-[#1ca74f] to-[#198d76] md:rounded-[40px] rounded-[0] md:py-[80px] md:px-[80px] py-[40px] px-[24px] flex flex-col items-center gap-10 relative'
+          style={{ overflow: 'visible', overflowX: 'visible' }}
+        >
           {/* メインテキスト */}
           <h2 className='text-white font-bold text-[24px] leading-[1.6] tracking-[2.4px] text-center font-[family-name:var(--font-noto-sans-jp)]'>
             登録して、
@@ -15,7 +24,7 @@ export function CTASection() {
             を広げよう。
           </h2>
           {/* ボタンコンテナ */}
-          <div className='flex md:flex-row flex-col gap-6 items-center '>
+          <div className='flex md:flex-row flex-col gap-6 items-center overflow-visible'>
             {/* 新規会員登録ボタン（Figma完全準拠） */}
             <Link
               href='/signup'
@@ -81,25 +90,28 @@ export function CTASection() {
           {/* 装飾的な円要素 - スクリーンショットに忠実な配置 */}
           {/* 既存の円装飾は全て削除 */}
           {/* circle01.pngを配置 */}
-          <div className='hidden md:block'>
+          <div
+            className='hidden md:block absolute top-0 left-0 w-full h-full overflow-visible pointer-events-none'
+            style={{ overflow: 'visible' }}
+          >
             <Image
               src='/images/circle01.png'
               alt='circle01'
-              width={80}
-              height={80}
-              sizes='80px'
-              className='absolute z-10'
-              style={{ top: 30, left: -40 }}
+              width={300}
+              height={300}
+              unoptimized
+              className='absolute z-0 overflow-visible'
+              style={{ top: 30, left: -60 }}
             />
             {/* circle02.pngを配置 */}
             <Image
               src='/images/circle02.png'
               alt='circle02'
-              width={80}
-              height={80}
-              sizes='80px'
-              className='absolute z-10'
-              style={{ top: 32, right: -30 }}
+              unoptimized
+              width={330}
+              height={330}
+              className='absolute z-0'
+              style={{ top: 50, right: -50 }}
             />
           </div>
         </div>
@@ -107,4 +119,3 @@ export function CTASection() {
     </section>
   );
 }
-//f

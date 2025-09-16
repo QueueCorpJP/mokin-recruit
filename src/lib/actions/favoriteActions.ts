@@ -3,45 +3,25 @@
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
-
-export interface FavoriteActionResult {
-  success: boolean;
-  error?: string;
-  favorite?: any;
-  message?: string;
-}
-
-export interface FavoriteListResult {
-  success: boolean;
-  data?: {
-    favorites: any[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
-  error?: string;
-}
-
-export interface FavoriteStatusResult {
-  success: boolean;
-  data?: Record<string, boolean>;
-  error?: string;
-}
+import type {
+  FavoriteActionResult,
+  FavoriteListResult,
+  FavoriteStatusResult,
+} from '@/types/actions';
 
 // お気に入り一覧を取得
-export async function getFavoriteListAction(params: {
-  page?: number;
-  limit?: number;
-} = {}): Promise<FavoriteListResult> {
+export async function getFavoriteListAction(
+  params: {
+    page?: number;
+    limit?: number;
+  } = {}
+): Promise<FavoriteListResult> {
   try {
     const auth = await requireCandidateAuthForAction();
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error
+        error: auth.error,
       };
     }
 
@@ -59,14 +39,15 @@ export async function getFavoriteListAction(params: {
       console.error('お気に入り総数取得エラー:', countError);
       return {
         success: false,
-        error: 'お気に入りの総数取得に失敗しました'
+        error: 'お気に入りの総数取得に失敗しました',
       };
     }
 
     // お気に入りリストを取得
     const { data: favorites, error } = await supabase
       .from('favorites')
-      .select(`
+      .select(
+        `
         id,
         job_posting_id,
         candidate_id,
@@ -82,7 +63,8 @@ export async function getFavoriteListAction(params: {
             company_name
           )
         )
-      `)
+      `
+      )
       .eq('candidate_id', auth.data.candidateId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -91,7 +73,7 @@ export async function getFavoriteListAction(params: {
       console.error('お気に入り取得エラー:', error);
       return {
         success: false,
-        error: 'お気に入りの取得に失敗しました'
+        error: 'お気に入りの取得に失敗しました',
       };
     }
 
@@ -103,26 +85,28 @@ export async function getFavoriteListAction(params: {
           page,
           limit,
           total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        }
-      }
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+      },
     };
   } catch (error) {
     console.error('お気に入り一覧取得エラー:', error);
     return {
       success: false,
-      error: 'システムエラーが発生しました'
+      error: 'システムエラーが発生しました',
     };
   }
 }
 
 // お気に入り状態を取得（複数の求人ID）
-export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<FavoriteStatusResult> {
+export async function getFavoriteStatusAction(
+  jobPostingIds: string[]
+): Promise<FavoriteStatusResult> {
   try {
     if (jobPostingIds.length === 0) {
       return {
         success: true,
-        data: {}
+        data: {},
       };
     }
 
@@ -130,7 +114,7 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error
+        error: auth.error,
       };
     }
 
@@ -147,12 +131,14 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
       console.error('お気に入り状態取得エラー:', error);
       return {
         success: false,
-        error: 'お気に入り状態の取得に失敗しました'
+        error: 'お気に入り状態の取得に失敗しました',
       };
     }
 
     // お気に入りに登録されているジョブIDのセット
-    const favoriteJobIds = new Set(favorites?.map(fav => fav.job_posting_id) || []);
+    const favoriteJobIds = new Set(
+      favorites?.map(fav => fav.job_posting_id) || []
+    );
 
     // 結果をマップ形式で作成
     const result: Record<string, boolean> = {};
@@ -162,25 +148,27 @@ export async function getFavoriteStatusAction(jobPostingIds: string[]): Promise<
 
     return {
       success: true,
-      data: result
+      data: result,
     };
   } catch (error) {
     console.error('お気に入り状態取得エラー:', error);
     return {
       success: false,
-      error: 'システムエラーが発生しました'
+      error: 'システムエラーが発生しました',
     };
   }
 }
 
 // お気に入りに追加
-export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteActionResult> {
+export async function addFavoriteAction(
+  jobPostingId: string
+): Promise<FavoriteActionResult> {
   try {
     const auth = await requireCandidateAuthForAction();
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error
+        error: auth.error,
       };
     }
 
@@ -198,14 +186,14 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       console.error('お気に入りチェックエラー:', checkError);
       return {
         success: false,
-        error: 'お気に入り状態の確認に失敗しました'
+        error: 'お気に入り状態の確認に失敗しました',
       };
     }
 
     if (existing) {
       return {
         success: false,
-        error: '既にお気に入りに追加されています'
+        error: '既にお気に入りに追加されています',
       };
     }
 
@@ -214,7 +202,7 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       .from('favorites')
       .insert({
         candidate_id: auth.data.candidateId,
-        job_posting_id: jobPostingId
+        job_posting_id: jobPostingId,
       })
       .select()
       .single();
@@ -223,34 +211,36 @@ export async function addFavoriteAction(jobPostingId: string): Promise<FavoriteA
       console.error('お気に入り追加エラー:', error);
       return {
         success: false,
-        error: 'お気に入りの追加に失敗しました'
+        error: 'お気に入りの追加に失敗しました',
       };
     }
 
     revalidatePath('/candidate/job/favorite');
-    
+
     return {
       success: true,
       favorite,
-      message: 'お気に入りに追加しました'
+      message: 'お気に入りに追加しました',
     };
   } catch (error) {
     console.error('お気に入り追加エラー:', error);
     return {
       success: false,
-      error: 'システムエラーが発生しました'
+      error: 'システムエラーが発生しました',
     };
   }
 }
 
 // お気に入りから削除
-export async function removeFavoriteAction(jobPostingId: string): Promise<FavoriteActionResult> {
+export async function removeFavoriteAction(
+  jobPostingId: string
+): Promise<FavoriteActionResult> {
   try {
     const auth = await requireCandidateAuthForAction();
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error
+        error: auth.error,
       };
     }
 
@@ -266,21 +256,21 @@ export async function removeFavoriteAction(jobPostingId: string): Promise<Favori
       console.error('お気に入り削除エラー:', error);
       return {
         success: false,
-        error: 'お気に入りの削除に失敗しました'
+        error: 'お気に入りの削除に失敗しました',
       };
     }
 
     revalidatePath('/candidate/job/favorite');
-    
+
     return {
       success: true,
-      message: 'お気に入りから削除しました'
+      message: 'お気に入りから削除しました',
     };
   } catch (error) {
     console.error('お気に入り削除エラー:', error);
     return {
       success: false,
-      error: 'システムエラーが発生しました'
+      error: 'システムエラーが発生しました',
     };
   }
 }

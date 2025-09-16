@@ -7,12 +7,14 @@ import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import Link from 'next/link';
 import { loginAction, LoginResult } from './actions';
+import { useRouter } from 'next/navigation';
 
 interface LoginClientProps {
   userType: 'candidate' | 'company' | 'admin';
 }
 
 export function LoginClient({ userType }: LoginClientProps) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,6 @@ export function LoginClient({ userType }: LoginClientProps) {
 
     startTransition(async () => {
       try {
-
         const result: LoginResult = await loginAction({
           email: email.trim(),
           password,
@@ -61,10 +62,23 @@ export function LoginClient({ userType }: LoginClientProps) {
           return;
         }
 
-
+        // Force refresh to update authentication state
+        router.refresh();
+        // Small delay to ensure auth state propagates
+        setTimeout(() => {
+          if (userType === 'company') {
+            router.push('/company/mypage');
+          } else if (userType === 'admin') {
+            router.push('/admin/dashboard');
+          }
+        }, 100);
       } catch (err) {
         // Next.jsのリダイレクトエラーは正常な処理なので無視
-        if (err instanceof Error && (err.message.includes('NEXT_REDIRECT') || (err as any).digest?.includes('NEXT_REDIRECT'))) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('NEXT_REDIRECT') ||
+            (err as any).digest?.includes('NEXT_REDIRECT'))
+        ) {
           // リダイレクト中なのでエラーを表示しない
           return;
         }
@@ -104,20 +118,19 @@ export function LoginClient({ userType }: LoginClientProps) {
             </Alert>
           )}
 
-
           {/* フォームフィールド */}
           <div className='flex flex-col gap-6 items-center'>
             {/* メールアドレス入力 */}
             <EmailFormField
               id='email'
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
 
             {/* パスワード入力 */}
             <div className='flex flex-col md:flex-row gap-2 md:gap-4 items-start w-full'>
               <div className='flex flex-row items-center justify-start md:justify-end pt-0 md:pt-[11px] pb-0 w-full md:w-[140px]'>
-                <label 
+                <label
                   htmlFor='password'
                   className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.4px] md:tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] text-nowrap whitespace-pre'
                 >
@@ -128,7 +141,7 @@ export function LoginClient({ userType }: LoginClientProps) {
                 <PasswordFormField
                   id='password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className='[&>div:first-child]:hidden'
                   inputWidth='w-full'
                 />

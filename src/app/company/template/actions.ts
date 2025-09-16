@@ -65,7 +65,7 @@ export async function getMessageTemplates(
     }
 
     // 企業のメッセージテンプレートを取得（RLSで自動的にアクセス制御）
-    let query = supabase
+    const query = supabase
       .from('message_templates')
       .select(
         `

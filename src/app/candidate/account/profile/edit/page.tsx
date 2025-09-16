@@ -3,7 +3,6 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import ProfileEditForm from './ProfileEditForm';
 
-
 // 候補者データの型定義
 interface CandidateData {
   id: string;
@@ -21,13 +20,16 @@ interface CandidateData {
 }
 
 // 候補者データを取得する関数
-async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
+async function getCandidateData(
+  candidateId: string
+): Promise<CandidateData | null> {
   try {
     const supabase = await getSupabaseServerClient();
-    
+
     const { data, error } = await supabase
       .from('candidates')
-      .select(`
+      .select(
+        `
         id,
         email,
         last_name,
@@ -40,7 +42,8 @@ async function getCandidateData(candidateId: string): Promise<CandidateData | nu
         gender,
         birth_date,
         current_income
-      `)
+      `
+      )
       .eq('id', candidateId)
       .single();
 
@@ -69,9 +72,5 @@ export default async function ProfileEditPage() {
     redirect('/candidate/auth/login');
   }
 
-  return (
-    <ProfileEditForm candidateData={candidateData} />
-  );
+  return <ProfileEditForm candidateData={candidateData} />;
 }
-
-export const dynamic = 'force-dynamic';

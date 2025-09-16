@@ -16,29 +16,6 @@ import { CombinedProviders } from '@/providers/CombinedProviders';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
-// 重要でないコンポーネントを遅延読み込み
-const AuthAwareNavigation = dynamic(
-  () =>
-    import('../components/layout/AuthAwareNavigation').then(mod => ({
-      default: mod.AuthAwareNavigation,
-    })),
-  {
-    loading: () => (
-      <div className='h-[80px] bg-white border-b border-gray-200' />
-    ),
-  }
-);
-
-const AuthAwareFooter = dynamic(
-  () =>
-    import('../components/layout/AuthAwareFooter').then(mod => ({
-      default: mod.AuthAwareFooter,
-    })),
-  {
-    loading: () => <div className='min-h-[200px] bg-[#323232]' />,
-  }
-);
-
 const FontLoader = dynamic(
   () =>
     import('../components/FontLoader').then(mod => ({

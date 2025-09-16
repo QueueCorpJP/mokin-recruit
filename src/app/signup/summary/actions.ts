@@ -11,7 +11,6 @@ interface SummaryFormData {
 }
 
 export async function saveSummaryData(formData: SummaryFormData) {
-  console.log('=== Start saveSummaryData ===');
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,14 +27,14 @@ export async function saveSummaryData(formData: SummaryFormData) {
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
-    console.log('Using candidate ID for summary data:', candidateId);
 
-    // Update candidates table with summary data
+    // Update candidates table with summary data and change status to official
     const { error: summaryError } = await supabase
       .from('candidates')
       .update({
         job_summary: formData.jobSummary || null,
         self_pr: formData.selfPR || null,
+        status: 'official', // 本登録状態に変更
         updated_at: new Date().toISOString(),
       })
       .eq('id', candidateId);
@@ -44,9 +43,7 @@ export async function saveSummaryData(formData: SummaryFormData) {
       throw new Error(`Summary data save failed: ${summaryError.message}`);
     }
 
-    console.log('Summary data saved successfully');
     redirect('/signup/complete');
-
   } catch (error) {
     console.error('Summary data save error:', error);
     throw error;

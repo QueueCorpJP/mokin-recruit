@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFavoriteToggleMutation } from '@/hooks';
 
 // Dynamic imports for heavy components
-const FaqBox = lazy(() =>
-  import('@/components/ui/FaqBox').then(mod => ({ default: mod.FaqBox }))
-);
+const FaqBox = lazy(() => import('@/components/ui/FaqBox'));
 const MessageListCard = lazy(() =>
   import('@/components/ui/MessageListCard').then(mod => ({
     default: mod.MessageListCard,
@@ -138,17 +136,22 @@ const FooterSection = lazy(() =>
             </div>
           </div>
           {/* バナー画像を表示 */}
-          <Image
-            src='/images/banner01.png'
-            alt='バナー画像01'
-            width={800}
-            height={200}
-            className='w-full h-auto block rounded-lg'
-            loading='lazy'
-            priority={false}
-            sizes='(max-width: 768px) 100vw, 320px'
-            quality={75}
-          />
+          <div
+            className='cursor-pointer'
+            onClick={() => router.push('/candidate/account/resume')}
+          >
+            <Image
+              src='/images/banner01.png'
+              alt='バナー画像01'
+              width={800}
+              height={200}
+              className='w-full h-auto block rounded-lg transition-opacity hover:opacity-90'
+              loading='lazy'
+              priority={false}
+              sizes='(max-width: 768px) 100vw, 320px'
+              quality={75}
+            />
+          </div>
           {/* FAQ/QAセクション */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <SectionHeading
@@ -390,7 +393,15 @@ export function CandidateDashboardClient({
                           borderRadius: '8px',
                           boxShadow: '0 0 20px rgba(0,0,0,0.05)',
                           cursor: 'pointer',
+                          transition: 'background 0.2s ease',
                         }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = '#E9E9E9';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = '#FFFFFF';
+                        }}
+                        onClick={() => router.push('/candidate/task')}
                       >
                         <div
                           style={{
@@ -480,6 +491,7 @@ export function CandidateDashboardClient({
                       height: 60,
                       borderRadius: '999px',
                     }}
+                    onClick={() => router.push('/candidate/task')}
                   >
                     やることリスト一覧
                   </Button>
@@ -534,6 +546,7 @@ export function CandidateDashboardClient({
                       height: 60,
                       borderRadius: '999px',
                     }}
+                    onClick={() => router.push('/candidate/message')}
                   >
                     メッセージ一覧
                   </Button>

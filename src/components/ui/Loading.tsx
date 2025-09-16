@@ -20,8 +20,10 @@ export const Loading: React.FC<LoadingProps> = ({
     variant === 'primary'
       ? 'text-[#0f9058]'
       : variant === 'muted'
-      ? 'text-gray-400'
-      : 'text-gray-500';
+        ? 'text-gray-400'
+        : variant === 'white'
+          ? 'text-white'
+          : 'text-gray-500';
   return (
     <div
       className={`${

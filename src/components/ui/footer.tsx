@@ -14,19 +14,98 @@ interface FooterProps {
   };
 }
 
-export function Footer({ 
+export function Footer({
   variant = 'default',
   isLoggedIn = false,
-  userInfo
+  userInfo,
 }: FooterProps) {
+  // リンクマッピング関数
+  const getLinkForItem = (
+    item: string,
+    section: 'service' | 'support' | 'company'
+  ) => {
+    const baseUrl =
+      variant === 'candidate'
+        ? '/candidate'
+        : variant === 'company'
+          ? '/company'
+          : '';
+
+    // サービスセクション
+    if (section === 'service') {
+      switch (item) {
+        case 'メッセージ':
+          return `${baseUrl}/message`;
+        case 'メディア':
+          return `${baseUrl}/media`;
+        case '求人を探す':
+          return variant === 'candidate' ? '/candidate/search' : '/search';
+        case 'お気に入り求人':
+          return '/candidate/job/favorite';
+        case 'お知らせ一覧':
+          return '/candidate/news';
+        case '求人管理':
+          return '/company/job';
+        case '候補者検索':
+          return '/company/search';
+        case '企業設定':
+          return '/company/setting';
+        case 'サービス紹介':
+          return '/about';
+        case '企業向け機能':
+          return '/company/features';
+        default:
+          return '#';
+      }
+    }
+
+    // お問い合わせセクション
+    if (section === 'support') {
+      switch (item) {
+        case '問い合わせ':
+          return '/contact';
+        case 'よくある質問':
+          return '/faq';
+        case '不具合・要望フォーム':
+          return '/feedback';
+        default:
+          return '#';
+      }
+    }
+
+    // 会社情報・規約セクション
+    if (section === 'company') {
+      switch (item) {
+        case '運営会社':
+          return '/about-company';
+        case '利用規約':
+          return '/terms';
+        case 'プライバシーポリシー':
+          return '/privacy';
+        case '法令に基づく表記':
+          return '/legal';
+        default:
+          return '#';
+      }
+    }
+
+    return '#';
+  };
+
   // variantと認証状態に応じたメニューデータ
   const getMenuData = () => {
     if (variant === 'candidate') {
       return {
         service: {
           title: 'サービス',
-          items: isLoggedIn 
-            ? ['メッセージ', 'メディア', '求人を探す', 'お気に入り求人', 'お知らせ一覧']
+          items: isLoggedIn
+            ? [
+                'メッセージ',
+                'メディア',
+                '求人を探す',
+                'お気に入り求人',
+                'お知らせ一覧',
+              ]
             : ['求人を探す', 'サービス紹介'],
         },
         support: {
@@ -47,7 +126,7 @@ export function Footer({
       return {
         service: {
           title: 'サービス',
-          items: isLoggedIn 
+          items: isLoggedIn
             ? ['求人管理', 'メッセージ', '候補者検索', '企業設定']
             : ['サービス紹介', '企業向け機能'],
         },
@@ -159,7 +238,11 @@ export function Footer({
                 <>
                   <div className='w-[104px] h-[32px] flex items-center justify-center'>
                     <Link
-                      href={variant === 'company' ? '/company/auth/register' : '/candidate/auth/register'}
+                      href={
+                        variant === 'company'
+                          ? '/company/auth/register'
+                          : '/candidate/auth/register'
+                      }
                       className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
                       style={{
                         fontFamily: 'Noto Sans JP, sans-serif',
@@ -186,7 +269,11 @@ export function Footer({
                   </span>
                   <div className='w-[104px] h-[32px] flex items-center justify-center'>
                     <Link
-                      href={variant === 'company' ? '/company/auth/login' : '/candidate/auth/login'}
+                      href={
+                        variant === 'company'
+                          ? '/company/auth/login'
+                          : '/candidate/auth/login'
+                      }
                       className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
                       style={{
                         fontFamily: 'Noto Sans JP, sans-serif',
@@ -215,7 +302,9 @@ export function Footer({
                   >
                     {userInfo?.userName && `${userInfo.userName}さん`}
                     {userInfo?.companyName && `${userInfo.companyName}様`}
-                    {!userInfo?.userName && !userInfo?.companyName && 'ログイン中'}
+                    {!userInfo?.userName &&
+                      !userInfo?.companyName &&
+                      'ログイン中'}
                   </span>
                 </div>
               )}
@@ -266,8 +355,9 @@ export function Footer({
                   {menuData.service.items.map((item, index) => (
                     <div key={index} className='flex items-center gap-2 py-1'>
                       <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
+                      <Link
+                        href={getLinkForItem(item, 'service')}
+                        className='text-white font-bold hover:text-[#0F9058] transition-colors'
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                           fontWeight: 700,
@@ -277,7 +367,7 @@ export function Footer({
                         }}
                       >
                         {item}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -329,8 +419,9 @@ export function Footer({
                   {menuData.support.items.map((item, index) => (
                     <div key={index} className='flex items-center gap-2 py-1'>
                       <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
+                      <Link
+                        href={getLinkForItem(item, 'support')}
+                        className='text-white font-bold hover:text-[#0F9058] transition-colors'
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                           fontWeight: 700,
@@ -340,7 +431,7 @@ export function Footer({
                         }}
                       >
                         {item}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -390,8 +481,9 @@ export function Footer({
                   {menuData.company.items.map((item, index) => (
                     <div key={index} className='flex items-center gap-2 py-1'>
                       <div className='w-2 h-2 bg-[#0F9058] rounded-full flex-shrink-0'></div>
-                      <span
-                        className='text-white font-bold'
+                      <Link
+                        href={getLinkForItem(item, 'company')}
+                        className='text-white font-bold hover:text-[#0F9058] transition-colors'
                         style={{
                           fontFamily: 'Noto Sans JP, sans-serif',
                           fontWeight: 700,
@@ -401,7 +493,7 @@ export function Footer({
                         }}
                       >
                         {item}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>

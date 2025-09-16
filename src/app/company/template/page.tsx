@@ -3,11 +3,9 @@ import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { TemplateClient } from './TemplateClient';
 import { getMessageTemplates } from './actions';
 
-export const dynamic = 'force-dynamic';
-
 export default async function TemplatePage() {
   console.log('🚀 TemplatePage loading...');
-  
+
   // 企業ユーザー認証（統一パターン）
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
@@ -23,12 +21,12 @@ export default async function TemplatePage() {
   // サーバーサイドでメッセージテンプレートを取得
   let initialMessageTemplates = [];
   let error = null;
-  
+
   try {
     console.log('📡 Calling getMessageTemplates...');
     const result = await getMessageTemplates(50, 0);
     console.log('📊 getMessageTemplates result:', result);
-    
+
     if (result.success) {
       initialMessageTemplates = result.data;
       console.log('✅ Templates loaded:', initialMessageTemplates.length);
@@ -42,7 +40,7 @@ export default async function TemplatePage() {
   }
 
   return (
-    <TemplateClient 
+    <TemplateClient
       initialMessageTemplates={initialMessageTemplates}
       initialError={error}
       companyUserId={auth.data.companyUserId}

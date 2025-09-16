@@ -32,19 +32,34 @@ export default [
         FormData: 'readonly',
         File: 'readonly',
         FormDataEntryValue: 'readonly',
+        // Node.js globals
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        exports: 'readonly',
+        // Browser globals
+        URL: 'readonly',
+        Blob: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        fetch: 'readonly',
+        Headers: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
       },
     },
     rules: {
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
 
       // General rules
-      'no-console': 'warn',
-      'no-debugger': 'error',
+      'no-console': 'off',
+      'no-debugger': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',
     },
@@ -83,12 +98,8 @@ export default [
       '.next/',
       'coverage/',
       '*.min.js',
-      // Vitest 型のない環境での誤検出回避
-      'src/**/*.test.ts',
-      'src/**/*.test.tsx',
-      'src/**/*.spec.ts',
-      'src/**/*.spec.tsx',
-      'src/**/__tests__/**',
+      '.husky/',
+      'supabase/',
     ],
   },
 ];

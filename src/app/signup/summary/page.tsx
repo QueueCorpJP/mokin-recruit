@@ -57,7 +57,7 @@ export default function SignupSummaryPage() {
 
           {/* Progress Tabs */}
           <div className='flex flex-row w-full h-[45px]'>
-            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
               <div className='w-6 h-6 flex items-center justify-center'>
                 <svg
                   width='24'
@@ -76,7 +76,7 @@ export default function SignupSummaryPage() {
                 経歴詳細
               </span>
             </div>
-            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
               <div className='w-6 h-6 flex items-center justify-center'>
                 <svg
                   width='25'
@@ -95,7 +95,7 @@ export default function SignupSummaryPage() {
                 語学・スキル
               </span>
             </div>
-            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
               <div className='w-6 h-6 flex items-center justify-center'>
                 <svg
                   width='24'
@@ -114,7 +114,7 @@ export default function SignupSummaryPage() {
                 希望条件
               </span>
             </div>
-            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+            <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
               <div className='w-6 h-6 flex items-center justify-center'>
                 <svg
                   width='24'
@@ -174,12 +174,12 @@ export default function SignupSummaryPage() {
                   職務要約
                 </label>
               </div>
-              <div className='w-[400px]'>
+              <div className='w-[400px] border border-[#999999] rounded-[5px] p-1'>
                 <textarea
                   value={jobSummary}
                   onChange={e => setJobSummary(e.target.value)}
                   placeholder='例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
-                  className='leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[214px] resize-none'
+                  className='leading-[200%] w-full bg-white text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[214px] resize-none border-none outline-none'
                 />
               </div>
             </div>
@@ -191,12 +191,12 @@ export default function SignupSummaryPage() {
                   自己PR・その他
                 </label>
               </div>
-              <div className='w-[400px]'>
+              <div className='w-[400px] border border-[#999999] rounded-[5px] p-1'>
                 <textarea
                   value={selfPR}
                   onChange={e => setSelfPR(e.target.value)}
                   placeholder='例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
-                  className='leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none'
+                  className='leading-[200%] w-full bg-white text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none border-none outline-none'
                 />
               </div>
             </div>
@@ -291,12 +291,14 @@ export default function SignupSummaryPage() {
               <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                 職務要約
               </label>
-              <textarea
-                value={jobSummary}
-                onChange={e => setJobSummary(e.target.value)}
-                placeholder='例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
-                className='leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[246px] resize-none'
-              />
+              <div className='border border-[#999999] rounded-[5px] p-1'>
+                <textarea
+                  value={jobSummary}
+                  onChange={e => setJobSummary(e.target.value)}
+                  placeholder='例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
+                  className='leading-[200%] w-full bg-white text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[246px] resize-none border-none outline-none'
+                />
+              </div>
             </div>
 
             {/* Self PR / Other */}
@@ -304,12 +306,14 @@ export default function SignupSummaryPage() {
               <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                 自己PR・その他
               </label>
-              <textarea
-                value={selfPR}
-                onChange={e => setSelfPR(e.target.value)}
-                placeholder='例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
-                className='leading-[200%] w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[148px] resize-none'
-              />
+              <div className='border border-[#999999] rounded-[5px] p-1'>
+                <textarea
+                  value={selfPR}
+                  onChange={e => setSelfPR(e.target.value)}
+                  placeholder='例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
+                  className='leading-[200%] w-full bg-white text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999] min-h-[148px] resize-none border-none outline-none'
+                />
+              </div>
             </div>
           </div>
 

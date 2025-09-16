@@ -1,16 +1,53 @@
 import { Suspense } from 'react';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
-import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 import { redirect } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
-export const dynamic = 'force-dynamic';
+const MessageLayoutWrapper = dynamic(
+  () =>
+    import('@/components/message/MessageLayoutWrapper').then(mod => ({
+      default: mod.MessageLayoutWrapper,
+    })),
+  {
+    loading: () => (
+      <div className='flex flex-col bg-white'>
+        <div style={{ flex: '0 0 85vh', height: '85vh' }}>
+          <div className='h-full flex'>
+            <div className='w-80 bg-gray-50 border-r border-gray-50 animate-pulse'>
+              <div className='p-4'>
+                <div className='h-6 bg-gray-200 rounded mb-4'></div>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className='h-16 bg-gray-200 rounded mb-2'></div>
+                ))}
+              </div>
+            </div>
+            <div className='flex-1 flex flex-col animate-pulse'>
+              <div className='h-16 bg-gray-100 border-b border-gray-50'></div>
+              <div className='flex-1 p-4'>
+                <div className='space-y-2'>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='h-4 bg-gray-200 rounded w-3/4'
+                    ></div>
+                  ))}
+                </div>
+              </div>
+              <div className='h-16 bg-gray-100 border-t border-gray-50'></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
 
 // データ取得を行うサーバーコンポーネント
 async function MessageServerComponent({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ room?: string }>
+  searchParams: Promise<{ room?: string }>;
 }) {
   const user = await getCachedCandidateUser();
   const params = await searchParams;
@@ -20,14 +57,14 @@ async function MessageServerComponent({
   }
 
   const rooms = await getRooms(user.id, 'candidate');
-  
+
   return (
     <div className='flex flex-col bg-white'>
       <div style={{ flex: '0 0 85vh', height: '85vh' }}>
-        <MessageLayoutWrapper 
+        <MessageLayoutWrapper
           rooms={rooms}
           userId={user.id}
-          userType="candidate"
+          userType='candidate'
           initialRoomId={params.room}
         />
       </div>
@@ -35,27 +72,47 @@ async function MessageServerComponent({
   );
 }
 
-// ローディング中の表示
-function LoadingSpinner() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="inline-block">
-          <div className="w-16 h-16 border-4 border-[#0f9058] border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <p className="mt-4 text-[#323232] text-lg font-medium">メッセージを読み込み中...</p>
-      </div>
-    </div>
-  );
-}
-
 export default function MessagePage({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ room?: string }>
+  searchParams: Promise<{ room?: string }>;
 }) {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense
+      fallback={
+        <div className='flex flex-col bg-white'>
+          <div style={{ flex: '0 0 85vh', height: '85vh' }}>
+            <div className='h-full flex'>
+              <div className='w-80 bg-gray-50 border-r border-gray-50 animate-pulse'>
+                <div className='p-4'>
+                  <div className='h-6 bg-gray-200 rounded mb-4'></div>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='h-16 bg-gray-200 rounded mb-2'
+                    ></div>
+                  ))}
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col animate-pulse'>
+                <div className='h-16 bg-gray-100 border-b border-gray-50'></div>
+                <div className='flex-1 p-4'>
+                  <div className='space-y-2'>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className='h-4 bg-gray-200 rounded w-3/4'
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+                <div className='h-16 bg-gray-100 border-t border-gray-50'></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
       <MessageServerComponent searchParams={searchParams} />
     </Suspense>
   );

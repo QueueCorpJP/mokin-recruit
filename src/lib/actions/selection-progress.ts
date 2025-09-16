@@ -41,7 +41,7 @@ export async function updateSelectionProgressAction({
     const supabase = await getSupabaseServerClient();
 
     // 既存の進捗レコードを確認
-    let { data: existingProgress } = await supabase
+    const { data: existingProgress } = await supabase
       .from('selection_progress')
       .select('*')
       .eq('candidate_id', candidateId)

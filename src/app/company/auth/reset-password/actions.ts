@@ -1,7 +1,9 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import { sendEmailViaSendGrid } from '@/lib/email/sender';
+import { createClient } from '@supabase/supabase-js';
 
 export interface ResetPasswordFormData {
   email: string;
@@ -20,11 +22,83 @@ const ForgotPasswordSchema = z.object({
   userType: z.enum(['candidate', 'company']).optional(),
 });
 
-export async function resetPasswordRequestAction(formData: ResetPasswordFormData): Promise<ResetPasswordResult> {
-  try {
-    logger.info('Password reset request received at:', new Date().toISOString());
+/**
+ * パスワードリセット用OTPメールのHTML生成
+ */
+function generateResetPasswordEmailHtml(
+  otp: string,
+  userType?: string
+): string {
+  const userTypeName = userType === 'company' ? '企業' : 'ユーザー';
 
-    // ステップ1: 環境変数の確認
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>【Mokin Recruit】パスワードリセット認証コード</title>
+    </head>
+    <body style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.6; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #0f9058; font-size: 24px; margin: 0;">Mokin Recruit</h1>
+        </div>
+
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 8px;">
+          <h2 style="color: #333; font-size: 18px; margin-top: 0;">${userTypeName}パスワードリセット認証コード</h2>
+
+          <p>以下の6桁の認証コードを入力して、パスワードリセットを完了してください：</p>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="background: #fff; border: 2px solid #0f9058; border-radius: 8px; padding: 20px; display: inline-block;">
+              <span style="font-size: 32px; font-weight: bold; color: #0f9058; letter-spacing: 8px;">${otp}</span>
+            </div>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">
+            ※ この認証コードの有効期限は10分間です。<br>
+            ※ 第三者と共有しないでください。
+          </p>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
+          <p>このメールに心当たりがない場合は、このメールを削除してください。</p>
+          <p>© 2024 Mokin Recruit. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * 6桁のOTPコードを生成
+ */
+function generateOtp(): string {
+  return Math.floor(Math.random() * 1000000)
+    .toString()
+    .padStart(6, '0');
+}
+
+export async function resetPasswordRequestAction(
+  formData: ResetPasswordFormData
+): Promise<ResetPasswordResult> {
+  try {
+    logger.info(
+      'Password reset request received at:',
+      new Date().toISOString()
+    );
+
+    // ステップ1: SendGrid環境変数の確認
+    if (!process.env.SENDGRID_API_KEY) {
+      logger.error('Missing SENDGRID_API_KEY environment variable');
+      return {
+        success: false,
+        message: 'メール送信設定が正しくありません。',
+      };
+    }
+
+    // ステップ2: Supabase環境変数の確認
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
@@ -35,11 +109,11 @@ export async function resetPasswordRequestAction(formData: ResetPasswordFormData
       });
       return {
         success: false,
-        message: 'サーバー設定エラーが発生しました。',
+        message: 'データベース設定エラーが発生しました。',
       };
     }
 
-    // ステップ2: バリデーション
+    // ステップ3: バリデーション
     const validationResult = ForgotPasswordSchema.safeParse(formData);
     if (!validationResult.success) {
       const firstError = validationResult.error.errors[0];
@@ -55,21 +129,8 @@ export async function resetPasswordRequestAction(formData: ResetPasswordFormData
     logger.info('Request details:', {
       email: email.substring(0, 3) + '***',
       userType,
-      hasUserType: !!userType
+      hasUserType: !!userType,
     });
-
-    // ステップ3: Supabaseクライアントの動的インポートと初期化
-    let createClient;
-    try {
-      const supabaseModule = await import('@supabase/supabase-js');
-      createClient = supabaseModule.createClient;
-    } catch (importError) {
-      logger.error('Failed to import Supabase module:', importError);
-      return {
-        success: false,
-        message: 'サーバーライブラリの読み込みに失敗しました。',
-      };
-    }
 
     // ステップ4: Supabaseクライアントの作成
     let supabase;
@@ -78,14 +139,6 @@ export async function resetPasswordRequestAction(formData: ResetPasswordFormData
         auth: {
           autoRefreshToken: true,
           persistSession: false,
-        },
-        db: {
-          schema: 'public',
-        },
-        global: {
-          headers: {
-            'X-Client-Info': 'mokin-recruit-server',
-          },
         },
       });
     } catch (clientError) {
@@ -96,84 +149,141 @@ export async function resetPasswordRequestAction(formData: ResetPasswordFormData
       };
     }
 
-    // ステップ5: URL設定の動的取得
-    let redirectUrl;
+    // ステップ5: 既存ユーザーチェック（userTypeに基づいて適切なテーブルを確認）
     try {
-      // userTypeパラメータを含めたリダイレクトURL生成
-      const userTypeParam = userType ? `?userType=${userType}` : '';
-      
-      logger.info('URL generation details:', {
-        userType,
-        userTypeParam,
-        hasUserType: !!userType
-      });
-      
-      // 本番環境とVercelでの動的URL取得
-      if (process.env.VERCEL_URL) {
-        redirectUrl = `https://${process.env.VERCEL_URL}/auth/reset-password/new${userTypeParam}`;
-      } else if (process.env.NODE_ENV === 'production') {
-        redirectUrl = `https://mokin-recruit-client.vercel.app/auth/reset-password/new${userTypeParam}`;
-      } else {
-        redirectUrl = `http://localhost:3000/auth/reset-password/new${userTypeParam}`;
-      }
-    } catch (urlError) {
-      logger.error('Failed to configure redirect URL:', urlError);
-      return {
-        success: false,
-        message: 'リダイレクトURL設定に失敗しました。',
-      };
-    }
+      let existingUser = null;
+      let tableName = '';
 
-    // ステップ6: パスワードリセットメールの送信
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
+      if (userType === 'company') {
+        tableName = 'company_accounts';
+        const { data, error } = await supabase
+          .from('company_accounts')
+          .select('id, email, email_verified')
+          .eq('email', email.trim())
+          .maybeSingle();
 
-      if (error) {
-        logger.warn(`Password reset request failed for email: ${email.substring(0, 3)}***, error:`, error.message);
-
-        // 詳細なエラー情報をログに記録
-        logger.error('Detailed password reset error:', {
-          email: email.substring(0, 3) + '***',
-          error: error.message,
-          errorCode: error.code || 'unknown',
-          timestamp: new Date().toISOString(),
-          redirectUrl,
-        });
-
-        // Supabaseのメール制限エラーの特定
-        if (error.message?.includes('rate') || error.message?.includes('limit') || error.message?.includes('too many')) {
-          logger.error('Supabase email rate limit detected!');
-          
-          // 管理者向けの詳細情報
-          if (process.env.NODE_ENV === 'development') {
-            return {
-              success: false,
-              message: '⚠️ Supabaseのデフォルトメール制限に達しました。カスタムSMTPの設定が必要です。',
-            };
-          }
+        if (error && error.code !== 'PGRST116') {
+          logger.error('Database check error for company:', error);
+          return {
+            success: false,
+            message: 'ユーザー確認中にエラーが発生しました。',
+          };
         }
+        existingUser = data;
+      } else {
+        // Default to candidate
+        tableName = 'candidate_accounts';
+        const { data, error } = await supabase
+          .from('candidate_accounts')
+          .select('id, email, email_verified')
+          .eq('email', email.trim())
+          .maybeSingle();
 
-        // エラーの詳細は返さず、一般的なメッセージを返す（セキュリティ考慮）
+        if (error && error.code !== 'PGRST116') {
+          logger.error('Database check error for candidate:', error);
+          return {
+            success: false,
+            message: 'ユーザー確認中にエラーが発生しました。',
+          };
+        }
+        existingUser = data;
+      }
+
+      if (!existingUser) {
+        // セキュリティ上、メールアドレスの存在に関係なく成功レスポンスを返す
         return {
           success: true,
-          message: 'パスワードリセット用のリンクを送信しました。メールをご確認ください。',
+          message:
+            'パスワードリセット用の認証コードをメールで送信しました。メールをご確認ください。',
         };
       }
 
-      logger.info(`Password reset email sent successfully to: ${email.substring(0, 3)}***`);
-
-      // セキュリティ上、メールアドレスの存在に関係なく成功レスポンスを返す
-      return {
-        success: true,
-        message: 'パスワードリセット用のリンクを送信しました。メールをご確認ください。',
-      };
-    } catch (resetError) {
-      logger.error('Password reset operation failed:', resetError);
+      if (!existingUser.email_verified) {
+        return {
+          success: false,
+          error: 'このアカウントはまだメール認証が完了していません。',
+        };
+      }
+    } catch (error) {
+      logger.error('Error checking existing user:', error);
       return {
         success: false,
-        message: 'パスワードリセット処理中にエラーが発生しました。',
+        message: 'ユーザー確認中にエラーが発生しました。',
+      };
+    }
+
+    // ステップ6: OTPコード生成
+    const otp = generateOtp();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10分後
+
+    // ステップ7: OTPをデータベースに保存
+    try {
+      const { error: otpSaveError } = await supabase
+        .from('email_verification_codes')
+        .upsert(
+          {
+            email: email.trim(),
+            code: otp,
+            expires_at: expiresAt.toISOString(),
+            type: 'password-reset',
+            created_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'email,type',
+          }
+        );
+
+      if (otpSaveError) {
+        logger.error('Failed to save password reset OTP:', otpSaveError);
+        return {
+          success: false,
+          message: '認証コードの保存に失敗しました。',
+        };
+      }
+    } catch (error) {
+      logger.error('Error saving password reset OTP:', error);
+      return {
+        success: false,
+        message: '認証コードの保存中にエラーが発生しました。',
+      };
+    }
+
+    // ステップ8: SendGridでOTPメール送信
+    try {
+      const emailResult = await sendEmailViaSendGrid({
+        to: email.trim(),
+        subject: '【Mokin Recruit】パスワードリセット認証コード',
+        html: generateResetPasswordEmailHtml(otp, userType),
+      });
+
+      if (!emailResult.success) {
+        logger.error(
+          'Failed to send password reset OTP email:',
+          emailResult.error
+        );
+        return {
+          success: false,
+          message:
+            'メールの送信に失敗しました。しばらくしてから再度お試しください。',
+        };
+      }
+
+      logger.info(
+        `Password reset OTP email sent successfully to: ${email.substring(0, 3)}***`,
+        { messageId: emailResult.messageId, userType }
+      );
+
+      return {
+        success: true,
+        message:
+          'パスワードリセット用の認証コードをメールで送信しました。メールをご確認ください。',
+      };
+    } catch (emailError) {
+      logger.error('Password reset email sending error:', emailError);
+      return {
+        success: false,
+        message: 'メール送信中にエラーが発生しました。',
       };
     }
   } catch (error) {
@@ -181,7 +291,8 @@ export async function resetPasswordRequestAction(formData: ResetPasswordFormData
 
     return {
       success: false,
-      message: 'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
+      message:
+        'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
     };
   }
 }

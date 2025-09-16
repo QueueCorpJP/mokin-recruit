@@ -156,5 +156,3 @@ export default async function CandidateEducationPage() {
     </PageLayout>
   );
 }
-
-export const dynamic = 'force-dynamic';

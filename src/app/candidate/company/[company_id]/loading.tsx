@@ -17,7 +17,10 @@ export default function Loading() {
                 <div className='relative w-full aspect-[3/2] bg-gray-200 rounded-[10px] md:rounded-3xl animate-pulse' />
                 <div className='flex gap-1 h-2'>
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className='flex-1 bg-gray-200 rounded animate-pulse' />
+                    <div
+                      key={i}
+                      className='flex-1 bg-gray-200 rounded animate-pulse'
+                    />
                   ))}
                 </div>
               </div>
@@ -48,12 +51,18 @@ export default function Loading() {
             <div className='h-8 w-32 bg-gray-200 rounded animate-pulse mb-4 border-b-2 border-[#dcdcdc]' />
             <div className='flex flex-col gap-2'>
               {[...Array(6)].map((_, i) => (
-                <div key={i} className='bg-white border border-gray-100 rounded-[10px] shadow-sm p-6 flex gap-4'>
+                <div
+                  key={i}
+                  className='bg-white border border-gray-100 rounded-[10px] shadow-sm p-6 flex gap-4'
+                >
                   <div className='md:w-20 md:h-[53px] w-full h-[120px] bg-gray-200 rounded animate-pulse' />
                   <div className='flex-1 space-y-2'>
                     <div className='flex gap-2 flex-wrap'>
                       {[...Array(3)].map((_, j) => (
-                        <div key={j} className='h-6 w-16 bg-[#D2F1DA] rounded animate-pulse' />
+                        <div
+                          key={j}
+                          className='h-6 w-16 bg-[#D2F1DA] rounded animate-pulse'
+                        />
                       ))}
                     </div>
                     <div className='h-4 w-3/4 bg-gray-200 rounded animate-pulse' />
@@ -68,6 +77,3 @@ export default function Loading() {
     </div>
   );
 }
-
-
-

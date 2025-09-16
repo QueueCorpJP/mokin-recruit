@@ -48,26 +48,6 @@ export async function checkUserPermission(groupId: string) {
   }
 }
 
-// 求人データの型定義
-interface JobPosting {
-  id: string;
-  title: string;
-  jobType: string[];
-  industry: string[];
-  employmentType: string;
-  workLocation: string[];
-  salaryMin: number | null;
-  salaryMax: number | null;
-  status: string;
-  groupName: string;
-  groupId: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  publicationType: string;
-  internalMemo: string;
-}
-
 // 求人一覧取得の内部実装（キャッシュ可能版）
 async function _getCompanyJobs(
   params: {

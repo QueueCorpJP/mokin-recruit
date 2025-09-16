@@ -17,17 +17,23 @@
 
 /* Font Optimization - Webフォント遅延適用 */
 html {
-  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+  font-family:
+    'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui,
+    sans-serif;
 }
 
 /* Noto Sans JP が読み込まれた後に適用 */
 .font-noto-sans-jp {
-  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif;
 }
 
 /* Noto_Sans_JP クラスも同じフォントファミリーを適用（後方互換性のため） */
 .Noto_Sans_JP {
-  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif;
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif;
 }
 
 /* Company配下のすべての要素にNoto Sans JPを強制適用 */
@@ -35,12 +41,56 @@ body [data-company-section] *,
 body [data-company-page] *,
 .company-layout *,
 .company-page * {
-  font-family: var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', system-ui, sans-serif !important;
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
+/* Candidate配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-candidate-section] *,
+body [data-candidate-page] *,
+.candidate-layout *,
+.candidate-page *,
+[class*='candidate'] * {
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
+/* Admin配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-admin-section] *,
+body [data-admin-page] *,
+.admin-layout *,
+.admin-page *,
+[class*='admin'] * {
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
+/* Signup配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-signup-section] *,
+body [data-signup-page] *,
+.signup-layout *,
+.signup-page *,
+[class*='signup'] * {
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
+/* Signup配下の入力要素のプレースホルダーにフォントウェイトを強制適用 */
+[class*='signup'] input::placeholder,
+[class*='signup'] textarea::placeholder {
+  font-weight: 580 !important;
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
 }
 
 /* フォントボールド表示の強化 */
 .font-bold,
-[class*="font-bold"] {
+[class*='font-bold'] {
   font-weight: 700 !important;
   /* フォント読み込み中はより太いシステムフォントを使用 */
   font-synthesis: weight;
@@ -48,7 +98,7 @@ body [data-company-page] *,
 
 /* より強いボールドが必要な場合 */
 .font-extrabold,
-[class*="font-extrabold"] {
+[class*='font-extrabold'] {
   font-weight: 800 !important;
   font-synthesis: weight;
 }
@@ -68,8 +118,9 @@ body [data-company-page] *,
 
 /* Font loading states */
 html:not(.fonts-loaded) body {
-  font-family: 'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN',
-    'Hiragino Kaku Gothic ProN', 'メイリオ', 'Meiryo', system-ui, sans-serif;
+  font-family:
+    'Noto Sans JP Fallback', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN',
+    'メイリオ', 'Meiryo', system-ui, sans-serif;
 }
 
 /* Prevent FOIT (Flash of Invisible Text) */
@@ -394,6 +445,17 @@ html:not(.fonts-loaded) body {
 
   body {
     overflow-x: hidden;
+  }
+
+  /* CTA Section - Allow horizontal overflow for decorative images */
+  .cta-section-container {
+    overflow: visible !important;
+    overflow-x: visible !important;
+  }
+
+  .cta-section-container * {
+    overflow: visible !important;
+    overflow-x: visible !important;
   }
 }
 

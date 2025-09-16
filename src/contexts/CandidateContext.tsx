@@ -7,92 +7,13 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-
-// 候補者データの共通型定義
-export interface CandidateFormData {
-  // 基本情報
-  email: string;
-  password?: string;
-  passwordConfirm?: string;
-  lastName: string;
-  firstName: string;
-  lastNameKana: string;
-  firstNameKana: string;
-  gender: string;
-  birthYear: string;
-  birthMonth: string;
-  birthDay: string;
-  prefecture: string;
-  phoneNumber: string;
-  currentIncome: string;
-
-  // 転職活動状況
-  hasCareerChange: string;
-  jobChangeTiming: string;
-  currentActivityStatus: string;
-
-  // 職務経歴
-  recentJobCompanyName: string;
-  recentJobDepartmentPosition: string;
-  recentJobStartYear: string;
-  recentJobStartMonth: string;
-  recentJobEndYear: string;
-  recentJobEndMonth: string;
-  recentJobIsCurrentlyWorking: boolean;
-  recentJobDescription: string;
-  recentJobIndustries: string[];
-  recentJobTypes: string[];
-
-  // 職務要約・自己PR
-  jobSummary: string;
-  selfPr: string;
-
-  // 希望条件
-  desiredWorkStyles?: string[];
-  desiredSalary?: string;
-  desiredIndustries?: string[];
-  desiredJobTypes?: string[];
-  desiredLocations?: string[];
-}
-
-export interface EducationData {
-  final_education: string;
-  school_name: string;
-  department: string;
-  graduation_year: number | null;
-  graduation_month: number | null;
-}
-
-export interface SkillsData {
-  english_level: string;
-  qualifications: string;
-  skills_tags: string[];
-  other_languages?: Array<{ language: string; level: string }>;
-}
-
-export interface SelectionEntry {
-  id: string;
-  isPrivate: boolean;
-  industries: string[];
-  companyName: string;
-  department: string;
-  progressStatus: string;
-  declineReason?: string;
-  // Job history fields
-  startYear?: string;
-  startMonth?: string;
-  endYear?: string;
-  endMonth?: string;
-  isCurrentlyWorking?: boolean;
-  jobDescription?: string;
-  jobTypes?: string[];
-}
-
-export interface ModalState {
-  isOpen: boolean;
-  targetType: 'industry' | 'jobtype' | 'workstyle' | null;
-  targetIndex: number | null;
-}
+import type {
+  CandidateFormData,
+  EducationFormData as EducationData,
+  SkillsFormData as SkillsData,
+  SelectionEntry,
+  ModalState,
+} from '@/types';
 
 interface CandidateState {
   formData: CandidateFormData;
@@ -149,7 +70,7 @@ const initialFormData: CandidateFormData = {
   prefecture: '',
   phoneNumber: '',
   currentIncome: '',
-  hasCareerChange: 'no',
+  hasCareerChange: 'なし',
   jobChangeTiming: '',
   currentActivityStatus: '',
   recentJobCompanyName: '',

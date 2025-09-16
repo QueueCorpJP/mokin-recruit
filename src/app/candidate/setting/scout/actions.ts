@@ -5,7 +5,7 @@ import {
   upsertByCandidateId,
   getSingleByCandidateId,
 } from '@/app/candidate/setting/_shared/server/settings-utils';
-import type { ScoutSettings } from '@/app/candidate/setting/_shared/types';
+import type { ScoutSettings } from '@/types';
 
 export async function saveScoutSettings(formData: FormData) {
   const scoutStatus = formData.get('scoutStatus') as string;

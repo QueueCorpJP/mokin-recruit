@@ -57,6 +57,7 @@ export async function getOrCreateCandidateId(): Promise<string> {
       .from('candidates')
       .insert({
         email: `temp-${Date.now()}@example.com`, // Temporary email
+        status: 'temporary', // 仮登録状態
       })
       .select('id')
       .single();
