@@ -359,7 +359,7 @@ export default function JobEditClient({
       preferredSkills: otherRequirements || '',
       salaryMin: encrypt(salaryMin),
       salaryMax: encrypt(salaryMax),
-      salaryNote: salaryNote || '',
+      salaryNote: encrypt(salaryNote || ''),
       employmentType: employmentType || '未設定',
       work_locations: locations || [],
       location_note: locationNote || '',
