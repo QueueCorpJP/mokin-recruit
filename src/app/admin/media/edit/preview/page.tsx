@@ -13,6 +13,51 @@ import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { sanitizeHtml } from '@/lib/utils/sanitizer';
 
+// Encryption helpers for sessionStorage.
+async function encrypt(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const keyMaterial = await window.crypto.subtle.importKey(
+    'raw',
+    encoder.encode('a-very-secret-key-32b'),
+    'AES-GCM',
+    false,
+    ['encrypt', 'decrypt']
+  );
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    data
+  );
+  const encArr = new Uint8Array(encrypted);
+  const fullArr = new Uint8Array(iv.length + encArr.length);
+  fullArr.set(iv, 0);
+  fullArr.set(encArr, iv.length);
+  return btoa(String.fromCharCode(...fullArr));
+}
+
+async function decrypt(stored: string): Promise<string> {
+  const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+  const iv = raw.slice(0, 12);
+  const data = raw.slice(12);
+  const encoder = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    'raw',
+    encoder.encode('a-very-secret-key-32b'),
+    'AES-GCM',
+    false,
+    ['encrypt', 'decrypt']
+  );
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    data
+  );
+  const decArr = new Uint8Array(decrypted);
+  return new TextDecoder().decode(decArr);
+}
+
 interface PreviewData {
   id?: string;
   title: string;
@@ -189,11 +234,12 @@ export default function EditPreviewPage() {
     }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     // Update the status in sessionStorage before going back
     if (previewData) {
       const updatedData = { ...previewData, status: currentStatus };
-      sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
+      const encryptedData = await encrypt(JSON.stringify(updatedData));
+      sessionStorage.setItem('previewArticle', encryptedData);
     }
     // 編集ページに記事IDと共に戻る
     router.push(`/admin/media/edit?id=${previewData?.id}`);

@@ -46,7 +46,15 @@ export default function EditPreviewPage() {
     const fetchData = async () => {
       const storedData = sessionStorage.getItem('previewNotice');
       if (storedData) {
-        const data = JSON.parse(storedData);
+        let data;
+        try {
+          const decrypted = await decryptString(storedData);
+          data = JSON.parse(decrypted);
+        } catch (e) {
+          console.error('Failed to decrypt previewNotice', e);
+          router.push('/admin/notice/edit');
+          return;
+        }
 
         // カテゴリデータを取得してカテゴリ名の解決用に使用
         try {
@@ -107,7 +115,9 @@ export default function EditPreviewPage() {
     if (previewData) {
       const updatedData = { ...previewData, status: newStatus };
       setPreviewData(updatedData);
-      sessionStorage.setItem('previewNotice', JSON.stringify(updatedData));
+      encryptString(JSON.stringify(updatedData)).then(encrypted => {
+        sessionStorage.setItem('previewNotice', encrypted);
+      });
     }
   };
 

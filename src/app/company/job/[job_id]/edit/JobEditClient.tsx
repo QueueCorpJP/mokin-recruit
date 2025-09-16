@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import CryptoJS from 'crypto-js';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import JobEditHeader from './JobEditHeader';
@@ -57,19 +58,28 @@ interface JobEditClientProps {
   currentUserId?: string;
 }
 
-export default function JobEditClient({ 
-  initialCompanyGroups, 
-  jobData, 
+export default function JobEditClient({
+  initialCompanyGroups,
+  jobData,
   jobId,
-  currentUserId 
+  currentUserId,
 }: JobEditClientProps) {
   const router = useRouter();
+
+  // Encryption key for demonstration; in production, securely manage this!
+  const ENCRYPTION_KEY = 'YOUR_SECURE_KEY_HERE';
+
+  // AES encryption for sensitive data
+  function encrypt(text: string): string {
+    return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+  }
 
   // 確認画面の表示制御
 
   // 各項目の状態（jobDataから初期値を設定）
   const [group, setGroup] = useState(jobData.groupId || '');
-  const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>(initialCompanyGroups);
+  const [companyGroups, setCompanyGroups] =
+    useState<CompanyGroup[]>(initialCompanyGroups);
   const [title, setTitle] = useState(jobData.title || '');
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>(
@@ -81,29 +91,55 @@ export default function JobEditClient({
     setExistingImages(updatedImages);
   };
   const [jobTypes, setJobTypes] = useState<string[]>(jobData.jobType || []);
-  const [industries, setIndustries] = useState<string[]>(jobData.industry || []);
-  const [jobDescription, setJobDescription] = useState(jobData.jobDescription || '');
-  const [positionSummary, setPositionSummary] = useState(jobData.positionSummary || '');
+  const [industries, setIndustries] = useState<string[]>(
+    jobData.industry || []
+  );
+  const [jobDescription, setJobDescription] = useState(
+    jobData.jobDescription || ''
+  );
+  const [positionSummary, setPositionSummary] = useState(
+    jobData.positionSummary || ''
+  );
   const [skills, setSkills] = useState(jobData.requiredSkills || '');
-  const [otherRequirements, setOtherRequirements] = useState(jobData.preferredSkills || '');
-  const [salaryMin, setSalaryMin] = useState(jobData.salaryMin ? jobData.salaryMin.toString() : '');
-  const [salaryMax, setSalaryMax] = useState(jobData.salaryMax ? jobData.salaryMax.toString() : '');
+  const [otherRequirements, setOtherRequirements] = useState(
+    jobData.preferredSkills || ''
+  );
+  const [salaryMin, setSalaryMin] = useState(
+    jobData.salaryMin ? jobData.salaryMin.toString() : ''
+  );
+  const [salaryMax, setSalaryMax] = useState(
+    jobData.salaryMax ? jobData.salaryMax.toString() : ''
+  );
   const [salaryNote, setSalaryNote] = useState(jobData.salaryNote || '');
-  const [locations, setLocations] = useState<string[]>(jobData.workLocation || []);
+  const [locations, setLocations] = useState<string[]>(
+    jobData.workLocation || []
+  );
   const [locationNote, setLocationNote] = useState(jobData.locationNote || '');
-  const [employmentType, setEmploymentType] = useState(jobData.employmentType || '正社員');
-  const [employmentTypeNote, setEmploymentTypeNote] = useState(jobData.employmentTypeNote || '');
+  const [employmentType, setEmploymentType] = useState(
+    jobData.employmentType || '正社員'
+  );
+  const [employmentTypeNote, setEmploymentTypeNote] = useState(
+    jobData.employmentTypeNote || ''
+  );
   const [workingHours, setWorkingHours] = useState(jobData.workingHours || '');
   const [overtime, setOvertime] = useState('あり'); // デフォルト値
   const [holidays, setHolidays] = useState(jobData.holidays || '');
-  const [selectionProcess, setSelectionProcess] = useState(jobData.selectionProcess || '');
-  const [appealPoints, setAppealPoints] = useState<string[]>(jobData.appealPoints || []);
+  const [selectionProcess, setSelectionProcess] = useState(
+    jobData.selectionProcess || ''
+  );
+  const [appealPoints, setAppealPoints] = useState<string[]>(
+    jobData.appealPoints || []
+  );
   const [smoke, setSmoke] = useState(jobData.smokingPolicy || '屋内禁煙');
   const [smokeNote, setSmokeNote] = useState(jobData.smokingPolicyNote || '');
-  const [resumeRequired, setResumeRequired] = useState<string[]>(jobData.requiredDocuments || []);
+  const [resumeRequired, setResumeRequired] = useState<string[]>(
+    jobData.requiredDocuments || []
+  );
   const [overtimeMemo, setOvertimeMemo] = useState(jobData.overtimeInfo || '');
   const [memo, setMemo] = useState(jobData.internalMemo || '');
-  const [publicationType, setPublicationType] = useState(jobData.publicationType || 'public');
+  const [publicationType, setPublicationType] = useState(
+    jobData.publicationType || 'public'
+  );
 
   // データ復元のためのuseEffect
   useEffect(() => {
@@ -111,45 +147,71 @@ export default function JobEditClient({
     if (typeof window === 'undefined' || !jobId) {
       return;
     }
-    
+
     // sessionStorageからデータを復元
     try {
       const savedEditData = sessionStorage.getItem(`editData-${jobId}`);
       if (savedEditData) {
         const editData = JSON.parse(savedEditData);
-        
+
         // 保存されたデータで状態を更新
         setTitle(editData.title || jobData.title || '');
-        setJobDescription(editData.jobDescription || jobData.jobDescription || '');
-        setPositionSummary(editData.positionSummary || jobData.positionSummary || '');
+        setJobDescription(
+          editData.jobDescription || jobData.jobDescription || ''
+        );
+        setPositionSummary(
+          editData.positionSummary || jobData.positionSummary || ''
+        );
         setSkills(editData.requiredSkills || jobData.requiredSkills || '');
-        setOtherRequirements(editData.preferredSkills || jobData.preferredSkills || '');
-        setSalaryMin(editData.salaryMin?.toString() || (jobData.salaryMin ? jobData.salaryMin.toString() : ''));
-        setSalaryMax(editData.salaryMax?.toString() || (jobData.salaryMax ? jobData.salaryMax.toString() : ''));
+        setOtherRequirements(
+          editData.preferredSkills || jobData.preferredSkills || ''
+        );
+        setSalaryMin(
+          editData.salaryMin?.toString() ||
+            (jobData.salaryMin ? jobData.salaryMin.toString() : '')
+        );
+        setSalaryMax(
+          editData.salaryMax?.toString() ||
+            (jobData.salaryMax ? jobData.salaryMax.toString() : '')
+        );
         setSalaryNote(editData.salaryNote || jobData.salaryNote || '');
-        setEmploymentType(editData.employmentType || jobData.employmentType || '正社員');
+        setEmploymentType(
+          editData.employmentType || jobData.employmentType || '正社員'
+        );
         setLocations(editData.work_locations || jobData.workLocation || []);
         setLocationNote(editData.location_note || jobData.locationNote || '');
-        setEmploymentTypeNote(editData.employment_type_note || jobData.employmentTypeNote || '');
+        setEmploymentTypeNote(
+          editData.employment_type_note || jobData.employmentTypeNote || ''
+        );
         setWorkingHours(editData.working_hours || jobData.workingHours || '');
         setOvertimeMemo(editData.overtime_info || jobData.overtimeInfo || '');
         setHolidays(editData.holidays || jobData.holidays || '');
         setJobTypes(editData.job_types || jobData.jobType || []);
         setIndustries(editData.industries || jobData.industry || []);
-        setSelectionProcess(editData.selection_process || jobData.selectionProcess || '');
+        setSelectionProcess(
+          editData.selection_process || jobData.selectionProcess || ''
+        );
         setAppealPoints(editData.appeal_points || jobData.appealPoints || []);
-        setSmoke(editData.smoking_policy || jobData.smokingPolicy || '屋内禁煙');
-        setSmokeNote(editData.smoking_policy_note || jobData.smokingPolicyNote || '');
-        setResumeRequired(editData.required_documents || jobData.requiredDocuments || []);
+        setSmoke(
+          editData.smoking_policy || jobData.smokingPolicy || '屋内禁煙'
+        );
+        setSmokeNote(
+          editData.smoking_policy_note || jobData.smokingPolicyNote || ''
+        );
+        setResumeRequired(
+          editData.required_documents || jobData.requiredDocuments || []
+        );
         setMemo(editData.internal_memo || jobData.internalMemo || '');
-        setPublicationType(editData.publication_type || jobData.publicationType || 'public');
+        setPublicationType(
+          editData.publication_type || jobData.publicationType || 'public'
+        );
         setGroup(editData.groupId || jobData.groupId || '');
-        
+
         // 既存画像を復元（編集データに保存されている場合はそれを使用、なければ元のデータを使用）
         if (editData._existingImages !== undefined) {
           setExistingImages(editData._existingImages);
         }
-        
+
         console.log('Edit data restored from sessionStorage');
       }
     } catch (error) {
@@ -174,49 +236,49 @@ export default function JobEditClient({
   // 必須項目が全て入力されているかチェックする関数
   const isFormValid = () => {
     // 編集モードではグループはチェックしない（変更できないため）
-    
+
     // 求人タイトル
     if (!title.trim()) return false;
-    
+
     // 職種（1つ以上）
     if (jobTypes.length === 0) return false;
-    
+
     // 業種（1つ以上）
     if (industries.length === 0) return false;
-    
+
     // 業務内容
     if (!jobDescription.trim()) return false;
-    
+
     // 当ポジションの魅力
     if (!positionSummary.trim()) return false;
-    
+
     // スキル・経験
     if (!skills.trim()) return false;
-    
+
     // その他・求める人物像
     if (!otherRequirements.trim()) return false;
-    
+
     // 想定年収
     if (!salaryMin || !salaryMax) return false;
     const minValue = parseInt(salaryMin);
     const maxValue = parseInt(salaryMax);
     if (minValue > maxValue) return false;
-    
+
     // 勤務地（1つ以上）
     if (locations.length === 0) return false;
-    
+
     // 就業時間
     if (!workingHours.trim()) return false;
-    
+
     // 休日・休暇
     if (!holidays.trim()) return false;
-    
+
     // 選考情報
     if (!selectionProcess.trim()) return false;
-    
+
     // アピールポイント（1つ以上）
     if (!appealPoints || appealPoints.length === 0) return false;
-    
+
     return true;
   };
 
@@ -230,12 +292,15 @@ export default function JobEditClient({
       newErrors.jobDescription = '業務内容を入力してください。';
     if (!positionSummary.trim())
       newErrors.positionSummary = '当ポジションの魅力を入力してください。';
-    if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
+    if (!skills.trim())
+      newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
-      newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
+      newErrors.otherRequirements =
+        '求める人物像や価値観などを入力してください。';
     if (locations.length === 0)
       newErrors.locations = '勤務地を1つ以上選択してください。';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
+    if (jobTypes.length === 0)
+      newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
       newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
@@ -250,7 +315,8 @@ export default function JobEditClient({
     }
     if (!workingHours.trim())
       newErrors.workingHours = '就業時間を入力してください。';
-    if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
+    if (!holidays.trim())
+      newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
       newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
@@ -348,9 +414,9 @@ export default function JobEditClient({
       positionSummary: positionSummary || '',
       requiredSkills: skills || '',
       preferredSkills: otherRequirements || '',
-      salaryMin: salaryMin,
-      salaryMax: salaryMax,
-      salaryNote: salaryNote || '',
+      salaryMin: encrypt(salaryMin),
+      salaryMax: encrypt(salaryMax),
+      salaryNote: encrypt(salaryNote || ''),
       employmentType: employmentType || '未設定',
       work_locations: locations || [],
       location_note: locationNote || '',
@@ -371,7 +437,7 @@ export default function JobEditClient({
       images: allImages,
       _existingImages: existingImages, // UI用の一時データ（データベースに送信されない）
       groupId: group,
-      applicationDeadline: ''
+      applicationDeadline: '',
     };
 
     // 確認画面にリダイレクト（データをsessionStorageに保存）
@@ -387,11 +453,11 @@ export default function JobEditClient({
   return (
     <>
       <JobEditHeader jobId={jobId} />
-      <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
+      <div className='bg-[#f9f9f9] px-20 pt-10 pb-20'>
         <div className='w-full max-w-[1280px] mx-auto mb-10'>
-          <AttentionBanner 
-           title='求人内容の編集についてのご注意'
-           content='この求人は現在公開中です。すでに応募・スカウト済みの候補者がいる場合、内容変更により誤解やトラブルが発生する可能性があります。
+          <AttentionBanner
+            title='求人内容の編集についてのご注意'
+            content='この求人は現在公開中です。すでに応募・スカウト済みの候補者がいる場合、内容変更により誤解やトラブルが発生する可能性があります。
 変更内容は慎重にご確認の上、必要に応じて応募者へのご連絡をお願いいたします。'
           />
         </div>
@@ -438,7 +504,7 @@ export default function JobEditClient({
             skills={skills}
             setSkills={(value: string) => {
               setSkills(value);
-              clearFieldError('skills');  
+              clearFieldError('skills');
             }}
             otherRequirements={otherRequirements}
             setOtherRequirements={(value: string) => {
@@ -497,24 +563,23 @@ export default function JobEditClient({
           />
 
           {/* ボタンエリア */}
-          
         </div>
         <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
-            <div className='flex justify-center items-center gap-4 w-full'>
-              <button
-                type='button'
-                disabled={showErrors && !isFormValid()}
-                className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
-                  !showErrors || isFormValid()
-                    ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                onClick={handleConfirm}
-              >
-                確認する
-              </button>
-            </div>
+          <div className='flex justify-center items-center gap-4 w-full'>
+            <button
+              type='button'
+              disabled={showErrors && !isFormValid()}
+              className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
+                !showErrors || isFormValid()
+                  ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              onClick={handleConfirm}
+            >
+              確認する
+            </button>
           </div>
+        </div>
 
         {/* モーダル */}
         <>

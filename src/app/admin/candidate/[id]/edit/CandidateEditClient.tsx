@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import CryptoJS from 'crypto-js';
 import { CandidateDetailData } from '../page';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
@@ -31,24 +32,6 @@ import {
   PROGRESS_STATUS_OPTIONS,
   DECLINE_REASON_OPTIONS,
 } from '@/constants/career-status';
-
-type SelectionEntry = {
-  id: string;
-  isPrivate: boolean;
-  industries: string[];
-  companyName: string;
-  department: string;
-  progressStatus: string;
-  declineReason?: string;
-  // Job history fields
-  startYear?: string;
-  startMonth?: string;
-  endYear?: string;
-  endMonth?: string;
-  isCurrentlyWorking?: boolean;
-  jobDescription?: string;
-  jobTypes?: string[];
-};
 
 interface Props {
   candidate: CandidateDetailData;
@@ -643,10 +626,11 @@ export default function CandidateEditClient({ candidate }: Props) {
 
       // Store data in sessionStorage instead of URL params to avoid 431 error
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem(
-          'candidateEditData',
-          JSON.stringify(confirmData)
-        );
+        const encrypted = CryptoJS.AES.encrypt(
+          JSON.stringify(confirmData),
+          ENCRYPTION_KEY
+        ).toString();
+        sessionStorage.setItem('candidateEditData', encrypted);
       }
       router.push(`/admin/candidate/${candidate.id}/edit/confirm`);
     } catch (error) {

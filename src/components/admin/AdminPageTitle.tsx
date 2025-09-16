@@ -4,6 +4,53 @@ import { usePathname } from 'next/navigation';
 import { NewArticleButton } from './ui/NewArticleButton';
 import { AdminButton } from './ui/AdminButton';
 
+// Simple encryption helpers for sessionStorage.
+async function encrypt(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  // For demonstration, a static key is used, replace with a secure key in production.
+  const keyMaterial = await window.crypto.subtle.importKey(
+    'raw',
+    encoder.encode('a-very-secret-key-32b'), // Must be 16/24/32 bytes for AES
+    'AES-GCM',
+    false,
+    ['encrypt', 'decrypt']
+  );
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    data
+  );
+  // Concatenate IV and encrypted data for storage
+  const encArr = new Uint8Array(encrypted);
+  const fullArr = new Uint8Array(iv.length + encArr.length);
+  fullArr.set(iv, 0);
+  fullArr.set(encArr, iv.length);
+  return btoa(String.fromCharCode(...fullArr));
+}
+
+async function decrypt(stored: string): Promise<string> {
+  const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+  const iv = raw.slice(0, 12);
+  const data = raw.slice(12);
+  const encoder = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    'raw',
+    encoder.encode('a-very-secret-key-32b'),
+    'AES-GCM',
+    false,
+    ['encrypt', 'decrypt']
+  );
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    keyMaterial,
+    data
+  );
+  const decArr = new Uint8Array(decrypted);
+  return new TextDecoder().decode(decArr);
+}
+
 interface ButtonConfig {
   text: string;
   variant: 'green-gradient' | 'green-outline';
@@ -162,20 +209,20 @@ const pageTitleConfig: PageTitleConfig = {
       {
         text: '編集に戻る',
         variant: 'green-outline',
-        onClick: () => {
+        onClick: async () => {
           const previewDataString = sessionStorage.getItem('previewArticle');
           if (previewDataString) {
             try {
-              const previewData = JSON.parse(previewDataString);
+              const decryptedString = await decrypt(previewDataString);
+              const previewData = JSON.parse(decryptedString);
               const statusSelect = document.querySelector(
                 'input[name="status"]'
               ) as HTMLInputElement;
               const currentStatus = statusSelect?.value || 'DRAFT';
               const updatedData = { ...previewData, status: currentStatus };
-              sessionStorage.setItem(
-                'previewArticle',
-                JSON.stringify(updatedData)
-              );
+              const encryptedData = await encrypt(JSON.stringify(updatedData));
+              sessionStorage.setItem('previewArticle', encryptedData);
+
               window.location.href = `/admin/media/edit?id=${previewData.id}`;
             } catch (error) {
               console.error('Preview data parsing error:', error);
