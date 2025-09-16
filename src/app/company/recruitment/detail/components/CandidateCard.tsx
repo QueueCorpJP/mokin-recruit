@@ -607,7 +607,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit'
-                  }).replace(/\//g, '/');
+                  });
                   
                   return (
                     <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
