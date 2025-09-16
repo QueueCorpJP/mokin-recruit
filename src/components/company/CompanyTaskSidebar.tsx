@@ -170,7 +170,7 @@ export function CompanyTaskSidebar({ className, showTodoAndNews = false, taskDat
                   year: 'numeric',
                   month: '2-digit',
                   day: '2-digit'
-                }).replace(/\//g, '/')
+                }).replace(/\//g, '-')
               });
             }
           }
