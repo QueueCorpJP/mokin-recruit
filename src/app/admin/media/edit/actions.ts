@@ -150,7 +150,10 @@ export async function saveArticle(formData: FormData) {
           content,
           status,
           thumbnail_url: thumbnailUrl,
-          excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
+          excerpt: sanitizeHtml(content, {
+            allowedTags: [],
+            allowedAttributes: {},
+          }).substring(0, 200),
           published_at:
             status === 'PUBLISHED' ? new Date().toISOString() : null,
         })
