@@ -88,6 +88,28 @@ body [data-signup-page] *,
     'Meiryo', system-ui, sans-serif !important;
 }
 
+/* Candidate配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-candidate-section] *,
+body [data-candidate-page] *,
+.candidate-layout *,
+.candidate-page *,
+[class*='candidate'] * {
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
+/* Admin配下のすべての要素にNoto Sans JPを強制適用 */
+body [data-admin-section] *,
+body [data-admin-page] *,
+.admin-layout *,
+.admin-page *,
+[class*='admin'] * {
+  font-family:
+    var(--font-noto-sans-jp), 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Meiryo', system-ui, sans-serif !important;
+}
+
 /* フォントボールド表示の強化 */
 .font-bold,
 [class*='font-bold'] {
