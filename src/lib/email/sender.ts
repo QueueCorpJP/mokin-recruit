@@ -2,7 +2,7 @@
 
 import sgMail from '@sendgrid/mail';
 import { logger } from '@/lib/server/utils/logger';
-
+import { htmlToText } from 'html-to-text';
 // SendGrid API設定
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -80,7 +80,7 @@ export async function sendEmailViaSendGrid(
       },
       subject: params.subject,
       html: params.html,
-      text: params.text || params.html.replace(/<[^>]*>/g, ''), // HTMLからテキスト生成
+      text: params.text || htmlToText(params.html), // HTMLからテキスト生成
     };
 
     // SendGrid経由で送信
