@@ -1,6 +1,69 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+// --- Encryption helper using Web Crypto API ---
+// These helpers encrypt/decrypt with AES-GCM using a key stored in session
+const PREVIEW_NOTICE_KEY_NAME = 'previewNoticeKey';
+
+// Generates and stores/retrieves encryption key from sessionStorage
+async function getCryptoKey() {
+  // Try to get exported key from sessionStorage
+  let keyJwk = sessionStorage.getItem(PREVIEW_NOTICE_KEY_NAME);
+  if (keyJwk) {
+    const jwk = JSON.parse(keyJwk);
+    return await window.crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+  // Create new key
+  const key = await window.crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+  // Export and store
+  const exported = await window.crypto.subtle.exportKey('jwk', key);
+  sessionStorage.setItem(PREVIEW_NOTICE_KEY_NAME, JSON.stringify(exported));
+  return key;
+}
+
+// Encrypts a string and returns base64(iv+data)
+async function encryptString(text) {
+  const encoder = new TextEncoder();
+  const key = await getCryptoKey();
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoder.encode(text)
+  );
+  // Combine IV + ciphertext, encode base64
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+// Decrypts base64(iv+data) string
+async function decryptString(encryptedStr) {
+  const raw = atob(encryptedStr);
+  const arr = Uint8Array.from(raw, c => c.charCodeAt(0));
+  const iv = arr.slice(0, 12);
+  const data = arr.slice(12);
+  const key = await getCryptoKey();
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  const decoder = new TextDecoder();
+  return decoder.decode(decrypted);
+}
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/admin/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/admin/ui/select';
@@ -42,23 +105,27 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
     
     const storedData = sessionStorage.getItem('previewNotice');
     if (storedData) {
-      try {
-        const data = JSON.parse(storedData);
-        setTitle(data.title || '');
-        setSelectedCategoryIds(data.categoryIds || []);
-        setContent(data.content || '');
-        
-        // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
-        if (data.thumbnail && data.thumbnailName) {
-          // URLから復元する場合は表示のみで実際のFileオブジェクトは作成しない
-          // 代わりにプレビュー時と同じ形式でデータを保持
+      (async () => {
+        try {
+          // decrypt and parse
+          const decrypted = await decryptString(storedData);
+          const data = JSON.parse(decrypted);
+          setTitle(data.title || '');
+          setSelectedCategoryIds(data.categoryIds || []);
+          setContent(data.content || '');
+          
+          // サムネイルの復元（プレビューからの戻りの場合はURLしかないので表示のみ）
+          if (data.thumbnail && data.thumbnailName) {
+            // URLから復元する場合は表示のみで実際のFileオブジェクトは作成しない
+            // 代わりにプレビュー時と同じ形式でデータを保持
+          }
+          
+          // sessionStorageをクリア（一度復元したらクリア）
+          sessionStorage.removeItem('previewNotice');
+        } catch (error) {
+          console.error('プレビューデータの復元に失敗:', error);
         }
-        
-        // sessionStorageをクリア（一度復元したらクリア）
-        sessionStorage.removeItem('previewNotice');
-      } catch (error) {
-        console.error('プレビューデータの復元に失敗:', error);
-      }
+      })();
     }
 
     // AdminPageTitleからのイベントリスナーを追加
@@ -158,9 +225,16 @@ export default function NoticeNewClient({ categories, saveNotice }: NewNoticeFor
     };
 
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+      encryptString(JSON.stringify(noticeData))
+        .then(encrypted => {
+          sessionStorage.setItem('previewNotice', encrypted);
+        })
+        .then(() => {
+          router.push('/admin/notice/preview');
+        });
+      return; // prevent double navigation
     }
-    router.push('/admin/notice/preview');
+    // router.push is now called after encryption async step above
   };
 
   const handleSubmit = async (status: 'DRAFT' | 'PUBLISHED') => {
