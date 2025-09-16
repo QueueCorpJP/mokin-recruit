@@ -88,8 +88,7 @@ export default function NoticePageClient({
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-      })
-      .replace(/\//g, '/');
+      });
     const timeStr = date.toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit',
