@@ -287,8 +287,9 @@ export function SelectInput({
             'bg-[#F5F5F5] border-[#E0E0E0] text-[#999999] cursor-not-allowed',
           ],
 
-          // テキスト色
-          selectedValue ? 'text-[#323232]' : 'text-[#323232]'
+          // テキスト色（classNameで上書き可能）
+          !className?.includes('text-[') &&
+            (selectedValue ? 'text-[#323232]' : 'text-[#323232]')
         )}
         style={{
           padding: '11px',

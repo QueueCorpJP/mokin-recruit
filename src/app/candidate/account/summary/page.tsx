@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import EditButton from '@/components/candidate/account/EditButton';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // 候補者_職務要約確認ページ
 export default async function CandidateSummaryPage() {
@@ -24,30 +25,12 @@ export default async function CandidateSummaryPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              職務要約
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '職務要約' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>

@@ -168,8 +168,8 @@ export default function SignupRecentJobPage() {
   // モーダルから選択された値を設定
   const handleIndustryConfirm = (selectedIndustryNames: string[]) => {
     // Convert selectedIndustries to the expected format
-    const industries = selectedIndustryNames.map((industryName, index) => ({
-      id: `industry_${index}_${industryName}`,
+    const industries = selectedIndustryNames.map(industryName => ({
+      id: industryName, // Use the industry name as ID for simplicity
       name: industryName,
     }));
     updateJobHistory(editingIndex, { industries });
@@ -178,8 +178,8 @@ export default function SignupRecentJobPage() {
 
   const handleJobTypeConfirm = (selectedJobTypeNames: string[]) => {
     // Convert selectedJobTypes to the expected format
-    const jobTypes = selectedJobTypeNames.map((jobTypeName, index) => ({
-      id: `jobtype_${index}_${jobTypeName}`,
+    const jobTypes = selectedJobTypeNames.map(jobTypeName => ({
+      id: jobTypeName, // Use the job type name as ID for simplicity
       name: jobTypeName,
     }));
     updateJobHistory(editingIndex, { jobTypes });

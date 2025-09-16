@@ -12,6 +12,8 @@ import {
 } from '../../_shared/constants/forms';
 import { useEditForm } from '../../_shared/hooks/useEditForm';
 import { idFor, describedByIdFor, ariaPropsFor } from '../../_shared/utils';
+import { SelectInput } from '@/components/ui/select-input';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // スキーマは共通化されたものを使用
 
@@ -133,49 +135,13 @@ export default function CandidateSkillsEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              語学・スキル
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              語学・スキル編集
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '語学・スキル', href: '/candidate/account/skills' },
+              { label: '語学・スキル編集' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
@@ -254,33 +220,13 @@ export default function CandidateSkillsEditPage() {
                       </div>
                     </div>
                     <div className='flex-1 lg:py-6'>
-                      <div className='relative'>
-                        <select
-                          id={idFor('englishLevel')}
-                          {...register('englishLevel')}
-                          {...ariaPropsFor(
-                            false,
-                            describedByIdFor('englishLevel')
-                          )}
-                          className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                        >
-                          {ENGLISH_LEVELS.map(level => (
-                            <option key={level.value} value={level.value}>
-                              {level.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
-                          </svg>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={ENGLISH_LEVELS}
+                        value={watch('englishLevel')}
+                        onChange={value => setValue('englishLevel', value)}
+                        radius={5}
+                        className='w-full'
+                      />
                     </div>
                   </div>
 
@@ -296,75 +242,32 @@ export default function CandidateSkillsEditPage() {
                         {(otherLanguages || []).map((_, index) => (
                           <div key={index} className='space-y-2 relative'>
                             <div className='flex flex-col gap-2'>
-                              <div className='relative'>
-                                <select
-                                  id={idFor(`otherLanguages.${index}.language`)}
-                                  {...register(
-                                    `otherLanguages.${index}.language`
-                                  )}
-                                  {...ariaPropsFor(
-                                    false,
-                                    describedByIdFor(
-                                      `otherLanguages.${index}.language`
-                                    )
-                                  )}
-                                  className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                                >
-                                  {LANGUAGE_OPTIONS.map(lang => (
-                                    <option key={lang.value} value={lang.value}>
-                                      {lang.label}
-                                    </option>
-                                  ))}
-                                </select>
-                                <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                                  <svg
-                                    width='14'
-                                    height='10'
-                                    viewBox='0 0 14 10'
-                                    fill='none'
-                                  >
-                                    <path
-                                      d='M7 10L0 0H14L7 10Z'
-                                      fill='#0f9058'
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <div className='relative'>
-                                <select
-                                  id={idFor(`otherLanguages.${index}.level`)}
-                                  {...register(`otherLanguages.${index}.level`)}
-                                  {...ariaPropsFor(
-                                    false,
-                                    describedByIdFor(
-                                      `otherLanguages.${index}.level`
-                                    )
-                                  )}
-                                  className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                                >
-                                  {ENGLISH_LEVELS.map(level => (
-                                    <option
-                                      key={level.value}
-                                      value={level.value}
-                                    >
-                                      {level.label}
-                                    </option>
-                                  ))}
-                                </select>
-                                <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                                  <svg
-                                    width='14'
-                                    height='10'
-                                    viewBox='0 0 14 10'
-                                    fill='none'
-                                  >
-                                    <path
-                                      d='M7 10L0 0H14L7 10Z'
-                                      fill='#0f9058'
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
+                              <SelectInput
+                                options={LANGUAGE_OPTIONS}
+                                value={watch(
+                                  `otherLanguages.${index}.language`
+                                )}
+                                onChange={value =>
+                                  setValue(
+                                    `otherLanguages.${index}.language`,
+                                    value
+                                  )
+                                }
+                                radius={5}
+                                className='w-full'
+                              />
+                              <SelectInput
+                                options={ENGLISH_LEVELS}
+                                value={watch(`otherLanguages.${index}.level`)}
+                                onChange={value =>
+                                  setValue(
+                                    `otherLanguages.${index}.level`,
+                                    value
+                                  )
+                                }
+                                radius={5}
+                                className='w-full'
+                              />
                             </div>
                             {otherLanguages.length > 1 && index > 0 && (
                               <button
@@ -502,17 +405,19 @@ export default function CandidateSkillsEditPage() {
                     </div>
                     <div className='flex-1 lg:py-6'>
                       <div className='space-y-2'>
-                        <textarea
-                          id={idFor('qualifications')}
-                          {...register('qualifications')}
-                          {...ariaPropsFor(
-                            false,
-                            describedByIdFor('qualifications')
-                          )}
-                          placeholder='保有資格を入力'
-                          rows={5}
-                          className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-3 text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058] resize-none'
-                        />
+                        <div className='border border-[#999999] rounded-[5px] p-1'>
+                          <textarea
+                            id={idFor('qualifications')}
+                            {...register('qualifications')}
+                            {...ariaPropsFor(
+                              false,
+                              describedByIdFor('qualifications')
+                            )}
+                            placeholder='保有資格を入力'
+                            rows={5}
+                            className='w-full bg-white rounded-[5px] px-4 py-3 text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none border-none resize-none'
+                          />
+                        </div>
                         <p className='text-[#999999] text-[14px] font-bold tracking-[1.4px]'>
                           ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
                         </p>

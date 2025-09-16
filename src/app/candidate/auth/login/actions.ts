@@ -131,12 +131,6 @@ export async function candidateLoginAction(
       }
     }
 
-    console.log('✅ [CANDIDATE LOGIN] Success:', {
-      userId: data.user.id,
-      email: data.user.email || '',
-      userType,
-    });
-
     // 認証関連のキャッシュを完全にクリア
     revalidatePath('/', 'layout');
     revalidateTag('auth');

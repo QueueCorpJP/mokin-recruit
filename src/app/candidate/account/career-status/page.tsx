@@ -7,6 +7,7 @@ import ContentCard from '@/components/candidate/account/ContentCard';
 import SectionHeader from '@/components/candidate/account/SectionHeader';
 import DataRow from '@/components/candidate/account/DataRow';
 import EditButton from '@/components/candidate/account/EditButton';
+import CompanyNameButton from '@/components/candidate/account/career-status/CompanyNameButton';
 import {
   CURRENT_ACTIVITY_STATUS_OPTIONS,
   DECLINE_REASON_OPTIONS,
@@ -34,12 +35,6 @@ async function getCareerStatusEntries(candidateId: string) {
     globalThis.console.error('Career status entries fetch failed:', error);
     return [];
   }
-}
-
-// value→label変換関数
-function getLabel(options: any[], value: string) {
-  const found = options.find((opt: any) => opt.value === value);
-  return found ? found.label : value || '未設定';
 }
 
 // 候補者_転職活動状況確認ページ
@@ -70,26 +65,14 @@ export default async function CandidateCareerStatusPage() {
             {/* 転職希望時期 */}
             <DataRow label='転職希望時期'>
               <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-                {getLabel(
-                  JOB_CHANGE_TIMING_OPTIONS as unknown as {
-                    value: string;
-                    label: string;
-                  }[],
-                  candidateData.job_change_timing
-                )}
+                {candidateData.job_change_timing || '未設定'}
               </div>
             </DataRow>
 
             {/* 現在の活動状況 */}
             <DataRow label='現在の活動状況'>
               <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-                {getLabel(
-                  CURRENT_ACTIVITY_STATUS_OPTIONS as unknown as {
-                    value: string;
-                    label: string;
-                  }[],
-                  candidateData.current_activity_status
-                )}
+                {candidateData.current_activity_status || '未設定'}
               </div>
             </DataRow>
           </div>
@@ -160,17 +143,9 @@ export default async function CandidateCareerStatusPage() {
                         </div>
                         <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                           {entry.company_name ? (
-                            <button
-                              onClick={() =>
-                                window.open(
-                                  `https://www.google.com/search?q=${encodeURIComponent(entry.company_name)}`,
-                                  '_blank'
-                                )
-                              }
-                              className='text-[16px] text-[#0F9058] font-medium tracking-[1.6px] leading-[2] hover:underline cursor-pointer bg-transparent border-none p-0 text-left'
-                            >
-                              {entry.company_name}
-                            </button>
+                            <CompanyNameButton
+                              companyName={entry.company_name}
+                            />
                           ) : (
                             <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
                               未設定
@@ -202,13 +177,7 @@ export default async function CandidateCareerStatusPage() {
                         </div>
                         <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                           <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-                            {getLabel(
-                              PROGRESS_STATUS_OPTIONS as unknown as {
-                                value: string;
-                                label: string;
-                              }[],
-                              entry.progress_status
-                            )}
+                            {entry.progress_status || '未設定'}
                           </div>
                         </div>
                       </div>
@@ -224,13 +193,7 @@ export default async function CandidateCareerStatusPage() {
                           </div>
                           <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                             <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-                              {getLabel(
-                                DECLINE_REASON_OPTIONS as unknown as {
-                                  value: string;
-                                  label: string;
-                                }[],
-                                entry.decline_reason
-                              )}
+                              {entry.decline_reason || '未設定'}
                             </div>
                           </div>
                         </div>

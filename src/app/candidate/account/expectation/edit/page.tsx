@@ -2,22 +2,25 @@
 
 import { Button } from '@/components/ui/button';
 import { SALARY_OPTIONS } from '../../_shared/constants/forms';
-import { idFor, describedByIdFor, ariaPropsFor } from '../..//_shared/utils';
+import { idFor, describedByIdFor, ariaPropsFor } from '../../_shared/utils';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getExpectationData, updateExpectationData } from './actions';
 import { useEditForm } from '../../_shared/hooks/useEditForm';
 import {
   expectationSchema,
   type ExpectationFormData,
 } from '../../_shared/schemas/expectation';
-import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
+import { Modal } from '@/components/ui/mo-dal';
 import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
 import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
+import { SelectInput } from '@/components/ui/select-input';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // スキーマは共通化されたものを使用
 
@@ -29,26 +32,12 @@ export default function CandidateExpectationEditPage() {
   const router = useRouter();
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
   const [isJobTypeModalOpen, setIsJobTypeModalOpen] = useState(false);
-
-  // 認証チェック
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isAuthenticated || !candidateUser) {
-      router.push('/candidate/auth/login');
-    }
-  }, [isAuthenticated, candidateUser, loading, router]);
-
-  if (loading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
-      </div>
-    );
-  }
-
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
+
+  // Modal refs - must be defined before any early returns
+  const industryModalRef = useRef<{ handleConfirm: () => void } | null>(null);
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void } | null>(null);
 
   const {
     register,
@@ -94,28 +83,44 @@ export default function CandidateExpectationEditPage() {
     submitAction: updateExpectationData,
   });
 
+  // 認証チェック
+  useEffect(() => {
+    if (loading) return;
+
+    if (!isAuthenticated || !candidateUser) {
+      router.push('/candidate/auth/login');
+    }
+  }, [isAuthenticated, candidateUser, loading, router]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-pulse'>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !candidateUser) {
+    return null;
+  }
+
   // 初期データロード・送信・キャンセルは useEditForm に委譲
 
   // 業種モーダル
-  const handleIndustriesConfirm = (industryIds: string[]) => {
-    // IDからIndustryオブジェクトに変換
-    const industries: Industry[] = industryIds
-      .map(id =>
-        INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
-      )
-      .filter(Boolean) as Industry[];
-    setValue('industries', industries, {
+  const handleIndustriesConfirm = (industryNames: string[]) => {
+    // 日本語名を文字列配列として保存（signupと同じ形式）
+    setValue('industries', industryNames, {
       shouldValidate: true,
       shouldDirty: true,
     });
     setIsIndustryModalOpen(false);
   };
 
-  const removeIndustry = (industryId: string) => {
+  const removeIndustry = (industryName: string) => {
     const currentIndustries = watch('industries') || [];
     setValue(
       'industries',
-      currentIndustries.filter(industry => industry.id !== industryId),
+      currentIndustries.filter(industry => industry !== industryName),
       {
         shouldValidate: true,
         shouldDirty: true,
@@ -124,25 +129,20 @@ export default function CandidateExpectationEditPage() {
   };
 
   // 職種モーダル
-  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
-    // IDからJobTypeオブジェクトに変換
-    const jobTypes: JobType[] = jobTypeIds
-      .map(id =>
-        JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
-      )
-      .filter(Boolean) as JobType[];
-    setValue('jobTypes', jobTypes, {
+  const handleJobTypesConfirm = (jobTypeNames: string[]) => {
+    // 日本語名を文字列配列として保存（signupと同じ形式）
+    setValue('jobTypes', jobTypeNames, {
       shouldValidate: true,
       shouldDirty: true,
     });
     setIsJobTypeModalOpen(false);
   };
 
-  const removeJobType = (jobTypeId: string) => {
+  const removeJobType = (jobTypeName: string) => {
     const currentJobTypes = watch('jobTypes') || [];
     setValue(
       'jobTypes',
-      currentJobTypes.filter(jobType => jobType.id !== jobTypeId),
+      currentJobTypes.filter(jobType => jobType !== jobTypeName),
       {
         shouldValidate: true,
         shouldDirty: true,
@@ -218,49 +218,13 @@ export default function CandidateExpectationEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              希望条件
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              希望条件編集
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '希望条件', href: '/candidate/account/expectation' },
+              { label: '希望条件編集' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
@@ -329,34 +293,29 @@ export default function CandidateExpectationEditPage() {
                     </div>
                   </div>
                   <div className='flex-1 lg:py-6'>
-                    <div className='relative'>
-                      <select
-                        id={idFor('desiredIncome')}
-                        {...register('desiredIncome')}
-                        {...ariaPropsFor(
-                          false,
-                          describedByIdFor('desiredIncome')
-                        )}
-                        className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-10 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                      >
-                        <option value=''>未選択</option>
-                        {SALARY_OPTIONS.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                        <svg
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                        >
-                          <path d='M7 10L0 0H14L7 10Z' fill='#0f9058' />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={[
+                        { value: '', label: '未選択' },
+                        ...SALARY_OPTIONS,
+                      ]}
+                      value={watch('desiredIncome')}
+                      onChange={value =>
+                        setValue('desiredIncome', value, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        })
+                      }
+                      className='w-full'
+                      style={{
+                        padding: '11px',
+                        border: '1px solid #999999',
+                        borderRadius: '5px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        letterSpacing: '1.6px',
+                      }}
+                      radius={5}
+                    />
                   </div>
                 </div>
 
@@ -378,15 +337,15 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {industries && industries.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {(industries || []).map(industry => (
+                          {(industries || []).map((industry, index) => (
                             <div
-                              key={industry.id}
+                              key={index}
                               className='bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2'
                             >
-                              {industry.name}
+                              {industry}
                               <button
                                 type='button'
-                                onClick={() => removeIndustry(industry.id)}
+                                onClick={() => removeIndustry(industry)}
                                 className='ml-1'
                               >
                                 <svg
@@ -429,15 +388,15 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {jobTypes && jobTypes.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {(jobTypes || []).map(jobType => (
+                          {(jobTypes || []).map((jobType, index) => (
                             <div
-                              key={jobType.id}
+                              key={index}
                               className='bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2'
                             >
-                              {jobType.name}
+                              {jobType}
                               <button
                                 type='button'
-                                onClick={() => removeJobType(jobType.id)}
+                                onClick={() => removeJobType(jobType)}
                                 className='ml-1'
                               >
                                 <svg
@@ -593,45 +552,60 @@ export default function CandidateExpectationEditPage() {
 
       {/* 業種選択モーダル */}
       {isIndustryModalOpen && (
-        <IndustrySelectModal
-          isOpen={true}
+        <Modal
+          title='業種を選択'
+          isOpen={isIndustryModalOpen}
           onClose={() => setIsIndustryModalOpen(false)}
-          onConfirm={handleIndustriesConfirm}
-          initialSelected={industries?.map(i => i.id) || []}
-          maxSelections={3}
-        />
+          primaryButtonText='決定'
+          onPrimaryAction={() => industryModalRef.current?.handleConfirm()}
+          width='800px'
+          height='680px'
+        >
+          <IndustryModal
+            selectedIndustries={industries || []}
+            onIndustriesChange={handleIndustriesConfirm}
+            onClose={() => setIsIndustryModalOpen(false)}
+            ref={industryModalRef}
+          />
+        </Modal>
       )}
 
       {/* 職種選択モーダル */}
       {isJobTypeModalOpen && (
-        <JobTypeSelectModal
-          isOpen={true}
+        <Modal
+          title='職種を選択'
+          isOpen={isJobTypeModalOpen}
           onClose={() => setIsJobTypeModalOpen(false)}
-          onConfirm={handleJobTypesConfirm}
-          initialSelected={jobTypes?.map(jt => jt.id) || []}
-          maxSelections={3}
-        />
+          primaryButtonText='決定'
+          onPrimaryAction={() => jobTypeModalRef.current?.handleConfirm()}
+          width='800px'
+          height='680px'
+        >
+          <JobTypeModal
+            selectedJobTypes={jobTypes || []}
+            onJobTypesChange={handleJobTypesConfirm}
+            onClose={() => setIsJobTypeModalOpen(false)}
+            ref={jobTypeModalRef}
+          />
+        </Modal>
       )}
 
       {/* 勤務地選択モーダル */}
-      {isWorkLocationModalOpen && (
-        <WorkLocationSelectModal
-          isOpen={true}
-          onClose={() => setIsWorkLocationModalOpen(false)}
-          onConfirm={handleLocationsConfirm}
-          initialSelected={workLocations}
-        />
-      )}
+      <WorkLocationSelectModal
+        isOpen={isWorkLocationModalOpen}
+        onClose={() => setIsWorkLocationModalOpen(false)}
+        onConfirm={handleLocationsConfirm}
+        initialSelected={workLocations}
+      />
 
       {/* 働き方選択モーダル */}
-      {isWorkStyleModalOpen && (
-        <WorkStyleSelectModal
-          isOpen={true}
-          onClose={() => setIsWorkStyleModalOpen(false)}
-          onConfirm={handleWorkStylesConfirm}
-          initialSelected={workStyles}
-        />
-      )}
+      <WorkStyleSelectModal
+        isOpen={isWorkStyleModalOpen}
+        onClose={() => setIsWorkStyleModalOpen(false)}
+        onConfirm={handleWorkStylesConfirm}
+        initialSelected={workStyles}
+        maxSelections={6}
+      />
     </>
   );
 }

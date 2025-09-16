@@ -93,10 +93,9 @@ export async function signupVerifyAction(
     // ステップ4: データベースからOTPコードを取得して検証
     try {
       const { data: otpData, error: otpError } = await supabase
-        .from('email_verification_codes')
-        .select('code, expires_at')
+        .from('signup_verification_codes')
+        .select('verification_code, expires_at')
         .eq('email', email.trim())
-        .eq('type', 'signup')
         .maybeSingle();
 
       if (otpError) {
@@ -118,7 +117,7 @@ export async function signupVerifyAction(
       // OTPコードの検証
       const verificationResult = verifyOtp(
         verificationCode,
-        otpData.code,
+        otpData.verification_code,
         new Date(otpData.expires_at)
       );
 
@@ -198,10 +197,9 @@ export async function signupVerifyAction(
 
       // ステップ6: 使用済みOTPコードを削除
       const { error: deleteOtpError } = await supabase
-        .from('email_verification_codes')
+        .from('signup_verification_codes')
         .delete()
-        .eq('email', email.trim())
-        .eq('type', 'signup');
+        .eq('email', email.trim());
 
       if (deleteOtpError) {
         logger.warn('Failed to delete used OTP:', deleteOtpError);
@@ -336,10 +334,9 @@ export async function resendVerificationCodeAction(
 
     // ステップ5: 既存のOTPコードがあるかチェック
     const { data: existingOtp } = await supabase
-      .from('email_verification_codes')
+      .from('signup_verification_codes')
       .select('created_at')
       .eq('email', email.trim())
-      .eq('type', 'signup')
       .maybeSingle();
 
     // レート制限チェック（1分以内の再送信を防ぐ）
@@ -363,17 +360,16 @@ export async function resendVerificationCodeAction(
 
     // ステップ7: OTPをデータベースに保存（既存のものを更新）
     const { error: otpSaveError } = await supabase
-      .from('email_verification_codes')
+      .from('signup_verification_codes')
       .upsert(
         {
           email: email.trim(),
-          code: otp,
+          verification_code: otp,
           expires_at: expiresAt.toISOString(),
-          type: 'signup',
           created_at: new Date().toISOString(),
         },
         {
-          onConflict: 'email,type',
+          onConflict: 'email',
         }
       );
 

@@ -9,11 +9,11 @@ import { saveSkillsData } from './actions';
 // 言語レベルの選択肢
 const ENGLISH_LEVELS = [
   { value: '', label: 'レベルを選択' },
-  { value: 'native', label: 'ネイティブ' },
-  { value: 'business', label: 'ビジネスレベル' },
-  { value: 'conversation', label: '日常会話' },
-  { value: 'basic', label: '基礎会話' },
-  { value: 'none', label: 'なし' },
+  { value: 'ネイティブ', label: 'ネイティブ' },
+  { value: 'ビジネスレベル', label: 'ビジネスレベル' },
+  { value: '日常会話', label: '日常会話' },
+  { value: '基礎会話', label: '基礎会話' },
+  { value: 'なし', label: 'なし' },
 ] as const;
 
 // その他言語の選択肢
@@ -602,7 +602,7 @@ export default function SignupSkillsPage() {
                   </label>
                 </div>
                 <div className='flex flex-col gap-2 w-[400px]'>
-                  <div className='border border-[#999999] rounded-[5px] bg-white'>
+                  <div className='border border-[#999999] rounded-[5px] bg-white p-1'>
                     <textarea
                       value={formData.qualifications}
                       onChange={e =>
@@ -943,7 +943,7 @@ export default function SignupSkillsPage() {
                 <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                   保有資格
                 </label>
-                <div className='border border-[#999999] rounded-[5px] bg-white'>
+                <div className='border border-[#999999] rounded-[5px] bg-white p-1'>
                   <textarea
                     value={formData.qualifications}
                     onChange={e =>

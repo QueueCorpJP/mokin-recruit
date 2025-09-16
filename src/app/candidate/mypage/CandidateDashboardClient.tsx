@@ -644,6 +644,9 @@ export function CandidateDashboardClient({
                             imageHeight={69}
                             isFavoriteLoading={favoriteLoading[job.id] || false}
                             onStarClick={() => handleStarClick(job.id)}
+                            onClick={() =>
+                              router.push(`/candidate/search/setting/${job.id}`)
+                            }
                           />
                         ))}
                       </Suspense>

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // 区切り線のSVGコンポーネント
 const DividerLine = () => (
@@ -230,6 +231,18 @@ export default async function ShokumuPreviewPage() {
     <div className='min-h-screen bg-white'>
       {/* 印刷スタイル */}
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
+
+      {/* ヘッダー部分（印刷時非表示） */}
+      <div className='no-print bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
+        <Breadcrumb
+          items={[
+            { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+            { label: '履歴書・職務経歴書', href: '/candidate/account/resume' },
+            { label: '職務経歴書プレビュー' },
+          ]}
+        />
+      </div>
+
       {/* メインコンテンツ（印刷対象） */}
       <div className='print-container bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start px-0 lg:px-[400px] py-6 lg:py-[120px] relative w-full'>
         <div className='w-[640px] mx-auto'>

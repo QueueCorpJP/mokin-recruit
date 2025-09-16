@@ -5,6 +5,7 @@ import {
   getEducationData,
   getSkillsData,
 } from '@/lib/server/candidate/candidateData';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // 区切り線のSVGコンポーネント
 const DividerLine = () => (
@@ -99,43 +100,6 @@ const printStyles = `
     margin: 20mm;
   }
 `;
-
-// 言語コードと日本語名のマッピング
-const LANGUAGE_MAPPING: Record<string, string> = {
-  indonesian: 'インドネシア語',
-  italian: 'イタリア語',
-  spanish: 'スペイン語',
-  thai: 'タイ語',
-  german: 'ドイツ語',
-  french: 'フランス語',
-  portuguese: 'ポルトガル語',
-  malaysian: 'マレー語',
-  russian: 'ロシア語',
-  korean: '韓国語',
-  'chinese-simplified': '中国語（簡体字）',
-  'chinese-traditional': '中国語（繁体字）',
-  vietnamese: 'ベトナム語',
-  arabic: 'アラビア語',
-  hindi: 'ヒンディー語',
-  dutch: 'オランダ語',
-};
-
-// 英語レベルコードと日本語名のマッピング
-const ENGLISH_LEVEL_MAPPING: Record<string, string> = {
-  none: 'なし',
-  basic: '初級',
-  intermediate: '中級',
-  business: 'ビジネス',
-  native: 'ネイティブ',
-};
-
-// 言語レベルコードと日本語名のマッピング
-const LANGUAGE_LEVEL_MAPPING: Record<string, string> = {
-  basic: '初級',
-  intermediate: '中級',
-  business: 'ビジネス',
-  native: 'ネイティブ',
-};
 
 // 最終学歴の表示名を取得
 function getFinalEducationDisplay(finalEducation?: string) {
@@ -264,9 +228,8 @@ export default async function RirekisyoPreviewPage() {
     }
 
     return skillsData.other_languages.map((lang: any) => ({
-      language:
-        LANGUAGE_MAPPING[lang.language] || lang.language || '言語未設定',
-      level: LANGUAGE_LEVEL_MAPPING[lang.level] || lang.level || 'レベル未設定',
+      language: lang.language || '言語未設定',
+      level: lang.level || 'レベル未設定',
     }));
   };
 
@@ -293,9 +256,7 @@ export default async function RirekisyoPreviewPage() {
     education: formatEducation(),
     careers: getCareers(),
     englishLevel:
-      ENGLISH_LEVEL_MAPPING[skillsData?.english_level || ''] ||
-      skillsData?.english_level ||
-      'なし',
+      skillsData?.english_level || skillsData?.english_level || 'なし',
     otherLanguages: getOtherLanguages(),
     skills: getSkillsList(),
     qualifications: skillsData?.qualifications || '保有資格なし',
@@ -305,6 +266,18 @@ export default async function RirekisyoPreviewPage() {
     <div className='min-h-screen bg-white'>
       {/* 印刷スタイル */}
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
+
+      {/* ヘッダー部分（印刷時非表示） */}
+      <div className='no-print bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
+        <Breadcrumb
+          items={[
+            { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+            { label: '履歴書・職務経歴書', href: '/candidate/account/resume' },
+            { label: '履歴書プレビュー' },
+          ]}
+        />
+      </div>
+
       {/* メインコンテンツ（印刷対象） */}
       <div className='print-container bg-[#ffffff] box-border content-stretch flex flex-col gap-10 items-center justify-start px-0 lg:px-[400px] py-6 lg:py-[120px] relative w-full'>
         <div className='w-[640px] mx-auto'>

@@ -5,6 +5,7 @@ import {
   getSkillsData,
 } from '@/lib/server/candidate/candidateData';
 import EditButton from '@/components/candidate/account/EditButton';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // 候補者_資格・語学・スキル確認ページ
 export default async function CandidateSkillsPage() {
@@ -47,43 +48,6 @@ export default async function CandidateSkillsPage() {
     );
   };
 
-  // 言語コードと日本語名のマッピング
-  const LANGUAGE_MAPPING: Record<string, string> = {
-    indonesian: 'インドネシア語',
-    italian: 'イタリア語',
-    spanish: 'スペイン語',
-    thai: 'タイ語',
-    german: 'ドイツ語',
-    french: 'フランス語',
-    portuguese: 'ポルトガル語',
-    malaysian: 'マレー語',
-    russian: 'ロシア語',
-    korean: '韓国語',
-    'chinese-simplified': '中国語（簡体字）',
-    'chinese-traditional': '中国語（繁体字）',
-    vietnamese: 'ベトナム語',
-    arabic: 'アラビア語',
-    hindi: 'ヒンディー語',
-    dutch: 'オランダ語',
-    swedish: 'スウェーデン語',
-    polish: 'ポーランド語',
-    turkish: 'トルコ語',
-    japanese: '日本語',
-    bengali: 'ベンガル語',
-    tagalog: 'タガログ語',
-    tamil: 'タミル語',
-    burmese: 'ミャンマー語',
-  };
-
-  // 英語レベルと日本語名のマッピング
-  const LEVEL_MAPPING: Record<string, string> = {
-    native: 'ネイティブ',
-    business: 'ビジネスレベル',
-    conversation: '日常会話',
-    basic: '基礎会話',
-    none: 'なし',
-  };
-
   // その他の言語を表示する関数
   const renderOtherLanguages = (otherLanguages: any) => {
     if (
@@ -104,12 +68,10 @@ export default async function CandidateSkillsPage() {
         {languages.map((lang: any, idx: number) => (
           <div key={idx} className='space-y-2'>
             <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-              {LANGUAGE_MAPPING[lang.language] ||
-                lang.language ||
-                '言語名未設定'}
+              {lang.language || '言語名未設定'}
             </div>
             <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-              {LEVEL_MAPPING[lang.level] || lang.level || 'レベル未設定'}
+              {lang.level || 'レベル未設定'}
             </div>
           </div>
         ))}
@@ -124,30 +86,12 @@ export default async function CandidateSkillsPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              語学・スキル
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '語学・スキル' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
@@ -215,10 +159,7 @@ export default async function CandidateSkillsPage() {
                     </div>
                     <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                       <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-[2]'>
-                        {skillsData?.english_level
-                          ? LEVEL_MAPPING[skillsData.english_level] ||
-                            skillsData.english_level
-                          : '未設定'}
+                        {skillsData?.english_level || '未設定'}
                       </div>
                     </div>
                   </div>

@@ -1,34 +1,55 @@
-import React, { useState } from 'react';
+import React, {
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import { jobCategories } from './types';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface JobTypeModalProps {
   selectedJobTypes: string[];
-  setSelectedJobTypes: (jobTypes: string[]) => void;
+  onJobTypesChange: (jobTypes: string[]) => void;
+  onClose: () => void;
 }
 
-export const JobTypeModal: React.FC<JobTypeModalProps> = ({
-  selectedJobTypes,
-  setSelectedJobTypes,
-}) => {
+export const JobTypeModal = forwardRef<
+  { handleConfirm: () => void },
+  JobTypeModalProps
+>(({ selectedJobTypes, onJobTypesChange }, ref) => {
   const [selectedCategory, setSelectedCategory] = useState(
     jobCategories[0].name
   );
   const MAX_SELECTION = 3;
+  const [tempSelectedJobTypes, setTempSelectedJobTypes] =
+    useState<string[]>(selectedJobTypes);
+
+  // 初期値を設定
+  useEffect(() => {
+    setTempSelectedJobTypes(selectedJobTypes);
+  }, [selectedJobTypes]);
 
   const handleCheckboxChange = (job: string) => {
-    if (selectedJobTypes.includes(job)) {
+    if (tempSelectedJobTypes.includes(job)) {
       // 既に選択されている場合は削除
-      const newJobTypes = selectedJobTypes.filter(j => j !== job);
-      setSelectedJobTypes(newJobTypes);
+      setTempSelectedJobTypes(tempSelectedJobTypes.filter(j => j !== job));
     } else {
       // 新規選択の場合は制限をチェック
-      if (selectedJobTypes.length < MAX_SELECTION) {
-        const newJobTypes = [...selectedJobTypes, job];
-        setSelectedJobTypes(newJobTypes);
+      if (tempSelectedJobTypes.length < MAX_SELECTION) {
+        setTempSelectedJobTypes([...tempSelectedJobTypes, job]);
       }
     }
   };
+
+  // 決定ボタンが押された時に実際の値を更新
+  const handleConfirm = () => {
+    onJobTypesChange(tempSelectedJobTypes);
+  };
+
+  // ref経由でhandleConfirmを公開
+  useImperativeHandle(ref, () => ({
+    handleConfirm,
+  }));
 
   const selectedCategoryData = jobCategories.find(
     category => category.name === selectedCategory
@@ -88,7 +109,7 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({
         </h3>
 
         {/* 制限メッセージ */}
-        {selectedJobTypes.length >= MAX_SELECTION && (
+        {tempSelectedJobTypes.length >= MAX_SELECTION && (
           <div className='p-3 bg-[#FFF3CD] border border-[#FFEAA7] rounded-md mb-4'>
             <p className="font-['Noto_Sans_JP'] text-[14px] text-[#856404]">
               最大{MAX_SELECTION}
@@ -100,9 +121,9 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({
         {/* 職種チェックボックスリスト（2列グリッド） */}
         <div className='grid grid-cols-2 gap-x-8 gap-y-4 mt-6'>
           {selectedCategoryData.jobs.map(job => {
-            const isSelected = selectedJobTypes.includes(job);
+            const isSelected = tempSelectedJobTypes.includes(job);
             const isDisabled =
-              !isSelected && selectedJobTypes.length >= MAX_SELECTION;
+              !isSelected && tempSelectedJobTypes.length >= MAX_SELECTION;
 
             return (
               <div key={job} className='flex items-center'>
@@ -119,5 +140,4 @@ export const JobTypeModal: React.FC<JobTypeModalProps> = ({
       </div>
     </div>
   );
-};
-//a
+});
