@@ -49,6 +49,7 @@ export default [
         Headers: 'readonly',
         Request: 'readonly',
         Response: 'readonly',
+
       },
     },
     rules: {

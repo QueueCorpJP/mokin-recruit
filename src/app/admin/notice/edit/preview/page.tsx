@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import DOMPurify from 'dompurify';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { SelectInput } from '@/components/ui/select-input';
@@ -71,10 +71,11 @@ export default function EditPreviewPage() {
                   .eq('id', categoryId)
                   .single();
 
-                if (categoryData && (categoryData as any).name) {
-                  names[categoryId] = (categoryData as any).name as string;
+                if (categoryData && categoryData.name) {
+                  names[categoryId] = categoryData.name;
                 }
               } catch (err) {
+                // 個別カテゴリ取得失敗
                 console.error(
                   'Individual category fetch failed:',
                   categoryId,
@@ -88,6 +89,7 @@ export default function EditPreviewPage() {
           setPreviewData(data);
           setCurrentStatus(data.status || 'DRAFT');
         } catch (error) {
+          // カテゴリの取得に失敗
           console.error('カテゴリの取得に失敗:', error);
           setPreviewData(data);
         }
@@ -147,6 +149,7 @@ export default function EditPreviewPage() {
             );
           formData.append('thumbnail', thumbnailFile);
         } catch (error) {
+          // サムネイル画像の処理に失敗
           console.warn('サムネイル画像の処理に失敗しました:', error);
         }
       } else if (previewData.thumbnail && !previewData.thumbnailName) {
@@ -162,6 +165,7 @@ export default function EditPreviewPage() {
       sessionStorage.removeItem('previewNotice');
       setShowSuccessModal(true);
     } catch (error) {
+      // お知らせの保存に失敗
       console.error('お知らせの保存に失敗:', error);
       setError(
         error instanceof Error ? error.message : 'お知らせの保存に失敗しました'
@@ -284,7 +288,7 @@ export default function EditPreviewPage() {
                 className='prose prose-lg max-w-none mb-[60px]'
                 style={{ paddingLeft: '0', paddingRight: '0' }}
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(previewData.content),
+                  __html: DOMPurify.sanitize(previewData.content),
                 }}
               />
 

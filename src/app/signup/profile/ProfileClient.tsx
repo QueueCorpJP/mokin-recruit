@@ -9,12 +9,18 @@ import {
   generateYearOptions,
 } from '@/constants/profile';
 import { type ProfileFormData } from '@/lib/schema/profile';
+import CryptoJS from 'crypto-js';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { saveProfileData } from './actions';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+
+function encryptData(data: object, secret: string): string {
+  // AES encrypt the JSON stringified data.
+  return CryptoJS.AES.encrypt(JSON.stringify(data), secret).toString();
+}
 
 export default function SignupProfilePage() {
   const router = useRouter();
@@ -165,6 +171,9 @@ export default function SignupProfilePage() {
       !formData.phoneNumber ||
       !formData.currentIncome
     ) {
+      // Define the encryption key; in practice, do NOT hardcode!
+      const ENC_KEY =
+        process.env.NEXT_PUBLIC_PROFILE_ENC_KEY || 'default_encryption_key';
       alert('すべての項目を入力してください');
       return;
     }
@@ -177,7 +186,7 @@ export default function SignupProfilePage() {
         console.log('Save result:', result);
 
         if (result.success) {
-          localStorage.setItem('signupProfile', JSON.stringify(formData));
+          localStorage.setItem('signupProfile', encryptData(formData, ENC_KEY));
           router.push('/signup/career-status');
         } else {
           console.error('Profile save error:', result.error);
@@ -185,7 +194,7 @@ export default function SignupProfilePage() {
         }
       } else {
         console.log('No userId, saving to localStorage only');
-        localStorage.setItem('signupProfile', JSON.stringify(formData));
+        localStorage.setItem('signupProfile', encryptData(formData, ENC_KEY));
         router.push('/signup/career-status');
       }
     } catch (error) {

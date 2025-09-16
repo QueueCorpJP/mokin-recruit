@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import DOMPurify from 'dompurify';
 import { useAdminAuth } from '@/hooks/useClientAuth';
 import { AccessRestricted } from '@/components/AccessRestricted';
 import { Button } from '@/components/ui/button';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
@@ -54,6 +54,10 @@ export default function EditPreviewPage() {
       if (storedData) {
         const data = JSON.parse(storedData);
 
+        if (data.content) {
+          data.content = DOMPurify.sanitize(data.content);
+        }
+
         // カテゴリデータを取得してカテゴリ名の解決用に使用
         try {
           const supabase = createClient();
@@ -63,14 +67,14 @@ export default function EditPreviewPage() {
             .order('name');
 
           if (categoriesData) {
-            setCategories(categoriesData as unknown as ArticleCategory[]);
+            setCategories(categoriesData as ArticleCategory[]);
 
             // カテゴリIDからカテゴリ名を解決
             if (data.categoryIds && data.categoryIds.length > 0) {
               const names: { [key: string]: string } = {};
               for (const categoryId of data.categoryIds) {
-                const category = (categoriesData as any[]).find(
-                  (cat: any) => cat.id === categoryId
+                const category = categoriesData.find(
+                  cat => cat.id === categoryId
                 );
                 if (category && category.name) {
                   names[categoryId] = category.name;
@@ -80,6 +84,7 @@ export default function EditPreviewPage() {
             }
           }
         } catch (error) {
+          // カテゴリの取得に失敗
           console.error('カテゴリの取得に失敗:', error);
         }
 
@@ -156,6 +161,7 @@ export default function EditPreviewPage() {
               );
             formData.append('thumbnail', thumbnailFile);
           } catch (error) {
+            // サムネイル画像の処理に失敗
             console.warn('サムネイル画像の処理に失敗しました:', error);
           }
         } else {
@@ -173,6 +179,7 @@ export default function EditPreviewPage() {
       sessionStorage.removeItem('previewArticle');
       setShowSuccessModal(true);
     } catch (error) {
+      // 記事の保存に失敗
       console.error('記事の保存に失敗:', error);
       setError(
         error instanceof Error ? error.message : '記事の保存に失敗しました'
@@ -190,13 +197,6 @@ export default function EditPreviewPage() {
     }
     // 編集ページに記事IDと共に戻る
     router.push(`/admin/media/edit?id=${previewData?.id}`);
-  };
-
-  const handleCancel = () => {
-    if (confirm('プレビューを終了して一覧に戻りますか？')) {
-      sessionStorage.removeItem('previewArticle');
-      router.push('/admin/media');
-    }
   };
 
   const handleBackToList = () => {
@@ -238,15 +238,6 @@ export default function EditPreviewPage() {
     month: '2-digit',
     day: '2-digit',
   });
-
-  const getStatusText = (status: 'DRAFT' | 'PUBLISHED') => {
-    return status === 'DRAFT' ? '下書き' : '公開';
-  };
-
-  const getSaveButtonText = () => {
-    if (isLoading) return '保存中...';
-    return '記事を保存/公開する';
-  };
 
   const handleSaveClick = () => {
     handleSave();
@@ -314,6 +305,7 @@ export default function EditPreviewPage() {
                           categories.find(cat => cat.id === categoryId)?.name;
 
                         if (!categoryName) {
+                          // カテゴリ名が見つからない場合
                           console.log(
                             'No category name found for:',
                             categoryId
