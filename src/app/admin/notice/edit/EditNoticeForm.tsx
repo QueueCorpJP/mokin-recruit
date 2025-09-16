@@ -102,7 +102,7 @@ export default function EditNoticeForm({ categories, saveNotice, initialNotice }
     }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     // バリデーションエラーをクリア
     setTitleError('');
     setCategoryError('');
@@ -144,9 +144,14 @@ export default function EditNoticeForm({ categories, saveNotice, initialNotice }
     };
 
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+      // Encrypt noticeData before storing in sessionStorage
+      encryptData(JSON.stringify(noticeData)).then(enc => {
+        sessionStorage.setItem('previewNotice', enc);
+        router.push('/admin/notice/edit/preview');
+      });
+    } else {
+      router.push('/admin/notice/edit/preview');
     }
-    router.push('/admin/notice/edit/preview');
   };
 
   const handleCancel = () => {
