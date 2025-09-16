@@ -133,7 +133,7 @@ export default function CompanyClient({ companies }: Props) {
               hour: '2-digit',
               minute: '2-digit',
             })
-            .replace(/\//g, '/')
+            // .replace(/\//g, '/') (removed: no-op)
         : 'N/A',
       company.last_login_user || 'N/A',
       company.group_names || 'N/A',
@@ -145,7 +145,7 @@ export default function CompanyClient({ companies }: Props) {
           hour: '2-digit',
           minute: '2-digit',
         })
-        .replace(/\//g, '/'),
+        // .replace(/\//g, '/') (removed: no-op)
     ]);
 
     // CSV形式に変換
