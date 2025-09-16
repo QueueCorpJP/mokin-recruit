@@ -638,7 +638,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                   month: '2-digit',
                                   day: '2-digit',
                                 })
-                                .replace(/\//g, '/')
+                                // Removed pointless .replace(/\//g, '/') which had no effect
                             : 'ー'}
                         </div>
 
@@ -650,7 +650,8 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                               month: '2-digit',
                               day: '2-digit',
                             })
-                            .replace(/\//g, '/')}
+                            /* Removed pointless .replace(/\//g, '/') which had no effect */
+                            )}
                         </div>
 
                         {/* アクション */}
