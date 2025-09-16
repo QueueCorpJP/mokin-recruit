@@ -64,7 +64,7 @@ export default function MediaPageClient({
         month: '2-digit',
         day: '2-digit',
       })
-      .replace(/\//g, '/');
+      .replace(/\//g, '-');
     const timeStr = date.toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit',
