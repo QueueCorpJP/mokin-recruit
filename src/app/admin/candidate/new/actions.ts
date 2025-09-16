@@ -239,7 +239,7 @@ export async function createCandidateData(
     console.log('Candidate ID:', candidateId, typeof candidateId);
 
     // Insert education
-    if (education.final_education || education.school_name) {
+    if (education.final_education) {
       const { error: educationError } = await supabase
         .from('education')
         .insert({
@@ -262,6 +262,7 @@ export async function createCandidateData(
         .filter(exp => exp.industry_name && exp.industry_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
+          industry_id: exp.industry_name,
           industry_name: exp.industry_name,
           experience_years: exp.experience_years,
         }));
@@ -283,6 +284,7 @@ export async function createCandidateData(
         .filter(exp => exp.job_type_name && exp.job_type_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
+          job_type_id: exp.job_type_name,
           job_type_name: exp.job_type_name,
           experience_years: exp.experience_years,
         }));
@@ -300,13 +302,13 @@ export async function createCandidateData(
 
     // Insert skills
     if (
-      skills.english_level ||
+      (skills.english_level ?? 'none') ||
       skills.qualifications ||
       (skills.skills_tags && skills.skills_tags.length > 0)
     ) {
       const { error: skillsError } = await supabase.from('skills').insert({
         candidate_id: candidateId,
-        english_level: skills.english_level,
+        english_level: skills.english_level ?? 'none',
         other_languages: skills.other_languages || null,
         skills_list: skills.skills_tags || [],
         qualifications: skills.qualifications,
@@ -345,22 +347,24 @@ export async function createCandidateData(
     // Insert selection entries if provided
     if (selectionEntries && selectionEntries.length > 0) {
       const entriesData = selectionEntries
-        .filter(entry => entry.companyName.trim())
+        .filter(entry => (entry.companyName || '').trim())
         .map(entry => ({
           candidate_id: candidateId,
-          company_name: entry.companyName,
-          industries: entry.industries,
-          job_types: entry.jobTypes,
+          company_name: entry.companyName || '',
+          industries: entry.industries || [],
+          progress_status: entry.progressStatus || null,
         }));
 
       if (entriesData.length > 0) {
-        const { error: entriesError } = await supabase
-          .from('candidate_selection_entries')
+        const { error: careerStatusError } = await supabase
+          .from('career_status_entries')
           .insert(entriesData);
 
-        if (entriesError && entriesError.code !== '42P01') {
-          // Ignore table doesn't exist error for now
-          console.warn('Selection entries table may not exist:', entriesError);
+        if (careerStatusError) {
+          console.warn(
+            'Career status entries insert error:',
+            careerStatusError
+          );
         }
       }
     }

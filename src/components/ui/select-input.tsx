@@ -292,7 +292,7 @@ export function SelectInput({
             (selectedValue ? 'text-[#323232]' : 'text-[#323232]')
         )}
         style={{
-          padding: '11px',
+          padding: '8px 11px',
           alignItems: 'center',
           gap: '8px',
           borderRadius: `${radius}px`,
@@ -344,7 +344,7 @@ export function SelectInput({
               onClick={() => handleSelect(option.value)}
               className={cn(
                 // 基本スタイル
-                'px-4 py-3 cursor-pointer',
+                'px-4 py-2 cursor-pointer',
                 'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
                 'transition-colors duration-150',
 
@@ -367,7 +367,7 @@ export function SelectInput({
 
           {/* 選択肢が空の場合 */}
           {options.length === 0 && (
-            <li className="px-4 py-3 text-[#999999] font-['Noto_Sans_JP'] text-[16px] font-bold leading-[32px] tracking-[1.6px]">
+            <li className="px-4 py-2 text-[#999999] font-['Noto_Sans_JP'] text-[16px] font-bold leading-[32px] tracking-[1.6px]">
               選択肢がありません
             </li>
           )}

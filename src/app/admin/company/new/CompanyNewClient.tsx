@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { IndustryModal } from '@/app/company/job/IndustryModal';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
+import { SelectInput } from '@/components/ui/select-input';
 
 // フォームデータの型定義
 interface CompanyFormData {
@@ -34,25 +35,13 @@ interface CompanyFormData {
   }>;
 }
 
-// 業種のオプション
-const _industryOptions = [
-  'IT・インターネット',
-  'コンサルティング',
-  '製造業',
-  '金融・保険',
-  '商社・流通',
-  'メディア・広告',
-  '不動産・建設',
-  'サービス・レジャー',
-  '医療・福祉',
-  '教育',
-  '官公庁・公社・団体',
-];
+// 業種選択は既存のIndustryModalを使用するため、このオプションは削除
 
 // プランのオプション
 const planOptions = [
-  { value: 'basic', label: 'ベーシック' },
-  { value: 'standard', label: 'スタンダード' },
+  { value: 'プラン加入なし', label: 'プラン加入なし' },
+  { value: 'スタンダード', label: 'スタンダード' },
+  { value: 'ストラテジック', label: 'ストラテジック' },
 ];
 
 // 都道府県のオプション
@@ -106,14 +95,15 @@ const prefectureOptions = [
   '沖縄県',
 ];
 
-// 企業フェーズのオプション
+// 企業フェーズのオプション（database.mdの制約に合わせて修正）
 const companyPhaseOptions = [
-  'スタートアップ',
-  'アーリーステージ',
-  'グロースステージ',
-  'レイターステージ',
-  '上場企業',
-  '大手企業',
+  'スタートアップ（創業初期・社員数50名規模）',
+  'スタートアップ（成長中・シリーズB以降）',
+  'メガベンチャー（急成長・未上場）',
+  '上場ベンチャー（マザーズ等上場済）',
+  '中堅企業（~1000名規模）',
+  '上場企業（プライム・スタンダード等）',
+  '大企業（グローバル展開・数千名規模）',
 ];
 
 export default function CompanyNewClient() {
@@ -161,8 +151,9 @@ export default function CompanyNewClient() {
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
 
   // 業種選択ハンドラー
-  const handleIndustryChange = (industries: string[]) => {
+  const handleIndustryConfirm = (industries: string[]) => {
     setFormData(prev => ({ ...prev, industries }));
+    setIsIndustryModalOpen(false);
   };
 
   // 業種の削除（選択された業種から個別に削除）
@@ -273,27 +264,19 @@ export default function CompanyNewClient() {
 
       {/* プラン */}
       <div className='flex items-center gap-6 py-3'>
-        <label
-          htmlFor='plan-select'
-          className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40"
-        >
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
           プラン
         </label>
-        <select
-          id='plan-select'
+        <SelectInput
+          options={[
+            { value: '', label: 'プランを選択してください' },
+            ...planOptions,
+          ]}
           value={formData.plan}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, plan: e.target.value }))
-          }
-          className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-        >
-          <option value=''>プランを選択してください ▼</option>
-          {planOptions.map(plan => (
-            <option key={plan.value} value={plan.value}>
-              {plan.label}
-            </option>
-          ))}
-        </select>
+          onChange={value => setFormData(prev => ({ ...prev, plan: value }))}
+          placeholder='プランを選択してください'
+          radius={5}
+        />
       </div>
 
       <hr className='border-gray-300' />
@@ -477,25 +460,19 @@ export default function CompanyNewClient() {
             placeholder='500'
             className="w-24 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] text-center focus:outline-none focus:border-[#0F9058]"
           />
-          <div className='flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px]'>
-            <label htmlFor='capital-unit' className='sr-only'>
-              資本金単位
-            </label>
-            <select
-              id='capital-unit'
-              value={formData.capitalUnit}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, capitalUnit: e.target.value }))
-              }
-              className="text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] bg-transparent border-none outline-none focus:outline-none"
-            >
-              <option value='万円'>万円</option>
-              <option value='円'>円</option>
-              <option value='千円'>千円</option>
-              <option value='億円'>億円</option>
-            </select>
-            <span className='ml-2'>▼</span>
-          </div>
+          <SelectInput
+            options={[
+              { value: '万円', label: '万円' },
+              { value: '円', label: '円' },
+              { value: '千円', label: '千円' },
+              { value: '億円', label: '億円' },
+            ]}
+            value={formData.capitalUnit}
+            onChange={value =>
+              setFormData(prev => ({ ...prev, capitalUnit: value }))
+            }
+            className='w-24'
+          />
         </div>
       </div>
 
@@ -563,15 +540,20 @@ export default function CompanyNewClient() {
         <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">
           事業内容
         </label>
-        <textarea
-          value={formData.businessContent}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, businessContent: e.target.value }))
-          }
-          placeholder='当社はテクノロジーを活用したソリューションを提供する会社です。&#10;主な事業内容として、ソフトウェア開発、システムインテグレーション、&#10;コンサルティングサービスを行っています。'
-          rows={4}
-          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-        />
+        <div className='flex-1 p-1 border border-[#999999] rounded-[5px]'>
+          <textarea
+            value={formData.businessContent}
+            onChange={e =>
+              setFormData(prev => ({
+                ...prev,
+                businessContent: e.target.value,
+              }))
+            }
+            placeholder='当社はテクノロジーを活用したソリューションを提供する会社です。&#10;主な事業内容として、ソフトウェア開発、システムインテグレーション、&#10;コンサルティングサービスを行っています。'
+            rows={4}
+            className="w-full px-[11px] py-[11px] bg-white border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none placeholder:text-[#999999]"
+          />
+        </div>
       </div>
 
       <hr className='border-gray-300' />
@@ -582,26 +564,21 @@ export default function CompanyNewClient() {
           所在地
         </label>
         <div className='flex-1 space-y-3'>
-          <div className='flex items-center'>
-            <label htmlFor='prefecture-select' className='sr-only'>
-              都道府県選択
-            </label>
-            <select
-              id='prefecture-select'
-              value={formData.prefecture}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, prefecture: e.target.value }))
-              }
-              className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-            >
-              <option value=''>都道府県を選択　▼</option>
-              {prefectureOptions.map(prefecture => (
-                <option key={prefecture} value={prefecture}>
-                  {prefecture}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectInput
+            options={[
+              { value: '', label: '都道府県を選択' },
+              ...prefectureOptions.map(prefecture => ({
+                value: prefecture,
+                label: prefecture,
+              })),
+            ]}
+            value={formData.prefecture}
+            onChange={value =>
+              setFormData(prev => ({ ...prev, prefecture: value }))
+            }
+            placeholder='都道府県を選択'
+            radius={5}
+          />
           <input
             type='text'
             value={formData.address}
@@ -618,27 +595,24 @@ export default function CompanyNewClient() {
 
       {/* 企業フェーズ */}
       <div className='flex items-center gap-6 py-3'>
-        <label
-          htmlFor='company-phase'
-          className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40"
-        >
+        <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
           企業フェーズ
         </label>
-        <select
-          id='company-phase'
+        <SelectInput
+          options={[
+            { value: '', label: '企業フェーズを選択' },
+            ...companyPhaseOptions.map(phase => ({
+              value: phase,
+              label: phase,
+            })),
+          ]}
           value={formData.companyPhase}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, companyPhase: e.target.value }))
+          onChange={value =>
+            setFormData(prev => ({ ...prev, companyPhase: value }))
           }
-          className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-        >
-          <option value=''>企業フェーズを選択　▼</option>
-          {companyPhaseOptions.map(phase => (
-            <option key={phase} value={phase}>
-              {phase}
-            </option>
-          ))}
-        </select>
+          placeholder='企業フェーズを選択'
+          radius={5}
+        />
       </div>
 
       <hr className='border-gray-300' />
@@ -700,15 +674,17 @@ export default function CompanyNewClient() {
                 placeholder='スタートアップ企業'
                 className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               />
-              <textarea
-                value={attraction.description}
-                onChange={e =>
-                  updateAttraction(index, 'description', e.target.value)
-                }
-                placeholder='私たちはベンチャー企業として、革新的なテクノロジーと柔軟な働き方で成長を続けています。&#10;代表との距離が近く、裁量を持って働ける環境で、自分のアイデアを形にできます。&#10;福利厚生も充実しており、ワークライフバランスを大切にしています。'
-                rows={5}
-                className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-              />
+              <div className='w-full p-1 border border-[#999999] rounded-[5px]'>
+                <textarea
+                  value={attraction.description}
+                  onChange={e =>
+                    updateAttraction(index, 'description', e.target.value)
+                  }
+                  placeholder='私たちはベンチャー企業として、革新的なテクノロジーと柔軟な働き方で成長を続けています。&#10;代表との距離が近く、裁量を持って働ける環境で、自分のアイデアを形にできます。&#10;福利厚生も充実しており、ワークライフバランスを大切にしています。'
+                  rows={5}
+                  className="w-full px-[11px] py-[11px] bg-white border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none placeholder:text-[#999999]"
+                />
+              </div>
             </div>
           ))}
           <AdminButton
@@ -730,32 +706,13 @@ export default function CompanyNewClient() {
       </div>
 
       {/* 業種選択モーダル */}
-      {isIndustryModalOpen && (
-        <div
-          className='fixed inset-0 flex items-center justify-center z-50'
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
-        >
-          <div className='bg-white p-6 rounded-lg max-w-4xl max-h-[80vh] overflow-y-auto'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-xl font-bold'>業種を選択</h2>
-              <button
-                onClick={() => setIsIndustryModalOpen(false)}
-                className='text-2xl font-bold text-gray-500 hover:text-gray-700'
-              >
-                ×
-              </button>
-            </div>
-            <IndustryModal
-              selectedIndustries={formData.industries}
-              onIndustriesChange={industries => {
-                handleIndustryChange(industries);
-                setIsIndustryModalOpen(false);
-              }}
-              onClose={() => setIsIndustryModalOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+      <IndustrySelectModal
+        isOpen={isIndustryModalOpen}
+        onClose={() => setIsIndustryModalOpen(false)}
+        onConfirm={handleIndustryConfirm}
+        initialSelected={formData.industries}
+        maxSelections={5}
+      />
     </div>
   );
 }

@@ -40,8 +40,9 @@ interface CompanyFormData {
 
 // プランのオプション
 const planOptions = [
-  { value: 'basic', label: 'ベーシック' },
-  { value: 'standard', label: 'スタンダード' },
+  { value: 'プラン加入なし', label: 'プラン加入なし' },
+  { value: 'スタンダード', label: 'スタンダード' },
+  { value: 'ストラテジック', label: 'ストラテジック' },
 ];
 
 // 都道府県のオプション

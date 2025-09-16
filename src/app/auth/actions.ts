@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { getSupabaseClient } from '@/lib/server/database/supabase';
 import bcrypt from 'bcryptjs';
 
@@ -11,10 +12,13 @@ interface LoginResult {
   redirectTo?: string;
 }
 
-export async function candidateLogin(email: string, password: string): Promise<LoginResult> {
+export async function candidateLogin(
+  email: string,
+  password: string
+): Promise<LoginResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     // 候補者のメールアドレスとパスワードハッシュを取得
     const { data: candidate, error: candidateError } = await supabase
       .from('candidates')
@@ -23,32 +27,49 @@ export async function candidateLogin(email: string, password: string): Promise<L
       .single();
 
     if (candidateError || !candidate) {
-      return { success: false, error: 'メールアドレスまたはパスワードが間違っています' };
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが間違っています',
+      };
     }
 
     // パスワード確認
-    const isPasswordValid = await bcrypt.compare(password, candidate.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      candidate.password_hash
+    );
     if (!isPasswordValid) {
-      return { success: false, error: 'メールアドレスまたはパスワードが間違っています' };
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが間違っています',
+      };
     }
 
     // メール確認チェック
     if (!candidate.email_confirmed) {
-      return { success: false, error: 'メールアドレスが確認されていません。確認メールをご確認ください。' };
+      return {
+        success: false,
+        error:
+          'メールアドレスが確認されていません。確認メールをご確認ください。',
+      };
     }
 
     // セッションクッキーを設定
     const cookieStore = await cookies();
-    cookieStore.set('user_session', JSON.stringify({
-      userId: candidate.id,
-      email: candidate.email,
-      userType: 'candidate'
-    }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7日間
-    });
+    cookieStore.set(
+      'user_session',
+      JSON.stringify({
+        userId: candidate.id,
+        email: candidate.email,
+        userType: 'candidate',
+      }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7, // 7日間
+      }
+    );
 
     return { success: true, redirectTo: '/candidate/dashboard' };
   } catch (error) {
@@ -57,10 +78,13 @@ export async function candidateLogin(email: string, password: string): Promise<L
   }
 }
 
-export async function companyLogin(email: string, password: string): Promise<LoginResult> {
+export async function companyLogin(
+  email: string,
+  password: string
+): Promise<LoginResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     // 企業ユーザーのメールアドレスとパスワードハッシュを取得
     const { data: companyUser, error: userError } = await supabase
       .from('company_users')
@@ -69,32 +93,49 @@ export async function companyLogin(email: string, password: string): Promise<Log
       .single();
 
     if (userError || !companyUser) {
-      return { success: false, error: 'メールアドレスまたはパスワードが間違っています' };
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが間違っています',
+      };
     }
 
     // パスワード確認
-    const isPasswordValid = await bcrypt.compare(password, companyUser.password_hash);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      companyUser.password_hash
+    );
     if (!isPasswordValid) {
-      return { success: false, error: 'メールアドレスまたはパスワードが間違っています' };
+      return {
+        success: false,
+        error: 'メールアドレスまたはパスワードが間違っています',
+      };
     }
 
     // メール確認チェック
     if (!companyUser.email_confirmed) {
-      return { success: false, error: 'メールアドレスが確認されていません。確認メールをご確認ください。' };
+      return {
+        success: false,
+        error:
+          'メールアドレスが確認されていません。確認メールをご確認ください。',
+      };
     }
 
     // セッションクッキーを設定
     const cookieStore = await cookies();
-    cookieStore.set('user_session', JSON.stringify({
-      userId: companyUser.id,
-      email: companyUser.email,
-      userType: 'company_user'
-    }), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 7日間
-    });
+    cookieStore.set(
+      'user_session',
+      JSON.stringify({
+        userId: companyUser.id,
+        email: companyUser.email,
+        userType: 'company_user',
+      }),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7, // 7日間
+      }
+    );
 
     return { success: true, redirectTo: '/company/dashboard' };
   } catch (error) {
@@ -106,6 +147,12 @@ export async function companyLogin(email: string, password: string): Promise<Log
 export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete('user_session');
+
+  // キャッシュをクリア
+  revalidatePath('/candidate', 'layout');
+  revalidatePath('/company', 'layout');
+  revalidatePath('/', 'layout');
+
   redirect('/');
 }
 
@@ -116,7 +163,9 @@ interface RegistrationData {
   companyName?: string;
 }
 
-export async function candidateRegister(data: RegistrationData): Promise<LoginResult> {
+export async function candidateRegister(
+  data: RegistrationData
+): Promise<LoginResult> {
   try {
     const supabase = getSupabaseClient();
     const { email, password, name } = data;
@@ -143,7 +192,7 @@ export async function candidateRegister(data: RegistrationData): Promise<LoginRe
         password_hash: passwordHash,
         name: name || null,
         email_confirmed: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -155,9 +204,9 @@ export async function candidateRegister(data: RegistrationData): Promise<LoginRe
 
     // TODO: 確認メール送信処理を追加
 
-    return { 
-      success: true, 
-      redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email)
+    return {
+      success: true,
+      redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email),
     };
   } catch (error) {
     console.error('Registration error:', error);
@@ -165,7 +214,9 @@ export async function candidateRegister(data: RegistrationData): Promise<LoginRe
   }
 }
 
-export async function companyRegister(data: RegistrationData): Promise<LoginResult> {
+export async function companyRegister(
+  data: RegistrationData
+): Promise<LoginResult> {
   try {
     const supabase = getSupabaseClient();
     const { email, password, companyName } = data;
@@ -192,7 +243,7 @@ export async function companyRegister(data: RegistrationData): Promise<LoginResu
         password_hash: passwordHash,
         company_name: companyName || null,
         email_confirmed: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -204,9 +255,9 @@ export async function companyRegister(data: RegistrationData): Promise<LoginResu
 
     // TODO: 確認メール送信処理を追加
 
-    return { 
-      success: true, 
-      redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email)
+    return {
+      success: true,
+      redirectTo: '/auth/verify-email?email=' + encodeURIComponent(email),
     };
   } catch (error) {
     console.error('Company registration error:', error);
@@ -214,10 +265,13 @@ export async function companyRegister(data: RegistrationData): Promise<LoginResu
   }
 }
 
-export async function requestPasswordReset(email: string, userType: 'candidate' | 'company'): Promise<LoginResult> {
+export async function requestPasswordReset(
+  email: string,
+  userType: 'candidate' | 'company'
+): Promise<LoginResult> {
   try {
     const supabase = getSupabaseClient();
-    
+
     // ユーザーの存在確認
     const tableName = userType === 'candidate' ? 'candidates' : 'company_users';
     const { data: user, error: userError } = await supabase
@@ -231,13 +285,17 @@ export async function requestPasswordReset(email: string, userType: 'candidate' 
     }
 
     // TODO: パスワードリセットトークン生成とメール送信処理を追加
-    
-    return { 
-      success: true, 
-      redirectTo: '/auth/reset-password/sent?email=' + encodeURIComponent(email)
+
+    return {
+      success: true,
+      redirectTo:
+        '/auth/reset-password/sent?email=' + encodeURIComponent(email),
     };
   } catch (error) {
     console.error('Password reset request error:', error);
-    return { success: false, error: 'パスワードリセット処理中にエラーが発生しました' };
+    return {
+      success: false,
+      error: 'パスワードリセット処理中にエラーが発生しました',
+    };
   }
 }
