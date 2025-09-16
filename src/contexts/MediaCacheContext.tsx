@@ -1,22 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { PopularArticle, ArticleCategory, ArticleTag } from '@/app/candidate/media/actions';
+import type { SidebarData, MediaCacheContextType } from '@/types';
 
-interface SidebarData {
-  popularArticles: PopularArticle[];
-  categories: ArticleCategory[];
-  tags: ArticleTag[];
-}
-
-interface MediaCacheContextType {
-  sidebarData: SidebarData | null;
-  setSidebarData: (data: SidebarData) => void;
-  clearCache: () => void;
-  lastUpdated: number | null;
-}
-
-const MediaCacheContext = createContext<MediaCacheContextType | undefined>(undefined);
+const MediaCacheContext = createContext<MediaCacheContextType | undefined>(
+  undefined
+);
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5分間キャッシュ
 
@@ -47,12 +36,14 @@ export function MediaCacheProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <MediaCacheContext.Provider value={{
-      sidebarData: getCachedSidebarData(),
-      setSidebarData,
-      clearCache,
-      lastUpdated
-    }}>
+    <MediaCacheContext.Provider
+      value={{
+        sidebarData: getCachedSidebarData(),
+        setSidebarData,
+        clearCache,
+        lastUpdated,
+      }}
+    >
       {children}
     </MediaCacheContext.Provider>
   );

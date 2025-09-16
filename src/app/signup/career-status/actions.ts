@@ -1,11 +1,11 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
 
 // Career status form data types
 export interface CareerStatusFormData {
-  hasCareerChange: 'yes' | 'no';
+  hasCareerChange: 'あり' | 'なし';
   jobChangeTiming: string;
   currentActivityStatus: string;
   selectionEntries: Array<{
@@ -27,18 +27,20 @@ export interface SaveCareerStatusResult {
 
 // Validation schema
 const CareerStatusSchema = z.object({
-  hasCareerChange: z.enum(['yes', 'no']),
+  hasCareerChange: z.enum(['あり', 'なし']),
   jobChangeTiming: z.string().min(1, '転職希望時期を選択してください'),
   currentActivityStatus: z.string().min(1, '現在の活動状況を選択してください'),
-  selectionEntries: z.array(z.object({
-    id: z.string(),
-    isPrivate: z.boolean(),
-    industries: z.array(z.string()),
-    companyName: z.string(),
-    department: z.string(),
-    progressStatus: z.string(),
-    declineReason: z.string().optional(),
-  })),
+  selectionEntries: z.array(
+    z.object({
+      id: z.string(),
+      isPrivate: z.boolean(),
+      industries: z.array(z.string()),
+      companyName: z.string(),
+      department: z.string(),
+      progressStatus: z.string(),
+      declineReason: z.string().optional(),
+    })
+  ),
   userId: z.string().min(1, 'ユーザーIDが必要です'),
 });
 
@@ -47,7 +49,10 @@ export async function saveCareerStatusAction(
   userId: string
 ): Promise<SaveCareerStatusResult> {
   try {
-    logger.info('Career status save request received at:', new Date().toISOString());
+    logger.info(
+      'Career status save request received at:',
+      new Date().toISOString()
+    );
 
     // Environment variables check
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -79,7 +84,12 @@ export async function saveCareerStatusAction(
       };
     }
 
-    const { hasCareerChange, jobChangeTiming, currentActivityStatus, selectionEntries } = validationResult.data;
+    const {
+      hasCareerChange,
+      jobChangeTiming,
+      currentActivityStatus,
+      selectionEntries,
+    } = validationResult.data;
 
     logger.info('Career status save request details:', {
       userId: userId.substring(0, 8) + '***',
@@ -130,7 +140,10 @@ export async function saveCareerStatusAction(
         .eq('id', userId);
 
       if (candidateUpdateError) {
-        logger.error('Failed to update candidate career status:', candidateUpdateError);
+        logger.error(
+          'Failed to update candidate career status:',
+          candidateUpdateError
+        );
         return {
           success: false,
           message: 'キャリア状況情報の保存に失敗しました。',
@@ -144,7 +157,10 @@ export async function saveCareerStatusAction(
         .eq('candidate_id', userId);
 
       if (deleteError) {
-        logger.error('Failed to delete existing career status entries:', deleteError);
+        logger.error(
+          'Failed to delete existing career status entries:',
+          deleteError
+        );
         return {
           success: false,
           message: '既存の選考状況データの削除に失敗しました。',
@@ -184,7 +200,6 @@ export async function saveCareerStatusAction(
         success: true,
         message: 'キャリア状況情報が保存されました。',
       };
-
     } catch (saveError) {
       logger.error('Career status save operation failed:', saveError);
       return {
@@ -196,7 +211,8 @@ export async function saveCareerStatusAction(
     logger.error('Critical error in career status save action:', error);
     return {
       success: false,
-      message: 'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
+      message:
+        'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
     };
   }
 }

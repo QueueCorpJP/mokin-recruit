@@ -20,7 +20,7 @@ export default function ScoutSettingPage() {
   // 認証チェック
   useEffect(() => {
     if (loading) return;
-    
+
     if (!isAuthenticated || !candidateUser) {
       router.push('/candidate/auth/login');
     }
@@ -71,8 +71,8 @@ export default function ScoutSettingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-pulse'>Loading...</div>
       </div>
     );
   }
@@ -82,102 +82,92 @@ export default function ScoutSettingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] overflow-x-hidden">
+    <div className='min-h-screen bg-[#f9f9f9] overflow-x-hidden'>
       <SettingsHeader
         breadcrumbs={[
           { label: '各種設定', href: '/candidate/setting' },
-          { label: 'スカウトステータス変更' }
+          { label: 'スカウトステータス変更' },
         ]}
-        title="スカウトステータス変更"
-        icon={<img src="/images/setting.svg" alt="設定" width={32} height={32} />}
+        title='スカウトステータス変更'
+        icon={
+          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+        }
       />
-      <div
-        className="bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-[80px] relative w-full"
-      >
-        <div
-          className="bg-[#ffffff] box-border content-stretch flex flex-col gap-6 items-start justify-start p-4 md:py-[40px] md:px-[40px] relative rounded-[10px] shrink-0 w-full"
-        >
+      <div className='bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-[80px] relative w-full'>
+        <div className='bg-[#ffffff] box-border content-stretch flex flex-col gap-6 items-start justify-start p-4 md:py-[40px] md:px-[40px] relative rounded-[10px] shrink-0 w-full'>
           {error && (
-            <div className="w-full p-4 mb-4 text-red-600 bg-red-50 border border-red-200 rounded">
+            <div className='w-full p-4 mb-4 text-red-600 bg-red-50 border border-red-200 rounded'>
               {error}
             </div>
           )}
-          <div
-            className="box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full"
-          >
-            <div
-              className="box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full"
-            >
-              <div
-                className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px] md:min-w-[140px]"
-              >
-                <p className="adjustLetterSpacing block leading-[2] font-bold">スカウトステータス</p>
+          <div className='box-border content-stretch flex flex-col gap-4 md:gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+            <div className='box-border content-stretch flex flex-col md:flex-row gap-2 md:gap-4 items-start justify-start p-0 relative shrink-0 w-full'>
+              <div className="font-['Noto_Sans_JP:Bold',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium min-w-[120px] md:min-w-[140px]">
+                <p className='adjustLetterSpacing block leading-[2] font-bold'>
+                  スカウトステータス
+                </p>
               </div>
-              <div
-                className="box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full"
-              >
-                <div
-                  className="[flex-flow:wrap] box-border content-center flex flex-col md:flex-row gap-4 items-start md:items-center justify-start p-0 relative shrink-0 w-full"
-                >
-                  <div className="flex items-center gap-2">
+              <div className='box-border content-stretch flex flex-col gap-2 items-start justify-start p-0 relative shrink-0 w-full'>
+                <div className='[flex-flow:wrap] box-border content-center flex flex-col md:flex-row gap-4 items-start md:items-center justify-start p-0 relative shrink-0 w-full'>
+                  <div className='flex items-center gap-2'>
                     <Radio
-                      id="scout-receive"
-                      name="scoutStatus"
-                      value="receive"
+                      id='scout-receive'
+                      name='scoutStatus'
+                      value='receive'
                       checked={scoutStatus === 'receive'}
                       onChange={handleScoutStatusChange}
                     />
                     <label
-                      htmlFor="scout-receive"
+                      htmlFor='scout-receive'
                       className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
                     >
-                      <p className="adjustLetterSpacing block leading-[2]">スカウトを受け取る</p>
+                      <p className='adjustLetterSpacing block leading-[2]'>
+                        スカウトを受け取る
+                      </p>
                     </label>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className='flex items-center gap-2'>
                     <Radio
-                      id="scout-not-receive"
-                      name="scoutStatus"
-                      value="not-receive"
+                      id='scout-not-receive'
+                      name='scoutStatus'
+                      value='not-receive'
                       checked={scoutStatus === 'not-receive'}
                       onChange={handleScoutStatusChange}
                     />
                     <label
-                      htmlFor="scout-not-receive"
+                      htmlFor='scout-not-receive'
                       className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium cursor-pointer"
                     >
-                      <p className="adjustLetterSpacing block leading-[2]">スカウトを受け取らない</p>
+                      <p className='adjustLetterSpacing block leading-[2]'>
+                        スカウトを受け取らない
+                      </p>
                     </label>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div
-            className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[2] w-full not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium"
-          >
-            <p className="block mb-0">
-            「受け取らない」に設定すると、企業からの新規スカウトが停止されます。転職活動を一次休止したいときなどにご活用ください。
+          <div className="font-['Noto_Sans_JP:Medium',_sans-serif] leading-[2] w-full not-italic relative shrink-0 text-[#323232] text-sm md:text-[16px] text-left tracking-[1.2px] md:tracking-[1.6px] font-medium">
+            <p className='block mb-0'>
+              「受け取らない」に設定すると、企業からの新規スカウトが停止されます。転職活動を一次休止したいときなどにご活用ください。
             </p>
-            <p className="block">設定はいつでも変更可能です。</p>
+            <p className='block'>設定はいつでも変更可能です。</p>
           </div>
         </div>
-        <div
-          className="[flex-flow:wrap] box-border content-start flex flex-col md:flex-row gap-4 items-stretch md:items-start justify-center p-0 relative shrink-0 w-full md:w-auto"
-        >
+        <div className='[flex-flow:wrap] box-border content-start flex flex-col md:flex-row gap-4 items-stretch md:items-start justify-center p-0 relative shrink-0 w-full md:w-auto'>
           <Button
-            variant="green-outline"
-            size="figma-outline"
-            className="min-w-40 w-full md:w-auto"
+            variant='green-outline'
+            size='figma-outline'
+            className='min-w-40 w-full md:w-auto'
             onClick={handleBack}
             disabled={isPending}
           >
-保存せず戻る
+            保存せず戻る
           </Button>
           <Button
-            variant="green-gradient"
-            size="figma-default"
-            className="min-w-40 w-full md:w-auto"
+            variant='green-gradient'
+            size='figma-default'
+            className='min-w-40 w-full md:w-auto'
             onClick={handleSave}
             disabled={!hasChanges || isPending}
           >
@@ -188,5 +178,3 @@ export default function ScoutSettingPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

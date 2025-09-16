@@ -19,7 +19,9 @@ export async function uploadContentImage(
       '@/lib/server/utils/soft-auth-check'
     );
     await softReauthorizeForCompany('admin.uploadContentImage', {});
-  } catch {}
+  } catch (error) {
+    console.warn('Soft authorization check failed:', error);
+  }
 
   try {
     const file = formData.get('file') as File;

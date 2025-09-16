@@ -6,7 +6,7 @@ import {
   upsertByCandidateId,
   getSingleByCandidateId,
 } from '@/app/candidate/setting/_shared/server/settings-utils';
-import type { NotificationSettings } from '@/app/candidate/setting/_shared/types';
+import type { NotificationSettings } from '@/types';
 
 export async function saveNotificationSettings(formData: FormData) {
   const scoutNotification = formData.get('scoutNotification') as string;

@@ -469,5 +469,3 @@ export default async function RirekisyoPreviewPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

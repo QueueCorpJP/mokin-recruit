@@ -1,8 +1,47 @@
 import { Suspense } from 'react';
-import { MessageLayoutWrapper } from '@/components/message/MessageLayoutWrapper';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getRooms } from '@/lib/rooms';
 import { getJobOptions } from '@/lib/server/candidate/recruitment-queries';
+import dynamic from 'next/dynamic';
+
+const MessageLayoutWrapper = dynamic(
+  () =>
+    import('@/components/message/MessageLayoutWrapper').then(mod => ({
+      default: mod.MessageLayoutWrapper,
+    })),
+  {
+    loading: () => (
+      <div className='flex flex-col bg-white'>
+        <div style={{ flex: '0 0 85vh', height: '85vh' }}>
+          <div className='h-full flex'>
+            <div className='w-80 bg-gray-50 border-r border-gray-50 animate-pulse'>
+              <div className='p-4'>
+                <div className='h-6 bg-gray-200 rounded mb-4'></div>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className='h-16 bg-gray-200 rounded mb-2'></div>
+                ))}
+              </div>
+            </div>
+            <div className='flex-1 flex flex-col animate-pulse'>
+              <div className='h-16 bg-gray-100 border-b border-gray-50'></div>
+              <div className='flex-1 p-4'>
+                <div className='space-y-2'>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='h-4 bg-gray-200 rounded w-3/4'
+                    ></div>
+                  ))}
+                </div>
+              </div>
+              <div className='h-16 bg-gray-100 border-t border-gray-50'></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface MessagePageProps {
   searchParams: Promise<{ room?: string }>;
@@ -10,56 +49,40 @@ interface MessagePageProps {
 
 // データ取得を行うサーバーコンポーネント
 async function MessageServerComponent({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ room?: string }>
+  searchParams: Promise<{ room?: string }>;
 }) {
   const auth = await requireCompanyAuthForAction();
   const params = await searchParams;
 
   if (!auth.success) {
     return (
-      <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
-        <main className='w-full max-w-[1280px] mx-auto'>
-          <p>認証が必要です。</p>
-        </main>
+      <div className='flex flex-col bg-white'>
+        <div style={{ flex: '0 0 85vh', height: '85vh' }}>
+          <div className='h-full flex items-center justify-center'>
+            <p>認証が必要です。</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   const companyUserId = auth.data.companyUserId;
   const fullName = '';
-  console.log('🔍 [STEP 1] Auth success:', { 
-    companyUserId, 
-    fullName,
-    roomId: params.room,
-    userType: 'company'
-  });
-  
+
   const [rooms, jobOptions] = await Promise.all([
     getRooms(companyUserId, 'company'),
-    getJobOptions()
+    getJobOptions(),
   ]);
-  
-  console.log('🔍 [STEP 2] Rooms returned:', { 
-    roomsCount: rooms.length,
-    initialRoomId: params.room,
-    rooms: rooms.map(r => ({
-      id: r.id,
-      candidateName: r.candidateName,
-      companyName: r.companyName,
-      groupName: r.groupName,
-      jobTitle: r.jobTitle
-    }))
-  });
 
   return (
     <div className='flex flex-col bg-white'>
       <div style={{ flex: '0 0 85vh', height: '85vh' }}>
-        <MessageLayoutWrapper 
-          rooms={rooms} 
+        <MessageLayoutWrapper
+          rooms={rooms}
           userId={companyUserId}
-          userType="company"
+          userType='company'
           companyUserName={fullName}
           initialRoomId={params.room}
           jobOptions={jobOptions}
@@ -69,26 +92,44 @@ async function MessageServerComponent({
   );
 }
 
-// ローディング中の表示
-function LoadingSpinner() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="inline-block">
-          <div className="w-16 h-16 border-4 border-[#0f9058] border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <p className="mt-4 text-[#323232] text-lg font-medium">メッセージを読み込み中...</p>
-      </div>
-    </div>
-  );
-}
-
 export default function CompanyMessagePage({ searchParams }: MessagePageProps) {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense
+      fallback={
+        <div className='flex flex-col bg-white'>
+          <div style={{ flex: '0 0 85vh', height: '85vh' }}>
+            <div className='h-full flex'>
+              <div className='w-80 bg-gray-50 border-r border-gray-50 animate-pulse'>
+                <div className='p-4'>
+                  <div className='h-6 bg-gray-200 rounded mb-4'></div>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='h-16 bg-gray-200 rounded mb-2'
+                    ></div>
+                  ))}
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col animate-pulse'>
+                <div className='h-16 bg-gray-100 border-b border-gray-50'></div>
+                <div className='flex-1 p-4'>
+                  <div className='space-y-2'>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className='h-4 bg-gray-200 rounded w-3/4'
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+                <div className='h-16 bg-gray-100 border-t border-gray-50'></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
       <MessageServerComponent searchParams={searchParams} />
     </Suspense>
   );
 }
-
-export const dynamic = 'force-dynamic';

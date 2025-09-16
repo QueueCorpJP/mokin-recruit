@@ -4,6 +4,7 @@ import IndustrySelectModal from '@/components/career-status/IndustrySelectModal'
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import { Button } from '@/components/ui/button';
+import { SelectInput } from '@/components/ui/select-input';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
@@ -53,53 +54,65 @@ export default function SignupEducationPage() {
 
   // 最終学歴の選択肢
   const educationOptions = [
-    '中学校卒業',
-    '高等学校卒業',
-    '高等専門学校卒業',
-    '短期大学卒業',
-    '専門学校卒業',
-    '大学卒業（学士）',
-    '大学院修士課程修了（修士）',
-    '大学院博士課程修了（博士）',
-    '海外大学卒業（学士）',
-    '海外大学院修了（修士・博士含む）',
-    'その他',
+    { value: '中学校卒業', label: '中学校卒業' },
+    { value: '高等学校卒業', label: '高等学校卒業' },
+    { value: '高等専門学校卒業', label: '高等専門学校卒業' },
+    { value: '短期大学卒業', label: '短期大学卒業' },
+    { value: '専門学校卒業', label: '専門学校卒業' },
+    { value: '大学卒業（学士）', label: '大学卒業（学士）' },
+    {
+      value: '大学院修士課程修了（修士）',
+      label: '大学院修士課程修了（修士）',
+    },
+    {
+      value: '大学院博士課程修了（博士）',
+      label: '大学院博士課程修了（博士）',
+    },
+    { value: '海外大学卒業（学士）', label: '海外大学卒業（学士）' },
+    {
+      value: '海外大学院修了（修士・博士含む）',
+      label: '海外大学院修了（修士・博士含む）',
+    },
+    { value: 'その他', label: 'その他' },
   ];
 
   // 年の選択肢を生成（1970年から2025年まで）
   const yearOptions = useMemo(() => {
     const years = [];
     for (let year = 2025; year >= 1970; year--) {
-      years.push(year.toString());
+      years.push({ value: year.toString(), label: year.toString() });
     }
     return years;
   }, []);
 
   // 月の選択肢を生成（1〜12月）
-  const monthOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: (i + 1).toString(),
+  }));
 
   // 経験年数の選択肢
   const experienceYearOptions = [
-    '1年',
-    '2年',
-    '3年',
-    '4年',
-    '5年',
-    '6年',
-    '7年',
-    '8年',
-    '9年',
-    '10年',
-    '11年',
-    '12年',
-    '13年',
-    '14年',
-    '15年',
-    '16年',
-    '17年',
-    '18年',
-    '19年',
-    '20年以上',
+    { value: '1年', label: '経験年数：1年' },
+    { value: '2年', label: '経験年数：2年' },
+    { value: '3年', label: '経験年数：3年' },
+    { value: '4年', label: '経験年数：4年' },
+    { value: '5年', label: '経験年数：5年' },
+    { value: '6年', label: '経験年数：6年' },
+    { value: '7年', label: '経験年数：7年' },
+    { value: '8年', label: '経験年数：8年' },
+    { value: '9年', label: '経験年数：9年' },
+    { value: '10年', label: '経験年数：10年' },
+    { value: '11年', label: '経験年数：11年' },
+    { value: '12年', label: '経験年数：12年' },
+    { value: '13年', label: '経験年数：13年' },
+    { value: '14年', label: '経験年数：14年' },
+    { value: '15年', label: '経験年数：15年' },
+    { value: '16年', label: '経験年数：16年' },
+    { value: '17年', label: '経験年数：17年' },
+    { value: '18年', label: '経験年数：18年' },
+    { value: '19年', label: '経験年数：19年' },
+    { value: '20年以上', label: '経験年数：20年以上' },
   ];
 
   const isFormValid = () => {
@@ -258,7 +271,7 @@ export default function SignupEducationPage() {
 
                 {/* Progress Tabs */}
                 <div className='flex flex-row w-full h-[45px]'>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -277,7 +290,7 @@ export default function SignupEducationPage() {
                       経歴詳細
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='25'
@@ -296,7 +309,7 @@ export default function SignupEducationPage() {
                       語学・スキル
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -315,7 +328,7 @@ export default function SignupEducationPage() {
                       希望条件
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -418,39 +431,18 @@ export default function SignupEducationPage() {
                       </label>
                     </div>
                     <div className='w-[400px]'>
-                      <div className='relative'>
-                        <select
-                          value={formData.finalEducation}
-                          onChange={e =>
-                            setFormData(prev => ({
-                              ...prev,
-                              finalEducation: e.target.value,
-                            }))
-                          }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          <option value=''>未選択</option>
-                          {educationOptions.map(option => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={educationOptions}
+                        value={formData.finalEducation}
+                        placeholder='未選択'
+                        radius={5}
+                        onChange={value =>
+                          setFormData(prev => ({
+                            ...prev,
+                            finalEducation: value,
+                          }))
+                        }
+                      />
                     </div>
                   </div>
 
@@ -495,7 +487,7 @@ export default function SignupEducationPage() {
                             department: e.target.value,
                           }))
                         }
-                        className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
+                        className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] placeholder:font-semibold'
                       />
                     </div>
                   </div>
@@ -509,74 +501,36 @@ export default function SignupEducationPage() {
                     </div>
                     <div className='w-[274px]'>
                       <div className='flex flex-wrap gap-2 items-center'>
-                        <div className='relative flex-1'>
-                          <select
+                        <div className='flex-1'>
+                          <SelectInput
+                            options={yearOptions}
                             value={formData.graduationYear}
-                            onChange={e =>
+                            placeholder='未選択'
+                            radius={5}
+                            onChange={value =>
                               setFormData(prev => ({
                                 ...prev,
-                                graduationYear: e.target.value,
+                                graduationYear: value,
                               }))
                             }
-                            className='w-full px-[11px] py-[11px] pl-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            <option value=''>未選択</option>
-                            {yearOptions.map(year => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
+                          />
                         </div>
                         <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                           年
                         </span>
-                        <div className='relative flex-1'>
-                          <select
+                        <div className='flex-1'>
+                          <SelectInput
+                            options={monthOptions}
                             value={formData.graduationMonth}
-                            onChange={e =>
+                            placeholder='未選択'
+                            radius={5}
+                            onChange={value =>
                               setFormData(prev => ({
                                 ...prev,
-                                graduationMonth: e.target.value,
+                                graduationMonth: value,
                               }))
                             }
-                            className='w-full px-[11px] py-[11px] pl-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                          >
-                            <option value=''>未選択</option>
-                            {monthOptions.map(month => (
-                              <option key={month} value={month}>
-                                {month}
-                              </option>
-                            ))}
-                          </select>
-                          <div className='absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none'>
-                            <svg
-                              xmlns='http://www.w3.org/2000/svg'
-                              width='14'
-                              height='10'
-                              viewBox='0 0 14 10'
-                              fill='none'
-                            >
-                              <path
-                                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                fill='#0F9058'
-                              />
-                            </svg>
-                          </div>
+                          />
                         </div>
                         <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                           月
@@ -661,36 +615,22 @@ export default function SignupEducationPage() {
                                 </span>
                               </span>
                               <div className='bg-[#d2f1da] h-[40px] flex items-center px-4'>
-                                <select
-                                  className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
+                                <SelectInput
+                                  options={experienceYearOptions}
                                   value={industry.experienceYears || ''}
-                                  onChange={e =>
-                                    updateIndustryExperience(
-                                      industry.id,
-                                      e.target.value
-                                    )
+                                  placeholder='経験年数：未選択'
+                                  className='bg-transparent border-none text-[14px] font-medium tracking-[1.4px] w-full'
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    padding: '0',
+                                    color: '#0f9058',
+                                  }}
+                                  radius={0}
+                                  onChange={value =>
+                                    updateIndustryExperience(industry.id, value)
                                   }
-                                >
-                                  <option value=''>経験年数：未選択</option>
-                                  {experienceYearOptions.map(year => (
-                                    <option key={year} value={year}>
-                                      経験年数：{year}
-                                    </option>
-                                  ))}
-                                </select>
-                                <svg
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  width='14'
-                                  height='10'
-                                  viewBox='0 0 14 10'
-                                  fill='none'
-                                  className='ml-2'
-                                >
-                                  <path
-                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                    fill='#0F9058'
-                                  />
-                                </svg>
+                                />
                               </div>
                               <button
                                 type='button'
@@ -745,36 +685,22 @@ export default function SignupEducationPage() {
                                 </span>
                               </span>
                               <div className='bg-[#d2f1da] h-[40px] flex items-center px-4'>
-                                <select
-                                  className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none'
+                                <SelectInput
+                                  options={experienceYearOptions}
                                   value={jobType.experienceYears || ''}
-                                  onChange={e =>
-                                    updateJobTypeExperience(
-                                      jobType.id,
-                                      e.target.value
-                                    )
+                                  placeholder='経験年数：未選択'
+                                  className='bg-transparent border-none text-[14px] font-medium tracking-[1.4px] w-full'
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    padding: '0',
+                                    color: '#0f9058',
+                                  }}
+                                  radius={0}
+                                  onChange={value =>
+                                    updateJobTypeExperience(jobType.id, value)
                                   }
-                                >
-                                  <option value=''>経験年数：未選択</option>
-                                  {experienceYearOptions.map(year => (
-                                    <option key={year} value={year}>
-                                      経験年数：{year}
-                                    </option>
-                                  ))}
-                                </select>
-                                <svg
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  width='14'
-                                  height='10'
-                                  viewBox='0 0 14 10'
-                                  fill='none'
-                                  className='ml-2'
-                                >
-                                  <path
-                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                    fill='#0F9058'
-                                  />
-                                </svg>
+                                />
                               </div>
                               <button
                                 type='button'
@@ -908,39 +834,18 @@ export default function SignupEducationPage() {
                     <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                       最終学歴
                     </label>
-                    <div className='relative'>
-                      <select
-                        value={formData.finalEducation}
-                        onChange={e =>
-                          setFormData(prev => ({
-                            ...prev,
-                            finalEducation: e.target.value,
-                          }))
-                        }
-                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                      >
-                        <option value=''>未選択</option>
-                        {educationOptions.map(option => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                        <svg
-                          xmlns='http://www.w3.org/2000/svg'
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                        >
-                          <path
-                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={educationOptions}
+                      value={formData.finalEducation}
+                      placeholder='未選択'
+                      radius={5}
+                      onChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          finalEducation: value,
+                        }))
+                      }
+                    />
                   </div>
 
                   {/* School Name */}
@@ -977,7 +882,7 @@ export default function SignupEducationPage() {
                           department: e.target.value,
                         }))
                       }
-                      className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
+                      className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] placeholder:font-semibold'
                     />
                   </div>
 
@@ -987,74 +892,36 @@ export default function SignupEducationPage() {
                       卒業年月
                     </label>
                     <div className='flex gap-2 items-center'>
-                      <div className='relative flex-1'>
-                        <select
+                      <div className='flex-1'>
+                        <SelectInput
+                          options={yearOptions}
                           value={formData.graduationYear}
-                          onChange={e =>
+                          placeholder='未選択'
+                          radius={5}
+                          onChange={value =>
                             setFormData(prev => ({
                               ...prev,
-                              graduationYear: e.target.value,
+                              graduationYear: value,
                             }))
                           }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          <option value=''>未選択</option>
-                          {yearOptions.map(year => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
+                        />
                       </div>
                       <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                         年
                       </span>
-                      <div className='relative flex-1'>
-                        <select
+                      <div className='flex-1'>
+                        <SelectInput
+                          options={monthOptions}
                           value={formData.graduationMonth}
-                          onChange={e =>
+                          placeholder='未選択'
+                          radius={5}
+                          onChange={value =>
                             setFormData(prev => ({
                               ...prev,
-                              graduationMonth: e.target.value,
+                              graduationMonth: value,
                             }))
                           }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          <option value=''>未選択</option>
-                          {monthOptions.map(month => (
-                            <option key={month} value={month}>
-                              {month}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
+                        />
                       </div>
                       <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                         月
@@ -1100,35 +967,22 @@ export default function SignupEducationPage() {
                                 </div>
                               </div>
                               <div className='bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between'>
-                                <select
-                                  className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
+                                <SelectInput
+                                  options={experienceYearOptions}
                                   value={industry.experienceYears || ''}
-                                  onChange={e =>
-                                    updateIndustryExperience(
-                                      industry.id,
-                                      e.target.value
-                                    )
+                                  placeholder='経験年数：未選択'
+                                  className='bg-transparent border-none text-[14px] font-medium tracking-[1.4px] w-full'
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    padding: '0',
+                                    color: '#0f9058',
+                                  }}
+                                  radius={0}
+                                  onChange={value =>
+                                    updateIndustryExperience(industry.id, value)
                                   }
-                                >
-                                  <option value=''>経験年数：未選択</option>
-                                  {experienceYearOptions.map(year => (
-                                    <option key={year} value={year}>
-                                      経験年数：{year}
-                                    </option>
-                                  ))}
-                                </select>
-                                <svg
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  width='14'
-                                  height='10'
-                                  viewBox='0 0 14 10'
-                                  fill='none'
-                                >
-                                  <path
-                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                    fill='#0F9058'
-                                  />
-                                </svg>
+                                />
                               </div>
                             </div>
                             <button
@@ -1182,35 +1036,22 @@ export default function SignupEducationPage() {
                                 </div>
                               </div>
                               <div className='bg-[#d2f1da] px-6 py-[10px] rounded-bl-[10px] flex items-center justify-between'>
-                                <select
-                                  className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
+                                <SelectInput
+                                  options={experienceYearOptions}
                                   value={jobType.experienceYears || ''}
-                                  onChange={e =>
-                                    updateJobTypeExperience(
-                                      jobType.id,
-                                      e.target.value
-                                    )
+                                  placeholder='経験年数：未選択'
+                                  className='bg-transparent border-none text-[14px] font-medium tracking-[1.4px] w-full'
+                                  style={{
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    padding: '0',
+                                    color: '#0f9058',
+                                  }}
+                                  radius={0}
+                                  onChange={value =>
+                                    updateJobTypeExperience(jobType.id, value)
                                   }
-                                >
-                                  <option value=''>経験年数：未選択</option>
-                                  {experienceYearOptions.map(year => (
-                                    <option key={year} value={year}>
-                                      経験年数：{year}
-                                    </option>
-                                  ))}
-                                </select>
-                                <svg
-                                  xmlns='http://www.w3.org/2000/svg'
-                                  width='14'
-                                  height='10'
-                                  viewBox='0 0 14 10'
-                                  fill='none'
-                                >
-                                  <path
-                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                                    fill='#0F9058'
-                                  />
-                                </svg>
+                                />
                               </div>
                             </div>
                             <button

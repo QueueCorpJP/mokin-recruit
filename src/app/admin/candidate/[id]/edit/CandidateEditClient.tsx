@@ -12,14 +12,14 @@ import {
   generateMonthOptions,
   generateDayOptions,
 } from '@/constants/profile';
-import {
+import { checkEmailDuplication } from './actions';
+import type {
   UpdateCandidateData,
-  EducationData,
-  SkillsData,
-  WorkExperienceData,
-  JobTypeExperienceData,
-  checkEmailDuplication,
-} from './actions';
+  AdminEducationData as EducationData,
+  AdminSkillsData as SkillsData,
+  AdminWorkExperienceData as WorkExperienceData,
+  AdminJobTypeExperienceData as JobTypeExperienceData,
+} from '@/types/admin';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
@@ -200,6 +200,10 @@ export default function CandidateEditClient({ candidate }: Props) {
             : skill
         )
       : [],
+    skills_tags:
+      (candidate.skills[0] as any)?.skills_tags ||
+      (candidate.skills[0] as any)?.skills_list ||
+      [],
     qualifications: candidate.skills[0]?.qualifications || '',
   });
 
@@ -272,18 +276,18 @@ export default function CandidateEditClient({ candidate }: Props) {
   };
 
   // Work experience and job type experience management
-  const addWorkExperience = () => {
+  const _addWorkExperience = () => {
     setWorkExperience(prev => [
       ...prev,
       { industry_name: '', experience_years: 0 },
     ]);
   };
 
-  const removeWorkExperience = (index: number) => {
+  const _removeWorkExperience = (index: number) => {
     setWorkExperience(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateWorkExperience = (
+  const _updateWorkExperience = (
     index: number,
     field: keyof WorkExperienceData,
     value: string | number
@@ -308,18 +312,18 @@ export default function CandidateEditClient({ candidate }: Props) {
     });
   };
 
-  const addJobTypeExperience = () => {
+  const _addJobTypeExperience = () => {
     setJobTypeExperience(prev => [
       ...prev,
       { job_type_name: '', experience_years: 0 },
     ]);
   };
 
-  const removeJobTypeExperience = (index: number) => {
+  const _removeJobTypeExperience = (index: number) => {
     setJobTypeExperience(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateJobTypeExperience = (
+  const _updateJobTypeExperience = (
     index: number,
     field: keyof JobTypeExperienceData,
     value: string | number

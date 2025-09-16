@@ -28,14 +28,14 @@ export default function CompanyLayoutClient({
   initialAuth,
 }: {
   children: React.ReactNode;
-  initialAuth: InitialAuth;
+  initialAuth?: InitialAuth;
 }) {
   // ルート保護はmiddlewareで実施済み
 
   // サーバーから渡された初期認証情報を使用（クライアントサイドでのAPI呼び出しなし）
   const [authState, setAuthState] = useState({
-    isAuthenticated: initialAuth.isAuthenticated,
-    companyUser: initialAuth.user,
+    isAuthenticated: initialAuth?.isAuthenticated ?? false,
+    companyUser: initialAuth?.user ?? null,
     loading: false, // サーバーサイドで既に確定済み
   });
 

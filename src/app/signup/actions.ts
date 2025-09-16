@@ -2,7 +2,8 @@
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
-import * as crypto from 'crypto';
+import { sendEmailViaSendGrid } from '@/lib/email/sender';
+import { createClient } from '@supabase/supabase-js';
 
 export interface SignupFormData {
   email: string;
@@ -19,13 +20,75 @@ const SignupSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
 });
 
+/**
+ * OTP認証メールのHTML生成
+ */
+function generateOtpEmailHtml(otp: string, email: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>【CuePoint】認証コードのお知らせ</title>
+    </head>
+    <body style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.6; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #fff;">
+        <div style="padding: 20px 0;">
+          <p>${email} 様</p>
+
+          <p>CuePointをご利用いただきありがとうございます。<br>
+          認証コードは以下です。</p>
+
+          <div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; margin: 20px 0; padding: 20px 0;">
+            <p style="margin: 0; font-weight: bold;">■ 認証コード：${otp}</p>
+          </div>
+
+          <p><strong>【次のステップ】</strong><br>
+          登録画面で上記コードを入力し、本登録を完了してください。<br>
+          ※コードの有効期限は発行から24時間です。</p>
+
+          <div style="border-top: 1px solid #ccc; margin-top: 40px; padding-top: 20px;">
+            <p><strong>CuePoint</strong><br>
+            <a href="https://cuepoint.jp/candidate" style="color: #0066cc;">https://cuepoint.jp/candidate</a></p>
+
+            <p><strong>【お問い合わせ先】</strong><br>
+            ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}</p>
+
+            <p>運営会社：メルセネール株式会社<br>
+            東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * 6桁のOTPコードを生成
+ */
+function generateOtp(): string {
+  return Math.floor(Math.random() * 1000000)
+    .toString()
+    .padStart(6, '0');
+}
+
 export async function signupRequestAction(
   formData: SignupFormData
 ): Promise<SignupResult> {
   try {
     logger.info('Signup request received at:', new Date().toISOString());
 
-    // ステップ1: 環境変数の確認
+    // ステップ1: SendGrid環境変数の確認
+    if (!process.env.SENDGRID_API_KEY) {
+      logger.error('Missing SENDGRID_API_KEY environment variable');
+      return {
+        success: false,
+        error: 'メール送信設定が正しくありません。',
+      };
+    }
+
+    // ステップ2: Supabase環境変数の確認
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
@@ -36,11 +99,11 @@ export async function signupRequestAction(
       });
       return {
         success: false,
-        message: 'サーバー設定エラーが発生しました。',
+        error: 'データベース設定エラーが発生しました。',
       };
     }
 
-    // ステップ2: バリデーション
+    // ステップ3: バリデーション
     const validationResult = SignupSchema.safeParse(formData);
     if (!validationResult.success) {
       const firstError = validationResult.error.errors[0];
@@ -57,19 +120,6 @@ export async function signupRequestAction(
       email: email.substring(0, 3) + '***',
     });
 
-    // ステップ3: Supabaseクライアントの動的インポートと初期化
-    let createClient;
-    try {
-      const supabaseModule = await import('@supabase/supabase-js');
-      createClient = supabaseModule.createClient;
-    } catch (importError) {
-      logger.error('Failed to import Supabase module:', importError);
-      return {
-        success: false,
-        message: 'サーバーライブラリの読み込みに失敗しました。',
-      };
-    }
-
     // ステップ4: Supabaseクライアントの作成
     let supabase;
     try {
@@ -78,84 +128,102 @@ export async function signupRequestAction(
           autoRefreshToken: true,
           persistSession: false,
         },
-        db: {
-          schema: 'public',
-        },
-        global: {
-          headers: {
-            'X-Client-Info': 'mokin-recruit-server',
-          },
-        },
       });
     } catch (clientError) {
       logger.error('Failed to create Supabase client:', clientError);
       return {
         success: false,
-        message: 'データベース接続の初期化に失敗しました。',
+        error: 'データベース接続の初期化に失敗しました。',
       };
     }
 
-    // ステップ5: リダイレクトURL設定
-    let redirectUrl;
+    // ステップ5: 既存ユーザーチェック
     try {
-      // 本番環境とVercelでの動的URL取得
-      if (process.env.VERCEL_URL) {
-        redirectUrl = `https://${process.env.VERCEL_URL}/signup/verify`;
-      } else if (process.env.NODE_ENV === 'production') {
-        redirectUrl = `https://mokin-recruit-client.vercel.app/signup/verify`;
-      } else {
-        redirectUrl = `http://localhost:3000/signup/verify`;
-      }
-    } catch (urlError) {
-      logger.error('Failed to configure redirect URL:', urlError);
-      return {
-        success: false,
-        message: 'リダイレクトURL設定に失敗しました。',
-      };
-    }
+      const { data: existingUser, error: checkError } = await supabase
+        .from('candidates')
+        .select('id, email')
+        .eq('email', email.trim())
+        .maybeSingle();
 
-    // ステップ6: 通常のsignUpでConfirmation emailを送信
-    try {
-      logger.info('Creating user with signUp for confirmation email');
-
-      // 一時パスワードを生成
-      const tempPassword =
-        'temp_signup_' + crypto.randomBytes(12).toString('base64url');
-
-      const { error: signupError } = await supabase.auth.signUp({
-        email: email,
-        password: tempPassword,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            user_type: 'candidate',
-            signup_step: 'verification_pending',
-            email_verification_required: true,
-            temp_password: true,
-          },
-        },
-      });
-
-      if (signupError) {
-        if (
-          signupError.message?.includes('already registered') ||
-          signupError.message?.includes('User already registered')
-        ) {
-          return {
-            success: false,
-            error: 'このメールアドレスは既に登録されています。',
-          };
-        }
-
-        logger.error('Failed to signup:', signupError);
+      if (checkError && checkError.code !== 'PGRST116') {
+        logger.error('Database check error:', checkError);
         return {
           success: false,
-          error: `会員登録に失敗しました: ${signupError.message}`,
+          error: 'ユーザー確認中にエラーが発生しました。',
+        };
+      }
+
+      if (existingUser) {
+        return {
+          success: false,
+          error: 'このメールアドレスは既に登録済みです。ログインしてください。',
+        };
+      }
+    } catch (error) {
+      logger.error('Error checking existing user:', error);
+      return {
+        success: false,
+        error: 'ユーザー確認中にエラーが発生しました。',
+      };
+    }
+
+    // ステップ6: OTPコード生成
+    const otp = generateOtp();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10分後
+
+    // ステップ7: OTPをデータベースに保存
+    try {
+      const { error: otpSaveError } = await supabase
+        .from('email_verification_codes')
+        .upsert(
+          {
+            email: email.trim(),
+            code: otp,
+            expires_at: expiresAt.toISOString(),
+            type: 'signup',
+            created_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'email,type',
+          }
+        );
+
+      if (otpSaveError) {
+        logger.error('Failed to save OTP:', otpSaveError);
+        return {
+          success: false,
+          error: '認証コードの保存に失敗しました。',
+        };
+      }
+    } catch (error) {
+      logger.error('Error saving OTP:', error);
+      return {
+        success: false,
+        error: '認証コードの保存中にエラーが発生しました。',
+      };
+    }
+
+    // ステップ8: SendGridでOTPメール送信
+    try {
+      const emailResult = await sendEmailViaSendGrid({
+        to: email.trim(),
+        subject: '【CuePoint】認証コードのお知らせ',
+        html: generateOtpEmailHtml(otp, email),
+      });
+
+      if (!emailResult.success) {
+        logger.error('Failed to send OTP email:', emailResult.error);
+        return {
+          success: false,
+          error:
+            'メールの送信に失敗しました。しばらくしてから再度お試しください。',
         };
       }
 
       logger.info(
-        `Signup confirmation email sent to: ${email.substring(0, 3)}***`
+        `OTP email sent successfully to: ${email.substring(0, 3)}***`,
+        { messageId: emailResult.messageId }
       );
 
       return {
@@ -163,11 +231,11 @@ export async function signupRequestAction(
         message:
           '認証コードをメールで送信しました。メールをご確認いただき、認証を完了してください。',
       };
-    } catch (signupError) {
-      logger.error('Signup operation failed:', signupError);
+    } catch (emailError) {
+      logger.error('Email sending error:', emailError);
       return {
         success: false,
-        message: '会員登録処理中にエラーが発生しました。',
+        error: 'メール送信中にエラーが発生しました。',
       };
     }
   } catch (error) {
@@ -175,7 +243,7 @@ export async function signupRequestAction(
 
     return {
       success: false,
-      message:
+      error:
         'サーバーエラーが発生しました。しばらく時間をおいてから再度お試しください。',
     };
   }

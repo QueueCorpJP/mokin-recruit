@@ -1,18 +1,18 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+// import { redirect } from 'next/navigation';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 
 export async function approveJob(jobId: string) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { error } = await supabase
       .from('job_postings')
-      .update({ 
+      .update({
         status: 'PUBLISHED',
-        published_at: new Date().toISOString()
+        published_at: new Date().toISOString(),
       })
       .eq('id', jobId);
 
@@ -24,13 +24,13 @@ export async function approveJob(jobId: string) {
     // ページを再検証して最新データを反映
     revalidatePath('/admin/job');
     revalidatePath('/admin/job/pending');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Job approval error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '承認に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '承認に失敗しました',
     };
   }
 }
@@ -38,12 +38,12 @@ export async function approveJob(jobId: string) {
 export async function rejectJob(jobId: string) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { error } = await supabase
       .from('job_postings')
-      .update({ 
+      .update({
         status: 'DRAFT',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', jobId);
 
@@ -54,30 +54,34 @@ export async function rejectJob(jobId: string) {
 
     revalidatePath('/admin/job');
     revalidatePath('/admin/job/pending');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Job rejection error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '却下に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '却下に失敗しました',
     };
   }
 }
 
-export async function bulkApproveJobs(jobIds: string[], reason?: string, comment?: string) {
+export async function bulkApproveJobs(
+  jobIds: string[],
+  reason?: string,
+  comment?: string
+) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { error } = await supabase
       .from('job_postings')
-      .update({ 
+      .update({
         status: 'PUBLISHED',
         published_at: new Date().toISOString(),
         approval_reason: reason,
         approval_comment: comment,
         approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .in('id', jobIds);
 
@@ -88,29 +92,33 @@ export async function bulkApproveJobs(jobIds: string[], reason?: string, comment
 
     revalidatePath('/admin/job');
     revalidatePath('/admin/job/pending');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Bulk approval error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '一括承認に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '一括承認に失敗しました',
     };
   }
 }
 
-export async function bulkRejectJobs(jobIds: string[], reason?: string, comment?: string) {
+export async function bulkRejectJobs(
+  jobIds: string[],
+  reason?: string,
+  comment?: string
+) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { error } = await supabase
       .from('job_postings')
-      .update({ 
+      .update({
         status: 'DRAFT',
         rejection_reason: reason,
         rejection_comment: comment,
         rejected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .in('id', jobIds);
 
@@ -121,13 +129,13 @@ export async function bulkRejectJobs(jobIds: string[], reason?: string, comment?
 
     revalidatePath('/admin/job');
     revalidatePath('/admin/job/pending');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Bulk rejection error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '一括却下に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '一括却下に失敗しました',
     };
   }
 }
@@ -135,7 +143,7 @@ export async function bulkRejectJobs(jobIds: string[], reason?: string, comment?
 export async function deleteJob(jobId: string) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { error } = await supabase
       .from('job_postings')
       .delete()
@@ -150,9 +158,9 @@ export async function deleteJob(jobId: string) {
     return { success: true };
   } catch (error) {
     console.error('Job delete error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '削除に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '削除に失敗しました',
     };
   }
 }
@@ -160,9 +168,9 @@ export async function deleteJob(jobId: string) {
 export async function updateJob(jobId: string, jobData: any) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     console.log('Updating job:', jobId, 'with data:', Object.keys(jobData));
-    
+
     const { data, error } = await supabase
       .from('job_postings')
       .update({
@@ -191,7 +199,7 @@ export async function updateJob(jobId: string, jobData: any) {
         smoking_policy_note: jobData.smoking_policy_note,
         required_documents: jobData.required_documents,
         internal_memo: jobData.internal_memo,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', jobId)
       .select();
@@ -201,7 +209,7 @@ export async function updateJob(jobId: string, jobData: any) {
         message: error.message,
         details: error.details,
         hint: error.hint,
-        code: error.code
+        code: error.code,
       });
       return { success: false, error: `更新に失敗しました: ${error.message}` };
     }
@@ -210,14 +218,14 @@ export async function updateJob(jobId: string, jobData: any) {
 
     revalidatePath('/admin/job');
     revalidatePath(`/admin/job/${jobId}`);
-    
+
     // 成功を返す（リダイレクトはクライアント側で処理）
     return { success: true, jobId };
   } catch (error) {
     console.error('Job update error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }
@@ -225,16 +233,16 @@ export async function updateJob(jobId: string, jobData: any) {
 export async function createJob(jobData: any) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     console.log('Creating job with data:', {
       company_group_id: jobData.company_group_id,
       title: jobData.title,
       work_locations: jobData.work_locations,
       job_types: jobData.job_types,
       industries: jobData.industries,
-      images: jobData.images ? jobData.images.length : 0
+      images: jobData.images ? jobData.images.length : 0,
     });
-    
+
     const { data, error } = await supabase
       .from('job_postings')
       .insert({
@@ -265,8 +273,13 @@ export async function createJob(jobData: any) {
         internal_memo: jobData.internal_memo,
         publication_type: jobData.publication_type || 'public',
         status: jobData.status || 'DRAFT',
-        published_at: jobData.status === 'PUBLISHED' ? new Date().toISOString() : null,
-        image_urls: jobData.images ? jobData.images.map((img: any) => `data:${img.contentType};base64,${img.data}`) : null
+        published_at:
+          jobData.status === 'PUBLISHED' ? new Date().toISOString() : null,
+        image_urls: jobData.images
+          ? jobData.images.map(
+              (img: any) => `data:${img.contentType};base64,${img.data}`
+            )
+          : null,
       })
       .select()
       .single();
@@ -276,7 +289,7 @@ export async function createJob(jobData: any) {
         message: error.message,
         details: error.details,
         hint: error.hint,
-        code: error.code
+        code: error.code,
       });
       return { success: false, error: `作成に失敗しました: ${error.message}` };
     }
@@ -285,9 +298,9 @@ export async function createJob(jobData: any) {
     return { success: true, jobId: data.id };
   } catch (error) {
     console.error('Job create error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '作成に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '作成に失敗しました',
     };
   }
 }

@@ -1,47 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../lib/api/client';
 import { logError } from '../lib/errors/errorHandler';
-import type { UserType } from '../lib/auth/server';
-
-// 型定義
-interface LoginData {
-  email: string;
-  password: string;
-  userType?: UserType;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  name?: string;
-  userType: UserType;
-}
-
-interface ResetPasswordData {
-  email: string;
-}
-
-interface NewPasswordData {
-  token: string;
-  password: string;
-}
-
-interface SessionResponse {
-  success: boolean;
-  user?: {
-    id: string;
-    email: string;
-    userType: UserType;
-    name?: string;
-    emailConfirmed: boolean;
-    lastSignIn?: string;
-  };
-  session?: {
-    expiresAt: string;
-    needsRefresh: boolean;
-  };
-  error?: string;
-}
+import type {
+  UserType,
+  LoginData,
+  RegisterData,
+  ResetPasswordData,
+  NewPasswordData,
+  SessionResponse,
+} from '@/types';
 
 // セッション情報を取得するクエリ（ストア更新は外部で行う）
 export const useSessionQuery = (enabled = true) => {
@@ -51,14 +18,16 @@ export const useSessionQuery = (enabled = true) => {
 
   const refetch = useCallback(async () => {
     if (!enabled) return;
-    
+
     setIsLoading(true);
     setError(null);
     try {
       const response = await apiClient.get<SessionResponse>('/auth/session');
       setData(response);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch session'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch session')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -128,10 +97,11 @@ export const useRegisterMutation = (userType: UserType) => {
   const mutate = async (data: Omit<RegisterData, 'userType'>) => {
     setIsPending(true);
     try {
-      const endpoint = userType === 'candidate' 
-        ? '/auth/register/candidate' 
-        : '/auth/register/company';
-      
+      const endpoint =
+        userType === 'candidate'
+          ? '/auth/register/candidate'
+          : '/auth/register/company';
+
       const response = await apiClient.post(endpoint, {
         ...data,
         userType,
@@ -157,7 +127,10 @@ export const useResetPasswordMutation = () => {
   const mutate = async (data: ResetPasswordData) => {
     setIsPending(true);
     try {
-      const response = await apiClient.post('/auth/reset-password/request', data);
+      const response = await apiClient.post(
+        '/auth/reset-password/request',
+        data
+      );
       return response;
     } catch (error) {
       logError(error as any, 'useResetPasswordMutation');

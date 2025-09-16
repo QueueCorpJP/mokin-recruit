@@ -18,6 +18,7 @@ export interface ScoutSendFormData {
 export interface ScoutSendResult {
   success: boolean;
   scoutSendId?: string;
+  roomId?: string;
   error?: string;
 }
 
@@ -288,7 +289,7 @@ export async function sendScout(
       '/company/search/scout/complete'
     );
 
-    return { success: true, scoutSendId: scoutSend.id };
+    return { success: true, scoutSendId: scoutSend.id, roomId };
   } catch (error) {
     console.error('スカウト送信処理中のエラー:', error);
     return {

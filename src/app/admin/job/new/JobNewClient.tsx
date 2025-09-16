@@ -19,12 +19,16 @@ interface JobNewClientProps {
   currentUserId?: string;
 }
 
-export default function AdminJobNewClient({ initialCompanyGroups, currentUserId }: JobNewClientProps) {
+export default function AdminJobNewClient({
+  initialCompanyGroups,
+  currentUserId,
+}: JobNewClientProps) {
   const router = useRouter();
 
   // 各項目の状態
   const [group, setGroup] = useState('');
-  const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>(initialCompanyGroups);
+  const [companyGroups, _setCompanyGroups] =
+    useState<CompanyGroup[]>(initialCompanyGroups);
   const [title, setTitle] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [jobTypes, setJobTypes] = useState<string[]>([]);
@@ -39,16 +43,24 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
   const [locations, setLocations] = useState<string[]>([]);
   const [locationNote, setLocationNote] = useState('');
   const [employmentType, setEmploymentType] = useState('正社員');
-  const [employmentTypeNote, setEmploymentTypeNote] = useState('契約期間：期間の定めなし\n試用期間：あり（３か月）');
-  const [workingHours, setWorkingHours] = useState('9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有');
+  const [employmentTypeNote, setEmploymentTypeNote] = useState(
+    '契約期間：期間の定めなし\n試用期間：あり（３か月）'
+  );
+  const [workingHours, setWorkingHours] = useState(
+    '9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有'
+  );
   const [overtime, setOvertime] = useState('あり');
-  const [holidays, setHolidays] = useState('完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇');
+  const [holidays, setHolidays] = useState(
+    '完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇'
+  );
   const [selectionProcess, setSelectionProcess] = useState('');
   const [appealPoints, setAppealPoints] = useState<string[]>([]);
   const [smoke, setSmoke] = useState('屋内禁煙');
   const [smokeNote, setSmokeNote] = useState('');
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
-  const [overtimeMemo, setOvertimeMemo] = useState('月平均20時間程度／固定残業代45時間分を含む');
+  const [overtimeMemo, setOvertimeMemo] = useState(
+    '月平均20時間程度／固定残業代45時間分を含む'
+  );
   const [memo, setMemo] = useState('');
   const [publicationType, setPublicationType] = useState('public');
 
@@ -92,35 +104,38 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
   useEffect(() => {
     // クライアントサイドでのみ実行
     if (typeof window === 'undefined') return;
-    
+
     const loadData = () => {
       try {
         // 複製データがあるかチェック（優先）
         const duplicateData = sessionStorage.getItem('duplicateJobData');
         if (duplicateData) {
           const parsedData = JSON.parse(duplicateData);
-          
+
           // 複製データを各状態にセット
-          if (parsedData.company_group_id) setGroup(parsedData.company_group_id);
+          if (parsedData.company_group_id)
+            setGroup(parsedData.company_group_id);
           if (parsedData.title) setTitle(parsedData.title);
-          
+
           // 職種の復元（新しい配列形式と古い単一値形式の両方に対応）
           if (parsedData.job_types && Array.isArray(parsedData.job_types)) {
             setJobTypes(parsedData.job_types);
           } else if (parsedData.job_type) {
             setJobTypes([parsedData.job_type]);
           }
-          
+
           // 業種の復元（新しい配列形式と古い単一値形式の両方に対応）
           if (parsedData.industries && Array.isArray(parsedData.industries)) {
             setIndustries(parsedData.industries);
           } else if (parsedData.industry) {
             setIndustries([parsedData.industry]);
           }
-          
-          if (parsedData.job_description) setJobDescription(parsedData.job_description);
-          if (parsedData.position_summary) setPositionSummary(parsedData.position_summary);
-          
+
+          if (parsedData.job_description)
+            setJobDescription(parsedData.job_description);
+          if (parsedData.position_summary)
+            setPositionSummary(parsedData.position_summary);
+
           // スキルの復元（配列からテキストに変換対応）
           if (parsedData.required_skills) {
             if (Array.isArray(parsedData.required_skills)) {
@@ -136,31 +151,46 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
               setOtherRequirements(parsedData.preferred_skills);
             }
           }
-          
-          if (parsedData.salary_min) setSalaryMin(parsedData.salary_min.toString());
-          if (parsedData.salary_max) setSalaryMax(parsedData.salary_max.toString());
+
+          if (parsedData.salary_min)
+            setSalaryMin(parsedData.salary_min.toString());
+          if (parsedData.salary_max)
+            setSalaryMax(parsedData.salary_max.toString());
           if (parsedData.salary_note) setSalaryNote(parsedData.salary_note);
-          
+
           // 勤務地の復元（新しい配列形式と古い単一値形式の両方に対応）
-          if (parsedData.work_locations && Array.isArray(parsedData.work_locations)) {
+          if (
+            parsedData.work_locations &&
+            Array.isArray(parsedData.work_locations)
+          ) {
             setLocations(parsedData.work_locations);
           } else if (parsedData.work_location) {
             setLocations([parsedData.work_location]);
           }
-          
-          if (parsedData.location_note) setLocationNote(parsedData.location_note);
-          if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
-          if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
-          if (parsedData.working_hours) setWorkingHours(parsedData.working_hours);
-          if (parsedData.overtime_info) setOvertimeMemo(parsedData.overtime_info);
+
+          if (parsedData.location_note)
+            setLocationNote(parsedData.location_note);
+          if (parsedData.employment_type)
+            setEmploymentType(parsedData.employment_type);
+          if (parsedData.employment_type_note)
+            setEmploymentTypeNote(parsedData.employment_type_note);
+          if (parsedData.working_hours)
+            setWorkingHours(parsedData.working_hours);
+          if (parsedData.overtime_info)
+            setOvertimeMemo(parsedData.overtime_info);
           if (parsedData.holidays) setHolidays(parsedData.holidays);
-          if (parsedData.selection_process) setSelectionProcess(parsedData.selection_process);
-          if (parsedData.appeal_points) setAppealPoints(parsedData.appeal_points);
+          if (parsedData.selection_process)
+            setSelectionProcess(parsedData.selection_process);
+          if (parsedData.appeal_points)
+            setAppealPoints(parsedData.appeal_points);
           if (parsedData.smoking_policy) setSmoke(parsedData.smoking_policy);
-          if (parsedData.smoking_policy_note) setSmokeNote(parsedData.smoking_policy_note);
-          if (parsedData.required_documents) setResumeRequired(parsedData.required_documents);
+          if (parsedData.smoking_policy_note)
+            setSmokeNote(parsedData.smoking_policy_note);
+          if (parsedData.required_documents)
+            setResumeRequired(parsedData.required_documents);
           if (parsedData.internal_memo) setMemo(parsedData.internal_memo);
-          if (parsedData.publication_type) setPublicationType(parsedData.publication_type);
+          if (parsedData.publication_type)
+            setPublicationType(parsedData.publication_type);
 
           // 複製データ使用後は削除
           sessionStorage.removeItem('duplicateJobData');
@@ -235,54 +265,53 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
     validateSalary(salaryMin, salaryMax);
   }, [salaryMin, salaryMax]);
 
-
   // 必須項目が全て入力されているかチェックする関数
   const isFormValid = () => {
     // グループ選択
     if (!group) return false;
-    
+
     // 求人タイトル
     if (!title.trim()) return false;
-    
+
     // 職種（1つ以上）
     if (jobTypes.length === 0) return false;
-    
+
     // 業種（1つ以上）
     if (industries.length === 0) return false;
-    
+
     // 業務内容
     if (!jobDescription.trim()) return false;
-    
+
     // 当ポジションの魅力
     if (!positionSummary.trim()) return false;
-    
+
     // スキル・経験
     if (!skills.trim()) return false;
-    
+
     // その他・求める人物像
     if (!otherRequirements.trim()) return false;
-    
+
     // 想定年収
     if (!salaryMin || !salaryMax) return false;
     const minValue = parseInt(salaryMin);
     const maxValue = parseInt(salaryMax);
     if (minValue > maxValue) return false;
-    
+
     // 勤務地（1つ以上）
     if (locations.length === 0) return false;
-    
+
     // 就業時間
     if (!workingHours.trim()) return false;
-    
+
     // 休日・休暇
     if (!holidays.trim()) return false;
-    
+
     // 選考情報
     if (!selectionProcess.trim()) return false;
-    
+
     // アピールポイント（1つ以上）
     if (!appealPoints || appealPoints.length === 0) return false;
-    
+
     return true;
   };
 
@@ -296,12 +325,15 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
       newErrors.jobDescription = '業務内容を入力してください。';
     if (!positionSummary.trim())
       newErrors.positionSummary = '当ポジションの魅力を入力してください。';
-    if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
+    if (!skills.trim())
+      newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
-      newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
+      newErrors.otherRequirements =
+        '求める人物像や価値観などを入力してください。';
     if (locations.length === 0)
       newErrors.locations = '勤務地を1つ以上選択してください。';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
+    if (jobTypes.length === 0)
+      newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
       newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
@@ -316,7 +348,8 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
     }
     if (!workingHours.trim())
       newErrors.workingHours = '就業時間を入力してください。';
-    if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
+    if (!holidays.trim())
+      newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
       newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
@@ -535,12 +568,17 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
   useEffect(() => {
     console.log('JobNewClient: Setting up event listeners');
     const handleJobNewBack = () => {
-      console.log('JobNewClient: Received job-new-back event, isConfirmMode:', isConfirmMode);
+      console.log(
+        'JobNewClient: Received job-new-back event, isConfirmMode:',
+        isConfirmMode
+      );
       if (isConfirmMode) {
         console.log('JobNewClient: Calling handleBack()');
         handleBack();
       } else {
-        console.log('JobNewClient: Not in confirm mode, switching to confirm mode');
+        console.log(
+          'JobNewClient: Not in confirm mode, switching to confirm mode'
+        );
         // 確認モードでない場合は確認モードに切り替える
         if (isFormValid()) {
           setIsConfirmMode(true);
@@ -570,39 +608,76 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
       {/* <NewJobHeader /> */}
       <div className='flex justify-start'>
         <div className='mr-0'>
-
           {/* 選考メモテーブル - 独立して中央配置（確認ページでは非表示） */}
           {!isConfirmMode && (
-            <div className="mb-6 flex justify-center w-full">
-              <table className="border-collapse border border-gray-400">
+            <div className='mb-6 flex justify-center w-full'>
+              <table className='border-collapse border border-gray-400'>
                 <tbody>
                   <tr>
                     <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]"></td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">スカウト送信数</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">開封数</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">返信数(返信率)</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">応募数(応募率)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                      スカウト送信数
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                      開封数
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                      返信数(返信率)
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 bg-gray-300 text-center font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232]">
+                      応募数(応募率)
+                    </td>
                   </tr>
                   <tr>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去7日合計</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                      過去7日合計
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
                   </tr>
                   <tr>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">過去30日合計</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                      過去30日合計
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
                   </tr>
                   <tr>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">累計</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
-                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">0 (0%)</td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#666666]">
+                      累計
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
+                    <td className="w-[220px] h-[36px] border border-gray-400 text-center font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
+                      0 (0%)
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -625,7 +700,7 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
                 ) : (
                   <textarea
                     value={memo}
-                    onChange={(e) => setMemo(e.target.value)}
+                    onChange={e => setMemo(e.target.value)}
                     rows={4}
                     className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
                     placeholder='選考に関するメモを入力してください'
@@ -641,187 +716,187 @@ export default function AdminJobNewClient({ initialCompanyGroups, currentUserId 
               <div className='h-0.5 bg-gray-300 mb-4'></div>
               <h2 className='text-2xl font-bold text-gray-900'>求人詳細</h2>
             </div>
-          
-          {isConfirmMode ? (
-            <ConfirmView
-              group={group}
-              companyGroups={companyGroups}
-              title={title}
-              images={images}
-              jobTypes={jobTypes}
-              industries={industries}
-              jobDescription={jobDescription}
-              positionSummary={positionSummary}
-              skills={skills}
-              otherRequirements={otherRequirements}
-              salaryMin={salaryMin}
-              salaryMax={salaryMax}
-              salaryNote={salaryNote}
-              locations={locations}
-              locationNote={locationNote}
-              selectionProcess={selectionProcess}
-              employmentType={employmentType}
-              employmentTypeNote={employmentTypeNote}
-              workingHours={workingHours}
-              overtime={overtime}
-              holidays={holidays}
-              appealPoints={appealPoints}
-              smoke={smoke}
-              smokeNote={smokeNote}
-              resumeRequired={resumeRequired}
-              overtimeMemo={overtimeMemo}
-              memo={memo}
-              publicationType={publicationType}
-              setPublicationType={setPublicationType}
-            />
-          ) : (
-            <FormFields
-              group={group}
-              setGroup={(value: string) => {
-                setGroup(value);
-                clearFieldError('group');
-              }}
-              companyGroups={companyGroups}
-              title={title}
-              setTitle={(value: string) => {
-                setTitle(value);
-                clearFieldError('title');
-              }}
-              images={images}
-              setImages={(images: File[]) => {
-                setImages(images);
-                clearFieldError('images');
-              }}
-              jobTypes={jobTypes}
-              setJobTypes={(types: string[]) => {
-                setJobTypes(types);
-                clearFieldError('jobTypes');
-              }}
-              industries={industries}
-              setIndustries={(industries: string[]) => {
-                setIndustries(industries);
-                clearFieldError('industries');
-              }}
-              jobDescription={jobDescription}
-              setJobDescription={(value: string) => {
-                setJobDescription(value);
-                clearFieldError('jobDescription');
-              }}
-              positionSummary={positionSummary}
-              setPositionSummary={(value: string) => {
-                setPositionSummary(value);
-                clearFieldError('positionSummary');
-              }}
-              skills={skills}
-              setSkills={(value: string) => {
-                setSkills(value);
-                clearFieldError('skills');  
-              }}
-              otherRequirements={otherRequirements}
-              setOtherRequirements={(value: string) => {
-                setOtherRequirements(value);
-                clearFieldError('otherRequirements');
-              }}
-              salaryMin={salaryMin}
-              setSalaryMin={setSalaryMin}
-              salaryMax={salaryMax}
-              setSalaryMax={setSalaryMax}
-              salaryNote={salaryNote}
-              setSalaryNote={setSalaryNote}
-              locations={locations}
-              setLocations={(locations: string[]) => {
-                setLocations(locations);
-                clearFieldError('locations');
-              }}
-              locationNote={locationNote}
-              setLocationNote={setLocationNote}
-              selectionProcess={selectionProcess}
-              setSelectionProcess={(value: string) => {
-                setSelectionProcess(value);
-                clearFieldError('selectionProcess');
-              }}
-              employmentType={employmentType}
-              setEmploymentType={setEmploymentType}
-              employmentTypeNote={employmentTypeNote}
-              setEmploymentTypeNote={setEmploymentTypeNote}
-              workingHours={workingHours}
-              setWorkingHours={setWorkingHours}
-              overtime={overtime}
-              setOvertime={setOvertime}
-              holidays={holidays}
-              setHolidays={setHolidays}
-              appealPoints={appealPoints}
-              setAppealPoints={(points: string[]) => {
-                setAppealPoints(points);
-                clearFieldError('appealPoints');
-              }}
-              smoke={smoke}
-              setSmoke={setSmoke}
-              smokeNote={smokeNote}
-              setSmokeNote={setSmokeNote}
-              resumeRequired={resumeRequired}
-              setResumeRequired={setResumeRequired}
-              overtimeMemo={overtimeMemo}
-              setOvertimeMemo={setOvertimeMemo}
-              memo={memo}
-              setMemo={setMemo}
-              setLocationModalOpen={setLocationModalOpen}
-              setJobTypeModalOpen={setJobTypeModalOpen}
-              setIndustryModalOpen={setIndustryModalOpen}
-              errors={errors}
-              showErrors={showErrors}
-            />
-          )}
 
-          {/* ボタンエリア */}
-          <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
-            <div className='flex justify-center items-center gap-4 w-full'>
-              {isConfirmMode ? (
-                <>
-                  <Button
-                    type='button'
-                    variant='green-outline'
-                    size='lg'
-                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
-                    onClick={handleBack}
-                  >
-                    戻る
-                  </Button>
-                  <button
-                    type='button'
-                    className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
-                    onClick={handleSubmit}
-                  >
+            {isConfirmMode ? (
+              <ConfirmView
+                group={group}
+                companyGroups={companyGroups}
+                title={title}
+                images={images}
+                jobTypes={jobTypes}
+                industries={industries}
+                jobDescription={jobDescription}
+                positionSummary={positionSummary}
+                skills={skills}
+                otherRequirements={otherRequirements}
+                salaryMin={salaryMin}
+                salaryMax={salaryMax}
+                salaryNote={salaryNote}
+                locations={locations}
+                locationNote={locationNote}
+                selectionProcess={selectionProcess}
+                employmentType={employmentType}
+                employmentTypeNote={employmentTypeNote}
+                workingHours={workingHours}
+                overtime={overtime}
+                holidays={holidays}
+                appealPoints={appealPoints}
+                smoke={smoke}
+                smokeNote={smokeNote}
+                resumeRequired={resumeRequired}
+                overtimeMemo={overtimeMemo}
+                memo={memo}
+                publicationType={publicationType}
+                setPublicationType={setPublicationType}
+              />
+            ) : (
+              <FormFields
+                group={group}
+                setGroup={(value: string) => {
+                  setGroup(value);
+                  clearFieldError('group');
+                }}
+                companyGroups={companyGroups}
+                title={title}
+                setTitle={(value: string) => {
+                  setTitle(value);
+                  clearFieldError('title');
+                }}
+                images={images}
+                setImages={(images: File[]) => {
+                  setImages(images);
+                  clearFieldError('images');
+                }}
+                jobTypes={jobTypes}
+                setJobTypes={(types: string[]) => {
+                  setJobTypes(types);
+                  clearFieldError('jobTypes');
+                }}
+                industries={industries}
+                setIndustries={(industries: string[]) => {
+                  setIndustries(industries);
+                  clearFieldError('industries');
+                }}
+                jobDescription={jobDescription}
+                setJobDescription={(value: string) => {
+                  setJobDescription(value);
+                  clearFieldError('jobDescription');
+                }}
+                positionSummary={positionSummary}
+                setPositionSummary={(value: string) => {
+                  setPositionSummary(value);
+                  clearFieldError('positionSummary');
+                }}
+                skills={skills}
+                setSkills={(value: string) => {
+                  setSkills(value);
+                  clearFieldError('skills');
+                }}
+                otherRequirements={otherRequirements}
+                setOtherRequirements={(value: string) => {
+                  setOtherRequirements(value);
+                  clearFieldError('otherRequirements');
+                }}
+                salaryMin={salaryMin}
+                setSalaryMin={setSalaryMin}
+                salaryMax={salaryMax}
+                setSalaryMax={setSalaryMax}
+                salaryNote={salaryNote}
+                setSalaryNote={setSalaryNote}
+                locations={locations}
+                setLocations={(locations: string[]) => {
+                  setLocations(locations);
+                  clearFieldError('locations');
+                }}
+                locationNote={locationNote}
+                setLocationNote={setLocationNote}
+                selectionProcess={selectionProcess}
+                setSelectionProcess={(value: string) => {
+                  setSelectionProcess(value);
+                  clearFieldError('selectionProcess');
+                }}
+                employmentType={employmentType}
+                setEmploymentType={setEmploymentType}
+                employmentTypeNote={employmentTypeNote}
+                setEmploymentTypeNote={setEmploymentTypeNote}
+                workingHours={workingHours}
+                setWorkingHours={setWorkingHours}
+                overtime={overtime}
+                setOvertime={setOvertime}
+                holidays={holidays}
+                setHolidays={setHolidays}
+                appealPoints={appealPoints}
+                setAppealPoints={(points: string[]) => {
+                  setAppealPoints(points);
+                  clearFieldError('appealPoints');
+                }}
+                smoke={smoke}
+                setSmoke={setSmoke}
+                smokeNote={smokeNote}
+                setSmokeNote={setSmokeNote}
+                resumeRequired={resumeRequired}
+                setResumeRequired={setResumeRequired}
+                overtimeMemo={overtimeMemo}
+                setOvertimeMemo={setOvertimeMemo}
+                memo={memo}
+                setMemo={setMemo}
+                setLocationModalOpen={setLocationModalOpen}
+                setJobTypeModalOpen={setJobTypeModalOpen}
+                setIndustryModalOpen={setIndustryModalOpen}
+                errors={errors}
+                showErrors={showErrors}
+              />
+            )}
+
+            {/* ボタンエリア */}
+            <div className='flex flex-col items-center gap-4 mt-[40px] w-full'>
+              <div className='flex justify-center items-center gap-4 w-full'>
+                {isConfirmMode ? (
+                  <>
+                    <Button
+                      type='button'
+                      variant='green-outline'
+                      size='lg'
+                      className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                      onClick={handleBack}
+                    >
+                      戻る
+                    </Button>
+                    <button
+                      type='button'
+                      className='rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white transition-all duration-200 ease-in-out hover:from-[#12614E] hover:to-[#1A8946]'
+                      onClick={handleSubmit}
+                    >
                       保存する
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    type='button'
-                    variant='green-outline'
-                    size='lg'
-                    className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
-                    onClick={saveDraft}
-                  >
-                    下書き保存
-                  </Button>
-                  <button
-                    type='button'
-                    disabled={showErrors && !isFormValid()}
-                    className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
-                      !showErrors || isFormValid()
-                        ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                    onClick={handleConfirm}
-                  >
-                    確認する
-                  </button>
-                </>
-              )}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type='button'
+                      variant='green-outline'
+                      size='lg'
+                      className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                      onClick={saveDraft}
+                    >
+                      下書き保存
+                    </Button>
+                    <button
+                      type='button'
+                      disabled={showErrors && !isFormValid()}
+                      className={`rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 transition-all duration-200 ease-in-out ${
+                        !showErrors || isFormValid()
+                          ? 'bg-gradient-to-r from-[#198D76] to-[#1CA74F] text-white hover:from-[#12614E] hover:to-[#1A8946] cursor-pointer'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      onClick={handleConfirm}
+                    >
+                      確認する
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
           </div>
         </div>
 

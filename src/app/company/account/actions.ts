@@ -8,7 +8,7 @@ import {
   getFromAddress,
   isSendgridConfigured,
   sendBatch,
-} from '@/lib/server/mail/sendgrid';
+} from '@/lib/email/sender';
 import { ok, fail } from '@/lib/server/actions/response';
 import { toDbPermission } from '@/lib/company/permissions';
 

@@ -3,42 +3,60 @@
 import { z } from 'zod';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
+import type {
+  CreateCandidateData,
+  AdminEducationData as EducationData,
+  AdminWorkExperienceData as WorkExperienceData,
+  AdminJobTypeExperienceData as JobTypeExperienceData,
+  AdminSkillsData as SkillsData,
+  AdminExpectationsData as ExpectationsData,
+  AdminSelectionEntryData as SelectionEntryData,
+} from '@/types/admin';
 
 export async function checkEmailDuplication(email: string) {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { data, error } = await supabase
       .from('candidates')
       .select('id')
       .eq('email', email);
-    
+
     if (error) {
       throw error;
     }
-    
+
     return { isDuplicate: data && data.length > 0 };
   } catch (error) {
     console.error('Error checking email duplication:', error);
-    return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      isDuplicate: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
 // Validation schema for candidate creation
 const CreateCandidateSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().optional().refine((password) => {
-    if (!password || password.trim() === '') return true; // Optional
-    return password.length >= 8;
-  }, {
-    message: 'パスワードは8文字以上で入力してください'
-  }),
+  password: z
+    .string()
+    .optional()
+    .refine(
+      password => {
+        if (!password || password.trim() === '') return true; // Optional
+        return password.length >= 8;
+      },
+      {
+        message: 'パスワードは8文字以上で入力してください',
+      }
+    ),
   last_name: z.string().min(1, '姓を入力してください'),
   first_name: z.string().min(1, '名を入力してください'),
   last_name_kana: z.string().min(1, '姓（カナ）を入力してください'),
   first_name_kana: z.string().min(1, '名（カナ）を入力してください'),
   gender: z.enum(['male', 'female', 'unspecified'], {
-    errorMap: () => ({ message: '性別を選択してください' })
+    errorMap: () => ({ message: '性別を選択してください' }),
   }),
   birth_date: z.string().nullable(),
   prefecture: z.string().min(1, '都道府県を選択してください'),
@@ -51,101 +69,11 @@ export async function validateCandidateData(formData: CreateCandidateData) {
   if (!validationResult.success) {
     const errors = validationResult.error.errors.map(error => ({
       field: error.path.join('.'),
-      message: error.message
+      message: error.message,
     }));
     return { success: false, errors };
   }
   return { success: true, data: validationResult.data };
-}
-
-export interface CreateCandidateData {
-  // Basic info
-  email: string;
-  password?: string;
-  last_name: string;
-  first_name: string;
-  last_name_kana: string;
-  first_name_kana: string;
-  gender: 'male' | 'female' | 'unspecified';
-  birth_date: string | null;
-  prefecture: string;
-  phone_number: string;
-  current_income: string;
-  current_salary?: string;
-  desired_salary?: string;
-  
-  // Current employment
-  current_company?: string;
-  current_position?: string;
-  current_residence?: string;
-  
-  // Career status
-  has_career_change: string;
-  job_change_timing: string;
-  current_activity_status: string;
-  
-  // Recent job
-  recent_job_company_name: string;
-  recent_job_department_position: string;
-  recent_job_start_year: string;
-  recent_job_start_month: string;
-  recent_job_end_year: string;
-  recent_job_end_month: string;
-  recent_job_is_currently_working: boolean;
-  recent_job_description: string;
-  recent_job_industries: string[];
-  recent_job_types: string[];
-  
-  // Summary
-  job_summary: string;
-  self_pr: string;
-  
-  // Preferences
-  skills?: string[];
-  desired_industries?: string[];
-  desired_job_types?: string[];
-  desired_locations?: string[];
-  management_experience_count?: number;
-  interested_work_styles?: string[];
-}
-
-export interface EducationData {
-  final_education: string;
-  school_name: string;
-  department: string;
-  graduation_year: number | null;
-  graduation_month: number | null;
-}
-
-export interface WorkExperienceData {
-  industry_name: string;
-  experience_years: number;
-}
-
-export interface JobTypeExperienceData {
-  job_type_name: string;
-  experience_years: number;
-}
-
-export interface SkillsData {
-  english_level: string;
-  other_languages?: any;
-  skills_tags: string[];
-  qualifications: string;
-}
-
-export interface ExpectationsData {
-  desired_income?: string;
-  desired_industries?: string[];
-  desired_job_types?: string[];
-  desired_work_locations?: string[];
-  desired_work_styles?: string[];
-}
-
-export interface SelectionEntryData {
-  companyName: string;
-  industries: string[];
-  jobTypes: string[];
 }
 
 export async function createCandidateData(
@@ -164,8 +92,9 @@ export async function createCandidateData(
     if (!validation.success) {
       return {
         success: false,
-        error: validation.errors?.[0]?.message || '入力データが正しくありません',
-        validationErrors: validation.errors
+        error:
+          validation.errors?.[0]?.message || '入力データが正しくありません',
+        validationErrors: validation.errors,
       };
     }
 
@@ -174,13 +103,13 @@ export async function createCandidateData(
     if (emailCheck.error) {
       return {
         success: false,
-        error: emailCheck.error
+        error: emailCheck.error,
       };
     }
     if (emailCheck.isDuplicate) {
       return {
         success: false,
-        error: 'このメールアドレスは既に登録されています。'
+        error: 'このメールアドレスは既に登録されています。',
       };
     }
 
@@ -190,29 +119,33 @@ export async function createCandidateData(
     let authUserId: string | null = null;
     if (formData.password && formData.password.trim()) {
       try {
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: formData.password,
-          email_confirm: true, // Skip email verification for admin-created users
-          user_metadata: {
-            user_type: 'candidate',
-            created_by: 'admin',
-            signup_step: 'completed',
-            email_verification_required: false
-          }
-        });
+        const { data: authData, error: authError } =
+          await supabase.auth.admin.createUser({
+            email: formData.email,
+            password: formData.password,
+            email_confirm: true, // Skip email verification for admin-created users
+            user_metadata: {
+              user_type: 'candidate',
+              created_by: 'admin',
+              signup_step: 'completed',
+              email_verification_required: false,
+            },
+          });
 
         if (authError) {
-          if (authError.message?.includes('already registered') || authError.message?.includes('User already registered')) {
+          if (
+            authError.message?.includes('already registered') ||
+            authError.message?.includes('User already registered')
+          ) {
             return {
               success: false,
-              error: 'このメールアドレスは既に登録されています。'
+              error: 'このメールアドレスは既に登録されています。',
             };
           }
           console.error('Auth user creation error:', authError);
           return {
             success: false,
-            error: `ユーザー認証の作成に失敗しました: ${authError.message}`
+            error: `ユーザー認証の作成に失敗しました: ${authError.message}`,
           };
         }
 
@@ -222,7 +155,7 @@ export async function createCandidateData(
         console.error('Auth creation failed:', authCreateError);
         return {
           success: false,
-          error: 'ユーザー認証の作成に失敗しました。'
+          error: 'ユーザー認証の作成に失敗しました。',
         };
       }
     }
@@ -326,7 +259,7 @@ export async function createCandidateData(
     // Insert work experience
     if (workExperience.length > 0) {
       const workExpData = workExperience
-        .filter(exp => exp.industry_name.trim())
+        .filter(exp => exp.industry_name && exp.industry_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
           industry_name: exp.industry_name,
@@ -347,7 +280,7 @@ export async function createCandidateData(
     // Insert job type experience
     if (jobTypeExperience.length > 0) {
       const jobTypeExpData = jobTypeExperience
-        .filter(exp => exp.job_type_name.trim())
+        .filter(exp => exp.job_type_name && exp.job_type_name.trim())
         .map(exp => ({
           candidate_id: candidateId,
           job_type_name: exp.job_type_name,
@@ -366,16 +299,18 @@ export async function createCandidateData(
     }
 
     // Insert skills
-    if (skills.english_level || skills.qualifications || skills.skills_tags.length > 0) {
-      const { error: skillsError } = await supabase
-        .from('skills')
-        .insert({
-          candidate_id: candidateId,
-          english_level: skills.english_level,
-          other_languages: skills.other_languages || null,
-          skills_list: skills.skills_tags,
-          qualifications: skills.qualifications,
-        });
+    if (
+      skills.english_level ||
+      skills.qualifications ||
+      (skills.skills_tags && skills.skills_tags.length > 0)
+    ) {
+      const { error: skillsError } = await supabase.from('skills').insert({
+        candidate_id: candidateId,
+        english_level: skills.english_level,
+        other_languages: skills.other_languages || null,
+        skills_list: skills.skills_tags || [],
+        qualifications: skills.qualifications,
+      });
 
       if (skillsError) {
         throw skillsError;
@@ -383,9 +318,14 @@ export async function createCandidateData(
     }
 
     // Insert expectations
-    if (expectations && (expectations.desired_income || expectations.desired_industries?.length || 
-        expectations.desired_job_types?.length || expectations.desired_work_locations?.length || 
-        expectations.desired_work_styles?.length)) {
+    if (
+      expectations &&
+      (expectations.desired_income ||
+        expectations.desired_industries?.length ||
+        expectations.desired_job_types?.length ||
+        expectations.desired_work_locations?.length ||
+        expectations.desired_work_styles?.length)
+    ) {
       const { error: expectationsError } = await supabase
         .from('expectations')
         .insert({
@@ -418,7 +358,8 @@ export async function createCandidateData(
           .from('candidate_selection_entries')
           .insert(entriesData);
 
-        if (entriesError && entriesError.code !== '42P01') { // Ignore table doesn't exist error for now
+        if (entriesError && entriesError.code !== '42P01') {
+          // Ignore table doesn't exist error for now
           console.warn('Selection entries table may not exist:', entriesError);
         }
       }
@@ -443,6 +384,9 @@ export async function createCandidateData(
     return { success: true, candidateId };
   } catch (error) {
     console.error('Error creating candidate:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }

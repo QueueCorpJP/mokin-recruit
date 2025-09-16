@@ -275,5 +275,3 @@ export default async function CandidateRecentJobPage() {
     </>
   );
 }
-
-export const dynamic = 'force-dynamic';

@@ -24,7 +24,7 @@ export const fontOptimizer = {
       },
     ];
 
-    criticalFonts.forEach((font) => {
+    criticalFonts.forEach(font => {
       const observer = new FontFaceObserver(font.family, {
         weight: font.weight,
         style: font.style,
@@ -48,21 +48,21 @@ export const fontOptimizer = {
       'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap',
     ];
 
-    fontUrls.forEach((url) => {
+    fontUrls.forEach(url => {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'style';
       link.href = url;
       link.crossOrigin = 'anonymous';
-      
+
       const onLoad = () => {
         link.onload = link.onerror = null;
         link.rel = 'stylesheet';
       };
-      
+
       link.onload = onLoad;
       link.onerror = onLoad;
-      
+
       document.head.appendChild(link);
     });
   },
@@ -70,11 +70,15 @@ export const fontOptimizer = {
   measureFontLoadTime: () => {
     if (typeof window === 'undefined' || !window.performance) return;
 
-    const fontLoadEntries = performance.getEntriesByType('resource')
+    const fontLoadEntries = performance
+      .getEntriesByType('resource')
       .filter(entry => {
         try {
           const hostname = new URL(entry.name).hostname;
-          return hostname === 'fonts.googleapis.com' || hostname === 'fonts.gstatic.com';
+          return (
+            hostname === 'fonts.googleapis.com' ||
+            hostname === 'fonts.gstatic.com'
+          );
         } catch {
           return false;
         }
@@ -87,7 +91,8 @@ export const fontOptimizer = {
     return {
       entries: fontLoadEntries,
       totalLoadTime,
-      averageLoadTime: fontLoadEntries.length > 0 ? totalLoadTime / fontLoadEntries.length : 0,
+      averageLoadTime:
+        fontLoadEntries.length > 0 ? totalLoadTime / fontLoadEntries.length : 0,
     };
   },
 };
@@ -99,7 +104,10 @@ class FontFaceObserver {
   weight: string;
   style: string;
 
-  constructor(family: string, descriptors: { weight?: string; style?: string } = {}) {
+  constructor(
+    family: string,
+    descriptors: { weight?: string; style?: string } = {}
+  ) {
     this.family = family;
     this.weight = descriptors.weight || 'normal';
     this.style = descriptors.style || 'normal';
@@ -108,10 +116,10 @@ class FontFaceObserver {
   load(text?: string | null, timeout?: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const font = `${this.style} ${this.weight} 1px ${this.family}`;
-      
+
       if (document.fonts && typeof document.fonts.load === 'function') {
         document.fonts.load(font, text || 'BESbswy').then(
-          (fonts) => {
+          fonts => {
             if (fonts.length > 0) {
               resolve();
             } else {

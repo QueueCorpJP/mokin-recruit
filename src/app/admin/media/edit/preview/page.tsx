@@ -11,6 +11,7 @@ import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
+import { sanitizeHtml } from '@/lib/utils/sanitizer';
 
 interface PreviewData {
   id?: string;
@@ -52,6 +53,7 @@ export default function EditPreviewPage() {
       const storedData = sessionStorage.getItem('previewArticle');
       if (storedData) {
         const data = JSON.parse(storedData);
+
         if (data.content) {
           data.content = DOMPurify.sanitize(data.content);
         }
@@ -348,7 +350,9 @@ export default function EditPreviewPage() {
               <div
                 className='prose prose-lg max-w-none mb-[60px]'
                 style={{ paddingLeft: '0', paddingRight: '0' }}
-                dangerouslySetInnerHTML={{ __html: previewData.content }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(previewData.content),
+                }}
               />
             </article>
           </div>

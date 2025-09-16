@@ -88,7 +88,7 @@ export default function CandidateNewClient() {
     setSubmitting,
     prepareConfirmationData,
     validateFormData,
-    resetForm,
+    resetForm: _resetForm,
   } = useCandidateData();
 
   const {
@@ -531,9 +531,9 @@ export default function CandidateNewClient() {
                   <div className='w-[400px] flex gap-2'>
                     <button
                       type='button'
-                      onClick={() => updateFormData('hasCareerChange', 'yes')}
+                      onClick={() => updateFormData('hasCareerChange', 'あり')}
                       className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
-                        formData.hasCareerChange === 'yes'
+                        formData.hasCareerChange === 'あり'
                           ? 'bg-[#0f9058] border-[#0f9058] text-white'
                           : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
                       }`}
@@ -542,9 +542,9 @@ export default function CandidateNewClient() {
                     </button>
                     <button
                       type='button'
-                      onClick={() => updateFormData('hasCareerChange', 'no')}
+                      onClick={() => updateFormData('hasCareerChange', 'なし')}
                       className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
-                        formData.hasCareerChange === 'no'
+                        formData.hasCareerChange === 'なし'
                           ? 'bg-[#0f9058] border-[#0f9058] text-white'
                           : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
                       }`}

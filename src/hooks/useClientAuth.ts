@@ -3,30 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import type { User } from '@supabase/supabase-js';
-
-export type UserType = 'candidate' | 'company_user' | 'admin';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  userType: UserType;
-  name?: string;
-  emailConfirmed: boolean;
-  lastSignIn?: string;
-  user_metadata?: {
-    user_type?: string;
-    company_account_id?: string;
-    company_user_id?: string;
-    [key: string]: any;
-  };
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  user: AuthUser | null;
-  userType: UserType | null;
-  loading: boolean;
-}
+import type { AuthUser, AuthState, UserType } from '@/types';
 
 export function useClientAuth(): AuthState {
   const [authState, setAuthState] = useState<AuthState>({
@@ -45,9 +22,12 @@ export function useClientAuth(): AuthState {
     // Initial session check
     const checkSession = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error || !session?.user) {
           setAuthState({
             isAuthenticated: false,
             user: null,
@@ -57,8 +37,10 @@ export function useClientAuth(): AuthState {
           return;
         }
 
-        const userType = (user.user_metadata?.user_type || 'candidate') as UserType;
-        
+        const user = session.user;
+        const userType = (user.user_metadata?.user_type ||
+          'candidate') as UserType;
+
         const authUser: AuthUser = {
           id: user.id,
           email: user.email || '',
@@ -99,10 +81,15 @@ export function useClientAuth(): AuthState {
           userType: null,
           loading: false,
         });
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      } else if (
+        event === 'SIGNED_IN' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'USER_UPDATED'
+      ) {
         const user = session.user;
-        const userType = (user.user_metadata?.user_type || 'candidate') as UserType;
-        
+        const userType = (user.user_metadata?.user_type ||
+          'candidate') as UserType;
+
         const authUser: AuthUser = {
           id: user.id,
           email: user.email || '',
@@ -119,6 +106,14 @@ export function useClientAuth(): AuthState {
           userType,
           loading: false,
         });
+
+        // Force refresh navigation after sign in
+        if (event === 'SIGNED_IN') {
+          // Trigger a small delay to ensure state propagation
+          setTimeout(() => {
+            window.dispatchEvent(new Event('auth-state-changed'));
+          }, 100);
+        }
       }
     });
 
@@ -134,7 +129,8 @@ export function useCandidateAuth() {
   return {
     ...auth,
     isCandidate: auth.isAuthenticated && auth.userType === 'candidate',
-    candidateUser: auth.isAuthenticated && auth.userType === 'candidate' ? auth.user : null,
+    candidateUser:
+      auth.isAuthenticated && auth.userType === 'candidate' ? auth.user : null,
   };
 }
 
@@ -143,7 +139,10 @@ export function useCompanyAuth() {
   return {
     ...auth,
     isCompany: auth.isAuthenticated && auth.userType === 'company_user',
-    companyUser: auth.isAuthenticated && auth.userType === 'company_user' ? auth.user : null,
+    companyUser:
+      auth.isAuthenticated && auth.userType === 'company_user'
+        ? auth.user
+        : null,
   };
 }
 
@@ -152,6 +151,7 @@ export function useAdminAuth() {
   return {
     ...auth,
     isAdmin: auth.isAuthenticated && auth.userType === 'admin',
-    adminUser: auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null,
+    adminUser:
+      auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null,
   };
 }

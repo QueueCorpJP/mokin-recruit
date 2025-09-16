@@ -34,7 +34,7 @@ export const selectionEntrySchema = z.object({
 export const careerStatusSchema = z
   .object({
     // 転職経験
-    hasCareerChange: z.enum(['yes', 'no'], {
+    hasCareerChange: z.enum(['あり', 'なし'], {
       required_error: '転職経験を選択してください',
       invalid_type_error: '転職経験を選択してください',
     }),
@@ -50,11 +50,11 @@ export const careerStatusSchema = z
     selectionEntries: z.array(selectionEntrySchema),
   })
   .refine(
-    (data) => {
+    data => {
       // 「まだ始めていない」「情報収集中」以外の場合は最低1件の選考状況が必要
       if (
-        data.currentActivityStatus !== 'not_started' &&
-        data.currentActivityStatus !== 'researching'
+        data.currentActivityStatus !== 'まだ始めていない' &&
+        data.currentActivityStatus !== '情報収集中'
       ) {
         return data.selectionEntries.length > 0;
       }
@@ -63,13 +63,13 @@ export const careerStatusSchema = z
     {
       message: '選考状況を1件以上入力してください',
       path: ['selectionEntries'],
-    },
+    }
   )
   .refine(
-    (data) => {
+    data => {
       // 進捗状況が「辞退」の場合は辞退理由が必須
-      return data.selectionEntries.every((entry) => {
-        if (entry.progressStatus === 'declined') {
+      return data.selectionEntries.every(entry => {
+        if (entry.progressStatus === '辞退') {
           return entry.declineReason && entry.declineReason.length > 0;
         }
         return true;
@@ -78,7 +78,7 @@ export const careerStatusSchema = z
     {
       message: '進捗状況が「辞退」の場合は辞退理由を選択してください',
       path: ['selectionEntries'],
-    },
+    }
   );
 
 export type CareerStatusFormData = z.infer<typeof careerStatusSchema>;

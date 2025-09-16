@@ -23,6 +23,9 @@ interface SelectInputProps {
   onFocus?: () => void;
   onOpen?: () => void;
   onClose?: () => void;
+  onClick?: () => void;
+  readOnly?: boolean;
+  value?: string;
   'data-testid'?: string;
   forcePosition?: 'top' | 'bottom'; // ドロップダウンの位置を強制指定
   // NOTE: 元に戻すため、borderlessは撤回（呼び出し局所で制御する）
@@ -78,15 +81,19 @@ export function SelectInput({
   onFocus,
   onOpen,
   onClose,
+  onClick,
+  readOnly = false,
+  value = '',
   forcePosition,
   'data-testid': testId,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState('');
-  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const [selectedValue, setSelectedValue] = useState(value);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>(
+    'bottom'
+  );
   const selectRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-
 
   // 選択された項目のラベルを取得
   const selectedOption = options.find(option => option.value === selectedValue);
@@ -127,7 +134,6 @@ export function SelectInput({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onBlur, onClose, isOpen]);
 
-
   // ドロップダウンの位置を計算
   useEffect(() => {
     if (isOpen && selectRef.current) {
@@ -136,13 +142,13 @@ export function SelectInput({
         setDropdownPosition(forcePosition);
         return;
       }
-      
+
       const rect = selectRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
       const dropdownMaxHeight = 240; // max-h-60 = 240px
-      
+
       // 下に十分なスペースがあるか、または上のスペースが不十分な場合は下に表示
       if (spaceBelow >= dropdownMaxHeight || spaceAbove < dropdownMaxHeight) {
         setDropdownPosition('bottom');
@@ -169,9 +175,16 @@ export function SelectInput({
   // トグル処理
   const handleToggle = () => {
     if (disabled) return;
+
+    // readOnlyでonClickが設定されている場合はonClickを呼ぶ
+    if (readOnly && onClick) {
+      onClick();
+      return;
+    }
+
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
-    
+
     if (newIsOpen) {
       onOpen?.();
     } else {
@@ -278,9 +291,9 @@ export function SelectInput({
           selectedValue ? 'text-[#323232]' : 'text-[#323232]'
         )}
         style={{
-          padding: '4px 16px 4px 11px',
+          padding: '11px',
           alignItems: 'center',
-          gap: '16px',
+          gap: '8px',
           borderRadius: `${radius}px`,
           ...style,
         }}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
@@ -43,7 +43,12 @@ export function CandidateLoginClient() {
 
         if (result.success) {
           // setSuccess('ログインに成功しました！');
-          router.push('/candidate/mypage');
+          // Force refresh to update authentication state
+          router.refresh();
+          // Small delay to ensure auth state propagates
+          setTimeout(() => {
+            router.push('/candidate/mypage');
+          }, 100);
         } else {
           setError(result.error || 'ログインに失敗しました');
         }
@@ -78,10 +83,9 @@ export function CandidateLoginClient() {
         <form onSubmit={handleSubmit} className='w-full h-auto'>
           {/* エラー表示 */}
           {!isPending && error && (
-            <Alert variant='destructive' className='mb-6'>
-              <AlertCircle className='h-4 w-4' />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className='mb-6 text-red-600 text-[14px] font-medium text-center'>
+              {error}
+            </div>
           )}
 
           {/* 成功表示 */}

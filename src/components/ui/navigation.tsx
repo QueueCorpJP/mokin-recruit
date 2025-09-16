@@ -3,34 +3,37 @@
 import { useState, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { X, ChevronDown, User } from 'lucide-react';
+import { X, User } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 import { logoutAction } from '@/lib/auth/actions';
-import { Modal } from './mo-dal';
 import { CandidateProfileModal } from './candidate-profile-modal';
 
 // Custom Icon Components
 
-const DownIcon = memo(({ className }: { className?: string }) => {
-  return (
-    <div
-      className={cn(
-        'relative w-[10px] h-[10px] transition-transform duration-300',
-        className
-      )}
-    >
-      <img
-        width={10}
-        height={10}
-        className='object-contain w-full h-full'
-        src='/images/down.svg'
-        alt='down-icon'
-      />
-    </div>
-  );
-});
+const DownIcon = memo(
+  ({ className, mobile = false }: { className?: string; mobile?: boolean }) => {
+    return (
+      <div
+        className={cn(
+          mobile
+            ? 'relative w-[14px] h-[14px] transition-transform duration-300'
+            : 'relative w-[10px] h-[10px] transition-transform duration-300',
+          className
+        )}
+      >
+        <img
+          width={mobile ? 14 : 10}
+          height={mobile ? 14 : 10}
+          className='object-contain w-full h-full'
+          src='/images/down.svg'
+          alt='down-icon'
+        />
+      </div>
+    );
+  }
+);
 DownIcon.displayName = 'DownIcon';
 
 const HomeIcon = memo(({ className }: { className?: string }) => {
@@ -215,7 +218,7 @@ interface NavigationProps {
   customCTAButton?: {
     label: string;
     href: string;
-    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+    onClick?: () => void;
   };
 }
 
@@ -228,7 +231,6 @@ export function Navigation({
   className,
   variant = 'default',
   isLoggedIn = false,
-  userInfo,
   customCTAButton,
 }: NavigationProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -236,12 +238,13 @@ export function Navigation({
   const router = useRouter();
   const pathname = usePathname();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   // ドロップダウンメニューの切り替え
   const toggleDropdown = useCallback((dropdown: string) => {
     setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
-    setIsMenuOpen(false);
   }, []);
 
   // ログアウト処理
@@ -441,7 +444,7 @@ export function Navigation({
         variant: 'green-outline',
         size: 'lg',
         className:
-          'rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] border-2 border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] transition-all duration-200 ease-in-out',
+          'rounded-[32px] px-8 font-bold tracking-[0.1em] h-[60px] max-h-[60px] border-[1.5px] border-[#0F9058] text-[#0F9058] hover:bg-[#F3FBF7] transition-all duration-200 ease-in-out',
       },
     ];
     return (
@@ -468,8 +471,8 @@ export function Navigation({
               {candidateButtons.map((btn, index) => (
                 <Button
                   key={`${btn.label}-${index}`}
-                  variant={btn.variant as any}
-                  size={btn.size as any}
+                  variant={btn.variant as 'green-gradient' | 'green-outline'}
+                  size={btn.size as 'lg'}
                   className={btn.className}
                   asChild
                 >
@@ -484,18 +487,22 @@ export function Navigation({
             <div className='lg:hidden'>
               <Button
                 variant='ghost'
-                className='p-2'
+                className='p-3'
                 onClick={toggleMenuCallback}
                 aria-label='メニューを開く'
               >
-                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                {isMenuOpen ? (
+                  <X size={32} className='size-8' />
+                ) : (
+                  <HamburgerIcon />
+                )}
               </Button>
             </div>
           </div>
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div className='lg:hidden bg-white shadow-lg border-t border-gray-100'>
+            <div className='lg:hidden bg-white shadow-lg border-t border-gray-100 animate-in slide-in-from-top-2 duration-200 ease-out'>
               <div className='px-6 py-6 space-y-3'>
                 {/* 会員登録ボタン（グラデーション） */}
                 <Button
@@ -517,7 +524,7 @@ export function Navigation({
                 <Button
                   variant='outline'
                   size='lg'
-                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] border-2 border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F8FDF9] transition-all duration-200 ease-in-out active:scale-[0.98]'
+                  className='w-full rounded-full px-6 font-semibold h-[48px] text-[15px] border-[1.5px] border-[#0F9058] text-[#0F9058] bg-white hover:bg-[#F8FDF9] transition-all duration-200 ease-in-out active:scale-[0.98]'
                   asChild
                 >
                   <Link
@@ -593,7 +600,7 @@ export function Navigation({
                           <span>{item.label}</span>
                           <DownIcon
                             className={cn(
-                              'ml-1',
+                              'ml-0.5',
                               openDropdown === item.label && 'rotate-180'
                             )}
                           />
@@ -669,7 +676,7 @@ export function Navigation({
                     <span>アカウント</span>
                     <DownIcon
                       className={cn(
-                        'ml-1',
+                        'ml-0.5',
                         openDropdown === 'account' && 'rotate-180'
                       )}
                     />
@@ -704,18 +711,22 @@ export function Navigation({
             <div className='lg:hidden'>
               <Button
                 variant='ghost'
-                className='p-2'
+                className='p-3'
                 onClick={toggleMenuCallback}
                 aria-label='メニューを開く'
               >
-                {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                {isMenuOpen ? (
+                  <X size={32} className='size-8' />
+                ) : (
+                  <HamburgerIcon />
+                )}
               </Button>
             </div>
           </div>
 
           {/* モバイル用ナビゲーション */}
           {isMenuOpen && (
-            <div className='lg:hidden border-t border-gray-200 bg-white'>
+            <div className='lg:hidden border-t border-gray-200 bg-white animate-in slide-in-from-top-2 duration-200 ease-out'>
               <div className='px-4 py-2 space-y-1'>
                 {navigationItems.map((item, index) => (
                   <div key={`nav-${item.label}-${index}`}>
@@ -728,13 +739,14 @@ export function Navigation({
                           <div className='flex items-center gap-2'>
                             <item.icon className='w-5 h-5' />
                             <span>{item.label}</span>
+                            <DownIcon
+                              mobile={true}
+                              className={cn(
+                                'ml-1 transform transition-transform',
+                                openDropdown === item.label && 'rotate-180'
+                              )}
+                            />
                           </div>
-                          <DownIcon
-                            className={cn(
-                              'transform transition-transform',
-                              openDropdown === item.label && 'rotate-180'
-                            )}
-                          />
                         </button>
                         {openDropdown === item.label && (
                           <div className='ml-6 mt-1 space-y-1'>
@@ -780,13 +792,14 @@ export function Navigation({
                     <div className='flex items-center gap-2'>
                       <User className='w-5 h-5' />
                       <span>アカウント</span>
+                      <DownIcon
+                        mobile={true}
+                        className={cn(
+                          'ml-1 transform transition-transform',
+                          openDropdown === 'account' && 'rotate-180'
+                        )}
+                      />
                     </div>
-                    <DownIcon
-                      className={cn(
-                        'transform transition-transform',
-                        openDropdown === 'account' && 'rotate-180'
-                      )}
-                    />
                   </button>
                   {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
@@ -896,7 +909,7 @@ export function Navigation({
                               <span>{item.label}</span>
                               <DownIcon
                                 className={cn(
-                                  'ml-1',
+                                  'ml-0.5',
                                   openDropdown === item.label && 'rotate-180'
                                 )}
                               />
@@ -973,7 +986,7 @@ export function Navigation({
                       <span>アカウント</span>
                       <DownIcon
                         className={cn(
-                          'ml-1',
+                          'ml-0.5',
                           openDropdown === 'account' && 'rotate-180'
                         )}
                       />
@@ -1008,50 +1021,85 @@ export function Navigation({
               <div className='lg:hidden'>
                 <Button
                   variant='ghost'
-                  className='p-2'
+                  className='p-3'
                   onClick={toggleMenuCallback}
                   aria-label='メニューを開く'
                 >
-                  {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+                  {isMenuOpen ? (
+                    <X size={32} className='size-8' />
+                  ) : (
+                    <HamburgerIcon />
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* モバイル用ナビゲーション */}
             {isMenuOpen && (
-              <div className='lg:hidden border-t border-gray-200 bg-white'>
-                <div className='px-4 py-2 space-y-1'>
+              <div className='lg:hidden fixed inset-0 bg-white z-50 animate-in fade-in-0 slide-in-from-top-4 duration-200 ease-out'>
+                {/* Close button in top-right corner */}
+                <div className='absolute top-6 right-6'>
+                  <Button
+                    variant='ghost'
+                    className='p-3 rounded-full hover:bg-gray-100 transition-colors duration-200'
+                    onClick={closeMenuCallback}
+                    aria-label='メニューを閉じる'
+                  >
+                    <X size={32} className='size-8 text-[#323232]' />
+                  </Button>
+                </div>
+
+                {/* Menu content */}
+                <div className='px-6 py-16 space-y-3 overflow-y-auto h-full'>
                   {navigationItems.map((item, index) => (
-                    <div key={`nav-${item.label}-${index}`}>
-                      {item.hasDropdown ? (
+                    <div
+                      key={`nav-${item.label}-${index}`}
+                      className='border-b border-gray-100 pb-2 last:border-b-0'
+                    >
+                      {item.label === 'プロフィール確認・編集' ? (
+                        <button
+                          onClick={() => {
+                            setIsProfileModalOpen(true);
+                            setIsMenuOpen(false);
+                          }}
+                          className='w-full flex items-center gap-4 px-4 py-4 text-[18px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
+                        >
+                          <item.icon className='w-6 h-6' />
+                          <span>{item.label}</span>
+                        </button>
+                      ) : item.hasDropdown ? (
                         <div>
                           <button
                             onClick={() => toggleDropdown(item.label)}
-                            className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                            className='w-full flex items-center justify-between px-4 py-4 text-[18px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
                           >
-                            <div className='flex items-center gap-2'>
-                              <item.icon className='w-5 h-5' />
+                            <div className='flex items-center gap-4'>
+                              <item.icon className='w-6 h-6' />
                               <span>{item.label}</span>
+                              <DownIcon
+                                mobile={true}
+                                className={cn(
+                                  'ml-1 transform transition-transform duration-200',
+                                  openDropdown === item.label && 'rotate-180'
+                                )}
+                              />
                             </div>
-                            <DownIcon
-                              className={cn(
-                                'transform transition-transform',
-                                openDropdown === item.label && 'rotate-180'
-                              )}
-                            />
                           </button>
                           {openDropdown === item.label && (
-                            <div className='ml-6 mt-1 space-y-1'>
+                            <div className='ml-8 mt-2 space-y-2 animate-in slide-in-from-top-2 duration-200'>
                               {item.dropdownItems?.map(
                                 (dropdownItem, dropdownIndex) => (
                                   <Link
                                     key={`dropdown-${dropdownItem.label}-${dropdownIndex}`}
                                     href={dropdownItem.href}
                                     prefetch={dropdownItem.prefetch}
-                                    className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                                    className='block px-4 py-3 text-[16px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
                                     onClick={() => {
-                                      setIsMenuOpen(false);
-                                      setOpenDropdown(null);
+                                      // 少し遅延させて遷移確定後にメニューを閉じる
+                                      setTimeout(() => {
+                                        setIsMenuOpen(false);
+                                        setOpenDropdown(null);
+                                      }, 150);
                                     }}
                                   >
                                     {dropdownItem.label}
@@ -1065,10 +1113,15 @@ export function Navigation({
                         <Link
                           href={item.href}
                           prefetch={item.prefetch}
-                          className='flex items-center gap-2 px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
-                          onClick={closeMenuCallback}
+                          className='flex items-center gap-4 px-4 py-4 text-[18px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
+                          onClick={() => {
+                            // 少し遅延させて遷移確定後にメニューを閉じる
+                            setTimeout(() => {
+                              setIsMenuOpen(false);
+                            }, 150);
+                          }}
                         >
-                          <item.icon className='w-5 h-5' />
+                          <item.icon className='w-6 h-6' />
                           <span>{item.label}</span>
                         </Link>
                       )}
@@ -1076,30 +1129,34 @@ export function Navigation({
                   ))}
 
                   {/* モバイル用アカウント情報 */}
-                  <div className='border-t border-gray-200 pt-2 mt-2'>
+                  <div className='border-t border-gray-200 pt-4'>
                     <button
                       onClick={() => toggleDropdown('account')}
-                      className='w-full flex items-center justify-between px-3 py-2 text-[16px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                      className='w-full flex items-center justify-between px-4 py-4 text-[18px] font-noto-sans-jp font-bold text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
                     >
-                      <div className='flex items-center gap-2'>
-                        <User className='w-5 h-5' />
+                      <div className='flex items-center gap-4'>
+                        <User className='w-6 h-6' />
                         <span>アカウント</span>
+                        <DownIcon
+                          mobile={true}
+                          className={cn(
+                            'ml-1 transform transition-transform duration-200',
+                            openDropdown === 'account' && 'rotate-180'
+                          )}
+                        />
                       </div>
-                      <DownIcon
-                        className={cn(
-                          'transform transition-transform',
-                          openDropdown === 'account' && 'rotate-180'
-                        )}
-                      />
                     </button>
                     {openDropdown === 'account' && (
-                      <div className='ml-6 mt-1 space-y-1'>
+                      <div className='ml-8 mt-2 space-y-2 animate-in slide-in-from-top-2 duration-200'>
                         <Link
                           href='/candidate/setting'
-                          className='block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                          className='block px-4 py-3 text-[16px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
                           onClick={() => {
-                            setIsMenuOpen(false);
-                            setOpenDropdown(null);
+                            // 少し遅延させて遷移確定後にメニューを閉じる
+                            setTimeout(() => {
+                              setIsMenuOpen(false);
+                              setOpenDropdown(null);
+                            }, 150);
                           }}
                         >
                           アカウント設定
@@ -1109,7 +1166,7 @@ export function Navigation({
                             handleLogout();
                             setIsMenuOpen(false);
                           }}
-                          className='w-full text-left px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
+                          className='w-full text-left px-4 py-3 text-[16px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-lg transition-all duration-200'
                         >
                           ログアウト
                         </button>
@@ -1163,7 +1220,7 @@ export function Navigation({
   if (isMenuOpen) {
     return (
       <div
-        className='lg:hidden fixed inset-0 bg-white z-50'
+        className='lg:hidden fixed inset-0 bg-white z-50 animate-in fade-in-0 duration-200 ease-out'
         onClick={closeMenuCallback}
         aria-label='メニューを閉じる'
       >
@@ -1214,11 +1271,15 @@ export function Navigation({
           <div className='lg:hidden'>
             <Button
               variant='ghost'
-              className='p-2'
+              className='p-3'
               onClick={toggleMenuCallback}
               aria-label='メニューを開く'
             >
-              {isMenuOpen ? <X className='h-6 w-6' /> : <HamburgerIcon />}
+              {isMenuOpen ? (
+                <X size={32} className='size-8' />
+              ) : (
+                <HamburgerIcon />
+              )}
             </Button>
           </div>
         </div>
@@ -1226,7 +1287,7 @@ export function Navigation({
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div
-            className='lg:hidden fixed inset-0 bg-white z-50'
+            className='lg:hidden fixed inset-0 bg-white z-50 animate-in fade-in-0 duration-200 ease-out'
             onClick={closeMenuCallback}
             aria-label='メニューを閉じる'
           >

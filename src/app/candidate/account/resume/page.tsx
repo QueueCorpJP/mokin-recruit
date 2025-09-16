@@ -3,9 +3,9 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import {
   PageLayout,
-  ContentCard,
-  SectionHeader,
-  DataRow,
+  // ContentCard,
+  // SectionHeader,
+  // DataRow,
 } from '@/components/candidate/account';
 import ResumeUploadSection from './ResumeUploadSection';
 
@@ -31,5 +31,3 @@ export default async function CandidateResumePage() {
     </PageLayout>
   );
 }
-
-export const dynamic = 'force-dynamic';

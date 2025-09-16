@@ -1,16 +1,22 @@
 export const JOB_CHANGE_TIMING_OPTIONS = [
-  { value: 'within_3months', label: '3か月以内に' },
-  { value: 'within_6months', label: '6か月以内に' },
-  { value: 'within_1year', label: '1年以内に' },
-  { value: 'undecided', label: '未定' },
+  { value: '3か月以内に', label: '3か月以内に' },
+  { value: '6か月以内に', label: '6か月以内に' },
+  { value: '1年以内に', label: '1年以内に' },
+  { value: '未定', label: '未定' },
 ] as const;
 
 export const CURRENT_ACTIVITY_STATUS_OPTIONS = [
-  { value: 'not_started', label: 'まだ始めていない' },
-  { value: 'info_gathering', label: '情報収集中' },
-  { value: 'document_screening', label: '書類選考に進んでいる企業がある' },
-  { value: 'interviewing', label: '面接・面談を受けている企業がある' },
-  { value: 'offer_received', label: '内定をもらっている' },
+  { value: 'まだ始めていない', label: 'まだ始めていない' },
+  { value: '情報収集中', label: '情報収集中' },
+  {
+    value: '書類選考に進んでいる企業がある',
+    label: '書類選考に進んでいる企業がある',
+  },
+  {
+    value: '面接・面談を受けている企業がある',
+    label: '面接・面談を受けている企業がある',
+  },
+  { value: '内定をもらっている', label: '内定をもらっている' },
 ] as const;
 
 export const PROGRESS_STATUS_OPTIONS = [

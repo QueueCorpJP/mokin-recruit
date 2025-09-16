@@ -1,27 +1,36 @@
+// Message types aligned with Supabase database schema
+
+export type MessageSenderType = 'CANDIDATE' | 'COMPANY_USER';
+export type MessageType = 'SCOUT' | 'APPLICATION' | 'GENERAL';
+export type MessageStatus = 'SENT' | 'READ' | 'REPLIED';
+
 export interface ChatMessage {
   id: string;
   room_id: string;
   content: string;
-  sender_type: 'CANDIDATE' | 'COMPANY_USER';
+  sender_type: MessageSenderType;
   sender_candidate_id?: string | null;
-  sender_company_group_id?: string | null;
-  message_type: 'SCOUT' | 'APPLICATION' | 'GENERAL';
+  sender_company_user_id?: string | null;
+  receiver_type: MessageSenderType;
+  receiver_candidate_id?: string | null;
+  receiver_company_user_id?: string | null;
+  message_type: MessageType;
   subject?: string | null;
-  status: 'SENT' | 'READ' | 'REPLIED';
-  sent_at: string | null;
-  read_at?: string | null;
-  replied_at?: string | null;
-  file_urls?: string[];
+  status: MessageStatus;
+  attachment_file_paths?: string[];
   created_at: string;
   updated_at: string;
-  
-  // リレーションデータ
+  read_at?: string | null;
+  replied_at?: string | null;
+
+  // リレーションデータ（JOINクエリ結果用）
   sender_candidate?: {
     first_name: string;
     last_name: string;
   } | null;
-  sender_company_group?: {
-    group_name: string;
+  sender_company_user?: {
+    full_name: string;
+    position_title?: string;
     company_account: {
       company_name: string;
     };

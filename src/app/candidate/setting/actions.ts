@@ -2,20 +2,11 @@
 
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
+import type { NotificationSettings, ScoutSettings } from '@/types';
 
 // 簡単なメモリキャッシュ
 const userSettingsCache = new Map<string, { data: any; timestamp: number }>();
 const USER_SETTINGS_CACHE_TTL = 1 * 60 * 1000; // 1分
-
-export interface NotificationSettings {
-  scout_notification: 'receive' | 'not-receive';
-  message_notification: 'receive' | 'not-receive';
-  recommendation_notification: 'receive' | 'not-receive';
-}
-
-export interface ScoutSettings {
-  scout_status: 'receive' | 'not-receive';
-}
 
 export interface UserSettings {
   email: string;
@@ -36,7 +27,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   // キャッシュキーの生成
   const cacheKey = candidateId;
   const cached = userSettingsCache.get(cacheKey);
-  
+
   // 期限切れキャッシュを即座に削除
   if (cached && Date.now() - cached.timestamp >= USER_SETTINGS_CACHE_TTL) {
     userSettingsCache.delete(cacheKey);
@@ -67,27 +58,39 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   console.log('Candidate data:', candidateData);
 
   // Get notification settings from notification_settings table
-  console.log('Searching notification_settings with candidate_id:', candidateId);
+  console.log(
+    'Searching notification_settings with candidate_id:',
+    candidateId
+  );
   const { data: notificationData, error: notificationError } = await supabase
     .from('notification_settings')
-    .select('scout_notification, message_notification, recommendation_notification')
+    .select(
+      'scout_notification, message_notification, recommendation_notification'
+    )
     .eq('candidate_id', candidateId)
     .maybeSingle();
 
   if (notificationError) {
     console.error('通知設定の取得エラー:', notificationError);
     // Try with string conversion for scout_settings
-    const { data: notificationDataStr, error: notificationErrorStr } = await supabase
-      .from('notification_settings')
-      .select('scout_notification, message_notification, recommendation_notification')
-      .eq('candidate_id', String(candidateId))
-      .maybeSingle();
-    console.log('Notification settings with string conversion:', notificationDataStr, notificationErrorStr);
+    const { data: notificationDataStr, error: notificationErrorStr } =
+      await supabase
+        .from('notification_settings')
+        .select(
+          'scout_notification, message_notification, recommendation_notification'
+        )
+        .eq('candidate_id', String(candidateId))
+        .maybeSingle();
+    console.log(
+      'Notification settings with string conversion:',
+      notificationDataStr,
+      notificationErrorStr
+    );
   } else {
     console.log('Notification settings found:', notificationData);
   }
 
-  // Get scout settings from scout_settings table  
+  // Get scout settings from scout_settings table
   console.log('Searching scout_settings with candidate_id:', candidateId);
   const { data: scoutData, error: scoutError } = await supabase
     .from('scout_settings')
@@ -103,7 +106,11 @@ export async function getUserSettings(): Promise<UserSettings | null> {
       .select('scout_status')
       .eq('candidate_id', String(candidateId))
       .maybeSingle();
-    console.log('Scout settings with string conversion:', scoutDataStr, scoutErrorStr);
+    console.log(
+      'Scout settings with string conversion:',
+      scoutDataStr,
+      scoutErrorStr
+    );
   } else {
     console.log('Scout settings found:', scoutData);
   }
@@ -116,7 +123,9 @@ export async function getUserSettings(): Promise<UserSettings | null> {
   if (!notificationData && notificationError) {
     const { data: notificationDataStr } = await supabase
       .from('notification_settings')
-      .select('scout_notification, message_notification, recommendation_notification')
+      .select(
+        'scout_notification, message_notification, recommendation_notification'
+      )
       .eq('candidate_id', String(candidateId))
       .maybeSingle();
     finalNotificationData = notificationDataStr;
@@ -141,7 +150,7 @@ export async function getUserSettings(): Promise<UserSettings | null> {
 
   // 成功した場合のみキャッシュに保存
   userSettingsCache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
+
   // キャッシュサイズを制限（メモリ使用量対策）
   if (userSettingsCache.size > 20) {
     const oldestKey = userSettingsCache.keys().next().value;

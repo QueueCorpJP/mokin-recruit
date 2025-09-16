@@ -4,8 +4,6 @@ import CtaGuideSection from '@/components/cta/CtaGuideSection';
 import { getCachedCompanyUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 
-export const dynamic = 'force-dynamic';
-
 export default async function ContactPage() {
   // 親レイアウト（CompanyLayoutClient）で認証処理が統一されているため、
   // ここでは認証チェックを削除

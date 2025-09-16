@@ -152,6 +152,7 @@ export async function setPasswordAction(
           .insert({
             id: userId,
             email: userEmail,
+            status: 'temporary', // 仮登録状態
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });

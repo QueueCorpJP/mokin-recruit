@@ -4,8 +4,9 @@ import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';
+import type { MediaArticle } from '@/types';
 
-interface MediaArticle {
+interface MediaArticleView {
   id: string;
   date: string;
   categories: string[];
@@ -16,7 +17,7 @@ interface MediaArticle {
 }
 
 interface ArticleGridProps {
-  articles: MediaArticle[];
+  articles: MediaArticleView[];
   filterType?: 'all' | 'category' | 'tag';
   filterValue?: string;
   hasMore?: boolean;
@@ -26,20 +27,23 @@ interface ArticleGridProps {
 
 const ITEMS_PER_PAGE = 9;
 
-export const ArticleGrid: React.FC<ArticleGridProps> = ({ 
-  articles, 
-  filterType = 'all', 
+export const ArticleGrid: React.FC<ArticleGridProps> = ({
+  articles,
+  filterType = 'all',
   filterValue,
   hasMore = false,
   loadingMore = false,
-  onLoadMore
+  onLoadMore,
 }) => {
   const router = useRouter();
-  
-  const handleArticleClick = useCallback((articleId: string) => {
-    router.prefetch(`/candidate/media/${articleId}`);
-    router.push(`/candidate/media/${articleId}`);
-  }, [router]);
+
+  const handleArticleClick = useCallback(
+    (articleId: string) => {
+      router.prefetch(`/candidate/media/${articleId}`);
+      router.push(`/candidate/media/${articleId}`);
+    },
+    [router]
+  );
 
   const getSectionInfo = () => {
     switch (filterType) {
@@ -47,19 +51,19 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({
         return {
           icon: '/images/cotegory.svg',
           title: `「${filterValue || 'カテゴリー'}」の記事の一覧`,
-          alt: 'category'
+          alt: 'category',
         };
       case 'tag':
         return {
           icon: '/images/tag.svg',
           title: `「${filterValue || 'タグ'}」の記事の一覧`,
-          alt: 'tag'
+          alt: 'tag',
         };
       default:
         return {
           icon: '/images/new.svg',
           title: '新着記事',
-          alt: 'new'
+          alt: 'new',
         };
     }
   };
@@ -67,28 +71,42 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({
   const sectionInfo = getSectionInfo();
 
   return (
-    <div className="flex-1">
-      <div className="flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[24px]">
-        <Image src={sectionInfo.icon} alt={sectionInfo.alt} width={24} height={24} loading="lazy" />
-        <h2 className="text-[20px] text-[#323232] Noto_Sans_JP" style={{ 
-          fontWeight: 700,
-          fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }}>{sectionInfo.title}</h2>
+    <div className='flex-1'>
+      <div className='flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[24px]'>
+        <Image
+          src={sectionInfo.icon}
+          alt={sectionInfo.alt}
+          width={24}
+          height={24}
+          loading='lazy'
+        />
+        <h2
+          className='text-[20px] text-[#323232] Noto_Sans_JP'
+          style={{
+            fontWeight: 700,
+            fontFamily:
+              'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          }}
+        >
+          {sectionInfo.title}
+        </h2>
       </div>
       {articles.length === 0 ? (
-        <div className="flex items-center justify-center py-[120px]">
-          <p className="text-[18px] text-[#666666] Noto_Sans_JP">まだ記事はありません</p>
+        <div className='flex items-center justify-center py-[120px]'>
+          <p className='text-[18px] text-[#666666] Noto_Sans_JP'>
+            まだ記事はありません
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]">
-          {articles.map((article) => (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[40px]'>
+          {articles.map(article => (
             <article
               key={article.id}
               onClick={() => handleArticleClick(article.id)}
-              className="bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group"
+              className='bg-[#FFF] rounded-[10px] overflow-hidden shadow-[0_0_20px_0_rgba(0,0,0,0.05)] hover:shadow-none transition-all duration-300 cursor-pointer group'
             >
               {/* 画像エリア - パフォーマンス最適化 */}
-              <div className="relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden">
+              <div className='relative h-[240px] md:h-[200px] bg-gray-200 overflow-hidden'>
                 {article.imageUrl ? (
                   // Next.js Imageコンポーネントは設定済み - 必要に応じて以下のように変更可能:
                   // <Image src={article.imageUrl} alt={article.title} fill sizes="..." className="..." />
@@ -96,38 +114,45 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({
                     src={article.imageUrl}
                     alt={article.title}
                     fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    className='object-cover group-hover:scale-110 transition-transform duration-500'
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-500">No Image</span>
+                  <div className='w-full h-full bg-gray-300 flex items-center justify-center'>
+                    <span className='text-gray-500'>No Image</span>
                   </div>
                 )}
               </div>
 
               {/* コンテンツエリア */}
-              <div className="p-[24px] pb-[40px]">
-                <h3 className="text-[18px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden" 
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      textOverflow: 'ellipsis',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                    }}>
+              <div className='p-[24px] pb-[40px]'>
+                <h3
+                  className='text-[18px] font-extrabold text-[#323232] mb-[16px] Noto_Sans_JP tracking-tight overflow-hidden'
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    textOverflow: 'ellipsis',
+                    fontWeight: 700,
+                    fontFamily:
+                      'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  }}
+                >
                   {article.title}
                 </h3>
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   {article.categories && article.categories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '32px' }}>
+                    <div
+                      className='flex flex-wrap gap-2 overflow-hidden'
+                      style={{ maxHeight: '32px' }}
+                    >
                       {article.categories.map((category, index) => (
                         <span
                           key={index}
-                          className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
-                          style={{ 
+                          className='bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]'
+                          style={{
                             fontWeight: 700,
-                            fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily:
+                              'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                           }}
                         >
                           {category}
@@ -136,14 +161,18 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({
                     </div>
                   )}
                   {article.tags && article.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 overflow-hidden" style={{ maxHeight: '72px' }}>
+                    <div
+                      className='flex flex-wrap gap-2 overflow-hidden'
+                      style={{ maxHeight: '72px' }}
+                    >
                       {article.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="text-[#0F9058] text-[16px]"
-                          style={{ 
+                          className='text-[#0F9058] text-[16px]'
+                          style={{
                             fontWeight: 700,
-                            fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily:
+                              'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                           }}
                         >
                           #{tag}
@@ -160,14 +189,15 @@ export const ArticleGrid: React.FC<ArticleGridProps> = ({
 
       {/* Load More ボタン */}
       {hasMore && onLoadMore && (
-        <div className="flex justify-center mt-[60px]">
+        <div className='flex justify-center mt-[60px]'>
           <button
             onClick={onLoadMore}
             disabled={loadingMore}
-            className="bg-[#0F9058] text-white px-[40px] py-[16px] rounded-full hover:bg-[#0D7A4A] transition-colors disabled:opacity-50"
-            style={{ 
+            className='bg-[#0F9058] text-white px-[40px] py-[16px] rounded-full hover:bg-[#0D7A4A] transition-colors disabled:opacity-50'
+            style={{
               fontWeight: 700,
-              fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily:
+                'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             }}
           >
             {loadingMore ? '読み込み中...' : 'もっと見る'}

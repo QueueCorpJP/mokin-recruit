@@ -1,11 +1,8 @@
-
 import React from 'react';
 import TemplateNewClient from './TemplateNewClient';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyGroups, type GroupOption } from './actions';
 import { redirect } from 'next/navigation';
-
-export const dynamic = 'force-dynamic';
 
 // NOTE: サーバーコンポーネント（ユーザー情報取得のため）
 export default async function TemplateNewPage() {
@@ -23,7 +20,7 @@ export default async function TemplateNewPage() {
   // サーバーサイドでグループ一覧を取得
   let groupOptions: GroupOption[] = [];
   let error: string | null = null;
-  
+
   try {
     groupOptions = await getCompanyGroups();
   } catch (err) {

@@ -2,24 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
-import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
+import { IndustryModal } from '@/app/company/job/IndustryModal';
+import { JobTypeModal } from '@/app/company/job/JobTypeModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
 import WorkStyleSelectModal from '@/components/career-status/WorkStyleSelectModal';
-import { type Industry, INDUSTRY_GROUPS } from '@/constants/industry-data';
-import { JOB_TYPE_GROUPS, type JobType } from '@/constants/job-type-data';
+import { Modal } from '@/components/ui/mo-dal';
+import { SelectInput } from '@/components/ui/select-input';
 import { saveExpectationData } from './actions';
 
 interface ExpectationFormData {
   desiredIncome: string;
-  industries: Array<{
-    id: string;
-    name: string;
-  }>;
-  jobTypes: Array<{
-    id: string;
-    name: string;
-  }>;
+  industries: string[];
+  jobTypes: string[];
   workLocations: Array<{
     id: string;
     name: string;
@@ -29,6 +23,37 @@ interface ExpectationFormData {
     name: string;
   }>;
 }
+
+const incomeOptions = [
+  { value: '', label: '問わない' },
+  { value: '600', label: '600万円以上' },
+  { value: '700', label: '700万円以上' },
+  { value: '800', label: '800万円以上' },
+  { value: '900', label: '900万円以上' },
+  { value: '1000', label: '1000万円以上' },
+  { value: '1100', label: '1100万円以上' },
+  { value: '1200', label: '1200万円以上' },
+  { value: '1300', label: '1300万円以上' },
+  { value: '1400', label: '1400万円以上' },
+  { value: '1500', label: '1500万円以上' },
+  { value: '1600', label: '1600万円以上' },
+  { value: '1700', label: '1700万円以上' },
+  { value: '1800', label: '1800万円以上' },
+  { value: '1900', label: '1900万円以上' },
+  { value: '2000', label: '2000万円以上' },
+  { value: '2100', label: '2100万円以上' },
+  { value: '2200', label: '2200万円以上' },
+  { value: '2300', label: '2300万円以上' },
+  { value: '2400', label: '2400万円以上' },
+  { value: '2500', label: '2500万円以上' },
+  { value: '2600', label: '2600万円以上' },
+  { value: '2700', label: '2700万円以上' },
+  { value: '2800', label: '2800万円以上' },
+  { value: '2900', label: '2900万円以上' },
+  { value: '3000', label: '3000万円以上' },
+  { value: '4000', label: '4000万円以上' },
+  { value: '5000', label: '5000万円以上' },
+];
 
 export default function SignupExpectationPage() {
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
@@ -58,7 +83,6 @@ export default function SignupExpectationPage() {
   };
 
   const handleSubmit = async (e: any) => {
-    // eslint-disable-next-line
     e.preventDefault();
     if (!isFormValid()) return;
 
@@ -66,48 +90,23 @@ export default function SignupExpectationPage() {
     try {
       await saveExpectationData(formData);
     } catch (error) {
-      // eslint-disable-next-line
       console.error('Expectation data save failed:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 業種モーダル
-  const handleIndustriesConfirm = (industryNames: string[]) => {
-    // 名前からIndustryオブジェクトに変換
-    const industries: Industry[] = industryNames
-      .map(name =>
-        INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.name === name)
-      )
-      .filter(Boolean) as Industry[];
-    setFormData(prev => ({ ...prev, industries }));
-    setIsIndustryModalOpen(false); // 決定時にモーダルを閉じる
-  };
-
-  const handleRemoveIndustry = (id: string) => {
+  const handleRemoveIndustry = (industry: string) => {
     setFormData(prev => ({
       ...prev,
-      industries: prev.industries.filter(i => i.id !== id),
+      industries: prev.industries.filter(i => i !== industry),
     }));
   };
 
-  // 職種モーダル
-  const handleJobTypesConfirm = (jobTypeNames: string[]) => {
-    // 名前からJobTypeオブジェクトに変換
-    const jobTypes: JobType[] = jobTypeNames
-      .map(name =>
-        JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.name === name)
-      )
-      .filter(Boolean) as JobType[];
-    setFormData(prev => ({ ...prev, jobTypes }));
-    setIsJobTypeModalOpen(false); // 決定時にモーダルを閉じる
-  };
-
-  const handleRemoveJobType = (id: string) => {
+  const handleRemoveJobType = (jobType: string) => {
     setFormData(prev => ({
       ...prev,
-      jobTypes: prev.jobTypes.filter(j => j.id !== id),
+      jobTypes: prev.jobTypes.filter(j => j !== jobType),
     }));
   };
 
@@ -126,26 +125,48 @@ export default function SignupExpectationPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line
     window.scrollTo({ top: 0 });
   }, []);
 
   return (
     <>
-      <IndustrySelectModal
-        isOpen={isIndustryModalOpen}
-        onClose={() => setIsIndustryModalOpen(false)}
-        onConfirm={handleIndustriesConfirm}
-        initialSelected={formData.industries.map(i => i.name)}
-        maxSelections={3}
-      />
-      <JobTypeSelectModal
-        isOpen={isJobTypeModalOpen}
-        onClose={() => setIsJobTypeModalOpen(false)}
-        onConfirm={handleJobTypesConfirm}
-        initialSelected={formData.jobTypes.map(j => j.name)}
-        maxSelections={3}
-      />
+      {isIndustryModalOpen && (
+        <Modal
+          title='業種を選択'
+          isOpen={isIndustryModalOpen}
+          onClose={() => setIsIndustryModalOpen(false)}
+          primaryButtonText='決定'
+          onPrimaryAction={() => setIsIndustryModalOpen(false)}
+          width='800px'
+          height='680px'
+        >
+          <IndustryModal
+            selectedIndustries={formData.industries}
+            onIndustriesChange={industries =>
+              setFormData(prev => ({ ...prev, industries }))
+            }
+            onClose={() => setIsIndustryModalOpen(false)}
+          />
+        </Modal>
+      )}
+      {isJobTypeModalOpen && (
+        <Modal
+          title='職種を選択'
+          isOpen={isJobTypeModalOpen}
+          onClose={() => setIsJobTypeModalOpen(false)}
+          primaryButtonText='決定'
+          onPrimaryAction={() => setIsJobTypeModalOpen(false)}
+          width='800px'
+          height='680px'
+        >
+          <JobTypeModal
+            selectedJobTypes={formData.jobTypes}
+            setSelectedJobTypes={jobTypes =>
+              setFormData(prev => ({ ...prev, jobTypes }))
+            }
+          />
+        </Modal>
+      )}
       <WorkLocationSelectModal
         isOpen={isWorkLocationModalOpen}
         onClose={() => setIsWorkLocationModalOpen(false)}
@@ -186,7 +207,7 @@ export default function SignupExpectationPage() {
 
                 {/* Progress Tabs */}
                 <div className='flex flex-row w-full h-[45px]'>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -204,7 +225,7 @@ export default function SignupExpectationPage() {
                       経歴詳細
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='25'
@@ -222,7 +243,7 @@ export default function SignupExpectationPage() {
                       語学・スキル
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -240,7 +261,7 @@ export default function SignupExpectationPage() {
                       希望条件
                     </span>
                   </div>
-                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+                  <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                     <div className='w-6 h-6 flex items-center justify-center'>
                       <svg
                         width='24'
@@ -294,60 +315,19 @@ export default function SignupExpectationPage() {
                       </label>
                     </div>
                     <div className='w-[400px]'>
-                      <div className='relative'>
-                        <select
-                          value={formData.desiredIncome}
-                          onChange={e =>
-                            setFormData(prev => ({
-                              ...prev,
-                              desiredIncome: e.target.value,
-                            }))
-                          }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          <option value=''>問わない</option>
-                          <option value='600'>600万円以上</option>
-                          <option value='700'>700万円以上</option>
-                          <option value='800'>800万円以上</option>
-                          <option value='900'>900万円以上</option>
-                          <option value='1000'>1000万円以上</option>
-                          <option value='1100'>1100万円以上</option>
-                          <option value='1200'>1200万円以上</option>
-                          <option value='1300'>1300万円以上</option>
-                          <option value='1400'>1400万円以上</option>
-                          <option value='1500'>1500万円以上</option>
-                          <option value='1600'>1600万円以上</option>
-                          <option value='1700'>1700万円以上</option>
-                          <option value='1800'>1800万円以上</option>
-                          <option value='1900'>1900万円以上</option>
-                          <option value='2000'>2000万円以上</option>
-                          <option value='2100'>2100万円以上</option>
-                          <option value='2200'>2200万円以上</option>
-                          <option value='2300'>2300万円以上</option>
-                          <option value='2400'>2400万円以上</option>
-                          <option value='2500'>2500万円以上</option>
-                          <option value='2600'>2600万円以上</option>
-                          <option value='2700'>2700万円以上</option>
-                          <option value='2800'>2800万円以上</option>
-                          <option value='2900'>2900万円以上</option>
-                          <option value='3000'>3000万円以上</option>
-                          <option value='4000'>4000万円以上</option>
-                          <option value='5000'>5000万円以上</option>
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={incomeOptions}
+                        value={formData.desiredIncome}
+                        onChange={value =>
+                          setFormData(prev => ({
+                            ...prev,
+                            desiredIncome: value,
+                          }))
+                        }
+                        placeholder='問わない'
+                        radius={5}
+                        className='w-full'
+                      />
                     </div>
                   </div>
 
@@ -368,19 +348,17 @@ export default function SignupExpectationPage() {
                       </button>
                       {formData.industries.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {formData.industries.map(industry => (
+                          {formData.industries.map((industry, index) => (
                             <div
-                              key={industry.id}
+                              key={index}
                               className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                             >
-                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
-                                {industry.name}
+                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                                {industry}
                               </span>
                               <button
                                 type='button'
-                                onClick={() =>
-                                  handleRemoveIndustry(industry.id)
-                                }
+                                onClick={() => handleRemoveIndustry(industry)}
                                 className='w-3 h-3'
                               >
                                 <svg
@@ -421,17 +399,17 @@ export default function SignupExpectationPage() {
                       </button>
                       {formData.jobTypes.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {formData.jobTypes.map(jobType => (
+                          {formData.jobTypes.map((jobType, index) => (
                             <div
-                              key={jobType.id}
+                              key={index}
                               className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                             >
-                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
-                                {jobType.name}
+                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                                {jobType}
                               </span>
                               <button
                                 type='button'
-                                onClick={() => handleRemoveJobType(jobType.id)}
+                                onClick={() => handleRemoveJobType(jobType)}
                                 className='w-3 h-3'
                               >
                                 <svg
@@ -479,7 +457,7 @@ export default function SignupExpectationPage() {
                               }-${index}`}
                               className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                             >
-                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
                                 {location.name}
                               </span>
                               <button
@@ -532,7 +510,7 @@ export default function SignupExpectationPage() {
                               key={style.id}
                               className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                             >
-                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
                                 {style.name}
                               </span>
                               <button
@@ -647,60 +625,19 @@ export default function SignupExpectationPage() {
                     <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                       希望年収
                     </label>
-                    <div className='relative'>
-                      <select
-                        value={formData.desiredIncome}
-                        onChange={e =>
-                          setFormData(prev => ({
-                            ...prev,
-                            desiredIncome: e.target.value,
-                          }))
-                        }
-                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                      >
-                        <option value=''>問わない</option>
-                        <option value='600'>600万円以上</option>
-                        <option value='700'>700万円以上</option>
-                        <option value='800'>800万円以上</option>
-                        <option value='900'>900万円以上</option>
-                        <option value='1000'>1000万円以上</option>
-                        <option value='1100'>1100万円以上</option>
-                        <option value='1200'>1200万円以上</option>
-                        <option value='1300'>1300万円以上</option>
-                        <option value='1400'>1400万円以上</option>
-                        <option value='1500'>1500万円以上</option>
-                        <option value='1600'>1600万円以上</option>
-                        <option value='1700'>1700万円以上</option>
-                        <option value='1800'>1800万円以上</option>
-                        <option value='1900'>1900万円以上</option>
-                        <option value='2000'>2000万円以上</option>
-                        <option value='2100'>2100万円以上</option>
-                        <option value='2200'>2200万円以上</option>
-                        <option value='2300'>2300万円以上</option>
-                        <option value='2400'>2400万円以上</option>
-                        <option value='2500'>2500万円以上</option>
-                        <option value='2600'>2600万円以上</option>
-                        <option value='2700'>2700万円以上</option>
-                        <option value='2800'>2800万円以上</option>
-                        <option value='2900'>2900万円以上</option>
-                        <option value='3000'>3000万円以上</option>
-                        <option value='4000'>4000万円以上</option>
-                        <option value='5000'>5000万円以上</option>
-                      </select>
-                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                        <svg
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                        >
-                          <path
-                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={incomeOptions}
+                      value={formData.desiredIncome}
+                      onChange={value =>
+                        setFormData(prev => ({
+                          ...prev,
+                          desiredIncome: value,
+                        }))
+                      }
+                      placeholder='問わない'
+                      radius={5}
+                      className='w-full'
+                    />
                   </div>
 
                   {/* Desired Industry */}
@@ -717,17 +654,17 @@ export default function SignupExpectationPage() {
                     </button>
                     {formData.industries.length > 0 && (
                       <div className='flex flex-wrap gap-2'>
-                        {formData.industries.map(industry => (
+                        {formData.industries.map((industry, index) => (
                           <div
-                            key={industry.id}
+                            key={index}
                             className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                           >
-                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
-                              {industry.name}
+                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                              {industry}
                             </span>
                             <button
                               type='button'
-                              onClick={() => handleRemoveIndustry(industry.id)}
+                              onClick={() => handleRemoveIndustry(industry)}
                               className='w-3 h-3'
                             >
                               <svg
@@ -764,17 +701,17 @@ export default function SignupExpectationPage() {
                     </button>
                     {formData.jobTypes.length > 0 && (
                       <div className='flex flex-wrap gap-2'>
-                        {formData.jobTypes.map(jobType => (
+                        {formData.jobTypes.map((jobType, index) => (
                           <div
-                            key={jobType.id}
+                            key={index}
                             className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                           >
-                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
-                              {jobType.name}
+                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                              {jobType}
                             </span>
                             <button
                               type='button'
-                              onClick={() => handleRemoveJobType(jobType.id)}
+                              onClick={() => handleRemoveJobType(jobType)}
                               className='w-3 h-3'
                             >
                               <svg
@@ -818,7 +755,7 @@ export default function SignupExpectationPage() {
                             }-${index}`}
                             className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                           >
-                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
                               {location.name}
                             </span>
                             <button
@@ -867,7 +804,7 @@ export default function SignupExpectationPage() {
                             key={style.id}
                             className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                           >
-                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                            <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
                               {style.name}
                             </span>
                             <button

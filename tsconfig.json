@@ -12,7 +12,7 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noEmit": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

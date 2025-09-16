@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ColumnCard } from '@/components/ui/ColumnCard';
 import { getArticlesWithPagination } from '@/app/candidate/media/actions';
+import type { MediaArticle } from '@/types';
 
-interface MediaArticle {
+interface MediaArticleView {
   id: string;
   title: string;
   categories: string[];
@@ -13,7 +14,7 @@ interface MediaArticle {
 }
 
 export function ColumnSection() {
-  const [articles, setArticles] = useState<MediaArticle[]>([]);
+  const [articles, setArticles] = useState<MediaArticleView[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

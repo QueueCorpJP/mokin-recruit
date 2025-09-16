@@ -9,7 +9,7 @@ interface FaqBoxProps {
   style?: React.CSSProperties;
 }
 
-export const FaqBox: React.FC<FaqBoxProps> = ({ title, body, style }) => {
+const FaqBox: React.FC<FaqBoxProps> = ({ title, body, style }) => {
   const faqBoxStyle: React.CSSProperties = {
     background: '#fff',
     padding: '16px 24px',
@@ -52,3 +52,6 @@ export const FaqBox: React.FC<FaqBoxProps> = ({ title, body, style }) => {
     </div>
   );
 };
+
+export default FaqBox;
+export { FaqBox };

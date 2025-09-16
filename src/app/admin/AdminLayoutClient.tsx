@@ -13,27 +13,29 @@ interface AdminLayoutClientProps {
 
 export function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   return (
-    <div className='min-h-screen flex flex-col'>
-      <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200" />}>
+    <div className='admin-layout min-h-screen flex flex-col' data-admin-section>
+      <Suspense
+        fallback={<div className='h-16 bg-white border-b border-gray-200' />}
+      >
         <AdminHeader />
       </Suspense>
       <div className='flex'>
-        <Suspense fallback={<div className="w-64 bg-gray-100" />}>
+        <Suspense fallback={<div className='w-64 bg-gray-100' />}>
           <AdminSidebar />
         </Suspense>
         <main className='flex-1 p-6 bg-[#F9F9F9] overflow-x-hidden min-w-0'>
-          <Suspense fallback={<div className="h-8 bg-gray-50" />}>
+          <Suspense fallback={<div className='h-8 bg-gray-50' />}>
             <AdminBreadcrumb />
           </Suspense>
           <div className='p-4 overflow-x-hidden min-w-0'>
-            <Suspense fallback={<div className="h-12 bg-white" />}>
+            <Suspense fallback={<div className='h-12 bg-white' />}>
               <AdminPageTitle />
             </Suspense>
             {children}
           </div>
         </main>
       </div>
-      <Suspense fallback={<div className="h-16 bg-gray-800" />}>
+      <Suspense fallback={<div className='h-16 bg-gray-800' />}>
         <AdminFooter />
       </Suspense>
     </div>

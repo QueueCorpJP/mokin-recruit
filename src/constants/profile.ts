@@ -70,9 +70,9 @@ export const INCOME_RANGES = [
 ] as const;
 
 export const GENDER_OPTIONS = [
-  { value: 'male', label: '男性' },
-  { value: 'female', label: '女性' },
-  { value: 'unspecified', label: '未回答' },
+  { value: '男性', label: '男性' },
+  { value: '女性', label: '女性' },
+  { value: '未回答', label: '未回答' },
 ] as const;
 
 export const generateYearOptions = (startYear?: number) => {

@@ -6,15 +6,15 @@ import { type ScoutTemplateData } from './actions';
 import { getScoutTemplateById } from './actions';
 import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
 interface ScoutTemplateEditPageProps {
   searchParams: { id?: string };
 }
 
-export default async function ScoutTemplateEditPage({ searchParams }: ScoutTemplateEditPageProps) {
+export default async function ScoutTemplateEditPage({
+  searchParams,
+}: ScoutTemplateEditPageProps) {
   const templateId = searchParams.id;
-  
+
   if (!templateId) {
     redirect('/company/scout-template');
   }
@@ -34,20 +34,20 @@ export default async function ScoutTemplateEditPage({ searchParams }: ScoutTempl
   let groupOptions: GroupOption[] = [];
   let templateData: ScoutTemplateData | null = null;
   let error: string | null = null;
-  
+
   try {
     console.log('📋 Fetching template data for ID:', templateId);
 
     const [groups, template] = await Promise.all([
       getCompanyGroups(),
-      getScoutTemplateById(templateId)
+      getScoutTemplateById(templateId),
     ]);
-    
+
     console.log('📊 Groups result:', groups);
     console.log('📝 Template result:', template);
-    
+
     groupOptions = groups;
-    
+
     if (template.success) {
       templateData = template.data;
     } else {
@@ -66,7 +66,7 @@ export default async function ScoutTemplateEditPage({ searchParams }: ScoutTempl
   }
 
   return (
-    <ScoutTemplateEditClient 
+    <ScoutTemplateEditClient
       initialGroupOptions={groupOptions}
       templateData={templateData}
       templateId={templateId}

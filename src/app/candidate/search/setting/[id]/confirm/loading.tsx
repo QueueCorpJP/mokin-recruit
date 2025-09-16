@@ -9,7 +9,10 @@ export default function Loading() {
             <div className='h-4 w-2/3 bg-gray-100 rounded animate-pulse' />
             <div className='grid grid-cols-2 gap-4'>
               {[...Array(4)].map((_, i) => (
-                <div key={i} className='h-24 bg-gray-50 rounded animate-pulse' />
+                <div
+                  key={i}
+                  className='h-24 bg-gray-50 rounded animate-pulse'
+                />
               ))}
             </div>
             <div className='flex gap-4 justify-center pt-4'>
@@ -22,6 +25,3 @@ export default function Loading() {
     </div>
   );
 }
-
-
-

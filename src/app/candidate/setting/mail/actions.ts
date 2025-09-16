@@ -4,25 +4,25 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { requireCandidateAuth } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
-import sgMail from '@sendgrid/mail';
+import { sendEmailViaSendGrid } from '@/lib/email/sender';
 
 // メールアドレス変更完了後の認証状態リフレッシュ用
 export async function refreshAuthState() {
   'use server';
-  
+
   console.log('認証状態をリフレッシュ中...');
   try {
     const cookieStore = await cookies();
-    
+
     // 全ての認証関連クッキーを削除
     const authCookies = [
       'supabase-auth-token',
       'sb-access-token',
       'sb-refresh-token',
       'next-auth.session-token',
-      'auth-token'
+      'auth-token',
     ];
-    
+
     authCookies.forEach(cookieName => {
       try {
         cookieStore.delete(cookieName);
@@ -31,7 +31,7 @@ export async function refreshAuthState() {
         console.log(`クッキー削除スキップ: ${cookieName}`);
       }
     });
-    
+
     console.log('✅ 認証状態リフレッシュ完了');
     return { success: true };
   } catch (error) {
@@ -44,7 +44,7 @@ export async function sendVerificationCode(email: string) {
   try {
     console.log('=== sendVerificationCode開始 ===');
     console.log('入力されたメールアドレス:', email);
-    
+
     const user = await requireCandidateAuth();
     if (!user) {
       console.log('認証エラー: ユーザーが見つかりません');
@@ -72,7 +72,9 @@ export async function sendVerificationCode(email: string) {
     console.log('メールアドレス同一性チェック...');
     if (currentUser.email === email) {
       console.log('現在と同じメールアドレスが入力されました');
-      return { error: '現在のメールアドレスと同じです。変更の必要はありません。' };
+      return {
+        error: '現在のメールアドレスと同じです。変更の必要はありません。',
+      };
     }
 
     // メールアドレス重複チェック（自分以外で同じメールアドレスが使用されていないか）
@@ -84,35 +86,44 @@ export async function sendVerificationCode(email: string) {
       .neq('id', user.id)
       .single();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = No rows found
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 = No rows found
       console.error('重複チェックエラー:', checkError);
       return { error: 'メールアドレスの確認に失敗しました' };
     }
 
     if (existingUser) {
       console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
-      return { error: 'このメールアドレスは既に他のユーザーによって使用されています' };
+      return {
+        error: 'このメールアドレスは既に他のユーザーによって使用されています',
+      };
     }
     console.log('重複チェック完了 - 使用可能なメールアドレス');
 
-    const verificationCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const verificationCode = Math.random()
+      .toString(36)
+      .substring(2, 6)
+      .toUpperCase();
     console.log('生成された認証コード:', verificationCode);
-    
+
     // データベースに認証コードを保存
     console.log('認証コードをデータベースに保存中...');
     const { error: saveError } = await supabase
       .from('email_verification_codes')
-      .upsert({
-        candidate_id: user.id,
-        email: email,
-        code: verificationCode,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10分後に期限切れ
-        used: false
-      }, {
-        onConflict: 'candidate_id',
-        ignoreDuplicates: false
-      });
+      .upsert(
+        {
+          candidate_id: user.id,
+          email: email,
+          code: verificationCode,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10分後に期限切れ
+          used: false,
+        },
+        {
+          onConflict: 'candidate_id',
+          ignoreDuplicates: false,
+        }
+      );
 
     if (saveError) {
       console.error('認証コード保存エラー:', saveError);
@@ -120,50 +131,38 @@ export async function sendVerificationCode(email: string) {
     }
     console.log('認証コードをデータベースに保存完了');
 
-    // SendGridでメール送信
-    console.log('メール送信設定を確認中...');
-    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
-    
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
-      console.log('SendGrid設定が不完全です');
-      return { error: 'メール送信設定が正しく構成されていません' };
+    // メール送信
+    console.log('メール送信中...');
+    console.log('送信先:', currentUser.email);
+
+    const emailResult = await sendEmailViaSendGrid({
+      to: currentUser.email,
+      subject: 'メールアドレス変更の認証コード',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0f9058;">メールアドレス変更の認証コード</h2>
+          <p>以下の認証コードを入力してください：</p>
+          <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0;">
+            <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 4px;">${verificationCode}</h3>
+          </div>
+          <p style="color: #666;">このコードは10分間有効です。</p>
+          <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
+        </div>
+      `,
+    });
+
+    if (!emailResult.success) {
+      console.error('❌ メール送信エラー:', emailResult.error);
+      return {
+        error:
+          emailResult.error ||
+          'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。',
+      };
     }
 
-    try {
-      console.log('SendGrid APIキーを設定中...');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      
-      console.log('メール送信中...');
-      console.log('送信先:', currentUser.email);
-      console.log('送信元:', process.env.SENDGRID_FROM_EMAIL);
-      
-      const msg = {
-        to: currentUser.email,
-        from: process.env.SENDGRID_FROM_EMAIL,
-        subject: 'メールアドレス変更の認証コード',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #0f9058;">メールアドレス変更の認証コード</h2>
-            <p>以下の認証コードを入力してください：</p>
-            <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0;">
-              <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 4px;">${verificationCode}</h3>
-            </div>
-            <p style="color: #666;">このコードは10分間有効です。</p>
-            <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
-          </div>
-        `
-      };
-      
-      await sgMail.send(msg);
-      
-      console.log(`✅ メール送信成功! 送信先: ${currentUser.email}`);
-      
-    } catch (emailErr) {
-      console.error('❌ メール送信エラー:', emailErr);
-      return { error: 'メールの送信に失敗しました。しばらく時間をおいて再度お試しください。' };
-    }
-    
+    console.log(`✅ メール送信成功! 送信先: ${currentUser.email}`);
+    console.log('メッセージID:', emailResult.messageId);
+
     console.log('=== sendVerificationCode完了 ===');
     return { success: true };
   } catch (error) {
@@ -176,7 +175,7 @@ export async function verifyCode(code: string) {
   try {
     console.log('=== verifyCode開始 ===');
     console.log('入力された認証コード:', code);
-    
+
     const user = await requireCandidateAuth();
     if (!user) {
       console.log('認証エラー: ユーザーが見つかりません');
@@ -185,7 +184,7 @@ export async function verifyCode(code: string) {
     console.log('認証成功 - ユーザーID:', user.id);
 
     const supabase = await getSupabaseServerClient();
-    
+
     console.log('認証コードをデータベースから検索中...');
     const { data: verification, error: fetchError } = await supabase
       .from('email_verification_codes')
@@ -216,14 +215,17 @@ export async function verifyCode(code: string) {
       .neq('id', user.id)
       .single();
 
-    if (finalCheckError && finalCheckError.code !== 'PGRST116') { // PGRST116 = No rows found
+    if (finalCheckError && finalCheckError.code !== 'PGRST116') {
+      // PGRST116 = No rows found
       console.error('最終重複チェックエラー:', finalCheckError);
       return { error: 'メールアドレスの確認に失敗しました' };
     }
 
     if (existingUser) {
       console.log('他のユーザーが同じメールアドレスを使用中:', existingUser.id);
-      return { error: 'このメールアドレスは既に他のユーザーによって使用されています' };
+      return {
+        error: 'このメールアドレスは既に他のユーザーによって使用されています',
+      };
     }
     console.log('最終重複チェック完了 - 使用可能');
 
@@ -245,16 +247,16 @@ export async function verifyCode(code: string) {
       .select('email')
       .eq('id', user.id)
       .single();
-    
+
     console.log('メールアドレスを更新中...');
     console.log('更新前のメールアドレス:', beforeUpdate?.email);
     console.log('更新予定のメールアドレス:', verification.email);
-    
+
     const { data: updateResult, error: updateEmailError } = await supabase
       .from('candidates')
-      .update({ 
+      .update({
         email: verification.email,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
       .select('email');
@@ -266,51 +268,58 @@ export async function verifyCode(code: string) {
 
     console.log('✅ candidatesテーブルのメールアドレス更新成功!');
     console.log('更新結果:', updateResult);
-    
+
     // Supabase Authのメールアドレスも更新
     console.log('Supabase Authのメールアドレスを更新中...');
     try {
-      const { data: authUpdateResult, error: authUpdateError } = await supabase.auth.admin.updateUserById(
-        user.id,
-        { email: verification.email }
-      );
+      const { data: authUpdateResult, error: authUpdateError } =
+        await supabase.auth.admin.updateUserById(user.id, {
+          email: verification.email,
+        });
 
       if (authUpdateError) {
-        console.error('Supabase Auth メールアドレス更新エラー:', authUpdateError);
+        console.error(
+          'Supabase Auth メールアドレス更新エラー:',
+          authUpdateError
+        );
         // candidatesテーブルは更新されているので、警告として扱う
-        console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+        console.warn(
+          'candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました'
+        );
       } else {
         console.log('✅ Supabase Authのメールアドレス更新成功!');
         console.log('Auth更新結果:', authUpdateResult);
       }
     } catch (authError) {
       console.error('Supabase Auth更新エラー:', authError);
-      console.warn('candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました');
+      console.warn(
+        'candidatesテーブルは更新済みですが、Supabase Authの更新に失敗しました'
+      );
     }
-    
+
     // 更新後の確認
     const { data: afterUpdate, error: afterError } = await supabase
       .from('candidates')
       .select('email')
       .eq('id', user.id)
       .single();
-    
+
     console.log('更新後のメールアドレス確認:', afterUpdate?.email);
-    
+
     // 古いセッションを無効化してから新しいセッションを作成
     console.log('古いセッションを無効化中...');
     try {
       const cookieStore = await cookies();
-      
+
       // 全ての認証関連クッキーを一旦削除
       const authCookies = [
         'supabase-auth-token',
-        'sb-access-token', 
+        'sb-access-token',
         'sb-refresh-token',
         'next-auth.session-token',
-        'auth-token'
+        'auth-token',
       ];
-      
+
       authCookies.forEach(cookieName => {
         try {
           cookieStore.delete(cookieName);
@@ -319,16 +328,18 @@ export async function verifyCode(code: string) {
           console.log(`クッキー削除スキップ: ${cookieName}`);
         }
       });
-      
+
       // Supabaseが新しいメールアドレスでセッションを再作成する
       console.log('Supabaseセッションが自動的に更新されます');
-      
+
       console.log('✅ セッション再生成完了!');
     } catch (sessionError) {
       console.error('セッション再生成エラー:', sessionError);
-      console.warn('メールアドレスは更新されましたが、セッション再生成に失敗しました');
+      console.warn(
+        'メールアドレスは更新されましたが、セッション再生成に失敗しました'
+      );
     }
-    
+
     console.log('=== verifyCode完了 ===');
     return { success: true, newEmail: verification.email };
   } catch (error) {

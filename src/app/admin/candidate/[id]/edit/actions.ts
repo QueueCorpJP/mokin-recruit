@@ -2,120 +2,43 @@
 
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
+import type {
+  UpdateCandidateData,
+  AdminEducationData as EducationData,
+  AdminWorkExperienceData as WorkExperienceData,
+  AdminJobTypeExperienceData as JobTypeExperienceData,
+  AdminSkillsData as SkillsData,
+  AdminExpectationsData as ExpectationsData,
+} from '@/types/admin';
 
-export async function checkEmailDuplication(email: string, excludeCandidateId?: string) {
+export async function checkEmailDuplication(
+  email: string,
+  excludeCandidateId?: string
+) {
   try {
     const supabase = getSupabaseAdminClient();
-    
-    let query = supabase
-      .from('candidates')
-      .select('id')
-      .eq('email', email);
-    
+
+    let query = supabase.from('candidates').select('id').eq('email', email);
+
     // 編集時は自分のIDを除外
     if (excludeCandidateId) {
       query = query.neq('id', excludeCandidateId);
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) {
       throw error;
     }
-    
+
     return { isDuplicate: data && data.length > 0 };
   } catch (error) {
     console.error('Error checking email duplication:', error);
-    return { isDuplicate: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      isDuplicate: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-}
-
-export interface UpdateCandidateData {
-  // Basic info
-  email: string;
-  last_name: string;
-  first_name: string;
-  last_name_kana: string;
-  first_name_kana: string;
-  gender: 'male' | 'female' | 'unspecified';
-  birth_date: string;
-  prefecture: string;
-  phone_number: string;
-  current_income: string;
-  current_salary?: string;
-  desired_salary?: string;
-  
-  // Current employment
-  current_company?: string;
-  current_position?: string;
-  current_residence?: string;
-  
-  // Career status
-  has_career_change: string;
-  job_change_timing: string;
-  current_activity_status: string;
-  
-  // Recent job
-  recent_job_company_name: string;
-  recent_job_department_position: string;
-  recent_job_start_year: string;
-  recent_job_start_month: string;
-  recent_job_end_year: string;
-  recent_job_end_month: string;
-  recent_job_is_currently_working: boolean;
-  recent_job_description: string;
-  
-  // Summary
-  job_summary: string;
-  self_pr: string;
-  
-  // Industry and Job Types
-  recent_job_industries: string[];
-  recent_job_types: string[];
-  
-  // Preferences
-  skills?: string[];
-  desired_industries?: string[];
-  desired_job_types?: string[];
-  desired_locations?: string[];
-  management_experience_count?: number;
-  desired_work_styles?: string[];
-  
-  // Password
-  password?: string;
-}
-
-export interface EducationData {
-  final_education: string;
-  school_name: string;
-  department: string;
-  graduation_year: number | null;
-  graduation_month: number | null;
-}
-
-export interface WorkExperienceData {
-  industry_name: string;
-  experience_years: number;
-}
-
-export interface JobTypeExperienceData {
-  job_type_name: string;
-  experience_years: number;
-}
-
-export interface SkillsData {
-  english_level: string;
-  other_languages: any;
-  skills_list: string[];
-  qualifications: string;
-}
-
-export interface ExpectationsData {
-  desired_income?: string;
-  desired_industries?: string[];
-  desired_job_types?: string[];
-  desired_work_locations?: string[];
-  desired_work_styles?: string[];
 }
 
 interface UpdateCandidateRequest {
@@ -131,7 +54,17 @@ interface UpdateCandidateRequest {
 }
 
 export async function updateCandidateData(request: UpdateCandidateRequest) {
-  const { candidateId, formData, education, workExperience, jobTypeExperience, skills, expectations, memo, selectionEntries } = request;
+  const {
+    candidateId,
+    formData,
+    education,
+    workExperience,
+    jobTypeExperience,
+    skills,
+    expectations,
+    memo: _memo,
+    selectionEntries,
+  } = request;
   try {
     const supabase = getSupabaseAdminClient();
 
@@ -142,7 +75,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
     }
 
     // Handle password update - use columns that exist in candidates table (confirmed from page.tsx)
-    let updateData: any = {
+    const updateData: any = {
       email: formData.email,
       last_name: formData.last_name,
       first_name: formData.first_name,
@@ -199,10 +132,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
     }
 
     // Update education
-    await supabase
-      .from('education')
-      .delete()
-      .eq('candidate_id', candidateId);
+    await supabase.from('education').delete().eq('candidate_id', candidateId);
 
     if (education.final_education || education.school_name) {
       const { error: educationError } = await supabase
@@ -276,21 +206,20 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
     }
 
     // Update skills
-    await supabase
-      .from('skills')
-      .delete()
-      .eq('candidate_id', candidateId);
+    await supabase.from('skills').delete().eq('candidate_id', candidateId);
 
-    if (skills.english_level || skills.qualifications || skills.skills_list?.length) {
-      const { error: skillsError } = await supabase
-        .from('skills')
-        .insert({
-          candidate_id: candidateId,
-          english_level: skills.english_level,
-          other_languages: skills.other_languages,
-          skills_list: skills.skills_list,
-          qualifications: skills.qualifications,
-        });
+    if (
+      skills.english_level ||
+      skills.qualifications ||
+      skills.skills_list?.length
+    ) {
+      const { error: skillsError } = await supabase.from('skills').insert({
+        candidate_id: candidateId,
+        english_level: skills.english_level,
+        other_languages: skills.other_languages,
+        skills_list: skills.skills_list,
+        qualifications: skills.qualifications,
+      });
 
       if (skillsError) {
         throw skillsError;
@@ -303,9 +232,14 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
       .delete()
       .eq('candidate_id', candidateId);
 
-    if (expectations && (expectations.desired_income || expectations.desired_industries?.length || 
-        expectations.desired_job_types?.length || expectations.desired_work_locations?.length || 
-        expectations.desired_work_styles?.length)) {
+    if (
+      expectations &&
+      (expectations.desired_income ||
+        expectations.desired_industries?.length ||
+        expectations.desired_job_types?.length ||
+        expectations.desired_work_locations?.length ||
+        expectations.desired_work_styles?.length)
+    ) {
       const { error: expectationsError } = await supabase
         .from('expectations')
         .insert({

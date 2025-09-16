@@ -108,7 +108,7 @@ additional_redirect_urls = [
   "https://*-*.vercel.app/**"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
-jwt_expiry = 3600
+jwt_expiry = 900  # 15分に短縮してセキュリティを向上
 # If disabled, the refresh token will never expire.
 enable_refresh_token_rotation = true
 # Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
@@ -176,11 +176,11 @@ max_frequency = "5s"
 # 4152127777 = "123456"
 
 # Configure logged in session timeouts.
-# [auth.sessions]
+[auth.sessions]
 # Force log out after the specified duration.
-# timebox = "24h"
+timebox = "72h"  # 3日間でセッション終了
 # Force log out if the user has been inactive longer than the specified duration.
-# inactivity_timeout = "8h"
+inactivity_timeout = "24h"  # 24時間非アクティブでタイムアウト
 
 # This hook runs before a token is issued and allows you to add additional claims based on the authentication method used.
 # [auth.hook.custom_access_token]

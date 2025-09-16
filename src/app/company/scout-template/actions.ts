@@ -1,6 +1,9 @@
 'use server';
 
-import { getCachedCompanyUser, requireCompanyAuthForAction } from '@/lib/auth/server';
+import {
+  getCachedCompanyUser,
+  requireCompanyAuthForAction,
+} from '@/lib/auth/server';
 import { createServerActionClient } from '@/lib/supabase/server';
 
 export interface ScoutTemplate {
@@ -24,19 +27,22 @@ export interface JobPosting {
 }
 
 // スカウトテンプレート一覧を取得
-export async function getScoutTemplates(limit: number = 50, offset: number = 0) {
+export async function getScoutTemplates(
+  limit: number = 50,
+  offset: number = 0
+) {
   try {
     console.log('🔍 Starting getScoutTemplates function');
-    
+
     // より厳密な企業認証を使用
     const authResult = await requireCompanyAuthForAction();
     console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
-    
+
     if (!authResult.success) {
       console.log('❌ Authentication failed:', authResult.error);
       return { success: false, error: authResult.error, data: [] };
     }
-    
+
     const { companyAccountId, companyUserId } = authResult.data;
     console.log('🏢 Company Account ID:', companyAccountId);
     console.log('👤 Company User ID:', companyUserId);
@@ -45,21 +51,30 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
     console.log('✅ Supabase client created');
 
     // 現在の認証情報を確認
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('🔐 Current auth user:', user ? {
-      id: user.id,
-      email: user.email,
-      user_metadata: user.user_metadata
-    } : 'not authenticated');
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    console.log(
+      '🔐 Current auth user:',
+      user
+        ? {
+            id: user.id,
+            email: user.email,
+            user_metadata: user.user_metadata,
+          }
+        : 'not authenticated'
+    );
+
     if (userError) {
       console.log('❌ User auth error:', userError);
     }
 
     // 企業のスカウトテンプレートを取得（RLSで自動的にアクセス制御）
-    let query = supabase
+    const query = supabase
       .from('search_templates')
-      .select(`
+      .select(
+        `
         id,
         template_name,
         group_id,
@@ -71,64 +86,73 @@ export async function getScoutTemplates(limit: number = 50, offset: number = 0) 
         is_saved,
         company_groups(id, group_name),
         job_postings(id, title)
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     // RLS依存なのでcompany_idフィルターは削除
-    console.log('🔎 Using RLS for data access control (no manual company_id filter)');
+    console.log(
+      '🔎 Using RLS for data access control (no manual company_id filter)'
+    );
 
     console.log('📡 Executing Supabase query...');
     const { data: templates, error } = await query;
-    
+
     console.log('📊 Query result:', {
       templates_count: templates?.length || 0,
       error: error || 'none',
-      templates: templates
+      templates: templates,
     });
 
     if (error) {
       console.error('❌ Error fetching scout templates:', error);
-      return { 
-        success: false, 
-        error: 'スカウトテンプレートの取得に失敗しました', 
-        data: [] 
+      return {
+        success: false,
+        error: 'スカウトテンプレートの取得に失敗しました',
+        data: [],
       };
     }
 
     console.log('🔄 Processing templates data...');
-    const formattedTemplates: ScoutTemplate[] = templates?.map(template => {
-      console.log('📝 Processing template:', {
-        id: template.id,
-        template_name: template.template_name,
-        group_id: template.group_id,
-        company_groups: template.company_groups,
-        job_postings: template.job_postings
-      });
-      
-      return {
-        id: template.id,
-        template_name: template.template_name || '',
-        subject: template.subject || '',
-        target_job_posting_id: template.target_job_posting_id || '',
-        target_job_title: (template.job_postings as any)?.title || '',
-        is_saved: template.is_saved || false,
-        group_id: template.group_id || (template.company_groups as any)?.id || '',
-        group_name: (template.company_groups as any)?.group_name || '',
-        searcher_name: '', // company_usersとのリレーションがないため空文字
-        created_at: template.created_at,
-        updated_at: template.updated_at,
-      };
-    }) || [];
+    const formattedTemplates: ScoutTemplate[] =
+      templates?.map(template => {
+        console.log('📝 Processing template:', {
+          id: template.id,
+          template_name: template.template_name,
+          group_id: template.group_id,
+          company_groups: template.company_groups,
+          job_postings: template.job_postings,
+        });
+
+        return {
+          id: template.id,
+          template_name: template.template_name || '',
+          subject: template.subject || '',
+          target_job_posting_id: template.target_job_posting_id || '',
+          target_job_title: (template.job_postings as any)?.title || '',
+          is_saved: template.is_saved || false,
+          group_id:
+            template.group_id || (template.company_groups as any)?.id || '',
+          group_name: (template.company_groups as any)?.group_name || '',
+          searcher_name: '', // company_usersとのリレーションがないため空文字
+          created_at: template.created_at,
+          updated_at: template.updated_at,
+        };
+      }) || [];
 
     console.log('✅ Formatted templates count:', formattedTemplates.length);
-    return { 
-      success: true, 
-      data: formattedTemplates
+    return {
+      success: true,
+      data: formattedTemplates,
     };
   } catch (error) {
     console.error('💥 Exception in getScoutTemplates:', error);
-    return { success: false, error: 'スカウトテンプレートの取得に失敗しました', data: [] };
+    return {
+      success: false,
+      error: 'スカウトテンプレートの取得に失敗しました',
+      data: [],
+    };
   }
 }
 
@@ -176,7 +200,10 @@ export async function deleteScoutTemplate(templateId: string) {
 }
 
 // スカウトテンプレートの名前を更新
-export async function updateScoutTemplateName(templateId: string, newName: string) {
+export async function updateScoutTemplateName(
+  templateId: string,
+  newName: string
+) {
   try {
     const companyUser = await getCachedCompanyUser();
     if (!companyUser) {
@@ -207,9 +234,9 @@ export async function updateScoutTemplateName(templateId: string, newName: strin
     // テンプレート名を更新
     const { error: updateError } = await supabase
       .from('search_templates')
-      .update({ 
+      .update({
         template_name: newName.trim(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', templateId);
 
@@ -226,7 +253,10 @@ export async function updateScoutTemplateName(templateId: string, newName: strin
 }
 
 // スカウトテンプレートの保存状態を更新
-export async function updateScoutTemplateSavedStatus(templateId: string, isSaved: boolean) {
+export async function updateScoutTemplateSavedStatus(
+  templateId: string,
+  isSaved: boolean
+) {
   try {
     const companyUser = await getCachedCompanyUser();
     if (!companyUser) {
@@ -253,9 +283,9 @@ export async function updateScoutTemplateSavedStatus(templateId: string, isSaved
     // 保存状態を更新
     const { error: updateError } = await supabase
       .from('search_templates')
-      .update({ 
+      .update({
         is_saved: isSaved,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', templateId);
 
@@ -275,16 +305,16 @@ export async function updateScoutTemplateSavedStatus(templateId: string, isSaved
 export async function getJobPostings() {
   try {
     console.log('🔍 Starting getJobPostings function');
-    
+
     // より厳密な企業認証を使用
     const authResult = await requireCompanyAuthForAction();
     console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
-    
+
     if (!authResult.success) {
       console.log('❌ Authentication failed:', authResult.error);
       return { success: false, error: authResult.error, data: [] };
     }
-    
+
     const { companyAccountId } = authResult.data;
     console.log('🏢 Company Account ID:', companyAccountId);
 
@@ -301,28 +331,32 @@ export async function getJobPostings() {
 
     console.log('📊 Job postings query result:', {
       job_postings_count: jobPostings?.length || 0,
-      error: error || 'none'
+      error: error || 'none',
     });
 
     if (error) {
       console.error('❌ Error fetching job postings:', error);
-      return { 
-        success: false, 
-        error: '求人の取得に失敗しました', 
-        data: [] 
+      return {
+        success: false,
+        error: '求人の取得に失敗しました',
+        data: [],
       };
     }
 
-    const formattedJobPostings: JobPosting[] = jobPostings?.map(job => ({
-      id: job.id,
-      title: job.title || '',
-      status: job.status || ''
-    })) || [];
+    const formattedJobPostings: JobPosting[] =
+      jobPostings?.map(job => ({
+        id: job.id,
+        title: job.title || '',
+        status: job.status || '',
+      })) || [];
 
-    console.log('✅ Formatted job postings count:', formattedJobPostings.length);
-    return { 
-      success: true, 
-      data: formattedJobPostings
+    console.log(
+      '✅ Formatted job postings count:',
+      formattedJobPostings.length
+    );
+    return {
+      success: true,
+      data: formattedJobPostings,
     };
   } catch (error) {
     console.error('💥 Exception in getJobPostings:', error);

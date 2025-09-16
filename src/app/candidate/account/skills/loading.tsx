@@ -23,7 +23,10 @@ export default function Loading() {
                     <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                       <div className='flex flex-wrap gap-2'>
                         {[...Array(4)].map((_, j) => (
-                          <div key={j} className='h-7 w-20 bg-[#d2f1da] rounded animate-pulse' />
+                          <div
+                            key={j}
+                            className='h-7 w-20 bg-[#d2f1da] rounded animate-pulse'
+                          />
                         ))}
                       </div>
                     </div>
@@ -38,6 +41,3 @@ export default function Loading() {
     </div>
   );
 }
-
-
-

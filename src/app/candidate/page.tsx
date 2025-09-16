@@ -1,4 +1,3 @@
-
 import { Metadata } from 'next';
 import { HeroSection } from '@/app/candidate/components/HeroSection';
 import { ScoutServiceSection } from '@/app/candidate/components/ScoutServiceSection';
@@ -7,7 +6,6 @@ import { JobSearchSection } from '@/app/candidate/components/JobSearchSection';
 import { FAQSection } from '@/app/candidate/components/FAQSection';
 import { CTASection } from '@/app/candidate/components/CTASection';
 import { ColumnSection } from '@/app/candidate/components/ColumnSection';
-
 
 export const metadata: Metadata = {
   title: '転職・キャリアアップ支援 | CuePoint',
@@ -18,11 +16,13 @@ export const metadata: Metadata = {
 
 export default function CandidateLandingPage() {
   return (
-    <div className="relative w-full">
-      <div className="w-full">
+    <div className='w-full'>
+      <div className='w-full'>
         <HeroSection />
         <ScoutServiceSection />
-        <FlowSection />
+        <div className='md:hidden block'>
+          <FlowSection />
+        </div>
         <JobSearchSection />
         <FAQSection />
         <CTASection />

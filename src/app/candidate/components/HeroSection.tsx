@@ -38,20 +38,32 @@ const ProfileIcon = () => (
 
 export function HeroSection() {
   return (
-    <div className='relative w-full'>
+    <div className='relative w-full z-10'>
       {/* Hero Section */}
-      <div className='relative w-full h-auto'>
+      <div className='relative w-full h-auto z-10'>
         <div className='w-[100%] h-auto flex block mx-auto justify-center'>
-          <Image
-            src='/top.png'
-            alt='hero'
-            width={1920}
-            height={1080}
-            className='w-full h-auto object-cover'
-            priority={true}
-            sizes='100vw'
-            style={{ width: '100%', height: 'auto' }}
-          />
+          <div className='w-full h-auto min-h-[400px] md:min-h-[600px] overflow-hidden'>
+            <Image
+              src='/top.png'
+              alt='hero'
+              width={1920}
+              height={1080}
+              className='w-full h-auto object-cover hidden md:block'
+              priority={true}
+              sizes='100vw'
+              style={{ width: '100%', height: 'auto' }}
+            />
+            <Image
+              src='/image.png'
+              alt='hero'
+              width={768}
+              height={1024}
+              className='w-full h-auto object-cover md:hidden block'
+              priority={true}
+              sizes='100vw'
+              style={{ width: '100%', height: 'auto' }}
+            />
+          </div>
         </div>
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='flex flex-col items-center justify-center gap-[24px] text-center'>

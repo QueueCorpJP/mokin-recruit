@@ -12,19 +12,23 @@ interface Props {
   }>;
 }
 
-async function getCandidateData(id: string): Promise<CandidateDetailData | null> {
+async function getCandidateData(
+  id: string
+): Promise<CandidateDetailData | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { data: candidate, error } = await supabase
       .from('candidates')
-      .select(`
+      .select(
+        `
         *,
         education(*),
         work_experience(*),
         job_type_experience(*),
         skills(*)
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -40,10 +44,13 @@ async function getCandidateData(id: string): Promise<CandidateDetailData | null>
   }
 }
 
-export default async function CandidateEditConfirmPage({ params, searchParams }: Props) {
+export default async function CandidateEditConfirmPage({
+  params,
+  searchParams: _searchParams,
+}: Props) {
   const { id } = await params;
   const candidate = await getCandidateData(id);
-  
+
   if (!candidate) {
     notFound();
   }

@@ -128,20 +128,23 @@ class ApiClient {
  */
 export const getAuthInfo = async () => {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
-    
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
+
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
     if (error || !session) {
       return null;
     }
-    
+
     return {
       token: session.access_token,
-      user: session.user
+      user: session.user,
     };
   } catch (error) {
     console.warn('Failed to get Supabase session:', error);
@@ -154,7 +157,7 @@ export const getAuthInfo = async () => {
  */
 export const getCookieToken = (): string | null => {
   if (typeof document === 'undefined') return null;
-  
+
   const cookies = document.cookie.split(';');
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
@@ -171,10 +174,10 @@ export const getCookieToken = (): string | null => {
 export const getCurrentUserId = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
-  
+
   // クッキーベースの認証状態から取得
   // Note: authStore access removed to avoid ESLint issues
-  
+
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
@@ -187,14 +190,18 @@ export const getCurrentUserId = async (): Promise<string | null> => {
 export const getCurrentUserType = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
-  
+
   // クッキーベースの認証状態から取得
   // Note: authStore access removed to avoid ESLint issues
-  
+
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
-  return (authInfo as any).userInfo?.userType || (authInfo as any).userInfo?.type || null;
+  return (
+    (authInfo as any).userInfo?.userType ||
+    (authInfo as any).userInfo?.type ||
+    null
+  );
 };
 
 /**
@@ -203,10 +210,10 @@ export const getCurrentUserType = async (): Promise<string | null> => {
 export const getCompanyAccountId = async (): Promise<string | null> => {
   // クライアントサイドでのみ実行
   if (typeof window === 'undefined') return null;
-  
+
   // クッキーベースの認証状態から取得
   // Note: authStore access removed to avoid ESLint issues
-  
+
   // フォールバック: localStorage から取得（後方互換性のため）
   const authInfo = await getAuthInfo();
   if (!authInfo) return null;
@@ -222,10 +229,10 @@ export const getAuthHeaders = () => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   // Supabaseはクッキーベース認証を使用するため、通常Authorizationヘッダーは不要
   // credentials: 'include' を設定することで認証される
-  
+
   return headers;
 };
 
@@ -233,13 +240,13 @@ export const getAuthHeaders = () => {
 const createApiClient = (baseURL: string = '/api') => {
   return {
     // ... existing methods ...
-    
+
     /**
      * 認証付きのGETリクエスト
      */
     getAuth: async (path: string, options: RequestInit = {}) => {
       const authHeaders = getAuthHeaders();
-      
+
       return fetch(`${baseURL}${path}`, {
         method: 'GET',
         headers: {
@@ -250,13 +257,13 @@ const createApiClient = (baseURL: string = '/api') => {
         ...options,
       });
     },
-    
+
     /**
      * 認証付きのPOSTリクエスト
      */
     postAuth: async (path: string, data?: any, options: RequestInit = {}) => {
       const authHeaders = getAuthHeaders();
-      
+
       return fetch(`${baseURL}${path}`, {
         method: 'POST',
         headers: {
@@ -271,58 +278,48 @@ const createApiClient = (baseURL: string = '/api') => {
   };
 };
 
-interface JobSearchParams {
-  keyword?: string;
-  location?: string;
-  salaryMin?: string;
-  industries?: string[];
-  jobTypes?: string[];
-  appealPoints?: string[];
-  page?: number;
-  limit?: number;
-}
+// Import unified types
+import type {
+  JobSearchParams,
+  JobSearchResponse,
+  JobDetailResponse,
+} from '@/types';
 
-interface JobSearchResponse {
-  success: boolean;
-  data?: {
-    jobs: any[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
-  error?: string;
-}
-
-export async function searchJobs(params: JobSearchParams): Promise<JobSearchResponse> {
+export async function searchJobs(
+  params: JobSearchParams
+): Promise<JobSearchResponse> {
   try {
     const authHeaders = getAuthHeaders();
     const searchParams = new URLSearchParams();
-    
+
     if (params.keyword) searchParams.append('keyword', params.keyword);
     if (params.location) searchParams.append('location', params.location);
     if (params.salaryMin) searchParams.append('salaryMin', params.salaryMin);
-    if (params.industries?.length) searchParams.append('industries', params.industries.join(','));
-    if (params.jobTypes?.length) searchParams.append('jobTypes', params.jobTypes.join(','));
-    if (params.appealPoints?.length) searchParams.append('appealPoints', params.appealPoints.join(','));
+    if (params.industries?.length)
+      searchParams.append('industries', params.industries.join(','));
+    if (params.jobTypes?.length)
+      searchParams.append('jobTypes', params.jobTypes.join(','));
+    if (params.appealPoints?.length)
+      searchParams.append('appealPoints', params.appealPoints.join(','));
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.limit) searchParams.append('limit', params.limit.toString());
 
-    const response = await fetch(`/api/candidate/job/search?${searchParams.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders,
-      },
-    });
+    const response = await fetch(
+      `/api/candidate/job/search?${searchParams.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+      }
+    );
     return await response.json();
   } catch (error) {
     console.error('Failed to search jobs:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -351,7 +348,7 @@ export async function getJobDetail(jobId: string): Promise<JobDetailResponse> {
     console.error('Failed to fetch job detail:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -386,28 +383,34 @@ interface FavoriteResponse {
 /**
  * お気に入り一覧を取得
  */
-export async function getFavorites(page: number = 1, limit: number = 20): Promise<FavoriteResponse> {
+export async function getFavorites(
+  page: number = 1,
+  limit: number = 20
+): Promise<FavoriteResponse> {
   try {
     const authHeaders = getAuthHeaders();
     const searchParams = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
-    const response = await fetch(`/api/candidate/favorite?${searchParams.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders,
-      },
-    });
+    const response = await fetch(
+      `/api/candidate/favorite?${searchParams.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+      }
+    );
 
     return await response.json();
   } catch (error) {
     console.error('Failed to get favorites:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -415,16 +418,18 @@ export async function getFavorites(page: number = 1, limit: number = 20): Promis
 /**
  * お気に入りに追加
  */
-export async function addToFavorites(jobPostingId: string): Promise<FavoriteResponse> {
+export async function addToFavorites(
+  jobPostingId: string
+): Promise<FavoriteResponse> {
   try {
     const authHeaders = getAuthHeaders();
     const userType = getCurrentUserType();
-    
+
     console.log('お気に入り追加API呼び出し:', {
       jobPostingId,
       userType,
       hasAuthHeaders: Object.keys(authHeaders).length > 0,
-      authHeaders: Object.keys(authHeaders)
+      authHeaders: Object.keys(authHeaders),
     });
 
     // ユーザータイプに応じてAPIエンドポイントを決定
@@ -437,12 +442,13 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {
         success: false,
-        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
+        error: '企業ユーザーはお気に入り機能をご利用いただけません。',
       };
     } else {
       return {
         success: false,
-        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
+        error:
+          'ログインが必要です。適切なユーザータイプでログインしてください。',
       };
     }
 
@@ -454,21 +460,21 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
       },
       credentials: 'include', // クッキーベース認証の高速化
       body: JSON.stringify({
-        job_posting_id: jobPostingId
+        job_posting_id: jobPostingId,
       }),
     });
 
     console.log('API応答ステータス:', response.status);
-    
+
     const result = await response.json();
     console.log('API応答内容:', result);
-    
+
     return result;
   } catch (error) {
     console.error('Failed to add to favorites:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -476,7 +482,9 @@ export async function addToFavorites(jobPostingId: string): Promise<FavoriteResp
 /**
  * お気に入りから削除
  */
-export async function removeFromFavorites(jobPostingId: string): Promise<FavoriteResponse> {
+export async function removeFromFavorites(
+  jobPostingId: string
+): Promise<FavoriteResponse> {
   try {
     const authHeaders = getAuthHeaders();
     const userType = getCurrentUserType();
@@ -484,7 +492,7 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
     console.log('お気に入り削除API呼び出し:', {
       jobPostingId,
       userType,
-      hasAuthHeaders: Object.keys(authHeaders).length > 0
+      hasAuthHeaders: Object.keys(authHeaders).length > 0,
     });
 
     // ユーザータイプに応じてAPIエンドポイントを決定
@@ -497,12 +505,13 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
       console.warn('企業ユーザー用のお気に入り機能は未実装です。');
       return {
         success: false,
-        error: '企業ユーザーはお気に入り機能をご利用いただけません。'
+        error: '企業ユーザーはお気に入り機能をご利用いただけません。',
       };
     } else {
       return {
         success: false,
-        error: 'ログインが必要です。適切なユーザータイプでログインしてください。'
+        error:
+          'ログインが必要です。適切なユーザータイプでログインしてください。',
       };
     }
 
@@ -517,13 +526,13 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
 
     const result = await response.json();
     console.log('削除API応答:', result);
-    
+
     return result;
   } catch (error) {
     console.error('Failed to remove from favorites:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -531,13 +540,15 @@ export async function removeFromFavorites(jobPostingId: string): Promise<Favorit
 /**
  * お気に入り状態を確認（複数の求人ID）
  */
-export async function checkFavoriteStatus(jobPostingIds: string[]): Promise<Record<string, boolean>> {
+export async function checkFavoriteStatus(
+  jobPostingIds: string[]
+): Promise<Record<string, boolean>> {
   try {
     const authHeaders = getAuthHeaders();
-    
+
     // お気に入り一覧を取得してIDリストを作成
     const favorites = await getFavorites(1, 100); // 最大100件取得
-    
+
     if (!favorites.success || !favorites.data) {
       return {};
     }
@@ -584,7 +595,9 @@ interface ApplicationResponse {
   message?: string;
 }
 
-export async function submitApplication(applicationData: ApplicationRequest): Promise<ApplicationResponse> {
+export async function submitApplication(
+  applicationData: ApplicationRequest
+): Promise<ApplicationResponse> {
   try {
     const authHeaders = getAuthHeaders();
 
@@ -595,7 +608,7 @@ export async function submitApplication(applicationData: ApplicationRequest): Pr
         ...authHeaders,
       },
       credentials: 'include',
-      body: JSON.stringify(applicationData)
+      body: JSON.stringify(applicationData),
     });
 
     return await response.json();
@@ -603,7 +616,7 @@ export async function submitApplication(applicationData: ApplicationRequest): Pr
     console.error('Failed to submit application:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }
@@ -618,7 +631,7 @@ export async function getApplicationHistory(): Promise<ApplicationResponse> {
         'Content-Type': 'application/json',
         ...authHeaders,
       },
-      credentials: 'include'
+      credentials: 'include',
     });
 
     return await response.json();
@@ -626,7 +639,7 @@ export async function getApplicationHistory(): Promise<ApplicationResponse> {
     console.error('Failed to fetch application history:', error);
     return {
       success: false,
-      error: 'ネットワークエラーが発生しました'
+      error: 'ネットワークエラーが発生しました',
     };
   }
 }

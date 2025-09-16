@@ -17,10 +17,10 @@ import { JobPostCard } from '@/components/ui/JobPostCard';
 import { Pagination } from '@/components/ui/Pagination';
 
 import { useRouter } from 'next/navigation';
-import { JobSearchResult } from './actions';
+import type { JobSearchResultUI } from '@/types';
 
 interface CandidateSearchClientProps {
-  initialJobs: JobSearchResult[];
+  initialJobs: JobSearchResultUI[];
   initialPagination: {
     page: number;
     limit: number;
@@ -748,13 +748,13 @@ function CandidateSearchClient({
                 {loading
                   ? 'Loading...'
                   : pagination.total === 0
-                  ? '0件'
-                  : `${
-                      (pagination.page - 1) * pagination.limit + 1
-                    }〜${Math.min(
-                      pagination.page * pagination.limit,
-                      pagination.total
-                    )}件 / ${pagination.total}件`}
+                    ? '0件'
+                    : `${
+                        (pagination.page - 1) * pagination.limit + 1
+                      }〜${Math.min(
+                        pagination.page * pagination.limit,
+                        pagination.total
+                      )}件 / ${pagination.total}件`}
               </span>
               <button
                 className={`p-1 ${
@@ -806,6 +806,8 @@ function CandidateSearchClient({
                     onClick={() =>
                       router.push(`/candidate/search/setting/${card.id}`)
                     }
+                    companyIconUrl={card.companyIconUrl}
+                    showCompanyInfo={true}
                   />
                 ))
               )}

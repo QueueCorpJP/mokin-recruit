@@ -81,7 +81,7 @@ function PasswordFormCard({
           password !== confirmPassword
         }
       >
-        {isLoading ? '設定中...' : '設定する'}
+        {isLoading ? '...設定中' : '設定する'}
       </Button>
     </div>
   );

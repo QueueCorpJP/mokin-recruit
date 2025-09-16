@@ -3,6 +3,7 @@
 import { useState, KeyboardEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { SelectInput } from '@/components/ui/select-input';
 import { saveSkillsData } from './actions';
 
 // 言語レベルの選択肢
@@ -57,7 +58,7 @@ interface SkillsFormData {
 }
 
 export default function SignupSkillsPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [skillInput, setSkillInput] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -210,7 +211,7 @@ export default function SignupSkillsPage() {
 
             {/* Progress Tabs */}
             <div className='flex flex-row w-full h-[45px]'>
-              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                 <div className='w-6 h-6 flex items-center justify-center'>
                   <svg
                     width='24'
@@ -229,7 +230,7 @@ export default function SignupSkillsPage() {
                   経歴詳細
                 </span>
               </div>
-              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#0f9058]'>
+              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#0f9058]'>
                 <div className='w-6 h-6 flex items-center justify-center'>
                   <svg
                     width='25'
@@ -248,7 +249,7 @@ export default function SignupSkillsPage() {
                   語学・スキル
                 </span>
               </div>
-              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                 <div className='w-6 h-6 flex items-center justify-center'>
                   <svg
                     width='24'
@@ -267,7 +268,7 @@ export default function SignupSkillsPage() {
                   希望条件
                 </span>
               </div>
-              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-3 border-[#dcdcdc]'>
+              <div className='flex-1 flex flex-row gap-2 items-center justify-center py-2 px-6 border-b-2 border-[#dcdcdc]'>
                 <div className='w-6 h-6 flex items-center justify-center'>
                   <svg
                     width='24'
@@ -371,38 +372,18 @@ export default function SignupSkillsPage() {
                   </label>
                 </div>
                 <div className='w-[400px]'>
-                  <div className='relative'>
-                    <select
-                      value={formData.englishLevel}
-                      onChange={e =>
-                        setFormData(prev => ({
-                          ...prev,
-                          englishLevel: e.target.value,
-                        }))
-                      }
-                      className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                    >
-                      {ENGLISH_LEVELS.map(level => (
-                        <option key={level.value} value={level.value}>
-                          {level.label}
-                        </option>
-                      ))}
-                    </select>
-                    <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                      <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        width='14'
-                        height='10'
-                        viewBox='0 0 14 10'
-                        fill='none'
-                      >
-                        <path
-                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                          fill='#0F9058'
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <SelectInput
+                    options={ENGLISH_LEVELS}
+                    value={formData.englishLevel}
+                    onChange={value =>
+                      setFormData(prev => ({
+                        ...prev,
+                        englishLevel: value,
+                      }))
+                    }
+                    className=''
+                    radius={5}
+                  />
                   {errors.englishLevel && (
                     <p className='text-red-500 text-[14px] mt-1'>
                       {errors.englishLevel}
@@ -426,69 +407,25 @@ export default function SignupSkillsPage() {
                       )}
                     </div>
                     <div className='flex flex-col gap-2 w-[400px]'>
-                      <div className='relative'>
-                        <select
-                          value={field.language}
-                          onChange={e =>
-                            handleLanguageChange(
-                              index,
-                              'language',
-                              e.target.value
-                            )
-                          }
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                        >
-                          {OTHER_LANGUAGES.map(lang => (
-                            <option key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className='relative'>
-                        <select
-                          value={field.level}
-                          onChange={e =>
-                            handleLanguageChange(index, 'level', e.target.value)
-                          }
-                          disabled={!field.language}
-                          className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer disabled:opacity-50'
-                        >
-                          {ENGLISH_LEVELS.map(level => (
-                            <option key={level.value} value={level.value}>
-                              {level.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            width='14'
-                            height='10'
-                            viewBox='0 0 14 10'
-                            fill='none'
-                          >
-                            <path
-                              d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                              fill='#0F9058'
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <SelectInput
+                        options={OTHER_LANGUAGES}
+                        value={field.language}
+                        onChange={value =>
+                          handleLanguageChange(index, 'language', value)
+                        }
+                        className=''
+                        radius={5}
+                      />
+                      <SelectInput
+                        options={ENGLISH_LEVELS}
+                        value={field.level}
+                        onChange={value =>
+                          handleLanguageChange(index, 'level', value)
+                        }
+                        disabled={!field.language}
+                        className=''
+                        radius={5}
+                      />
                       {errors[`otherLanguages.${index}.level`] && (
                         <p className='text-red-500 text-[12px] mt-1'>
                           {errors[`otherLanguages.${index}.level`]}
@@ -606,13 +543,15 @@ export default function SignupSkillsPage() {
                   </label>
                 </div>
                 <div className='flex flex-col gap-2 w-[400px]'>
-                  <textarea
-                    value={skillInput}
-                    onChange={e => setSkillInput(e.target.value)}
-                    onKeyDown={handleSkillInputKeyDown}
-                    placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
-                    className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none'
-                  />
+                  <div className='border border-[#999999] rounded-[5px] bg-white'>
+                    <textarea
+                      value={skillInput}
+                      onChange={e => setSkillInput(e.target.value)}
+                      onKeyDown={handleSkillInputKeyDown}
+                      placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
+                      className='w-full px-[11px] py-[11px] bg-transparent border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none focus:outline-none'
+                    />
+                  </div>
                   <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'>
                     ※最低3つ以上のキーワードを選択/登録してください。
                   </p>
@@ -663,17 +602,19 @@ export default function SignupSkillsPage() {
                   </label>
                 </div>
                 <div className='flex flex-col gap-2 w-[400px]'>
-                  <textarea
-                    value={formData.qualifications}
-                    onChange={e =>
-                      setFormData(prev => ({
-                        ...prev,
-                        qualifications: e.target.value,
-                      }))
-                    }
-                    placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
-                    className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none'
-                  />
+                  <div className='border border-[#999999] rounded-[5px] bg-white'>
+                    <textarea
+                      value={formData.qualifications}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          qualifications: e.target.value,
+                        }))
+                      }
+                      placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
+                      className='w-full px-[11px] py-[11px] bg-transparent border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none focus:outline-none'
+                    />
+                  </div>
                   <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'>
                     ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
                   </p>
@@ -815,38 +756,18 @@ export default function SignupSkillsPage() {
                 <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                   英語
                 </label>
-                <div className='relative'>
-                  <select
-                    value={formData.englishLevel}
-                    onChange={e =>
-                      setFormData(prev => ({
-                        ...prev,
-                        englishLevel: e.target.value,
-                      }))
-                    }
-                    className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                  >
-                    {ENGLISH_LEVELS.map(level => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                    <svg
-                      xmlns='http://www.w3.org/2000/svg'
-                      width='14'
-                      height='10'
-                      viewBox='0 0 14 10'
-                      fill='none'
-                    >
-                      <path
-                        d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                        fill='#0F9058'
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <SelectInput
+                  options={ENGLISH_LEVELS}
+                  value={formData.englishLevel}
+                  onChange={value =>
+                    setFormData(prev => ({
+                      ...prev,
+                      englishLevel: value,
+                    }))
+                  }
+                  className=''
+                  radius={5}
+                />
                 {errors.englishLevel && (
                   <p className='text-red-500 text-[14px]'>
                     {errors.englishLevel}
@@ -863,69 +784,25 @@ export default function SignupSkillsPage() {
                     </label>
                   )}
                   <div className='flex flex-col gap-2'>
-                    <div className='relative'>
-                      <select
-                        value={field.language}
-                        onChange={e =>
-                          handleLanguageChange(
-                            index,
-                            'language',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
-                      >
-                        {OTHER_LANGUAGES.map(lang => (
-                          <option key={lang.value} value={lang.value}>
-                            {lang.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                        <svg
-                          xmlns='http://www.w3.org/2000/svg'
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                        >
-                          <path
-                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className='relative'>
-                      <select
-                        value={field.level}
-                        onChange={e =>
-                          handleLanguageChange(index, 'level', e.target.value)
-                        }
-                        disabled={!field.language}
-                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer disabled:opacity-50'
-                      >
-                        {ENGLISH_LEVELS.map(level => (
-                          <option key={level.value} value={level.value}>
-                            {level.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-                        <svg
-                          xmlns='http://www.w3.org/2000/svg'
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                        >
-                          <path
-                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </div>
-                    </div>
+                    <SelectInput
+                      options={OTHER_LANGUAGES}
+                      value={field.language}
+                      onChange={value =>
+                        handleLanguageChange(index, 'language', value)
+                      }
+                      className=''
+                      radius={5}
+                    />
+                    <SelectInput
+                      options={ENGLISH_LEVELS}
+                      value={field.level}
+                      onChange={value =>
+                        handleLanguageChange(index, 'level', value)
+                      }
+                      disabled={!field.language}
+                      className=''
+                      radius={5}
+                    />
                     {errors[`otherLanguages.${index}.level`] && (
                       <p className='text-red-500 text-[12px] mt-1'>
                         {errors[`otherLanguages.${index}.level`]}
@@ -1011,13 +888,15 @@ export default function SignupSkillsPage() {
                 <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                   スキル
                 </label>
-                <textarea
-                  value={skillInput}
-                  onChange={e => setSkillInput(e.target.value)}
-                  onKeyDown={handleSkillInputKeyDown}
-                  placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
-                  className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[90px] resize-none'
-                />
+                <div className='border border-[#999999] rounded-[5px] bg-white'>
+                  <textarea
+                    value={skillInput}
+                    onChange={e => setSkillInput(e.target.value)}
+                    onKeyDown={handleSkillInputKeyDown}
+                    placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
+                    className='w-full px-[11px] py-[11px] bg-transparent border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[90px] resize-none focus:outline-none'
+                  />
+                </div>
                 <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'>
                   ※最低3つ以上のキーワードを選択/登録してください。
                 </p>
@@ -1064,17 +943,19 @@ export default function SignupSkillsPage() {
                 <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                   保有資格
                 </label>
-                <textarea
-                  value={formData.qualifications}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      qualifications: e.target.value,
-                    }))
-                  }
-                  placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
-                  className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none'
-                />
+                <div className='border border-[#999999] rounded-[5px] bg-white'>
+                  <textarea
+                    value={formData.qualifications}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        qualifications: e.target.value,
+                      }))
+                    }
+                    placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
+                    className='w-full px-[11px] py-[11px] bg-transparent border-none rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none focus:outline-none'
+                  />
+                </div>
                 <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'>
                   ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
                 </p>

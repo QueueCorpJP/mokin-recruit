@@ -1,54 +1,13 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/client';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
-
-export interface JobSearchResult {
-  id: string;
-  title: string;
-  companyName: string;
-  imageUrl: string;
-  imageAlt?: string;
-  tags: string[];
-  location: string[];
-  salary: string;
-  apell: string[];
-  starred?: boolean;
-  created_at: string;
-  job_type: string | string[];
-  work_location: string | string[];
-  salary_min?: number;
-  salary_max?: number;
-  salary_note?: string;
-  appeal_points?: any;
-  image_urls?: string[];
-  company_name?: string;
-}
-
-export interface JobSearchParams {
-  keyword?: string;
-  location?: string;
-  salaryMin?: string;
-  industries?: string[];
-  jobTypes?: string[];
-  appealPoints?: string[];
-  page?: number;
-  limit?: number;
-}
-
-export interface JobSearchResponse {
-  success: boolean;
-  data?: {
-    jobs: JobSearchResult[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
-  error?: string;
-}
+import type {
+  JobSearchParams,
+  JobSearchResponseUI,
+  FavoriteStatusResponse,
+} from '@/types';
 
 // -----------------------------
 // Zod schema for search params
@@ -97,12 +56,6 @@ function normalizeJobSearchParams(params: JobSearchParams): JobSearchParams {
     };
   }
   return parsed.data;
-}
-
-export interface FavoriteStatusResponse {
-  success: boolean;
-  data?: Record<string, boolean>;
-  error?: string;
 }
 
 // フィルタリング条件を適用する共通関数
@@ -160,21 +113,47 @@ function applyFilters(query: any, params: JobSearchParams) {
   return query;
 }
 
+// サーバー側のSupabaseクライアントを作成
+async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (_error) {
+            // Server Componentでは読み取り専用
+          }
+        },
+      },
+    }
+  );
+}
+
 // 簡単なメモリキャッシュ
 const searchCache = new Map<
   string,
-  { data: JobSearchResponse; timestamp: number }
+  { data: JobSearchResponseUI; timestamp: number }
 >();
 const CACHE_TTL = 2 * 60 * 1000; // 2分
 
 // 最適化された検索関数 - すべての関連データを並列で取得
 async function searchJobsServerOptimized(
   params: JobSearchParams
-): Promise<JobSearchResponse> {
-  const startTime = performance.now();
+): Promise<JobSearchResponseUI> {
+  const _startTime = performance.now();
 
   try {
-    const supabase = createClient();
+    const supabase = await createSupabaseServerClient();
 
     // ページネーション設定
     const page = params.page || 1;
@@ -208,7 +187,8 @@ async function searchJobsServerOptimized(
         company_account_id,
         company_accounts (
           id,
-          company_name
+          company_name,
+          icon_image_url
         )
       `
       )
@@ -220,12 +200,12 @@ async function searchJobsServerOptimized(
       .range(offset, offset + limit - 1);
 
     // 並列実行 - カウントとデータを同時に取得（JOINで企業情報も含まれる）
-    const dbStartTime = performance.now();
+    const _dbStartTime = performance.now();
     const [countResult, dataResult] = await Promise.all([
       countQuery,
       dataQuery,
     ]);
-    const dbEndTime = performance.now();
+    const _dbEndTime = performance.now();
 
     const { count, error: countError } = countResult;
     const { data: jobs, error: dataError } = dataResult;
@@ -280,13 +260,16 @@ async function searchJobsServerOptimized(
         appeal_points: job.appeal_points,
         image_urls: job.image_urls,
         company_name: companyName,
+        companyIconUrl:
+          job.company_accounts?.icon_image_url ||
+          '/company-icon-placeholder.png',
       };
     });
 
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
-    const endTime = performance.now();
+    const _endTime = performance.now();
 
     return {
       success: true,
@@ -311,7 +294,7 @@ async function searchJobsServerOptimized(
 
 export async function getJobSearchData(
   params: JobSearchParams
-): Promise<JobSearchResponse> {
+): Promise<JobSearchResponseUI> {
   const normalized = normalizeJobSearchParams(params);
   console.log(
     '[getJobSearchData] Called with params:',

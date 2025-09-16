@@ -16,8 +16,8 @@ export interface UseEditFormParams<TForm extends FieldValues> {
   defaultValues: DefaultValues<TForm>;
   fetchInitialData: () => Promise<Partial<TForm> | null>;
   redirectPath: string;
-  buildFormData: (data: TForm) => FormData;
-  submitAction: (formData: FormData) => Promise<
+  buildFormData: (_data: TForm) => FormData;
+  submitAction: (_formData: FormData) => Promise<
     | { success: boolean; error?: string }
     | {
         success: boolean;
@@ -32,7 +32,7 @@ export interface UseEditFormReturn<TForm extends FieldValues>
   extends UseFormReturn<TForm> {
   isLoading: boolean;
   isSubmitting: boolean;
-  onSubmit: (data: TForm) => Promise<void>;
+  onSubmit: (_data: TForm) => Promise<void>;
   handleCancel: () => void;
 }
 
@@ -102,11 +102,10 @@ export function useEditForm<TForm extends FieldValues>(
           (result as any)?.message ||
           (result as any)?.error ||
           '更新に失敗しました。もう一度お試しください。';
-        // eslint-disable-next-line no-alert
+
         alert(message);
       }
-    } catch (e) {
-      // eslint-disable-next-line no-alert
+    } catch (_e) {
       alert('更新に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);
