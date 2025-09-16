@@ -59,7 +59,7 @@ async function getRoomsForCandidate(candidateId: string): Promise<CandidateRoom[
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit'
-      }).replace(/\//g, '/') : '',
+      }).replace(/\//g, '.') : '',
       unreadCount: unreadCount,
       isUnread: unreadCount > 0,
     });
