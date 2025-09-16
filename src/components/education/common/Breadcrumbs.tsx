@@ -1,7 +1,9 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface BreadcrumbItem {
   label: string;
+  href?: string;
   isCurrent?: boolean;
 }
 
@@ -13,7 +15,7 @@ interface BreadcrumbsProps {
 /**
  * [Breadcrumbs]
  * パンくずリストを共通化するコンポーネント。
- * - items: パンくずリストの項目（label, isCurrent）
+ * - items: パンくずリストの項目（label, href, isCurrent）
  * - className: 追加クラス
  */
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = '' }) => {
@@ -24,13 +26,22 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = '' }) => {
     >
       {items.map((item, idx) => (
         <React.Fragment key={item.label}>
-          <span
-            className={`text-white text-[14px] font-bold tracking-[1.4px]${
-              item.isCurrent ? '' : ''
-            }`}
-          >
-            {item.label}
-          </span>
+          {item.href && !item.isCurrent ? (
+            <Link
+              href={item.href}
+              className='text-white text-[14px] font-bold tracking-[1.4px] hover:opacity-80 transition-opacity'
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <span
+              className={`text-white text-[14px] font-bold tracking-[1.4px]${
+                item.isCurrent ? ' opacity-80' : ''
+              }`}
+            >
+              {item.label}
+            </span>
+          )}
           {idx < items.length - 1 && (
             <svg
               width='8'

@@ -8,7 +8,7 @@ import { profileSchema } from '../../_shared/schemas';
 
 // フォームデータの型定義
 export interface ProfileUpdateData {
-  gender: 'male' | 'female' | 'unspecified';
+  gender: '男性' | '女性' | '未回答';
   prefecture: string;
   birthYear: string;
   birthMonth: string;
@@ -88,19 +88,20 @@ export async function updateCandidateProfile(
     const { error } = await supabase
       .from('candidates')
       .update({
-        gender: gender as 'male' | 'female' | 'unspecified',
-        current_residence: prefecture,
+        gender: gender,
+        prefecture: prefecture,
         birth_date: birthDate,
         phone_number: phoneNumber || null,
-        current_salary: currentIncome || null,
+        current_income: currentIncome || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', candidateId);
 
     if (error) {
+      console.error('Supabase update error:', error);
       return {
         success: false,
-        message: 'プロフィールの更新に失敗しました',
+        message: `プロフィールの更新に失敗しました: ${error.message}`,
         errors: {},
       };
     }

@@ -325,6 +325,18 @@ async function getRecommendedJobsInternal(candidateId: string) {
       return [];
     }
 
+    // お気に入り状態を取得
+    const jobIds = jobs.map(job => job.id);
+    const { data: favorites } = await client
+      .from('favorites')
+      .select('job_posting_id')
+      .eq('candidate_id', candidateId)
+      .in('job_posting_id', jobIds);
+
+    const favoriteJobIds = new Set(
+      favorites?.map(fav => fav.job_posting_id) || []
+    );
+
     // 最適化されたデータ変換
     const transformedJobs = jobs.map(
       (job: {
@@ -347,7 +359,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
           : [job.work_location || '勤務地未設定'],
         salary_min: job.salary_min,
         salary_max: job.salary_max,
-        starred: false,
+        starred: favoriteJobIds.has(job.id),
       })
     );
 

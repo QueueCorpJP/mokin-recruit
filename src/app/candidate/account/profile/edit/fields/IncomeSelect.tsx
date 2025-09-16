@@ -1,5 +1,6 @@
 import React from 'react';
 import { FieldError, UseFormRegister } from 'react-hook-form';
+import { SelectInput } from '@/components/ui/select-input';
 
 export interface IncomeOption {
   value: string;
@@ -39,29 +40,23 @@ const IncomeSelect: React.FC<IncomeSelectProps> = ({
         </label>
       </div>
       <div className='flex-1 py-6'>
-        <div className='w-[400px] relative'>
-          <select
-            {...(register ? register('currentIncome') : {})}
+        <div className='w-[400px]'>
+          <SelectInput
+            options={options}
             value={selectedIncome}
-            onChange={e => onChange && onChange(e.target.value)}
-            className={`w-full px-[11px] py-[11px] pr-10 bg-white border ${
-              errors?.currentIncome ? 'border-red-500' : 'border-[#999999]'
-            } rounded-[5px] text-[16px] ${selectedIncome ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
-          >
-            {options.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-            <svg width='14' height='10' viewBox='0 0 14 10' fill='none'>
-              <path
-                d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                fill='#0F9058'
-              />
-            </svg>
-          </div>
+            onChange={value => onChange && onChange(value)}
+            placeholder='年収を選択してください'
+            error={!!errors?.currentIncome}
+            radius={5}
+            className='w-full'
+            style={{
+              padding: '11px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              letterSpacing: '1.6px',
+              color: '#323232',
+            }}
+          />
         </div>
         {errors?.currentIncome && (
           <p className='text-red-500 text-sm mt-1'>

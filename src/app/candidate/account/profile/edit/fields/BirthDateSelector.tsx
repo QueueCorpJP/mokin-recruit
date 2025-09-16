@@ -1,5 +1,6 @@
 import React from 'react';
 import { FieldError, UseFormRegister } from 'react-hook-form';
+import { SelectInput } from '@/components/ui/select-input';
 
 export interface Option {
   value: string;
@@ -57,91 +58,71 @@ const BirthDateSelector: React.FC<BirthDateSelectorProps> = ({
       </div>
       <div className='flex-1 py-6'>
         <div className='flex gap-2 items-center w-[400px]'>
-          <div className='relative flex-1'>
-            <select
-              {...(register ? register('birthYear') : {})}
+          <div className='flex-1'>
+            <SelectInput
+              options={yearOptions}
               value={selectedYear}
-              onChange={e => onChange && onChange('birthYear', e.target.value)}
-              className={`w-full px-[11px] py-[11px] bg-white border ${
-                errors?.birthYear || errors?.birthMonth || errors?.birthDay
-                  ? 'border-red-500'
-                  : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${selectedYear ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
-            >
-              {yearOptions.map(year => (
-                <option key={year.value} value={year.value}>
-                  {year.label}
-                </option>
-              ))}
-            </select>
-            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-              <svg width='14' height='10' viewBox='0 0 14 10' fill='none'>
-                <path
-                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                  fill='#0F9058'
-                />
-              </svg>
-            </div>
+              onChange={value => onChange && onChange('birthYear', value)}
+              placeholder='年を選択'
+              error={
+                !!(errors?.birthYear || errors?.birthMonth || errors?.birthDay)
+              }
+              radius={5}
+              className='w-full'
+              style={{
+                padding: '11px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                letterSpacing: '1.6px',
+                color: '#323232',
+              }}
+            />
           </div>
           <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
             年
           </span>
-          <div className='relative flex-1'>
-            <select
-              {...(register ? register('birthMonth') : {})}
+          <div className='flex-1'>
+            <SelectInput
+              options={[{ value: '', label: '未選択' }, ...monthOptions]}
               value={selectedMonth}
-              onChange={e => onChange && onChange('birthMonth', e.target.value)}
-              className={`w-full px-[11px] py-[11px] bg-white border ${
-                errors?.birthYear || errors?.birthMonth || errors?.birthDay
-                  ? 'border-red-500'
-                  : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${selectedMonth ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
-            >
-              <option value=''>未選択</option>
-              {monthOptions.map(month => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
-            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-              <svg width='14' height='10' viewBox='0 0 14 10' fill='none'>
-                <path
-                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                  fill='#0F9058'
-                />
-              </svg>
-            </div>
+              onChange={value => onChange && onChange('birthMonth', value)}
+              placeholder='月を選択'
+              error={
+                !!(errors?.birthYear || errors?.birthMonth || errors?.birthDay)
+              }
+              radius={5}
+              className='w-full'
+              style={{
+                padding: '11px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                letterSpacing: '1.6px',
+                color: '#323232',
+              }}
+            />
           </div>
           <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
             月
           </span>
-          <div className='relative flex-1'>
-            <select
-              {...(register ? register('birthDay') : {})}
+          <div className='flex-1'>
+            <SelectInput
+              options={[{ value: '', label: '未選択' }, ...dayOptions]}
               value={selectedDay}
-              onChange={e => onChange && onChange('birthDay', e.target.value)}
-              className={`w-full px-[11px] py-[11px] bg-white border ${
-                errors?.birthYear || errors?.birthMonth || errors?.birthDay
-                  ? 'border-red-500'
-                  : 'border-[#999999]'
-              } rounded-[5px] text-[16px] ${selectedDay ? 'text-[#323232]' : 'text-[#323232]'} font-bold tracking-[1.6px] appearance-none cursor-pointer`}
-            >
-              <option value=''>未選択</option>
-              {dayOptions.map(day => (
-                <option key={day.value} value={day.value}>
-                  {day.label}
-                </option>
-              ))}
-            </select>
-            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
-              <svg width='14' height='10' viewBox='0 0 14 10' fill='none'>
-                <path
-                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                  fill='#0F9058'
-                />
-              </svg>
-            </div>
+              onChange={value => onChange && onChange('birthDay', value)}
+              placeholder='日を選択'
+              error={
+                !!(errors?.birthYear || errors?.birthMonth || errors?.birthDay)
+              }
+              radius={5}
+              className='w-full'
+              style={{
+                padding: '11px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                letterSpacing: '1.6px',
+                color: '#323232',
+              }}
+            />
           </div>
           <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
             日

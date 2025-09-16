@@ -1,0 +1,126 @@
+name: Security Review Helper
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: read
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: |
+          npm audit --audit-level=moderate --json > audit-results.json || true
+
+      - name: Check for new security issues
+        id: security-check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let auditResults = {};
+
+            try {
+              auditResults = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+            } catch (e) {
+              console.log('No audit results found');
+              return;
+            }
+
+            const vulnerabilities = auditResults.vulnerabilities || {};
+            const criticalCount = Object.values(vulnerabilities).filter(v => v.severity === 'critical').length;
+            const highCount = Object.values(vulnerabilities).filter(v => v.severity === 'high').length;
+            const moderateCount = Object.values(vulnerabilities).filter(v => v.severity === 'moderate').length;
+
+            let comment = '## 🔍 Security Review\n\n';
+
+            if (criticalCount + highCount + moderateCount === 0) {
+              comment += '✅ No security vulnerabilities found in dependencies!\n\n';
+            } else {
+              comment += '⚠️ Security vulnerabilities detected:\n\n';
+              comment += `- **Critical**: ${criticalCount}\n`;
+              comment += `- **High**: ${highCount}\n`;
+              comment += `- **Moderate**: ${moderateCount}\n\n`;
+
+              if (criticalCount > 0 || highCount > 0) {
+                comment += '🚨 **Action Required**: Please review and fix critical/high severity vulnerabilities before merging.\n\n';
+                comment += 'Run `npm audit fix` to automatically fix some issues.\n\n';
+              }
+            }
+
+            // Check for common security patterns
+            const { exec } = require('child_process');
+            const util = require('util');
+            const execPromise = util.promisify(exec);
+
+            try {
+              // Check for hardcoded secrets
+              const secretCheck = await execPromise('grep -r -i "password\\|secret\\|token\\|key" src/ --include="*.ts" --include="*.tsx" | grep -v "Type\\|Interface\\|process.env" | head -5 || true');
+
+              if (secretCheck.stdout.trim()) {
+                comment += '### 🔐 Potential Security Issues Found:\n\n';
+                comment += '```\n' + secretCheck.stdout.trim() + '\n```\n\n';
+                comment += '⚠️ Please review these files for hardcoded secrets.\n\n';
+              }
+
+              // Check for dangerous functions
+              const dangerousCheck = await execPromise('grep -r "dangerouslySetInnerHTML\\|eval(\\|innerHTML\\s*=" src/ --include="*.ts" --include="*.tsx" | head -5 || true');
+
+              if (dangerousCheck.stdout.trim()) {
+                comment += '### ⚡ Potentially Dangerous Code:\n\n';
+                comment += '```\n' + dangerousCheck.stdout.trim() + '\n```\n\n';
+                comment += '⚠️ Please review these usages carefully.\n\n';
+              }
+
+            } catch (e) {
+              console.log('Error running security checks:', e);
+            }
+
+            comment += '---\n*Automated security review by GitHub Actions*';
+
+            // Post comment on PR
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+            // Set output for other steps
+            core.setOutput('critical-count', criticalCount);
+            core.setOutput('high-count', highCount);
+            core.setOutput('total-issues', criticalCount + highCount + moderateCount);
+
+      - name: Fail on critical vulnerabilities
+        if: steps.security-check.outputs.critical-count > 0
+        run: |
+          echo "❌ Critical security vulnerabilities found. Please fix before merging."
+          exit 1
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-results
+          path: audit-results.json
+          retention-days: 30

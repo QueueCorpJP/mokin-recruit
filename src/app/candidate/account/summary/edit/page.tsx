@@ -3,6 +3,7 @@
 import ActionButtons from '@/app/candidate/account/_shared/ui/ActionButtons';
 import { FormField } from '@/app/candidate/account/_shared/fields/FormField';
 import { useSummaryForm } from '../../_shared/hooks/useSummaryForm';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // 候補者_職務要約編集ページ
 export default function CandidateSummaryEditPage() {
@@ -25,14 +26,6 @@ export default function CandidateSummaryEditPage() {
   // const [isLoading, setIsLoading] = useState(true);
   // useEffect ... 認証チェックや初期データ取得もカスタムフックに集約済みなので削除
 
-  if (isLoading) {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-pulse'>Loading...</div>
-      </div>
-    );
-  }
-
   if (!isAuthenticated || !candidateUser) {
     return null;
   }
@@ -44,49 +37,13 @@ export default function CandidateSummaryEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              職務要約
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              職務要約編集
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '職務要約', href: '/candidate/account/summary' },
+              { label: '職務要約編集' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
@@ -164,16 +121,18 @@ export default function CandidateSummaryEditPage() {
                       error={errors.jobSummary?.message ?? null}
                       hideLabel={true}
                     >
-                      <textarea
-                        id='jobSummary'
-                        {...register('jobSummary')}
-                        placeholder={
-                          isDesktop
-                            ? '例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
-                            : '例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
-                        }
-                        className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058] resize-none min-h-[147px] leading-8'
-                      />
+                      <div className='border border-[#999999] rounded-[5px] p-1'>
+                        <textarea
+                          id='jobSummary'
+                          {...register('jobSummary')}
+                          placeholder={
+                            isDesktop
+                              ? '例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
+                              : '例）大手メーカーにて事業企画を担当。国内外の市場調査や新規事業の事業性評価、既存事業のKPI分析・改善提案などを行ってきました。その後、経営企画部門に異動し、中期経営計画の策定や全社横断の施策推進にも携わっています。'
+                          }
+                          className='w-full bg-white border-0 rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none resize-none min-h-[147px] leading-8'
+                        />
+                      </div>
                     </FormField>
                   </div>
                 </div>
@@ -193,16 +152,18 @@ export default function CandidateSummaryEditPage() {
                       error={errors.selfPr?.message ?? null}
                       hideLabel={true}
                     >
-                      <textarea
-                        id='selfPr'
-                        {...register('selfPr')}
-                        placeholder={
-                          isDesktop
-                            ? '例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
-                            : '例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
-                        }
-                        className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#0f9058] resize-none min-h-[147px] leading-8'
-                      />
+                      <div className='border border-[#999999] rounded-[5px] p-1'>
+                        <textarea
+                          id='selfPr'
+                          {...register('selfPr')}
+                          placeholder={
+                            isDesktop
+                              ? '例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
+                              : '例）目標に向けて周囲を巻き込みながら推進するのが得意です。直近では〇〇プロジェクトで〜を達成しました。'
+                          }
+                          className='w-full bg-white border-0 rounded-[5px] px-4 py-[11px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none resize-none min-h-[147px] leading-8'
+                        />
+                      </div>
                     </FormField>
                   </div>
                 </div>

@@ -1,10 +1,10 @@
 export const ENGLISH_LEVELS = [
   { value: '', label: 'レベルを選択' },
-  { value: 'native', label: 'ネイティブ' },
-  { value: 'business', label: 'ビジネスレベル' },
-  { value: 'conversation', label: '日常会話' },
-  { value: 'basic', label: '基礎会話' },
-  { value: 'none', label: 'なし' },
+  { value: 'ネイティブ', label: 'ネイティブ' },
+  { value: 'ビジネスレベル', label: 'ビジネスレベル' },
+  { value: '日常会話', label: '日常会話' },
+  { value: '基礎会話', label: '基礎会話' },
+  { value: 'なし', label: 'なし' },
 ];
 
 export const LANGUAGE_OPTIONS = [

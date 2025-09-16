@@ -13,6 +13,7 @@ import { type JobType, JOB_TYPE_GROUPS } from '@/constants/job-type-data';
 // import { useCandidateAuth } from '@/hooks/useClientAuth';
 import AddButton from '@/components/education/common/AddButton';
 import JobHistoryEditRow from '@/components/education/common/JobHistoryEditRow';
+import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 // スキーマは共通化されたものを使用
 
@@ -78,17 +79,9 @@ export default function CandidateRecentJobEditPage() {
     fetchInitialData: async () => {
       const data = await getRecentJobData();
       if (!data || !data.jobHistories) return null;
-      // フォーム用にIDへ正規化（name/ID混在対策）
-      const normalizeId = (item: string) => {
-        const ind = INDUSTRY_GROUPS.flatMap(g => g.industries).find(
-          i => i.id === item || i.name === item
-        );
-        if (ind) return ind.id;
-        const jt = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(
-          j => j.id === item || j.name === item
-        );
-        if (jt) return jt.id;
-        return item;
+      // recent-jobでは名前をそのまま使用
+      const normalizeName = (item: string) => {
+        return item; // 名前をそのまま返す
       };
       return {
         jobHistories: data.jobHistories.map(job => ({
@@ -100,10 +93,10 @@ export default function CandidateRecentJobEditPage() {
           endMonth: job.endMonth || '',
           isCurrentlyWorking: !!job.isCurrentlyWorking,
           industries: (job.industries || [])
-            .map((x: string) => normalizeId(x))
+            .map((x: string) => normalizeName(x))
             .filter(Boolean),
           jobTypes: (job.jobTypes || [])
-            .map((x: string) => normalizeId(x))
+            .map((x: string) => normalizeName(x))
             .filter(Boolean),
           jobDescription: job.jobDescription || '',
         })),
@@ -126,7 +119,8 @@ export default function CandidateRecentJobEditPage() {
     name: 'jobHistories',
   });
 
-  const addJobHistory = () =>
+  const addJobHistory = () => {
+    const newIndex = jobHistoryFields.length;
     append({
       companyName: '',
       departmentPosition: '',
@@ -140,6 +134,17 @@ export default function CandidateRecentJobEditPage() {
       jobDescription: '',
     });
 
+    // 新しいインデックスに対してマップを初期化
+    setSelectedIndustriesMap(prev => ({
+      ...prev,
+      [newIndex]: [],
+    }));
+    setSelectedJobTypesMap(prev => ({
+      ...prev,
+      [newIndex]: [],
+    }));
+  };
+
   // 初期データを取得して選択マップを再構築（フォームの初期化は useEditForm に委譲）
   useEffect(() => {
     const buildSelectedMaps = async () => {
@@ -150,27 +155,17 @@ export default function CandidateRecentJobEditPage() {
           const jobTypeMap: { [key: number]: JobType[] } = {};
           data.jobHistories.forEach((job, index) => {
             if (job.industries && job.industries.length > 0) {
-              const industries: Industry[] = job.industries
-                .map((item: string) => {
-                  const allIndustries = INDUSTRY_GROUPS.flatMap(
-                    g => g.industries
-                  );
-                  return allIndustries.find(
-                    i => i.id === item || i.name === item
-                  );
-                })
-                .filter(Boolean) as Industry[];
+              const industries = job.industries.map((name: string) => ({
+                id: name, // IDとして名前を使用
+                name: name,
+              }));
               industryMap[index] = industries;
             }
             if (job.jobTypes && job.jobTypes.length > 0) {
-              const jobTypes: JobType[] = job.jobTypes
-                .map((item: string) => {
-                  const allJobTypes = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes);
-                  return allJobTypes.find(
-                    jt => jt.id === item || jt.name === item
-                  );
-                })
-                .filter(Boolean) as JobType[];
+              const jobTypes = job.jobTypes.map((name: string) => ({
+                id: name, // IDとして名前を使用
+                name: name,
+              }));
               jobTypeMap[index] = jobTypes;
             }
           });
@@ -195,14 +190,13 @@ export default function CandidateRecentJobEditPage() {
     setCurrentIndustryModalIndex(null);
   };
 
-  const handleIndustriesConfirm = (industryIds: string[]) => {
+  const handleIndustriesConfirm = (industryNames: string[]) => {
     if (currentIndustryModalIndex !== null) {
-      // IDからIndustryオブジェクトに変換
-      const industries: Industry[] = industryIds
-        .map(id =>
-          INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id)
-        )
-        .filter(Boolean) as Industry[];
+      // 名前から簡易的なIndustryオブジェクトを作成（recent-jobでは名前のみを使用）
+      const industries = industryNames.map(name => ({
+        id: name, // IDとして名前を使用
+        name: name,
+      }));
 
       // selectedIndustriesMapを更新
       setSelectedIndustriesMap(prev => ({
@@ -210,10 +204,10 @@ export default function CandidateRecentJobEditPage() {
         [currentIndustryModalIndex]: industries,
       }));
 
-      // フォームフィールドの値も更新
+      // フォームフィールドの値も更新（名前で保存）
       setValue(
         `jobHistories.${currentIndustryModalIndex}.industries`,
-        industries.map(ind => ind.id),
+        industryNames,
         { shouldValidate: true, shouldDirty: true }
       );
       closeIndustryModal();
@@ -221,17 +215,20 @@ export default function CandidateRecentJobEditPage() {
   };
 
   const removeIndustry = (index: number, industryId: string) => {
+    // industryIdは実際には名前として使用されている（id: nameなので）
+    const industryName = industryId;
+
     // selectedIndustriesMapから削除
     setSelectedIndustriesMap(prev => ({
       ...prev,
-      [index]: prev[index]?.filter(ind => ind.id !== industryId) || [],
+      [index]: prev[index]?.filter(ind => ind.name !== industryName) || [],
     }));
 
     // フォームフィールドからも削除
     const currentIndustries = watch(`jobHistories.${index}.industries`) || [];
     setValue(
       `jobHistories.${index}.industries`,
-      currentIndustries.filter((id: string) => id !== industryId),
+      currentIndustries.filter((name: string) => name !== industryName),
       { shouldValidate: true, shouldDirty: true }
     );
   };
@@ -250,14 +247,13 @@ export default function CandidateRecentJobEditPage() {
     setCurrentJobTypeModalIndex(null);
   };
 
-  const handleJobTypesConfirm = (jobTypeIds: string[]) => {
+  const handleJobTypesConfirm = (jobTypeNames: string[]) => {
     if (currentJobTypeModalIndex !== null) {
-      // IDからJobTypeオブジェクトに変換
-      const jobTypes: JobType[] = jobTypeIds
-        .map(id =>
-          JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id)
-        )
-        .filter(Boolean) as JobType[];
+      // 名前から簡易的なJobTypeオブジェクトを作成（recent-jobでは名前のみを使用）
+      const jobTypes = jobTypeNames.map(name => ({
+        id: name, // IDとして名前を使用
+        name: name,
+      }));
 
       // selectedJobTypesMapを更新
       setSelectedJobTypesMap(prev => ({
@@ -265,10 +261,10 @@ export default function CandidateRecentJobEditPage() {
         [currentJobTypeModalIndex]: jobTypes,
       }));
 
-      // フォームフィールドの値も更新
+      // フォームフィールドの値も更新（名前で保存）
       setValue(
         `jobHistories.${currentJobTypeModalIndex}.jobTypes`,
-        jobTypes.map(jt => jt.id),
+        jobTypeNames,
         { shouldValidate: true, shouldDirty: true }
       );
       closeJobTypeModal();
@@ -303,49 +299,13 @@ export default function CandidateRecentJobEditPage() {
         {/* 緑のグラデーション背景のヘッダー部分 */}
         <div className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-4 lg:px-20 py-6 lg:py-10'>
           {/* パンくずリスト */}
-          <div className='flex flex-wrap items-center gap-2 mb-2 lg:mb-4'>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              プロフィール確認・編集
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              職務経歴
-            </span>
-            <svg
-              width='8'
-              height='8'
-              viewBox='0 0 8 8'
-              fill='none'
-              xmlns='http://www.w3.org/2000/svg'
-              className='flex-shrink-0'
-            >
-              <path
-                d='M3 1L6 4L3 7'
-                stroke='white'
-                strokeWidth='1.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-            </svg>
-            <span className='text-white text-[14px] font-bold tracking-[1.4px]'>
-              職務経歴編集
-            </span>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: 'プロフィール確認・編集', href: '/candidate/mypage' },
+              { label: '職務経歴', href: '/candidate/account/recent-job' },
+              { label: '職務経歴編集' },
+            ]}
+          />
 
           {/* タイトル */}
           <div className='flex items-center gap-2 lg:gap-4'>
@@ -467,7 +427,7 @@ export default function CandidateRecentJobEditPage() {
           onClose={closeIndustryModal}
           onConfirm={handleIndustriesConfirm}
           initialSelected={getSelectedIndustries(currentIndustryModalIndex).map(
-            i => i.id
+            i => i.name
           )}
           maxSelections={3}
         />
@@ -480,7 +440,7 @@ export default function CandidateRecentJobEditPage() {
           onClose={closeJobTypeModal}
           onConfirm={handleJobTypesConfirm}
           initialSelected={getSelectedJobTypes(currentJobTypeModalIndex).map(
-            jt => jt.id
+            jt => jt.name
           )}
           maxSelections={3}
         />

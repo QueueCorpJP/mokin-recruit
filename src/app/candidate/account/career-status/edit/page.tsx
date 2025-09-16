@@ -15,6 +15,7 @@ import {
   CURRENT_ACTIVITY_STATUS_OPTIONS,
   JOB_CHANGE_TIMING_OPTIONS,
 } from '@/constants/career-status';
+import { SelectInput } from '@/components/ui/select-input';
 import Section from '@/components/education/common/Section';
 import SectionCard from '@/components/education/common/SectionCard';
 import FormRow from '@/components/education/common/FormRow';
@@ -188,8 +189,11 @@ export default function CandidateCareerStatusEditPage() {
           {/* パンくずリスト */}
           <Breadcrumbs
             items={[
-              { label: 'プロフィール確認・編集' },
-              { label: '転職活動状況' },
+              { label: 'プロフィール確認・編集', href: '/candidate/account' },
+              {
+                label: '転職活動状況',
+                href: '/candidate/account/career-status',
+              },
               { label: '転職活動状況編集', isCurrent: true },
             ]}
           />
@@ -247,41 +251,55 @@ export default function CandidateCareerStatusEditPage() {
                   label='転職希望時期'
                   error={errors.transferDesiredTime?.message || ''}
                 >
-                  <select
-                    id={idFor('transferDesiredTime')}
-                    {...register('transferDesiredTime')}
-                    {...ariaPropsFor(
-                      !!errors.transferDesiredTime,
-                      describedByIdFor('transferDesiredTime')
-                    )}
-                    className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                  >
-                    {JOB_CHANGE_TIMING_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <SelectInput
+                    options={JOB_CHANGE_TIMING_OPTIONS}
+                    value={watch('transferDesiredTime')}
+                    onChange={value =>
+                      setValue('transferDesiredTime', value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                    error={!!errors.transferDesiredTime}
+                    errorMessage={errors.transferDesiredTime?.message}
+                    className='w-full'
+                    style={{
+                      padding: '11px',
+                      border: '1px solid #999999',
+                      borderRadius: '5px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      letterSpacing: '1.6px',
+                    }}
+                    radius={5}
+                  />
                 </FormRow>
                 <FormRow
                   label='現在の活動状況'
                   error={errors.currentActivityStatus?.message || ''}
                 >
-                  <select
-                    id={idFor('currentActivityStatus')}
-                    {...register('currentActivityStatus')}
-                    {...ariaPropsFor(
-                      !!errors.currentActivityStatus,
-                      describedByIdFor('currentActivityStatus')
-                    )}
-                    className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-[11px] pr-12 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-                  >
-                    {CURRENT_ACTIVITY_STATUS_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <SelectInput
+                    options={CURRENT_ACTIVITY_STATUS_OPTIONS}
+                    value={watch('currentActivityStatus')}
+                    onChange={value =>
+                      setValue('currentActivityStatus', value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                    error={!!errors.currentActivityStatus}
+                    errorMessage={errors.currentActivityStatus?.message}
+                    className='w-full'
+                    style={{
+                      padding: '11px',
+                      border: '1px solid #999999',
+                      borderRadius: '5px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      letterSpacing: '1.6px',
+                    }}
+                    radius={5}
+                  />
                 </FormRow>
               </Section>
               <Section title='選考状況'>

@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -20,7 +20,7 @@ export interface LoginResult {
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,17 +44,11 @@ async function createSupabaseServerClient() {
   );
 }
 
-
-export async function loginAction(formData: LoginFormData): Promise<LoginResult> {
+export async function loginAction(
+  formData: LoginFormData
+): Promise<LoginResult> {
   try {
     const { email, password, userType } = formData;
-
-    // デバッグ用ログ - パスワードは安全のためマスク
-    console.log('🔍 [COMPANY LOGIN DEBUG] Input:', {
-      email,
-      password: password ? `[${password.length}文字]` : 'undefined',
-      userType
-    });
 
     // Supabase認証
     const supabase = await createSupabaseServerClient();
@@ -69,7 +63,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
         success: false,
         error: 'メールアドレスまたはパスワードが正しくありません',
         message: 'メールアドレスまたはパスワードが正しくありません',
-        code: 'AUTH_FAILED'
+        code: 'AUTH_FAILED',
       };
     }
 
@@ -78,7 +72,7 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
         success: false,
         error: 'ログインに失敗しました',
         message: 'ログインに失敗しました',
-        code: 'AUTH_FAILED'
+        code: 'AUTH_FAILED',
       };
     }
 
@@ -90,22 +84,13 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
       .single();
 
     if (companyUserError || !companyUser) {
-      console.log('Company user not found for auth user:', data.user.id);
       return {
         success: false,
         error: '企業ユーザーアカウントではありません',
         message: '企業ユーザーアカウントでログインしてください',
-        code: 'INVALID_USER_TYPE'
+        code: 'INVALID_USER_TYPE',
       };
     }
-
-    console.log('✅ [COMPANY LOGIN] Success:', {
-      authUserId: data.user.id,
-      email: data.user.email,
-      companyUserId: companyUser.id,
-      companyUserName: companyUser.full_name,
-      companyAccountId: companyUser.company_account_id
-    });
 
     // ユーザーメタデータを即時更新して企業ユーザー属性を明示
     try {
@@ -124,32 +109,34 @@ export async function loginAction(formData: LoginFormData): Promise<LoginResult>
     // 認証関連のキャッシュを完全にクリア
     revalidatePath('/', 'layout');
     revalidateTag('auth');
-    
+
     // Next.jsのキャッシュも強制クリア
     const cookieStore = await cookies();
     cookieStore.getAll().forEach(cookie => {
-      if (cookie.name.startsWith('__Secure-next-auth') || cookie.name.includes('supabase')) {
-        // 認証関連のクッキーを確実に設定
-        console.log('Cookie updated:', cookie.name);
+      if (
+        cookie.name.startsWith('__Secure-next-auth') ||
+        cookie.name.includes('supabase')
+      ) {
       }
     });
-    
-    // 成功時は適切なダッシュボードにリダイレクト
-    const redirectPath = userType === 'company' ? '/company/mypage' : '/candidate';
-    redirect(redirectPath);
 
+    // 成功時は適切なダッシュボードにリダイレクト
+    const redirectPath =
+      userType === 'company' ? '/company/mypage' : '/candidate';
+    redirect(redirectPath);
   } catch (error) {
     console.error('Login action error:', error);
-    
+
     if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
       // Next.jsのredirectは内部的にエラーを投げるため、これは正常な動作
       throw error;
     }
-    
+
     return {
       success: false,
       error: 'システムエラーが発生しました',
-      message: 'システムエラーが発生しました。しばらくしてから再度お試しください'
+      message:
+        'システムエラーが発生しました。しばらくしてから再度お試しください',
     };
   }
 }

@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
 import FormRow from '@/components/education/common/FormRow';
 import { RemoveButton } from '@/components/education/common/RemoveButton';
+import { SelectInput } from '@/components/ui/select-input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface JobHistoryEditRowProps {
   index: number;
@@ -82,86 +83,99 @@ const JobHistoryEditRow: React.FC<JobHistoryEditRowProps> = ({
             errors?.jobHistories?.[index]?.startMonth?.message
           }
         >
-          <div className='flex flex-wrap items-center gap-2'>
-            <select
-              {...register(`jobHistories.${index}.startYear`)}
-              className='bg-white border font-bold border-[#999999] rounded-[5px] px-3 py-2 pr-4 text-[16px] text-[#323232] tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-            >
-              <option value=''>未選択</option>
-              {yearOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
-              年
-            </span>
-            <select
-              {...register(`jobHistories.${index}.startMonth`)}
-              className='bg-white border border-[#999999] rounded-[5px] px-3 py-2 pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-            >
-              <option value=''>未選択</option>
-              {monthOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
-              月
-            </span>
-            <span className='mx-2'>〜</span>
-            <select
-              {...register(`jobHistories.${index}.endYear`)}
-              className='bg-white border border-[#999999] rounded-[5px] px-3 py-2 pr-4 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-            >
-              <option value=''>未選択</option>
-              {yearOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
-              年
-            </span>
-            <select
-              {...register(`jobHistories.${index}.endMonth`)}
-              className='bg-white border border-[#999999] rounded-[5px] px-3 py-2 pr-6 text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer focus:outline-none focus:border-[#0f9058]'
-            >
-              <option value=''>未選択</option>
-              {monthOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
-              月
-            </span>
+          <div className='flex flex-col gap-3'>
+            {/* 開始年月 */}
+            <div className='flex items-center gap-2'>
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px] w-[90px]'>
+                開始年月
+              </span>
+              <SelectInput
+                options={[{ value: '', label: '未選択' }, ...yearOptions]}
+                value={watch(`jobHistories.${index}.startYear`) || ''}
+                onChange={value =>
+                  setValue(`jobHistories.${index}.startYear`, value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder='未選択'
+                className='w-auto min-w-[100px]'
+                radius={5}
+              />
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
+                年
+              </span>
+              <SelectInput
+                options={[{ value: '', label: '未選択' }, ...monthOptions]}
+                value={watch(`jobHistories.${index}.startMonth`) || ''}
+                onChange={value =>
+                  setValue(`jobHistories.${index}.startMonth`, value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder='未選択'
+                className='w-auto min-w-[80px]'
+                radius={5}
+              />
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
+                月
+              </span>
+            </div>
+            {/* 終了年月 */}
+            <div className='flex items-center gap-2'>
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px] w-[90px]'>
+                終了年月
+              </span>
+              <SelectInput
+                options={[{ value: '', label: '未選択' }, ...yearOptions]}
+                value={watch(`jobHistories.${index}.endYear`) || ''}
+                onChange={value =>
+                  setValue(`jobHistories.${index}.endYear`, value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder='未選択'
+                className='w-auto min-w-[100px]'
+                radius={5}
+              />
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
+                年
+              </span>
+              <SelectInput
+                options={[{ value: '', label: '未選択' }, ...monthOptions]}
+                value={watch(`jobHistories.${index}.endMonth`) || ''}
+                onChange={value =>
+                  setValue(`jobHistories.${index}.endMonth`, value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder='未選択'
+                className='w-auto min-w-[80px]'
+                radius={5}
+              />
+              <span className='text-[16px] text-[#323232] font-bold tracking-[1.6px]'>
+                月
+              </span>
+            </div>
             {/* 在籍中チェックボックス */}
-            <div className='flex items-center gap-2 ml-4'>
-              <input
-                type='checkbox'
+            <div className='flex items-center gap-2 ml-[90px]'>
+              <Checkbox
+                id={`currentlyWorking-${index}`}
+                label='在籍中'
                 checked={
                   watch(`jobHistories.${index}.isCurrentlyWorking`) || false
                 }
-                onChange={() =>
+                onCheckedChange={checked =>
                   setValue(
                     `jobHistories.${index}.isCurrentlyWorking`,
-                    !watch(`jobHistories.${index}.isCurrentlyWorking`)
+                    !!checked
                   )
                 }
-                className='w-5 h-5 cursor-pointer accent-[#0f9058]'
-                id={`currentlyWorking-${index}`}
+                className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'
               />
-              <label
-                htmlFor={`currentlyWorking-${index}`}
-                className='text-[16px] text-[#323232] font-bold tracking-[1.6px] cursor-pointer'
-              >
-                在籍中
-              </label>
             </div>
           </div>
         </FormRow>
@@ -239,12 +253,14 @@ const JobHistoryEditRow: React.FC<JobHistoryEditRowProps> = ({
         </FormRow>
         {/* 業務内容 */}
         <FormRow label='業務内容'>
-          <textarea
-            {...register(`jobHistories.${index}.jobDescription`)}
-            placeholder='業務内容を入力'
-            rows={5}
-            className='w-full bg-white border border-[#999999] rounded-[5px] px-4 py-3 text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none focus:border-[#0f9058] resize-none'
-          />
+          <div className='border border-[#999999] rounded-[5px] p-1'>
+            <textarea
+              {...register(`jobHistories.${index}.jobDescription`)}
+              placeholder='業務内容を入力'
+              rows={5}
+              className='w-full bg-white border-0 rounded-[5px] px-4 py-3 text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder-[#999999] focus:outline-none resize-none'
+            />
+          </div>
         </FormRow>
       </div>
     </div>

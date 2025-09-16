@@ -175,17 +175,16 @@ export async function signupRequestAction(
     // ステップ7: OTPをデータベースに保存
     try {
       const { error: otpSaveError } = await supabase
-        .from('email_verification_codes')
+        .from('signup_verification_codes')
         .upsert(
           {
             email: email.trim(),
-            code: otp,
+            verification_code: otp,
             expires_at: expiresAt.toISOString(),
-            type: 'signup',
             created_at: new Date().toISOString(),
           },
           {
-            onConflict: 'email,type',
+            onConflict: 'email',
           }
         );
 

@@ -49,13 +49,17 @@ export async function sendContactForm(formData: {
     console.log('メール送信設定を確認中...');
     console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
     console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
+    console.log('SENT_EMAIL:', process.env.SENT_EMAIL);
+
+    // 送信先メールアドレスを確認
+    const sentToEmail = process.env.SENT_EMAIL || 'info@cuepoint.jp';
 
     // メール送信
     console.log('メール送信中...');
-    console.log('送信先:', companyUser.email);
+    console.log('送信先:', sentToEmail);
 
     const emailResult = await sendEmailViaSendGrid({
-      to: companyUser.email, // 企業ユーザーにメール送信
+      to: sentToEmail, // SENT_EMAILあてにメール送信
       subject: 'お問い合わせ受付完了のお知らせ',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -97,7 +101,7 @@ export async function sendContactForm(formData: {
       };
     }
 
-    console.log(`✅ メール送信成功! 送信先: ${companyUser.email}`);
+    console.log(`✅ メール送信成功! 送信先: ${sentToEmail}`);
     console.log('メッセージID:', emailResult.messageId);
 
     console.log('=== sendContactForm完了 ===');

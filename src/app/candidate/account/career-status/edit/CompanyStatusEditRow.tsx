@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import FormRow from '@/components/education/common/FormRow';
 import {
