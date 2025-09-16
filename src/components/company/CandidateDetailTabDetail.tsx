@@ -30,8 +30,7 @@ const CandidateDetailTabDetail: React.FC<CandidateDetailTabDetailProps> = ({
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
-        })
-        .replace(/\//g, '/');
+        });
     } catch {
       return '未設定';
     }
