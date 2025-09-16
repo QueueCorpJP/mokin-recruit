@@ -97,7 +97,7 @@ export async function saveArticle(formData: FormData) {
         content,
         status,
         thumbnail_url: thumbnailUrl,
-        excerpt: content.replace(/<[^>]*>/g, '').substring(0, 200),
+        excerpt: (() => { let s = content; let prev; do { prev = s; s = s.replace(/<[^>]*>/g, ''); } while (s !== prev); return s.substring(0, 200); })(),
         published_at: status === 'PUBLISHED' ? new Date().toISOString() : null,
       })
       .select()

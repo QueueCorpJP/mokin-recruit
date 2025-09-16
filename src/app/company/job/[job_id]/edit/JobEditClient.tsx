@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import CryptoJS from 'crypto-js';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import JobEditHeader from './JobEditHeader';
@@ -64,6 +65,14 @@ export default function JobEditClient({
   currentUserId 
 }: JobEditClientProps) {
   const router = useRouter();
+
+  // Encryption key for demonstration; in production, securely manage this!
+  const ENCRYPTION_KEY = 'YOUR_SECURE_KEY_HERE';
+
+  // AES encryption for sensitive data
+  function encrypt(text: string): string {
+    return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+  }
 
   // 確認画面の表示制御
 
@@ -348,9 +357,9 @@ export default function JobEditClient({
       positionSummary: positionSummary || '',
       requiredSkills: skills || '',
       preferredSkills: otherRequirements || '',
-      salaryMin: salaryMin,
-      salaryMax: salaryMax,
-      salaryNote: salaryNote || '',
+      salaryMin: encrypt(salaryMin),
+      salaryMax: encrypt(salaryMax),
+      salaryNote: encrypt(salaryNote || ''),
       employmentType: employmentType || '未設定',
       work_locations: locations || [],
       location_note: locationNote || '',
