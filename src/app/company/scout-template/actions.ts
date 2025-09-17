@@ -39,8 +39,15 @@ export async function getScoutTemplates(
     console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
 
     if (!authResult.success) {
-      console.log('❌ Authentication failed:', authResult.error);
-      return { success: false, error: authResult.error, data: [] };
+      console.log(
+        '❌ Authentication failed:',
+        (authResult as any).error || '認証が必要です'
+      );
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+        data: [],
+      };
     }
 
     const { companyAccountId, companyUserId } = authResult.data;
@@ -311,8 +318,15 @@ export async function getJobPostings() {
     console.log('👤 Auth result:', authResult.success ? 'success' : 'failed');
 
     if (!authResult.success) {
-      console.log('❌ Authentication failed:', authResult.error);
-      return { success: false, error: authResult.error, data: [] };
+      console.log(
+        '❌ Authentication failed:',
+        (authResult as any).error || '認証が必要です'
+      );
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+        data: [],
+      };
     }
 
     const { companyAccountId } = authResult.data;

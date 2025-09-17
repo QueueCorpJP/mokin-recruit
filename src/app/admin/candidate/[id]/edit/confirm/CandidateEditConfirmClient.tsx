@@ -919,7 +919,7 @@ export default function CandidateEditConfirmClient({
                     );
                     if (!otherLanguages) return null;
 
-                    let languageArray = [];
+                    let languageArray: any[] = [];
 
                     // 文字列の場合（JSON形式の可能性）
                     if (typeof otherLanguages === 'string') {

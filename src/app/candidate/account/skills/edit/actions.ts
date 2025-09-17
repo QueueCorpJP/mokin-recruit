@@ -42,7 +42,7 @@ export async function updateSkillsData(formData: FormData) {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      throw new Error(authResult.error);
+      throw new Error((authResult as any).error || '認証が必要です');
     }
 
     const { candidateId } = authResult.data;

@@ -8,6 +8,7 @@ import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import type { UserType } from '@/types';
 
 interface LoginFormProps {
   userType?: 'candidate' | 'company' | 'admin';

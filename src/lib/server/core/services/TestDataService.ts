@@ -408,7 +408,7 @@ export class TestDataService {
 
       // テスト用ユーザーをフィルタリング
       const testUsers = users.users.filter(
-        user =>
+        (user: any) =>
           user.user_metadata?.created_for_testing === true ||
           user.email?.includes('@test.local') ||
           user.email?.includes('@bypass.local')
@@ -473,11 +473,11 @@ export class TestDataService {
 
       const testUsers = users.users
         .filter(
-          user =>
+          (user: any) =>
             user.user_metadata?.created_for_testing === true ||
             user.email?.includes('@test.local')
         )
-        .map(user => ({
+        .map((user: any) => ({
           id: user.id,
           email: user.email,
           userType: user.user_metadata?.userType || 'unknown',

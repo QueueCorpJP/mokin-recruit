@@ -24,31 +24,27 @@ export default function NotificationSettingPage() {
     setError,
     hasChanges,
     handleSave,
-  } = useSettingsForm<NotificationSetting>({
+  } = useSettingsForm<NotificationSettings>({
     enabled: !loading && !!isAuthenticated && !!candidateUser,
     load: async () => {
       const settings = await getNotificationSettings();
       if (settings) {
-        return {
-          scoutNotification: settings.scout_notification,
-          messageNotification: settings.message_notification,
-          recommendationNotification: settings.recommendation_notification,
-        };
+        return settings;
       }
       // デフォルト値（従来の初期値を踏襲）
       return {
-        scoutNotification: 'receive',
-        messageNotification: 'receive',
-        recommendationNotification: 'receive',
+        scout_notification: 'receive' as const,
+        message_notification: 'receive' as const,
+        recommendation_notification: 'receive' as const,
       };
     },
     buildFormData: state => {
       const formData = new FormData();
-      formData.append('scoutNotification', state.scoutNotification);
-      formData.append('messageNotification', state.messageNotification);
+      formData.append('scoutNotification', state.scout_notification);
+      formData.append('messageNotification', state.message_notification);
       formData.append(
         'recommendationNotification',
-        state.recommendationNotification
+        state.recommendation_notification
       );
       return formData;
     },
@@ -67,9 +63,9 @@ export default function NotificationSettingPage() {
   // 旧来の差分判定・ロード副作用は useSettingsForm に移管済み
 
   const handleNotificationChange =
-    (type: keyof NotificationSetting) =>
+    (type: keyof NotificationSettings) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setNotifications(prev => ({
+      setNotifications((prev: any) => ({
         ...prev,
         [type]: e.target.value,
       }));
@@ -130,8 +126,10 @@ export default function NotificationSettingPage() {
                         id='scout-notification-receive'
                         name='scoutNotification'
                         value='receive'
-                        checked={notifications.scoutNotification === 'receive'}
-                        onChange={handleNotificationChange('scoutNotification')}
+                        checked={notifications.scout_notification === 'receive'}
+                        onChange={handleNotificationChange(
+                          'scout_notification'
+                        )}
                       />
                       <label
                         htmlFor='scout-notification-receive'
@@ -148,9 +146,11 @@ export default function NotificationSettingPage() {
                         name='scoutNotification'
                         value='not-receive'
                         checked={
-                          notifications.scoutNotification === 'not-receive'
+                          notifications.scout_notification === 'not-receive'
                         }
-                        onChange={handleNotificationChange('scoutNotification')}
+                        onChange={handleNotificationChange(
+                          'scout_notification'
+                        )}
                       />
                       <label
                         htmlFor='scout-notification-not-receive'
@@ -182,10 +182,10 @@ export default function NotificationSettingPage() {
                         name='messageNotification'
                         value='receive'
                         checked={
-                          notifications.messageNotification === 'receive'
+                          notifications.message_notification === 'receive'
                         }
                         onChange={handleNotificationChange(
-                          'messageNotification'
+                          'message_notification'
                         )}
                       />
                       <label
@@ -203,10 +203,10 @@ export default function NotificationSettingPage() {
                         name='messageNotification'
                         value='not-receive'
                         checked={
-                          notifications.messageNotification === 'not-receive'
+                          notifications.message_notification === 'not-receive'
                         }
                         onChange={handleNotificationChange(
-                          'messageNotification'
+                          'message_notification'
                         )}
                       />
                       <label
@@ -239,10 +239,11 @@ export default function NotificationSettingPage() {
                         name='recommendationNotification'
                         value='receive'
                         checked={
-                          notifications.recommendationNotification === 'receive'
+                          notifications.recommendation_notification ===
+                          'receive'
                         }
                         onChange={handleNotificationChange(
-                          'recommendationNotification'
+                          'recommendation_notification'
                         )}
                       />
                       <label
@@ -260,11 +261,11 @@ export default function NotificationSettingPage() {
                         name='recommendationNotification'
                         value='not-receive'
                         checked={
-                          notifications.recommendationNotification ===
+                          notifications.recommendation_notification ===
                           'not-receive'
                         }
                         onChange={handleNotificationChange(
-                          'recommendationNotification'
+                          'recommendation_notification'
                         )}
                       />
                       <label

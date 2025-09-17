@@ -33,8 +33,8 @@ export default function MailChangePage() {
     try {
       const result = await sendVerificationCode(email);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '認証が必要です');
       } else {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('verificationEmail', email);

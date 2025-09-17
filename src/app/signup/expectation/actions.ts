@@ -7,8 +7,8 @@ import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
 interface ExpectationFormData {
   desiredIncome: string;
-  industries: Array<{ id: string; name: string }>;
-  jobTypes: Array<{ id: string; name: string }>;
+  industries: string[];
+  jobTypes: string[];
   workLocations: Array<{ id: string; name: string }>;
   workStyles: Array<{ id: string; name: string }>;
 }
@@ -57,26 +57,25 @@ export async function saveExpectationData(formData: ExpectationFormData) {
       expectationError = error;
     } else {
       // Insert new record
-      const { error } = await supabase
-        .from('expectations')
-        .insert({
-          candidate_id: candidateId,
-          desired_income: formData.desiredIncome,
-          desired_industries: JSON.stringify(formData.industries),
-          desired_job_types: JSON.stringify(formData.jobTypes),
-          desired_work_locations: JSON.stringify(formData.workLocations),
-          desired_work_styles: JSON.stringify(formData.workStyles),
-        });
+      const { error } = await supabase.from('expectations').insert({
+        candidate_id: candidateId,
+        desired_income: formData.desiredIncome,
+        desired_industries: JSON.stringify(formData.industries),
+        desired_job_types: JSON.stringify(formData.jobTypes),
+        desired_work_locations: JSON.stringify(formData.workLocations),
+        desired_work_styles: JSON.stringify(formData.workStyles),
+      });
       expectationError = error;
     }
 
     if (expectationError) {
-      throw new Error(`Expectation data save failed: ${expectationError.message}`);
+      throw new Error(
+        `Expectation data save failed: ${expectationError.message}`
+      );
     }
 
     console.log('Expectation data saved successfully');
     redirect('/signup/summary');
-
   } catch (error) {
     console.error('Expectation data save error:', error);
     throw error;

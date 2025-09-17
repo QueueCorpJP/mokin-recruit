@@ -69,7 +69,7 @@ export async function updateCandidateData(request: UpdateCandidateRequest) {
     const supabase = getSupabaseAdminClient();
 
     // Create birth_date from year, month, day
-    let birth_date = null;
+    let birth_date: string | null = null;
     if (formData.birth_date) {
       birth_date = formData.birth_date;
     }

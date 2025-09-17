@@ -77,8 +77,9 @@ export default async function ContactPage() {
     )
     .eq('company_user_id', companyUserId);
 
-  const groups =
-    userGroups?.map(item => item.company_groups).filter(Boolean) || [];
+  const groups = (userGroups
+    ?.map((item: any) => item.company_groups)
+    .filter(Boolean) || []) as Array<{ id: string; group_name: string }>;
 
   if (groupsError) {
     // Handle error silently
@@ -200,7 +201,11 @@ export default async function ContactPage() {
                         | { company_name?: string }[];
                       if (Array.isArray(accounts) && accounts.length > 0) {
                         return accounts[0]?.company_name || 'データなし';
-                      } else if (accounts && accounts.company_name) {
+                      } else if (
+                        accounts &&
+                        !Array.isArray(accounts) &&
+                        accounts.company_name
+                      ) {
                         return accounts.company_name;
                       }
                       return 'データなし';
@@ -240,7 +245,7 @@ export default async function ContactPage() {
 
             {/* フォーム部分はクライアントコンポーネントに移管 */}
             <ContactFormClient
-              groups={groups as { id: string; name: string }[]}
+              groups={groups.map(g => ({ id: g.id, group_name: g.group_name }))}
             />
           </div>
         </div>

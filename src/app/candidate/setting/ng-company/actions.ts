@@ -41,7 +41,7 @@ export async function saveBlockedCompanies(companyNames: string[]) {
     company_names: companyNames,
   });
   if (!result.success) {
-    throw new Error(result.error);
+    throw new Error((result as any).error || '更新に失敗しました');
   }
 
   revalidatePath('/candidate/setting/ng-company');

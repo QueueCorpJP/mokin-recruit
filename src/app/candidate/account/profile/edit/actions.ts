@@ -35,7 +35,7 @@ export async function updateCandidateProfile(
     if (!authResult.success) {
       return {
         success: false,
-        message: authResult.error,
+        message: (authResult as any).error || '認証が必要です',
         errors: {},
       };
     }
@@ -47,8 +47,8 @@ export async function updateCandidateProfile(
     if (!validation.success) {
       return {
         success: false,
-        message: validation.message,
-        errors: validation.errors,
+        message: (validation as any).message || 'バリデーションエラー',
+        errors: (validation as any).errors || {},
       };
     }
     const {

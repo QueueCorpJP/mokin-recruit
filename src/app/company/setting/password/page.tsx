@@ -42,8 +42,8 @@ export default function PasswordChangePage() {
       // パスワード変更処理
       const result = await changePassword(currentPassword, newPassword);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '更新に失敗しました');
       } else {
         // 成功時は完了ページへ遷移
         router.push('/company/setting/password/complete');

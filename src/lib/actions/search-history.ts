@@ -72,7 +72,7 @@ export async function saveSearchHistory(data: SaveSearchHistoryData) {
     if (!authResult.success) {
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
       };
     }
 
@@ -295,11 +295,11 @@ export async function getSearchHistory(
     if (!authResult.success) {
       console.error(
         '[getSearchHistory] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
       };
     }
 
@@ -438,11 +438,11 @@ export async function updateSearchHistorySavedStatus(
     if (!authResult.success) {
       console.error(
         '[updateSearchHistorySavedStatus] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
       };
     }
 
@@ -537,11 +537,11 @@ export async function getCompanyGroups() {
     if (!authResult.success) {
       console.error(
         '[getCompanyGroups] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
         data: [],
       };
     }
@@ -638,11 +638,11 @@ export async function updateSearchHistoryTitle(
     if (!authResult.success) {
       console.error(
         '[updateSearchHistoryTitle] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
       };
     }
 
@@ -737,11 +737,11 @@ export async function getUserDefaultGroupId() {
     if (!authResult.success) {
       console.error(
         '[getUserDefaultGroupId] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
         data: null,
       };
     }
@@ -841,11 +841,11 @@ export async function deleteSearchHistory(historyId: string) {
     if (!authResult.success) {
       console.error(
         '[deleteSearchHistory] Company auth failed:',
-        authResult.error
+        (authResult as any).error || '認証エラー'
       );
       return {
         success: false,
-        error: authResult.error,
+        error: (authResult as any).error || '認証が必要です',
       };
     }
 

@@ -195,12 +195,12 @@ export default function AccountClient({
 
   const handleCreateGroupSubmit = async (payload: {
     groupName: string;
-    members: { email: string; role: 'admin' | 'member' | 'viewer' }[];
+    members: { email: string; role: 'admin' | 'recruiter' | 'scout' }[];
   }) => {
     try {
       const result = await createGroupAndInvite(payload);
       if (!result.success) {
-        alert(result.error || 'グループの作成に失敗しました');
+        alert((result as any).error || 'グループの作成に失敗しました');
         return;
       }
 
@@ -215,7 +215,7 @@ export default function AccountClient({
           permission:
             m.role === 'admin'
               ? 'admin'
-              : m.role === 'member'
+              : m.role === 'recruiter'
                 ? 'recruiter'
                 : 'scout',
         })),
@@ -277,7 +277,7 @@ export default function AccountClient({
         deleteTarget.memberId
       );
       if (!result.success) {
-        alert(result.error || 'メンバー削除に失敗しました');
+        alert((result as any).error || 'メンバー削除に失敗しました');
         return;
       }
 
@@ -360,7 +360,7 @@ export default function AccountClient({
     try {
       const result = await updateGroupName(renameTarget.groupId, newName);
       if (!result.success) {
-        alert(result.error || 'グループ名の更新に失敗しました');
+        alert((result as any).error || 'グループ名の更新に失敗しました');
         return;
       }
 
@@ -402,7 +402,7 @@ export default function AccountClient({
       }));
       const result = await inviteMembersToGroup(inviteTarget.groupId, payload);
       if (!result.success) {
-        alert(result.error || 'メンバー招待に失敗しました');
+        alert((result as any).error || 'メンバー招待に失敗しました');
         return;
       }
 
@@ -455,7 +455,7 @@ export default function AccountClient({
         permTarget.newRoleUi
       );
       if (!result.success) {
-        alert(result.error || '権限の更新に失敗しました');
+        alert((result as any).error || '権限の更新に失敗しました');
         return;
       }
 

@@ -80,12 +80,7 @@ export default function EditPreviewPage() {
                   .eq('id', categoryId)
                   .single();
 
-                if (
-                  categoryData &&
-                  typeof categoryData === 'object' &&
-                  'name' in categoryData &&
-                  categoryData.name
-                ) {
+                if (categoryData && (categoryData as any).name) {
                   names[categoryId] = (categoryData as { name: string }).name;
                 }
               } catch (err) {

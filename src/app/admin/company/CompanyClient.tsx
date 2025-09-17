@@ -125,27 +125,25 @@ export default function CompanyClient({ companies }: Props) {
       company.plan || 'プラン加入なし',
       company.headquarters_address || 'N/A',
       company.last_login
-        ? new Date(company.last_login)
-            .toLocaleString('ja-JP', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-            // .replace(/\//g, '/') (removed: no-op)
-        : 'N/A',
+        ? new Date(company.last_login).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : // .replace(/\//g, '/') (removed: no-op)
+          'N/A',
       company.last_login_user || 'N/A',
       company.group_names || 'N/A',
-      new Date(company.created_at)
-        .toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-        // .replace(/\//g, '/') (removed: no-op)
+      new Date(company.created_at).toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      // .replace(/\//g, '/') (removed: no-op)
     ]);
 
     // CSV形式に変換
@@ -316,14 +314,13 @@ export default function CompanyClient({ companies }: Props) {
                       <div>
                         <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
                           {c.last_login
-                            ? new Date(c.last_login)
-                                .toLocaleString('ja-JP', {
-                                  year: 'numeric',
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
+                            ? new Date(c.last_login).toLocaleString('ja-JP', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
                             : 'N/A'}
                         </div>
                       </div>

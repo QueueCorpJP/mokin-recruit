@@ -10,45 +10,62 @@ import Image from 'next/image';
 import JobEditConfirmHeader from './JobEditConfirmHeader';
 import { appealPointCategories } from '../../types';
 
+interface ImageWithData {
+  data: string;
+  contentType?: string;
+}
+
 interface ImageSectionProps {
-  images: (File | string)[];
+  images: (File | string | ImageWithData)[];
 }
 
 const ImageSection: React.FC<ImageSectionProps> = ({ images }) => {
   const validImages = images.filter(image => {
     if (!image) return false;
     if (typeof image === 'string') return image.trim() !== '';
-    if (typeof image === 'object' && image.data) return true;
+    if (typeof image === 'object' && 'data' in image && image.data) return true;
+    if (image instanceof File) return true;
     return false;
   });
-  
+
   if (validImages.length > 0) {
     return (
       <>
         {validImages.map((image, index) => (
           <div
             key={index}
-            className="relative rounded overflow-hidden bg-gray-100"
+            className='relative rounded overflow-hidden bg-gray-100'
             style={{ width: '200px', height: '133px' }}
           >
             {typeof image === 'string' ? (
               <Image
                 src={image}
-                alt="求人画像"
+                alt='求人画像'
                 width={200}
                 height={133}
-                className="object-cover w-full h-full rounded"
+                className='object-cover w-full h-full rounded'
               />
-            ) : image && typeof image === 'object' && image.data ? (
+            ) : image instanceof File ? (
+              <Image
+                src={URL.createObjectURL(image)}
+                alt='求人画像'
+                width={200}
+                height={133}
+                className='object-cover w-full h-full rounded'
+              />
+            ) : image &&
+              typeof image === 'object' &&
+              'data' in image &&
+              image.data ? (
               <Image
                 src={`data:${image.contentType || 'image/jpeg'};base64,${image.data}`}
-                alt="求人画像"
+                alt='求人画像'
                 width={200}
                 height={133}
-                className="object-cover w-full h-full rounded"
+                className='object-cover w-full h-full rounded'
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
+              <div className='w-full h-full flex items-center justify-center text-gray-500'>
                 画像を読み込めません
               </div>
             )}
@@ -57,12 +74,8 @@ const ImageSection: React.FC<ImageSectionProps> = ({ images }) => {
       </>
     );
   }
-  
-  return (
-    <div className="text-[#999999] py-4">
-      画像が設定されていません
-    </div>
-  );
+
+  return <div className='text-[#999999] py-4'>画像が設定されていません</div>;
 };
 
 interface JobData {
@@ -128,7 +141,7 @@ interface JobEditData {
   required_documents: string[];
   internal_memo: string;
   publication_type: string;
-  images: (File | string)[];
+  images: (File | string | ImageWithData)[];
   groupId: string;
   applicationDeadline: string;
 }
@@ -140,11 +153,11 @@ interface JobEditConfirmClientProps {
   onBackToEdit: () => void;
 }
 
-export default function JobEditConfirmClient({ 
-  jobData, 
-  jobId, 
+export default function JobEditConfirmClient({
+  jobData,
+  jobId,
   editData,
-  onBackToEdit
+  onBackToEdit,
 }: JobEditConfirmClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -187,7 +200,7 @@ export default function JobEditConfirmClient({
 
   // 公開範囲の表示
   const getPublicationTypeLabel = () => {
-    switch (editData.publicationType) {
+    switch (editData.publication_type) {
       case 'public':
         return '一般公開';
       case 'members':
@@ -227,31 +240,31 @@ export default function JobEditConfirmClient({
       <JobEditConfirmHeader jobId={jobId} />
 
       {/* メインコンテンツ */}
-      <div className="bg-[#f9f9f9] px-20 pt-10 pb-20">
+      <div className='bg-[#f9f9f9] px-20 pt-10 pb-20'>
         <div className='w-full max-w-[1280px] mx-auto mb-10'>
-          <AttentionBanner 
-           title='求人内容の編集についてのご注意'
-           content='この求人は現在公開中です。すでに応募・スカウト済みの候補者がいる場合、内容変更により誤解やトラブルが発生する可能性があります。
+          <AttentionBanner
+            title='求人内容の編集についてのご注意'
+            content='この求人は現在公開中です。すでに応募・スカウト済みの候補者がいる場合、内容変更により誤解やトラブルが発生する可能性があります。
 変更内容は慎重にご確認の上、必要に応じて応募者へのご連絡をお願いいたします。'
           />
         </div>
-        <div className="w-full max-w-[1280px] mx-auto mb-10">
+        <div className='w-full max-w-[1280px] mx-auto mb-10'>
           {/* 詳細情報セクション */}
-          <div className="bg-white rounded-[10px] p-10">
-            <div className="flex flex-col gap-2">
+          <div className='bg-white rounded-[10px] p-10'>
+            <div className='flex flex-col gap-2'>
               {/* グループ */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     グループ
                   </div>
                 </div>
-                <div className="flex items-center py-6">
+                <div className='flex items-center py-6'>
                   <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                    className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     {jobData.groupName}
@@ -260,18 +273,18 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 求人名/求人タイトル */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     求人タイトル
                   </div>
                 </div>
-                <div className="flex items-center py-6">
+                <div className='flex items-center py-6'>
                   <div
-                    className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                    className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     {editData.title}
@@ -280,38 +293,41 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* イメージ画像 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     イメージ画像
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex gap-4">
+                <div className='flex-1 py-6'>
+                  <div className='flex gap-4'>
                     <ImageSection images={editData.images || []} />
                   </div>
                 </div>
               </div>
 
               {/* 職種 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     職種
                   </div>
                 </div>
-                <div className="flex items-center py-6 gap-2">
+                <div className='flex items-center py-6 gap-2'>
                   {editData.job_types && editData.job_types.length > 0 ? (
                     editData.job_types.slice(0, 4).map((jobType, index) => (
-                      <div key={index} className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
+                      <div
+                        key={index}
+                        className='bg-[#d2f1da] rounded-[5px] px-3 py-1'
+                      >
                         <span
-                          className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                          className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           {jobType}
@@ -319,9 +335,9 @@ export default function JobEditConfirmClient({
                       </div>
                     ))
                   ) : (
-                    <div className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
+                    <div className='bg-[#d2f1da] rounded-[5px] px-3 py-1'>
                       <span
-                        className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                        className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         職種未設定
@@ -332,24 +348,24 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 業種 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[80px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     業種
                   </div>
                 </div>
-                <div className="flex items-center py-6 gap-2">
+                <div className='flex items-center py-6 gap-2'>
                   {editData.industries && editData.industries.length > 0 ? (
                     editData.industries.map((industry, index) => (
                       <div
                         key={index}
-                        className="bg-[#d2f1da] rounded-[5px] px-3 py-1"
+                        className='bg-[#d2f1da] rounded-[5px] px-3 py-1'
                       >
                         <span
-                          className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                          className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           {industry}
@@ -357,9 +373,9 @@ export default function JobEditConfirmClient({
                       </div>
                     ))
                   ) : (
-                    <div className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
+                    <div className='bg-[#d2f1da] rounded-[5px] px-3 py-1'>
                       <span
-                        className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                        className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         業種未設定
@@ -370,50 +386,52 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* ポジション概要 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     ポジション概要
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-6">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-6'>
                     {/* 業務内容サブセクション */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2.5 items-center">
+                    <div className='flex flex-col gap-2'>
+                      <div className='flex gap-2.5 items-center'>
                         <div
-                          className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                          className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           業務内容
                         </div>
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.jobDescription || '業務内容が設定されていません'}
+                        {editData.jobDescription ||
+                          '業務内容が設定されていません'}
                       </div>
                     </div>
 
                     {/* 当ポジションの魅力サブセクション */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2.5 items-center">
+                    <div className='flex flex-col gap-2'>
+                      <div className='flex gap-2.5 items-center'>
                         <div
-                          className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                          className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           当ポジションの魅力
                         </div>
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.positionSummary || 'ポジションの魅力が設定されていません'}
+                        {editData.positionSummary ||
+                          'ポジションの魅力が設定されていません'}
                       </div>
                     </div>
                   </div>
@@ -421,50 +439,52 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 求める人材像 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     求める人材像
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-6">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-6'>
                     {/* スキル・経験サブセクション */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2.5 items-center">
+                    <div className='flex flex-col gap-2'>
+                      <div className='flex gap-2.5 items-center'>
                         <div
-                          className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                          className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           スキル・経験
                         </div>
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.requiredSkills || '必要スキルが設定されていません'}
+                        {editData.requiredSkills ||
+                          '必要スキルが設定されていません'}
                       </div>
                     </div>
 
                     {/* その他・求める人物像などサブセクション */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2.5 items-center">
+                    <div className='flex flex-col gap-2'>
+                      <div className='flex gap-2.5 items-center'>
                         <div
-                          className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                          className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           その他・求める人物像など
                         </div>
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.preferredSkills || '人物像が設定されていません'}
+                        {editData.preferredSkills ||
+                          '人物像が設定されていません'}
                       </div>
                     </div>
                   </div>
@@ -472,49 +492,53 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 条件・待遇 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     条件・待遇
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-6">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-6'>
                     {/* 想定年収 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         想定年収
                       </div>
-                      <div className="flex gap-6 items-center">
-                        <div className="flex gap-2 items-center">
+                      <div className='flex gap-6 items-center'>
+                        <div className='flex gap-2 items-center'>
                           <span
-                            className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
+                            className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {editData.salaryMin ? `${editData.salaryMin}万円` : '下限未設定'}
+                            {editData.salaryMin
+                              ? `${editData.salaryMin}万円`
+                              : '下限未設定'}
                           </span>
                           <span
-                            className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                            className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
                             〜
                           </span>
                           <span
-                            className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
+                            className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
-                            {editData.salaryMax ? `${editData.salaryMax}万円` : '上限未設定'}
+                            {editData.salaryMax
+                              ? `${editData.salaryMax}万円`
+                              : '上限未設定'}
                           </span>
                         </div>
-                        <div className="flex gap-2 items-start">
+                        <div className='flex gap-2 items-start'>
                           <span
-                            className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                            className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
                             応相談
@@ -524,15 +548,15 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 年収補足 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         年収補足
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] w-[400px]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] w-[400px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         {editData.salaryNote || '年収補足が設定されていません'}
@@ -540,33 +564,39 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 区切り線 */}
-                    <div className="h-0 w-full relative">
-                      <div className="absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]"></div>
+                    <div className='h-0 w-full relative'>
+                      <div className='absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]'></div>
                     </div>
 
                     {/* 勤務地 */}
-                    <div className="flex gap-4 justify-start items-center">
+                    <div className='flex gap-4 justify-start items-center'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         勤務地
                       </div>
-                      <div className="flex flex-col gap-2 w-[400px]">
-                        <div className="flex flex-wrap gap-2">
-                          {editData.work_locations && editData.work_locations.length > 0 ? (
+                      <div className='flex flex-col gap-2 w-[400px]'>
+                        <div className='flex flex-wrap gap-2'>
+                          {editData.work_locations &&
+                          editData.work_locations.length > 0 ? (
                             editData.work_locations.map((location, index) => (
-                              <div key={index} className="bg-[#d2f1da] rounded-[5px] px-3 py-1">
+                              <div
+                                key={index}
+                                className='bg-[#d2f1da] rounded-[5px] px-3 py-1'
+                              >
                                 <span
-                                  className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
-                                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                  className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
+                                  style={{
+                                    fontFamily: 'Noto Sans JP, sans-serif',
+                                  }}
                                 >
                                   {location}
                                 </span>
                               </div>
                             ))
                           ) : (
-                            <div className="text-[#999999] py-1">
+                            <div className='text-[#999999] py-1'>
                               勤務地が設定されていません
                             </div>
                           )}
@@ -575,36 +605,37 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 勤務地補足 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         勤務地補足
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] w-[400px]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] w-[400px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.locationNote || '勤務地補足が設定されていません'}
+                        {editData.location_note ||
+                          '勤務地補足が設定されていません'}
                       </div>
                     </div>
 
                     {/* 区切り線 */}
-                    <div className="h-0 w-full relative">
-                      <div className="absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]"></div>
+                    <div className='h-0 w-full relative'>
+                      <div className='absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]'></div>
                     </div>
 
                     {/* 雇用形態 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         雇用形態
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         {getEmploymentTypeLabel()}
@@ -612,68 +643,70 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 雇用形態補足 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         雇用形態補足
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.employmentTypeNote || '雇用形態補足が設定されていません'}
+                        {editData.employment_type_note ||
+                          '雇用形態補足が設定されていません'}
                       </div>
                     </div>
 
                     {/* 区切り線 */}
-                    <div className="h-0 w-full relative">
-                      <div className="absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]"></div>
+                    <div className='h-0 w-full relative'>
+                      <div className='absolute top-[-0.5px] bottom-[-0.5px] left-0 right-0 border-t border-[#EFEFEF]'></div>
                     </div>
 
                     {/* 就業時間 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         就業時間
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.workingHours || '就業時間が設定されていません'}
+                        {editData.working_hours ||
+                          '就業時間が設定されていません'}
                       </div>
                     </div>
 
                     {/* 所定外労働の有無 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         所定外労働の有無
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.overtimeInfo || '未設定'}
+                        {editData.overtime_info || '未設定'}
                       </div>
                     </div>
 
                     {/* 備考（勤務時間関連） */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         備考
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         備考が設定されていません
@@ -681,15 +714,15 @@ export default function JobEditConfirmClient({
                     </div>
 
                     {/* 休日・休暇 */}
-                    <div className="flex flex-col gap-2">
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                        className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         休日・休暇
                       </div>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         {editData.holidays || '休日・休暇が設定されていません'}
@@ -700,23 +733,24 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 選考情報 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     選考情報
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-2">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-2.5'>
+                    <div className='flex flex-col gap-2'>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
-                        {editData.selectionProcess || '選考情報が設定されていません'}
+                        {editData.selection_process ||
+                          '選考情報が設定されていません'}
                       </div>
                     </div>
                   </div>
@@ -724,26 +758,28 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* アピールポイント */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-2 shrink-0 min-h-[50px] flex items-center flex-col justify-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-2 shrink-0 min-h-[50px] flex items-center flex-col justify-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     アピールポイント
                   </div>
                   <div
-                    className="text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]"
+                    className='text-[14px] font-medium text-[#0f9058] tracking-[1.4px] leading-[1.6]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     最大6つまで選択可能
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-6">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-6'>
                     {appealPointCategories.map((category, idx) => {
-                      const selected = category.points.filter(p =>
-                        editData.appeal_points && editData.appeal_points.includes(p)
+                      const selected = category.points.filter(
+                        p =>
+                          editData.appeal_points &&
+                          editData.appeal_points.includes(p)
                       );
                       return (
                         <div
@@ -751,26 +787,31 @@ export default function JobEditConfirmClient({
                           className={`flex flex-col gap-2${idx !== appealPointCategories.length - 1 ? ' mb-4' : ''}`}
                         >
                           <div
-                            className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                            className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
                             {category.name}
                           </div>
-                          <div className="flex flex-wrap gap-1 items-start">
+                          <div className='flex flex-wrap gap-1 items-start'>
                             {selected.length > 0 ? (
                               selected.map((point, index) => (
                                 <span
                                   key={index}
-                                  className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                  className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'
+                                  style={{
+                                    fontFamily: 'Noto Sans JP, sans-serif',
+                                  }}
                                 >
-                                  {point}{index < selected.length - 1 && '、'}
+                                  {point}
+                                  {index < selected.length - 1 && '、'}
                                 </span>
                               ))
                             ) : (
                               <span
-                                className="text-[16px] font-medium text-[#999999] tracking-[1.6px]"
-                                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                className='text-[16px] font-medium text-[#999999] tracking-[1.6px]'
+                                style={{
+                                  fontFamily: 'Noto Sans JP, sans-serif',
+                                }}
                               >
                                 未入力
                               </span>
@@ -784,34 +825,34 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 受動喫煙防止措置 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     受動喫煙防止措置
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-1">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-2.5'>
+                    <div className='flex flex-col gap-1'>
                       <div
-                        className="text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]"
+                        className='text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         {editData.smoking_policy || '未設定'}
                       </div>
                       {editData.smoking_policy_note && (
                         <div
-                          className="text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]"
+                          className='text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
                           {editData.smoking_policy_note}
                         </div>
                       )}
                       <div
-                        className="text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]"
+                        className='text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         就業場所が屋外である、就業場所によって対策内容が異なる、対策内容を断言できないなどの場合は、「その他」を選択し、面談・面接時に候補者にお伝えください。
@@ -822,10 +863,10 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 応募時のレジュメ提出 */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     応募時のレジュメ
@@ -833,23 +874,29 @@ export default function JobEditConfirmClient({
                     提出
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex flex-wrap gap-1 items-start w-[400px]">
-                        {editData.required_documents && editData.required_documents.length > 0 ? (
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-2.5'>
+                    <div className='flex flex-col gap-1'>
+                      <div className='flex flex-wrap gap-1 items-start w-[400px]'>
+                        {editData.required_documents &&
+                        editData.required_documents.length > 0 ? (
                           editData.required_documents.map((doc, index) => (
                             <span key={index}>
                               <span
-                                className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                                style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'
+                                style={{
+                                  fontFamily: 'Noto Sans JP, sans-serif',
+                                }}
                               >
                                 {doc}
                               </span>
-                              {index < editData.required_documents.length - 1 && (
+                              {index <
+                                editData.required_documents.length - 1 && (
                                 <span
-                                  className="text-[16px] font-medium text-[#323232] tracking-[1.6px]"
-                                  style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                                  className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'
+                                  style={{
+                                    fontFamily: 'Noto Sans JP, sans-serif',
+                                  }}
                                 >
                                   、
                                 </span>
@@ -858,7 +905,7 @@ export default function JobEditConfirmClient({
                           ))
                         ) : (
                           <span
-                            className="text-[16px] font-medium text-[#999999] tracking-[1.6px]"
+                            className='text-[16px] font-medium text-[#999999] tracking-[1.6px]'
                             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                           >
                             提出書類が設定されていません
@@ -866,7 +913,7 @@ export default function JobEditConfirmClient({
                         )}
                       </div>
                       <div
-                        className="text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]"
+                        className='text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         応募後に別途提出を依頼することも可能です。
@@ -877,28 +924,29 @@ export default function JobEditConfirmClient({
               </div>
 
               {/* 社内メモ */}
-              <div className="flex gap-6">
-                <div className="w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center">
+              <div className='flex gap-6'>
+                <div className='w-[200px] bg-[#f9f9f9] rounded-[5px] px-6 shrink-0 min-h-[50px] flex items-center'>
                   <div
-                    className="text-[16px] font-bold text-[#323232] tracking-[1.6px]"
+                    className='text-[16px] font-bold text-[#323232] tracking-[1.6px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     社内メモ
                   </div>
                 </div>
-                <div className="flex-1 py-6">
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-2">
-                      <div className="bg-white border border-[#999999] rounded-[5px] p-[11px] min-h-[78px] w-full">
+                <div className='flex-1 py-6'>
+                  <div className='flex flex-col gap-2.5'>
+                    <div className='flex flex-col gap-2'>
+                      <div className='bg-white border border-[#999999] rounded-[5px] p-[11px] min-h-[78px] w-full'>
                         <div
-                          className="text-[16px] font-medium text-[#999999] tracking-[1.6px] leading-[2]"
+                          className='text-[16px] font-medium text-[#999999] tracking-[1.6px] leading-[2]'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                         >
-                          {editData.internalMemo || '社内メモが設定されていません'}
+                          {editData.internal_memo ||
+                            '社内メモが設定されていません'}
                         </div>
                       </div>
                       <div
-                        className="text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]"
+                        className='text-[14px] font-medium text-[#999999] tracking-[1.4px] leading-[1.6]'
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         社内メモは候補者に共有されません。
@@ -910,22 +958,22 @@ export default function JobEditConfirmClient({
             </div>
           </div>
         </div>
-            <div className="flex justify-center gap-4">
+        <div className='flex justify-center gap-4'>
           <Button
-            variant="green-outline"
-            size="figma-outline"
+            variant='green-outline'
+            size='figma-outline'
             onClick={handleBackToEdit}
             disabled={isLoading}
-            className="min-w-[160px]"
+            className='min-w-[160px]'
           >
             修正する
           </Button>
           <Button
-            variant="green-gradient"
-            size="figma-default"
+            variant='green-gradient'
+            size='figma-default'
             onClick={handleConfirmUpdate}
             disabled={isLoading}
-            className="min-w-[160px]"
+            className='min-w-[160px]'
           >
             {isLoading ? '更新中...' : '変更を反映する'}
           </Button>
@@ -936,15 +984,12 @@ export default function JobEditConfirmClient({
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title="エラー"
+        title='エラー'
       >
-        <div className="p-4">
-          <p className="text-gray-700">{modalMessage}</p>
-          <div className="mt-4 text-right">
-            <Button
-              variant="primary"
-              onClick={() => setShowModal(false)}
-            >
+        <div className='p-4'>
+          <p className='text-gray-700'>{modalMessage}</p>
+          <div className='mt-4 text-right'>
+            <Button variant='primary' onClick={() => setShowModal(false)}>
               閉じる
             </Button>
           </div>

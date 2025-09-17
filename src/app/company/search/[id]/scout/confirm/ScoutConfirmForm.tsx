@@ -110,7 +110,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
           router.push('/company/search');
         }
       } else {
-        alert(result.error || 'スカウト送信に失敗しました');
+        alert((result as any).error || 'スカウト送信に失敗しました');
       }
     } catch (error) {
       console.error('スカウト送信エラー:', error);

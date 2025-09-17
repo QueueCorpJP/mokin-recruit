@@ -5,6 +5,9 @@ on:
   push:
     branches: [main, clean-slate]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest

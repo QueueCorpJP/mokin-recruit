@@ -38,8 +38,11 @@ export function ContactFormClient({ groups }: ContactFormClientProps) {
     try {
       const result = await sendContactForm(formData);
 
-      if (result.error) {
-        setMessage({ type: 'error', text: result.error });
+      if ((result as any).error) {
+        setMessage({
+          type: 'error',
+          text: (result as any).error || 'エラーが発生しました',
+        });
       } else {
         router.push('/company/contact/complete');
       }

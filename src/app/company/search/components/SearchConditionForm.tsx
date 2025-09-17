@@ -86,7 +86,10 @@ export default function SearchConditionForm({
           ];
           setGroupOptions(options);
         } else {
-          console.error('Failed to fetch company groups:', result.error);
+          console.error(
+            'Failed to fetch company groups:',
+            (result as any).error || 'エラーが発生しました'
+          );
         }
       } catch (error) {
         console.error('Error fetching company groups:', error);

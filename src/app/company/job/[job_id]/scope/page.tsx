@@ -17,10 +17,5 @@ export default async function JobScopePage({ params }: PageProps) {
     throw new Error(jobResult.error);
   }
 
-  return (
-    <JobScopeClient 
-      jobData={jobResult.data}
-      jobId={jobId}
-    />
-  );
+  return <JobScopeClient jobData={jobResult.data!} jobId={jobId} />;
 }

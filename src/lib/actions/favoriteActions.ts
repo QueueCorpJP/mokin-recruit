@@ -29,7 +29,7 @@ export async function getFavoriteListAction(
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error,
+        error: (auth as any).error || '認証が必要です',
       };
     }
 
@@ -92,7 +92,7 @@ export async function getFavoriteListAction(
       job_postings: Array.isArray(fav.job_postings)
         ? fav.job_postings[0] // Take the first item if it's an array
         : fav.job_postings, // Keep as-is if it's already an object
-    })) as FavoriteItem[];
+    })) as unknown as FavoriteItem[];
 
     return {
       success: true,
@@ -131,7 +131,7 @@ export async function getFavoriteStatusAction(
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error,
+        error: (auth as any).error || '認証が必要です',
       };
     }
 
@@ -185,7 +185,7 @@ export async function addFavoriteAction(
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error,
+        error: (auth as any).error || '認証が必要です',
       };
     }
 
@@ -257,7 +257,7 @@ export async function removeFavoriteAction(
     if (!auth.success) {
       return {
         success: false,
-        error: auth.error,
+        error: (auth as any).error || '認証が必要です',
       };
     }
 

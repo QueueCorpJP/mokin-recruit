@@ -34,7 +34,7 @@ export async function saveNotificationSettings(formData: FormData) {
 
   const result = await upsertByCandidateId('notification_settings', settings);
   if (!result.success) {
-    throw new Error(result.error);
+    throw new Error((result as any).error || '更新に失敗しました');
   }
 
   revalidatePath('/candidate/setting/notification');

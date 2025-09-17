@@ -4,7 +4,10 @@ import { SelectInput } from '@/components/ui/select-input';
 import { SelectionResultModal } from '@/components/ui/selection-result-modal';
 import { JoiningDateModal } from '@/components/ui/joining-date-modal';
 import { updateJoiningDateAction } from '@/lib/actions/joining-date';
-import { getSelectionProgressAction, updateSelectionProgressAction } from '@/lib/actions/selection-progress';
+import {
+  getSelectionProgressAction,
+  updateSelectionProgressAction,
+} from '@/lib/actions/selection-progress';
 
 const CareerChangeIcon = () => (
   <svg
@@ -32,16 +35,23 @@ interface CandidateCardProps {
   companyGroupId?: string | undefined;
 }
 
-export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, companyGroupId }: CandidateCardProps) {
+export function CandidateCard({
+  candidate,
+  onClick,
+  jobOptions,
+  onJobChange,
+  companyGroupId,
+}: CandidateCardProps) {
   const [selectionProgress, setSelectionProgress] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStage, setCurrentStage] = useState<string>('');
   const [isJoiningDateModalOpen, setIsJoiningDateModalOpen] = useState(false);
 
   // 同じグループの求人のみをフィルタリング
-  const filteredJobOptions = jobOptions.filter(job => 
-    job.value === '' || // "すべて"オプションは常に表示
-    job.groupId === candidate.groupId // 同じグループの求人のみ
+  const filteredJobOptions = jobOptions.filter(
+    job =>
+      job.value === '' || // "すべて"オプションは常に表示
+      job.groupId === candidate.groupId // 同じグループの求人のみ
   );
 
   useEffect(() => {
@@ -68,11 +78,11 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
     if (!candidate.id || !companyGroupId || !currentStage) return;
 
     const stageMapping: Record<string, any> = {
-      '書類選考': 'document_screening',
-      '一次面接': 'first_interview', 
-      '二次以降': 'secondary_interview',
-      '最終面接': 'final_interview',
-      '内定': 'offer'
+      書類選考: 'document_screening',
+      一次面接: 'first_interview',
+      二次以降: 'secondary_interview',
+      最終面接: 'final_interview',
+      内定: 'offer',
     };
 
     const result = await updateSelectionProgressAction({
@@ -93,11 +103,11 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
     if (!candidate.id || !companyGroupId || !currentStage) return;
 
     const stageMapping: Record<string, any> = {
-      '書類選考': 'document_screening',
-      '一次面接': 'first_interview', 
-      '二次以降': 'secondary_interview',
-      '最終面接': 'final_interview',
-      '内定': 'offer'
+      書類選考: 'document_screening',
+      一次面接: 'first_interview',
+      二次以降: 'secondary_interview',
+      最終面接: 'final_interview',
+      内定: 'offer',
     };
 
     const result = await updateSelectionProgressAction({
@@ -138,7 +148,10 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
       alert('入社日を設定しました');
     } else {
       // エラーメッセージを表示
-      alert('入社日の設定に失敗しました: ' + result.error);
+      alert(
+        '入社日の設定に失敗しました: ' +
+          ((result as any).error || 'エラーが発生しました')
+      );
     }
   };
 
@@ -150,7 +163,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
     jobPostingTitle: candidate.jobPostingTitle,
     groupId: candidate.groupId,
     assignedUsers: candidate.assignedUsers,
-    assignedUsersLength: candidate.assignedUsers?.length || 0
+    assignedUsersLength: candidate.assignedUsers?.length || 0,
   });
 
   return (
@@ -173,7 +186,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
           >
             {candidate.name || '未設定'}
           </div>
-          
+
           {/* タグ表示 */}
           <div className='flex gap-1 flex-wrap mb-2'>
             {candidate?.tags?.isHighlighted && (
@@ -224,7 +237,9 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
             className='text-[#323232] text-[14px] font-medium leading-[160%] tracking-[1.4px] w-full min-[1440px]:w-[356px] h-[22px]'
             style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
           >
-            {candidate.location || '地域未設定'}／{candidate.age && candidate.age > 0 ? `${candidate.age}歳` : '○○歳'}／{candidate.gender || '性別未設定'}
+            {candidate.location || '地域未設定'}／
+            {candidate.age && candidate.age > 0 ? `${candidate.age}歳` : '○○歳'}
+            ／{candidate.gender || '性別未設定'}
           </div>
         </div>
 
@@ -319,9 +334,9 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
             <SelectInput
               options={filteredJobOptions}
               value={candidate.jobPostingId}
-              onChange={(value) => onJobChange(candidate.id, value)}
-              placeholder="求人を選択"
-              className="w-full h-[38px]"
+              onChange={value => onJobChange(candidate.id, value)}
+              placeholder='求人を選択'
+              className='w-full h-[38px]'
             />
           </div>
         </div>
@@ -370,7 +385,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                         'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('書類選考');
@@ -420,7 +435,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                         'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('一次面接');
@@ -470,7 +485,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                         'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('二次以降');
@@ -520,7 +535,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                         'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('最終面接');
@@ -570,7 +585,7 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                         'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                       fontFamily: 'Noto Sans JP, sans-serif',
                     }}
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleModalOpen('内定');
@@ -597,18 +612,21 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
             <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
             {(() => {
               const progress = selectionProgress;
-              
+
               // 内定承諾済みの場合、入社日登録ボタンを表示
               if (progress?.offer_result === 'accepted') {
                 // 既に入社日が登録されている場合
                 if (progress?.joining_date) {
                   const joiningDate = new Date(progress.joining_date);
-                  const formattedDate = joiningDate.toLocaleDateString('ja-JP', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                  });
-                  
+
+                  const formattedDate = joiningDate.toLocaleDateString(
+                    'ja-JP',
+                    {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                    }
+                  );
                   return (
                     <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
                       {formattedDate}
@@ -620,10 +638,11 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
                     <button
                       className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
                       style={{
-                        background: 'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
+                        background:
+                          'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                         fontFamily: 'Noto Sans JP, sans-serif',
                       }}
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault();
                         e.stopPropagation();
                         handleJoiningDateModalOpen();
@@ -647,7 +666,10 @@ export function CandidateCard({ candidate, onClick, jobOptions, onJobChange, com
         {/* Assigned Users */}
         <div className='h-[66px] flex items-center'>
           <p className='text-[#323232] text-[14px] font-bold tracking-[1.4px]'>
-            やりとりしている担当者：{candidate.assignedUsers?.length > 0 ? candidate.assignedUsers.join('、') : '未設定'}
+            やりとりしている担当者：
+            {candidate.assignedUsers?.length > 0
+              ? candidate.assignedUsers.join('、')
+              : '未設定'}
           </p>
         </div>
       </div>

@@ -439,33 +439,44 @@ export default function CandidateExpectationEditPage() {
                       </button>
                       {workLocations && workLocations.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {(workLocations || []).map((location, index) => (
-                            <div
-                              key={`location-${location.id || index}`}
-                              className='bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2'
-                            >
-                              {location.name}
-                              <button
-                                type='button'
-                                onClick={() => removeLocation(location.id)}
-                                className='ml-1'
+                          {(workLocations || [])
+                            .slice(0, 6)
+                            .map((location, index) => (
+                              <div
+                                key={`location-${location.id || index}`}
+                                className='bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2'
                               >
-                                <svg
-                                  width='10'
-                                  height='10'
-                                  viewBox='0 0 10 10'
-                                  fill='none'
+                                {location.name}
+                                <button
+                                  type='button'
+                                  onClick={() => removeLocation(location.id)}
+                                  className='ml-1'
                                 >
-                                  <path
-                                    d='M1 1L9 9M1 9L9 1'
-                                    stroke='#0f9058'
-                                    strokeWidth='1.5'
-                                    strokeLinecap='round'
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
+                                  <svg
+                                    width='10'
+                                    height='10'
+                                    viewBox='0 0 10 10'
+                                    fill='none'
+                                  >
+                                    <path
+                                      d='M1 1L9 9M1 9L9 1'
+                                      stroke='#0f9058'
+                                      strokeWidth='1.5'
+                                      strokeLinecap='round'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          {workLocations.length > 6 && (
+                            <button
+                              type='button'
+                              onClick={() => setIsWorkLocationModalOpen(true)}
+                              className='bg-[#d2f1da] px-4 py-1.5 rounded-[10px] text-[#0f9058] text-[14px] font-medium tracking-[1.4px] flex items-center gap-2 cursor-pointer hover:bg-[#b6e5c5] transition-colors'
+                            >
+                              +{workLocations.length - 6}件
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -595,7 +606,11 @@ export default function CandidateExpectationEditPage() {
         isOpen={isWorkLocationModalOpen}
         onClose={() => setIsWorkLocationModalOpen(false)}
         onConfirm={handleLocationsConfirm}
-        initialSelected={workLocations}
+        initialSelected={
+          (workLocations || []).filter(
+            loc => loc.id && loc.name
+          ) as Prefecture[]
+        }
       />
 
       {/* 働き方選択モーダル */}
@@ -603,7 +618,11 @@ export default function CandidateExpectationEditPage() {
         isOpen={isWorkStyleModalOpen}
         onClose={() => setIsWorkStyleModalOpen(false)}
         onConfirm={handleWorkStylesConfirm}
-        initialSelected={workStyles}
+        initialSelected={
+          (workStyles || []).filter(
+            style => style.id && style.name
+          ) as WorkStyle[]
+        }
         maxSelections={6}
       />
     </>

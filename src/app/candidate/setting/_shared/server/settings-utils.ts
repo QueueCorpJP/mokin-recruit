@@ -53,7 +53,10 @@ export async function upsertByCandidateId<T extends object>(
   const supabase = await getSupabaseServerClient();
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    return { success: false, error: authResult.error };
+    return {
+      success: false,
+      error: (authResult as any).error || '認証が必要です',
+    };
   }
 
   const candidateId = authResult.data.candidateId;

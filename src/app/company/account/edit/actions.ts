@@ -62,7 +62,7 @@ export async function getCompanyAccountForEdit(): Promise<
 > {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
-    return { success: false, error: auth.error };
+    return { success: false, error: (auth as any).error || '認証が必要です' };
   }
 
   const { companyAccountId } = auth.data;
@@ -94,7 +94,7 @@ export async function getCompanyAccountForEdit(): Promise<
 
   // industries (jsonb) フィールドを優先し、なければ古い industry フィールドを使用
   let industries: Industry[] = [];
-  
+
   if (data.industries) {
     // industries フィールドがある場合（新しい形式）
     const industriesData = parseJsonField(data.industries, []);
@@ -104,19 +104,23 @@ export async function getCompanyAccountForEdit(): Promise<
         industries = findIndustriesByNames(industriesData);
       }
       // industriesが {id, name} オブジェクトの配列の場合
-      else if (typeof industriesData[0] === 'object' && industriesData[0].name) {
+      else if (
+        typeof industriesData[0] === 'object' &&
+        industriesData[0].name
+      ) {
         industries = industriesData.filter((item: any) => item && item.name);
       }
     }
   }
-  
+
   // industries が空で、古い industry フィールドがある場合は fallback
   if (industries.length === 0 && data.industry) {
     const industryText: string = data.industry;
     industries = findIndustriesByNames([industryText]);
   }
-  
-  const industryText = industries.map(i => i.name).join(', ') || data.industry || '';
+
+  const industryText =
+    industries.map(i => i.name).join(', ') || data.industry || '';
 
   // 都道府県の推定分割（一致しなければ住所に全体を入れる）
   const prefectureList = [...prefectureNamesForMatch, '海外'];
@@ -133,7 +137,9 @@ export async function getCompanyAccountForEdit(): Promise<
 
   const companyUrls = parseJsonField(data.company_urls, []);
   const companyAttractions = parseJsonField(data.company_attractions, []);
-  const companyImages = Array.isArray(data.company_images) ? data.company_images : [];
+  const companyImages = Array.isArray(data.company_images)
+    ? data.company_images
+    : [];
 
   return {
     success: true,
@@ -157,7 +163,9 @@ export async function getCompanyAccountForEdit(): Promise<
       businessContent: data.business_content || '',
       prefecture: data.prefecture || '',
       address: data.address || '',
-      companyAttractions: Array.isArray(companyAttractions) ? companyAttractions : [],
+      companyAttractions: Array.isArray(companyAttractions)
+        ? companyAttractions
+        : [],
     },
   };
 }
@@ -167,7 +175,7 @@ export async function saveCompanyAccountEdit(
 ): Promise<{ success: true } | { success: false; error: string }> {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
-    return { success: false, error: auth.error };
+    return { success: false, error: (auth as any).error || '認証が必要です' };
   }
 
   const { companyAccountId } = auth.data;
@@ -212,16 +220,21 @@ export async function saveCompanyAccountEdit(
   if ((current.representative_name || '') !== input.representativeName) {
     updateData.representative_name = input.representativeName;
   }
-  if ((current.representative_position || '') !== input.representativePosition) {
+  if (
+    (current.representative_position || '') !== input.representativePosition
+  ) {
     updateData.representative_position = input.representativePosition;
   }
   if ((current.industry || '') !== primaryIndustry) {
     updateData.industry = primaryIndustry;
   }
-  
+
   // industries フィールドにも保存（新しい複数業種対応）
-  const currentIndustries = current.industries ? 
-    (typeof current.industries === 'string' ? JSON.parse(current.industries) : current.industries) : [];
+  const currentIndustries = current.industries
+    ? typeof current.industries === 'string'
+      ? JSON.parse(current.industries)
+      : current.industries
+    : [];
   const newIndustries = input.industries.map(i => ({ id: i.id, name: i.name }));
   if (JSON.stringify(currentIndustries) !== JSON.stringify(newIndustries)) {
     updateData.industries = JSON.stringify(newIndustries);
@@ -235,35 +248,59 @@ export async function saveCompanyAccountEdit(
   if ((current.business_content || '') !== input.businessContent) {
     updateData.business_content = input.businessContent;
   }
-  if (input.iconUrl !== undefined && (current.icon_image_url || null) !== (input.iconUrl || null)) {
+  if (
+    input.iconUrl !== undefined &&
+    (current.icon_image_url || null) !== (input.iconUrl || null)
+  ) {
     updateData.icon_image_url = input.iconUrl || null;
   }
   if (input.imageUrls !== undefined) {
-    const curr = Array.isArray(current.company_images) ? current.company_images : [];
+    const curr = Array.isArray(current.company_images)
+      ? current.company_images
+      : [];
     const next = Array.isArray(input.imageUrls) ? input.imageUrls : [];
     if (JSON.stringify(curr) !== JSON.stringify(next)) {
       updateData.company_images = next;
     }
   }
   if (input.companyUrls !== undefined) {
-    const curr = current.company_urls ? (typeof current.company_urls === 'string' ? JSON.parse(current.company_urls) : current.company_urls) : [];
+    const curr = current.company_urls
+      ? typeof current.company_urls === 'string'
+        ? JSON.parse(current.company_urls)
+        : current.company_urls
+      : [];
     if (JSON.stringify(curr) !== JSON.stringify(input.companyUrls)) {
       updateData.company_urls = JSON.stringify(input.companyUrls);
     }
   }
-  if (input.establishedYear !== undefined && (current.established_year || null) !== input.establishedYear) {
+  if (
+    input.establishedYear !== undefined &&
+    (current.established_year || null) !== input.establishedYear
+  ) {
     updateData.established_year = input.establishedYear;
   }
-  if (input.capitalAmount !== undefined && (current.capital_amount || null) !== input.capitalAmount) {
+  if (
+    input.capitalAmount !== undefined &&
+    (current.capital_amount || null) !== input.capitalAmount
+  ) {
     updateData.capital_amount = input.capitalAmount;
   }
-  if (input.capitalUnit !== undefined && (current.capital_unit || '') !== input.capitalUnit) {
+  if (
+    input.capitalUnit !== undefined &&
+    (current.capital_unit || '') !== input.capitalUnit
+  ) {
     updateData.capital_unit = input.capitalUnit;
   }
-  if (input.employeesCount !== undefined && (current.employees_count || null) !== input.employeesCount) {
+  if (
+    input.employeesCount !== undefined &&
+    (current.employees_count || null) !== input.employeesCount
+  ) {
     updateData.employees_count = input.employeesCount;
   }
-  if (input.companyPhase !== undefined && (current.company_phase || '') !== input.companyPhase) {
+  if (
+    input.companyPhase !== undefined &&
+    (current.company_phase || '') !== input.companyPhase
+  ) {
     updateData.company_phase = input.companyPhase;
   }
   if ((current.prefecture || '') !== input.location.prefecture) {
@@ -273,7 +310,11 @@ export async function saveCompanyAccountEdit(
     updateData.address = input.location.address;
   }
   if (input.companyAttractions !== undefined) {
-    const curr = current.company_attractions ? (typeof current.company_attractions === 'string' ? JSON.parse(current.company_attractions) : current.company_attractions) : [];
+    const curr = current.company_attractions
+      ? typeof current.company_attractions === 'string'
+        ? JSON.parse(current.company_attractions)
+        : current.company_attractions
+      : [];
     if (JSON.stringify(curr) !== JSON.stringify(input.companyAttractions)) {
       updateData.company_attractions = JSON.stringify(input.companyAttractions);
     }
@@ -299,13 +340,15 @@ export async function saveCompanyAccountEdit(
 }
 
 // Upload icon image for company account
-export async function uploadCompanyAccountIconAction(formData: FormData): Promise<
+export async function uploadCompanyAccountIconAction(
+  formData: FormData
+): Promise<
   | { success: true; url: string; path: string }
   | { success: false; error: string }
 > {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
-    return { success: false, error: auth.error };
+    return { success: false, error: (auth as any).error || '認証が必要です' };
   }
 
   const file = formData.get('icon');
@@ -318,18 +361,23 @@ export async function uploadCompanyAccountIconAction(formData: FormData): Promis
     return { success: true, url: uploaded.publicUrl, path: uploaded.path };
   } catch (e: any) {
     console.error('uploadCompanyAccountIconAction error:', e);
-    return { success: false, error: e?.message || 'アップロードに失敗しました' };
+    return {
+      success: false,
+      error: e?.message || 'アップロードに失敗しました',
+    };
   }
 }
 
 // Upload multiple images for company account
-export async function uploadCompanyAccountImagesAction(formData: FormData): Promise<
+export async function uploadCompanyAccountImagesAction(
+  formData: FormData
+): Promise<
   | { success: true; files: Array<{ url: string; path: string }> }
   | { success: false; error: string }
 > {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
-    return { success: false, error: auth.error };
+    return { success: false, error: (auth as any).error || '認証が必要です' };
   }
 
   const entries = Array.from(formData.getAll('images'));
@@ -339,13 +387,19 @@ export async function uploadCompanyAccountImagesAction(formData: FormData): Prom
   }
 
   try {
-    const uploaded = await uploadCompanyImages(auth.data.companyAccountId, files);
+    const uploaded = await uploadCompanyImages(
+      auth.data.companyAccountId,
+      files
+    );
     return {
       success: true,
       files: uploaded.map(u => ({ url: u.publicUrl, path: u.path })),
     };
   } catch (e: any) {
     console.error('uploadCompanyAccountImagesAction error:', e);
-    return { success: false, error: e?.message || 'アップロードに失敗しました' };
+    return {
+      success: false,
+      error: e?.message || 'アップロードに失敗しました',
+    };
   }
 }

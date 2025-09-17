@@ -158,7 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signInAction(
         credentials.email,
         credentials.password,
-        credentials.userType || 'candidate'
+        (credentials.userType === 'company_user'
+          ? 'company'
+          : credentials.userType) || 'candidate'
       );
 
       if (result.success) {
@@ -243,5 +245,3 @@ export function useAuth() {
   }
   return context;
 }
-
-export type UserType = 'candidate' | 'company' | 'admin';

@@ -184,7 +184,10 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
     // 企業ユーザー認証
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('❌ [sendCompanyMessage] Auth failed:', authResult.error);
+      console.error(
+        '❌ [sendCompanyMessage] Auth failed:',
+        (authResult as any).error
+      );
       return { error: 'Unauthorized' };
     }
 

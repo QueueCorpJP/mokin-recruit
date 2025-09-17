@@ -378,7 +378,7 @@ export default function DesiredConditionForm({
             </button>
             {searchStore.desiredLocations.length > 0 && (
               <div className='flex flex-wrap gap-2'>
-                {searchStore.desiredLocations.map(location => (
+                {searchStore.desiredLocations.slice(0, 6).map(location => (
                   <div
                     key={location.id}
                     className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
@@ -417,6 +417,18 @@ export default function DesiredConditionForm({
                     </button>
                   </div>
                 ))}
+                {searchStore.desiredLocations.length > 6 && (
+                  <div className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'>
+                    <span
+                      className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'
+                      style={{
+                        fontFamily: 'Noto Sans JP, sans-serif',
+                      }}
+                    >
+                      +{searchStore.desiredLocations.length - 6}件
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

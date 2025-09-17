@@ -52,8 +52,8 @@ export default function PositionPage() {
         positionTitle
       );
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '更新に失敗しました');
       } else {
         router.push('/company/setting');
       }

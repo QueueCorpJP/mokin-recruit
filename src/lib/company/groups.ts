@@ -14,7 +14,7 @@ export async function getCompanyGroupsForCurrentUser(): Promise<
 > {
   const auth = await requireCompanyAuthForAction();
   if (!auth.success) {
-    return { success: false, error: auth.error };
+    return { success: false, error: (auth as any).error || '認証が必要です' };
   }
 
   const { companyUserId } = auth.data;

@@ -463,39 +463,52 @@ export default function SignupExpectationPage() {
                       </button>
                       {formData.workLocations.length > 0 && (
                         <div className='flex flex-wrap gap-2'>
-                          {formData.workLocations.map((location, index) => (
-                            <div
-                              key={`desktop-${
-                                location.id || location.name
-                              }-${index}`}
-                              className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
+                          {formData.workLocations
+                            .slice(0, 6)
+                            .map((location, index) => (
+                              <div
+                                key={`desktop-${
+                                  location.id || location.name
+                                }-${index}`}
+                                className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
+                              >
+                                <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                                  {location.name}
+                                </span>
+                                <button
+                                  type='button'
+                                  onClick={() =>
+                                    handleRemoveWorkLocation(location.id)
+                                  }
+                                  className='w-3 h-3'
+                                >
+                                  <svg
+                                    width='12'
+                                    height='12'
+                                    viewBox='0 0 12 12'
+                                    fill='none'
+                                  >
+                                    <path
+                                      d='M1 1L11 11M1 11L11 1'
+                                      stroke='#0f9058'
+                                      strokeWidth='2'
+                                      strokeLinecap='round'
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          {formData.workLocations.length > 6 && (
+                            <button
+                              type='button'
+                              onClick={() => setIsWorkLocationModalOpen(true)}
+                              className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 cursor-pointer hover:bg-[#b6e5c5] transition-colors'
                             >
                               <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
-                                {location.name}
+                                +{formData.workLocations.length - 6}件
                               </span>
-                              <button
-                                type='button'
-                                onClick={() =>
-                                  handleRemoveWorkLocation(location.id)
-                                }
-                                className='w-3 h-3'
-                              >
-                                <svg
-                                  width='12'
-                                  height='12'
-                                  viewBox='0 0 12 12'
-                                  fill='none'
-                                >
-                                  <path
-                                    d='M1 1L11 11M1 11L11 1'
-                                    stroke='#0f9058'
-                                    strokeWidth='2'
-                                    strokeLinecap='round'
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -761,39 +774,52 @@ export default function SignupExpectationPage() {
                     </button>
                     {formData.workLocations.length > 0 && (
                       <div className='flex flex-wrap gap-2'>
-                        {formData.workLocations.map((location, index) => (
-                          <div
-                            key={`mobile-${
-                              location.id || location.name
-                            }-${index}`}
-                            className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
+                        {formData.workLocations
+                          .slice(0, 6)
+                          .map((location, index) => (
+                            <div
+                              key={`mobile-${
+                                location.id || location.name
+                              }-${index}`}
+                              className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
+                            >
+                              <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
+                                {location.name}
+                              </span>
+                              <button
+                                type='button'
+                                onClick={() =>
+                                  handleRemoveWorkLocation(location.id)
+                                }
+                                className='w-3 h-3'
+                              >
+                                <svg
+                                  width='12'
+                                  height='12'
+                                  viewBox='0 0 12 12'
+                                  fill='none'
+                                >
+                                  <path
+                                    d='M1 1L11 11M1 11L11 1'
+                                    stroke='#0f9058'
+                                    strokeWidth='2'
+                                    strokeLinecap='round'
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        {formData.workLocations.length > 6 && (
+                          <button
+                            type='button'
+                            onClick={() => setIsWorkLocationModalOpen(true)}
+                            className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5 cursor-pointer hover:bg-[#b6e5c5] transition-colors'
                           >
                             <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px] font-["Noto_Sans_JP"]'>
-                              {location.name}
+                              +{formData.workLocations.length - 6}件
                             </span>
-                            <button
-                              type='button'
-                              onClick={() =>
-                                handleRemoveWorkLocation(location.id)
-                              }
-                              className='w-3 h-3'
-                            >
-                              <svg
-                                width='12'
-                                height='12'
-                                viewBox='0 0 12 12'
-                                fill='none'
-                              >
-                                <path
-                                  d='M1 1L11 11M1 11L11 1'
-                                  stroke='#0f9058'
-                                  strokeWidth='2'
-                                  strokeLinecap='round'
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
