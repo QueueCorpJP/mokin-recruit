@@ -16,6 +16,7 @@ module.exports = [
     ],
   },
   ...compat.extends('next/core-web-vitals'),
+  ...compat.extends('@next/eslint-config-next/base'),
   {
     languageOptions: {
       globals: {
