@@ -88,6 +88,10 @@ jobs:
               NODE_VERSION=$(cat .nvmrc)
               nvm install "$NODE_VERSION"
               nvm use "$NODE_VERSION"
+            else
+              # Fallback to required version for Vite engines
+              nvm install 20.19.0
+              nvm use 20.19.0
             fi
 
             # Write production env from GitHub Secrets
