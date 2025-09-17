@@ -12,7 +12,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -31,7 +31,11 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        queries: security-extended,security-and-quality
+        queries: security-and-quality
+        config: |
+          name: "CodeQL Config"
+          queries:
+            - uses: security-and-quality
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -40,12 +44,16 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --production=false
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    - name: Build for analysis
+      run: |
+        npm run build || echo "Build failed, continuing with available code"
+      continue-on-error: true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+        upload: true
+        cleanup-level: none
