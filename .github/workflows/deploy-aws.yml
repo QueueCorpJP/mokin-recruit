@@ -19,9 +19,60 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            cd /home/${{ secrets.EC2_USER }}/mokin-recruit || mkdir -p /home/${{ secrets.EC2_USER }}/mokin-recruit
-            git pull origin main || git clone https://github.com/${{ github.repository }}.git /home/${{ secrets.EC2_USER }}/mokin-recruit
-            cd /home/${{ secrets.EC2_USER }}/mokin-recruit
+            set -e
+            TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
+
+            # Detect package manager and install prerequisites if missing
+            ensure_pkg() {
+              if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update -y
+                sudo apt-get install -y git curl build-essential
+              elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y git curl gcc-c++ make
+              elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y git curl gcc-c++ make
+              else
+                echo "No supported package manager found (apt-get/yum/dnf)." >&2
+              fi
+            }
+
+            command -v git >/dev/null 2>&1 || ensure_pkg
+            command -v curl >/dev/null 2>&1 || ensure_pkg
+
+            # Install NVM/Node if npm is missing
+            if ! command -v npm >/dev/null 2>&1; then
+              if [ ! -d "$HOME/.nvm" ]; then
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+              fi
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            else
+              # npm exists but still export NVM if installed for version pinning
+              if [ -d "$HOME/.nvm" ]; then
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+              fi
+            fi
+
+            # Prepare directory and fetch code
+            mkdir -p "$TARGET_DIR"
+            if [ -d "$TARGET_DIR/.git" ]; then
+              cd "$TARGET_DIR"
+              git fetch origin
+              git reset --hard origin/main
+            else
+              rm -rf "$TARGET_DIR"
+              git clone https://github.com/${{ github.repository }}.git "$TARGET_DIR"
+              cd "$TARGET_DIR"
+            fi
+
+            # Use Node version from .nvmrc if available
+            if [ -n "$NVM_DIR" ] && [ -f .nvmrc ]; then
+              NODE_VERSION=$(cat .nvmrc)
+              nvm install "$NODE_VERSION"
+              nvm use "$NODE_VERSION"
+            fi
+
             # Write production env from GitHub Secrets
             cat > .env.production << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -33,6 +84,7 @@ jobs:
             EOF
             npm ci
             npm run build
+
             # Ensure pm2 and restart/start app
             if ! command -v pm2 >/dev/null 2>&1; then
               npm i -g pm2
