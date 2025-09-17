@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import CryptoJS from 'crypto-js';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
@@ -240,10 +241,19 @@ export default function CompanyNewClient() {
     }
   };
 
+  // フォームデータ暗号化用関数
+  function encryptData(data: any, key: string): string {
+    const stringData = typeof data === 'string' ? data : JSON.stringify(data);
+    return CryptoJS.AES.encrypt(stringData, key).toString();
+  }
+
   const handleSubmit = () => {
     // フォームデータをセッションストレージに保存して確認画面に渡す
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('companyFormData', JSON.stringify(formData));
+      // In production, use a secure key based on authenticated user/session
+      const encryptionKey = 'company-form-secret-key';
+      const encryptedData = encryptData(formData, encryptionKey);
+      sessionStorage.setItem('companyFormData', encryptedData);
     }
     router.push('/admin/company/new/confirm');
   };
