@@ -1,6 +1,14 @@
 import React from 'react';
 import { FieldErrors } from 'react-hook-form';
-import { EXPERIENCE_YEAR_OPTIONS } from '../../app/candidate/account/education/edit/constants/education';
+const EXPERIENCE_YEAR_OPTIONS = [
+  { value: '', label: '経験年数を選択' },
+  { value: '1年未満', label: '1年未満' },
+  { value: '1年', label: '1年' },
+  { value: '2年', label: '2年' },
+  { value: '3年', label: '3年' },
+  { value: '4年', label: '4年' },
+  { value: '5年以上', label: '5年以上' },
+];
 import { FormErrorMessage } from './common/FormErrorMessage';
 import { SectionTitle } from './common/SectionTitle';
 import { SectionDivider } from './common/SectionDivider';
@@ -69,9 +77,9 @@ function IndustrySection({
                       className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-6 cursor-pointer focus:outline-none w-full'
                     >
                       <option value=''>経験年数：未選択</option>
-                      {EXPERIENCE_YEAR_OPTIONS.map((year: string) => (
-                        <option key={year} value={year}>
-                          経験年数：{year}
+                      {EXPERIENCE_YEAR_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>
+                          経験年数：{option.label}
                         </option>
                       ))}
                     </select>
@@ -138,9 +146,9 @@ function IndustrySection({
                       }
                     >
                       <option value=''>経験年数：未選択</option>
-                      {EXPERIENCE_YEAR_OPTIONS.map((year: string) => (
-                        <option key={year} value={year}>
-                          経験年数：{year}
+                      {EXPERIENCE_YEAR_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>
+                          経験年数：{option.label}
                         </option>
                       ))}
                     </select>

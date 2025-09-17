@@ -6,8 +6,21 @@ import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
 import type { Tables } from '@/types';
 
-// データベーステーブルから直接型を取得
-type CandidateProfile = Tables<'candidates'>;
+// 実際に取得するフィールドに合わせた型を定義
+type CandidateProfile = {
+  id: string;
+  email: string;
+  last_name: string;
+  first_name: string;
+  last_name_kana: string;
+  first_name_kana: string;
+  phone_number: string;
+  current_residence: string;
+  prefecture: string;
+  gender: string | null;
+  birth_date: string | null;
+  current_income: string;
+};
 
 // 候補者データを取得する関数
 async function getCandidateData(
@@ -64,7 +77,7 @@ export default async function CandidateBasicInfoPage() {
   }
 
   // 生年月日をフォーマット
-  const formatBirthDate = (birthDate?: string) => {
+  const formatBirthDate = (birthDate?: string | null) => {
     if (!birthDate) return { year: 'yyyy', month: 'mm', day: 'dd' };
 
     const date = new Date(birthDate);
@@ -76,14 +89,14 @@ export default async function CandidateBasicInfoPage() {
   };
 
   // 性別の表示名を取得
-  const getGenderDisplay = (gender?: string) => {
+  const getGenderDisplay = (gender?: string | null) => {
     switch (gender) {
-      case 'male':
+      case '男性':
         return '男性';
-      case 'female':
+      case '女性':
         return '女性';
-      case 'unspecified':
-        return '未指定';
+      case '未回答':
+        return '未回答';
       default:
         return '未設定';
     }

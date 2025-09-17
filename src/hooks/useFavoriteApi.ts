@@ -8,7 +8,7 @@ import {
   type FavoriteActionResult,
   type FavoriteListResult,
   type FavoriteStatusResult,
-} from '../lib/actions/favoriteActions';
+} from '@/lib/actions/favoriteActions';
 
 // 型定義
 interface Favorite {

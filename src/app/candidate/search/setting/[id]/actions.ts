@@ -97,6 +97,36 @@ async function getJobDetailServer(jobId: string) {
       throw new Error('求人情報が見つかりませんでした');
     }
 
+    // Type assertion to help TypeScript understand the shape
+    const jobData = job as {
+      id: string;
+      title: string;
+      job_description: string;
+      position_summary: string;
+      required_skills: string[];
+      preferred_skills: string[];
+      salary_min: number | null;
+      salary_max: number | null;
+      salary_note: string | null;
+      employment_type: string;
+      employment_type_note: string | null;
+      work_location: string[];
+      location_note: string | null;
+      working_hours: string | null;
+      overtime: string | null;
+      overtime_info: string | null;
+      holidays: string | null;
+      selection_process: string | null;
+      job_type: string[];
+      industry: string[];
+      appeal_points: string[];
+      required_documents: string[];
+      image_urls: string[];
+      smoking_policy: string | null;
+      company_account_id: string;
+      status: string;
+    };
+
     // 会社情報は基本的な情報のみ取得（名前と基本情報）
     const { data: company, error: companyError } = await supabase
       .from('company_accounts')
@@ -123,41 +153,64 @@ async function getJobDetailServer(jobId: string) {
         company_images
       `
       )
-      .eq('id', job.company_account_id)
+      .eq('id', jobData.company_account_id)
       .maybeSingle();
 
     if (companyError) {
       console.error('Failed to fetch company:', companyError);
     }
 
-    if (!company) {
+    // Type assertion for company data
+    const companyData = company as {
+      id?: string;
+      company_name?: string;
+      representative_name?: string;
+      representative_position?: string;
+      industry?: string;
+      industries?: string[];
+      company_overview?: string;
+      business_content?: string;
+      headquarters_address?: string;
+      address?: string;
+      prefecture?: string;
+      established_year?: number;
+      capital_amount?: number;
+      capital_unit?: string;
+      employees_count?: number;
+      company_phase?: string;
+      company_urls?: string[];
+      icon_image_url?: string;
+      company_images?: string[];
+    } | null;
+
+    if (!companyData) {
       console.warn(
-        `Company not found for job ${jobId}, company_account_id: ${job.company_account_id}`
+        `Company not found for job ${jobId}, company_account_id: ${jobData.company_account_id}`
       );
     }
 
     // 求人データに会社情報を追加
     const jobWithCompany = {
-      ...job,
-      company_name: company?.company_name || '企業名未設定',
+      ...jobData,
+      company_name: companyData?.company_name || '企業名未設定',
       // 会社情報（最小限）
-      representative_name: company?.representative_name,
-      representative_position: company?.representative_position,
-      company_industry: company?.industry,
-      company_industries: company?.industries,
-      company_overview: company?.company_overview,
-      business_content: company?.business_content,
-      headquarters_address: company?.headquarters_address,
-      company_address: company?.address,
-      company_prefecture: company?.prefecture,
-      established_year: company?.established_year,
-      capital_amount: company?.capital_amount,
-      capital_unit: company?.capital_unit,
-      employees_count: company?.employees_count,
-      company_phase: company?.company_phase,
-      company_urls: company?.company_urls,
-      icon_image_url: company?.icon_image_url,
-      company_images: company?.company_images,
+      representative_name: companyData?.representative_name,
+      representative_position: companyData?.representative_position,
+      company_industry: companyData?.industry,
+      company_industries: companyData?.industries,
+      company_overview: companyData?.company_overview,
+      business_content: companyData?.business_content,
+      headquarters_address: companyData?.headquarters_address,
+      company_address: companyData?.address,
+      company_prefecture: companyData?.prefecture,
+      established_year: companyData?.established_year,
+      capital_amount: companyData?.capital_amount,
+      capital_unit: companyData?.capital_unit,
+      employees_count: companyData?.employees_count,
+      company_phase: companyData?.company_phase,
+      company_urls: companyData?.company_urls,
+      icon_image_url: companyData?.icon_image_url,
+      company_images: companyData?.company_images,
     };
 
     return {
@@ -201,8 +254,12 @@ export async function getJobDetailData(
             : [apiJob.company_industry || apiJob.industry || '業種未設定'],
         jobDescription: apiJob.job_description || 'テキストが入ります。',
         positionSummary: apiJob.position_summary || 'テキストが入ります。',
-        skills: apiJob.required_skills || 'テキストが入ります。',
-        otherRequirements: apiJob.preferred_skills || 'テキストが入ります。',
+        skills: Array.isArray(apiJob.required_skills)
+          ? apiJob.required_skills.join('、')
+          : apiJob.required_skills || 'テキストが入ります。',
+        otherRequirements: Array.isArray(apiJob.preferred_skills)
+          ? apiJob.preferred_skills.join('、')
+          : apiJob.preferred_skills || 'テキストが入ります。',
         salaryMin: apiJob.salary_min?.toString() || '応相談',
         salaryMax: apiJob.salary_max?.toString() || '応相談',
         salaryNote: apiJob.salary_note || 'テキストが入ります。',
@@ -214,24 +271,91 @@ export async function getJobDetailData(
         employmentTypeNote:
           apiJob.employment_type_note || 'テキストが入ります。',
         workingHours: apiJob.working_hours || 'テキストが入ります。',
-        overtime: apiJob.overtime,
-        overtimeMemo: apiJob.overtime_info,
+        overtime: apiJob.overtime || 'テキストが入ります。',
+        overtimeMemo: apiJob.overtime_info || 'テキストが入ります。',
         holidays: apiJob.holidays || 'テキストが入ります。',
         selectionProcess: apiJob.selection_process || 'テキストが入ります。',
-        appealPoints: {
-          business: Array.isArray(apiJob.appeal_points?.business)
-            ? apiJob.appeal_points.business
-            : ['CxO候補', '新規事業立ち上げ'],
-          company: Array.isArray(apiJob.appeal_points?.company)
-            ? apiJob.appeal_points.company
-            : ['成長フェーズ', '上場準備中'],
-          team: Array.isArray(apiJob.appeal_points?.team)
-            ? apiJob.appeal_points.team
-            : ['少数精鋭', '代表と距離が近い'],
-          workstyle: Array.isArray(apiJob.appeal_points?.workstyle)
-            ? apiJob.appeal_points.workstyle
-            : ['フレックス制度', 'リモートあり'],
-        },
+        appealPoints: (() => {
+          const appealPointsData = apiJob.appeal_points as any;
+          if (
+            appealPointsData &&
+            typeof appealPointsData === 'object' &&
+            !Array.isArray(appealPointsData)
+          ) {
+            return {
+              business: Array.isArray(appealPointsData.business)
+                ? appealPointsData.business
+                : ['CxO候補', '新規事業立ち上げ'],
+              company: Array.isArray(appealPointsData.company)
+                ? appealPointsData.company
+                : ['成長フェーズ', '上場準備中'],
+              team: Array.isArray(appealPointsData.team)
+                ? appealPointsData.team
+                : ['少数精鋭', '代表と距離が近い'],
+              workstyle: Array.isArray(appealPointsData.workstyle)
+                ? appealPointsData.workstyle
+                : ['フレックス制度', 'リモートあり'],
+            };
+          } else if (
+            Array.isArray(appealPointsData) &&
+            appealPointsData.length > 0
+          ) {
+            const businessPoints = appealPointsData.filter(
+              (point: string) =>
+                point.includes('CxO') ||
+                point.includes('新規事業') ||
+                point.includes('経営') ||
+                point.includes('幹部')
+            );
+            const companyPoints = appealPointsData.filter(
+              (point: string) =>
+                point.includes('成長') ||
+                point.includes('上場') ||
+                point.includes('拡大') ||
+                point.includes('発展')
+            );
+            const teamPoints = appealPointsData.filter(
+              (point: string) =>
+                point.includes('少数') ||
+                point.includes('代表') ||
+                point.includes('チーム') ||
+                point.includes('距離')
+            );
+            const workstylePoints = appealPointsData.filter(
+              (point: string) =>
+                point.includes('フレックス') ||
+                point.includes('リモート') ||
+                point.includes('在宅') ||
+                point.includes('働き方')
+            );
+
+            return {
+              business:
+                businessPoints.length > 0
+                  ? businessPoints
+                  : ['CxO候補', '新規事業立ち上げ'],
+              company:
+                companyPoints.length > 0
+                  ? companyPoints
+                  : ['成長フェーズ', '上場準備中'],
+              team:
+                teamPoints.length > 0
+                  ? teamPoints
+                  : ['少数精鋭', '代表と距離が近い'],
+              workstyle:
+                workstylePoints.length > 0
+                  ? workstylePoints
+                  : ['フレックス制度', 'リモートあり'],
+            };
+          } else {
+            return {
+              business: ['CxO候補', '新規事業立ち上げ'],
+              company: ['成長フェーズ', '上場準備中'],
+              team: ['少数精鋭', '代表と距離が近い'],
+              workstyle: ['フレックス制度', 'リモートあり'],
+            };
+          }
+        })(),
         smoke: apiJob.smoking_policy || '屋内禁煙',
         resumeRequired: Array.isArray(apiJob.required_documents)
           ? apiJob.required_documents

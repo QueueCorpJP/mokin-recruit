@@ -10,6 +10,7 @@ import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
 import { sanitizeHtml } from '@/lib/utils/sanitizer';
+import { encryptString, decryptString } from '@/lib/utils/encryption';
 
 interface PreviewData {
   id?: string;
@@ -79,8 +80,13 @@ export default function EditPreviewPage() {
                   .eq('id', categoryId)
                   .single();
 
-                if (categoryData && categoryData.name) {
-                  names[categoryId] = categoryData.name;
+                if (
+                  categoryData &&
+                  typeof categoryData === 'object' &&
+                  'name' in categoryData &&
+                  categoryData.name
+                ) {
+                  names[categoryId] = (categoryData as { name: string }).name;
                 }
               } catch (err) {
                 // 個別カテゴリ取得失敗
@@ -115,7 +121,7 @@ export default function EditPreviewPage() {
     if (previewData) {
       const updatedData = { ...previewData, status: newStatus };
       setPreviewData(updatedData);
-      encryptString(JSON.stringify(updatedData)).then(encrypted => {
+      encryptString(JSON.stringify(updatedData)).then((encrypted: string) => {
         sessionStorage.setItem('previewNotice', encrypted);
       });
     }

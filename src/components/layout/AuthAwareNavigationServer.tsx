@@ -9,7 +9,7 @@ interface AuthAwareNavigationServerProps {
   customCTAButton?: {
     label: string;
     href: string;
-    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+    onClick?: () => void;
   };
 }
 

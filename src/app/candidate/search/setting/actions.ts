@@ -6,8 +6,12 @@ import { z } from 'zod';
 import type {
   JobSearchParams,
   JobSearchResponseUI,
+  JobSearchResult,
   FavoriteStatusResponse,
 } from '@/types';
+
+// Re-export types for components
+export type { JobSearchResult } from '@/types';
 
 // -----------------------------
 // Zod schema for search params

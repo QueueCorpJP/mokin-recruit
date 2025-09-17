@@ -188,9 +188,9 @@ export default async function CompanyTaskPage() {
             <div style={{ marginBottom: '8px' }}>
               <SectionHeading
                 iconSrc='/images/list.svg'
-                iconAlt='やることリストアイコン'
+                iconAlt='対応リストアイコン'
               >
-                やることリスト
+                対応リスト
               </SectionHeading>
             </div>
 

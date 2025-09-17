@@ -8,7 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 //   useFavoriteToggleMutation,
 // } from '@/hooks/useFavoriteApi';
 // import { TagDisplay } from '@/components/ui/TagDisplay';
-import { CompanyDetailData, JobPostingData } from './actions';
+import type { CompanyDetailData, JobPostingData } from '@/types';
 import { useCompanyDetail } from '@/hooks/useCompanyDetail';
 import Image from 'next/image';
 import Loading from './loading';
@@ -299,7 +299,7 @@ export default function CompanyDetailClient({
                   {/* プログレスバー */}
                   {companyData?.images && companyData.images.length > 1 && (
                     <div className='flex flex-row gap-1 h-2 items-center justify-start w-full'>
-                      {companyData.images.map((_, index) => (
+                      {companyData.images.map((_: string, index: number) => (
                         <div
                           key={index}
                           className={`flex-1 h-full rounded-[5px] transition-colors ease-in-out ${
@@ -489,7 +489,7 @@ export default function CompanyDetailClient({
                         companyData.industry
                           .split('、')
                           .slice(0, 3)
-                          .map((industry, index) => (
+                          .map((industry: string, index: number) => (
                             <div
                               key={index}
                               className='bg-[#d2f1da] flex gap-2.5 items-center justify-center px-4 py-0 rounded-[5px] shrink-0'
@@ -665,9 +665,11 @@ export default function CompanyDetailClient({
                     >
                       {/* 左側の画像 */}
                       <div className='relative md:w-20 md:h-[53px] w-full h-[208px] overflow-hidden bg-gray-200 rounded-[5px] flex-shrink-0'>
-                        {job?.image_urls?.[0] || companyData.images?.[0] ? (
+                        {job?.image_urls?.[0] || companyData?.images?.[0] ? (
                           <Image
-                            src={job?.image_urls?.[0] || companyData.images[0]}
+                            src={
+                              job?.image_urls?.[0] || companyData?.images?.[0]
+                            }
                             alt={job?.title || `求人${index + 1}`}
                             fill
                             className='object-cover'

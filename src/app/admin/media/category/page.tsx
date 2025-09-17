@@ -39,7 +39,7 @@ export default function CategoryPage() {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
     null
   );
-  const [deletedCategoryName, __setDeletedCategoryName] = useState('');
+  const [deletedCategoryName, ____setDeletedCategoryName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
@@ -152,7 +152,7 @@ export default function CategoryPage() {
     if (categoryToDelete) {
       try {
         await deleteCategory(categoryToDelete.id!);
-        _setDeletedCategoryName(categoryToDelete.name);
+        ____setDeletedCategoryName(categoryToDelete.name);
         setShowDeleteModal(false);
         setCategoryToDelete(null);
         setShowDeletedModal(true);
@@ -174,7 +174,7 @@ export default function CategoryPage() {
 
   const handleCloseDeletedModal = () => {
     setShowDeletedModal(false);
-    _setDeletedCategoryName('');
+    ____setDeletedCategoryName('');
   };
 
   const handleAddCategory = () => {

@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function AuthStatus() {
-  const { user, accessToken, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [loginTime, setLoginTime] = useState<string>('');
 
   useEffect(() => {
-    if (user && user.last_sign_in_at) {
-      setLoginTime(new Date(user.last_sign_in_at).toLocaleString('ja-JP'));
+    if (user && user.lastSignIn) {
+      setLoginTime(new Date(user.lastSignIn).toLocaleString('ja-JP'));
     } else if (user) {
       setLoginTime(new Date().toLocaleString('ja-JP'));
     }
@@ -19,14 +19,14 @@ export function AuthStatus() {
     if (loading) {
       return '🔄 確認中...';
     }
-    return accessToken ? '✅ 保存済み' : '❌ 未保存';
+    return user ? '✅ 保存済み' : '❌ 未保存';
   };
 
   const getTokenStatusColor = () => {
     if (loading) {
       return 'text-gray-600';
     }
-    return accessToken ? 'text-green-600' : 'text-red-600';
+    return user ? 'text-green-600' : 'text-red-600';
   };
 
   return (
@@ -43,7 +43,7 @@ export function AuthStatus() {
           <span className='font-medium'>ログイン時刻:</span>{' '}
           {loading ? '確認中...' : loginTime}
         </p>
-        {!loading && !accessToken && (
+        {!loading && !user && (
           <p className='mt-2 text-xs text-red-600'>
             ⚠️
             認証トークンが見つかりません。再ログインが必要な可能性があります。

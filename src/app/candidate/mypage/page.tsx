@@ -340,18 +340,18 @@ async function getRecommendedJobsInternal(candidateId: string) {
     // 最適化されたデータ変換
     const transformedJobs = jobs.map(
       (job: {
-        id: string;
-        title?: string;
-        company_accounts?: { company_name?: string };
-        image_urls?: string[];
-        appeal_points?: string[];
-        work_location?: string | string[];
-        salary_min?: number;
-        salary_max?: number;
+        id: any;
+        title: any;
+        salary_min: any;
+        salary_max: any;
+        work_location: any;
+        appeal_points: any;
+        image_urls: any;
+        company_accounts: { company_name: any }[];
       }) => ({
         id: job.id,
         title: job.title || '求人タイトル未設定',
-        company_name: job.company_accounts?.company_name || '企業名未設定',
+        company_name: job.company_accounts?.[0]?.company_name || '企業名未設定',
         image_urls: job.image_urls?.slice(0, 1) || [], // 最初の画像のみ取得して転送量削減
         appeal_points: job.appeal_points?.slice(0, 3) || [],
         work_location: Array.isArray(job.work_location)
@@ -386,8 +386,16 @@ export default async function CandidateDashboard() {
 
   return (
     <CandidateDashboardClient
-      user={user as { id: string; name?: string; email: string }}
-      tasks={tasks}
+      user={
+        user as {
+          id: string;
+          name?: string;
+          email: string;
+          userType: 'candidate';
+          emailConfirmed: boolean;
+        }
+      }
+      tasks={tasks as any[]}
       messages={messages}
       jobs={jobs}
       notices={notices.notices}

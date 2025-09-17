@@ -9,7 +9,7 @@ interface PaginationInfo {
   totalPages: number;
 }
 
-interface JobSearchResultMinimal {
+export interface JobSearchResultMinimal {
   id: string;
   imageUrl: string;
   imageAlt?: string;
@@ -19,6 +19,7 @@ interface JobSearchResultMinimal {
   location: string | string[];
   salary: string;
   apell: string[];
+  companyIconUrl?: string;
 }
 
 interface SearchConditions {

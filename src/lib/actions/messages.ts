@@ -59,6 +59,8 @@ export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
         room_id: msg.room_id,
         content: msg.content,
         sender_type: msg.sender_type,
+        receiver_type:
+          msg.sender_type === 'CANDIDATE' ? 'COMPANY_USER' : 'CANDIDATE',
         sender_candidate_id: msg.sender_candidate_id,
         sender_company_group_id: msg.sender_company_group_id,
         message_type: msg.message_type,

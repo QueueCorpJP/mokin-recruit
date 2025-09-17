@@ -325,13 +325,15 @@ export async function searchJobs(
 }
 
 // 求人詳細取得API関数
-interface JobDetailResponse {
+interface LocalJobDetailResponse {
   success: boolean;
   data?: any;
   error?: string;
 }
 
-export async function getJobDetail(jobId: string): Promise<JobDetailResponse> {
+export async function getJobDetail(
+  jobId: string
+): Promise<LocalJobDetailResponse> {
   try {
     const authHeaders = getAuthHeaders();
 

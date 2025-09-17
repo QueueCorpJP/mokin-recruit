@@ -10,6 +10,7 @@ import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
+import { encryptData } from '@/lib/utils/encryption';
 
 interface NoticeCategory {
   id: string;

@@ -177,6 +177,7 @@ export interface SearchHistoryItem {
 export interface FavoriteItem {
   id: string;
   job_id: string;
+  job_posting_id: string;
   candidate_id: string;
   created_at: string;
   job_posting?: {
@@ -186,6 +187,29 @@ export interface FavoriteItem {
     work_location: string[];
     salary_range?: string;
   };
+  job_postings?:
+    | {
+        id: string;
+        title: string;
+        job_description: string;
+        salary_min?: number;
+        salary_max?: number;
+        work_location: string[];
+        company_accounts: {
+          company_name: string;
+        };
+      }
+    | {
+        id: string;
+        title: string;
+        job_description: string;
+        salary_min?: number;
+        salary_max?: number;
+        work_location: string[];
+        company_accounts: {
+          company_name: string;
+        };
+      }[];
 }
 
 export interface FavoriteActionResult {

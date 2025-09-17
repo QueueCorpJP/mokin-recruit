@@ -23,7 +23,7 @@ export const profileSchema = z.object({
     .max(50, 'メイは50文字以内で入力してください')
     .regex(/^[ァ-ヶー　]+$/, '全角カタカナで入力してください'),
 
-  gender: z.enum(['male', 'female', 'unspecified'], {
+  gender: z.enum(['男性', '女性', '未回答'], {
     errorMap: () => ({ message: '性別を選択してください' }),
   }),
 
@@ -40,7 +40,7 @@ export const profileSchema = z.object({
     .min(1, '電話番号を入力してください')
     .regex(
       /^\d{10,11}$/,
-      '電話番号は10桁または11桁の半角数字のみで入力してください',
+      '電話番号は10桁または11桁の半角数字のみで入力してください'
     ),
 
   currentIncome: z.string().min(1, '現在の年収を選択してください'),

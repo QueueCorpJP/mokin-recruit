@@ -36,7 +36,10 @@ export async function getCompanyAccountData(
       return null;
     }
 
-    const account = companyAccountData?.company_accounts;
+    const account = Array.isArray(companyAccountData?.company_accounts)
+      ? companyAccountData.company_accounts[0]
+      : companyAccountData?.company_accounts;
+
     if (!account) {
       console.error('Company account not found');
       return null;

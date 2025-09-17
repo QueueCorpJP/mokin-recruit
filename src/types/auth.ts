@@ -78,6 +78,7 @@ export interface SessionResponse {
 export interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  accessToken: string | null;
   signIn: (_credentials: LoginData) => Promise<{ error?: string }>;
   signUp: (_data: RegisterData) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;

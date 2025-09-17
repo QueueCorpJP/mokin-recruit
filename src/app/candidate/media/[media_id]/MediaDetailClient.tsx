@@ -11,7 +11,8 @@ import type {
   PopularArticle,
   ArticleCategory,
   ArticleTag,
-} from '@/app/candidate/media/actions';
+} from '@/types';
+import type { FormattedArticleCard } from '@/app/candidate/media/_shared/utils';
 
 interface MediaDetailClientProps {
   article: Article;
@@ -20,8 +21,8 @@ interface MediaDetailClientProps {
     categories: ArticleCategory[];
     tags: ArticleTag[];
   };
-  recommendedArticles: any[];
-  newArticles: any[];
+  recommendedArticles: FormattedArticleCard[];
+  newArticles: FormattedArticleCard[];
 }
 
 export default function MediaDetailClient({
@@ -185,7 +186,9 @@ export default function MediaDetailClient({
                       >
                         <div className='relative h-[200px] bg-gray-200 overflow-hidden'>
                           <Image
-                            src={article.imageUrl}
+                            src={
+                              article.imageUrl || '/images/default-article.jpg'
+                            }
                             alt={article.title}
                             fill
                             className='object-cover group-hover:scale-110 transition-transform duration-500'
@@ -290,7 +293,9 @@ export default function MediaDetailClient({
                       >
                         <div className='relative h-[200px] bg-gray-200 overflow-hidden'>
                           <Image
-                            src={article.imageUrl}
+                            src={
+                              article.imageUrl || '/images/default-article.jpg'
+                            }
                             alt={article.title}
                             fill
                             className='object-cover group-hover:scale-110 transition-transform duration-500'

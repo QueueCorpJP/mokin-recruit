@@ -13,17 +13,12 @@ interface TemplateOption {
   body?: string;
 }
 
-export const MessageInputBoxServer: React.FC<{ 
+export const MessageInputBoxServer: React.FC<{
   isCandidatePage?: boolean;
   userId?: string;
-  userType?: string; 
+  userType?: string;
   roomId?: string;
-}> = ({
-  isCandidatePage = false,
-  userId = '',
-  userType = '',
-  roomId,
-}) => {
+}> = ({ isCandidatePage = false, userId = '', userType = '', roomId }) => {
   const [templateOptions, setTemplateOptions] = useState<TemplateOption[]>([
     { value: '', label: 'テンプレート未選択' },
   ]);
@@ -36,7 +31,7 @@ export const MessageInputBoxServer: React.FC<{
   // テンプレートを取得する関数
   const loadTemplates = async () => {
     if (userType !== 'company') return;
-    
+
     setIsLoadingTemplates(true);
     try {
       const result = await getScoutTemplates(100, 0); // 最大1000件取得
@@ -47,8 +42,8 @@ export const MessageInputBoxServer: React.FC<{
             value: item.id,
             label: item.template_name,
             subject: item.subject,
-            body: item.body || ''
-          }))
+            body: (item as any).body || '',
+          })),
         ];
         setTemplateOptions(options);
       }
@@ -68,7 +63,9 @@ export const MessageInputBoxServer: React.FC<{
   const handleTemplateChange = (selectedValue: string) => {
     setTemplate(selectedValue);
     if (selectedValue) {
-      const selectedTemplate = templateOptions.find(opt => opt.value === selectedValue);
+      const selectedTemplate = templateOptions.find(
+        opt => opt.value === selectedValue
+      );
       if (selectedTemplate?.body) {
         setMessage(selectedTemplate.body);
       }
@@ -76,12 +73,12 @@ export const MessageInputBoxServer: React.FC<{
   };
 
   // デバッグ用：props の値を確認
-  console.log('MessageInputBoxServer props:', { 
-    userId, 
-    userType, 
-    roomId, 
+  console.log('MessageInputBoxServer props:', {
+    userId,
+    userType,
+    roomId,
     isCandidatePage,
-    messageLength: message.trim().length 
+    messageLength: message.trim().length,
   });
 
   const handleSendMessage = async () => {
@@ -90,44 +87,44 @@ export const MessageInputBoxServer: React.FC<{
       isSending,
       noRoomId: !roomId,
       userId,
-      userType
+      userType,
     });
-    
+
     if (!message.trim()) {
       alert('メッセージを入力してください');
       return;
     }
-    
+
     if (!roomId) {
       alert('送信先のルームが選択されていません');
       return;
     }
-    
+
     if (!userId) {
       alert('ユーザー認証が必要です');
       return;
     }
-    
+
     if (isSending) return;
-    
+
     try {
       setIsSending(true);
       console.log('Sending message with params:', {
         roomId,
         message: message.trim(),
         userType,
-        userId
+        userId,
       });
-      
+
       const result = await sendMessage(
         roomId,
         message.trim(),
         userType as 'candidate' | 'company',
         userId
       );
-      
+
       console.log('Send message result:', result);
-      
+
       if (result.success) {
         setMessage(''); // 送信後にメッセージをクリア
         alert('メッセージを送信しました');
@@ -152,21 +149,25 @@ export const MessageInputBoxServer: React.FC<{
 
   const handleQuickReply = (templateName: string) => {
     const templates: { [key: string]: string } = {
-      '話を聞いてみる': 'このたびはご連絡いただき、誠にありがとうございます。ぜひ詳しくお話を伺えればと存じます。',
-      '面談する（訪問）': 'ご連絡ありがとうございます。ぜひ貴社に直接お伺いして、お話を伺えますでしょうか？\nご都合のよい日程がございましたらご共有いただけますと幸いです。\n\n※以下に候補日を記載させていただきます。\n・〇月〇日（〇）〇時〜\n・〇月〇日（〇）〇時〜',
-      '面談する（オンライン）': 'ご連絡ありがとうございます。ぜひ一度オンラインにてお話を伺えますでしょうか？\nご都合のよい日程がございましたらご共有いただけますと幸いです。\n\n※以下に候補日を記載させていただきます。\n・〇月〇日（〇）〇時〜\n・〇月〇日（〇）〇時〜',
-      '質問する': 'ご連絡ありがとうございます。いくつかお伺いしたい点があり、下記に質問事項を記載いたしました。\nお忙しいところ恐縮ですが、ご確認のほどよろしくお願い申し上げます。\n\n【質問内容】\n・〇〇について\n・〇〇について'
+      話を聞いてみる:
+        'このたびはご連絡いただき、誠にありがとうございます。ぜひ詳しくお話を伺えればと存じます。',
+      '面談する（訪問）':
+        'ご連絡ありがとうございます。ぜひ貴社に直接お伺いして、お話を伺えますでしょうか？\nご都合のよい日程がございましたらご共有いただけますと幸いです。\n\n※以下に候補日を記載させていただきます。\n・〇月〇日（〇）〇時〜\n・〇月〇日（〇）〇時〜',
+      '面談する（オンライン）':
+        'ご連絡ありがとうございます。ぜひ一度オンラインにてお話を伺えますでしょうか？\nご都合のよい日程がございましたらご共有いただけますと幸いです。\n\n※以下に候補日を記載させていただきます。\n・〇月〇日（〇）〇時〜\n・〇月〇日（〇）〇時〜',
+      質問する:
+        'ご連絡ありがとうございます。いくつかお伺いしたい点があり、下記に質問事項を記載いたしました。\nお忙しいところ恐縮ですが、ご確認のほどよろしくお願い申し上げます。\n\n【質問内容】\n・〇〇について\n・〇〇について',
     };
-    
+
     setMessage(templates[templateName] || templateName);
   };
 
   return (
     <div
       className='w-full py-4 bg-white border-t border-[#efefef] transition-all duration-200'
-      style={{ 
-        paddingLeft: isExpanded ? '6px' : '24px', 
-        paddingRight: isExpanded ? '6px' : '24px'
+      style={{
+        paddingLeft: isExpanded ? '6px' : '24px',
+        paddingRight: isExpanded ? '6px' : '24px',
       }}
     >
       <div className='w-full flex flex-row flex-wrap md:flex-nowrap items-start mb-2 gap-x-2 gap-y-2'>
@@ -176,7 +177,7 @@ export const MessageInputBoxServer: React.FC<{
             '面談する（訪問）',
             '面談する（オンライン）',
             '質問する',
-          ].map((label) => (
+          ].map(label => (
             <button
               key={label}
               type='button'
@@ -202,10 +203,14 @@ export const MessageInputBoxServer: React.FC<{
             options={templateOptions}
             value={template}
             onChange={handleTemplateChange}
-            placeholder={isLoadingTemplates ? 'テンプレート読み込み中...' : 'テンプレート未選択'}
+            placeholder={
+              isLoadingTemplates
+                ? 'テンプレート読み込み中...'
+                : 'テンプレート未選択'
+            }
             className='w-[240px] font-bold text-[16px]'
             disabled={isLoadingTemplates}
-            forcePosition="top"
+            forcePosition='top'
           />
         )}
       </div>
@@ -214,7 +219,7 @@ export const MessageInputBoxServer: React.FC<{
         placeholder='メッセージを入力'
         rows={1}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={e => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isSending}
         style={{
@@ -229,19 +234,19 @@ export const MessageInputBoxServer: React.FC<{
           const target = e.target as HTMLTextAreaElement;
           target.style.height = '56px';
           target.style.height = target.scrollHeight + 'px';
-          
+
           // より正確な行数計算：初期高さ56pxを基準に判定
           const initialHeight = 56;
           const lineHeight = 32; // line-height: 2 × font-size: 16px = 32px
           const additionalHeight = target.scrollHeight - initialHeight;
           const currentLines = Math.floor(additionalHeight / lineHeight) + 1;
-          
+
           console.log('MessageInputBoxServer Height calculation:', {
             scrollHeight: target.scrollHeight,
             currentLines,
-            shouldExpand: currentLines >= 3
+            shouldExpand: currentLines >= 3,
           });
-          
+
           setIsExpanded(currentLines >= 3);
         }}
       />

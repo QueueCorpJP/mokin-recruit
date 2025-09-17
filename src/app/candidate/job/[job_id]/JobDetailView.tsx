@@ -85,25 +85,27 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-4xl mx-auto p-4 md:p-6'>
         {/* ヘッダー部分 */}
-        <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
-          <div className="flex flex-col md:flex-row gap-6">
+        <div className='bg-white rounded-lg shadow-sm mb-6 p-6'>
+          <div className='flex flex-col md:flex-row gap-6'>
             {/* 企業画像 */}
-            <div className="flex-shrink-0">
-              <div className="w-full md:w-48 h-32 md:h-32 bg-gray-200 rounded-lg overflow-hidden">
+            <div className='flex-shrink-0'>
+              <div className='w-full md:w-48 h-32 md:h-32 bg-gray-200 rounded-lg overflow-hidden'>
                 {jobDetail.image_urls?.[0] ? (
                   <Image
                     src={jobDetail.image_urls[0]}
-                    alt={jobDetail.company_account?.company_name}
+                    alt={
+                      jobDetail.company_account?.company_name || 'Company Logo'
+                    }
                     width={800}
                     height={400}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    className='w-full h-full object-cover'
+                    loading='lazy'
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <div className='w-full h-full flex items-center justify-center text-gray-400'>
                     企業ロゴ
                   </div>
                 )}
@@ -111,28 +113,28 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
             </div>
 
             {/* 求人基本情報 */}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <div className='flex-1'>
+              <h1 className='text-2xl font-bold text-gray-900 mb-2'>
                 {jobDetail.title}
               </h1>
-              
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-green-600 mb-1">
+
+              <div className='mb-4'>
+                <h2 className='text-lg font-semibold text-green-600 mb-1'>
                   {jobDetail.company_account?.company_name}
                 </h2>
                 {jobDetail.company_account?.headquarters_address && (
-                  <p className="text-gray-600 text-sm">
+                  <p className='text-gray-600 text-sm'>
                     {jobDetail.company_account.headquarters_address}
                   </p>
                 )}
               </div>
 
               {/* タグ */}
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className='flex flex-wrap gap-2 mb-4'>
                 {jobDetail.job_type?.map((type, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                    className='px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm'
                   >
                     {type}
                   </span>
@@ -140,13 +142,13 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
                 {jobDetail.industry?.map((ind, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                    className='px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm'
                   >
                     {ind}
                   </span>
                 ))}
                 {jobDetail.remote_work_available && (
-                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                  <span className='px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm'>
                     リモートワーク可
                   </span>
                 )}
@@ -155,18 +157,18 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           </div>
 
           {/* アクションボタン */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-6">
-            <Button 
+          <div className='flex flex-col sm:flex-row gap-3 mt-6'>
+            <Button
               onClick={handleApply}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              size="lg"
+              className='flex-1 bg-green-600 hover:bg-green-700 text-white'
+              size='lg'
             >
               この求人に応募する
             </Button>
-            <Button 
+            <Button
               onClick={handleFavorite}
-              variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50"
+              variant='outline'
+              className='border-green-600 text-green-600 hover:bg-green-50'
             >
               お気に入りに追加
             </Button>
@@ -174,13 +176,13 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
         </div>
 
         {/* 求人詳細情報 */}
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* 求人概要 */}
           {jobDetail.position_summary && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">求人概要</h3>
-                <p className="text-gray-700 whitespace-pre-line">
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>求人概要</h3>
+                <p className='text-gray-700 whitespace-pre-line'>
                   {jobDetail.position_summary}
                 </p>
               </CardContent>
@@ -189,9 +191,9 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
 
           {/* 仕事内容 */}
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">仕事内容</h3>
-              <div className="text-gray-700 whitespace-pre-line">
+            <CardContent className='p-6'>
+              <h3 className='text-lg font-semibold mb-4'>仕事内容</h3>
+              <div className='text-gray-700 whitespace-pre-line'>
                 {jobDetail.job_description}
               </div>
             </CardContent>
@@ -199,15 +201,15 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
 
           {/* 基本情報 */}
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">基本情報</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className='p-6'>
+              <h3 className='text-lg font-semibold mb-4'>基本情報</h3>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
-                  <dt className="font-medium text-gray-900 mb-1">雇用形態</dt>
-                  <dd className="text-gray-700 mb-3">
+                  <dt className='font-medium text-gray-900 mb-1'>雇用形態</dt>
+                  <dd className='text-gray-700 mb-3'>
                     {employmentTypeMap[jobDetail.employment_type]}
                     {jobDetail.employment_type_note && (
-                      <span className="block text-sm text-gray-600">
+                      <span className='block text-sm text-gray-600'>
                         {jobDetail.employment_type_note}
                       </span>
                     )}
@@ -215,42 +217,49 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
                 </div>
 
                 <div>
-                  <dt className="font-medium text-gray-900 mb-1">給与</dt>
-                  <dd className="text-gray-700 mb-3">{formatSalary()}</dd>
+                  <dt className='font-medium text-gray-900 mb-1'>給与</dt>
+                  <dd className='text-gray-700 mb-3'>{formatSalary()}</dd>
                 </div>
 
-                {jobDetail.work_location && jobDetail.work_location.length > 0 && (
-                  <div>
-                    <dt className="font-medium text-gray-900 mb-1">勤務地</dt>
-                    <dd className="text-gray-700 mb-3">
-                      {jobDetail.work_location.join('、')}
-                      {jobDetail.location_note && (
-                        <span className="block text-sm text-gray-600">
-                          {jobDetail.location_note}
-                        </span>
-                      )}
-                    </dd>
-                  </div>
-                )}
+                {jobDetail.work_location &&
+                  jobDetail.work_location.length > 0 && (
+                    <div>
+                      <dt className='font-medium text-gray-900 mb-1'>勤務地</dt>
+                      <dd className='text-gray-700 mb-3'>
+                        {jobDetail.work_location.join('、')}
+                        {jobDetail.location_note && (
+                          <span className='block text-sm text-gray-600'>
+                            {jobDetail.location_note}
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  )}
 
                 {jobDetail.working_hours && (
                   <div>
-                    <dt className="font-medium text-gray-900 mb-1">勤務時間</dt>
-                    <dd className="text-gray-700 mb-3">{jobDetail.working_hours}</dd>
+                    <dt className='font-medium text-gray-900 mb-1'>勤務時間</dt>
+                    <dd className='text-gray-700 mb-3'>
+                      {jobDetail.working_hours}
+                    </dd>
                   </div>
                 )}
 
                 {jobDetail.overtime_info && (
                   <div>
-                    <dt className="font-medium text-gray-900 mb-1">残業</dt>
-                    <dd className="text-gray-700 mb-3">{jobDetail.overtime_info}</dd>
+                    <dt className='font-medium text-gray-900 mb-1'>残業</dt>
+                    <dd className='text-gray-700 mb-3'>
+                      {jobDetail.overtime_info}
+                    </dd>
                   </div>
                 )}
 
                 {jobDetail.holidays && (
                   <div>
-                    <dt className="font-medium text-gray-900 mb-1">休日・休暇</dt>
-                    <dd className="text-gray-700 mb-3">{jobDetail.holidays}</dd>
+                    <dt className='font-medium text-gray-900 mb-1'>
+                      休日・休暇
+                    </dt>
+                    <dd className='text-gray-700 mb-3'>{jobDetail.holidays}</dd>
                   </div>
                 )}
               </div>
@@ -260,13 +269,17 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           {/* 求められるスキル・経験 */}
           {(jobDetail.required_skills || jobDetail.preferred_skills) && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">求められるスキル・経験</h3>
-                
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>
+                  求められるスキル・経験
+                </h3>
+
                 {jobDetail.required_skills && (
-                  <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">必須スキル</h4>
-                    <p className="text-gray-700 whitespace-pre-line">
+                  <div className='mb-4'>
+                    <h4 className='font-medium text-gray-900 mb-2'>
+                      必須スキル
+                    </h4>
+                    <p className='text-gray-700 whitespace-pre-line'>
                       {jobDetail.required_skills}
                     </p>
                   </div>
@@ -274,8 +287,10 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
 
                 {jobDetail.preferred_skills && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">歓迎スキル</h4>
-                    <p className="text-gray-700 whitespace-pre-line">
+                    <h4 className='font-medium text-gray-900 mb-2'>
+                      歓迎スキル
+                    </h4>
+                    <p className='text-gray-700 whitespace-pre-line'>
                       {jobDetail.preferred_skills}
                     </p>
                   </div>
@@ -287,13 +302,15 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           {/* アピールポイント */}
           {jobDetail.appeal_points && jobDetail.appeal_points.length > 0 && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">この求人のアピールポイント</h3>
-                <ul className="space-y-2">
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>
+                  この求人のアピールポイント
+                </h3>
+                <ul className='space-y-2'>
                   {jobDetail.appeal_points.map((point, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span className="text-gray-700">{point}</span>
+                    <li key={index} className='flex items-start'>
+                      <span className='text-green-600 mr-2'>✓</span>
+                      <span className='text-gray-700'>{point}</span>
                     </li>
                   ))}
                 </ul>
@@ -304,9 +321,9 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           {/* 選考プロセス */}
           {jobDetail.selection_process && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">選考プロセス</h3>
-                <p className="text-gray-700 whitespace-pre-line">
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>選考プロセス</h3>
+                <p className='text-gray-700 whitespace-pre-line'>
                   {jobDetail.selection_process}
                 </p>
               </CardContent>
@@ -314,29 +331,35 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           )}
 
           {/* 応募書類・その他 */}
-          {(jobDetail.required_documents?.length || jobDetail.smoking_policy) && (
+          {(jobDetail.required_documents?.length ||
+            jobDetail.smoking_policy) && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">応募書類・その他</h3>
-                
-                {jobDetail.required_documents && jobDetail.required_documents.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">必要書類</h4>
-                    <ul className="text-gray-700 space-y-1">
-                      {jobDetail.required_documents.map((doc, index) => (
-                        <li key={index}>・{doc}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>応募書類・その他</h3>
+
+                {jobDetail.required_documents &&
+                  jobDetail.required_documents.length > 0 && (
+                    <div className='mb-4'>
+                      <h4 className='font-medium text-gray-900 mb-2'>
+                        必要書類
+                      </h4>
+                      <ul className='text-gray-700 space-y-1'>
+                        {jobDetail.required_documents.map((doc, index) => (
+                          <li key={index}>・{doc}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                 {jobDetail.smoking_policy && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">喫煙に関して</h4>
-                    <p className="text-gray-700">
+                    <h4 className='font-medium text-gray-900 mb-2'>
+                      喫煙に関して
+                    </h4>
+                    <p className='text-gray-700'>
                       {jobDetail.smoking_policy}
                       {jobDetail.smoking_policy_note && (
-                        <span className="block text-sm text-gray-600 mt-1">
+                        <span className='block text-sm text-gray-600 mt-1'>
                           {jobDetail.smoking_policy_note}
                         </span>
                       )}
@@ -350,30 +373,36 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           {/* 企業情報 */}
           {jobDetail.company_account && (
             <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">企業情報</h3>
-                <div className="space-y-3">
+              <CardContent className='p-6'>
+                <h3 className='text-lg font-semibold mb-4'>企業情報</h3>
+                <div className='space-y-3'>
                   <div>
-                    <dt className="font-medium text-gray-900">企業名</dt>
-                    <dd className="text-gray-700">{jobDetail.company_account.company_name}</dd>
+                    <dt className='font-medium text-gray-900'>企業名</dt>
+                    <dd className='text-gray-700'>
+                      {jobDetail.company_account.company_name}
+                    </dd>
                   </div>
-                  
+
                   <div>
-                    <dt className="font-medium text-gray-900">業界</dt>
-                    <dd className="text-gray-700">{jobDetail.company_account.industry}</dd>
+                    <dt className='font-medium text-gray-900'>業界</dt>
+                    <dd className='text-gray-700'>
+                      {jobDetail.company_account.industry}
+                    </dd>
                   </div>
-                  
+
                   {jobDetail.company_account.headquarters_address && (
                     <div>
-                      <dt className="font-medium text-gray-900">本社所在地</dt>
-                      <dd className="text-gray-700">{jobDetail.company_account.headquarters_address}</dd>
+                      <dt className='font-medium text-gray-900'>本社所在地</dt>
+                      <dd className='text-gray-700'>
+                        {jobDetail.company_account.headquarters_address}
+                      </dd>
                     </div>
                   )}
-                  
+
                   {jobDetail.company_account.company_overview && (
                     <div>
-                      <dt className="font-medium text-gray-900">会社概要</dt>
-                      <dd className="text-gray-700 whitespace-pre-line">
+                      <dt className='font-medium text-gray-900'>会社概要</dt>
+                      <dd className='text-gray-700 whitespace-pre-line'>
                         {jobDetail.company_account.company_overview}
                       </dd>
                     </div>
@@ -385,18 +414,18 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
         </div>
 
         {/* 固定フッター */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 md:hidden">
-          <Button 
+        <div className='fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 md:hidden'>
+          <Button
             onClick={handleApply}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-            size="lg"
+            className='w-full bg-green-600 hover:bg-green-700 text-white'
+            size='lg'
           >
             この求人に応募する
           </Button>
         </div>
 
         {/* スマホ用の余白 */}
-        <div className="h-20 md:hidden"></div>
+        <div className='h-20 md:hidden'></div>
       </div>
     </div>
   );

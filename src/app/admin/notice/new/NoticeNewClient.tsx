@@ -33,7 +33,7 @@ async function getCryptoKey() {
 }
 
 // Encrypts a string and returns base64(iv+data)
-async function encryptString(text) {
+async function encryptString(text: string) {
   const encoder = new TextEncoder();
   const key = await getCryptoKey();
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -50,7 +50,7 @@ async function encryptString(text) {
 }
 
 // Decrypts base64(iv+data) string
-async function decryptString(encryptedStr) {
+async function decryptString(encryptedStr: string) {
   const raw = atob(encryptedStr);
   const arr = Uint8Array.from(raw, c => c.charCodeAt(0));
   const iv = arr.slice(0, 12);

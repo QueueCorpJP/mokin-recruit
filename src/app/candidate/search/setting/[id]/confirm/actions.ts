@@ -470,7 +470,7 @@ export async function submitApplication(
     logger.info('Creating or getting room for application messaging');
 
     // 既存のルームがあるかチェック
-    let roomId = null;
+    let roomId: string | null = null;
     const { data: existingRoom, error: roomSearchError } = await supabase
       .from('rooms')
       .select('id')
@@ -506,7 +506,7 @@ export async function submitApplication(
         logger.info('Room created successfully:', { roomId });
 
         // 新しいルームの場合、参加者を追加
-        const participantInserts = [
+        const participantInserts: any[] = [
           {
             room_id: roomId,
             participant_type: 'CANDIDATE',
@@ -516,10 +516,13 @@ export async function submitApplication(
         ];
 
         // 企業グループのユーザーも追加（管理者またはアクティブユーザー）
-        const { data: groupUsers, error: groupUsersError } = await supabase
+        const { data: groupUsers, error: groupUsersError } = (await supabase
           .from('company_user_group_permissions')
           .select('company_user_id')
-          .eq('company_group_id', validCompanyGroupId);
+          .eq('company_group_id', validCompanyGroupId)) as {
+          data: { company_user_id: string }[] | null;
+          error: any;
+        };
 
         if (!groupUsersError && groupUsers && groupUsers.length > 0) {
           // 全ての企業グループユーザーを参加者として追加

@@ -8,8 +8,6 @@ import { SelectInput } from '@/components/ui/select-input';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSchoolAutocomplete } from '@/hooks/useSchoolAutocomplete';
-import type { Industry } from '@/constants/industry-data';
-import type { JobType } from '@/constants/job-type-data';
 import { saveEducationData } from './actions';
 
 interface EducationFormData {

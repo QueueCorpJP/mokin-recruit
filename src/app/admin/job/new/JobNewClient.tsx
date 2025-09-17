@@ -938,6 +938,7 @@ export default function AdminJobNewClient({
                 <JobTypeModal
                   selectedJobTypes={jobTypes}
                   setSelectedJobTypes={setJobTypes}
+                  onClose={() => setJobTypeModalOpen(false)}
                 />
               </Modal>
             )}

@@ -3,7 +3,7 @@ export const JOB_CHANGE_TIMING_OPTIONS = [
   { value: '6か月以内に', label: '6か月以内に' },
   { value: '1年以内に', label: '1年以内に' },
   { value: '未定', label: '未定' },
-] as const;
+];
 
 export const CURRENT_ACTIVITY_STATUS_OPTIONS = [
   { value: 'まだ始めていない', label: 'まだ始めていない' },
@@ -17,7 +17,7 @@ export const CURRENT_ACTIVITY_STATUS_OPTIONS = [
     label: '面接・面談を受けている企業がある',
   },
   { value: '内定をもらっている', label: '内定をもらっている' },
-] as const;
+];
 
 export const PROGRESS_STATUS_OPTIONS = [
   { value: '書類選考', label: '書類選考' },

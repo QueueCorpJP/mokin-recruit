@@ -222,3 +222,117 @@ export interface ModalState {
   targetType: 'industry' | 'jobtype' | 'workstyle' | null;
   targetIndex: number | null;
 }
+
+// Missing exported types that are referenced in index.ts
+export interface CompanyAccountFormData {
+  companyName: string;
+  email: string;
+  password?: string;
+  passwordConfirm?: string;
+  representativeName: string;
+  industry: string;
+  headquartersAddress: string;
+  companyOverview?: string;
+  appealPoints?: string;
+  fullName: string;
+  positionTitle?: string;
+}
+
+export interface PasswordFormData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface WorkExperienceFormData {
+  companyName: string;
+  department: string;
+  position: string;
+  startYear: number;
+  startMonth: number;
+  endYear?: number;
+  endMonth?: number;
+  isCurrentlyWorking: boolean;
+  jobDescription: string;
+  industries: string[];
+  jobTypes: string[];
+}
+
+export interface CareerStatusFormData {
+  selectionEntries: SelectionEntry[];
+}
+
+export interface ExpectationsFormData {
+  desiredWorkStyles: string[];
+  desiredSalary: string;
+  desiredIndustries: string[];
+  desiredJobTypes: string[];
+  desiredLocations: string[];
+}
+
+export interface ResumeFormData {
+  jobSummary: string;
+  selfPr: string;
+}
+
+export interface ProfileFormData {
+  firstName: string;
+  lastName: string;
+  firstNameKana: string;
+  lastNameKana: string;
+  gender: string;
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+  prefecture: string;
+  phoneNumber: string;
+  currentIncome: string;
+}
+
+export interface JobFormData {
+  title: string;
+  departmentName?: string;
+  jobDescription: string;
+  positionSummary?: string;
+  requiredSkills: string[];
+  preferredSkills: string[];
+  employmentType?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryRange?: string;
+  salaryNote?: string;
+  workLocation: string[];
+  locationNote?: string;
+  employmentTypeNote?: string;
+  workingHours?: string;
+  overtimeInfo?: string;
+  holidays?: string;
+  remoteWorkAvailable: boolean;
+  jobType: string[];
+  industry: string[];
+  workStyle: string[];
+  benefits?: string;
+  selectionProcess?: string;
+  appealPoints: string[];
+  smokingPolicy?: string;
+  smokingPolicyNote?: string;
+  requiredDocuments: string[];
+  internalMemo?: string;
+  applicationRequirements?: string;
+  visibilityScope: string;
+  publicationType: string;
+  imageUrls: string[];
+  applicationDeadline?: string;
+}
+
+export interface NotificationFormData {
+  scoutNotification: string;
+  messageNotification: string;
+  recommendationNotification: string;
+}
+
+export interface EmailChangeFormData {
+  currentEmail: string;
+  newEmail: string;
+  password: string;
+}

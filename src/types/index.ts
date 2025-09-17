@@ -31,6 +31,11 @@ export type {
   JobFormData,
   NotificationFormData,
   EmailChangeFormData,
+  SelectionEntry,
+  ModalState,
+  NotificationSettings,
+  ScoutSettings,
+  BlockedCompanySettings,
 } from './forms';
 export * from './media';
 export * from './task';

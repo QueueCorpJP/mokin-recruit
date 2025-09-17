@@ -8,6 +8,14 @@ import type {
   Article,
 } from '@/types';
 
+// Re-export types for components
+export type {
+  PopularArticle,
+  ArticleCategory,
+  ArticleTag,
+  Article,
+} from '@/types';
+
 export async function getPopularArticles(
   limit: number = 5
 ): Promise<PopularArticle[]> {
@@ -52,11 +60,13 @@ export async function getMediaCategories(): Promise<ArticleCategory[]> {
 
     const categoryMap = new Map<string, number>();
 
-    data?.forEach((category: any) => {
-      const categoryName = category.name;
-      const currentCount = categoryMap.get(categoryName) || 0;
-      categoryMap.set(categoryName, currentCount + 1);
-    });
+    data?.forEach(
+      (category: { name: string; article_category_relations: any }) => {
+        const categoryName = category.name;
+        const currentCount = categoryMap.get(categoryName) || 0;
+        categoryMap.set(categoryName, currentCount + 1);
+      }
+    );
 
     return Array.from(categoryMap.entries()).map(([name, count]) => ({
       name,
@@ -90,7 +100,7 @@ export async function getMediaTags(): Promise<ArticleTag[]> {
 
     const tagMap = new Map<string, number>();
 
-    data?.forEach((tag: any) => {
+    data?.forEach((tag: { name: string; article_tag_relations: any }) => {
       const tagName = tag.name;
       const currentCount = tagMap.get(tagName) || 0;
       tagMap.set(tagName, currentCount + 1);

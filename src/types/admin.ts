@@ -9,7 +9,7 @@ export interface CreateCandidateData {
   first_name: string;
   last_name_kana: string;
   first_name_kana: string;
-  gender: 'male' | 'female' | 'unspecified';
+  gender: '男性' | '女性' | '未回答';
   birth_date: string | null;
   prefecture: string;
   phone_number: string;
@@ -59,7 +59,7 @@ export interface UpdateCandidateData {
   first_name: string;
   last_name_kana: string;
   first_name_kana: string;
-  gender: 'male' | 'female' | 'unspecified';
+  gender: '男性' | '女性' | '未回答';
   birth_date: string;
   prefecture: string;
   phone_number: string;
@@ -102,6 +102,7 @@ export interface UpdateCandidateData {
   desired_locations?: string[];
   management_experience_count?: number;
   desired_work_styles?: string[];
+  interested_work_styles?: string[];
 
   // Password
   password?: string;
@@ -146,6 +147,7 @@ export interface AdminSelectionEntryData {
   companyName: string;
   industries: string[];
   jobTypes: string[];
+  progressStatus?: string;
 }
 
 // Company management types
@@ -258,7 +260,7 @@ export interface CandidateDetailData {
   first_name: string;
   last_name_kana: string;
   first_name_kana: string;
-  gender: 'male' | 'female' | 'unspecified';
+  gender: '男性' | '女性' | '未回答';
   birth_date: string;
   prefecture: string;
   phone_number: string;
