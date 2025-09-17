@@ -1,0 +1,34 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/${{ secrets.EC2_USER }}/mokin-recruit || mkdir -p /home/${{ secrets.EC2_USER }}/mokin-recruit
+            git pull origin main || git clone https://github.com/${{ github.repository }}.git /home/${{ secrets.EC2_USER }}/mokin-recruit
+            cd /home/${{ secrets.EC2_USER }}/mokin-recruit
+            npm ci
+            npm run build
+            pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
