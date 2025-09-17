@@ -618,14 +618,15 @@ export function CandidateCard({
                 // 既に入社日が登録されている場合
                 if (progress?.joining_date) {
                   const joiningDate = new Date(progress.joining_date);
-                  const formattedDate = joiningDate
-                    .toLocaleDateString('ja-JP', {
+
+                  const formattedDate = joiningDate.toLocaleDateString(
+                    'ja-JP',
+                    {
                       year: 'numeric',
                       month: '2-digit',
                       day: '2-digit',
-                    })
-                    .replace(/\//g, '/');
-
+                    }
+                  );
                   return (
                     <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
                       {formattedDate}

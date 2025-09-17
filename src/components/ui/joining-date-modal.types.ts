@@ -32,14 +32,17 @@ export interface JoiningDateErrors {
 }
 
 // 年の選択肢を生成するヘルパー関数
-export const generateYearOptions = (startYear?: number, yearsCount: number = 6): SelectOption[] => {
+export const generateYearOptions = (
+  startYear?: number,
+  yearsCount: number = 6
+): SelectOption[] => {
   const currentYear = startYear || new Date().getFullYear();
   return [
     { value: '', label: '年を選択' },
     ...Array.from({ length: yearsCount }, (_, i) => {
       const year = currentYear + i;
       return { value: year.toString(), label: `${year}年` };
-    })
+    }),
   ];
 };
 
@@ -50,14 +53,17 @@ export const generateMonthOptions = (): SelectOption[] => {
     ...Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
       return { value: month.toString().padStart(2, '0'), label: `${month}月` };
-    })
+    }),
   ];
 };
 
 // 日の選択肢を生成するヘルパー関数
-export const generateDayOptions = (year: string, month: string): SelectOption[] => {
+export const generateDayOptions = (
+  year: string,
+  month: string
+): SelectOption[] => {
   const baseOptions = [{ value: '', label: '日を選択' }];
-  
+
   if (!year || !month) {
     return baseOptions;
   }
@@ -72,17 +78,21 @@ export const generateDayOptions = (year: string, month: string): SelectOption[] 
 };
 
 // 日付バリデーション関数
-export const validateJoiningDate = (year: string, month: string, day: string): JoiningDateErrors => {
+export const validateJoiningDate = (
+  year: string,
+  month: string,
+  day: string
+): JoiningDateErrors => {
   const errors: JoiningDateErrors = {};
-  
+
   if (!year) {
     errors.year = '年を選択してください';
   }
-  
+
   if (!month) {
     errors.month = '月を選択してください';
   }
-  
+
   if (!day) {
     errors.day = '日を選択してください';
   }
@@ -106,16 +116,22 @@ export const validateJoiningDate = (year: string, month: string, day: string): J
 };
 
 // 日付フォーマット関数
-export const formatJoiningDate = (year: string, month: string, day: string): string => {
+export const formatJoiningDate = (
+  year: string,
+  month: string,
+  day: string
+): string => {
   return `${year}-${month}-${day}`;
 };
 
 // 日付表示用フォーマット関数
 export const formatDisplayDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\//g, '/');
+  return date
+    .toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    .replace(/\//g, '-');
 };

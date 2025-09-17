@@ -5,6 +5,9 @@ on:
   push:
     branches: [main, clean-slate]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,3 +28,4 @@ jobs:
       - run: npm run test
 
       - run: npm run build
+

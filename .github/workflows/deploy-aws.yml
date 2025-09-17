@@ -1,4 +1,6 @@
 name: Deploy to AWS EC2
+permissions:
+  contents: read
 
 on:
   push:
@@ -31,4 +33,5 @@ jobs:
             cd /home/${{ secrets.EC2_USER }}/mokin-recruit
             npm ci
             npm run build
+
             pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
