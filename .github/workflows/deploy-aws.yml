@@ -1,0 +1,199 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Create deployment package
+        run: |
+          # standaloneビルドの場合の設定
+          mkdir -p deploy
+          cp -r .next/standalone/* deploy/
+          cp -r .next/static deploy/.next/static/
+          cp -r public deploy/public/
+
+          # package.jsonをコピー (dependencies情報のため)
+          cp package.json deploy/
+
+          # デプロイ用スクリプトを作成
+          cat > deploy/deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          echo "🚀 Starting deployment..."
+
+          # アプリケーションディレクトリ
+          APP_DIR="/home/ec2-user/mokin-recruit"
+
+          # 既存のプロセスを停止
+          echo "Stopping existing application..."
+          sudo pkill -f "node server.js" || true
+          sleep 2
+
+          # バックアップ作成
+          if [ -d "$APP_DIR" ]; then
+            echo "Creating backup..."
+            sudo mv "$APP_DIR" "$APP_DIR.backup.$(date +%Y%m%d_%H%M%S)" || true
+          fi
+
+          # 新しいファイルを配置
+          echo "Deploying new version..."
+          sudo mkdir -p "$APP_DIR"
+          sudo cp -r /tmp/deploy/* "$APP_DIR/"
+          sudo chown -R ec2-user:ec2-user "$APP_DIR"
+
+          # 権限設定
+          chmod +x "$APP_DIR/server.js" || true
+
+          # アプリケーション開始
+          echo "Starting application..."
+          cd "$APP_DIR"
+
+          # PM2を使用する場合
+          if command -v pm2 &> /dev/null; then
+            pm2 delete mokin-recruit || true
+            pm2 start server.js --name mokin-recruit
+            pm2 save
+          else
+            # systemdサービスがある場合
+            if systemctl is-active --quiet mokin-recruit; then
+              sudo systemctl restart mokin-recruit
+            else
+              # 直接実行
+              nohup node server.js > /tmp/app.log 2>&1 &
+            fi
+          fi
+
+          echo "✅ Deployment completed successfully!"
+
+          # ヘルスチェック
+          sleep 5
+          if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+            echo "✅ Application is running"
+          else
+            echo "⚠️  Health check failed - check logs"
+          fi
+          EOF
+
+          chmod +x deploy/deploy.sh
+
+          # デプロイパッケージを圧縮
+          tar -czf deploy.tar.gz -C deploy .
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            # 作業ディレクトリクリーンアップ
+            rm -rf /tmp/deploy /tmp/deploy.tar.gz
+
+            # Node.js環境確認
+            if ! command -v node &> /dev/null; then
+              echo "Installing Node.js..."
+              curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+              sudo yum install -y nodejs
+            fi
+
+            # PM2インストール確認
+            if ! command -v pm2 &> /dev/null; then
+              echo "Installing PM2..."
+              sudo npm install -g pm2
+              pm2 startup
+            fi
+
+      - name: Upload and extract files
+        uses: appleboy/scp-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "deploy.tar.gz"
+          target: "/tmp/"
+
+      - name: Execute deployment
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            # 解凍
+            cd /tmp
+            tar -xzf deploy.tar.gz -C /tmp/deploy/
+
+            # デプロイスクリプト実行
+            chmod +x /tmp/deploy/deploy.sh
+            /tmp/deploy/deploy.sh
+
+            # クリーンアップ
+            rm -rf /tmp/deploy /tmp/deploy.tar.gz
+
+      - name: Health check
+        run: |
+          echo "Waiting for application to start..."
+          sleep 10
+
+          # ヘルスチェック
+          for i in {1..5}; do
+            if curl -f http://${{ secrets.EC2_HOST }}:3000/ > /dev/null 2>&1; then
+              echo "✅ Application is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "❌ Health check failed"
+          exit 1
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🎉 Deployment to EC2 successful!"
+            echo "🌐 Application URL: http://${{ secrets.EC2_HOST }}:3000"
+          else
+            echo "❌ Deployment failed"
+          fi
