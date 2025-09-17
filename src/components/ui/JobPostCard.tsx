@@ -103,6 +103,7 @@ export function JobPostCard({
               isFavoriteLoading ? 'opacity-50 cursor-wait' : ''
             }`}
             onClick={e => {
+              e.preventDefault();
               e.stopPropagation(); // カードクリックとの競合を防ぐ
               onStarClick?.();
             }}
@@ -248,6 +249,7 @@ export function JobPostCard({
                       isFavoriteLoading ? 'opacity-50 cursor-wait' : ''
                     }`}
                     onClick={e => {
+                      e.preventDefault();
                       e.stopPropagation(); // カードクリックとの競合を防ぐ
                       onStarClick?.();
                     }}

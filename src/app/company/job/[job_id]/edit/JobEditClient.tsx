@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CryptoJS from 'crypto-js';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -223,6 +223,10 @@ export default function JobEditClient({
   const [isLocationModalOpen, setLocationModalOpen] = useState(false);
   const [isJobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [isIndustryModalOpen, setIndustryModalOpen] = useState(false);
+
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   // バリデーション状態
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -611,13 +615,16 @@ export default function JobEditClient({
               totalCount={3}
               primaryButtonText='決定'
               onPrimaryAction={() => {
+                jobTypeModalRef.current?.handleConfirm();
                 setJobTypeModalOpen(false);
                 clearFieldError('jobTypes');
               }}
             >
               <JobTypeModal
+                ref={jobTypeModalRef}
                 selectedJobTypes={jobTypes}
                 setSelectedJobTypes={setJobTypes}
+                onClose={() => setJobTypeModalOpen(false)}
               />
             </Modal>
           )}
@@ -631,11 +638,13 @@ export default function JobEditClient({
               primaryButtonText='決定'
               industries='true'
               onPrimaryAction={() => {
+                industryModalRef.current?.handleConfirm();
                 setIndustryModalOpen(false);
                 clearFieldError('industries');
               }}
             >
               <IndustryModal
+                ref={industryModalRef}
                 selectedIndustries={industries}
                 onIndustriesChange={setIndustries}
                 onClose={() => setIndustryModalOpen(false)}

@@ -224,6 +224,47 @@ export async function sendScout(
       }
       roomId = newRoom.id;
       console.info('新規Room作成完了:', { roomId });
+
+      // 新しいルームの場合、参加者を追加
+      const participantInserts = [
+        {
+          room_id: roomId,
+          participant_type: 'CANDIDATE',
+          candidate_id: formData.candidateId,
+          joined_at: new Date().toISOString(),
+        },
+      ];
+
+      // 企業グループのユーザーも追加
+      const { data: groupUsers, error: groupUsersError } = await supabase
+        .from('company_user_group_permissions')
+        .select('company_user_id')
+        .eq('company_group_id', formData.group);
+
+      if (!groupUsersError && groupUsers && groupUsers.length > 0) {
+        groupUsers.forEach(groupUser => {
+          participantInserts.push({
+            room_id: roomId,
+            participant_type: 'COMPANY_USER',
+            company_user_id: groupUser.company_user_id,
+            joined_at: new Date().toISOString(),
+          });
+        });
+      }
+
+      // 参加者を一括挿入
+      const { error: participantInsertError } = await supabase
+        .from('room_participants')
+        .insert(participantInserts);
+
+      if (participantInsertError) {
+        console.error('Room participants作成エラー:', participantInsertError);
+        // 参加者追加失敗してもスカウト自体は成功とする
+      } else {
+        console.info('Room participants作成完了:', {
+          count: participantInserts.length,
+        });
+      }
     }
 
     // メッセージを作成
@@ -231,6 +272,7 @@ export async function sendScout(
     const messageData = {
       room_id: roomId,
       sender_type: 'COMPANY_USER',
+      sender_company_user_id: companyUser.companyUserId,
       sender_company_group_id: formData.group,
       message_type: 'SCOUT',
       subject: formData.title,

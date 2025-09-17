@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BaseInput } from '@/components/ui/base-input';
 import { SelectInput } from '@/components/ui/select-input';
@@ -25,21 +25,28 @@ export default function SearchForm({
   initialSalary,
   initialIndustries,
   initialJobTypes,
-  initialAppealPoints
+  initialAppealPoints,
 }: SearchFormProps) {
   const router = useRouter();
-  
+
   const [keyword, setKeyword] = useState(initialKeyword);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(initialLocations);
+  const [selectedLocations, setSelectedLocations] =
+    useState<string[]>(initialLocations);
   const [selectedSalary, setSelectedSalary] = useState(initialSalary);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(initialIndustries);
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(initialJobTypes);
-  const [selectedAppealPoint, setSelectedAppealPoint] = useState(initialAppealPoints);
-  
+  const [selectedIndustries, setSelectedIndustries] =
+    useState<string[]>(initialIndustries);
+  const [selectedJobTypes, setSelectedJobTypes] =
+    useState<string[]>(initialJobTypes);
+  const [selectedAppealPoint, setSelectedAppealPoint] =
+    useState(initialAppealPoints);
+
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
   const [isSearchConditionActive, setIsSearchConditionActive] = useState(false);
+
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   // 年収セレクト用
   const salaryOptions = [
@@ -80,26 +87,30 @@ export default function SearchForm({
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    
+
     if (keyword.trim()) params.set('keyword', keyword.trim());
-    if (selectedLocations.length > 0) params.set('location', selectedLocations.join(','));
-    if (selectedSalary && selectedSalary !== '問わない') params.set('salaryMin', selectedSalary.replace(/[^\d]/g, ''));
-    if (selectedIndustries.length > 0) params.set('industries', selectedIndustries.join(','));
-    if (selectedJobTypes.length > 0) params.set('jobTypes', selectedJobTypes.join(','));
+    if (selectedLocations.length > 0)
+      params.set('location', selectedLocations.join(','));
+    if (selectedSalary && selectedSalary !== '問わない')
+      params.set('salaryMin', selectedSalary.replace(/[^\d]/g, ''));
+    if (selectedIndustries.length > 0)
+      params.set('industries', selectedIndustries.join(','));
+    if (selectedJobTypes.length > 0)
+      params.set('jobTypes', selectedJobTypes.join(','));
     if (selectedAppealPoint) params.set('appealPoints', selectedAppealPoint);
-    
+
     const queryString = params.toString();
     const newUrl = queryString ? `?${queryString}` : '';
-    
+
     router.push(`/candidate/search/setting${newUrl}`);
   };
 
   return (
     <div className='max-w-[662px] w-full mx-auto flex flex-col gap-6'>
-      <BaseInput 
-        placeholder='キーワード検索' 
+      <BaseInput
+        placeholder='キーワード検索'
         value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
+        onChange={e => setKeyword(e.target.value)}
       />
 
       <div className='flex flex-col md:flex-row gap-6 items-start justify-start w-full'>
@@ -273,9 +284,11 @@ export default function SearchForm({
             viewBox='0 0 14 10'
             fill='none'
             xmlns='http://www.w3.org/2000/svg'
-            style={{ 
-              transform: isSearchConditionActive ? 'rotate(0deg)' : 'rotate(180deg)',
-              transition: 'transform 0.4s ease'
+            style={{
+              transform: isSearchConditionActive
+                ? 'rotate(0deg)'
+                : 'rotate(180deg)',
+              transition: 'transform 0.4s ease',
             }}
           >
             <path
@@ -357,7 +370,7 @@ export default function SearchForm({
           </div>
         </div>
       )}
-      
+
       {/* モーダル */}
       {industryModalOpen && (
         <Modal
@@ -365,35 +378,44 @@ export default function SearchForm({
           isOpen={industryModalOpen}
           onClose={() => setIndustryModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setIndustryModalOpen(false)}
+          onPrimaryAction={() => {
+            industryModalRef.current?.handleConfirm();
+            setIndustryModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <IndustryModal
+            ref={industryModalRef}
             selectedIndustries={selectedIndustries}
             onIndustriesChange={setSelectedIndustries}
             onClose={() => setIndustryModalOpen(false)}
           />
         </Modal>
       )}
-      
+
       {jobTypeModalOpen && (
         <Modal
           title='職種を選択'
           isOpen={jobTypeModalOpen}
           onClose={() => setJobTypeModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setJobTypeModalOpen(false)}
+          onPrimaryAction={() => {
+            jobTypeModalRef.current?.handleConfirm();
+            setJobTypeModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <JobTypeModal
+            ref={jobTypeModalRef}
             selectedJobTypes={selectedJobTypes}
             setSelectedJobTypes={setSelectedJobTypes}
+            onClose={() => setJobTypeModalOpen(false)}
           />
         </Modal>
       )}
-      
+
       {locationModalOpen && (
         <Modal
           title='勤務地を選択'
@@ -410,7 +432,7 @@ export default function SearchForm({
           />
         </Modal>
       )}
-      
+
       {/* 検索ボタン */}
       <div className='flex flex-row gap-6 justify-center'>
         <button
@@ -433,13 +455,17 @@ export default function SearchForm({
             cursor: 'pointer',
           }}
           className='w-full md:w-[160px] transition-all duration-150 hover:shadow-[0_5px_10px_0_rgba(0,0,0,0.15)] hover:bg-[linear-gradient(263deg,#249881_0%,#27668D_100%)]'
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(263deg, #249881 0%, #27668D 100%)';
-            e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+          onMouseEnter={e => {
+            e.currentTarget.style.background =
+              'linear-gradient(263deg, #249881 0%, #27668D 100%)';
+            e.currentTarget.style.boxShadow =
+              '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
           }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)';
-            e.currentTarget.style.boxShadow = '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
+          onMouseLeave={e => {
+            e.currentTarget.style.background =
+              'linear-gradient(263deg, #26AF94 0%, #3A93CB 100%)';
+            e.currentTarget.style.boxShadow =
+              '0 5px 10px 0 rgba(0, 0, 0, 0.15)';
           }}
         >
           検索

@@ -9,14 +9,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface IndustryModalProps {
   selectedIndustries: string[];
-  onIndustriesChange: (industries: string[]) => void;
+  onIndustriesChange?: (industries: string[]) => void;
+  setSelectedIndustries?: (industries: string[]) => void;
   onClose: () => void;
 }
 
 export const IndustryModal = forwardRef<
   { handleConfirm: () => void },
   IndustryModalProps
->(({ selectedIndustries, onIndustriesChange }, ref) => {
+>(({ selectedIndustries, onIndustriesChange, setSelectedIndustries }, ref) => {
   const MAX_SELECTION = 3;
   const [tempSelectedIndustries, setTempSelectedIndustries] =
     useState<string[]>(selectedIndustries);
@@ -42,7 +43,11 @@ export const IndustryModal = forwardRef<
 
   // 決定ボタンが押された時に実際の値を更新
   const handleConfirm = () => {
-    onIndustriesChange(tempSelectedIndustries);
+    if (onIndustriesChange) {
+      onIndustriesChange(tempSelectedIndustries);
+    } else if (setSelectedIndustries) {
+      setSelectedIndustries(tempSelectedIndustries);
+    }
   };
 
   // ref経由でhandleConfirmを公開
@@ -100,3 +105,5 @@ export const IndustryModal = forwardRef<
     </div>
   );
 });
+
+IndustryModal.displayName = 'IndustryModal';

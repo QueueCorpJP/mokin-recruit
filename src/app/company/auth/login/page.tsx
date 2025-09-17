@@ -20,7 +20,7 @@ export default function CompanyLoginPage() {
       <main className='min-h-[730px] px-[80px] pt-[80px] pb-[80px] flex justify-center relative'>
         {/* 背景装飾（Figmaの曲線） */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute left-[-224px] top-[395px] w-[1889.89px] h-[335px]'>
+          <div className='absolute left-1/2 transform -translate-x-1/2 top-[395px] w-[1889.89px] h-[335px]'>
             <svg
               className='w-full h-full'
               fill='none'

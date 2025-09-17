@@ -24,27 +24,24 @@ export function ScoutServiceSection() {
   ];
 
   return (
-    <section className='py-16 flex flex-col items-center relative overflow-hidden px-[24px] md:px-0 bg-[#F9F9F9] md:bg-[#FFF]'>
+    <section className='py-16 flex flex-col items-center relative overflow-hidden px-[24px] md:px-[40px] lg:px-0 bg-[#F9F9F9] md:bg-[#FFF]'>
       {/* セクション全体を最大幅1200pxで中央寄せ */}
       <div className='w-full max-w-[1200px] flex flex-col items-center z-20'>
         {/* メインキャッチ＋背景帯＋ドット装飾 */}
         <div className='relative flex flex-col items-center w-full'>
           {/* 背景帯: Figmaピクセルパーフェクト対応（高さ20pxを明示） */}
-          <div className='absolute left-1/2 -translate-x-1/2 md:top-[73px] top-[51px] md:w-[820px] md:h-[20px] w-[345px] h-[16px] bg-[#FFF6A9]  z-0' />
+          <div className='absolute left-1/2 -translate-x-1/2 md:top-[73px] lg:top-[73px] top-[51px] md:w-[750px] lg:w-[820px] md:h-[20px] w-[345px] h-[16px] bg-[#FFF6A9]  z-0' />
           <div className='md:hidden absolute left-1/2 -translate-x-1/2 md:top-[73px] top-[90px] w-[258px] h-[16px] bg-[#FFF6A9]  z-0 ' />
-         
+
           {/* メインキャッチ */}
           <h2
-            className='relative z-10 text-center font-bold text-[18px] md:text-[24px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)]'
+            className='relative z-10 text-center font-bold text-[18px] md:text-[22px] lg:text-[24px] leading-[1.6] tracking-wider text-[#0F9058] font-[family-name:var(--font-noto-sans-jp)]'
             style={{ letterSpacing: '0.1em' }}
           >
-          届かないスカウトの時代に、
-
+            届かないスカウトの時代に、
             <br />
-            <span className='block  text-[24px] md:text-[32px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]'>
-            “いま誰と
-
-            比べられているか”が見える新しい仕組みを
+            <span className='block  text-[24px] md:text-[28px] lg:text-[32px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]'>
+              "いま誰と 比べられているか"が見える新しい仕組みを
             </span>
           </h2>
           {/* ドット装飾: Figmaピクセルパーフェクト対応（12px円, テキストとの間隔16px） */}
@@ -54,7 +51,7 @@ export function ScoutServiceSection() {
             <span className='w-[8px] h-[8px] md:h-[12px] md:w-[12px] rounded-full bg-[#0F9058]'></span>
           </div>
         </div>
-     
+
         <p
           className='mt-6 md:text-center text-left text-[16px] md:text-[16px] leading-[2] tracking-wider text-[#323232] font-medium font-[family-name:var(--font-noto-sans-jp)] max-w-[1200px]'
           style={{ letterSpacing: '0.1em' }}
@@ -67,11 +64,11 @@ export function ScoutServiceSection() {
         </p>
       </div>
       {/* カードUI: Figmaピクセルパーフェクト対応（3つ横並び） */}
-      <div className='mt-16 flex flex-wrap justify-center gap-8 w-full z-20'>
+      <div className='mt-16 flex flex-wrap justify-center gap-6 md:gap-8 w-full z-20'>
         {cards.map((card, i) => (
           <div
             key={i}
-            className='bg-white rounded-[10px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] p-[24px] md:p-[40px] md:pb-[72px] pb-[24px] flex flex-col items-center gap-10 max-w-[400px] w-full sm:w-[360px]'
+            className='bg-white rounded-[10px] shadow-[0_0_20px_0_rgba(0,0,0,0.05)] p-[24px] md:p-[32px] lg:p-[40px] md:pb-[56px] lg:pb-[72px] pb-[24px] flex flex-col items-center gap-10 max-w-[400px] w-full sm:w-[320px] md:w-[300px] lg:w-[360px]'
           >
             {/* イメージエリア */}
             <div className='relative w-[240px] h-[240px] flex items-center justify-center '>
@@ -81,7 +78,7 @@ export function ScoutServiceSection() {
                 alt='カードイメージ'
                 fill
                 className='rounded-full object-cover'
-                loading="lazy"
+                loading='lazy'
               />
               {/* サブ円（グラデーション） */}
               <div

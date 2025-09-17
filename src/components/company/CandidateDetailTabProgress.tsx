@@ -20,12 +20,11 @@ const CandidateDetailTabProgress: React.FC<CandidateDetailTabProgressProps> = ({
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '未設定';
     try {
-      return new Date(dateString)
-        .toLocaleDateString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
+      return new Date(dateString).toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
     } catch {
       return '未設定';
     }
@@ -47,15 +46,25 @@ const CandidateDetailTabProgress: React.FC<CandidateDetailTabProgressProps> = ({
               応募状況
             </span>
             <div className='text-[#323232] text-[16px] font-medium tracking-[1.6px] mt-1'>
-              応募済み
+              {candidate.applicationDate ? '応募済み' : '未応募'}
             </div>
           </div>
+          {candidate.applicationDate && (
+            <div>
+              <span className='text-[#999999] text-[14px] font-bold tracking-[1.4px]'>
+                応募日
+              </span>
+              <div className='text-[#323232] text-[16px] font-medium tracking-[1.6px] mt-1'>
+                {formatDate(candidate.applicationDate)}
+              </div>
+            </div>
+          )}
           <div>
             <span className='text-[#999999] text-[14px] font-bold tracking-[1.4px]'>
               進捗ステータス
             </span>
             <div className='text-[#323232] text-[16px] font-medium tracking-[1.6px] mt-1'>
-              書類選考中
+              {candidate.applicationDate ? '書類選考中' : '応募前'}
             </div>
           </div>
           <div>
@@ -89,6 +98,22 @@ const CandidateDetailTabProgress: React.FC<CandidateDetailTabProgressProps> = ({
           履歴
         </h3>
         <div className='space-y-4'>
+          {candidate.applicationDate && (
+            <div className='border-b border-[#DCDCDC] pb-4'>
+              <div className='flex justify-between items-center mb-2'>
+                <span className='text-[#999999] text-[12px] font-medium tracking-[1.2px]'>
+                  {formatDate(candidate.applicationDate)}
+                </span>
+                <span className='text-[#0F9058] text-[12px] font-bold tracking-[1.2px]'>
+                  候補者
+                </span>
+              </div>
+              <div className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                求人に応募しました
+              </div>
+            </div>
+          )}
+
           <div className='border-b border-[#DCDCDC] pb-4'>
             <div className='flex justify-between items-center mb-2'>
               <span className='text-[#999999] text-[12px] font-medium tracking-[1.2px]'>

@@ -9,14 +9,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface JobTypeModalProps {
   selectedJobTypes: string[];
-  onJobTypesChange: (jobTypes: string[]) => void;
+  onJobTypesChange?: (jobTypes: string[]) => void;
+  setSelectedJobTypes?: (jobTypes: string[]) => void;
   onClose: () => void;
 }
 
 export const JobTypeModal = forwardRef<
   { handleConfirm: () => void },
   JobTypeModalProps
->(({ selectedJobTypes, onJobTypesChange }, ref) => {
+>(({ selectedJobTypes, onJobTypesChange, setSelectedJobTypes }, ref) => {
   const [selectedCategory, setSelectedCategory] = useState(
     jobCategories[0].name
   );
@@ -43,7 +44,11 @@ export const JobTypeModal = forwardRef<
 
   // 決定ボタンが押された時に実際の値を更新
   const handleConfirm = () => {
-    onJobTypesChange(tempSelectedJobTypes);
+    if (onJobTypesChange) {
+      onJobTypesChange(tempSelectedJobTypes);
+    } else if (setSelectedJobTypes) {
+      setSelectedJobTypes(tempSelectedJobTypes);
+    }
   };
 
   // ref経由でhandleConfirmを公開
@@ -141,3 +146,5 @@ export const JobTypeModal = forwardRef<
     </div>
   );
 });
+
+JobTypeModal.displayName = 'JobTypeModal';

@@ -24,7 +24,7 @@ export function FAQSection() {
     },
   ];
   return (
-    <section className='bg-[#f9f9f9] pt-[120px] pb-[120px] flex flex-col items-center relative overflow-hidden'>
+    <section className='bg-[#f9f9f9] pt-[120px] pb-[120px] flex flex-col items-center relative overflow-hidden px-[24px] md:px-[40px] lg:px-0'>
       {/* Vector.svgを左上に、はみ出さないように配置 */}
       <div className='w-[531px] h-[701px] absolute left-0 top-0 mix-blend-multiply pointer-events-none select-none z-0'>
         <Image
@@ -43,18 +43,18 @@ export function FAQSection() {
       <div className='w-full max-w-[1200px] flex flex-col items-center gap-20 z-10 relative'>
         {/* セクションタイトル */}
         <div className='flex flex-col items-center gap-4'>
-          <h2 className='text-[#0f9058] font-bold md:text-[32px] text-[24px] leading-[1.6] tracking-[3.2px] text-center font-[family-name:var(--font-noto-sans-jp)]'>
+          <h2 className='text-[#0f9058] font-bold md:text-[28px] lg:text-[32px] text-[24px] leading-[1.6] tracking-[3.2px] text-center font-[family-name:var(--font-noto-sans-jp)]'>
             よくあるご質問
           </h2>
           {/* ドット装飾 */}
           <div className='flex flex-row gap-7'>
-            <span className='w-[8px] h-[8px] md:h-[12px] md:w-[12px] rounded-full bg-[#0f9058]'></span>
-            <span className='w-[8px] h-[8px] md:h-[12px] md:w-[12px] rounded-full bg-[#0f9058]'></span>
-            <span className='w-[8px] h-[8px] md:h-[12px] md:w-[12px] rounded-full bg-[#0f9058]'></span>
+            <span className='w-[8px] h-[8px] md:h-[10px] md:w-[10px] lg:h-[12px] lg:w-[12px] rounded-full bg-[#0f9058]'></span>
+            <span className='w-[8px] h-[8px] md:h-[10px] md:w-[10px] lg:h-[12px] lg:w-[12px] rounded-full bg-[#0f9058]'></span>
+            <span className='w-[8px] h-[8px] md:h-[10px] md:w-[10px] lg:h-[12px] lg:w-[12px] rounded-full bg-[#0f9058]'></span>
           </div>
         </div>
         {/* FAQ項目 */}
-        <div className='flex flex-col gap-4 md:w-[800px] w-auto px-[24px] md:px-0'>
+        <div className='flex flex-col gap-4 md:w-[700px] lg:w-[800px] w-auto px-[0px] md:px-0'>
           {faqs.map((faq, idx) => (
             <div
               key={idx}

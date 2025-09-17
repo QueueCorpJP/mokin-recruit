@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
@@ -25,14 +25,18 @@ interface UploadResult {
 /**
  * ファイルアップロード処理
  */
-async function uploadFile(file: File, type: 'resume' | 'career', candidateId: string): Promise<UploadResult> {
+async function uploadFile(
+  file: File,
+  type: 'resume' | 'career',
+  candidateId: string
+): Promise<UploadResult> {
   try {
     // ファイルサイズチェック（5MB）
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return {
         success: false,
-        error: 'ファイルサイズは5MB以下にしてください'
+        error: 'ファイルサイズは5MB以下にしてください',
       };
     }
 
@@ -44,13 +48,14 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
       'image/jpeg',
       'image/png',
       'image/gif',
-      'text/plain'
+      'text/plain',
     ];
-    
+
     if (!allowedTypes.includes(file.type)) {
       return {
         success: false,
-        error: 'PDF、Word、画像ファイル（JPEG/PNG/GIF）、テキストファイルのみアップロード可能です'
+        error:
+          'PDF、Word、画像ファイル（JPEG/PNG/GIF）、テキストファイルのみアップロード可能です',
       };
     }
 
@@ -59,11 +64,12 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
       const mimeToExtension: { [key: string]: string } = {
         'application/pdf': '.pdf',
         'application/msword': '.doc',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          '.docx',
         'image/jpeg': '.jpg',
         'image/png': '.png',
         'image/gif': '.gif',
-        'text/plain': '.txt'
+        'text/plain': '.txt',
       };
 
       if (mimeToExtension[mimeType]) {
@@ -86,20 +92,20 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
     // Supabase Storageにアップロード
     const supabase = await getSupabaseServerClient();
     const fileBuffer = await file.arrayBuffer();
-    
+
     const { data, error } = await supabase.storage
       .from('applications')
       .upload(fileName, fileBuffer, {
         cacheControl: '3600',
         contentType: file.type,
-        upsert: false
+        upsert: false,
       });
 
     if (error) {
       logger.error('Supabase upload error:', error);
       return {
         success: false,
-        error: 'ファイルのアップロードに失敗しました'
+        error: 'ファイルのアップロードに失敗しました',
       };
     }
 
@@ -110,14 +116,13 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
 
     return {
       success: true,
-      url: urlData.publicUrl
+      url: urlData.publicUrl,
     };
-
   } catch (error) {
     logger.error('File upload error:', error);
     return {
       success: false,
-      error: 'ファイルのアップロード中にエラーが発生しました'
+      error: 'ファイルのアップロード中にエラーが発生しました',
     };
   }
 }
@@ -125,20 +130,25 @@ async function uploadFile(file: File, type: 'resume' | 'career', candidateId: st
 /**
  * 求人応募処理（サーバーアクション）
  */
-export async function submitApplication(formData: FormData): Promise<ApplicationResult> {
+export async function submitApplication(
+  formData: FormData
+): Promise<ApplicationResult> {
   logger.info('=== Application submission started ===');
-  
-  try {
 
+  try {
     // FormDataの内容をログに出力（File constructor の代わりにプロパティで判定）
     try {
       const entries = [];
       for (const [key, value] of formData.entries()) {
         entries.push({
           key,
-          value: (value && typeof value === 'object' && 'name' in value && 'size' in value) 
-            ? `File: ${(value as any).name} (${(value as any).size} bytes)` 
-            : String(value)
+          value:
+            value &&
+            typeof value === 'object' &&
+            'name' in value &&
+            'size' in value
+              ? `File: ${(value as any).name} (${(value as any).size} bytes)`
+              : String(value),
         });
       }
       logger.info('FormData entries:', entries);
@@ -148,46 +158,47 @@ export async function submitApplication(formData: FormData): Promise<Application
 
     // FormDataから値を取得
     const jobId = formData.get('jobId') as string;
-    const applicationMessage = formData.get('applicationMessage') as string || '求人に応募いたします。';
-    
-    logger.info('Basic form data:', { jobId, applicationMessage });
-    
+
+    logger.info('Basic form data:', { jobId });
+
     // ファイルを取得
     const resumeFiles = formData.getAll('resumeFiles') as File[];
     const careerFiles = formData.getAll('careerFiles') as File[];
-    
+
     // ファイルのバリデーション（サーバー環境では File constructor が存在しないため、プロパティで判定）
-    const validResumeFiles = resumeFiles.filter(file => 
-      file && 
-      typeof file === 'object' && 
-      'name' in file && 
-      'size' in file && 
-      typeof file.size === 'number' && 
-      file.size > 0
+    const validResumeFiles = resumeFiles.filter(
+      file =>
+        file &&
+        typeof file === 'object' &&
+        'name' in file &&
+        'size' in file &&
+        typeof file.size === 'number' &&
+        file.size > 0
     );
-    const validCareerFiles = careerFiles.filter(file => 
-      file && 
-      typeof file === 'object' && 
-      'name' in file && 
-      'size' in file && 
-      typeof file.size === 'number' && 
-      file.size > 0
+    const validCareerFiles = careerFiles.filter(
+      file =>
+        file &&
+        typeof file === 'object' &&
+        'name' in file &&
+        'size' in file &&
+        typeof file.size === 'number' &&
+        file.size > 0
     );
-    
+
     logger.info('Files received:', {
       resumeFilesCount: resumeFiles.length,
       careerFilesCount: careerFiles.length,
       validResumeFilesCount: validResumeFiles.length,
       validCareerFilesCount: validCareerFiles.length,
       resumeFileNames: validResumeFiles.map(f => f.name),
-      careerFileNames: validCareerFiles.map(f => f.name)
+      careerFileNames: validCareerFiles.map(f => f.name),
     });
 
     if (!jobId) {
       logger.error('No jobId provided');
       return {
         success: false,
-        error: String('求人IDが必要です')
+        error: String('求人IDが必要です'),
       };
     }
 
@@ -198,7 +209,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       const authErrorResponse = {
         success: false,
         error: String('認証が必要です。ログインしてください。'),
-        needsAuth: true
+        needsAuth: true,
       };
       logger.info('Returning auth error response:', authErrorResponse);
       return authErrorResponse;
@@ -212,17 +223,19 @@ export async function submitApplication(formData: FormData): Promise<Application
     // 求人情報取得と応募済みチェックを並列実行
     const [
       { data: jobPosting, error: jobError },
-      { data: existingApplication, error: checkError }
+      { data: existingApplication, error: checkError },
     ] = await Promise.all([
       supabase
         .from('job_postings')
-        .select(`
+        .select(
+          `
           id,
           title,
           company_account_id,
           company_group_id,
           status
-        `)
+        `
+        )
         .eq('id', jobId)
         .maybeSingle(),
       supabase
@@ -230,14 +243,14 @@ export async function submitApplication(formData: FormData): Promise<Application
         .select('id')
         .eq('candidate_id', candidateId)
         .eq('job_posting_id', jobId)
-        .maybeSingle()
+        .maybeSingle(),
     ]);
 
     if (jobError || !jobPosting) {
       logger.error('Failed to fetch job posting:', jobError);
       return {
         success: false,
-        error: String('求人情報が見つかりませんでした')
+        error: String('求人情報が見つかりませんでした'),
       };
     }
 
@@ -245,7 +258,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       logger.error('Failed to check existing application:', checkError);
       return {
         success: false,
-        error: String('サーバーエラーが発生しました')
+        error: String('サーバーエラーが発生しました'),
       };
     }
 
@@ -254,7 +267,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       logger.error('Job not published:', { jobId, status: jobPosting.status });
       return {
         success: false,
-        error: String('この求人は現在応募できません')
+        error: String('この求人は現在応募できません'),
       };
     }
 
@@ -262,7 +275,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       logger.error('Application already exists:', { candidateId, jobId });
       return {
         success: false,
-        error: String('この求人には既に応募済みです')
+        error: String('この求人には既に応募済みです'),
       };
     }
 
@@ -273,13 +286,17 @@ export async function submitApplication(formData: FormData): Promise<Application
     // 履歴書をアップロード
     logger.info(`Uploading ${validResumeFiles.length} resume files`);
     for (const resumeFile of validResumeFiles) {
-      logger.info(`Uploading resume file: ${resumeFile.name}, size: ${resumeFile.size}`);
+      logger.info(
+        `Uploading resume file: ${resumeFile.name}, size: ${resumeFile.size}`
+      );
       const uploadResult = await uploadFile(resumeFile, 'resume', candidateId);
       if (!uploadResult.success) {
         logger.error('Resume upload failed:', uploadResult.error);
         return {
           success: false,
-          error: String(uploadResult.error || '履歴書のアップロードに失敗しました')
+          error: String(
+            uploadResult.error || '履歴書のアップロードに失敗しました'
+          ),
         };
       }
       if (uploadResult.url) {
@@ -291,13 +308,17 @@ export async function submitApplication(formData: FormData): Promise<Application
     // 職務経歴書をアップロード
     logger.info(`Uploading ${validCareerFiles.length} career files`);
     for (const careerFile of validCareerFiles) {
-      logger.info(`Uploading career file: ${careerFile.name}, size: ${careerFile.size}`);
+      logger.info(
+        `Uploading career file: ${careerFile.name}, size: ${careerFile.size}`
+      );
       const uploadResult = await uploadFile(careerFile, 'career', candidateId);
       if (!uploadResult.success) {
         logger.error('Career upload failed:', uploadResult.error);
         return {
           success: false,
-          error: String(uploadResult.error || '職務経歴書のアップロードに失敗しました')
+          error: String(
+            uploadResult.error || '職務経歴書のアップロードに失敗しました'
+          ),
         };
       }
       if (uploadResult.url) {
@@ -308,40 +329,42 @@ export async function submitApplication(formData: FormData): Promise<Application
 
     // company_group_idが存在するかチェック、存在しない場合はデフォルトグループを作成
     let validCompanyGroupId = jobPosting.company_group_id;
-    
+
     if (jobPosting.company_group_id) {
       const { data: existingGroup, error: groupCheckError } = await supabase
         .from('company_groups')
         .select('id, company_account_id')
         .eq('id', jobPosting.company_group_id)
         .maybeSingle();
-        
+
       if (groupCheckError || !existingGroup) {
-        logger.warn(`Company group ${jobPosting.company_group_id} not found, creating default group`);
-        
+        logger.warn(
+          `Company group ${jobPosting.company_group_id} not found, creating default group`
+        );
+
         const { data: newGroup, error: createGroupError } = await supabase
           .from('company_groups')
           .insert({
             id: jobPosting.company_group_id,
             company_account_id: jobPosting.company_account_id,
             group_name: '採用チーム',
-            description: '自動作成された採用チーム'
+            description: '自動作成された採用チーム',
           })
           .select('id')
           .maybeSingle();
-          
+
         if (createGroupError || !newGroup) {
           logger.error('Failed to create company group:', createGroupError);
           return {
             success: false,
-            error: String('企業グループ情報の作成に失敗しました')
+            error: String('企業グループ情報の作成に失敗しました'),
           };
         }
-        
+
         validCompanyGroupId = newGroup.id;
       }
     }
-    
+
     // 該当会社の最初のユーザーを取得（applicationテーブル用）
     const { data: companyUser, error: companyUserError } = await supabase
       .from('company_users')
@@ -354,7 +377,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       logger.error('Failed to fetch company user:', companyUserError);
       return {
         success: false,
-        error: String('企業ユーザー情報が見つかりませんでした')
+        error: String('企業ユーザー情報が見つかりませんでした'),
       };
     }
 
@@ -366,7 +389,7 @@ export async function submitApplication(formData: FormData): Promise<Application
       company_group_id: validCompanyGroupId,
       company_user_id: companyUser.id,
       resumeUrlsCount: resumeUrls.length,
-      careerUrlsCount: careerUrls.length
+      careerUrlsCount: careerUrls.length,
     });
 
     const { data: application, error: applicationError } = await supabase
@@ -379,10 +402,10 @@ export async function submitApplication(formData: FormData): Promise<Application
         company_user_id: companyUser.id,
         resume_url: resumeUrls.length > 0 ? resumeUrls[0] : null,
         career_history_url: careerUrls.length > 0 ? careerUrls[0] : null,
-        application_message: applicationMessage,
+        application_message: null,
         status: 'SENT',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select()
       .maybeSingle();
@@ -393,39 +416,221 @@ export async function submitApplication(formData: FormData): Promise<Application
         message: applicationError.message,
         details: applicationError.details,
         hint: applicationError.hint,
-        code: applicationError.code
+        code: applicationError.code,
       });
       return {
         success: false,
-        error: String(`応募の送信に失敗しました: ${applicationError.message}`)
+        error: String(`応募の送信に失敗しました: ${applicationError.message}`),
       };
     }
 
     logger.info(`Application created successfully:`, {
       applicationId: application.id,
       candidateId,
-      jobPostingId: jobId
+      jobPostingId: jobId,
     });
 
-    // ルームの作成（応募成功後にメッセージ用のルームを作成）
-    logger.info('Creating room for application messaging');
-    
-    const { data: room, error: roomError } = await supabase
-      .from('rooms')
-      .insert({
-        type: 'direct',
-        candidate_id: candidateId,
-        company_group_id: validCompanyGroupId,
-        related_job_posting_id: jobId
-      })
-      .select('id')
-      .single();
+    // 選考進捗レコードを作成（企業グループが候補者の進捗状況を閲覧・編集できるようにする）
+    logger.info('Creating selection progress record');
 
-    if (roomError) {
-      logger.error('Failed to create room:', roomError);
-      // ルーム作成失敗してもアプリケーション自体は成功とする
+    const { data: selectionProgress, error: selectionProgressError } =
+      await supabase
+        .from('selection_progress')
+        .insert({
+          candidate_id: candidateId,
+          company_group_id: validCompanyGroupId,
+          application_id: application.id,
+          job_posting_id: jobId,
+          document_screening_result: null,
+          first_interview_result: null,
+          secondary_interview_result: null,
+          final_interview_result: null,
+          offer_result: null,
+          application_date: new Date().toISOString(),
+          notes: `求人「${jobPosting.title}」への応募が完了しました。`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+    if (selectionProgressError) {
+      logger.error(
+        'Failed to create selection progress:',
+        selectionProgressError
+      );
+      // 進捗レコード作成失敗してもアプリケーション自体は成功とする
     } else {
-      logger.info('Room created successfully:', { roomId: room.id });
+      logger.info('Selection progress created successfully:', {
+        progressId: selectionProgress.id,
+      });
+    }
+
+    // ルームの作成または取得（応募成功後にメッセージ用のルームを作成）
+    logger.info('Creating or getting room for application messaging');
+
+    // 既存のルームがあるかチェック
+    let roomId = null;
+    const { data: existingRoom, error: roomSearchError } = await supabase
+      .from('rooms')
+      .select('id')
+      .eq('candidate_id', candidateId)
+      .eq('company_group_id', validCompanyGroupId)
+      .eq('type', 'direct')
+      .maybeSingle();
+
+    if (roomSearchError) {
+      logger.error('Room search error:', roomSearchError);
+      // ルーム検索失敗してもアプリケーション自体は成功とする
+    } else if (existingRoom) {
+      roomId = existingRoom.id;
+      logger.info('Using existing room:', { roomId });
+    } else {
+      // 新しいルームを作成
+      const { data: newRoom, error: roomInsertError } = await supabase
+        .from('rooms')
+        .insert({
+          type: 'direct',
+          candidate_id: candidateId,
+          company_group_id: validCompanyGroupId,
+          related_job_posting_id: jobId,
+        })
+        .select('id')
+        .single();
+
+      if (roomInsertError) {
+        logger.error('Failed to create room:', roomInsertError);
+        // ルーム作成失敗してもアプリケーション自体は成功とする
+      } else {
+        roomId = newRoom.id;
+        logger.info('Room created successfully:', { roomId });
+
+        // 新しいルームの場合、参加者を追加
+        const participantInserts = [
+          {
+            room_id: roomId,
+            participant_type: 'CANDIDATE',
+            candidate_id: candidateId,
+            joined_at: new Date().toISOString(),
+          },
+        ];
+
+        // 企業グループのユーザーも追加（管理者またはアクティブユーザー）
+        const { data: groupUsers, error: groupUsersError } = await supabase
+          .from('company_user_group_permissions')
+          .select('company_user_id')
+          .eq('company_group_id', validCompanyGroupId);
+
+        if (!groupUsersError && groupUsers && groupUsers.length > 0) {
+          // 全ての企業グループユーザーを参加者として追加
+          groupUsers.forEach(groupUser => {
+            participantInserts.push({
+              room_id: roomId,
+              participant_type: 'COMPANY_USER',
+              company_user_id: groupUser.company_user_id,
+              joined_at: new Date().toISOString(),
+            });
+          });
+        }
+
+        // 参加者を一括挿入
+        const { error: participantInsertError } = await supabase
+          .from('room_participants')
+          .insert(participantInserts);
+
+        if (participantInsertError) {
+          logger.error(
+            'Failed to add room participants:',
+            participantInsertError
+          );
+          // 参加者追加失敗してもアプリケーション自体は成功とする
+        } else {
+          logger.info('Room participants added successfully:', {
+            count: participantInserts.length,
+          });
+        }
+      }
+    }
+
+    // ルームが正常に作成または取得できた場合、メッセージを送信
+    if (roomId) {
+      logger.info('Sending application message to room:', { roomId });
+
+      // 応募メッセージのコンテンツ作成
+      const attachmentInfo = [];
+      if (resumeUrls.length > 0) {
+        attachmentInfo.push(`・履歴書: ${resumeUrls.length}件添付`);
+      }
+      if (careerUrls.length > 0) {
+        attachmentInfo.push(`・職務経歴書: ${careerUrls.length}件添付`);
+      }
+
+      const messageContent = `【求人応募のお知らせ】
+
+求人「${jobPosting.title}」に応募いたしました。
+
+${attachmentInfo.length > 0 ? `提出書類:\n${attachmentInfo.join('\n')}\n` : ''}
+よろしくお願いいたします。`;
+
+      // ファイルURLを配列形式で準備
+      const allFileUrls = [...resumeUrls, ...careerUrls];
+
+      const { data: message, error: messageInsertError } = await supabase
+        .from('messages')
+        .insert({
+          room_id: roomId,
+          sender_type: 'CANDIDATE',
+          sender_candidate_id: candidateId,
+          message_type: 'APPLICATION',
+          subject: `求人「${jobPosting.title}」への応募`,
+          content: messageContent,
+          file_urls: allFileUrls,
+          status: 'SENT',
+          sent_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (messageInsertError) {
+        logger.error('Failed to create message:', messageInsertError);
+        // メッセージ作成失敗してもアプリケーション自体は成功とする
+      } else {
+        logger.info('Message created successfully:', { messageId: message.id });
+
+        // 企業側への通知を作成
+        // 企業グループの全ユーザーを取得
+        const { data: groupUsers, error: groupUsersError } = await supabase
+          .from('company_user_group_permissions')
+          .select('company_user_id')
+          .eq('company_group_id', validCompanyGroupId);
+
+        if (!groupUsersError && groupUsers && groupUsers.length > 0) {
+          // 各企業ユーザーに通知を作成
+          const notificationPromises = groupUsers.map(groupUser =>
+            supabase.from('company_unread_notifications').insert({
+              company_user_id: groupUser.company_user_id,
+              message_id: message.id,
+              notification_type: 'APPLICATION',
+            })
+          );
+
+          const notificationResults =
+            await Promise.allSettled(notificationPromises);
+
+          const successCount = notificationResults.filter(
+            result => result.status === 'fulfilled'
+          ).length;
+          const failureCount = notificationResults.filter(
+            result => result.status === 'rejected'
+          ).length;
+
+          logger.info('Company notifications created:', {
+            total: groupUsers.length,
+            success: successCount,
+            failure: failureCount,
+          });
+        }
+      }
     }
 
     const responseData = {
@@ -434,23 +639,23 @@ export async function submitApplication(formData: FormData): Promise<Application
         application_id: String(application.id),
         job_title: String(jobPosting.title),
         status: 'SENT',
-        applied_at: String(application.created_at)
-      }
+        applied_at: String(application.created_at),
+      },
     };
-    
+
     logger.info('Returning success response:', responseData);
     return responseData;
-
   } catch (error) {
     logger.error('Application submission error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     logger.error('Detailed error message:', errorMessage);
-    
+
     const errorResponse = {
       success: false,
-      error: String(`サーバーエラーが発生しました: ${errorMessage}`)
+      error: String(`サーバーエラーが発生しました: ${errorMessage}`),
     };
-    
+
     logger.info('Returning error response:', errorResponse);
     return errorResponse;
   }
@@ -465,7 +670,9 @@ export async function getJobDetails(jobId: string) {
     const supabase = await getSupabaseServerClient();
 
     // デバッグ: jobIdの型と値を確認
-    logger.info(`Job ID type: ${typeof jobId}, value: "${jobId}", length: ${jobId?.length}`);
+    logger.info(
+      `Job ID type: ${typeof jobId}, value: "${jobId}", length: ${jobId?.length}`
+    );
 
     // まず、ランダムな求人を1つ取得してデータベース接続を確認
     const { data: randomJob, error: randomError } = await supabase
@@ -473,8 +680,11 @@ export async function getJobDetails(jobId: string) {
       .select('id, title, status')
       .limit(1)
       .maybeSingle();
-    
-    logger.info(`Random job query for connection test:`, { randomJob, randomError });
+
+    logger.info(`Random job query for connection test:`, {
+      randomJob,
+      randomError,
+    });
 
     // 指定されたIDの求人が存在するかチェック（ステータス制限なし）
     const { data: jobCheck, error: checkError } = await supabase
@@ -483,42 +693,51 @@ export async function getJobDetails(jobId: string) {
       .eq('id', jobId)
       .maybeSingle();
 
-    logger.info(`Job check result:`, { 
-      jobCheck, 
+    logger.info(`Job check result:`, {
+      jobCheck,
       checkError,
       queryJobId: jobId,
       foundId: jobCheck?.id,
-      idsMatch: jobCheck?.id === jobId
+      idsMatch: jobCheck?.id === jobId,
     });
 
     // もしjobCheckで見つからない場合、すべての求人IDを取得して比較
     if (!jobCheck && !checkError) {
-      logger.warn(`Job ${jobId} not found, fetching all job IDs for comparison`);
+      logger.warn(
+        `Job ${jobId} not found, fetching all job IDs for comparison`
+      );
       const { data: allJobs, error: allJobsError } = await supabase
         .from('job_postings')
         .select('id, title, status, publication_type')
         .limit(10);
-      
+
       logger.info(`All jobs (first 10):`, { allJobs, allJobsError });
-      
+
       if (allJobs) {
         const exactMatch = allJobs.find(job => job.id === jobId);
-        const similarIds = allJobs.filter(job => job.id.includes(jobId) || jobId.includes(job.id));
-        logger.info(`Exact match: ${exactMatch?.id}, Similar IDs:`, similarIds.map(j => j.id));
+        const similarIds = allJobs.filter(
+          job => job.id.includes(jobId) || jobId.includes(job.id)
+        );
+        logger.info(
+          `Exact match: ${exactMatch?.id}, Similar IDs:`,
+          similarIds.map(j => j.id)
+        );
       }
     }
 
     // 求人情報を取得（job detail pageと同じフィルタ条件を適用）
     const { data: jobPosting, error } = await supabase
       .from('job_postings')
-      .select(`
+      .select(
+        `
         id,
         title,
         job_description,
         required_documents,
         status,
         company_account_id
-      `)
+      `
+      )
       .eq('id', jobId)
       .eq('status', 'PUBLISHED')
       .in('publication_type', ['public', 'members'])
@@ -533,31 +752,33 @@ export async function getJobDetails(jobId: string) {
 
     if (!jobPosting) {
       logger.error(`No published job posting found for ID: ${jobId}`);
-      
+
       // 詳細なエラーメッセージを生成
       if (jobCheck) {
         // 求人は存在するが、公開されていない
         const status = jobCheck.status;
         const publicationType = jobCheck.publication_type;
-        logger.info(`Job exists but not accessible: status=${status}, publication_type=${publicationType}`);
-        
+        logger.info(
+          `Job exists but not accessible: status=${status}, publication_type=${publicationType}`
+        );
+
         if (status !== 'PUBLISHED') {
-          return { 
-            success: false, 
-            error: `この求人は現在公開されていません (ステータス: ${status})` 
+          return {
+            success: false,
+            error: `この求人は現在公開されていません (ステータス: ${status})`,
           };
         } else if (!['public', 'members'].includes(publicationType)) {
-          return { 
-            success: false, 
-            error: `この求人は現在応募できません (公開設定: ${publicationType})` 
+          return {
+            success: false,
+            error: `この求人は現在応募できません (公開設定: ${publicationType})`,
           };
         }
       }
-      
+
       // より詳細なエラーメッセージを提供
-      return { 
-        success: false, 
-        error: `指定された求人が見つかりませんでした (ID: ${jobId})` 
+      return {
+        success: false,
+        error: `指定された求人が見つかりませんでした (ID: ${jobId})`,
       };
     }
 
@@ -578,15 +799,14 @@ export async function getJobDetails(jobId: string) {
         description: jobPosting.job_description,
         companyName: company?.company_name || '企業名未設定',
         requiredDocuments: jobPosting.required_documents || [],
-        status: jobPosting.status
-      }
+        status: jobPosting.status,
+      },
     };
-
   } catch (error) {
     logger.error('Get job details error:', error);
     return {
       success: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
     };
   }
 }

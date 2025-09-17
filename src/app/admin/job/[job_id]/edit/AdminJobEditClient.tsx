@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/mo-dal';
@@ -121,6 +121,10 @@ export default function AdminJobEditClient({
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
+
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   // Error state
   const [errors, _setErrors] = useState<Record<string, string>>({});
@@ -406,11 +410,16 @@ export default function AdminJobEditClient({
           title='職種を選択'
           isOpen={jobTypeModalOpen}
           onClose={() => setJobTypeModalOpen(false)}
-          onPrimaryAction={() => setJobTypeModalOpen(false)}
+          onPrimaryAction={() => {
+            jobTypeModalRef.current?.handleConfirm();
+            setJobTypeModalOpen(false);
+          }}
         >
           <JobTypeModal
+            ref={jobTypeModalRef}
             selectedJobTypes={jobTypes}
             setSelectedJobTypes={setJobTypes}
+            onClose={() => setJobTypeModalOpen(false)}
           />
         </Modal>
 
@@ -418,9 +427,13 @@ export default function AdminJobEditClient({
           title='業種を選択'
           isOpen={industryModalOpen}
           onClose={() => setIndustryModalOpen(false)}
-          onPrimaryAction={() => setIndustryModalOpen(false)}
+          onPrimaryAction={() => {
+            industryModalRef.current?.handleConfirm();
+            setIndustryModalOpen(false);
+          }}
         >
           <IndustryModal
+            ref={industryModalRef}
             selectedIndustries={industries}
             onIndustriesChange={setIndustries}
             onClose={() => setIndustryModalOpen(false)}

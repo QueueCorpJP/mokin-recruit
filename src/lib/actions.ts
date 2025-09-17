@@ -33,7 +33,7 @@ export async function sendMessage(
       },
     }
   );
-  
+
   try {
     // 企業ユーザーの場合、company_group_idを取得
     let companyGroupId = null;
@@ -43,7 +43,7 @@ export async function sendMessage(
         .select('company_group_id')
         .eq('company_user_id', senderId)
         .single();
-      
+
       if (groupError) {
         console.error('Error fetching company group ID:', groupError);
       } else {
@@ -57,13 +57,12 @@ export async function sendMessage(
       .insert({
         room_id: roomId,
         sender_type: senderType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER',
-        ...(senderType === 'candidate' 
+        ...(senderType === 'candidate'
           ? { sender_candidate_id: senderId }
-          : { 
+          : {
               sender_company_user_id: senderId,
-              sender_company_group_id: companyGroupId
-            }
-        ),
+              sender_company_group_id: companyGroupId,
+            }),
         message_type: 'GENERAL',
         subject: subject || null,
         content,
@@ -85,9 +84,12 @@ export async function sendMessage(
     return { success: true, message: messageData };
   } catch (error) {
     console.error('Error in sendMessage:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'メッセージの送信に失敗しました'
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'メッセージの送信に失敗しました',
     };
   }
 }
@@ -118,7 +120,7 @@ export async function createOrGetRoom(
       },
     }
   );
-  
+
   try {
     // 既存のルームを検索（候補者と企業ユーザーが両方参加しているルーム）
     const { data: candidateRooms, error: candidateRoomsError } = await supabase
@@ -133,7 +135,7 @@ export async function createOrGetRoom(
 
     if (candidateRooms && candidateRooms.length > 0) {
       const roomIds = candidateRooms.map(r => r.room_id);
-      
+
       const { data: companyRooms, error: companyRoomsError } = await supabase
         .from('room_participants')
         .select('room_id')
@@ -146,7 +148,6 @@ export async function createOrGetRoom(
         return { success: true, roomId: companyRooms[0].room_id };
       }
     }
-
 
     // 新しいルームを作成
     const { data: newRoom, error: roomError } = await supabase
@@ -174,7 +175,7 @@ export async function createOrGetRoom(
         room_id: newRoom.id,
         participant_type: 'COMPANY_USER',
         company_user_id: companyUserId,
-      }
+      },
     ];
 
     const { error: participantsError } = await supabase
@@ -189,14 +190,21 @@ export async function createOrGetRoom(
     return { success: true, roomId: newRoom.id };
   } catch (error) {
     console.error('Error in createOrGetRoom:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'ルームの作成・取得に失敗しました'
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'ルームの作成・取得に失敗しました',
     };
   }
 }
 
-export async function getRoomMessages(roomId: string, currentUserId?: string, currentUserType?: string) {
+export async function getRoomMessages(
+  roomId: string,
+  currentUserId?: string,
+  currentUserType?: string
+) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -220,9 +228,12 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
   );
 
   try {
+    console.log('[DEBUG] Getting messages for room (company):', roomId);
+
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         id,
         sender_type,
         sender_candidate_id,
@@ -241,9 +252,17 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
           first_name,
           last_name
         )
-      `)
+      `
+      )
       .eq('room_id', roomId)
       .order('sent_at', { ascending: true });
+
+    console.log('[DEBUG] Messages query result (company):', {
+      roomId,
+      messageCount: messagesData?.length || 0,
+      error: messagesError,
+      sampleMessage: messagesData?.[0],
+    });
 
     if (messagesError) {
       console.error('Error fetching room messages:', messagesError);
@@ -253,8 +272,12 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
     const messages = (messagesData || []).map((msg: any) => {
       const isCandidate = msg.sender_type === 'CANDIDATE';
       const senderName = isCandidate
-        ? (msg.candidates ? `${msg.candidates.last_name} ${msg.candidates.first_name}`.trim() : '候補者')
-        : (msg.company_users ? `${msg.company_users.last_name} ${msg.company_users.first_name}`.trim() : '企業担当者');
+        ? msg.candidates
+          ? `${msg.candidates.last_name} ${msg.candidates.first_name}`.trim()
+          : '候補者'
+        : msg.company_users
+          ? `${msg.company_users.last_name} ${msg.company_users.first_name}`.trim()
+          : '企業担当者';
 
       return {
         id: String(msg.id),
@@ -267,7 +290,7 @@ export async function getRoomMessages(roomId: string, currentUserId?: string, cu
           month: '2-digit',
           day: '2-digit',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
         }),
       };
     });
@@ -301,7 +324,7 @@ export async function markMessageAsRead(messageId: string) {
       },
     }
   );
-  
+
   try {
     const { error } = await supabase
       .from('messages')
@@ -320,15 +343,17 @@ export async function markMessageAsRead(messageId: string) {
     return { success: true };
   } catch (error) {
     console.error('Error in markMessageAsRead:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '既読処理に失敗しました'
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '既読処理に失敗しました',
     };
   }
 }
 
 // 候補者用: ルームのメッセージを既読にする専用関数
-export async function markCandidateRoomMessagesAsRead(roomId: string): Promise<{ success: boolean; error?: string }> {
+export async function markCandidateRoomMessagesAsRead(
+  roomId: string
+): Promise<{ success: boolean; error?: string }> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -350,14 +375,14 @@ export async function markCandidateRoomMessagesAsRead(roomId: string): Promise<{
       },
     }
   );
-  
+
   try {
     // 候補者宛ての未読メッセージ（企業から送信された'SENT'ステータスのメッセージ）を既読にする
     const { error: readUpdateError } = await supabase
       .from('messages')
       .update({
         status: 'read',
-        read_at: new Date().toISOString()
+        read_at: new Date().toISOString(),
       })
       .eq('room_id', roomId)
       .eq('status', 'SENT')
@@ -368,14 +393,16 @@ export async function markCandidateRoomMessagesAsRead(roomId: string): Promise<{
       return { success: false, error: readUpdateError.message };
     }
 
-    console.log('✅ [markCandidateRoomMessagesAsRead] Successfully updated read status for room:', roomId);
-    
+    console.log(
+      '✅ [markCandidateRoomMessagesAsRead] Successfully updated read status for room:',
+      roomId
+    );
+
     // 関連ページを再検証
     revalidatePath('/candidate/message');
     revalidatePath('/company/message');
-    
-    return { success: true };
 
+    return { success: true };
   } catch (error) {
     console.error('Mark candidate room messages as read error:', error);
     return { success: false, error: 'Internal server error' };
@@ -436,72 +463,94 @@ export async function uploadMessageFile(formData: FormData) {
       'image/bmp',
       'image/webp',
       'image/svg+xml',
-      'text/plain'
+      'text/plain',
     ];
-    
+
     if (!allowedTypes.includes(file.type)) {
-      return { error: 'PDF、Word、画像ファイル、テキストファイルのみアップロード可能です' };
+      return {
+        error:
+          'PDF、Word、画像ファイル、テキストファイルのみアップロード可能です',
+      };
     }
 
     // ファイル名の生成（タイムスタンプ + オリジナルファイル名）
     const timestamp = new Date().getTime();
-    
+
     // Supabaseストレージ対応のファイル名サニタイズ処理
     const sanitizeFileName = (name: string): string => {
       const lastDotIndex = name.lastIndexOf('.');
       const extension = lastDotIndex !== -1 ? name.substring(lastDotIndex) : '';
-      const nameWithoutExt = lastDotIndex !== -1 ? name.substring(0, lastDotIndex) : name;
-      
+      const nameWithoutExt =
+        lastDotIndex !== -1 ? name.substring(0, lastDotIndex) : name;
+
       let sanitized = nameWithoutExt
         .replace(/[^a-zA-Z0-9\\-_.]/g, '_')
         .replace(/_+/g, '_')
         .replace(/^_|_$/g, '')
         .replace(/^\\.|\\.$/g, '');
-      
+
       if (!sanitized || sanitized === '.' || sanitized === '..') {
         sanitized = 'file';
       }
-      
+
       const maxLength = 100 - extension.length - `${timestamp}_`.length;
       if (sanitized.length > maxLength) {
         sanitized = sanitized.substring(0, maxLength);
       }
-      
+
       return sanitized + extension;
     };
-    
+
     const sanitizedFileName = sanitizeFileName(file.name);
     const fileName = `${timestamp}_${sanitizedFileName}`;
     const filePath = `${userId}/messages/${fileName}`;
-    
+
     const fileBuffer = await file.arrayBuffer();
-    
+
     const { data, error } = await supabase.storage
       .from('message-files')
       .upload(filePath, fileBuffer, {
         cacheControl: '3600',
         contentType: file.type,
-        upsert: false
+        upsert: false,
       });
 
     if (error) {
       console.error('Supabase message file upload error:', error);
       let errorMessage = 'ファイルのアップロードに失敗しました';
-      
+
       if (error.message) {
-        if (error.message.includes('Payload too large') || error.message.includes('Request entity too large')) {
-          errorMessage = 'ファイルサイズが大きすぎます。5MB以下にしてください。';
-        } else if (error.message.includes('Invalid file type') || error.message.includes('content-type')) {
+        if (
+          error.message.includes('Payload too large') ||
+          error.message.includes('Request entity too large')
+        ) {
+          errorMessage =
+            'ファイルサイズが大きすぎます。5MB以下にしてください。';
+        } else if (
+          error.message.includes('Invalid file type') ||
+          error.message.includes('content-type')
+        ) {
           errorMessage = 'サポートされていないファイル形式です。';
-        } else if (error.message.includes('Duplicate') || error.message.includes('already exists')) {
-          errorMessage = '同じファイルが既に存在します。しばらく待ってから再試行してください。';
-        } else if (error.message.includes('Permission') || error.message.includes('Unauthorized')) {
+        } else if (
+          error.message.includes('Duplicate') ||
+          error.message.includes('already exists')
+        ) {
+          errorMessage =
+            '同じファイルが既に存在します。しばらく待ってから再試行してください。';
+        } else if (
+          error.message.includes('Permission') ||
+          error.message.includes('Unauthorized')
+        ) {
           errorMessage = 'ファイルのアップロード権限がありません。';
-        } else if (error.message.includes('Network') || error.message.includes('timeout')) {
-          errorMessage = 'ネットワークエラーです。インターネット接続を確認してください。';
+        } else if (
+          error.message.includes('Network') ||
+          error.message.includes('timeout')
+        ) {
+          errorMessage =
+            'ネットワークエラーです。インターネット接続を確認してください。';
         }
       }
-      
+
       return { error: errorMessage };
     }
 
@@ -513,9 +562,8 @@ export async function uploadMessageFile(formData: FormData) {
     return {
       url: urlData.publicUrl,
       path: filePath,
-      success: true
+      success: true,
     };
-
   } catch (error) {
     console.error('Upload message file error:', error);
     return { error: 'ファイルのアップロード中にエラーが発生しました' };
