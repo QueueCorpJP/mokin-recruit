@@ -306,7 +306,7 @@ export function CandidateSlideMenu({
           setLoading(false);
         });
     }
-  }, [candidateId, isOpen, companyGroupId]);
+  }, [candidateId, isOpen, companyGroupId, propsCandidateData]);
 
   // ESCキーでメニューを閉じる
   useEffect(() => {

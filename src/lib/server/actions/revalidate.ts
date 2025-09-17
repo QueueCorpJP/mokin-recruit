@@ -15,7 +15,6 @@ export function revalidateCompanyPaths(...paths: string[]) {
       revalidatePath(p);
     } catch (e) {
       // Non-fatal: best-effort
-      // eslint-disable-next-line no-console
       console.warn('revalidatePath failed:', p, e);
     }
   }

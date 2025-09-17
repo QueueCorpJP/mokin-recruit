@@ -5,6 +5,7 @@ import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { useRouter } from 'next/navigation';
 import { updateCompanyProfile, getCompanyUserSettings } from '../actions';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
@@ -62,7 +63,12 @@ export default function ProfilePage() {
           ]}
           title='プロフィール変更'
           icon={
-            <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+            <Image
+              src='/images/setting.svg'
+              alt='設定'
+              width={32}
+              height={32}
+            />
           }
         />
         <div className='px-4 md:px-20 py-10'>
@@ -87,7 +93,7 @@ export default function ProfilePage() {
         ]}
         title='プロフィール変更'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

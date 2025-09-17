@@ -21,7 +21,8 @@ export default function JobTypeSelectModal({
   initialSelected = [],
   maxSelections = 3,
 }: JobTypeSelectModalProps) {
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(initialSelected);
+  const [selectedJobTypes, setSelectedJobTypes] =
+    useState<string[]>(initialSelected);
   const [selectedCategory, setSelectedCategory] = useState(
     jobCategories[0].name
   );
@@ -35,7 +36,7 @@ export default function JobTypeSelectModal({
       setSelectedJobTypes([...initialSelected]);
       selectedJobTypesRef.current = [...initialSelected];
     }
-  }, [isOpen]);
+  }, [isOpen, initialSelected]);
 
   const handleCheckboxChange = (jobTypeName: string) => {
     let newJobTypes: string[];
@@ -48,7 +49,7 @@ export default function JobTypeSelectModal({
         return;
       }
     }
-    
+
     setSelectedJobTypes(newJobTypes);
     selectedJobTypesRef.current = newJobTypes;
   };
@@ -63,16 +64,15 @@ export default function JobTypeSelectModal({
     category => category.name === selectedCategory
   )!;
 
-
   return (
     <Modal
-      title="職種を選択"
+      title='職種を選択'
       isOpen={isOpen}
       onClose={onClose}
-      primaryButtonText="決定"
+      primaryButtonText='決定'
       onPrimaryAction={handleConfirm}
-      width={isDesktop ? "800px" : "100%"}
-      height={isDesktop ? "680px" : "90vh"}
+      width={isDesktop ? '800px' : '100%'}
+      height={isDesktop ? '680px' : '90vh'}
       selectedCount={selectedJobTypes.length}
       totalCount={maxSelections}
     >
@@ -92,7 +92,8 @@ export default function JobTypeSelectModal({
                     style={{
                       fontFamily: '"Noto Sans JP"',
                       fontSize: '14px',
-                      fontWeight: selectedCategory === category.name ? 600 : 500,
+                      fontWeight:
+                        selectedCategory === category.name ? 600 : 500,
                       lineHeight: '160%',
                       letterSpacing: '1.4px',
                     }}
@@ -128,45 +129,49 @@ export default function JobTypeSelectModal({
         {!isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {jobCategories.slice(0, showAllCategories ? jobCategories.length : 6).map((category, index) => (
-                <React.Fragment key={category.name}>
-                  <button
-                    className={`py-2 px-2 transition-colors ${
-                      selectedCategory === category.name
-                        ? 'text-[#0F9058] font-medium'
-                        : 'text-[var(--3,#999)] hover:text-[#0F9058]'
-                    }`}
-                    style={{
-                      fontFamily: '"Noto Sans JP"',
-                      fontSize: '14px',
-                      fontWeight: selectedCategory === category.name ? 600 : 500,
-                      lineHeight: '160%',
-                      letterSpacing: '1.4px',
-                    }}
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    {category.name}
-                  </button>
-                  {index < (showAllCategories ? jobCategories.length - 1 : 5) && (
-                    <div className='mx-2'>
-                      <svg
-                        width='2'
-                        height='24'
-                        viewBox='0 0 2 24'
-                        fill='none'
-                        xmlns='http://www.w3.org/2000/svg'
-                      >
-                        <path
-                          d='M1 1V23'
-                          stroke='var(--3,#999)'
-                          strokeLinecap='round'
-                          strokeWidth='1'
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
+              {jobCategories
+                .slice(0, showAllCategories ? jobCategories.length : 6)
+                .map((category, index) => (
+                  <React.Fragment key={category.name}>
+                    <button
+                      className={`py-2 px-2 transition-colors ${
+                        selectedCategory === category.name
+                          ? 'text-[#0F9058] font-medium'
+                          : 'text-[var(--3,#999)] hover:text-[#0F9058]'
+                      }`}
+                      style={{
+                        fontFamily: '"Noto Sans JP"',
+                        fontSize: '14px',
+                        fontWeight:
+                          selectedCategory === category.name ? 600 : 500,
+                        lineHeight: '160%',
+                        letterSpacing: '1.4px',
+                      }}
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      {category.name}
+                    </button>
+                    {index <
+                      (showAllCategories ? jobCategories.length - 1 : 5) && (
+                      <div className='mx-2'>
+                        <svg
+                          width='2'
+                          height='24'
+                          viewBox='0 0 2 24'
+                          fill='none'
+                          xmlns='http://www.w3.org/2000/svg'
+                        >
+                          <path
+                            d='M1 1V23'
+                            stroke='var(--3,#999)'
+                            strokeLinecap='round'
+                            strokeWidth='1'
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
               {!showAllCategories && jobCategories.length > 6 && (
                 <>
                   <div className='mx-2'>

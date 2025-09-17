@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import NewJobHeader from '@/app/company/job/NewJobHeader';
@@ -270,13 +270,34 @@ export default function JobNewClient({
     loadData();
   }, [DRAFT_KEY]);
 
+  // 年収バリデーション関数
+  const validateSalary = useCallback((minValue: string, maxValue: string) => {
+    if (minValue && maxValue && minValue !== '' && maxValue !== '') {
+      const min = parseInt(minValue);
+      const max = parseInt(maxValue);
+      if (min > max) {
+        setErrors(prev => ({
+          ...prev,
+          salary: '最大年収は最小年収よりも高く設定してください',
+        }));
+        return;
+      }
+    }
+    // エラーをクリア
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.salary;
+      return newErrors;
+    });
+  }, []);
+
   // 年収のリアルタイムバリデーション
   useEffect(() => {
     validateSalary(salaryMin, salaryMax);
-  }, [salaryMin, salaryMax]);
+  }, [salaryMin, salaryMax, validateSalary]);
 
   // 必須項目が全て入力されているかチェックする関数
-  const isFormValid = () => {
+  const isFormValid = useCallback(() => {
     // グループ選択
     if (!group) return false;
 
@@ -323,7 +344,23 @@ export default function JobNewClient({
     if (!appealPoints || appealPoints.length === 0) return false;
 
     return true;
-  };
+  }, [
+    group,
+    title,
+    jobTypes,
+    industries,
+    jobDescription,
+    positionSummary,
+    skills,
+    otherRequirements,
+    salaryMin,
+    salaryMax,
+    locations,
+    workingHours,
+    holidays,
+    selectionProcess,
+    appealPoints,
+  ]);
 
   // バリデーション関数
   const validateForm = () => {
@@ -378,27 +415,6 @@ export default function JobNewClient({
         return newErrors;
       });
     }
-  };
-
-  // 年収バリデーション関数
-  const validateSalary = (minValue: string, maxValue: string) => {
-    if (minValue && maxValue && minValue !== '' && maxValue !== '') {
-      const min = parseInt(minValue);
-      const max = parseInt(maxValue);
-      if (min > max) {
-        setErrors(prev => ({
-          ...prev,
-          salary: '最大年収は最小年収よりも高く設定してください',
-        }));
-        return;
-      }
-    }
-    // エラーをクリア
-    setErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors.salary;
-      return newErrors;
-    });
   };
 
   // 下書き保存関数（Supabaseに保存・バリデーションなし）
@@ -504,10 +520,10 @@ export default function JobNewClient({
   };
 
   // 編集モードに戻る
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setIsConfirmMode(false);
     setShowErrors(false);
-  };
+  }, []);
 
   // 画像をBase64エンコードする関数
   const encodeImagesToBase64 = async (files: File[]): Promise<any[]> => {
@@ -537,7 +553,7 @@ export default function JobNewClient({
   };
 
   // 送信処理
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // 画像をBase64エンコード
     let encodedImages: any[] = [];
     if (images.length > 0) {
@@ -612,7 +628,38 @@ export default function JobNewClient({
       console.error('Request Error:', error);
       alert('通信エラーが発生しました');
     }
-  };
+  }, [
+    images,
+    group,
+    title,
+    jobDescription,
+    positionSummary,
+    skills,
+    otherRequirements,
+    salaryMin,
+    salaryMax,
+    salaryNote,
+    employmentType,
+    employmentTypeNote,
+    locations,
+    locationNote,
+    workingHours,
+    overtime,
+    overtimeMemo,
+    holidays,
+    jobTypes,
+    industries,
+    selectionProcess,
+    appealPoints,
+    smoke,
+    smokeNote,
+    resumeRequired,
+    memo,
+    publicationType,
+    router,
+    setPermissionError,
+    setShowPermissionError,
+  ]);
 
   return (
     <>

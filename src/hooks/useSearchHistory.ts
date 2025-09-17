@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,7 +26,7 @@ export function useSearchHistory(groupId?: string) {
 
   const supabase = createClient();
 
-  const fetchSearchHistory = async () => {
+  const fetchSearchHistory = useCallback(async () => {
     if (!user) {
       setSearchHistory([]);
       setLoading(false);
@@ -61,7 +61,7 @@ export function useSearchHistory(groupId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, groupId, supabase]);
 
   const updateSavedStatus = async (historyId: string, isSaved: boolean) => {
     try {
@@ -131,7 +131,7 @@ export function useSearchHistory(groupId?: string) {
 
   useEffect(() => {
     fetchSearchHistory();
-  }, [user, groupId]);
+  }, [user, groupId, fetchSearchHistory]);
 
   return {
     searchHistory,

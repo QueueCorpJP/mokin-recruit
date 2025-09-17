@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { changePassword } from './actions';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function PasswordChangePage() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -64,7 +65,7 @@ export default function PasswordChangePage() {
         ]}
         title='パスワード変更'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

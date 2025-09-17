@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers.client';
@@ -614,7 +615,7 @@ export function CompanyTaskSidebar({
           </Button>
 
           <div style={faqLinkStyle}>
-            <img
+            <Image
               src='/images/question.svg'
               alt='プラン比較'
               width={16}
@@ -971,7 +972,7 @@ export function CompanyTaskSidebar({
               }}
               onClick={() => router.push('/company/guide')}
             >
-              <img
+              <Image
                 src='/images/book.svg'
                 alt='ご利用ガイド'
                 width={24}
@@ -997,7 +998,7 @@ export function CompanyTaskSidebar({
               }}
               onClick={() => router.push('/company/faq')}
             >
-              <img
+              <Image
                 src='/images/question.svg'
                 alt='よくある質問'
                 width={24}
@@ -1037,7 +1038,12 @@ export function CompanyTaskSidebar({
 
             onClick={() => router.push('/company/contact')}
           >
-            <img src='/images/consult.svg' alt='お問い合わせ' />
+            <Image
+              src='/images/consult.svg'
+              alt='お問い合わせ'
+              width={24}
+              height={24}
+            />
           </div>
         </div>
       </div>

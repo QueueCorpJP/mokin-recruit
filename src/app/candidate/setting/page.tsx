@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBlockedCompanies } from './ng-company/actions';
 import { getUserSettings, UserSettings } from './actions';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
@@ -76,7 +77,7 @@ export default function SettingsPage() {
         breadcrumbs={[{ label: '各種設定' }]}
         title='各種設定'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

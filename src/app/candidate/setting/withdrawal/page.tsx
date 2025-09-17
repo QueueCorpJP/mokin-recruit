@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
@@ -52,7 +53,7 @@ export default function WithdrawalPage() {
         ]}
         title='退会'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
       <div className='bg-[#f9f9f9] box-border content-stretch flex flex-col gap-10 items-center justify-start pb-20 pt-10 px-4 md:px-20 relative w-full'>

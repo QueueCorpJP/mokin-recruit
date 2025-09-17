@@ -160,7 +160,7 @@ export default function SignupPasswordPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [validatePasswords, userId, router]);
+  }, [validatePasswords, userId, router, password, confirmPassword]);
 
   return (
     <CandidateAuthBackground>

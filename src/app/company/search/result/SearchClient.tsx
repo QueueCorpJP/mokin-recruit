@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
@@ -436,22 +436,10 @@ export default function SearchClient({
   // 検索条件表示テキスト生成 - searchStoreの値が変更されたら再計算
   const searchConditionText = useMemo(() => {
     return generateSearchConditionText(searchStore);
-  }, [
-    searchStore.keyword,
-    searchStore.experienceJobTypes,
-    searchStore.experienceIndustries,
-    searchStore.currentSalaryMin,
-    searchStore.currentSalaryMax,
-    searchStore.desiredLocations,
-    searchStore.desiredJobTypes,
-    searchStore.desiredIndustries,
-    searchStore.ageMin,
-    searchStore.ageMax,
-    searchStore.lastLoginMin,
-  ]);
+  }, [searchStore]);
 
   // 検索実行ハンドラー
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     console.log('🔍 [SearchClient] 検索実行を開始');
 
     if (!user) {
@@ -625,7 +613,7 @@ export default function SearchClient({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, searchStore, router]);
 
   // Hydration完了のマーク
   useEffect(() => {
@@ -637,7 +625,7 @@ export default function SearchClient({
     if (initialSearchParams && initialSearchParams.searchGroup) {
       searchStore.setSearchGroup(initialSearchParams.searchGroup);
     }
-  }, [initialSearchParams]);
+  }, [initialSearchParams, searchStore]);
 
   // 保存された候補者を取得
   useEffect(() => {
@@ -695,7 +683,7 @@ export default function SearchClient({
         isPickup: savedCandidateIds.includes(String(candidate.id)),
       }))
     );
-  }, [savedCandidateIds]);
+  }, [savedCandidateIds, candidates.length]);
 
   // 初期データ読み込み
   useEffect(() => {
@@ -792,7 +780,14 @@ export default function SearchClient({
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
     loadInitialData();
-  }, [isHydrated, authLoading, user]);
+  }, [
+    isHydrated,
+    authLoading,
+    user,
+    initialCandidates,
+    searchParams,
+    searchStore,
+  ]);
 
   // URLパラメータが変更された時の処理
   useEffect(() => {
@@ -801,7 +796,7 @@ export default function SearchClient({
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
     console.log('[DEBUG] URL parameters changed, reloading search params');
-  }, [searchParams, isHydrated]);
+  }, [searchParams, isHydrated, searchStore]);
 
   // 初回のみ外部パラメータで検索実行
   useEffect(() => {
@@ -846,7 +841,7 @@ export default function SearchClient({
       setCandidates(allCandidates);
       setCurrentPage(1);
     }
-  }, [isHydrated, allCandidates]); // 依存関係を最小限に
+  }, [isHydrated, allCandidates, handleSearch, searchParams]); // 依存関係を最小限に
 
   const togglePickup = async (candidateId: string) => {
     const currentGroupId = searchStore.searchGroup;

@@ -41,7 +41,7 @@ export function ScoutServiceSection() {
             届かないスカウトの時代に、
             <br />
             <span className='block  text-[24px] md:text-[28px] lg:text-[32px] leading-[1.6] font-[family-name:var(--font-noto-sans-jp)]'>
-              "いま誰と 比べられているか"が見える新しい仕組みを
+              &quot;いま誰と 比べられているか&quot;が見える新しい仕組みを
             </span>
           </h2>
           {/* ドット装飾: Figmaピクセルパーフェクト対応（12px円, テキストとの間隔16px） */}

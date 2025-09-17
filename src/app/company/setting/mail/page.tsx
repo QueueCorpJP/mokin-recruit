@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendVerificationCode } from './actions';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function MailChangePage() {
   const [email, setEmail] = useState('');
@@ -46,7 +46,7 @@ export default function MailChangePage() {
         ]}
         title='メールアドレス変更'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

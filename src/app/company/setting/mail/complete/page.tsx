@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function MailCompletePage() {
   // コンポーネントマウント時に認証状態を確認（削除ではなく更新確認）
@@ -45,7 +45,7 @@ export default function MailCompletePage() {
         ]}
         title='メールアドレス変更完了'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

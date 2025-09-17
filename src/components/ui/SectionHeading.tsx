@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface SectionHeadingProps {
   /** 画像のsrc（public配下のパス or 絶対URL） */
@@ -45,13 +46,13 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   };
   return (
     <div style={wrapperStyle}>
-      <img
+      <Image
         src={iconSrc}
         alt={iconAlt}
         width={iconWidth}
         height={iconHeight}
         style={{ display: 'block' }}
-        loading="lazy"
+        loading='lazy'
       />
       <span style={headingTextStyle}>{children}</span>
     </div>

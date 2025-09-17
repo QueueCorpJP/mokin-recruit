@@ -4,16 +4,15 @@ import React, { ChangeEvent, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
-import { 
-  type MessageTemplate as ServerMessageTemplate 
-} from './actions';
+import { type MessageTemplate as ServerMessageTemplate } from './actions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Pagination } from '@/components/ui/Pagination';      
+import { Pagination } from '@/components/ui/Pagination';
+import Image from 'next/image';
 
 // Icons
 const MailIcon = () => (
-  <img
+  <Image
     src='/images/mail.svg'
     alt='メッセージテンプレートアイコン'
     width={32}
@@ -21,7 +20,6 @@ const MailIcon = () => (
     style={{ filter: 'brightness(0) invert(1)' }}
   />
 );
-
 
 const DotsMenuIcon = () => (
   <svg
@@ -85,7 +83,11 @@ interface TemplateClientProps {
   companyUserId: string;
 }
 
-export function TemplateClient({ initialMessageTemplates, initialError, companyUserId }: TemplateClientProps) {
+export function TemplateClient({
+  initialMessageTemplates,
+  initialError,
+  companyUserId,
+}: TemplateClientProps) {
   const { user, accessToken, loading: authLoading } = useAuth();
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
@@ -97,7 +99,9 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
   const [error, setError] = useState<string | null>(initialError);
 
   // ServerMessageTemplateをクライアント用のMessageTemplateItemに変換
-  const transformMessageTemplates = (items: ServerMessageTemplate[]): MessageTemplateItem[] => {
+  const transformMessageTemplates = (
+    items: ServerMessageTemplate[]
+  ): MessageTemplateItem[] => {
     return items.map(item => ({
       id: item.id,
       group: item.group_id, // group_idを使用してフィルタリングと統一
@@ -106,25 +110,25 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
       body: item.body,
       date: new Date(item.created_at).toLocaleString('ja-JP', {
         year: 'numeric',
-        month: '2-digit', 
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
       updatedAt: new Date(item.updated_at).toLocaleString('ja-JP', {
         year: 'numeric',
-        month: '2-digit', 
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
       isMenuOpen: false,
     }));
   };
 
-  const [messageTemplates, setMessageTemplates] = useState<MessageTemplateItem[]>(
-    transformMessageTemplates(initialMessageTemplates)
-  );
+  const [messageTemplates, setMessageTemplates] = useState<
+    MessageTemplateItem[]
+  >(transformMessageTemplates(initialMessageTemplates));
 
   const toggleMenu = (id: string) => {
     setMessageTemplates((prev: MessageTemplateItem[]) =>
@@ -136,7 +140,6 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
     );
   };
 
-
   const handleEdit = (item: MessageTemplateItem) => {
     // editページに遷移し、テンプレート情報をクエリパラメータで渡す
     router.push(`/company/template/edit?id=${item.id}`);
@@ -145,7 +148,6 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
       prev.map((i: MessageTemplateItem) => ({ ...i, isMenuOpen: false }))
     );
   };
-
 
   const handleDelete = (item: MessageTemplateItem) => {
     // editページに遷移し、テンプレート情報をクエリパラメータで渡す（編集と同じ処理）
@@ -163,7 +165,7 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
       groupId: item.group,
       groupName: item.groupName,
       templateName: item.templateName,
-      body: item.body
+      body: item.body,
     });
     router.push(`/company/template/new?${params.toString()}`);
     // Close the dropdown menu
@@ -172,7 +174,6 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
     );
   };
 
-
   // グループオプションを生成（重複なし）
   const uniqueGroupsMap = new Map();
   messageTemplates.forEach(item => {
@@ -180,24 +181,27 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
       uniqueGroupsMap.set(item.group, item.groupName);
     }
   });
-  
+
   const groupOptions = [
     { value: '', label: '未選択' },
     ...Array.from(uniqueGroupsMap.entries()).map(([groupId, groupName]) => ({
       value: groupId,
-      label: groupName
-    }))
+      label: groupName,
+    })),
   ];
 
   // フィルタリング済みのメッセージテンプレート
   const filteredMessageTemplates = messageTemplates.filter(item => {
     // グループフィルタ
     if (selectedGroup && item.group !== selectedGroup) return false;
-    
+
     // キーワードフィルタ
-    if (keyword && !item.templateName.toLowerCase().includes(keyword.toLowerCase())) return false;
-    
-    
+    if (
+      keyword &&
+      !item.templateName.toLowerCase().includes(keyword.toLowerCase())
+    )
+      return false;
+
     return true;
   });
 
@@ -283,7 +287,6 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
             </div>
 
             {/* Saved Only Checkbox */}
-          
           </div>
         </div>
       </div>
@@ -300,7 +303,8 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
               onClick={() => {
                 // Redirect to new template page
                 router.push('/company/template/new');
-              }}>
+              }}
+            >
               新規メッセージテンプレート作成
             </Button>
 
@@ -309,7 +313,11 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || totalItems === 0}
-                className={currentPage === 1 || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === 1 || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronLeftIcon />
               </button>
@@ -319,7 +327,11 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalItems === 0}
-                className={currentPage === totalPages || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === totalPages || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronRightIcon />
               </button>
@@ -360,97 +372,103 @@ export function TemplateClient({ initialMessageTemplates, initialError, companyU
           {/* Template Items */}
           <div className='flex flex-col gap-2 mt-2'>
             {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">メッセージテンプレートを読み込んでいます...</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>
+                  メッセージテンプレートを読み込んでいます...
+                </p>
               </div>
             ) : error ? (
-              <div className="text-center py-8">
-                <p className="text-red-500 mb-4">メッセージテンプレートの取得に失敗しました</p>
-                <p className="text-gray-600">{error}</p>
+              <div className='text-center py-8'>
+                <p className='text-red-500 mb-4'>
+                  メッセージテンプレートの取得に失敗しました
+                </p>
+                <p className='text-gray-600'>{error}</p>
               </div>
             ) : currentItems.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">まだ作成したメッセージテンプレートはありません。</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>
+                  まだ作成したメッセージテンプレートはありません。
+                </p>
               </div>
             ) : (
               currentItems.map((item: MessageTemplateItem) => (
-              <div
-                key={item.id}
-                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
-              >
-                {/* Group Badge */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
-                  <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
-                    {item.groupName}
-                  </span>
-                </div>
+                <div
+                  key={item.id}
+                  className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
+                >
+                  {/* Group Badge */}
+                  <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                    <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
+                      {item.groupName}
+                    </span>
+                  </div>
 
-                {/* Template Name */}
-                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.templateName}
-                </div>
+                  {/* Template Name */}
+                  <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[280px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.templateName}
+                  </div>
 
-                {/* Body */}
-                <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.body.length > 18 ? `${item.body.substring(0, 18)}...` : item.body}
-                </div>
+                  {/* Body */}
+                  <div className='w-[200px] min-[1200px]:w-[250px] min-[1300px]:w-[300px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.body.length > 18
+                      ? `${item.body.substring(0, 18)}...`
+                      : item.body}
+                  </div>
 
-                {/* Date */}
-                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
-                  {item.date}
-                </div>
+                  {/* Date */}
+                  <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                    {item.date}
+                  </div>
 
-                {/* Updated Date */}
-                <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
-                  {item.updatedAt}
-                </div>
+                  {/* Updated Date */}
+                  <div className='w-[80px] min-[1200px]:w-[90px] min-[1300px]:w-[100px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px] truncate'>
+                    {item.updatedAt}
+                  </div>
 
-                {/* Menu Button */}
-                <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
-                  <button onClick={() => toggleMenu(item.id)}>
-                    <DotsMenuIcon />
-                  </button>
+                  {/* Menu Button */}
+                  <div className='w-[24px] ml-4 min-[1200px]:ml-6 flex-shrink-0 relative'>
+                    <button onClick={() => toggleMenu(item.id)}>
+                      <DotsMenuIcon />
+                    </button>
 
-                  {/* Dropdown Menu */}
-                  {item.isMenuOpen && (
-                    <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => handleDuplicate(item)}
-                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        複製
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
+                    {/* Dropdown Menu */}
+                    {item.isMenuOpen && (
+                      <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(item)}
+                          className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          複製
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          削除
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               ))
             )}
           </div>
 
           {/* Pagination */}
-          <Pagination 
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
-            className="mt-10"
+            className='mt-10'
           />
         </div>
       </div>
-
-
     </>
   );
 }

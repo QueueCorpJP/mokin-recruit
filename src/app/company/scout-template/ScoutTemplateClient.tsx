@@ -4,16 +4,17 @@ import React, { ChangeEvent, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SelectInput } from '@/components/ui/select-input';
-import { 
+import {
   type ScoutTemplate as ServerScoutTemplate,
-  type JobPosting 
+  type JobPosting,
 } from './actions';
 import { useRouter } from 'next/navigation';
-import { Pagination } from '@/components/ui/Pagination';      
+import { Pagination } from '@/components/ui/Pagination';
+import Image from 'next/image';
 
 // Icons
 const MailIcon = () => (
-  <img
+  <Image
     src='/images/mail.svg'
     alt='メッセージテンプレートアイコン'
     width={32}
@@ -21,7 +22,6 @@ const MailIcon = () => (
     style={{ filter: 'brightness(0) invert(1)' }}
   />
 );
-
 
 const DotsMenuIcon = () => (
   <svg
@@ -76,10 +76,7 @@ const SortUpIcon = () => (
     viewBox='0 0 12 8'
     fill='none'
   >
-    <path
-      d='M6 0L11.1962 7.5H0.803847L6 0Z'
-      fill='#666666'
-    />
+    <path d='M6 0L11.1962 7.5H0.803847L6 0Z' fill='#666666' />
   </svg>
 );
 
@@ -91,10 +88,7 @@ const SortDownIcon = () => (
     viewBox='0 0 12 8'
     fill='none'
   >
-    <path
-      d='M6 8L0.803847 0.5H11.1962L6 8Z'
-      fill='#666666'
-    />
+    <path d='M6 8L0.803847 0.5H11.1962L6 8Z' fill='#666666' />
   </svg>
 );
 
@@ -117,7 +111,13 @@ interface ScoutTemplateClientProps {
   initialError: string | null;
 }
 
-type SortField = 'groupName' | 'templateName' | 'subject' | 'targetJobTitle' | 'createdAt' | 'updatedAt';
+type SortField =
+  | 'groupName'
+  | 'templateName'
+  | 'subject'
+  | 'targetJobTitle'
+  | 'createdAt'
+  | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -125,34 +125,48 @@ interface SortConfig {
   direction: SortDirection;
 }
 
-export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings, initialError }: ScoutTemplateClientProps) {
+export function ScoutTemplateClient({
+  initialScoutTemplates,
+  initialJobPostings,
+  initialError,
+}: ScoutTemplateClientProps) {
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [selectedJob, setSelectedJob] = useState<string>('');
   const [keyword, setKeyword] = useState<string>('');
-  
+
   // クライアントサイドでの認証状態確認
   useEffect(() => {
     const checkClientAuth = async () => {
       try {
         const { createClient } = await import('@/lib/supabase/client');
         const supabase = createClient();
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
         console.log('🖥️ Client-side auth check:', {
-          user: user ? { id: user.id, email: user.email, user_metadata: user.user_metadata } : null,
-          error: error?.message
+          user: user
+            ? {
+                id: user.id,
+                email: user.email,
+                user_metadata: user.user_metadata,
+              }
+            : null,
+          error: error?.message,
         });
-        
+
         // セッション状態も確認
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         console.log('🖥️ Client-side session:', session ? 'exists' : 'none');
-        
       } catch (error) {
         console.error('🖥️ Client auth check error:', error);
       }
     };
-    
+
     checkClientAuth();
   }, []);
   const [currentPage, setCurrentPage] = useState(1);
@@ -162,7 +176,9 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   // ServerScoutTemplateをクライアント用のScoutTemplateItemに変換
-  const transformScoutTemplates = (items: ServerScoutTemplate[]): ScoutTemplateItem[] => {
+  const transformScoutTemplates = (
+    items: ServerScoutTemplate[]
+  ): ScoutTemplateItem[] => {
     return items.map(item => ({
       id: item.id,
       group: item.group_id, // group_idを使用してフィルタリングと統一
@@ -173,17 +189,17 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
       targetJobTitle: item.target_job_title,
       createdAt: new Date(item.created_at).toLocaleString('ja-JP', {
         year: 'numeric',
-        month: '2-digit', 
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
       updatedAt: new Date(item.updated_at).toLocaleString('ja-JP', {
         year: 'numeric',
-        month: '2-digit', 
+        month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       }),
       isMenuOpen: false,
     }));
@@ -202,7 +218,6 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
       )
     );
   };
-
 
   const handleEdit = (item: ScoutTemplateItem) => {
     try {
@@ -228,10 +243,10 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
         templateId: item.id,
         groupId: item.group,
         groupName: item.groupName,
-        templateName: item.templateName
+        templateName: item.templateName,
       });
       router.push(`/company/scout-template/new?${params.toString()}`);
-      
+
       // Close the dropdown menu
       setScoutTemplates((prev: ScoutTemplateItem[]) =>
         prev.map((i: ScoutTemplateItem) => ({ ...i, isMenuOpen: false }))
@@ -260,7 +275,11 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
   // ソート機能
   const handleSort = (field: SortField) => {
     let direction: SortDirection = 'asc';
-    if (sortConfig && sortConfig.field === field && sortConfig.direction === 'asc') {
+    if (
+      sortConfig &&
+      sortConfig.field === field &&
+      sortConfig.direction === 'asc'
+    ) {
       direction = 'desc';
     }
     setSortConfig({ field, direction });
@@ -321,13 +340,13 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
       uniqueGroupsMap.set(item.group, item.groupName);
     }
   });
-  
+
   const groupOptions = [
     { value: '', label: '未選択' },
     ...Array.from(uniqueGroupsMap.entries()).map(([groupId, groupName]) => ({
       value: groupId,
-      label: groupName
-    }))
+      label: groupName,
+    })),
   ];
 
   // 求人オプションを生成
@@ -335,26 +354,30 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
     { value: '', label: 'すべて' },
     ...initialJobPostings.map(job => ({
       value: job.id,
-      label: job.title
-    }))
+      label: job.title,
+    })),
   ];
 
   // フィルタリング済みのスカウトテンプレート
   const filteredScoutTemplates = scoutTemplates.filter(item => {
     // グループフィルタ
     if (selectedGroup && item.group !== selectedGroup) return false;
-    
+
     // 求人フィルタ
     if (selectedJob && item.targetJobId !== selectedJob) return false;
-    
+
     // キーワードフィルタ（テンプレート名と求人タイトルで検索）
     if (keyword) {
       const keywordLower = keyword.toLowerCase();
-      const templateNameMatch = item.templateName.toLowerCase().includes(keywordLower);
-      const jobTitleMatch = item.targetJobTitle.toLowerCase().includes(keywordLower);
+      const templateNameMatch = item.templateName
+        .toLowerCase()
+        .includes(keywordLower);
+      const jobTitleMatch = item.targetJobTitle
+        .toLowerCase()
+        .includes(keywordLower);
       if (!templateNameMatch && !jobTitleMatch) return false;
     }
-    
+
     return true;
   });
 
@@ -421,7 +444,7 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
                 <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap'>
                   対象の求人
                 </span>
-               <SelectInput
+                <SelectInput
                   options={jobOptions}
                   value={selectedJob}
                   onChange={setSelectedJob}
@@ -429,29 +452,28 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
                   className='w-full min-[1200px]:w-60'
                 />
               </div>
-               
             </div>
             <div className='flex gap-4 w-[700px]'>
-                <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap flex items-center'>
-                  テンプレート名、求人タイトルから検索
-                </span>
-                  <Input
-                    type='text'
-                    value={keyword}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setKeyword(e.target.value)
-                    }
-                    placeholder='キーワード検索'
-                    className='bg-white border-[#999999] flex-1 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[8px]'
-                  />
-                  <Button
-                    variant='small-green'
-                    size='figma-small'
-                    className='px-6 py-2'
-                  >
-                    検索
-                  </Button>
-                </div>
+              <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px] whitespace-nowrap flex items-center'>
+                テンプレート名、求人タイトルから検索
+              </span>
+              <Input
+                type='text'
+                value={keyword}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setKeyword(e.target.value)
+                }
+                placeholder='キーワード検索'
+                className='bg-white border-[#999999] flex-1 text-[#323232] text-[16px] tracking-[1.6px] placeholder:text-[#999999] h-auto py-1 rounded-[8px]'
+              />
+              <Button
+                variant='small-green'
+                size='figma-small'
+                className='px-6 py-2'
+              >
+                検索
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -468,7 +490,8 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
               onClick={() => {
                 // Redirect to new search page
                 router.push('/company/scout-template/new');
-              }}>
+              }}
+            >
               新規スカウトテンプレート作成
             </Button>
 
@@ -477,7 +500,11 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || totalItems === 0}
-                className={currentPage === 1 || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === 1 || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronLeftIcon />
               </button>
@@ -487,7 +514,11 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || totalItems === 0}
-                className={currentPage === totalPages || totalItems === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={
+                  currentPage === totalPages || totalItems === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }
               >
                 <ChevronRightIcon />
               </button>
@@ -545,97 +576,99 @@ export function ScoutTemplateClient({ initialScoutTemplates, initialJobPostings,
           {/* Search History Items */}
           <div className='flex flex-col gap-2 mt-2'>
             {loading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴を読み込んでいます...</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>検索履歴を読み込んでいます...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-8">
-                <p className="text-red-500 mb-4">検索履歴の取得に失敗しました</p>
-                <p className="text-gray-600">{error}</p>
+              <div className='text-center py-8'>
+                <p className='text-red-500 mb-4'>
+                  検索履歴の取得に失敗しました
+                </p>
+                <p className='text-gray-600'>{error}</p>
               </div>
             ) : currentItems.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">検索履歴がありません</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>検索履歴がありません</p>
               </div>
             ) : (
               currentItems.map((item: ScoutTemplateItem) => (
-              <div
-                key={item.id}
-                className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
-              >
-                {/* Group Badge */}
-                <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
-                  <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
-                    {item.groupName}
-                  </span>
-                </div>
+                <div
+                  key={item.id}
+                  className='bg-white rounded-[10px] px-10 py-5 flex items-center shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] relative'
+                >
+                  {/* Group Badge */}
+                  <div className='w-[120px] min-[1200px]:w-[140px] min-[1300px]:w-[164px] flex-shrink-0 bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-3 min-[1200px]:px-5 py-1 flex items-center justify-center'>
+                    <span className='text-white text-[14px] font-bold tracking-[1.4px] truncate'>
+                      {item.groupName}
+                    </span>
+                  </div>
 
-                {/* Template Name */}
-                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.templateName}
-                </div>
+                  {/* Template Name */}
+                  <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.templateName}
+                  </div>
 
-                {/* Subject */}
-                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.subject}
-                </div>
+                  {/* Subject */}
+                  <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.subject}
+                  </div>
 
-                {/* Target Job */}
-                <div className='w-[160px] min-[1200px]:w-[180px] min-[1300px]:w-[200px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
-                  {item.targetJobTitle}
-                </div>
+                  {/* Target Job */}
+                  <div className='w-[160px] min-[1200px]:w-[180px] min-[1300px]:w-[200px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] min-[1200px]:text-[16px] font-bold tracking-[1.4px] min-[1200px]:tracking-[1.6px] truncate'>
+                    {item.targetJobTitle}
+                  </div>
 
-                {/* Created Date */}
-                <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
-                  {item.createdAt}
-                </div>
+                  {/* Created Date */}
+                  <div className='w-[140px] min-[1200px]:w-[160px] min-[1300px]:w-[180px] ml-4 min-[1200px]:ml-6 flex-shrink-0 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                    {item.createdAt}
+                  </div>
 
-                {/* Updated Date */}
-                <div className='flex-1 ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
-                  {item.updatedAt}
-                </div>
+                  {/* Updated Date */}
+                  <div className='flex-1 ml-4 min-[1200px]:ml-6 text-[#323232] text-[14px] font-medium tracking-[1.4px]'>
+                    {item.updatedAt}
+                  </div>
 
-                {/* Menu Button */}
-                <div className='w-[24px] flex-shrink-0 relative'>
-                  <button onClick={() => toggleMenu(item.id)}>
-                    <DotsMenuIcon />
-                  </button>
+                  {/* Menu Button */}
+                  <div className='w-[24px] flex-shrink-0 relative'>
+                    <button onClick={() => toggleMenu(item.id)}>
+                      <DotsMenuIcon />
+                    </button>
 
-                  {/* Dropdown Menu */}
-                  {item.isMenuOpen && (
-                    <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => handleDuplicate(item)}
-                        className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        複製
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item)}
-                        className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
-                      >
-                        削除
-                      </button>
-                    </div>
-                  )}
+                    {/* Dropdown Menu */}
+                    {item.isMenuOpen && (
+                      <div className='absolute top-5 left-0 bg-white rounded-[5px] shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1)] p-2 min-w-[80px] z-10'>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(item)}
+                          className='block w-full text-left text-[#323232] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          複製
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className='block w-full text-left text-[#ff5b5b] text-[14px] font-medium tracking-[1.4px] py-1 hover:bg-gray-50'
+                        >
+                          削除
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               ))
             )}
           </div>
 
           {/* Pagination */}
-          <Pagination 
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
-            className="mt-10"
+            className='mt-10'
           />
         </div>
       </div>

@@ -64,7 +64,7 @@ export const useRealTimeMessages = (
     };
 
     loadMessages();
-  }, [roomId]);
+  }, [roomId, candidateId]);
 
   // リアルタイム購読設定
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 // import NewJobHeader from '@/app/company/job/NewJobHeader';
@@ -266,7 +266,7 @@ export default function AdminJobNewClient({
   }, [salaryMin, salaryMax]);
 
   // 必須項目が全て入力されているかチェックする関数
-  const isFormValid = () => {
+  const isFormValid = useCallback(() => {
     // グループ選択
     if (!group) return false;
 
@@ -313,7 +313,23 @@ export default function AdminJobNewClient({
     if (!appealPoints || appealPoints.length === 0) return false;
 
     return true;
-  };
+  }, [
+    group,
+    title,
+    jobTypes,
+    industries,
+    jobDescription,
+    positionSummary,
+    skills,
+    otherRequirements,
+    salaryMin,
+    salaryMax,
+    locations,
+    workingHours,
+    holidays,
+    selectionProcess,
+    appealPoints,
+  ]);
 
   // バリデーション関数
   const validateForm = () => {
@@ -468,10 +484,10 @@ export default function AdminJobNewClient({
   };
 
   // 編集モードに戻る
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setIsConfirmMode(false);
     setShowErrors(false);
-  };
+  }, []);
 
   // 画像をBase64エンコードする関数
   const encodeImagesToBase64 = async (files: File[]): Promise<any[]> => {
@@ -501,7 +517,7 @@ export default function AdminJobNewClient({
   };
 
   // 送信処理
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // 画像をBase64エンコード
     let encodedImages: any[] = [];
     if (images.length > 0) {
@@ -562,7 +578,36 @@ export default function AdminJobNewClient({
       console.error('Request Error:', error);
       alert('通信エラーが発生しました');
     }
-  };
+  }, [
+    images,
+    group,
+    title,
+    jobDescription,
+    positionSummary,
+    skills,
+    otherRequirements,
+    salaryMin,
+    salaryMax,
+    salaryNote,
+    employmentType,
+    employmentTypeNote,
+    locations,
+    locationNote,
+    workingHours,
+    overtime,
+    overtimeMemo,
+    holidays,
+    jobTypes,
+    industries,
+    selectionProcess,
+    appealPoints,
+    smoke,
+    smokeNote,
+    resumeRequired,
+    memo,
+    publicationType,
+    router,
+  ]);
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
@@ -601,7 +646,7 @@ export default function AdminJobNewClient({
       window.removeEventListener('job-new-back', handleJobNewBack);
       window.removeEventListener('job-new-create', handleJobNewCreate);
     };
-  }, [isConfirmMode, handleBack, handleSubmit]);
+  }, [isConfirmMode, handleBack, handleSubmit, isFormValid]);
 
   return (
     <>

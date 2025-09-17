@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import DOMPurify from 'dompurify';
 import { useAdminAuth } from '@/hooks/useClientAuth';
@@ -160,81 +160,9 @@ export default function EditPreviewPage() {
         handleSaveArticleDirect
       );
     };
-  }, [router, isAdmin]);
+  }, [router, isAdmin, handleBack, handleSave, handleSaveClick]);
 
-  const handleSave = async (status?: 'DRAFT' | 'PUBLISHED') => {
-    if (!previewData) return;
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      if (!previewData.id) {
-        throw new Error('記事IDが見つかりません');
-      }
-
-      const formData = new FormData();
-      formData.append('id', previewData.id);
-      formData.append('title', previewData.title);
-      formData.append(
-        'categoryId',
-        previewData.categoryIds && previewData.categoryIds.length > 0
-          ? previewData.categoryIds[0]
-          : ''
-      );
-      formData.append(
-        'tags',
-        Array.isArray(previewData.tags)
-          ? previewData.tags.join(', ')
-          : previewData.tags
-      );
-      formData.append('content', previewData.content);
-      formData.append('status', status || currentStatus);
-
-      // サムネイル処理
-      if (previewData.thumbnail) {
-        if (previewData.thumbnailName) {
-          // 新しいファイルがある場合
-          try {
-            const thumbnailFile = await fetch(previewData.thumbnail)
-              .then(res => res.blob())
-              .then(
-                blob =>
-                  new File([blob], previewData.thumbnailName!, {
-                    type: blob.type,
-                  })
-              );
-            formData.append('thumbnail', thumbnailFile);
-          } catch (error) {
-            // サムネイル画像の処理に失敗
-            console.warn('サムネイル画像の処理に失敗しました:', error);
-          }
-        } else {
-          // 既存の画像URLの場合
-          formData.append('thumbnail_url', previewData.thumbnail);
-        }
-      }
-
-      // actions.tsのsaveArticle関数を使用して更新
-      const { saveArticle } = await import('../actions');
-      await saveArticle(formData);
-
-      // 成功時の処理
-      setSavedArticleId(previewData.id);
-      sessionStorage.removeItem('previewArticle');
-      setShowSuccessModal(true);
-    } catch (error) {
-      // 記事の保存に失敗
-      console.error('記事の保存に失敗:', error);
-      setError(
-        error instanceof Error ? error.message : '記事の保存に失敗しました'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBack = async () => {
+  const handleBack = useCallback(async () => {
     // Update the status in sessionStorage before going back
     if (previewData) {
       const updatedData = { ...previewData, status: currentStatus };
@@ -243,7 +171,86 @@ export default function EditPreviewPage() {
     }
     // 編集ページに記事IDと共に戻る
     router.push(`/admin/media/edit?id=${previewData?.id}`);
-  };
+  }, [previewData, currentStatus, router]);
+
+  const handleSave = useCallback(
+    async (status?: 'DRAFT' | 'PUBLISHED') => {
+      if (!previewData) return;
+
+      setIsLoading(true);
+      setError('');
+
+      try {
+        if (!previewData.id) {
+          throw new Error('記事IDが見つかりません');
+        }
+
+        const formData = new FormData();
+        formData.append('id', previewData.id);
+        formData.append('title', previewData.title);
+        formData.append(
+          'categoryId',
+          previewData.categoryIds && previewData.categoryIds.length > 0
+            ? previewData.categoryIds[0]
+            : ''
+        );
+        formData.append(
+          'tags',
+          Array.isArray(previewData.tags)
+            ? previewData.tags.join(', ')
+            : previewData.tags
+        );
+        formData.append('content', previewData.content);
+        formData.append('status', status || currentStatus);
+
+        // サムネイル処理
+        if (previewData.thumbnail) {
+          if (previewData.thumbnailName) {
+            // 新しいファイルがある場合
+            try {
+              const thumbnailFile = await fetch(previewData.thumbnail)
+                .then(res => res.blob())
+                .then(
+                  blob =>
+                    new File([blob], previewData.thumbnailName!, {
+                      type: blob.type,
+                    })
+                );
+              formData.append('thumbnail', thumbnailFile);
+            } catch (error) {
+              // サムネイル画像の処理に失敗
+              console.warn('サムネイル画像の処理に失敗しました:', error);
+            }
+          } else {
+            // 既存の画像URLの場合
+            formData.append('thumbnail_url', previewData.thumbnail);
+          }
+        }
+
+        // actions.tsのsaveArticle関数を使用して更新
+        const { saveArticle } = await import('../actions');
+        await saveArticle(formData);
+
+        // 成功時の処理
+        setSavedArticleId(previewData.id);
+        sessionStorage.removeItem('previewArticle');
+        setShowSuccessModal(true);
+      } catch (error) {
+        // 記事の保存に失敗
+        console.error('記事の保存に失敗:', error);
+        setError(
+          error instanceof Error ? error.message : '記事の保存に失敗しました'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [previewData, currentStatus]
+  );
+
+  const handleSaveClick = useCallback(() => {
+    handleSave();
+  }, [handleSave]);
 
   const handleBackToList = () => {
     setShowSuccessModal(false);
@@ -284,10 +291,6 @@ export default function EditPreviewPage() {
     month: '2-digit',
     day: '2-digit',
   });
-
-  const handleSaveClick = () => {
-    handleSave();
-  };
 
   return (
     <div className='min-h-screen bg-[#F9F9F9]'>

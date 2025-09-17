@@ -149,7 +149,7 @@ function CandidateSearchClient({
         }
       }
     }
-  }, [initialized, initialSearchConditions]);
+  }, [initialized, initialSearchConditions, executeSearch]);
 
   // （URL同期は useCandidateSearch 側で実施）
 
