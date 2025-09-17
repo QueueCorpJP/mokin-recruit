@@ -47,9 +47,9 @@ export function HeroSection() {
     <div className='relative w-full'>
       {/* Hero Section */}
       <div className='relative w-full h-auto'>
-        <div className='w-[100%] h-auto flex block mx-auto justify-center'>
+        <div className='w-[100%] h-auto block mx-auto'>
           {/* モバイル用画像 */}
-          <div className='block md:hidden relative w-full aspect-[375/300]'>
+          <div className='block md:hidden relative w-full aspect-[375/770]'>
             <Image
               src='/sm_company_back.png'
               alt='hero'
@@ -69,17 +69,17 @@ export function HeroSection() {
             />
           </div>
         </div>
-        <div className='absolute inset-0 flex md:items-center items-start justify-start p-[20px] sm:p-[40px] md:p-[80px] '>
+        <div className='absolute inset-0 flex md:items-center items-start justify-start p-[20px] sm:p-[40px] md:p-[60px] lg:p-[80px] '>
           <div className='flex flex-col items-start justify-start gap-[24px] text-left w-full md:w-auto'>
             {/* Title & Subtitle */}
             <div className='text-white w-full md:w-auto h-auto'>
-              <h1 className='text-[31px] md:text-[44px] leading-[1.6] tracking-widest font-bold text-left mb-2 md:mb-4'>
-              職歴だけでは届かない、
-              <br />
-              <span className='text-[#FFF6A9] '>
-              志向に深く刺さるスカウト
-              </span>
-              を。
+              <h1 className='text-[31px] md:text-[38px] lg:text-[44px] leading-[1.6] tracking-widest font-bold text-left mb-2 md:mb-4'>
+                職歴だけでは届かない、
+                <br />
+                <span className='text-[#FFF6A9] '>
+                  志向に深く刺さるスカウト
+                </span>
+                を。
               </h1>
               <div className=''>
                 <p
@@ -87,14 +87,13 @@ export function HeroSection() {
     text-white
     text-left
     font-['Noto_Sans_JP']
-    text-[16px] md:text-[20px]
+    text-[16px] md:text-[18px] lg:text-[20px]
     font-bold
     leading-[200%]
     tracking-[1.6px]
   "
                 >
-                 志向・選考状況・比較企業を可視化し、“今”だから届く即戦力へアプローチ。
-                 
+                  志向・選考状況・比較企業を可視化し、"今"だから届く即戦力へアプローチ。
                 </p>
               </div>
             </div>
@@ -108,11 +107,19 @@ export function HeroSection() {
     shadow-[0px_5px_10px_0px_rgba(0,0,0,0.15)]
     font-bold text-[14px] tracking-[1.4px] leading-[2] font-['Noto_Sans_JP']
     min-w-[160px] max-w-[169px] px-[auto] py-[14px]
-    md:min-w-auto md:max-w-none md:px-10 md:py-3.5 md:flex-none md:gap-2.5 
+    md:min-w-[180px] md:max-w-[180px] md:px-8 md:py-3.5 md:flex-none md:gap-2.5
+    lg:min-w-auto lg:max-w-none lg:px-10 lg:py-3.5 lg:flex-none lg:gap-2.5
     transition-all duration-200 hover:bg-[linear-gradient(to_right_top,#EEAB02,#E1CA11)]
   "
               >
-                <img src="/images/files.svg" alt="files" width={20} height={20} loading="lazy" className='flex-shrink-0' />
+                <img
+                  src='/images/files.svg'
+                  alt='files'
+                  width={20}
+                  height={20}
+                  loading='lazy'
+                  className='flex-shrink-0'
+                />
                 <span className='truncate'>資料請求</span>
               </button>
 
@@ -125,7 +132,8 @@ export function HeroSection() {
    mb-[0px]
     min-w-[160px] max-w-[160px] w-full px-[40px] py-[14px]
     gap-[0px]
-    md:min-w-[205px] md:px-10 md:py-3.5 md:gap-2.5 md:flex-none
+    md:min-w-[180px] md:max-w-[180px] md:px-8 md:py-3.5 md:gap-2.5 md:flex-none
+    lg:min-w-[205px] lg:px-10 lg:py-3.5 lg:gap-2.5 lg:flex-none
     transition-colors duration-200 hover:bg-white/30
   '
               >

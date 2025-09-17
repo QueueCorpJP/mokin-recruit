@@ -7,7 +7,9 @@ import { CandidateRoom, CandidateMessage } from '@/types/candidate-message';
 /**
  * 候補者のルーム一覧を取得（簡素化版）
  */
-export async function getCandidateRooms(candidateId: string): Promise<CandidateRoom[]> {
+export async function getCandidateRooms(
+  candidateId: string
+): Promise<CandidateRoom[]> {
   try {
     // 候補者認証チェック
     const user = await requireCandidateAuth();
@@ -34,7 +36,8 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
     // 候補者が参加しているルーム一覧を取得
     const { data: participantRooms, error: participantError } = await supabase
       .from('room_participants')
-      .select(`
+      .select(
+        `
         room_id,
         rooms!inner(
           id,
@@ -44,7 +47,8 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
             title
           )
         )
-      `)
+      `
+      )
       .eq('candidate_id', candidateId)
       .eq('participant_type', 'CANDIDATE');
 
@@ -62,7 +66,8 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
     // 各ルームの企業担当者情報を取得
     const { data: companyParticipants, error: companyError } = await supabase
       .from('room_participants')
-      .select(`
+      .select(
+        `
         room_id,
         company_users(
           id,
@@ -74,7 +79,8 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
             )
           )
         )
-      `)
+      `
+      )
       .in('room_id', roomIds)
       .eq('participant_type', 'COMPANY_USER');
 
@@ -85,12 +91,14 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
     // 各ルームの最新メッセージを取得
     const { data: latestMessages, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         room_id,
         content,
         created_at,
         status
-      `)
+      `
+      )
       .in('room_id', roomIds)
       .order('created_at', { ascending: false });
 
@@ -111,48 +119,62 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
     }
 
     // データを組み立て
-    const rooms: CandidateRoom[] = participantRooms.map((pr: any) => {
-      const roomId = pr.room_id;
-      const room = pr.rooms;
+    const rooms: CandidateRoom[] = participantRooms
+      .map((pr: any) => {
+        const roomId = pr.room_id;
+        const room = pr.rooms;
 
-      // 企業情報を取得
-      const companyParticipant = companyParticipants?.find((cp: any) => cp.room_id === roomId);
-      const companyUser = Array.isArray(companyParticipant?.company_users) ? companyParticipant?.company_users[0] : companyParticipant?.company_users;
-      const companyName = companyUser?.company_groups?.[0]?.company_accounts?.[0]?.company_name || 
-                         `${companyUser?.last_name || ''} ${companyUser?.first_name || ''}`.trim() || 
-                         '企業担当者';
+        // 企業情報を取得
+        const companyParticipant = companyParticipants?.find(
+          (cp: any) => cp.room_id === roomId
+        );
+        const companyUser = Array.isArray(companyParticipant?.company_users)
+          ? companyParticipant?.company_users[0]
+          : companyParticipant?.company_users;
+        const companyName =
+          companyUser?.company_groups?.[0]?.company_accounts?.[0]
+            ?.company_name ||
+          `${companyUser?.last_name || ''} ${companyUser?.first_name || ''}`.trim() ||
+          '企業担当者';
 
-      // NG企業チェック - company_nameがブロックリストに含まれている場合は除外
-      if (blockedCompanyNames.includes(companyName)) {
-        return null;
-      }
+        // NG企業チェック - company_nameがブロックリストに含まれている場合は除外
+        if (blockedCompanyNames.includes(companyName)) {
+          return null;
+        }
 
-      // 最新メッセージ
-      const roomMessages = latestMessages?.filter((m: any) => m.room_id === roomId) || [];
-      const latestMessage = roomMessages[0];
+        // 最新メッセージ
+        const roomMessages =
+          latestMessages?.filter((m: any) => m.room_id === roomId) || [];
+        const latestMessage = roomMessages[0];
 
-      // 未読数
-      const unreadCount = unreadCounts?.filter((uc: any) => uc.room_id === roomId).length || 0;
+        // 未読数
+        const unreadCount =
+          unreadCounts?.filter((uc: any) => uc.room_id === roomId).length || 0;
 
-      return {
-        id: roomId,
-        companyGroupId: (companyUser?.company_groups?.[0] as any)?.id || '',
-        companyName,
-        groupName: (companyUser?.company_groups?.[0] as any)?.group_name || 'グループ未設定',
-        jobTitle: room?.job_postings?.title || '求人情報なし',
-        jobPostingId: room?.job_postings?.id || '',
-        lastMessage: latestMessage?.content || '',
-        lastMessageTime: latestMessage ? new Date(latestMessage.created_at).toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        }) : '',
-        unreadCount,
-        isUnread: unreadCount > 0,
-      };
-    }).filter(room => room !== null); // NG企業を除外
+        return {
+          id: roomId,
+          companyGroupId: (companyUser?.company_groups?.[0] as any)?.id || '',
+          companyName,
+          groupName:
+            (companyUser?.company_groups?.[0] as any)?.group_name ||
+            'グループ未設定',
+          jobTitle: room?.job_postings?.title || '求人情報なし',
+          jobPostingId: room?.job_postings?.id || '',
+          lastMessage: latestMessage?.content || '',
+          lastMessageTime: latestMessage
+            ? new Date(latestMessage.created_at).toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : '',
+          unreadCount,
+          isUnread: unreadCount > 0,
+        };
+      })
+      .filter(room => room !== null); // NG企業を除外
 
     return rooms;
   } catch (error) {
@@ -164,7 +186,10 @@ export async function getCandidateRooms(candidateId: string): Promise<CandidateR
 /**
  * 特定のルームのメッセージ一覧を取得（候補者用簡素化版）
  */
-export async function getCandidateRoomMessages(roomId: string, candidateId: string): Promise<CandidateMessage[]> {
+export async function getCandidateRoomMessages(
+  roomId: string,
+  candidateId: string
+): Promise<CandidateMessage[]> {
   try {
     // 候補者認証チェック
     const user = await requireCandidateAuth();
@@ -175,9 +200,12 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
 
     const supabase = getSupabaseAdminClient();
 
+    console.log('[DEBUG] Getting messages for room:', roomId);
+
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         id,
         sender_type,
         sender_candidate_id,
@@ -192,44 +220,59 @@ export async function getCandidateRoomMessages(roomId: string, candidateId: stri
           first_name,
           last_name
         )
-      `)
+      `
+      )
       .eq('room_id', roomId)
       .order('created_at', { ascending: true });
+
+    console.log('[DEBUG] Messages query result:', {
+      roomId,
+      messageCount: messagesData?.length || 0,
+      error: messagesError,
+      sampleMessage: messagesData?.[0],
+    });
 
     if (messagesError) {
       console.error('Error fetching room messages:', messagesError);
       return [];
     }
 
-    const messages: CandidateMessage[] = (messagesData || []).map((msg: any) => {
-      const isCandidate = msg.sender_type === 'CANDIDATE';
-      const isOwnMessage = isCandidate && msg.sender_candidate_id === candidateId;
-      
-      let senderName = '';
-      if (isCandidate) {
-        const candidate = msg.candidates;
-        senderName = candidate ? `${candidate.last_name} ${candidate.first_name}`.trim() : '候補者';
-      } else {
-        const companyUser = msg.company_users;
-        senderName = companyUser ? `${companyUser.last_name} ${companyUser.first_name}`.trim() : '企業担当者';
-      }
+    const messages: CandidateMessage[] = (messagesData || []).map(
+      (msg: any) => {
+        const isCandidate = msg.sender_type === 'CANDIDATE';
+        const isOwnMessage =
+          isCandidate && msg.sender_candidate_id === candidateId;
 
-      return {
-        id: String(msg.id),
-        roomId,
-        content: msg.content || '',
-        senderType: msg.sender_type === 'CANDIDATE' ? 'CANDIDATE' : 'COMPANY',
-        senderName,
-        isOwnMessage,
-        createdAt: new Date(msg.created_at).toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-      };
-    });
+        let senderName = '';
+        if (isCandidate) {
+          const candidate = msg.candidates;
+          senderName = candidate
+            ? `${candidate.last_name} ${candidate.first_name}`.trim()
+            : '候補者';
+        } else {
+          const companyUser = msg.company_users;
+          senderName = companyUser
+            ? `${companyUser.last_name} ${companyUser.first_name}`.trim()
+            : '企業担当者';
+        }
+
+        return {
+          id: String(msg.id),
+          roomId,
+          content: msg.content || '',
+          senderType: msg.sender_type === 'CANDIDATE' ? 'CANDIDATE' : 'COMPANY',
+          senderName,
+          isOwnMessage,
+          createdAt: new Date(msg.created_at).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        };
+      }
+    );
 
     return messages;
   } catch (error) {
@@ -256,16 +299,14 @@ export async function sendCandidateMessage(
 
     const supabase = getSupabaseAdminClient();
 
-    const { error: messageError } = await supabase
-      .from('messages')
-      .insert({
-        room_id: roomId,
-        sender_type: 'CANDIDATE',
-        sender_candidate_id: candidateId,
-        message_type: 'GENERAL',
-        content,
-        status: 'SENT',
-      });
+    const { error: messageError } = await supabase.from('messages').insert({
+      room_id: roomId,
+      sender_type: 'CANDIDATE',
+      sender_candidate_id: candidateId,
+      message_type: 'GENERAL',
+      content,
+      status: 'SENT',
+    });
 
     if (messageError) {
       console.error('Error sending candidate message:', messageError);

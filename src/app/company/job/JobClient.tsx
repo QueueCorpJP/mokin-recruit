@@ -51,7 +51,7 @@ const statusColors: Record<JobStatus, string> = {
 
 interface JobClientProps {
   initialJobs: JobPosting[];
-  initialGroups: {id: string; group_name: string; description: string}[];
+  initialGroups: { id: string; group_name: string; description: string }[];
   initialConditions: {
     status: string;
     groupId: string;
@@ -60,13 +60,19 @@ interface JobClientProps {
   };
 }
 
-export default function JobClient({ initialJobs, initialGroups, initialConditions }: JobClientProps) {
+export default function JobClient({
+  initialJobs,
+  initialGroups,
+  initialConditions,
+}: JobClientProps) {
   const router = useRouter();
 
   // 状態管理
   const [jobs, setJobs] = useState<JobPosting[]>(initialJobs);
   const [groups, setGroups] = useState(initialGroups);
-  const [selectedStatus, setSelectedStatus] = useState(initialConditions.status);
+  const [selectedStatus, setSelectedStatus] = useState(
+    initialConditions.status
+  );
   const [selectedGroup, setSelectedGroup] = useState(initialConditions.groupId);
   const [selectedScope, setSelectedScope] = useState(initialConditions.scope);
   const [searchKeyword, setSearchKeyword] = useState(initialConditions.search);
@@ -85,8 +91,8 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
     { value: 'すべて', label: 'すべて' },
     ...groups.map(group => ({
       value: group.id,
-      label: group.group_name
-    }))
+      label: group.group_name,
+    })),
   ];
 
   // propsの変更を監視
@@ -102,11 +108,15 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
 
   const updateSearchParams = (params: Record<string, string>) => {
     const searchParams = new URLSearchParams();
-    
-    if (params.status && params.status !== 'すべて') searchParams.set('status', params.status);
-    if (params.groupId && params.groupId !== 'すべて') searchParams.set('groupId', params.groupId);
-    if (params.scope && params.scope !== 'すべて') searchParams.set('scope', params.scope);
-    if (params.search && params.search.trim()) searchParams.set('search', params.search.trim());
+
+    if (params.status && params.status !== 'すべて')
+      searchParams.set('status', params.status);
+    if (params.groupId && params.groupId !== 'すべて')
+      searchParams.set('groupId', params.groupId);
+    if (params.scope && params.scope !== 'すべて')
+      searchParams.set('scope', params.scope);
+    if (params.search && params.search.trim())
+      searchParams.set('search', params.search.trim());
 
     const queryString = searchParams.toString();
     router.push(`/company/job${queryString ? `?${queryString}` : ''}`);
@@ -119,7 +129,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
       status,
       groupId: selectedGroup,
       scope: selectedScope,
-      search: searchKeyword
+      search: searchKeyword,
     });
   };
 
@@ -129,7 +139,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
       status: selectedStatus,
       groupId,
       scope: selectedScope,
-      search: searchKeyword
+      search: searchKeyword,
     });
   };
 
@@ -139,7 +149,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
       status: selectedStatus,
       groupId: selectedGroup,
       scope,
-      search: searchKeyword
+      search: searchKeyword,
     });
   };
 
@@ -149,7 +159,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
       status: selectedStatus,
       groupId: selectedGroup,
       scope: selectedScope,
-      search: searchKeyword
+      search: searchKeyword,
     });
   };
 
@@ -178,10 +188,10 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
   const handleDuplicateJob = async (jobId: string) => {
     try {
       const result = await getJobForEdit(jobId);
-      
+
       if (result.success && result.data) {
         const originalJob = result.data;
-        
+
         // 複製データを作成
         const duplicateData = {
           ...originalJob,
@@ -190,10 +200,13 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
           createdAt: undefined,
           updatedAt: undefined,
           publishedAt: undefined,
-          status: 'DRAFT'
+          status: 'DRAFT',
         };
-        
-        sessionStorage.setItem('duplicateJobData', JSON.stringify(duplicateData));
+
+        sessionStorage.setItem(
+          'duplicateJobData',
+          JSON.stringify(duplicateData)
+        );
         router.push('/company/job/new');
       } else {
         console.error('求人データの取得に失敗しました:', result.error);
@@ -209,7 +222,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
   const handleDeleteJob = async (jobId: string) => {
     try {
       const result = await deleteJob(jobId);
-      
+
       if (result.success) {
         // ページを再読み込みして最新データを取得
         router.refresh();
@@ -226,7 +239,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
   // ポップアップの表示状態と対象jobId
   const [popupJobId, setPopupJobId] = useState<string | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
-  
+
   // 求人削除説明の表示状態
   const [showDeleteInfo, setShowDeleteInfo] = useState(false);
 
@@ -403,10 +416,10 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
               {/* 右側まとめ（中央＋右） */}
               <div className='flex gap-3 items-center w-auto flex-shrink-0'>
                 {/* 中央：求人の削除について */}
-                <div 
+                <div
                   className={`bg-[#F0F9F3] rounded-[8px] p-4 w-[608px] transition-all duration-[600ms] ease-in-out ${
-                    showDeleteInfo 
-                      ? 'opacity-100 translate-y-0 scale-100' 
+                    showDeleteInfo
+                      ? 'opacity-100 translate-y-0 scale-100'
                       : 'opacity-0 translate-y-[-10px] scale-95 pointer-events-none'
                   }`}
                   style={{ boxShadow: '0px 0px 20px 0px rgba(0, 0, 0, 0.1)' }}
@@ -428,7 +441,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                       <PaginationArrow direction='left' />
                     </button>
                     <span className='text-[#323232] text-xs font-bold'>
-                      {displayedJobs.length > 0 
+                      {displayedJobs.length > 0
                         ? `${(currentPage - 1) * itemsPerPage + 1}〜${Math.min(currentPage * itemsPerPage, jobs.length)}件 / ${jobs.length}件`
                         : '0件'}
                     </span>
@@ -439,7 +452,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                       <PaginationArrow direction='right' />
                     </button>
                   </div>
-                  <button 
+                  <button
                     className='flex items-center gap-1 text-[#999999] text-xs font-bold focus:outline-none'
                     onMouseEnter={() => setShowDeleteInfo(true)}
                     onMouseLeave={() => setShowDeleteInfo(false)}
@@ -606,10 +619,15 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                 maxWidth: '100%',
                               }}
                             >
-                              {job.status === 'CLOSED' ? '公開停止' :
-                               job.publicationType === 'public' ? '一般公開' :
-                               job.publicationType === 'members' ? '登録会員限定' :
-                               job.publicationType === 'scout' ? 'スカウト限定' : '一般公開'}
+                              {job.status === 'CLOSED'
+                                ? '公開停止'
+                                : job.publicationType === 'public'
+                                  ? '一般公開'
+                                  : job.publicationType === 'members'
+                                    ? '登録会員限定'
+                                    : job.publicationType === 'scout'
+                                      ? 'スカウト限定'
+                                      : '一般公開'}
                             </span>
                           </div>
                         </div>
@@ -632,33 +650,32 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                         {/* 公開日 */}
                         <div className='w-[70px] text-[#323232] text-xs flex items-center justify-center text-center'>
                           {job.publishedAt
-                            ? new Date(job.publishedAt)
-                                .toLocaleDateString('ja-JP', {
+                            ? new Date(job.publishedAt).toLocaleDateString(
+                                'ja-JP',
+                                {
                                   year: 'numeric',
                                   month: '2-digit',
                                   day: '2-digit',
-                                })
-                                // Removed pointless .replace(/\//g, '/') which had no effect
-                            : 'ー'}
+                                }
+                              )
+                            : // Removed pointless .replace(/\//g, '/') which had no effect
+                              'ー'}
                         </div>
 
                         {/* 最終更新日 */}
                         <div className='w-[76px] text-[#323232] text-xs flex items-center justify-center text-center'>
-                          {new Date(job.updatedAt)
-                            .toLocaleDateString('ja-JP', {
-                              year: 'numeric',
-                              month: '2-digit',
-                              day: '2-digit',
-                            })
-                            /* Removed pointless .replace(/\//g, '/') which had no effect */
-                            )}
+                          {new Date(job.updatedAt).toLocaleDateString('ja-JP', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                          })}
                         </div>
 
                         {/* アクション */}
                         <div className='col-span-2 flex items-center gap-2 relative'>
                           <button
                             className='text-[#DCDCDC] hover:text-[#323232] rounded-full p-2'
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault();
                               e.stopPropagation();
                               setPopupJobId(job.id);
@@ -680,7 +697,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                   height: '22px',
                                   padding: 0,
                                 }}
-                                onClick={(e) => {
+                                onClick={e => {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   handleDuplicateJob(job.id);
@@ -699,7 +716,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                                   padding: 0,
                                   marginTop: '4px',
                                 }}
-                                onClick={(e) => {
+                                onClick={e => {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   handleDeleteJob(job.id);
@@ -719,7 +736,7 @@ export default function JobClient({ initialJobs, initialGroups, initialCondition
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
-                    className="mt-10"
+                    className='mt-10'
                   />
                 </>
               )}

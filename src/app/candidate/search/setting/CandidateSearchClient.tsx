@@ -3,7 +3,7 @@
 import { SearchIcon } from 'lucide-react';
 import { Star } from 'lucide-react';
 import { BaseInput } from '@/components/ui/base-input';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useCandidateSearch } from './useCandidateSearch';
 
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -45,6 +45,10 @@ function CandidateSearchClient({
   initialSearchConditions,
 }: CandidateSearchClientProps) {
   const router = useRouter();
+
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -611,11 +615,15 @@ function CandidateSearchClient({
                       isOpen={industryModalOpen}
                       onClose={() => setIndustryModalOpen(false)}
                       primaryButtonText='決定'
-                      onPrimaryAction={() => setIndustryModalOpen(false)}
+                      onPrimaryAction={() => {
+                        industryModalRef.current?.handleConfirm();
+                        setIndustryModalOpen(false);
+                      }}
                       width='800px'
                       height='680px'
                     >
                       <IndustryModal
+                        ref={industryModalRef}
                         selectedIndustries={selectedIndustries}
                         onIndustriesChange={setSelectedIndustries}
                         onClose={() => setIndustryModalOpen(false)}
@@ -629,13 +637,18 @@ function CandidateSearchClient({
                       isOpen={jobTypeModalOpen}
                       onClose={() => setJobTypeModalOpen(false)}
                       primaryButtonText='決定'
-                      onPrimaryAction={() => setJobTypeModalOpen(false)}
+                      onPrimaryAction={() => {
+                        jobTypeModalRef.current?.handleConfirm();
+                        setJobTypeModalOpen(false);
+                      }}
                       width='800px'
                       height='680px'
                     >
                       <JobTypeModal
+                        ref={jobTypeModalRef}
                         selectedJobTypes={selectedJobTypes}
                         setSelectedJobTypes={setSelectedJobTypes}
+                        onClose={() => setJobTypeModalOpen(false)}
                       />
                     </Modal>
                   )}

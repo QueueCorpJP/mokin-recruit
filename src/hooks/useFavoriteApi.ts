@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { logError } from '../lib/errors/errorHandler';
-import { 
-  getFavoriteListAction, 
-  getFavoriteStatusAction, 
-  addFavoriteAction, 
+import {
+  getFavoriteListAction,
+  getFavoriteStatusAction,
+  addFavoriteAction,
   removeFavoriteAction,
   type FavoriteActionResult,
   type FavoriteListResult,
-  type FavoriteStatusResult
+  type FavoriteStatusResult,
 } from '../lib/actions/favoriteActions';
 
 // 型定義
@@ -46,7 +46,9 @@ export const useFavoritesQuery = (params: FavoriteParams = {}) => {
       const result = await getFavoriteListAction({ page, limit });
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch favorites'));
+      setError(
+        err instanceof Error ? err : new Error('Failed to fetch favorites')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +65,9 @@ export const useFavoritesQuery = (params: FavoriteParams = {}) => {
 export const useAddFavoriteMutation = () => {
   const [isPending, setIsPending] = useState(false);
 
-  const mutate = async (jobPostingId: string): Promise<FavoriteActionResult> => {
+  const mutate = async (
+    jobPostingId: string
+  ): Promise<FavoriteActionResult> => {
     setIsPending(true);
     try {
       const result = await addFavoriteAction(jobPostingId);
@@ -85,7 +89,9 @@ export const useAddFavoriteMutation = () => {
 export const useRemoveFavoriteMutation = () => {
   const [isPending, setIsPending] = useState(false);
 
-  const mutate = async (jobPostingId: string): Promise<FavoriteActionResult> => {
+  const mutate = async (
+    jobPostingId: string
+  ): Promise<FavoriteActionResult> => {
     setIsPending(true);
     try {
       const result = await removeFavoriteAction(jobPostingId);
@@ -109,6 +115,11 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // 楽観的更新用の関数
+  const updateOptimistic = useCallback((jobId: string, isFavorite: boolean) => {
+    setData(prev => ({ ...prev, [jobId]: isFavorite }));
+  }, []);
+
   const refetch = useCallback(async () => {
     if (jobPostingIds.length === 0) {
       setData({});
@@ -119,14 +130,18 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
     setError(null);
     try {
       const result = await getFavoriteStatusAction(jobPostingIds);
-      
+
       if (!result.success || !result.data) {
         setData({});
       } else {
         setData(result.data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch favorite status'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error('Failed to fetch favorite status')
+      );
       setData({});
     } finally {
       setIsLoading(false);
@@ -137,7 +152,7 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
     refetch();
   }, [refetch]);
 
-  return { data, isLoading, error, refetch };
+  return { data, isLoading, error, refetch, updateOptimistic };
 };
 
 // お気に入りのトグル（追加/削除を自動判定）
@@ -146,8 +161,11 @@ export const useFavoriteToggleMutation = () => {
   const addFavorite = useAddFavoriteMutation();
   const removeFavorite = useRemoveFavoriteMutation();
 
-  const mutate = async ({ jobPostingId, isFavorite }: { 
-    jobPostingId: string; 
+  const mutate = async ({
+    jobPostingId,
+    isFavorite,
+  }: {
+    jobPostingId: string;
     isFavorite: boolean;
   }) => {
     setIsPending(true);

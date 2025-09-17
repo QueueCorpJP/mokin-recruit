@@ -79,11 +79,11 @@ export function Footer({
         case '運営会社':
           return '/about-company';
         case '利用規約':
-          return '/terms';
+          return variant === 'candidate' ? '/candidate/terms' : '/terms';
         case 'プライバシーポリシー':
-          return '/privacy';
+          return variant === 'candidate' ? '/candidate/privacy' : '/privacy';
         case '法令に基づく表記':
-          return '/legal';
+          return variant === 'candidate' ? '/candidate/legal' : '/legal';
         default:
           return '#';
       }

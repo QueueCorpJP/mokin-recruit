@@ -51,8 +51,11 @@ export function useCandidateSearch({
   >({});
 
   const jobIds = useMemo(() => jobCards.map(j => j.id), [jobCards]);
-  const { data: favoriteStatus, refetch: refetchFavoriteStatus } =
-    useFavoriteStatusQuery(jobIds);
+  const {
+    data: favoriteStatus,
+    refetch: refetchFavoriteStatus,
+    updateOptimistic,
+  } = useFavoriteStatusQuery(jobIds);
   const favoriteToggle = useFavoriteToggleMutation();
 
   const updateURL = useCallback((conditions: SearchConditions) => {
@@ -100,7 +103,10 @@ export function useCandidateSearch({
 
   const toggleFavorite = useCallback(
     async (jobId: string, isCurrentlyFavorite: boolean) => {
+      // 楽観的更新：即座にUIを更新
+      updateOptimistic(jobId, !isCurrentlyFavorite);
       setFavoriteLoading(prev => ({ ...prev, [jobId]: true }));
+
       try {
         const res = await favoriteToggle.mutateAsync({
           jobPostingId: jobId,
@@ -109,9 +115,13 @@ export function useCandidateSearch({
         if (res.success) {
           await refetchFavoriteStatus();
         } else {
+          // エラー時は元の状態に戻す
+          updateOptimistic(jobId, isCurrentlyFavorite);
           alert(res.error || 'お気に入り操作に失敗しました');
         }
       } catch (error) {
+        // エラー時は元の状態に戻す
+        updateOptimistic(jobId, isCurrentlyFavorite);
         console.error('お気に入り操作エラー:', error);
         alert(
           'ネットワークエラーが発生しました。インターネット接続を確認してください。'
@@ -120,7 +130,7 @@ export function useCandidateSearch({
         setFavoriteLoading(prev => ({ ...prev, [jobId]: false }));
       }
     },
-    [favoriteToggle, refetchFavoriteStatus]
+    [favoriteToggle, refetchFavoriteStatus, updateOptimistic]
   );
 
   return {

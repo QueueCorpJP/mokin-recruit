@@ -40,11 +40,11 @@ export default function CandidateApplicationClient({
   jobId,
   jobTitle,
   companyName,
-  requiredDocuments
+  requiredDocuments,
 }: CandidateApplicationClientProps) {
   const router = useRouter();
   const { isAuthenticated, candidateUser, loading } = useCandidateAuth();
-  
+
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resumeFiles, setResumeFiles] = useState<File[]>([]);
   const [careerFiles, setCareerFiles] = useState<File[]>([]);
@@ -53,14 +53,14 @@ export default function CandidateApplicationClient({
 
   // form ref
   const formRef = useRef<HTMLFormElement>(null);
-  
+
   // モバイル判定
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   // 認証チェック
   React.useEffect(() => {
     if (loading) return;
-    
+
     if (!isAuthenticated || !candidateUser) {
       router.push('/candidate/auth/login');
     }
@@ -69,7 +69,7 @@ export default function CandidateApplicationClient({
   // 必須書類チェック機能
   const isResumeRequired = requiredDocuments.includes('履歴書の提出が必須');
   const isCareerRequired = requiredDocuments.includes('職務経歴書の提出が必須');
-  
+
   // 必須書類が揃っているかチェック
   const canSubmit = () => {
     if (isResumeRequired && resumeFiles.length === 0) return false;
@@ -83,7 +83,7 @@ export default function CandidateApplicationClient({
     if (file.size > maxSize) {
       return {
         valid: false,
-        error: 'ファイルサイズは5MB以下にしてください'
+        error: 'ファイルサイズは5MB以下にしてください',
       };
     }
 
@@ -94,13 +94,14 @@ export default function CandidateApplicationClient({
       'image/jpeg',
       'image/png',
       'image/gif',
-      'text/plain'
+      'text/plain',
     ];
-    
+
     if (!allowedTypes.includes(file.type)) {
       return {
         valid: false,
-        error: 'PDF、Word、画像ファイル（JPEG/PNG/GIF）、テキストファイルのみアップロード可能です'
+        error:
+          'PDF、Word、画像ファイル（JPEG/PNG/GIF）、テキストファイルのみアップロード可能です',
       };
     }
 
@@ -113,7 +114,7 @@ export default function CandidateApplicationClient({
     if (files.length > 0) {
       const validFiles: File[] = [];
       const invalidFiles: string[] = [];
-      
+
       files.forEach(file => {
         const validation = validateFile(file);
         if (validation.valid) {
@@ -122,17 +123,17 @@ export default function CandidateApplicationClient({
           invalidFiles.push(`${file.name}: ${validation.error}`);
         }
       });
-      
+
       if (invalidFiles.length > 0) {
         setUploadError(`以下のファイルが無効です: ${invalidFiles.join(', ')}`);
       } else {
         setUploadError('');
       }
-      
+
       if (validFiles.length > 0) {
         setResumeFiles(prev => [...prev, ...validFiles]);
       }
-      
+
       event.target.value = '';
     }
   };
@@ -142,7 +143,7 @@ export default function CandidateApplicationClient({
     if (files.length > 0) {
       const validFiles: File[] = [];
       const invalidFiles: string[] = [];
-      
+
       files.forEach(file => {
         const validation = validateFile(file);
         if (validation.valid) {
@@ -151,17 +152,17 @@ export default function CandidateApplicationClient({
           invalidFiles.push(`${file.name}: ${validation.error}`);
         }
       });
-      
+
       if (invalidFiles.length > 0) {
         setUploadError(`以下のファイルが無効です: ${invalidFiles.join(', ')}`);
       } else {
         setUploadError('');
       }
-      
+
       if (validFiles.length > 0) {
         setCareerFiles(prev => [...prev, ...validFiles]);
       }
-      
+
       event.target.value = '';
     }
   };
@@ -170,7 +171,9 @@ export default function CandidateApplicationClient({
   const handleRemoveResume = (index: number) => {
     setResumeFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
-    const resumeInput = document.getElementById('resume-upload') as HTMLInputElement;
+    const resumeInput = document.getElementById(
+      'resume-upload'
+    ) as HTMLInputElement;
     if (resumeInput) {
       resumeInput.value = '';
     }
@@ -179,7 +182,9 @@ export default function CandidateApplicationClient({
   const handleRemoveCareer = (index: number) => {
     setCareerFiles(prev => prev.filter((_, i) => i !== index));
     setUploadError('');
-    const careerInput = document.getElementById('career-upload') as HTMLInputElement;
+    const careerInput = document.getElementById(
+      'career-upload'
+    ) as HTMLInputElement;
     if (careerInput) {
       careerInput.value = '';
     }
@@ -195,8 +200,10 @@ export default function CandidateApplicationClient({
     // 必須書類チェック
     if (!canSubmit()) {
       const missingDocs = [];
-      if (isResumeRequired && resumeFiles.length === 0) missingDocs.push('履歴書');
-      if (isCareerRequired && careerFiles.length === 0) missingDocs.push('職務経歴書');
+      if (isResumeRequired && resumeFiles.length === 0)
+        missingDocs.push('履歴書');
+      if (isCareerRequired && careerFiles.length === 0)
+        missingDocs.push('職務経歴書');
       setUploadError(`必須書類が不足しています: ${missingDocs.join('、')}`);
       return;
     }
@@ -208,13 +215,12 @@ export default function CandidateApplicationClient({
       // FormDataを作成
       const formData = new FormData();
       formData.append('jobId', jobId);
-      formData.append('applicationMessage', '求人に応募いたします。');
-      
+
       // ファイルを追加
       resumeFiles.forEach(file => {
         formData.append('resumeFiles', file);
       });
-      
+
       careerFiles.forEach(file => {
         formData.append('careerFiles', file);
       });
@@ -234,8 +240,14 @@ export default function CandidateApplicationClient({
       // 応募完了状態に変更
       setIsSubmitted(true);
 
+      // 応募完了後、メッセージページにリダイレクト
+      setTimeout(() => {
+        router.push('/candidate/message');
+      }, 2000); // 2秒後にリダイレクト
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : '応募の送信に失敗しました');
+      setUploadError(
+        error instanceof Error ? error.message : '応募の送信に失敗しました'
+      );
     } finally {
       setIsUploading(false);
     }
@@ -518,7 +530,7 @@ export default function CandidateApplicationClient({
                 aria-label='応募完了イメージ'
               >
                 <Image
-                  src='/images/complete.svg'  
+                  src='/images/complete.svg'
                   alt='応募完了イメージ'
                   width={isMobile ? 160 : 240}
                   height={isMobile ? 160 : 240}
@@ -573,9 +585,8 @@ export default function CandidateApplicationClient({
                       <br />
                       書類の提出が必要な求人に関しては、書類をアップロードした上で応募しましょう。
                     </p>
-                   
                   </div>
-                 
+
                   {uploadError && (
                     <div
                       style={{
@@ -627,7 +638,9 @@ export default function CandidateApplicationClient({
                       alignItems: 'flex-start',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                    >
                       <span
                         style={{
                           fontFamily: 'Noto Sans JP',
@@ -670,17 +683,19 @@ export default function CandidateApplicationClient({
                       padding: isMobile ? 0 : '24px 0',
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: 16 }}>
+                    <div
+                      style={{ display: 'flex', flexDirection: 'row', gap: 16 }}
+                    >
                       <input
-                        type="file"
-                        accept=".pdf"
+                        type='file'
+                        accept='.pdf'
                         multiple
                         onChange={handleResumeUpload}
                         style={{ display: 'none' }}
-                        id="resume-upload"
+                        id='resume-upload'
                       />
-                      <label 
-                        htmlFor="resume-upload"
+                      <label
+                        htmlFor='resume-upload'
                         className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none cursor-pointer bg-transparent flex items-center justify-center'
                         style={{
                           width: isMobile ? '100%' : undefined,
@@ -694,9 +709,9 @@ export default function CandidateApplicationClient({
                       <div
                         key={`${file.name}-${index}`}
                         className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
-                        style={{ 
+                        style={{
                           maxWidth: isMobile ? '140px' : '300px',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -704,7 +719,7 @@ export default function CandidateApplicationClient({
                         </div>
                         <button
                           onClick={() => handleRemoveResume(index)}
-                          className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
+                          className='flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors'
                           style={{
                             background: 'none',
                             border: 'none',
@@ -718,7 +733,7 @@ export default function CandidateApplicationClient({
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
-                          title="ファイルを削除"
+                          title='ファイルを削除'
                         >
                           ×
                         </button>
@@ -762,7 +777,9 @@ export default function CandidateApplicationClient({
                       alignItems: 'flex-start',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                    >
                       <span
                         style={{
                           fontFamily: 'Noto Sans JP',
@@ -806,17 +823,19 @@ export default function CandidateApplicationClient({
                       padding: isMobile ? 0 : '24px 0',
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: 16 }}>
+                    <div
+                      style={{ display: 'flex', flexDirection: 'row', gap: 16 }}
+                    >
                       <input
-                        type="file"
-                        accept=".pdf"
+                        type='file'
+                        accept='.pdf'
                         multiple
                         onChange={handleCareerUpload}
                         style={{ display: 'none' }}
-                        id="career-upload"
+                        id='career-upload'
                       />
-                      <label 
-                        htmlFor="career-upload"
+                      <label
+                        htmlFor='career-upload'
                         className='h-[50px] px-[40px] rounded-[999px] font-bold tracking-[0.1em] border-[1px] border-[#999] text-[16px] text-[#323232] leading-[2] shadow-none cursor-pointer bg-transparent flex items-center justify-center'
                         style={{
                           width: isMobile ? '100%' : undefined,
@@ -844,9 +863,9 @@ export default function CandidateApplicationClient({
                       <div
                         key={`${file.name}-${index}`}
                         className='bg-[#d2f1da] box-border content-stretch flex flex-row gap-2 items-center justify-between px-3 py-1 relative rounded-[5px] shrink-0 mt-2'
-                        style={{ 
+                        style={{
                           maxWidth: isMobile ? '140px' : '300px',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         <div className="font-['Noto_Sans_JP'] font-medium text-[14px] leading-[1.6] tracking-[1.4px] text-[#0f9058] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -854,7 +873,7 @@ export default function CandidateApplicationClient({
                         </div>
                         <button
                           onClick={() => handleRemoveCareer(index)}
-                          className="flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors"
+                          className='flex-shrink-0 ml-2 text-[#0f9058] hover:text-[#0d7a4e] transition-colors'
                           style={{
                             background: 'none',
                             border: 'none',
@@ -868,7 +887,7 @@ export default function CandidateApplicationClient({
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
-                          title="ファイルを削除"
+                          title='ファイルを削除'
                         >
                           ×
                         </button>
@@ -926,12 +945,17 @@ export default function CandidateApplicationClient({
                 transition: 'all 0.2s ease-in-out',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(15, 144, 88, 0.1)';
+                e.currentTarget.style.backgroundColor =
+                  'rgba(15, 144, 88, 0.1)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
-              onClick={isSubmitted ? () => router.push('/candidate/message') : () => router.back()}
+              onClick={
+                isSubmitted
+                  ? () => router.push('/candidate/message')
+                  : () => router.back()
+              }
             >
               {isSubmitted ? 'メッセージ一覧' : '戻る'}
             </Button>
@@ -958,18 +982,28 @@ export default function CandidateApplicationClient({
               }}
               onMouseEnter={e => {
                 if (!isUploading && (isSubmitted || canSubmit())) {
-                  e.currentTarget.style.background = 'linear-gradient(180deg, #12614E 0%, #1A8946 100%)';
+                  e.currentTarget.style.background =
+                    'linear-gradient(180deg, #12614E 0%, #1A8946 100%)';
                 }
               }}
               onMouseLeave={e => {
                 if (!isUploading && (isSubmitted || canSubmit())) {
-                  e.currentTarget.style.background = 'linear-gradient(180deg, #198D76 0%, #1CA74F 100%)';
+                  e.currentTarget.style.background =
+                    'linear-gradient(180deg, #198D76 0%, #1CA74F 100%)';
                 }
               }}
-              onClick={isSubmitted ? () => router.push('/candidate/search/setting') : handleApplication}
+              onClick={
+                isSubmitted
+                  ? () => router.push('/candidate/search/setting')
+                  : handleApplication
+              }
               disabled={isUploading || (!isSubmitted && !canSubmit())}
             >
-              {isSubmitted ? '求人検索' : isUploading ? '応募中...' : '応募する'}
+              {isSubmitted
+                ? '求人検索'
+                : isUploading
+                  ? '応募中...'
+                  : '応募する'}
             </Button>
           </div>
         </div>

@@ -84,7 +84,11 @@ export async function middleware(request: NextRequest) {
   // company配下のルートをチェック（認証必須・auth配下は除外）
   // 判定はサーバー側レイアウトに委譲するため、ここでは
   // セッション（アクセストークン）の存在のみを確認
-  if (path.startsWith('/company') && !path.startsWith('/company/auth')) {
+  if (
+    path.startsWith('/company') &&
+    !path.startsWith('/company/auth') &&
+    path !== '/company'
+  ) {
     // Supabaseのセッションクッキーを確認（優先: sb-access-token）
     let accessToken = request.cookies.get('sb-access-token')?.value;
     let hasSupabaseSession = false;

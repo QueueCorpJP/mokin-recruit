@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
@@ -15,6 +15,10 @@ export function JobSearchSection() {
   const [selectedSalary, setSelectedSalary] = useState('');
   const [jobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [industryModalOpen, setIndustryModalOpen] = useState(false);
+
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   const salaryOptions = [
     { value: '', label: '選択してください' },
@@ -215,13 +219,18 @@ export function JobSearchSection() {
           isOpen={jobTypeModalOpen}
           onClose={() => setJobTypeModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setJobTypeModalOpen(false)}
+          onPrimaryAction={() => {
+            jobTypeModalRef.current?.handleConfirm();
+            setJobTypeModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <JobTypeModal
+            ref={jobTypeModalRef}
             selectedJobTypes={selectedJobTypes}
             setSelectedJobTypes={setSelectedJobTypes}
+            onClose={() => setJobTypeModalOpen(false)}
           />
         </Modal>
       )}
@@ -232,11 +241,15 @@ export function JobSearchSection() {
           isOpen={industryModalOpen}
           onClose={() => setIndustryModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setIndustryModalOpen(false)}
+          onPrimaryAction={() => {
+            industryModalRef.current?.handleConfirm();
+            setIndustryModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <IndustryModal
+            ref={industryModalRef}
             selectedIndustries={selectedIndustries}
             onIndustriesChange={setSelectedIndustries}
             onClose={() => setIndustryModalOpen(false)}

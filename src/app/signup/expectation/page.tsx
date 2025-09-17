@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { IndustryModal } from '@/app/company/job/IndustryModal';
 import { JobTypeModal } from '@/app/company/job/JobTypeModal';
@@ -61,6 +61,10 @@ export default function SignupExpectationPage() {
   const [isWorkLocationModalOpen, setIsWorkLocationModalOpen] = useState(false);
   const [isWorkStyleModalOpen, setIsWorkStyleModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   const [formData, setFormData] = useState<ExpectationFormData>({
     desiredIncome: '',
@@ -136,11 +140,15 @@ export default function SignupExpectationPage() {
           isOpen={isIndustryModalOpen}
           onClose={() => setIsIndustryModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setIsIndustryModalOpen(false)}
+          onPrimaryAction={() => {
+            industryModalRef.current?.handleConfirm();
+            setIsIndustryModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <IndustryModal
+            ref={industryModalRef}
             selectedIndustries={formData.industries}
             onIndustriesChange={industries =>
               setFormData(prev => ({ ...prev, industries }))
@@ -155,15 +163,20 @@ export default function SignupExpectationPage() {
           isOpen={isJobTypeModalOpen}
           onClose={() => setIsJobTypeModalOpen(false)}
           primaryButtonText='決定'
-          onPrimaryAction={() => setIsJobTypeModalOpen(false)}
+          onPrimaryAction={() => {
+            jobTypeModalRef.current?.handleConfirm();
+            setIsJobTypeModalOpen(false);
+          }}
           width='800px'
           height='680px'
         >
           <JobTypeModal
+            ref={jobTypeModalRef}
             selectedJobTypes={formData.jobTypes}
             setSelectedJobTypes={jobTypes =>
               setFormData(prev => ({ ...prev, jobTypes }))
             }
+            onClose={() => setIsJobTypeModalOpen(false)}
           />
         </Modal>
       )}

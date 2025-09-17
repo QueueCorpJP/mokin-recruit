@@ -333,10 +333,20 @@ export async function getCandidatesDataWithQuery(
   );
   if (candidateIds.length === 0) return [];
 
-  const groupIdsSet = new Set<string>((candidatesData || []).map((app: any) => app.company_group_id));
+  const groupIdsSet = new Set<string>(
+    (candidatesData || []).map((app: any) => app.company_group_id)
+  );
   const groupIdsForPairs: string[] = Array.from(groupIdsSet);
 
-  const [jobExpAll, workExpAll, careerStatusAll, selectionProgressAll, roomsAll, scoutSendsAll, companyGroupsAll] = await Promise.all([
+  const [
+    jobExpAll,
+    workExpAll,
+    careerStatusAll,
+    selectionProgressAll,
+    roomsAll,
+    scoutSendsAll,
+    companyGroupsAll,
+  ] = await Promise.all([
     supabase
       .from('job_type_experience')
       .select('candidate_id, job_type_name')
@@ -367,7 +377,7 @@ export async function getCandidatesDataWithQuery(
     supabase
       .from('company_groups')
       .select('id, group_name')
-      .in('id', groupIdsForPairs)
+      .in('id', groupIdsForPairs),
   ]);
 
   const jobTypeByCandidate = new Map<string, string[]>();
@@ -415,7 +425,9 @@ export async function getCandidatesDataWithQuery(
   });
 
   const groupNameById = new Map<string, string>();
-  companyGroupsAll.data?.forEach((g: any) => groupNameById.set(g.id, g.group_name));
+  companyGroupsAll.data?.forEach((g: any) =>
+    groupNameById.set(g.id, g.group_name)
+  );
 
   const result = (candidatesData || []).map((app: any) => {
     const candidateId = app.candidate_id;
@@ -432,11 +444,16 @@ export async function getCandidatesDataWithQuery(
     if (roomUsers.length) {
       assignedUsers = roomUsers;
     } else {
-      const senders = Array.from(scoutSendersByPair.get(pairKey) || new Set<string>());
+      const senders = Array.from(
+        scoutSendersByPair.get(pairKey) || new Set<string>()
+      );
       if (senders.length) {
         assignedUsers = senders;
       } else {
-        const gName = app.company_groups?.group_name || groupNameById.get(app.company_group_id) || '';
+        const gName =
+          app.company_groups?.group_name ||
+          groupNameById.get(app.company_group_id) ||
+          '';
         if (gName) assignedUsers = [`${gName}グループ`];
       }
     }
@@ -446,7 +463,8 @@ export async function getCandidatesDataWithQuery(
     return {
       id: candidateId,
       name: `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim(),
-      company: candidate?.recent_job_company_name || candidate?.current_company || '',
+      company:
+        candidate?.recent_job_company_name || candidate?.current_company || '',
       location: candidate?.prefecture || '',
       age,
       gender: candidate?.gender || '',
@@ -458,7 +476,8 @@ export async function getCandidatesDataWithQuery(
       jobPostingTitle: app.job_postings?.title || '',
       group: app.company_groups?.group_name || '',
       groupId: app.company_group_id || '',
-      applicationDate: app.created_at ? new Date(app.created_at).toLocaleDateString('ja-JP') : '',
+      applicationDate:
+        selectionProgress?.application_date || app.created_at || '',
       firstScreening: app.status === 'document_screening' ? 'ready' : undefined,
       secondScreening: app.status === 'second_interview' ? 'ready' : undefined,
       finalScreening: app.status === 'final_interview' ? 'ready' : undefined,
@@ -1031,6 +1050,7 @@ export interface CandidateDetailData {
     isCareerChange?: boolean;
   };
   assignedUsers?: string[];
+  applicationDate?: string;
 }
 
 /**
@@ -1254,8 +1274,8 @@ export async function getCandidateDetailData(
       industries: Array.isArray(candidate.recent_job_industries)
         ? candidate.recent_job_industries
         : candidate.recent_job_industries
-        ? [candidate.recent_job_industries]
-        : [],
+          ? [candidate.recent_job_industries]
+          : [],
       department: candidate.recent_job_department_position || '',
       position: candidate.recent_job_department_position || '',
       jobType: Array.isArray(candidate.recent_job_types)
@@ -1278,8 +1298,8 @@ export async function getCandidateDetailData(
       candidate.gender === 'male'
         ? '男性'
         : candidate.gender === 'female'
-        ? '女性'
-        : candidate.gender || '',
+          ? '女性'
+          : candidate.gender || '',
     income: candidate.current_income || candidate.current_salary || '',
     lastLogin: formatDate(candidate.last_login_at),
     lastUpdate: formatDate(candidate.updated_at),
@@ -1402,8 +1422,8 @@ export async function getCandidateDetailData(
     skills: Array.isArray(candidate.skills)
       ? candidate.skills
       : Array.isArray(skillsData?.skills_list)
-      ? skillsData.skills_list
-      : [],
+        ? skillsData.skills_list
+        : [],
     languages: skillsData?.other_languages
       ? Object.entries(
           skillsData.other_languages as Record<string, string | number>
@@ -1412,8 +1432,8 @@ export async function getCandidateDetailData(
           level: String(level),
         }))
       : skillsData?.english_level
-      ? [{ language: '英語', level: skillsData.english_level }]
-      : [],
+        ? [{ language: '英語', level: skillsData.english_level }]
+        : [],
     education: (education || []).map(
       (e: {
         school_name: string;

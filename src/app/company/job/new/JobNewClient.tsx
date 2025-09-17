@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import NewJobHeader from '@/app/company/job/NewJobHeader';
@@ -19,12 +19,16 @@ interface JobNewClientProps {
   currentUserId?: string;
 }
 
-export default function JobNewClient({ initialCompanyGroups, currentUserId }: JobNewClientProps) {
+export default function JobNewClient({
+  initialCompanyGroups,
+  currentUserId,
+}: JobNewClientProps) {
   const router = useRouter();
 
   // 各項目の状態
   const [group, setGroup] = useState('');
-  const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>(initialCompanyGroups);
+  const [companyGroups, setCompanyGroups] =
+    useState<CompanyGroup[]>(initialCompanyGroups);
   const [title, setTitle] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [jobTypes, setJobTypes] = useState<string[]>([]);
@@ -39,16 +43,24 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   const [locations, setLocations] = useState<string[]>([]);
   const [locationNote, setLocationNote] = useState('');
   const [employmentType, setEmploymentType] = useState('正社員');
-  const [employmentTypeNote, setEmploymentTypeNote] = useState('契約期間：期間の定めなし\n試用期間：あり（３か月）');
-  const [workingHours, setWorkingHours] = useState('9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有');
+  const [employmentTypeNote, setEmploymentTypeNote] = useState(
+    '契約期間：期間の定めなし\n試用期間：あり（３か月）'
+  );
+  const [workingHours, setWorkingHours] = useState(
+    '9:00～18:00（所定労働時間8時間）\n休憩：60分\nフレックス制：有'
+  );
   const [overtime, setOvertime] = useState('あり');
-  const [holidays, setHolidays] = useState('完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇');
+  const [holidays, setHolidays] = useState(
+    '完全週休2日制（土・日）、祝日\n年間休日：120日\n有給休暇：初年度10日\nその他休暇：年末年始休暇'
+  );
   const [selectionProcess, setSelectionProcess] = useState('');
   const [appealPoints, setAppealPoints] = useState<string[]>([]);
   const [smoke, setSmoke] = useState('屋内禁煙');
   const [smokeNote, setSmokeNote] = useState('');
   const [resumeRequired, setResumeRequired] = useState<string[]>([]);
-  const [overtimeMemo, setOvertimeMemo] = useState('月平均20時間程度／固定残業代45時間分を含む');
+  const [overtimeMemo, setOvertimeMemo] = useState(
+    '月平均20時間程度／固定残業代45時間分を含む'
+  );
   const [memo, setMemo] = useState('');
   const [publicationType, setPublicationType] = useState('public');
 
@@ -57,13 +69,17 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   const [isJobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [isIndustryModalOpen, setIndustryModalOpen] = useState(false);
 
+  // モーダル用のref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
+
   // 確認モードの状態
   const [isConfirmMode, setIsConfirmMode] = useState(false);
 
   // バリデーション状態
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
-  
+
   // 権限エラー状態
   const [permissionError, setPermissionError] = useState<string>('');
   const [showPermissionError, setShowPermissionError] = useState(false);
@@ -98,35 +114,38 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
     if (typeof window === 'undefined') {
       return;
     }
-    
+
     const loadData = () => {
       try {
         // 複製データがあるかチェック（優先）
         const duplicateData = sessionStorage.getItem('duplicateJobData');
         if (duplicateData) {
           const parsedData = JSON.parse(duplicateData);
-          
+
           // 複製データを各状態にセット
-          if (parsedData.company_group_id) setGroup(parsedData.company_group_id);
+          if (parsedData.company_group_id)
+            setGroup(parsedData.company_group_id);
           if (parsedData.title) setTitle(parsedData.title);
-          
+
           // 職種の復元（新しい配列形式と古い単一値形式の両方に対応）
           if (parsedData.job_types && Array.isArray(parsedData.job_types)) {
             setJobTypes(parsedData.job_types);
           } else if (parsedData.job_type) {
             setJobTypes([parsedData.job_type]);
           }
-          
+
           // 業種の復元（新しい配列形式と古い単一値形式の両方に対応）
           if (parsedData.industries && Array.isArray(parsedData.industries)) {
             setIndustries(parsedData.industries);
           } else if (parsedData.industry) {
             setIndustries([parsedData.industry]);
           }
-          
-          if (parsedData.job_description) setJobDescription(parsedData.job_description);
-          if (parsedData.position_summary) setPositionSummary(parsedData.position_summary);
-          
+
+          if (parsedData.job_description)
+            setJobDescription(parsedData.job_description);
+          if (parsedData.position_summary)
+            setPositionSummary(parsedData.position_summary);
+
           // スキルの復元（配列からテキストに変換対応）
           if (parsedData.required_skills) {
             if (Array.isArray(parsedData.required_skills)) {
@@ -142,31 +161,46 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
               setOtherRequirements(parsedData.preferred_skills);
             }
           }
-          
-          if (parsedData.salary_min) setSalaryMin(parsedData.salary_min.toString());
-          if (parsedData.salary_max) setSalaryMax(parsedData.salary_max.toString());
+
+          if (parsedData.salary_min)
+            setSalaryMin(parsedData.salary_min.toString());
+          if (parsedData.salary_max)
+            setSalaryMax(parsedData.salary_max.toString());
           if (parsedData.salary_note) setSalaryNote(parsedData.salary_note);
-          
+
           // 勤務地の復元（新しい配列形式と古い単一値形式の両方に対応）
-          if (parsedData.work_locations && Array.isArray(parsedData.work_locations)) {
+          if (
+            parsedData.work_locations &&
+            Array.isArray(parsedData.work_locations)
+          ) {
             setLocations(parsedData.work_locations);
           } else if (parsedData.work_location) {
             setLocations([parsedData.work_location]);
           }
-          
-          if (parsedData.location_note) setLocationNote(parsedData.location_note);
-          if (parsedData.employment_type) setEmploymentType(parsedData.employment_type);
-          if (parsedData.employment_type_note) setEmploymentTypeNote(parsedData.employment_type_note);
-          if (parsedData.working_hours) setWorkingHours(parsedData.working_hours);
-          if (parsedData.overtime_info) setOvertimeMemo(parsedData.overtime_info);
+
+          if (parsedData.location_note)
+            setLocationNote(parsedData.location_note);
+          if (parsedData.employment_type)
+            setEmploymentType(parsedData.employment_type);
+          if (parsedData.employment_type_note)
+            setEmploymentTypeNote(parsedData.employment_type_note);
+          if (parsedData.working_hours)
+            setWorkingHours(parsedData.working_hours);
+          if (parsedData.overtime_info)
+            setOvertimeMemo(parsedData.overtime_info);
           if (parsedData.holidays) setHolidays(parsedData.holidays);
-          if (parsedData.selection_process) setSelectionProcess(parsedData.selection_process);
-          if (parsedData.appeal_points) setAppealPoints(parsedData.appeal_points);
+          if (parsedData.selection_process)
+            setSelectionProcess(parsedData.selection_process);
+          if (parsedData.appeal_points)
+            setAppealPoints(parsedData.appeal_points);
           if (parsedData.smoking_policy) setSmoke(parsedData.smoking_policy);
-          if (parsedData.smoking_policy_note) setSmokeNote(parsedData.smoking_policy_note);
-          if (parsedData.required_documents) setResumeRequired(parsedData.required_documents);
+          if (parsedData.smoking_policy_note)
+            setSmokeNote(parsedData.smoking_policy_note);
+          if (parsedData.required_documents)
+            setResumeRequired(parsedData.required_documents);
           if (parsedData.internal_memo) setMemo(parsedData.internal_memo);
-          if (parsedData.publication_type) setPublicationType(parsedData.publication_type);
+          if (parsedData.publication_type)
+            setPublicationType(parsedData.publication_type);
 
           // 複製データ使用後は削除
           sessionStorage.removeItem('duplicateJobData');
@@ -245,49 +279,49 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   const isFormValid = () => {
     // グループ選択
     if (!group) return false;
-    
+
     // 求人タイトル
     if (!title.trim()) return false;
-    
+
     // 職種（1つ以上）
     if (jobTypes.length === 0) return false;
-    
+
     // 業種（1つ以上）
     if (industries.length === 0) return false;
-    
+
     // 業務内容
     if (!jobDescription.trim()) return false;
-    
+
     // 当ポジションの魅力
     if (!positionSummary.trim()) return false;
-    
+
     // スキル・経験
     if (!skills.trim()) return false;
-    
+
     // その他・求める人物像
     if (!otherRequirements.trim()) return false;
-    
+
     // 想定年収
     if (!salaryMin || !salaryMax) return false;
     const minValue = parseInt(salaryMin);
     const maxValue = parseInt(salaryMax);
     if (minValue > maxValue) return false;
-    
+
     // 勤務地（1つ以上）
     if (locations.length === 0) return false;
-    
+
     // 就業時間
     if (!workingHours.trim()) return false;
-    
+
     // 休日・休暇
     if (!holidays.trim()) return false;
-    
+
     // 選考情報
     if (!selectionProcess.trim()) return false;
-    
+
     // アピールポイント（1つ以上）
     if (!appealPoints || appealPoints.length === 0) return false;
-    
+
     return true;
   };
 
@@ -301,12 +335,15 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
       newErrors.jobDescription = '業務内容を入力してください。';
     if (!positionSummary.trim())
       newErrors.positionSummary = '当ポジションの魅力を入力してください。';
-    if (!skills.trim()) newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
+    if (!skills.trim())
+      newErrors.skills = '必要または歓迎するスキル・経験を入力してください。';
     if (!otherRequirements.trim())
-      newErrors.otherRequirements = '求める人物像や価値観などを入力してください。';
+      newErrors.otherRequirements =
+        '求める人物像や価値観などを入力してください。';
     if (locations.length === 0)
       newErrors.locations = '勤務地を1つ以上選択してください。';
-    if (jobTypes.length === 0) newErrors.jobTypes = '職種を1つ以上選択してください。';
+    if (jobTypes.length === 0)
+      newErrors.jobTypes = '職種を1つ以上選択してください。';
     if (industries.length === 0)
       newErrors.industries = '業種を1つ以上選択してください。';
     // 想定年収
@@ -321,7 +358,8 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
     }
     if (!workingHours.trim())
       newErrors.workingHours = '就業時間を入力してください。';
-    if (!holidays.trim()) newErrors.holidays = '休日・休暇について入力してください。';
+    if (!holidays.trim())
+      newErrors.holidays = '休日・休暇について入力してください。';
     if (!selectionProcess.trim())
       newErrors.selectionProcess = '選考情報を入力してください。';
     if (!appealPoints || appealPoints.length === 0)
@@ -441,7 +479,9 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
       try {
         const permissionResult = await checkUserPermission(group);
         if (!permissionResult.success) {
-          setPermissionError(permissionResult.error || '権限エラーが発生しました');
+          setPermissionError(
+            permissionResult.error || '権限エラーが発生しました'
+          );
           setShowPermissionError(true);
           // ページの上部にスクロール
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -556,7 +596,10 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
       } else {
         console.error('API Error:', result);
         // 権限関連のエラーかどうかをチェック
-        if (result.error?.includes('スカウト担当者') || result.error?.includes('権限')) {
+        if (
+          result.error?.includes('スカウト担当者') ||
+          result.error?.includes('権限')
+        ) {
           setPermissionError(result.error);
           setShowPermissionError(true);
           // ページの上部にスクロール
@@ -574,21 +617,27 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
   return (
     <>
       <NewJobHeader />
-      
+
       {/* 権限エラーメッセージ */}
       {showPermissionError && permissionError && (
         <div className='mx-[76px] mt-[20px]'>
           <div className='bg-red-50 border border-red-200 rounded-[10px] p-4 mb-4'>
             <div className='flex items-center'>
               <div className='flex-shrink-0'>
-                <svg className='w-5 h-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
-                  <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
+                <svg
+                  className='w-5 h-5 text-red-400'
+                  viewBox='0 0 20 20'
+                  fill='currentColor'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                    clipRule='evenodd'
+                  />
                 </svg>
               </div>
               <div className='ml-3'>
-                <h3 className='text-sm font-medium text-red-800'>
-                  権限エラー
-                </h3>
+                <h3 className='text-sm font-medium text-red-800'>権限エラー</h3>
                 <div className='mt-2 text-sm text-red-700'>
                   <p>{permissionError}</p>
                 </div>
@@ -601,8 +650,16 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
                     onClick={() => setShowPermissionError(false)}
                   >
                     <span className='sr-only'>閉じる</span>
-                    <svg className='w-4 h-4' viewBox='0 0 20 20' fill='currentColor'>
-                      <path fillRule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clipRule='evenodd' />
+                    <svg
+                      className='w-4 h-4'
+                      viewBox='0 0 20 20'
+                      fill='currentColor'
+                    >
+                      <path
+                        fillRule='evenodd'
+                        d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                        clipRule='evenodd'
+                      />
                     </svg>
                   </button>
                 </div>
@@ -611,7 +668,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
           </div>
         </div>
       )}
-      
+
       <div className='mx-[76px]'>
         <div className='w-full my-[37px] p-[37px] rounded-[10px] bg-white'>
           {isConfirmMode ? (
@@ -687,7 +744,7 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
               skills={skills}
               setSkills={(value: string) => {
                 setSkills(value);
-                clearFieldError('skills');  
+                clearFieldError('skills');
               }}
               otherRequirements={otherRequirements}
               setOtherRequirements={(value: string) => {
@@ -825,13 +882,16 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
                 totalCount={3}
                 primaryButtonText='決定'
                 onPrimaryAction={() => {
+                  jobTypeModalRef.current?.handleConfirm();
                   setJobTypeModalOpen(false);
                   clearFieldError('jobTypes');
                 }}
               >
                 <JobTypeModal
+                  ref={jobTypeModalRef}
                   selectedJobTypes={jobTypes}
                   setSelectedJobTypes={setJobTypes}
+                  onClose={() => setJobTypeModalOpen(false)}
                 />
               </Modal>
             )}
@@ -845,11 +905,13 @@ export default function JobNewClient({ initialCompanyGroups, currentUserId }: Jo
                 primaryButtonText='決定'
                 industries='true'
                 onPrimaryAction={() => {
+                  industryModalRef.current?.handleConfirm();
                   setIndustryModalOpen(false);
                   clearFieldError('industries');
                 }}
               >
                 <IndustryModal
+                  ref={industryModalRef}
                   selectedIndustries={industries}
                   onIndustriesChange={setIndustries}
                   onClose={() => setIndustryModalOpen(false)}
