@@ -27,7 +27,7 @@ export async function GET(
     const candidateId = params.id;
     const supabase = await createSupabaseClient();
 
-    // Get candidate data to verify access and get resume path
+    // Get candidate data to verify access and get resume pat
     const { data: candidate, error: candidateError } = await supabase
       .from('candidates')
       .select('resume_url, resume_filename, first_name, last_name')
