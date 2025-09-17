@@ -3,12 +3,36 @@ import { createClient } from '@supabase/supabase-js';
 import ScoutTable from '@/components/ui/ScoutTable';
 import RegistrationTable from '@/components/ui/RegistrationTable';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const dynamic = 'force-dynamic';
 
 async function getAnalyticsData() {
+  // ビルドフェーズはSupabaseへ接続せずスタブを返す
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    const zeroScout = {
+      sent: 0,
+      opened: 0,
+      replied: 0,
+      applied: 0,
+    };
+    return {
+      scoutTableData: {
+        last7Days: { ...zeroScout },
+        last30Days: { ...zeroScout },
+        total: { ...zeroScout },
+      },
+      registrationTableData: {
+        candidates: { total: 0, thisMonth: 0, lastMonth: 0 },
+        companies: { total: 0, thisMonth: 0, lastMonth: 0 },
+      },
+    };
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables for analytics');
+  }
+  const supabase = createClient(supabaseUrl, supabaseKey);
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -89,19 +113,28 @@ async function getAnalyticsData() {
   const scoutTableData = {
     last7Days: {
       sent: messages7Days?.length || 0,
-      opened: messages7Days?.filter(m => m.status === 'READ' || m.status === 'REPLIED').length || 0,
+      opened:
+        messages7Days?.filter(
+          m => m.status === 'READ' || m.status === 'REPLIED'
+        ).length || 0,
       replied: messages7Days?.filter(m => m.status === 'REPLIED').length || 0,
       applied: applications7Days || 0,
     },
     last30Days: {
       sent: messages30Days?.length || 0,
-      opened: messages30Days?.filter(m => m.status === 'READ' || m.status === 'REPLIED').length || 0,
+      opened:
+        messages30Days?.filter(
+          m => m.status === 'READ' || m.status === 'REPLIED'
+        ).length || 0,
       replied: messages30Days?.filter(m => m.status === 'REPLIED').length || 0,
       applied: applications30Days || 0,
     },
     total: {
       sent: messagesTotal?.length || 0,
-      opened: messagesTotal?.filter(m => m.status === 'READ' || m.status === 'REPLIED').length || 0,
+      opened:
+        messagesTotal?.filter(
+          m => m.status === 'READ' || m.status === 'REPLIED'
+        ).length || 0,
       replied: messagesTotal?.filter(m => m.status === 'REPLIED').length || 0,
       applied: applicationsTotal || 0,
     },
@@ -131,12 +164,14 @@ export default async function AnalyticsPage() {
   const { scoutTableData, registrationTableData } = await getAnalyticsData();
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">企業・候補者分析</h1>
-      <p className="text-red-500 mb-8">企業全体、候補者全体の流通量での確認が可能</p>
-      <h2 className="text-xl font-bold mb-4">スカウト利用状況</h2>
+    <div className='p-8'>
+      <h1 className='text-2xl font-bold mb-4'>企業・候補者分析</h1>
+      <p className='text-red-500 mb-8'>
+        企業全体、候補者全体の流通量での確認が可能
+      </p>
+      <h2 className='text-xl font-bold mb-4'>スカウト利用状況</h2>
       <ScoutTable data={scoutTableData} />
-      <h2 className="text-xl font-bold mt-8 mb-4">候補者・企業登録数</h2>
+      <h2 className='text-xl font-bold mt-8 mb-4'>候補者・企業登録数</h2>
       <RegistrationTable data={registrationTableData} />
     </div>
   );
