@@ -26,18 +26,20 @@ jobs:
             ensure_pkg() {
               if command -v apt-get >/dev/null 2>&1; then
                 sudo apt-get update -y
-                sudo apt-get install -y git curl build-essential
+                # avoid curl install unless strictly needed
+                sudo apt-get install -y git build-essential
               elif command -v yum >/dev/null 2>&1; then
-                sudo yum install -y git curl gcc-c++ make
+                # avoid curl install to prevent conflicts
+                sudo yum install -y git gcc-c++ make
               elif command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y git curl gcc-c++ make
+                # Amazon Linux 2023: exclude curl-minimal to avoid conflicts with curl
+                sudo dnf install -y git gcc-c++ make --exclude=curl-minimal
               else
                 echo "No supported package manager found (apt-get/yum/dnf)." >&2
               fi
             }
 
-            command -v git >/dev/null 2>&1 || ensure_pkg
-            command -v curl >/dev/null 2>&1 || ensure_pkg
+            ensure_pkg
 
             # Install NVM/Node if npm is missing
             if ! command -v npm >/dev/null 2>&1; then
