@@ -18,6 +18,8 @@ export interface ChatMessage {
   subject?: string | null;
   status: MessageStatus;
   attachment_file_paths?: string[];
+  file_urls?: string[];
+  sent_at?: string | null;
   created_at: string;
   updated_at: string;
   read_at?: string | null;
@@ -32,6 +34,11 @@ export interface ChatMessage {
     full_name: string;
     position_title?: string;
     company_account: {
+      company_name: string;
+    };
+  } | null;
+  sender_company_group?: {
+    company_account?: {
       company_name: string;
     };
   } | null;

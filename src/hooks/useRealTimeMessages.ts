@@ -3,7 +3,10 @@ import { createClient } from '@/lib/supabase/client';
 import { ChatMessage } from '@/types/message';
 import { sendMessage, getRoomMessages } from '@/lib/actions';
 
-export const useRealTimeMessages = (roomId: string | null, candidateId?: string) => {
+export const useRealTimeMessages = (
+  roomId: string | null,
+  candidateId?: string
+) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const channelRef = useRef<any>(null);
@@ -26,11 +29,32 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
         console.log('Loading messages for room:', roomId);
         const result = await getRoomMessages(roomId);
         console.log('getRoomMessages result:', result);
-        if (result.messages) {
-          console.log('Setting messages:', result.messages);
-          setMessages(result.messages);
-        } else if (result.error) {
-          console.error('Error from getRoomMessages:', result.error);
+        if (Array.isArray(result)) {
+          // getRoomMessages from actions.ts returns an array directly
+          // Convert the simple message format to ChatMessage format
+          const convertedMessages: ChatMessage[] = result.map((msg: any) => ({
+            id: msg.id || '',
+            room_id: roomId,
+            content: msg.content || '',
+            sender_type: msg.senderType || 'CANDIDATE',
+            receiver_type:
+              msg.senderType === 'CANDIDATE' ? 'COMPANY_USER' : 'CANDIDATE',
+            sender_candidate_id:
+              msg.senderType === 'CANDIDATE' ? candidateId : null,
+            sender_company_user_id:
+              msg.senderType === 'COMPANY_USER' ? msg.senderId : null,
+            message_type: 'GENERAL',
+            subject: msg.subject,
+            status: 'SENT',
+            sent_at: msg.createdAt,
+            created_at: msg.createdAt || new Date().toISOString(),
+            updated_at: msg.createdAt || new Date().toISOString(),
+            file_urls: [],
+          }));
+          console.log('Setting converted messages:', convertedMessages);
+          setMessages(convertedMessages);
+        } else {
+          console.error('No messages returned or unexpected format');
         }
       } catch (error) {
         console.error('Error loading messages:', error);
@@ -47,7 +71,7 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
     if (!roomId || !candidateId) return;
 
     const supabase = createClient();
-    
+
     // リアルタイムチャンネルの設定
     const channel = supabase
       .channel(`messages-${roomId}`)
@@ -59,10 +83,10 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
           table: 'messages',
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        payload => {
           const newMessage = payload.new as ChatMessage;
           console.log('New message received:', newMessage);
-          
+
           setMessages(prev => {
             // 重複チェック
             if (prev.some(msg => msg.id === newMessage.id)) {
@@ -80,13 +104,15 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
           table: 'messages',
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        payload => {
           const updatedMessage = payload.new as ChatMessage;
           console.log('Message updated:', updatedMessage);
-          
-          setMessages(prev => prev.map(msg => 
-            msg.id === updatedMessage.id ? updatedMessage : msg
-          ));
+
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === updatedMessage.id ? updatedMessage : msg
+            )
+          );
         }
       )
       .subscribe();
@@ -102,15 +128,20 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
   }, [roomId, candidateId]);
 
   // メッセージ送信（楽観的更新）
-  const sendRealTimeMessage = async (content: string, subject?: string, fileUrls?: string[]) => {
+  const sendRealTimeMessage = async (
+    content: string,
+    subject?: string,
+    fileUrls?: string[]
+  ) => {
     if (!roomId) throw new Error('Room ID is required');
-    
+
     // 楽観的UIアップデート用の一時メッセージ
     const tempMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
       room_id: roomId,
       sender_candidate_id: candidateId || null,
       sender_type: candidateId ? 'CANDIDATE' : 'COMPANY_USER',
+      receiver_type: candidateId ? 'COMPANY_USER' : 'CANDIDATE',
       content,
       subject,
       message_type: 'GENERAL',
@@ -120,18 +151,20 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    
+
     // 楽観的更新: すぐにUIに反映
     setMessages(prev => [...prev, tempMessage]);
-    
+
     // スクロールをトリガー（少し遅延を入れる）
     setTimeout(() => {
-      const scrollableContainer = document.getElementById('message-detail-body');
+      const scrollableContainer = document.getElementById(
+        'message-detail-body'
+      );
       if (scrollableContainer) {
         scrollableContainer.scrollTop = scrollableContainer.scrollHeight;
       }
     }, 50);
-    
+
     try {
       const result = await sendMessage(
         roomId,
@@ -150,9 +183,9 @@ export const useRealTimeMessages = (roomId: string | null, candidateId?: string)
 
       // 成功時は一時メッセージを実際のメッセージに置き換え
       if (result.message) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempMessage.id ? result.message! : msg
-        ));
+        setMessages(prev =>
+          prev.map(msg => (msg.id === tempMessage.id ? result.message! : msg))
+        );
       }
 
       return result.message;

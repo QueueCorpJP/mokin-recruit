@@ -48,7 +48,7 @@ export const PREFECTURES = [
   '鹿児島',
   '沖縄',
   '海外',
-] as const;
+];
 
 export const INCOME_RANGES = [
   { value: '', label: '未選択' },
@@ -67,13 +67,13 @@ export const INCOME_RANGES = [
   { value: '2000~3000万', label: '2000~3000万' },
   { value: '3000~5000万', label: '3000~5000万' },
   { value: '5000万~', label: '5000万~' },
-] as const;
+];
 
 export const GENDER_OPTIONS = [
   { value: '男性', label: '男性' },
   { value: '女性', label: '女性' },
   { value: '未回答', label: '未回答' },
-] as const;
+];
 
 export const generateYearOptions = (startYear?: number) => {
   const currentYear = new Date().getFullYear();

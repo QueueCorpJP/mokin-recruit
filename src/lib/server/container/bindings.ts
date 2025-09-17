@@ -30,7 +30,6 @@ import { SessionService } from '@/lib/server/core/services/SessionService';
 import { UserRegistrationService } from '@/lib/server/core/services/UserRegistrationService';
 import { ValidationService } from '@/lib/server/core/services/ValidationService';
 
-
 // Interfaces
 import {
   IPasswordService,
@@ -42,7 +41,6 @@ import { ICandidateRepository } from '@/lib/server/core/interfaces/IDomainReposi
 // DIコンテナ設定 (SOLID原則準拠)
 export const container = new Container({
   defaultScope: 'Singleton',
-  autoBindInjectable: true,
 });
 
 // ビルド時とランタイムの区別
@@ -108,7 +106,6 @@ if (process.env.NEXT_PHASE === 'phase-production-build') {
     container
       .bind<ValidationService>(TYPES.ValidationService)
       .to(ValidationService);
-
 
     logger.info('✅ DI Container initialized successfully');
     logger.debug('📦 Registered bindings:', {

@@ -7,6 +7,14 @@ import type {
   FavoriteActionResult,
   FavoriteListResult,
   FavoriteStatusResult,
+  FavoriteItem,
+} from '@/types/actions';
+
+// Re-export types for components
+export type {
+  FavoriteActionResult,
+  FavoriteListResult,
+  FavoriteStatusResult,
 } from '@/types/actions';
 
 // お気に入り一覧を取得
@@ -77,10 +85,19 @@ export async function getFavoriteListAction(
       };
     }
 
+    // Map the favorites to include job_id for compatibility and handle job_postings array
+    const mappedFavorites = (favorites || []).map(fav => ({
+      ...fav,
+      job_id: fav.job_posting_id, // Add job_id as an alias for job_posting_id
+      job_postings: Array.isArray(fav.job_postings)
+        ? fav.job_postings[0] // Take the first item if it's an array
+        : fav.job_postings, // Keep as-is if it's already an object
+    })) as FavoriteItem[];
+
     return {
       success: true,
       data: {
-        favorites: favorites || [],
+        favorites: mappedFavorites,
         pagination: {
           page,
           limit,

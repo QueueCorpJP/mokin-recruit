@@ -1,10 +1,16 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { TagDisplay } from '@/components/ui/TagDisplay';
-import { CompanyDetailData, JobPostingData } from './actions';
+import type { CompanyDetailData, JobPostingData } from '@/types';
 import Image from 'next/image';
 
 interface CompanyDetailClientProps {
@@ -39,18 +45,18 @@ const OptimizedLocationTags: React.FC<{ locations: string[] }> = ({
 
     const container = containerRef.current;
     const containerWidth = container.offsetWidth;
-    
+
     // 簡素化された幅計算
     let totalWidth = 0;
     let count = 0;
-    
+
     for (let i = 0; i < locations.length; i++) {
       const estimatedWidth = locations[i].length * 12 + 40; // 簡略化
       if (totalWidth + estimatedWidth > containerWidth - 40) break;
       totalWidth += estimatedWidth + 8;
       count++;
     }
-    
+
     setVisibleCount(Math.max(1, count));
   }, [locations]);
 
@@ -104,9 +110,9 @@ const OptimizedLocationTags: React.FC<{ locations: string[] }> = ({
 };
 
 // 画像カルーセルコンポーネント（最適化版）
-const OptimizedImageCarousel: React.FC<{ 
-  images: string[]; 
-  companyName: string; 
+const OptimizedImageCarousel: React.FC<{
+  images: string[];
+  companyName: string;
 }> = ({ images, companyName }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -129,7 +135,7 @@ const OptimizedImageCarousel: React.FC<{
           src={images[currentImageIndex] || '/company.jpg'}
           alt={`${companyName} - 画像${currentImageIndex + 1}`}
           fill
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes='(max-width: 768px) 100vw, 50vw'
           priority={currentImageIndex === 0}
           className='object-cover transition-opacity duration-500'
         />
@@ -168,7 +174,10 @@ export default function OptimizedCompanyDetailClient({
   // ハンドラー関数をメモ化
   const handleFavoriteToggle = useCallback(async () => {
     setIsFavorite(prev => !prev);
-    console.log('企業お気に入り切り替え:', { companyId, isFavorite: !isFavorite });
+    console.log('企業お気に入り切り替え:', {
+      companyId,
+      isFavorite: !isFavorite,
+    });
   }, [companyId, isFavorite]);
 
   const handleJobFavoriteToggle = useCallback((jobId: string) => {
@@ -225,7 +234,7 @@ export default function OptimizedCompanyDetailClient({
             <div className='order-1 lg:order-1 flex flex-col gap-10 items-start justify-start lg:flex-1 min-w-0 max-w-full overflow-hidden'>
               {/* 画像・プログレス・タグセクション */}
               <div className='flex flex-col gap-4 items-start justify-start w-full'>
-                <OptimizedImageCarousel 
+                <OptimizedImageCarousel
                   images={companyData.images}
                   companyName={companyData.companyName}
                 />
@@ -233,10 +242,19 @@ export default function OptimizedCompanyDetailClient({
 
               {/* アピールポイントセクション */}
               {[
-                { title: 'アピールポイントタイトルテキストが入ります', content: companyData.jobDescription },
-                { title: 'アピールポイントタイトルテキストが入ります', content: companyData.positionSummary }
+                {
+                  title: 'アピールポイントタイトルテキストが入ります',
+                  content: companyData.jobDescription,
+                },
+                {
+                  title: 'アピールポイントタイトルテキストが入ります',
+                  content: companyData.positionSummary,
+                },
               ].map((section, index) => (
-                <div key={index} className='flex flex-col gap-4 items-start justify-start w-full'>
+                <div
+                  key={index}
+                  className='flex flex-col gap-4 items-start justify-start w-full'
+                >
                   <div className='flex flex-row gap-3 min-h-[40px] items-center justify-start pb-2 pt-0 px-0 w-full border-b-2 border-[#dcdcdc]'>
                     <h2 className="font-['Noto_Sans_JP'] font-bold text-[20px] lg:text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
                       {section.title}
@@ -259,7 +277,11 @@ export default function OptimizedCompanyDetailClient({
           <div className='order-3 w-full'>
             <div className='flex flex-col gap-4 items-start justify-start w-full'>
               <div className='flex flex-row gap-3 min-h-[40px] items-center justify-start pb-2 pt-0 px-0 w-full border-b-2 border-[#dcdcdc]'>
-                <svg className='w-5 h-5 text-[#0f9058]' viewBox='0 0 32 32' fill='currentColor'>
+                <svg
+                  className='w-5 h-5 text-[#0f9058]'
+                  viewBox='0 0 32 32'
+                  fill='currentColor'
+                >
                   <path d='M15.9998 0C13.3525 0 11.0978 1.66875 10.2682 4H7.89318C5.65751 4 3.83984 5.79375 3.83984 8V28C3.83984 30.2062 5.65751 32 7.89318 32H24.1065C26.3422 32 28.1598 30.2062 28.1598 28V8C28.1598 5.79375 26.3422 4 24.1065 4H21.7315C20.9018 1.66875 18.6472 0 15.9998 0Z' />
                 </svg>
                 <h2 className="font-['Noto_Sans_JP'] font-bold text-[20px] md:text-[24px] leading-[1.6] tracking-[2.4px] text-[#323232]">
@@ -271,31 +293,35 @@ export default function OptimizedCompanyDetailClient({
               <div className='flex flex-col gap-2 items-start justify-start w-full'>
                 {processedJobPostings.map((job, index) => {
                   const jobKey = job?.id || `sample-${index}`;
-                  const tags = job ? [
-                    getEmploymentTypeInJapanese(job.employment_type),
-                    ...(job.work_location?.slice(0, 2) || [])
-                  ] : ['正社員', 'リモート', 'フレックス'];
-                  
+                  const tags = job
+                    ? [
+                        getEmploymentTypeInJapanese(job.employment_type),
+                        ...(job.work_location?.slice(0, 2) || []),
+                      ]
+                    : ['正社員', 'リモート', 'フレックス'];
+
                   return (
-                    <div 
-                      key={jobKey} 
+                    <div
+                      key={jobKey}
                       className='bg-white flex md:flex-row flex-col gap-4 items-start justify-start w-full cursor-pointer hover:bg-gray-50 p-6 rounded-[10px] transition-colors border border-gray-100 shadow-sm'
                       onClick={() => {
                         if (job?.id) {
                           router.push(`/candidate/search/setting/${job.id}`);
                         } else {
-                          alert('この求人は現在データベースに存在しません。サンプル表示です。');
+                          alert(
+                            'この求人は現在データベースに存在しません。サンプル表示です。'
+                          );
                         }
                       }}
                     >
                       {/* 画像 */}
                       <div className='relative md:w-20 md:h-[53px] w-full h-[208px] overflow-hidden bg-gray-200 rounded-[5px] flex-shrink-0'>
-                        {(job?.image_urls?.[0] || companyData.images?.[0]) ? (
+                        {job?.image_urls?.[0] || companyData.images?.[0] ? (
                           <Image
                             src={job?.image_urls?.[0] || companyData.images[0]}
                             alt={job?.title || `求人${index + 1}`}
                             fill
-                            sizes="(max-width: 768px) 100vw, 80px"
+                            sizes='(max-width: 768px) 100vw, 80px'
                             className='object-cover'
                           />
                         ) : (
@@ -304,7 +330,7 @@ export default function OptimizedCompanyDetailClient({
                           </div>
                         )}
                       </div>
-                      
+
                       {/* コンテンツ */}
                       <div className='flex flex-col flex-1 min-w-0'>
                         {/* スマホ：タグ優先レイアウト */}
@@ -323,28 +349,34 @@ export default function OptimizedCompanyDetailClient({
                             <button
                               type='button'
                               className='flex-shrink-0 items-start'
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleJobFavoriteToggle(jobKey);
                               }}
                               aria-label='お気に入り'
                             >
-                              <Star 
-                                size={24} 
-                                fill={jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'}
-                                color={jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'}
+                              <Star
+                                size={24}
+                                fill={
+                                  jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'
+                                }
+                                color={
+                                  jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'
+                                }
                               />
                             </button>
                           </div>
                           <h3 className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.6] tracking-[1.6px] text-[#0f9058] break-words mt-2">
-                            {job?.title || '求人テキストが入ります | 求人テキストが入ります'}
+                            {job?.title ||
+                              '求人テキストが入ります | 求人テキストが入ります'}
                           </h3>
                         </div>
 
                         {/* PC：タイトル優先レイアウト */}
                         <div className='hidden md:block'>
                           <h3 className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[1.6] tracking-[1.6px] text-[#0f9058] break-words">
-                            {job?.title || '求人テキストが入ります | 求人テキストが入ります'}
+                            {job?.title ||
+                              '求人テキストが入ります | 求人テキストが入ります'}
                           </h3>
                           <div className='flex flex-row gap-2 items-start flex-wrap mt-1'>
                             {tags.map((tag, tagIndex) => (
@@ -358,20 +390,20 @@ export default function OptimizedCompanyDetailClient({
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* PC：右側の星アイコン */}
                       <div className='hidden md:flex flex-col items-center justify-start pt-1'>
                         <button
                           type='button'
                           className='p-1'
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleJobFavoriteToggle(jobKey);
                           }}
                           aria-label='お気に入り'
                         >
-                          <Star 
-                            size={24} 
+                          <Star
+                            size={24}
                             fill={jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'}
                             color={jobFavorites[jobKey] ? '#FFDA5F' : '#DCDCDC'}
                           />

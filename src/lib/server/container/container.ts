@@ -14,8 +14,6 @@ export class DIContainer {
   private constructor() {
     this.container = new Container({
       defaultScope: 'Singleton',
-      skipBaseClassChecks: true,
-      autoBindInjectable: true,
     });
 
     logger.info('DIContainer initialized');

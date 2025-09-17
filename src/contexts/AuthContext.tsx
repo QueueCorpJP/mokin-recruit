@@ -8,15 +8,26 @@ import React, {
   startTransition,
 } from 'react';
 import { type User } from '@supabase/supabase-js';
-import type { AuthContextType, UserType } from '@/types';
+import type { AuthContextType, AuthUser, UserType } from '@/types';
 
 const createClientLazy = () =>
   import('@/lib/supabase/client').then(mod => mod.createClient);
 
+// Convert Supabase User to AuthUser
+const convertToAuthUser = (user: User): AuthUser => ({
+  id: user.id,
+  email: user.email || '',
+  userType: (user.user_metadata?.user_type as UserType) || 'candidate',
+  name: user.user_metadata?.name,
+  emailConfirmed: !!user.email_confirmed_at,
+  lastSignIn: user.last_sign_in_at,
+  user_metadata: user.user_metadata,
+});
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
@@ -65,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               startTransition(() => {
                 if (session?.user) {
-                  setUser(session.user);
+                  setUser(convertToAuthUser(session.user));
                   setAccessToken(session.access_token);
                 } else {
                   setUser(null);
@@ -103,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setAccessToken(null);
           } else if (session?.user) {
-            setUser(session.user);
+            setUser(convertToAuthUser(session.user));
             setAccessToken(session.access_token);
           } else {
             setUser(null);
@@ -136,28 +147,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = async (
-    email: string,
-    password: string,
-    userType?: 'candidate' | 'company' | 'admin'
-  ) => {
+  const signIn = async (credentials: {
+    email: string;
+    password: string;
+    userType?: UserType;
+  }) => {
     try {
       // Server Actionを動的インポート
       const { signInAction } = await import('@/lib/auth/actions');
-      const result = await signInAction(email, password, userType);
+      const result = await signInAction(
+        credentials.email,
+        credentials.password,
+        credentials.userType || 'candidate'
+      );
 
       if (result.success) {
         await refreshAuth();
-        return { success: true };
+        return {};
       }
 
       return {
-        success: false,
         error: result.error || 'ログインに失敗しました',
       };
     } catch (error) {
       console.error('Sign in error:', error);
-      return { success: false, error: 'ネットワークエラーが発生しました' };
+      return { error: 'ネットワークエラーが発生しました' };
     }
   };
 
@@ -191,7 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = await supabase.auth.getSession();
 
         if (session?.user) {
-          setUser(session.user);
+          setUser(convertToAuthUser(session.user));
           setAccessToken(session.access_token);
         } else {
           setUser(null);
@@ -205,7 +219,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, accessToken, signIn, signOut, refreshAuth }}
+      value={{
+        user,
+        loading,
+        accessToken,
+        signIn,
+        signOut: signOut as () => Promise<void>,
+        signUp: async () => ({ error: 'Not implemented' }),
+        resetPassword: async () => ({ error: 'Not implemented' }),
+        updatePassword: async () => ({ error: 'Not implemented' }),
+        refreshSession: refreshAuth,
+      }}
     >
       {children}
     </AuthContext.Provider>

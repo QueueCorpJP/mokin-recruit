@@ -1,5 +1,3 @@
-import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
-import { AuthAwareFooterServer } from '@/components/layout/AuthAwareFooterServer';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import EditClient from './EditClient';
 

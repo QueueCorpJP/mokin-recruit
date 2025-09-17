@@ -15,6 +15,9 @@ import type {
   ModalState,
 } from '@/types';
 
+// Re-export types for components
+export type { CandidateFormData } from '@/types';
+
 interface CandidateState {
   formData: CandidateFormData;
   education: EducationData;

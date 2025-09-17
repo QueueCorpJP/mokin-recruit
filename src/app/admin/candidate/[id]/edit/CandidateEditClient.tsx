@@ -21,6 +21,7 @@ import type {
   AdminWorkExperienceData as WorkExperienceData,
   AdminJobTypeExperienceData as JobTypeExperienceData,
 } from '@/types/admin';
+import type { SelectionEntry } from '@/types/forms';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
 import WorkLocationSelectModal from '@/components/career-status/WorkLocationSelectModal';
@@ -97,7 +98,14 @@ export default function CandidateEditClient({ candidate }: Props) {
     first_name: candidate.first_name || '',
     last_name_kana: candidate.last_name_kana || '',
     first_name_kana: candidate.first_name_kana || '',
-    gender: candidate.gender || 'unspecified',
+    gender:
+      (candidate.gender === 'male'
+        ? '男性'
+        : candidate.gender === 'female'
+          ? '女性'
+          : candidate.gender === 'unspecified'
+            ? '未回答'
+            : candidate.gender) || '未回答',
     birth_date: candidate.birth_date || '',
     prefecture: candidate.prefecture || '',
     phone_number: candidate.phone_number || '',
@@ -122,37 +130,43 @@ export default function CandidateEditClient({ candidate }: Props) {
     job_summary: candidate.job_summary || '',
     self_pr: candidate.self_pr || '',
     recent_job_industries:
-      candidate.recent_job_industries?.map((industry: any) =>
-        typeof industry === 'object'
-          ? industry.name || industry.id || JSON.stringify(industry)
-          : industry
+      candidate.recent_job_industries?.map(
+        (
+          industry: string | { name?: string; id?: string; [key: string]: any }
+        ) =>
+          typeof industry === 'object'
+            ? industry.name || industry.id || JSON.stringify(industry)
+            : industry
       ) || [],
     recent_job_types:
-      candidate.recent_job_types?.map((jobType: any) =>
-        typeof jobType === 'object'
-          ? jobType.name || jobType.id || JSON.stringify(jobType)
-          : jobType
+      candidate.recent_job_types?.map(
+        (
+          jobType: string | { name?: string; id?: string; [key: string]: any }
+        ) =>
+          typeof jobType === 'object'
+            ? jobType.name || jobType.id || JSON.stringify(jobType)
+            : jobType
       ) || [],
     desired_industries:
-      candidate.desired_industries?.map((industry: any) =>
+      candidate.desired_industries?.map(industry =>
         typeof industry === 'object'
           ? industry.name || industry.id || JSON.stringify(industry)
           : industry
       ) || [],
     desired_job_types:
-      candidate.desired_job_types?.map((jobType: any) =>
+      candidate.desired_job_types?.map(jobType =>
         typeof jobType === 'object'
           ? jobType.name || jobType.id || JSON.stringify(jobType)
           : jobType
       ) || [],
     desired_locations:
-      candidate.desired_locations?.map((location: any) =>
+      candidate.desired_locations?.map(location =>
         typeof location === 'object'
           ? location.name || location.id || JSON.stringify(location)
           : location
       ) || [],
-    desired_work_styles:
-      candidate.interested_work_styles?.map((style: any) =>
+    interested_work_styles:
+      candidate.interested_work_styles?.map(style =>
         typeof style === 'object'
           ? style.name || style.id || JSON.stringify(style)
           : style
@@ -177,22 +191,19 @@ export default function CandidateEditClient({ candidate }: Props) {
       ? candidate.skills[0].other_languages
       : [{ language: '', level: '' }],
     skills_list: candidate.skills[0]?.skills_list
-      ? candidate.skills[0].skills_list.map((skill: any) =>
+      ? candidate.skills[0].skills_list.map(skill =>
           typeof skill === 'object'
             ? skill.name || skill.id || JSON.stringify(skill)
             : skill
         )
       : [],
-    skills_tags:
-      (candidate.skills[0] as any)?.skills_tags ||
-      (candidate.skills[0] as any)?.skills_list ||
-      [],
+    skills_tags: (candidate.skills[0] as any)?.skills_tags || [],
     qualifications: candidate.skills[0]?.qualifications || '',
   });
 
   // Work experience data
   const [workExperience, setWorkExperience] = useState<WorkExperienceData[]>(
-    candidate.work_experience?.map((exp: any) => ({
+    candidate.work_experience?.map(exp => ({
       industry_name:
         typeof exp.industry_name === 'object'
           ? exp.industry_name.name ||
@@ -207,7 +218,7 @@ export default function CandidateEditClient({ candidate }: Props) {
   const [jobTypeExperience, setJobTypeExperience] = useState<
     JobTypeExperienceData[]
   >(
-    candidate.job_type_experience?.map((exp: any) => ({
+    candidate.job_type_experience?.map(exp => ({
       job_type_name:
         typeof exp.job_type_name === 'object'
           ? exp.job_type_name.name ||
@@ -218,15 +229,24 @@ export default function CandidateEditClient({ candidate }: Props) {
     })) || []
   );
 
-  const handleInputChange = (field: keyof UpdateCandidateData, value: any) => {
+  const handleInputChange = (
+    field: keyof UpdateCandidateData,
+    value: string | string[] | number | boolean
+  ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleEducationChange = (field: keyof EducationData, value: any) => {
+  const handleEducationChange = (
+    field: keyof EducationData,
+    value: string | number
+  ) => {
     setEducation(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSkillsChange = (field: keyof SkillsData, value: any) => {
+  const handleSkillsChange = (
+    field: keyof SkillsData,
+    value: string | string[] | object[]
+  ) => {
     setSkills(prev => ({ ...prev, [field]: value }));
   };
 
@@ -243,7 +263,7 @@ export default function CandidateEditClient({ candidate }: Props) {
 
   const handleRemoveLanguage = (index: number) => {
     const currentLanguages = skills.other_languages || [];
-    const newLanguages = currentLanguages.filter((_: any, i) => i !== index);
+    const newLanguages = currentLanguages.filter((_, i) => i !== index);
     setSkills(prev => ({ ...prev, other_languages: newLanguages }));
   };
 
@@ -289,7 +309,7 @@ export default function CandidateEditClient({ candidate }: Props) {
           experience_years: Number(value || 0),
         };
       } else {
-        updated[index] = { ...updated[index], [field]: value as any };
+        updated[index] = { ...updated[index], [field]: value };
       }
       return updated;
     });
@@ -324,7 +344,7 @@ export default function CandidateEditClient({ candidate }: Props) {
           experience_years: Number(value || 0),
         };
       } else {
-        updated[index] = { ...updated[index], [field]: value as any };
+        updated[index] = { ...updated[index], [field]: value };
       }
       return updated;
     });
@@ -363,7 +383,11 @@ export default function CandidateEditClient({ candidate }: Props) {
   };
 
   // Selection entry helper functions
-  const updateSelectionEntry = (index: number, field: string, value: any) => {
+  const updateSelectionEntry = (
+    index: number,
+    field: keyof SelectionEntry,
+    value: string | string[] | boolean
+  ) => {
     setSelectionEntries(prev =>
       prev.map((entry, i) =>
         i === index ? { ...entry, [field]: value } : entry
@@ -448,7 +472,7 @@ export default function CandidateEditClient({ candidate }: Props) {
       }
     } else if (modalType === 'workstyle') {
       if (targetIndex === -4) {
-        return (formData.desired_work_styles || []).map(style => ({
+        return (formData.interested_work_styles || []).map((style: string) => ({
           id: style.toLowerCase().replace(/[^a-z0-9]/g, ''),
           name: style,
         }));
@@ -519,7 +543,7 @@ export default function CandidateEditClient({ candidate }: Props) {
     if (targetIndex !== null) {
       if (targetIndex === -4) {
         const workStyleNames = selectedWorkStyles.map(style => style.name);
-        handleInputChange('desired_work_styles', workStyleNames);
+        handleInputChange('interested_work_styles', workStyleNames);
       }
     }
     setModalState({ isOpen: false, targetType: null, targetIndex: null });
@@ -613,14 +637,14 @@ export default function CandidateEditClient({ candidate }: Props) {
           desired_industries: formData.desired_industries,
           desired_job_types: formData.desired_job_types,
           desired_work_locations: formData.desired_locations,
-          desired_work_styles: formData.desired_work_styles,
+          interested_work_styles: formData.interested_work_styles,
         },
       };
 
       // デバッグ用
       console.log(
         'FormData desired_work_styles:',
-        formData.desired_work_styles
+        formData.interested_work_styles
       );
       console.log('ConfirmData expectations:', confirmData.expectations);
 
@@ -628,7 +652,7 @@ export default function CandidateEditClient({ candidate }: Props) {
       if (typeof window !== 'undefined') {
         const encrypted = CryptoJS.AES.encrypt(
           JSON.stringify(confirmData),
-          ENCRYPTION_KEY
+          process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'default-key'
         ).toString();
         sessionStorage.setItem('candidateEditData', encrypted);
       }
@@ -1921,7 +1945,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                         onChange={e =>
                           handleEducationChange(
                             'graduation_year',
-                            e.target.value ? parseInt(e.target.value) : null
+                            e.target.value ? parseInt(e.target.value) : ''
                           )
                         }
                         className='w-full px-[11px] py-[11px] pl-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
@@ -1957,7 +1981,7 @@ export default function CandidateEditClient({ candidate }: Props) {
                         onChange={e =>
                           handleEducationChange(
                             'graduation_month',
-                            e.target.value ? parseInt(e.target.value) : null
+                            e.target.value ? parseInt(e.target.value) : ''
                           )
                         }
                         className='w-full px-[11px] py-[11px] pl-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
@@ -2589,44 +2613,46 @@ export default function CandidateEditClient({ candidate }: Props) {
                     興味のある働き方を選択
                   </button>
                   <div className='flex flex-wrap gap-2'>
-                    {formData.desired_work_styles?.map((workStyle, index) => (
-                      <div
-                        key={index}
-                        className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
-                      >
-                        <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
-                          {workStyle}
-                        </span>
-                        <button
-                          type='button'
-                          onClick={() => {
-                            const newWorkStyles =
-                              formData.desired_work_styles?.filter(
-                                (_, i) => i !== index
-                              ) || [];
-                            handleInputChange(
-                              'desired_work_styles',
-                              newWorkStyles
-                            );
-                          }}
-                          className='w-3 h-3'
+                    {formData.interested_work_styles?.map(
+                      (workStyle: string, index: number) => (
+                        <div
+                          key={index}
+                          className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
                         >
-                          <svg
-                            width='12'
-                            height='12'
-                            viewBox='0 0 12 12'
-                            fill='none'
+                          <span className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'>
+                            {workStyle}
+                          </span>
+                          <button
+                            type='button'
+                            onClick={() => {
+                              const newWorkStyles =
+                                formData.interested_work_styles?.filter(
+                                  (_: string, i: number) => i !== index
+                                ) || [];
+                              handleInputChange(
+                                'interested_work_styles',
+                                newWorkStyles
+                              );
+                            }}
+                            className='w-3 h-3'
                           >
-                            <path
-                              d='M1 1L11 11M1 11L11 1'
-                              stroke='#0f9058'
-                              strokeWidth='2'
-                              strokeLinecap='round'
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+                            <svg
+                              width='12'
+                              height='12'
+                              viewBox='0 0 12 12'
+                              fill='none'
+                            >
+                              <path
+                                d='M1 1L11 11M1 11L11 1'
+                                stroke='#0f9058'
+                                strokeWidth='2'
+                                strokeLinecap='round'
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -2687,10 +2713,12 @@ export default function CandidateEditClient({ candidate }: Props) {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleIndustryConfirm}
-          initialSelected={getModalInitialData(
-            'industry',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData(
+              'industry',
+              modalState.targetIndex || 0
+            ) as string[]
+          }
         />
       )}
 
@@ -2699,10 +2727,12 @@ export default function CandidateEditClient({ candidate }: Props) {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleJobTypeConfirm}
-          initialSelected={getModalInitialData(
-            'jobtype',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData(
+              'jobtype',
+              modalState.targetIndex || 0
+            ) as string[]
+          }
         />
       )}
 
@@ -2711,10 +2741,12 @@ export default function CandidateEditClient({ candidate }: Props) {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleLocationConfirm}
-          initialSelected={getModalInitialData(
-            'location',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData('location', modalState.targetIndex || 0) as {
+              id: string;
+              name: string;
+            }[]
+          }
         />
       )}
 
@@ -2723,10 +2755,12 @@ export default function CandidateEditClient({ candidate }: Props) {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleWorkStyleConfirm}
-          initialSelected={getModalInitialData(
-            'workstyle',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData('workstyle', modalState.targetIndex || 0) as {
+              id: string;
+              name: string;
+            }[]
+          }
         />
       )}
     </>

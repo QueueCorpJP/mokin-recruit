@@ -4,10 +4,11 @@ import {
   UseFormRegister,
   UseFormWatch,
   FieldValues,
+  Path,
 } from 'react-hook-form';
 import { FormLabel } from './common/FormLabel';
 import { FormInput } from './common/FormInput';
-import { FormSelect } from './common/FormSelect';
+import { SelectInput } from '@/components/ui/select-input';
 
 export type EducationSectionProps<T extends FieldValues> = {
   register: UseFormRegister<T>;
@@ -39,10 +40,13 @@ function EducationSection<T extends FieldValues>({
             <FormLabel htmlFor='finalEducation'>最終学歴</FormLabel>
           </div>
           <div className='relative'>
-            <FormSelect id='finalEducation' {...register('finalEducation')}>
+            <SelectInput
+              id='finalEducation'
+              {...register('finalEducation' as Path<T>)}
+            >
               <option value=''>未選択</option>
               {/* educationOptionsは親でmapして渡す想定 */}
-            </FormSelect>
+            </SelectInput>
           </div>
         </div>
         {/* 学校名 */}
@@ -54,7 +58,7 @@ function EducationSection<T extends FieldValues>({
             id='schoolName'
             type='text'
             placeholder='学校名を入力'
-            {...register('schoolName')}
+            {...register('schoolName' as Path<T>)}
           />
         </div>
         {/* 学部学科専攻 */}
@@ -66,7 +70,7 @@ function EducationSection<T extends FieldValues>({
             id='department'
             type='text'
             placeholder='学部学科専攻を入力'
-            {...register('department')}
+            {...register('department' as Path<T>)}
           />
         </div>
         {/* 卒業年月 */}
@@ -76,27 +80,33 @@ function EducationSection<T extends FieldValues>({
           </div>
           <div className='flex gap-2 items-center'>
             <div className='relative flex-1'>
-              <FormSelect id='graduationYear' {...register('graduationYear')}>
+              <SelectInput
+                id='graduationYear'
+                {...register('graduationYear' as Path<T>)}
+              >
                 <option value=''>未選択</option>
                 {yearOptions.map(year => (
                   <option key={year} value={year}>
                     {year}
                   </option>
                 ))}
-              </FormSelect>
+              </SelectInput>
             </div>
             <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
               年
             </span>
             <div className='relative flex-1'>
-              <FormSelect id='graduationMonth' {...register('graduationMonth')}>
+              <SelectInput
+                id='graduationMonth'
+                {...register('graduationMonth' as Path<T>)}
+              >
                 <option value=''>未選択</option>
                 {monthOptions.map(month => (
                   <option key={month} value={month}>
                     {month}
                   </option>
                 ))}
-              </FormSelect>
+              </SelectInput>
             </div>
             <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
               月
@@ -116,10 +126,13 @@ function EducationSection<T extends FieldValues>({
         </div>
         <div className='flex-1 py-6'>
           <div className='w-[400px] relative'>
-            <FormSelect id='finalEducation' {...register('finalEducation')}>
+            <SelectInput
+              id='finalEducation'
+              {...register('finalEducation' as Path<T>)}
+            >
               <option value=''>未選択</option>
               {/* educationOptionsは親でmapして渡す想定 */}
-            </FormSelect>
+            </SelectInput>
           </div>
         </div>
       </div>
@@ -134,7 +147,7 @@ function EducationSection<T extends FieldValues>({
               id='schoolName'
               type='text'
               placeholder='学校名を入力'
-              {...register('schoolName')}
+              {...register('schoolName' as Path<T>)}
             />
           </div>
         </div>
@@ -150,7 +163,7 @@ function EducationSection<T extends FieldValues>({
               id='department'
               type='text'
               placeholder='学部学科専攻を入力'
-              {...register('department')}
+              {...register('department' as Path<T>)}
             />
           </div>
         </div>
@@ -163,27 +176,33 @@ function EducationSection<T extends FieldValues>({
         <div className='flex-1 py-6'>
           <div className='flex gap-2 items-center w-[400px]'>
             <div className='relative flex-1'>
-              <FormSelect id='graduationYear' {...register('graduationYear')}>
+              <SelectInput
+                id='graduationYear'
+                {...register('graduationYear' as Path<T>)}
+              >
                 <option value=''>未選択</option>
                 {yearOptions.map(year => (
                   <option key={year} value={year}>
                     {year}
                   </option>
                 ))}
-              </FormSelect>
+              </SelectInput>
             </div>
             <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
               年
             </span>
             <div className='relative flex-1'>
-              <FormSelect id='graduationMonth' {...register('graduationMonth')}>
+              <SelectInput
+                id='graduationMonth'
+                {...register('graduationMonth' as Path<T>)}
+              >
                 <option value=''>未選択</option>
                 {monthOptions.map(month => (
                   <option key={month} value={month}>
                     {month}
                   </option>
                 ))}
-              </FormSelect>
+              </SelectInput>
             </div>
             <span className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
               月

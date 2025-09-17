@@ -23,7 +23,7 @@ export const useSessionQuery = (enabled = true) => {
     setError(null);
     try {
       const response = await apiClient.get<SessionResponse>('/auth/session');
-      setData(response);
+      setData(response.data || response);
     } catch (err) {
       setError(
         err instanceof Error ? err : new Error('Failed to fetch session')

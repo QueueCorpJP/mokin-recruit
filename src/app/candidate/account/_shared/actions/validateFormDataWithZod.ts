@@ -40,7 +40,10 @@ export async function validateFormDataWithZod<T extends ZodTypeAny>(
     return { success: true, data: result.data };
   } else {
     // エラーをflattenして返却
-    const errors = result.error.flatten().fieldErrors;
+    const errors = result.error.flatten().fieldErrors as Record<
+      string,
+      string[]
+    >;
     return {
       success: false,
       errors,

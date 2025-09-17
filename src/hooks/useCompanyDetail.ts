@@ -205,8 +205,8 @@ export function useCompanyDetail(companyId: string): CompanyDataState {
             company.industries && Array.isArray(company.industries)
               ? company.industries
               : ['業種未設定'],
-          salaryMin: null,
-          salaryMax: null,
+          salaryMin: undefined,
+          salaryMax: undefined,
           salaryNote: '募集要項をご確認ください',
           locations: ['募集要項をご確認ください'],
           locationNote: '詳細は募集要項をご確認ください',

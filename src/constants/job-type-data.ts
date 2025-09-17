@@ -1,5 +1,7 @@
 import type { JobType, JobTypeGroup } from '@/types';
 
+export type { JobType } from '@/types';
+
 export const JOB_TYPE_GROUPS: JobTypeGroup[] = [
   {
     id: 'consultant',

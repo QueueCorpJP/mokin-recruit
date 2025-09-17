@@ -1944,10 +1944,12 @@ export default function CandidateNewClient() {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleIndustryConfirm}
-          initialSelected={getModalInitialData(
-            'industry',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData(
+              'industry',
+              modalState.targetIndex || 0
+            ) as string[]
+          }
         />
       )}
 
@@ -1956,10 +1958,12 @@ export default function CandidateNewClient() {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleJobTypeConfirm}
-          initialSelected={getModalInitialData(
-            'jobtype',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData(
+              'jobtype',
+              modalState.targetIndex || 0
+            ) as string[]
+          }
         />
       )}
 
@@ -1968,10 +1972,12 @@ export default function CandidateNewClient() {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleWorkStyleConfirm}
-          initialSelected={getModalInitialData(
-            'workstyle',
-            modalState.targetIndex || 0
-          )}
+          initialSelected={
+            getModalInitialData('workstyle', modalState.targetIndex || 0) as {
+              id: string;
+              name: string;
+            }[]
+          }
         />
       )}
     </>

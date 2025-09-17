@@ -3,8 +3,6 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { InputField } from '@/components/ui/input-field';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
@@ -70,15 +68,19 @@ export function LoginForm({ userType }: LoginFormProps) {
 
     startTransition(async () => {
       try {
-        const result = await signIn(email.trim(), password, userType);
+        const result = await signIn({
+          email: email.trim(),
+          password,
+          userType: userType as UserType,
+        });
 
-        if (result.success) {
+        if (result.error) {
+          setError(result.error || 'ログインに失敗しました');
+        } else {
           setSuccess('ログインに成功しました！');
           setTimeout(() => {
             router.push(getRedirectPath());
           }, 1000);
-        } else {
-          setError(result.error || 'ログインに失敗しました');
         }
       } catch (error) {
         console.error('Login error:', error);

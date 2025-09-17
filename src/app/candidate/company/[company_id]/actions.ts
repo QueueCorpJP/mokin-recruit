@@ -3,6 +3,9 @@
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import type { CompanyDetailData, JobPostingData } from '@/types';
 
+// Re-export types for components
+export type { CompanyDetailData } from '@/types';
+
 // デフォルトデータを返す関数
 function getDefaultCompanyData(company_id: string): CompanyDetailData {
   return {

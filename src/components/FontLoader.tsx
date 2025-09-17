@@ -14,9 +14,9 @@ export function FontLoader() {
             document.fonts.load('500 16px var(--font-noto-sans-jp)'),
             document.fonts.load('600 16px var(--font-noto-sans-jp)'),
             document.fonts.load('700 16px var(--font-noto-sans-jp)'),
-            document.fonts.load('800 16px var(--font-noto-sans-jp)')
+            document.fonts.load('800 16px var(--font-noto-sans-jp)'),
           ]);
-          
+
           // フォント読み込み完了後にクラスを追加
           document.documentElement.classList.add('font-loaded');
           document.documentElement.classList.remove('font-loading');
@@ -30,7 +30,7 @@ export function FontLoader() {
 
       // 初期状態はloading
       document.documentElement.classList.add('font-loading');
-      
+
       // フォント読み込み開始
       loadFonts();
 
@@ -46,6 +46,9 @@ export function FontLoader() {
       return () => {
         clearTimeout(timeout);
       };
+    } else {
+      // TypeScript requires all code paths to return a value when the function signature expects one
+      return () => {};
     }
   }, []);
 

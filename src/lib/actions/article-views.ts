@@ -5,7 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 /**
  * 記事の訪問数をインクリメント
  */
-export async function incrementArticleViewCount(articleId: string): Promise<{ success: boolean; views_count?: number; error?: string }> {
+export async function incrementArticleViewCount(
+  articleId: string
+): Promise<{ success: boolean; views_count?: number; error?: string }> {
   try {
     if (!articleId || typeof articleId !== 'string') {
       return { success: false, error: 'Invalid article ID' };
@@ -14,12 +16,12 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
     const supabase = createAdminClient();
 
     // 記事の現在のviews_countを取得してインクリメント
-    const { data: article, error: fetchError } = await supabase
+    const { data: article, error: fetchError } = (await supabase
       .from('articles')
       .select('views_count')
       .eq('id', articleId)
       .eq('status', 'PUBLISHED') // 公開済みの記事のみ
-      .single();
+      .single()) as { data: { views_count: number } | null; error: any };
 
     if (fetchError) {
       console.error('記事の取得に失敗:', fetchError);
@@ -30,15 +32,15 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
       return { success: false, error: 'Article not found' };
     }
 
-    const currentCount = (article.views_count as number) || 0;
+    const currentCount =
+      typeof article.views_count === 'number' ? article.views_count : 0;
     const newCount = currentCount + 1;
 
     // views_countをインクリメント
-    const { error: updateError } = await supabase
-      .from('articles')
-      .update({ 
+    const { error: updateError } = await (supabase.from('articles') as any)
+      .update({
         views_count: newCount,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', articleId);
 
@@ -47,16 +49,15 @@ export async function incrementArticleViewCount(articleId: string): Promise<{ su
       return { success: false, error: 'Failed to update view count' };
     }
 
-    return { 
-      success: true, 
-      views_count: newCount 
+    return {
+      success: true,
+      views_count: newCount,
     };
-
   } catch (error) {
     console.error('サーバーアクションエラー:', error);
-    return { 
-      success: false, 
-      error: 'Internal server error' 
+    return {
+      success: false,
+      error: 'Internal server error',
     };
   }
 }

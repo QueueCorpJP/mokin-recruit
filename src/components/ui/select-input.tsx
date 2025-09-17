@@ -10,7 +10,7 @@ interface SelectOption {
 }
 
 interface SelectInputProps {
-  options: SelectOption[];
+  options: readonly SelectOption[];
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;

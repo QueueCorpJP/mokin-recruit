@@ -59,7 +59,8 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
   try {
     const { data, error } = await supabase
       .from('job_postings')
-      .select(`
+      .select(
+        `
         id,
         title,
         job_description,
@@ -100,7 +101,8 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
           group_name,
           description
         )
-      `)
+      `
+      )
       .eq('id', jobId)
       .eq('status', 'PUBLISHED') // 公開されている求人のみ取得
       .single();
@@ -110,7 +112,19 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
       return null;
     }
 
-    return data as JobPostingDetail;
+    // Fix type compatibility issue with company_account
+    const result: JobPostingDetail = {
+      ...data,
+      company_account:
+        Array.isArray(data.company_account) && data.company_account.length > 0
+          ? data.company_account[0]
+          : null,
+      company_group:
+        Array.isArray(data.company_group) && data.company_group.length > 0
+          ? data.company_group[0]
+          : null,
+    };
+    return result;
   } catch (error) {
     console.error('Unexpected error fetching job detail:', error);
     return null;
@@ -120,10 +134,12 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
 // 共有キャッシュで重複取得を避ける
 const jobDetailCache = new Map<string, JobPostingDetail | null>();
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   // キャッシュから取得、なければDBから取得
   let jobDetail = jobDetailCache.get(params.job_id);
-  if (!jobDetail && jobDetail !== null) {
+  if (jobDetail === undefined) {
     jobDetail = await getJobDetail(params.job_id);
     jobDetailCache.set(params.job_id, jobDetail);
   }
@@ -136,7 +152,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const companyName = jobDetail.company_account?.company_name || '企業名不明';
-  const description = jobDetail.position_summary || jobDetail.job_description.slice(0, 160);
+  const description =
+    jobDetail.position_summary || jobDetail.job_description.slice(0, 160);
 
   return {
     title: `${jobDetail.title} - ${companyName} | 求人詳細`,
@@ -154,7 +171,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function JobDetailPage({ params }: PageProps) {
   // キャッシュから取得、なければDBから取得
   let jobDetail = jobDetailCache.get(params.job_id);
-  if (!jobDetail && jobDetail !== null) {
+  if (jobDetail === undefined) {
     jobDetail = await getJobDetail(params.job_id);
     jobDetailCache.set(params.job_id, jobDetail);
   }

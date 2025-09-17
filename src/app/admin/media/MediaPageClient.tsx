@@ -24,7 +24,7 @@ export default function MediaPageClient({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeletedModal, setShowDeletedModal] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
-  const [deletedArticleTitle, __setDeletedArticleTitle] = useState('');
+  const [deletedArticleTitle, ____setDeletedArticleTitle] = useState('');
   const itemsPerPage = 10;
 
   const getStatusBadge = (status: Article['status']) => {
@@ -108,7 +108,7 @@ export default function MediaPageClient({
   const handleConfirmDelete = async () => {
     // 仮実装: ローカル状態のみ更新
     if (articleToDelete) {
-      _setDeletedArticleTitle(articleToDelete.title);
+      ____setDeletedArticleTitle(articleToDelete.title);
       setShowDeleteModal(false);
       setArticleToDelete(null);
       setShowDeletedModal(true);
@@ -123,7 +123,7 @@ export default function MediaPageClient({
 
   const handleCloseDeletedModal = () => {
     setShowDeletedModal(false);
-    _setDeletedArticleTitle('');
+    ____setDeletedArticleTitle('');
   };
 
   const handlePrevious = () => {

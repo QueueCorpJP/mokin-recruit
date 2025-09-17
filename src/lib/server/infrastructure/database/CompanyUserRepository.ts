@@ -105,7 +105,8 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -128,7 +129,8 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
   // 最終ログイン時刻の更新
   async updateLastLogin(id: string): Promise<boolean> {
     try {
-      const { error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { error } = await client
         .from(this.tableName)
         .update({
           last_login_at: new Date().toISOString(),
@@ -152,7 +154,8 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
   // IDで企業ユーザーを検索
   async findById(id: string): Promise<CompanyUserEntity | null> {
     try {
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('id', id)
@@ -179,7 +182,8 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
     companyAccountId: string
   ): Promise<CompanyUserEntity[]> {
     try {
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .select('*')
         .eq('company_account_id', companyAccountId);
@@ -202,10 +206,8 @@ export class CompanyUserRepository extends UserSupabaseRepository<CompanyUserEnt
   // 企業ユーザーの削除
   async delete(id: string): Promise<boolean> {
     try {
-      const { error } = await this.client
-        .from(this.tableName)
-        .delete()
-        .eq('id', id);
+      const client = await this.getAuthenticatedClient();
+      const { error } = await client.from(this.tableName).delete().eq('id', id);
 
       if (error) {
         logger.error('Error deleting company user:', error);
@@ -267,7 +269,8 @@ export class CompanyAccountRepository extends UserSupabaseRepository<CompanyAcco
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .insert(createData)
         .select()
@@ -297,7 +300,8 @@ export class CompanyAccountRepository extends UserSupabaseRepository<CompanyAcco
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await this.client
+      const client = await this.getAuthenticatedClient();
+      const { data, error } = await client
         .from(this.tableName)
         .update(updateData)
         .eq('id', id)
@@ -320,10 +324,8 @@ export class CompanyAccountRepository extends UserSupabaseRepository<CompanyAcco
   // 企業アカウントの削除
   async delete(id: string): Promise<boolean> {
     try {
-      const { error } = await this.client
-        .from(this.tableName)
-        .delete()
-        .eq('id', id);
+      const client = await this.getAuthenticatedClient();
+      const { error } = await client.from(this.tableName).delete().eq('id', id);
 
       if (error) {
         logger.error('Error deleting company account:', error);

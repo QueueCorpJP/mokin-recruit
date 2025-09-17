@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { saveNotificationSettings, getNotificationSettings } from './actions';
 import { useCandidateAuth } from '@/hooks/useClientAuth';
 import { useSettingsForm } from '@/app/candidate/setting/_shared/hooks/useSettingsForm';
-import type { NotificationSetting } from '@/types';
+import type { NotificationSettings } from '@/types';
 
 export default function NotificationSettingPage() {
   const { isAuthenticated, candidateUser, loading } = useCandidateAuth();

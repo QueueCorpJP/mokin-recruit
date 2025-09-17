@@ -119,7 +119,11 @@ export default function EditPreviewPage() {
               const names: { [key: string]: string } = {};
               for (const categoryId of data.categoryIds) {
                 const category = categoriesData.find(
-                  cat => cat.id === categoryId
+                  (cat: {
+                    id: string;
+                    name: string;
+                  }): cat is { id: string; name: string } =>
+                    cat && cat.id === categoryId
                 );
                 if (category && category.name) {
                   names[categoryId] = category.name;
