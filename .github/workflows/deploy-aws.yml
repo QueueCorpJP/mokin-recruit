@@ -12,15 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - run: npm ci
-
-      - run: npm run build
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -31,7 +22,19 @@ jobs:
             cd /home/${{ secrets.EC2_USER }}/mokin-recruit || mkdir -p /home/${{ secrets.EC2_USER }}/mokin-recruit
             git pull origin main || git clone https://github.com/${{ github.repository }}.git /home/${{ secrets.EC2_USER }}/mokin-recruit
             cd /home/${{ secrets.EC2_USER }}/mokin-recruit
+            # Write production env from GitHub Secrets
+            cat > .env.production << 'EOF'
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            NODE_ENV=production
+            EOF
             npm ci
             npm run build
-
+            # Ensure pm2 and restart/start app
+            if ! command -v pm2 >/dev/null 2>&1; then
+              npm i -g pm2
+            fi
             pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
