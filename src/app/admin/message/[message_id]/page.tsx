@@ -88,11 +88,13 @@ const DisplayValue: React.FC<{ value: string; className?: string }> = ({
   </div>
 );
 
-async function fetchMessageDetail(messageId: string): Promise<MessageDetail | null> {
+async function fetchMessageDetail(
+  messageId: string
+): Promise<MessageDetail | null> {
   const supabase = getSupabaseAdminClient();
-  
+
   console.log('Fetching message with ID:', messageId);
-  
+
   // まず基本的なメッセージ情報を取得
   const { data: messageData, error: messageError } = await supabase
     .from('messages')
@@ -101,7 +103,10 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
     .single();
 
   if (messageError) {
-    console.error('Error fetching basic message:', JSON.stringify(messageError, null, 2));
+    console.error(
+      'Error fetching basic message:',
+      JSON.stringify(messageError, null, 2)
+    );
     return null;
   }
 
@@ -113,14 +118,16 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
   // 関連するルーム情報を取得
   const { data: roomData, error: roomError } = await supabase
     .from('rooms')
-    .select(`
+    .select(
+      `
       candidate_id,
       related_job_posting_id,
       job_postings:related_job_posting_id (
         id,
         title
       )
-    `)
+    `
+    )
     .eq('id', messageData.room_id)
     .single();
 
@@ -129,61 +136,77 @@ async function fetchMessageDetail(messageId: string): Promise<MessageDetail | nu
   }
 
   // 企業グループ情報を取得（企業からのメッセージの場合のみ）
-  let companyGroupData = null;
-  let companyGroupError = null;
-  
-  if (messageData.sender_type === 'COMPANY_USER' && messageData.sender_company_group_id) {
+  let companyGroupData: any = null;
+  let companyGroupError: any = null;
+
+  if (
+    messageData.sender_type === 'COMPANY_USER' &&
+    messageData.sender_company_group_id
+  ) {
     const result = await supabase
       .from('company_groups')
-      .select(`
+      .select(
+        `
         group_name,
         company_account_id,
         company_accounts:company_account_id (
           id,
           company_name
         )
-      `)
+      `
+      )
       .eq('id', messageData.sender_company_group_id)
       .single();
-    
+
     companyGroupData = result.data;
     companyGroupError = result.error;
-    
+
     if (companyGroupError) {
-      console.warn('Warning: Could not fetch company group data:', companyGroupError);
+      console.warn(
+        'Warning: Could not fetch company group data:',
+        companyGroupError
+      );
     }
   }
 
-  const processedRoomData = roomData ? {
-    candidate_id: roomData.candidate_id,
-    related_job_posting_id: roomData.related_job_posting_id,
-    job_postings: Array.isArray(roomData.job_postings) 
-      ? roomData.job_postings[0] || null 
-      : roomData.job_postings
-  } : null;
+  const processedRoomData = roomData
+    ? {
+        candidate_id: roomData.candidate_id,
+        related_job_posting_id: roomData.related_job_posting_id,
+        job_postings: Array.isArray(roomData.job_postings)
+          ? roomData.job_postings[0] || null
+          : roomData.job_postings,
+      }
+    : null;
 
-  const processedCompanyGroupData = companyGroupData ? {
-    group_name: companyGroupData.group_name,
-    company_account_id: companyGroupData.company_account_id,
-    company_accounts: Array.isArray(companyGroupData.company_accounts)
-      ? companyGroupData.company_accounts[0] || null
-      : companyGroupData.company_accounts
-  } : null;
+  const processedCompanyGroupData = companyGroupData
+    ? {
+        group_name: companyGroupData.group_name,
+        company_account_id: companyGroupData.company_account_id,
+        company_accounts: Array.isArray(companyGroupData.company_accounts)
+          ? companyGroupData.company_accounts[0] || null
+          : companyGroupData.company_accounts,
+      }
+    : null;
 
   return {
     ...messageData,
     rooms: processedRoomData,
-    company_groups: processedCompanyGroupData
+    company_groups: processedCompanyGroupData,
   } as MessageDetail;
 }
 
-async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<RoomMessage[]> {
+async function fetchRoomMessages(
+  roomId: string,
+  limit: number = 5
+): Promise<RoomMessage[]> {
   const supabase = getSupabaseAdminClient();
-  
+
   // JOINを使って一括取得でN+1問題を解決
   const { data: messages, error } = await supabase
     .from('messages')
-    .select(`
+    .select(
+      `
       *,
       company_groups:sender_company_group_id (
         group_name,
@@ -193,7 +216,8 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
           company_name
         )
       )
-    `)
+    `
+    )
     .eq('room_id', roomId)
     .order('sent_at', { ascending: true })
     .limit(limit);
@@ -208,9 +232,9 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
   }
 
   // データを正規化
-  const messagesWithGroups = messages.map((message) => {
+  const messagesWithGroups = messages.map(message => {
     let processedCompanyGroupData = null;
-    
+
     if (message.sender_type === 'COMPANY_USER' && message.company_groups) {
       const companyGroupData = message.company_groups;
       processedCompanyGroupData = {
@@ -218,26 +242,29 @@ async function fetchRoomMessages(roomId: string, limit: number = 5): Promise<Roo
         company_account_id: companyGroupData.company_account_id,
         company_accounts: Array.isArray(companyGroupData.company_accounts)
           ? companyGroupData.company_accounts[0] || null
-          : companyGroupData.company_accounts
+          : companyGroupData.company_accounts,
       };
     }
 
     return {
       ...message,
-      company_groups: processedCompanyGroupData
+      company_groups: processedCompanyGroupData,
     } as RoomMessage;
   });
 
   return messagesWithGroups;
 }
 
-async function fetchApplicationDetail(candidateId: string, jobPostingId: string | null): Promise<ApplicationDetail | null> {
+async function fetchApplicationDetail(
+  candidateId: string,
+  jobPostingId: string | null
+): Promise<ApplicationDetail | null> {
   if (!jobPostingId) {
     return null;
   }
-  
+
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('application')
     .select('status, created_at, updated_at, application_message')
@@ -257,9 +284,11 @@ async function fetchApplicationDetail(candidateId: string, jobPostingId: string 
   return data as ApplicationDetail;
 }
 
-async function fetchCareerStatusEntry(candidateId: string): Promise<CareerStatusEntry | null> {
+async function fetchCareerStatusEntry(
+  candidateId: string
+): Promise<CareerStatusEntry | null> {
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('career_status_entries')
     .select('*')
@@ -279,27 +308,31 @@ async function fetchCareerStatusEntry(candidateId: string): Promise<CareerStatus
   return data[0] as CareerStatusEntry;
 }
 
-export default async function MessageDetailPage({ params }: MessageDetailPageProps) {
+export default async function MessageDetailPage({
+  params,
+}: MessageDetailPageProps) {
   const resolvedParams = await params;
   const { message_id } = resolvedParams;
   console.log('Page params:', resolvedParams);
   console.log('Message ID from params:', message_id);
-  
+
   // pendingの場合はリダイレクト
   if (message_id === 'pending') {
     redirect('/admin/message-moderation/ng-keywords');
   }
-  
+
   const messageDetail = await fetchMessageDetail(message_id);
 
   if (!messageDetail) {
     return (
-      <div className="p-8 bg-gray-50 min-h-screen">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mt-20">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">メッセージが見つかりません</h1>
-            <Link href="/admin/message">
-              <AdminButton text="メッセージ一覧に戻る" />
+      <div className='p-8 bg-gray-50 min-h-screen'>
+        <div className='max-w-6xl mx-auto'>
+          <div className='text-center mt-20'>
+            <h1 className='text-2xl font-bold text-gray-900 mb-4'>
+              メッセージが見つかりません
+            </h1>
+            <Link href='/admin/message'>
+              <AdminButton text='メッセージ一覧に戻る' />
             </Link>
           </div>
         </div>
@@ -308,15 +341,20 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
   }
 
   // 並列処理でパフォーマンスを改善
-  const [roomMessages, applicationDetail, careerStatusEntry] = await Promise.all([
-    fetchRoomMessages(messageDetail.room_id, 10),
-    messageDetail.rooms?.candidate_id && messageDetail.rooms?.related_job_posting_id
-      ? fetchApplicationDetail(messageDetail.rooms.candidate_id, messageDetail.rooms.related_job_posting_id)
-      : Promise.resolve(null),
-    messageDetail.rooms?.candidate_id
-      ? fetchCareerStatusEntry(messageDetail.rooms.candidate_id)
-      : Promise.resolve(null)
-  ]);
+  const [roomMessages, applicationDetail, careerStatusEntry] =
+    await Promise.all([
+      fetchRoomMessages(messageDetail.room_id, 10),
+      messageDetail.rooms?.candidate_id &&
+      messageDetail.rooms?.related_job_posting_id
+        ? fetchApplicationDetail(
+            messageDetail.rooms.candidate_id,
+            messageDetail.rooms.related_job_posting_id
+          )
+        : Promise.resolve(null),
+      messageDetail.rooms?.candidate_id
+        ? fetchCareerStatusEntry(messageDetail.rooms.candidate_id)
+        : Promise.resolve(null),
+    ]);
 
   const statusMap: Record<string, string> = {
     SENT: '書類提出',
@@ -332,19 +370,20 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
   };
 
   // フィルタリングロジックを追加
-  const validMessages = roomMessages.reverse().filter((message) => {
+  const validMessages = roomMessages.reverse().filter(message => {
     const hasContent = message.content && message.content.trim().length > 0;
     const hasSubject = message.subject && message.subject.trim().length > 0;
     return hasContent || hasSubject;
   });
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl">
-        
+    <div className='min-h-screen'>
+      <div className='mx-auto max-w-6xl'>
         {/* メッセージ詳細情報 */}
-        <div className="mb-6">
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ情報</h2>
+        <div className='mb-6'>
+          <h2 className='text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]'>
+            メッセージ情報
+          </h2>
           <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
             <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
               <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
@@ -352,7 +391,12 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
               </div>
             </div>
             <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-              <DisplayValue value={messageDetail.company_groups?.company_accounts?.company_name || '不明'} />
+              <DisplayValue
+                value={
+                  messageDetail.company_groups?.company_accounts
+                    ?.company_name || '不明'
+                }
+              />
             </div>
           </div>
           {/* 候補者名 */}
@@ -363,7 +407,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
               </div>
             </div>
             <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-              <DisplayValue 
+              <DisplayValue
                 value={`候補者ID: ${messageDetail.rooms?.candidate_id || '不明'}`}
               />
             </div>
@@ -406,7 +450,9 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue value={careerStatusEntry.progress_status || '未設定'} />
+                <DisplayValue
+                  value={careerStatusEntry.progress_status || '未設定'}
+                />
               </div>
             </div>
           )}
@@ -448,7 +494,7 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <ApplicationStatusSelect 
+                <ApplicationStatusSelect
                   candidateId={messageDetail.rooms.candidate_id}
                   jobPostingId={messageDetail.rooms.related_job_posting_id}
                   currentStatus={applicationDetail.status}
@@ -460,66 +506,83 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
 
         {/* メッセージ履歴 */}
         <div>
-          <h2 className="text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]">メッセージ詳細</h2>
-          <div className="space-y-6">
+          <h2 className='text-[24px] font-bold text-[#323232] mb-6 pb-3 border-b-3 border-[#323232]'>
+            メッセージ詳細
+          </h2>
+          <div className='space-y-6'>
             {validMessages.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">メッセージが見つかりません</p>
+              <div className='text-center py-8'>
+                <p className='text-gray-500'>メッセージが見つかりません</p>
               </div>
             ) : (
-              validMessages.map((message) => {
-                const hasContent = message.content && message.content.trim().length > 0;
-                const hasSubject = message.subject && message.subject.trim().length > 0;
-                
+              validMessages.map(message => {
+                const hasContent =
+                  message.content && message.content.trim().length > 0;
+                const hasSubject =
+                  message.subject && message.subject.trim().length > 0;
+
                 if (!hasContent && !hasSubject) {
                   return null;
                 }
 
                 const isCompany = message.sender_type === 'COMPANY_USER';
-                const companyName = message.company_groups?.company_accounts?.company_name || '企業';
-                const companyLogo = (message.company_groups?.company_accounts as any)?.logo_url;
+                const companyName =
+                  message.company_groups?.company_accounts?.company_name ||
+                  '企業';
+                const companyLogo = (
+                  message.company_groups?.company_accounts as any
+                )?.logo_url;
                 const candidateName = '候補者';
 
                 return (
-                  <div key={message.id} className={`flex gap-4 ${isCompany ? 'flex-row' : 'flex-row-reverse'} items-start`}>
+                  <div
+                    key={message.id}
+                    className={`flex gap-4 ${isCompany ? 'flex-row' : 'flex-row-reverse'} items-start`}
+                  >
                     {/* アイコンと名前 */}
-                    <div className="flex-shrink-0 flex flex-col items-center mt-2">
+                    <div className='flex-shrink-0 flex flex-col items-center mt-2'>
                       {isCompany && companyLogo ? (
-                        <Image 
-                          src={companyLogo} 
+                        <Image
+                          src={companyLogo}
                           alt={companyName}
                           width={48}
                           height={48}
-                          className="rounded-full object-cover border border-gray-200"
+                          className='rounded-full object-cover border border-gray-200'
                         />
                       ) : (
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
-                          isCompany 
-                            ? 'bg-black text-white' 
-                            : 'bg-white text-black border border-black'
-                        }`}>
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
+                            isCompany
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black border border-black'
+                          }`}
+                        >
                           {isCompany ? '企' : '求'}
                         </div>
                       )}
-                      <span className="text-xs text-gray-600 font-medium mt-1 text-center">
+                      <span className='text-xs text-gray-600 font-medium mt-1 text-center'>
                         {isCompany ? companyName : candidateName}
                       </span>
                     </div>
-                    
+
                     {/* メッセージ */}
-                    <div className={`flex-1 ${isCompany ? 'text-left' : 'text-right'}`}>
-                      <div className="mb-1">
-                        <span className="text-xs text-gray-500">
+                    <div
+                      className={`flex-1 ${isCompany ? 'text-left' : 'text-right'}`}
+                    >
+                      <div className='mb-1'>
+                        <span className='text-xs text-gray-500'>
                           {new Date(message.sent_at).toLocaleString('ja-JP')}
                         </span>
                       </div>
-                      <MessageBubble 
-                        className={isCompany ? '' : 'ml-auto'} 
+                      <MessageBubble
+                        className={isCompany ? '' : 'ml-auto'}
                         direction={isCompany ? 'left' : 'right'}
                       >
                         {hasSubject && (
-                          <div className="mb-4">
-                            <h4 className="font-bold text-lg text-gray-900 mb-2">件名</h4>
+                          <div className='mb-4'>
+                            <h4 className='font-bold text-lg text-gray-900 mb-2'>
+                              件名
+                            </h4>
                             <p className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[1.8] text-[#323232]">
                               {message.subject?.trim()}
                             </p>
@@ -540,7 +603,6 @@ export default async function MessageDetailPage({ params }: MessageDetailPagePro
             )}
           </div>
         </div>
-       
       </div>
     </div>
   );

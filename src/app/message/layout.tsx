@@ -3,7 +3,10 @@ import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigati
 import dynamicImport from 'next/dynamic';
 
 const AuthAwareFooterServer = dynamicImport(
-  () => import('@/components/layout/AuthAwareFooterServer').then(mod => ({ default: mod.AuthAwareFooterServer })),
+  () =>
+    import('@/components/layout/AuthAwareFooterServer').then(mod => ({
+      default: mod.AuthAwareFooterServer,
+    })),
   {
     loading: () => <div className='min-h-[200px] bg-[#323232]' />,
   }
@@ -18,13 +21,16 @@ export default async function MessageLayout({
 }) {
   // サーバーサイドで認証状態を確認（1回のみ）
   const auth = await getServerAuth();
-  
+
   // 認証情報を整理
-  const userInfo = auth.isAuthenticated && auth.user ? {
-    name: auth.user.name || auth.user.email,
-    email: auth.user.email,
-    userType: auth.userType
-  } : undefined;
+  const userInfo =
+    auth.isAuthenticated && auth.user
+      ? {
+          name: auth.user.name || auth.user.email,
+          email: auth.user.email,
+          userType: auth.userType,
+        }
+      : undefined;
 
   // 認証状態を確認してvariantを決定
   let variant: 'default' | 'candidate' | 'company' = 'default';
@@ -38,17 +44,9 @@ export default async function MessageLayout({
 
   return (
     <>
-      <AuthAwareNavigationServer 
-        variant={variant} 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
+      <AuthAwareNavigationServer variant={variant} />
       {children}
-      <AuthAwareFooterServer 
-        variant={variant} 
-        isLoggedIn={auth.isAuthenticated}
-        userInfo={userInfo}
-      />
+      <AuthAwareFooterServer variant={variant} />
     </>
   );
 }

@@ -1,7 +1,10 @@
 'use server';
 
 import { createServerActionClient } from '@/lib/supabase/server';
-import { getCachedCompanyUser, requireCompanyAuthForAction } from '@/lib/auth/server';
+import {
+  getCachedCompanyUser,
+  requireCompanyAuthForAction,
+} from '@/lib/auth/server';
 import { revalidatePath } from 'next/cache';
 
 export interface ScoutTemplateData {
@@ -20,25 +23,39 @@ export async function getScoutTemplateById(templateId: string) {
   try {
     console.log('🔍 Getting scout template by ID:', templateId);
     const authResult = await requireCompanyAuthForAction();
-    console.log('👤 Auth result for getScoutTemplateById:', authResult.success ? 'success' : 'failed');
-    
+    console.log(
+      '👤 Auth result for getScoutTemplateById:',
+      authResult.success ? 'success' : 'failed'
+    );
+
     if (!authResult.success) {
-      console.log('❌ Authentication failed:', authResult.error);
-      return { success: false, error: authResult.error, data: null };
+      console.log(
+        '❌ Authentication failed:',
+        (authResult as any).error || '認証が必要です'
+      );
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+        data: null,
+      };
     }
 
     const supabase = createServerActionClient();
-    
+
     // セッション状態を確認
-    const { data: { user }, error: sessionError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: sessionError,
+    } = await supabase.auth.getUser();
     console.log('🔐 Server Action session check:', {
       user: user ? { id: user.id, email: user.email } : null,
-      error: sessionError?.message
+      error: sessionError?.message,
     });
 
     const { data: template, error } = await supabase
       .from('search_templates')
-      .select(`
+      .select(
+        `
         id,
         template_name,
         group_id,
@@ -47,24 +64,25 @@ export async function getScoutTemplateById(templateId: string) {
         body,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('id', templateId)
       .single();
 
     if (error) {
       console.error('Error fetching scout template:', error);
-      return { 
-        success: false, 
-        error: 'スカウトテンプレートの取得に失敗しました', 
-        data: null 
+      return {
+        success: false,
+        error: 'スカウトテンプレートの取得に失敗しました',
+        data: null,
       };
     }
 
     if (!template) {
-      return { 
-        success: false, 
-        error: 'スカウトテンプレートが見つかりません', 
-        data: null 
+      return {
+        success: false,
+        error: 'スカウトテンプレートが見つかりません',
+        data: null,
       };
     }
 
@@ -79,32 +97,44 @@ export async function getScoutTemplateById(templateId: string) {
       updatedAt: template.updated_at,
     };
 
-    return { 
-      success: true, 
-      data: formattedTemplate
+    return {
+      success: true,
+      data: formattedTemplate,
     };
   } catch (error) {
     console.error('Exception in getScoutTemplateById:', error);
-    return { success: false, error: 'スカウトテンプレートの取得に失敗しました', data: null };
+    return {
+      success: false,
+      error: 'スカウトテンプレートの取得に失敗しました',
+      data: null,
+    };
   }
 }
 
 // スカウトテンプレートを更新
-export async function updateScoutTemplate(templateId: string, data: {
-  groupId: string;
-  targetJobPostingId: string;
-  templateName: string;
-  subject: string;
-  body: string;
-}) {
+export async function updateScoutTemplate(
+  templateId: string,
+  data: {
+    groupId: string;
+    targetJobPostingId: string;
+    templateName: string;
+    subject: string;
+    body: string;
+  }
+) {
   try {
     console.log('🔄 Updating scout template:', templateId);
     const companyUser = await getCachedCompanyUser();
-    console.log('👤 Company user for update:', companyUser ? {
-      id: companyUser.id,
-      company_account_id: companyUser.user_metadata?.company_account_id
-    } : 'not found');
-    
+    console.log(
+      '👤 Company user for update:',
+      companyUser
+        ? {
+            id: companyUser.id,
+            company_account_id: companyUser.user_metadata?.company_account_id,
+          }
+        : 'not found'
+    );
+
     if (!companyUser) {
       console.log('❌ No company user found for update');
       return { success: false, error: '認証が必要です' };
@@ -136,7 +166,7 @@ export async function updateScoutTemplate(templateId: string, data: {
         template_name: data.templateName,
         subject: data.subject,
         body: data.body,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', templateId);
 
@@ -160,23 +190,31 @@ export async function deleteScoutTemplate(templateId: string) {
   try {
     console.log('🗑️ Deleting scout template:', templateId);
     const companyUser = await getCachedCompanyUser();
-    console.log('👤 Company user for delete:', companyUser ? {
-      id: companyUser.id,
-      company_account_id: companyUser.user_metadata?.company_account_id
-    } : 'not found');
-    
+    console.log(
+      '👤 Company user for delete:',
+      companyUser
+        ? {
+            id: companyUser.id,
+            company_account_id: companyUser.user_metadata?.company_account_id,
+          }
+        : 'not found'
+    );
+
     if (!companyUser) {
       console.log('❌ No company user found for delete');
       return { success: false, error: '認証が必要です' };
     }
 
     const supabase = createServerActionClient();
-    
+
     // セッション状態を確認
-    const { data: { user }, error: sessionError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: sessionError,
+    } = await supabase.auth.getUser();
     console.log('🔐 Delete action session check:', {
       user: user ? { id: user.id, email: user.email } : null,
-      error: sessionError?.message
+      error: sessionError?.message,
     });
 
     // テンプレートが企業のものかチェック

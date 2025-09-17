@@ -54,8 +54,8 @@ export default function PasswordChangePage() {
       // パスワード変更処理
       const result = await changePassword(currentPassword, newPassword);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '認証が必要です');
       } else {
         // 成功時は完了ページへ遷移
         router.push('/candidate/setting/password/complete');

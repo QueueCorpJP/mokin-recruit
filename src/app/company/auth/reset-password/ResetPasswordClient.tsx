@@ -11,7 +11,9 @@ interface ResetPasswordClientProps {
 export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'success' | 'error'
+  >('idle');
   const [message, setMessage] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -67,7 +69,8 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
         } else {
           setSubmitStatus('error');
           setMessage(
-            result.error || 'パスワードリセット要求の送信に失敗しました。'
+            (result as any).error ||
+              'パスワードリセット要求の送信に失敗しました。'
           );
         }
       } catch (error) {
@@ -89,22 +92,28 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
             <div className='mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center'>
               <CheckCircle className='w-6 h-6 text-green-600' />
             </div>
-            <div className='text-[#0f9058] text-[32px] font-bold w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 700,
-              fontSize: '32px',
-              lineHeight: '1.6',
-              letterSpacing: '3.2px',
-            }}>
+            <div
+              className='text-[#0f9058] text-[32px] font-bold w-full'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 700,
+                fontSize: '32px',
+                lineHeight: '1.6',
+                letterSpacing: '3.2px',
+              }}
+            >
               <p className='block leading-[1.6]'>送信完了</p>
             </div>
-            <div className='text-[#323232] text-[16px] w-full' style={{
-              fontFamily: 'Noto Sans JP, sans-serif',
-              fontWeight: 500,
-              fontSize: '16px',
-              lineHeight: '2',
-              letterSpacing: '1.6px',
-            }}>
+            <div
+              className='text-[#323232] text-[16px] w-full'
+              style={{
+                fontFamily: 'Noto Sans JP, sans-serif',
+                fontWeight: 500,
+                fontSize: '16px',
+                lineHeight: '2',
+                letterSpacing: '1.6px',
+              }}
+            >
               <p className='block mb-0'>{message}</p>
             </div>
           </div>
@@ -118,22 +127,28 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
       <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[800px] mx-auto px-20 py-20'>
         {/* ヘッダー - 見出し+説明 */}
         <div className='flex flex-col gap-6 items-center w-full text-center'>
-          <div className='text-[#0f9058] text-[32px] font-bold w-full' style={{
-            fontFamily: 'Noto Sans JP, sans-serif',
-            fontWeight: 700,
-            fontSize: '32px',
-            lineHeight: '1.6',
-            letterSpacing: '3.2px',
-          }}>
+          <div
+            className='text-[#0f9058] text-[32px] font-bold w-full'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              fontSize: '32px',
+              lineHeight: '1.6',
+              letterSpacing: '3.2px',
+            }}
+          >
             <p className='block leading-[1.6]'>パスワードの再設定</p>
           </div>
-          <div className='text-[#323232] text-[16px] w-full' style={{
-            fontFamily: 'Noto Sans JP, sans-serif',
-            fontWeight: 700,
-            fontSize: '16px',
-            lineHeight: '2',
-            letterSpacing: '1.6px',
-          }}>
+          <div
+            className='text-[#323232] text-[16px] w-full'
+            style={{
+              fontFamily: 'Noto Sans JP, sans-serif',
+              fontWeight: 700,
+              fontSize: '16px',
+              lineHeight: '2',
+              letterSpacing: '1.6px',
+            }}
+          >
             <p className='block mb-0 '>
               サービスに登録されているメールアドレスを入力してください。
             </p>
@@ -144,7 +159,10 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className='flex flex-col gap-10 items-center w-full'>
+        <form
+          onSubmit={handleSubmit}
+          className='flex flex-col gap-10 items-center w-full'
+        >
           {/* エラーメッセージ */}
           {submitStatus === 'error' && (
             <div className='flex items-center gap-2 text-red-600 text-sm'>
@@ -204,7 +222,7 @@ export function ResetPasswordClient({ userType }: ResetPasswordClientProps) {
               {isPending ? (
                 <>
                   <p className='block font-bold leading-[1.6] text-[16px] whitespace-pre'>
-                  送信中...
+                    送信中...
                   </p>
                 </>
               ) : (

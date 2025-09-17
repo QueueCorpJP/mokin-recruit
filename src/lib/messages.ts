@@ -2,7 +2,10 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Message } from '@/components/message/MessageList';
 
-export async function getMessages(userId: string, userType: 'candidate' | 'company'): Promise<Message[]> {
+export async function getMessages(
+  userId: string,
+  userType: 'candidate' | 'company'
+): Promise<Message[]> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,25 +27,27 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
       },
     }
   );
-  
+
   try {
     // ユーザーが参加しているルームを取得
     // まず単純なクエリでroom_participantsを取得
     const { data: participantData, error: participantError } = await supabase
       .from('room_participants')
-      .select(`
+      .select(
+        `
         id,
         room_id,
         participant_type,
         candidate_id,
         company_user_id,
         joined_at
-      `)
-      .eq(
-        userType === 'candidate' ? 'candidate_id' : 'company_user_id',
-        userId
+      `
       )
-      .eq('participant_type', userType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER');
+      .eq(userType === 'candidate' ? 'candidate_id' : 'company_user_id', userId)
+      .eq(
+        'participant_type',
+        userType === 'candidate' ? 'CANDIDATE' : 'COMPANY_USER'
+      );
 
     if (participantError) {
       console.error('Error fetching room participants:', {
@@ -52,7 +57,7 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
         details: participantError.details,
         hint: participantError.hint,
         userId,
-        userType
+        userType,
       });
       return [];
     }
@@ -68,12 +73,12 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
     // 各ルームの最新メッセージを取得
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         id,
         room_id,
         sender_type,
         sender_candidate_id,
-        sender_company_user_id,
         subject,
         content,
         status,
@@ -87,7 +92,8 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
           full_name,
           email
         )
-      `)
+      `
+      )
       .in('room_id', roomIds)
       .order('created_at', { ascending: false });
 
@@ -98,25 +104,33 @@ export async function getMessages(userId: string, userType: 'candidate' | 'compa
 
     // メッセージデータをMessage型に変換
     const messages: Message[] = (messagesData || []).map(msg => {
-      const candidate = Array.isArray(msg.candidates) ? msg.candidates[0] : msg.candidates;
-      const companyUser = Array.isArray(msg.company_users) ? msg.company_users[0] : msg.company_users;
-      const senderName = msg.sender_type === 'CANDIDATE' 
-        ? (candidate ? `${candidate.first_name} ${candidate.last_name}` : '候補者')
-        : companyUser?.full_name || '企業担当者';
-      
+      const candidate = Array.isArray(msg.candidates)
+        ? msg.candidates[0]
+        : msg.candidates;
+      const senderName =
+        msg.sender_type === 'CANDIDATE'
+          ? candidate
+            ? `${candidate.first_name} ${candidate.last_name}`
+            : '候補者'
+          : '企業担当者';
+
       return {
         id: String(msg.id),
         roomId: String(msg.room_id), // room_idを追加
-        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })),
+        timestamp: String(
+          new Date(msg.created_at).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        ),
         isUnread: Boolean(msg.status !== 'READ'),
         companyName: String('企業名'), // TODO: room情報から取得
-        candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
+        candidateName: String(
+          msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'
+        ),
         messagePreview: String(msg.content || msg.subject || 'メッセージ'),
         groupName: String('グループ'), // TODO: room情報から取得
         jobTitle: String('求人タイトル'), // TODO: room情報から取得
@@ -152,16 +166,16 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
       },
     }
   );
-  
+
   try {
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         id,
         room_id,
         sender_type,
         sender_candidate_id,
-        sender_company_user_id,
         subject,
         content,
         status,
@@ -169,10 +183,6 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
         candidates:sender_candidate_id (
           first_name,
           last_name,
-          email
-        ),
-        company_users:sender_company_user_id (
-          full_name,
           email
         ),
         rooms:room_id (
@@ -186,7 +196,8 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
             )
           )
         )
-      `)
+      `
+      )
       .eq('room_id', roomId)
       .order('created_at', { ascending: true });
 
@@ -196,28 +207,44 @@ export async function getMessagesByRoomId(roomId: string): Promise<Message[]> {
     }
 
     const messages: Message[] = (messagesData || []).map(msg => {
-      const candidate = Array.isArray(msg.candidates) ? msg.candidates[0] : msg.candidates;
-      const companyUser = Array.isArray(msg.company_users) ? msg.company_users[0] : msg.company_users;
-      const senderName = msg.sender_type === 'CANDIDATE' 
-        ? (candidate ? `${candidate.first_name} ${candidate.last_name}` : '候補者')
-        : companyUser?.full_name || '企業担当者';
-      
+      const candidate = Array.isArray(msg.candidates)
+        ? msg.candidates[0]
+        : msg.candidates;
+      const senderName =
+        msg.sender_type === 'CANDIDATE'
+          ? candidate
+            ? `${candidate.first_name} ${candidate.last_name}`
+            : '候補者'
+          : '企業担当者';
+
       return {
         id: String(msg.id),
         roomId: String(msg.room_id), // room_idを追加
-        timestamp: String(new Date(msg.created_at).toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })),
+        timestamp: String(
+          new Date(msg.created_at).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        ),
         isUnread: Boolean(msg.status !== 'READ'),
-        companyName: String((msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]?.company_accounts?.[0]?.company_name || '企業名'),
-        candidateName: String(msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'),
+        companyName: String(
+          (msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]
+            ?.company_accounts?.[0]?.company_name || '企業名'
+        ),
+        candidateName: String(
+          msg.sender_type === 'CANDIDATE' ? senderName : '候補者名'
+        ),
         messagePreview: String(msg.content || msg.subject || 'メッセージ'),
-        groupName: String((msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]?.group_name || 'グループ'),
-        jobTitle: String((msg.rooms as any)?.job_postings?.[0]?.title || '求人タイトル'),
+        groupName: String(
+          (msg.rooms as any)?.job_postings?.[0]?.company_groups?.[0]
+            ?.group_name || 'グループ'
+        ),
+        jobTitle: String(
+          (msg.rooms as any)?.job_postings?.[0]?.title || '求人タイトル'
+        ),
       };
     });
 

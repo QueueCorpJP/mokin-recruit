@@ -10,7 +10,12 @@ import { ImageUpload } from '@/components/ui/ImageUpload';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { prefectures as PREFS } from '@/constants/prefectures';
 import type { Industry } from '@/constants/industry-data';
-import { getCompanyAccountForEdit, saveCompanyAccountEdit, uploadCompanyAccountIconAction, uploadCompanyAccountImagesAction } from './actions';
+import {
+  getCompanyAccountForEdit,
+  saveCompanyAccountEdit,
+  uploadCompanyAccountIconAction,
+  uploadCompanyAccountImagesAction,
+} from './actions';
 
 // Icons
 const RightArrowIcon = () => (
@@ -144,9 +149,11 @@ export default function EditClient() {
           setFormData(prev => ({
             ...prev,
             companyName: result.data.companyName || 'テキストが入ります。',
-            urls: Array.isArray(result.data.companyUrls) && result.data.companyUrls.length > 0 
-              ? result.data.companyUrls 
-              : [{ title: '', url: '' }],
+            urls:
+              Array.isArray(result.data.companyUrls) &&
+              result.data.companyUrls.length > 0
+                ? result.data.companyUrls
+                : [{ title: '', url: '' }],
             representative: {
               position: result.data.representativePosition || '',
               name: result.data.representativeName || '',
@@ -158,14 +165,19 @@ export default function EditClient() {
             },
             employees: result.data.employeesCount?.toString() || '',
             industries: result.data.industries || [],
-            businessContent: result.data.businessContent || result.data.companyOverview || '',
+            businessContent:
+              result.data.businessContent || result.data.companyOverview || '',
             location: result.data.location || { prefecture: '', address: '' },
             companyPhase: result.data.companyPhase || '',
             currentIconUrl: result.data.logoUrl ?? null,
-            currentImageUrls: Array.isArray(result.data.imageUrls) ? result.data.imageUrls : [],
-            attractions: Array.isArray(result.data.companyAttractions) && result.data.companyAttractions.length > 0 
-              ? result.data.companyAttractions 
-              : [{ title: '', content: '' }],
+            currentImageUrls: Array.isArray(result.data.imageUrls)
+              ? result.data.imageUrls
+              : [],
+            attractions:
+              Array.isArray(result.data.companyAttractions) &&
+              result.data.companyAttractions.length > 0
+                ? result.data.companyAttractions
+                : [{ title: '', content: '' }],
           }));
         }
       } finally {
@@ -270,7 +282,10 @@ export default function EditClient() {
         if (iconRes.success) {
           iconUrl = iconRes.url;
         } else {
-          setErrors({ submit: iconRes.error || 'アイコンのアップロードに失敗しました' });
+          setErrors({
+            submit:
+              (iconRes as any).error || 'アイコンのアップロードに失敗しました',
+          });
           return;
         }
       }
@@ -285,7 +300,10 @@ export default function EditClient() {
         if (imagesRes.success) {
           imageUrls = [...imageUrls, ...imagesRes.files.map(f => f.url)];
         } else {
-          setErrors({ submit: imagesRes.error || '画像のアップロードに失敗しました' });
+          setErrors({
+            submit:
+              (imagesRes as any).error || '画像のアップロードに失敗しました',
+          });
           return;
         }
       }
@@ -298,18 +316,28 @@ export default function EditClient() {
         location: formData.location,
         iconUrl,
         imageUrls,
-        companyUrls: formData.urls.filter(url => url.title.trim() || url.url.trim()),
-        establishedYear: formData.establishedYear ? parseInt(formData.establishedYear, 10) : null,
-        capitalAmount: formData.capital.amount ? parseInt(formData.capital.amount, 10) : null,
+        companyUrls: formData.urls.filter(
+          url => url.title.trim() || url.url.trim()
+        ),
+        establishedYear: formData.establishedYear
+          ? parseInt(formData.establishedYear, 10)
+          : null,
+        capitalAmount: formData.capital.amount
+          ? parseInt(formData.capital.amount, 10)
+          : null,
         capitalUnit: formData.capital.unit,
-        employeesCount: formData.employees ? parseInt(formData.employees, 10) : null,
+        employeesCount: formData.employees
+          ? parseInt(formData.employees, 10)
+          : null,
         companyPhase: formData.companyPhase,
-        companyAttractions: formData.attractions.filter(attr => attr.title.trim() || attr.content.trim()),
+        companyAttractions: formData.attractions.filter(
+          attr => attr.title.trim() || attr.content.trim()
+        ),
       });
       if ('success' in res && res.success) {
         router.push('/company/account');
       } else {
-        setErrors({ submit: res.error || '保存に失敗しました' });
+        setErrors({ submit: (res as any).error || '保存に失敗しました' });
       }
     } finally {
       setSaving(false);
@@ -401,44 +429,44 @@ export default function EditClient() {
                         {formData.urls.map((url, index) => (
                           <div key={index} className='flex items-center gap-2'>
                             <div className='w-[380px]'>
-                            <input
-                              type='text'
-                              placeholder='URLタイトルを入力'
-                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
-                              value={url.title || ''}
-                              onChange={e => {
-                                const newUrls = [...formData['urls']];
-                                const current = newUrls[index] ?? {
-                                  title: '',
-                                  url: '',
-                                };
-                                newUrls[index] = {
-                                  ...current,
-                                  title: e.target.value,
-                                };
-                                setFormData({ ...formData, urls: newUrls });
-                              }}
-                            />
+                              <input
+                                type='text'
+                                placeholder='URLタイトルを入力'
+                                className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
+                                value={url.title || ''}
+                                onChange={e => {
+                                  const newUrls = [...formData['urls']];
+                                  const current = newUrls[index] ?? {
+                                    title: '',
+                                    url: '',
+                                  };
+                                  newUrls[index] = {
+                                    ...current,
+                                    title: e.target.value,
+                                  };
+                                  setFormData({ ...formData, urls: newUrls });
+                                }}
+                              />
                             </div>
                             <div className='w-[380px]'>
-                            <input
-                              type='text'
-                              placeholder='https://'
-                              className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
-                              value={url.url || ''}
-                              onChange={e => {
-                                const newUrls = [...formData['urls']];
-                                const current = newUrls[index] ?? {
-                                  title: '',
-                                  url: '',
-                                };
-                                newUrls[index] = {
-                                  ...current,
-                                  url: e.target.value,
-                                };
-                                setFormData({ ...formData, urls: newUrls });
-                              }}
-                            />
+                              <input
+                                type='text'
+                                placeholder='https://'
+                                className='flex-1 px-4 py-2 border border-[#999] rounded-[5px] w-[380px]'
+                                value={url.url || ''}
+                                onChange={e => {
+                                  const newUrls = [...formData['urls']];
+                                  const current = newUrls[index] ?? {
+                                    title: '',
+                                    url: '',
+                                  };
+                                  newUrls[index] = {
+                                    ...current,
+                                    url: e.target.value,
+                                  };
+                                  setFormData({ ...formData, urls: newUrls });
+                                }}
+                              />
                             </div>
                             <button
                               type='button'
@@ -511,12 +539,12 @@ export default function EditClient() {
                           onChange={e => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            
+
                             // 画像ファイルを保持して即座に表示（アップロードは保存時）
-                            setFormData(prev => ({ 
-                              ...prev, 
+                            setFormData(prev => ({
+                              ...prev,
                               iconImage: file,
-                              currentIconUrl: null // 新しい画像を優先表示
+                              currentIconUrl: null, // 新しい画像を優先表示
                             }));
                           }}
                         />
@@ -796,24 +824,24 @@ export default function EditClient() {
                     <div className='flex-1 py-6'>
                       <div className='flex flex-col gap-2'>
                         <div className='w-[380px]'>
-                        <SelectInput
-                          options={prefectures.map(p => ({
-                            value: p,
-                            label: p,
-                          }))}
-                          value={formData.location.prefecture}
-                          className='max-w-100'
-                          onChange={value =>
-                            setFormData({
-                              ...formData,
-                              location: {
-                                ...formData.location,
-                                prefecture: value,
-                              },
-                            })
-                          }
-                          placeholder='都道府県を選択'
-                        />
+                          <SelectInput
+                            options={prefectures.map(p => ({
+                              value: p,
+                              label: p,
+                            }))}
+                            value={formData.location.prefecture}
+                            className='max-w-100'
+                            onChange={value =>
+                              setFormData({
+                                ...formData,
+                                location: {
+                                  ...formData.location,
+                                  prefecture: value,
+                                },
+                              })
+                            }
+                            placeholder='都道府県を選択'
+                          />
                         </div>
                         <input
                           type='text'
@@ -851,17 +879,17 @@ export default function EditClient() {
                     </div>
                     <div className='flex-1 py-6'>
                       <div className='w-[380px]'>
-                      <SelectInput
-                        options={companyPhases.map(p => ({
-                          value: p,
-                          label: p,
-                        }))}
-                        value={formData.companyPhase}
-                        className='max-w-100'
-                        onChange={value =>
-                          setFormData({ ...formData, companyPhase: value })
-                        }
-                            placeholder='未選択'
+                        <SelectInput
+                          options={companyPhases.map(p => ({
+                            value: p,
+                            label: p,
+                          }))}
+                          value={formData.companyPhase}
+                          className='max-w-100'
+                          onChange={value =>
+                            setFormData({ ...formData, companyPhase: value })
+                          }
+                          placeholder='未選択'
                         />
                       </div>
                     </div>
@@ -984,11 +1012,16 @@ export default function EditClient() {
                           <ImageUpload
                             images={[]}
                             onChange={newFiles => {
-                              const totalCount = formData.currentImageUrls.length + formData.images.length;
+                              const totalCount =
+                                formData.currentImageUrls.length +
+                                formData.images.length;
                               const availableSlots = 3 - totalCount;
-                              const filesToAdd = newFiles.slice(0, availableSlots);
+                              const filesToAdd = newFiles.slice(
+                                0,
+                                availableSlots
+                              );
                               if (filesToAdd.length === 0) return;
-                              
+
                               // 画像を即座に表示（アップロードは保存時）
                               setFormData(prev => ({
                                 ...prev,
@@ -1040,28 +1073,28 @@ export default function EditClient() {
                               }}
                             />
                             <div className='border border-[#999] rounded-[5px] p-[1px]'>
-                            <textarea
-                              placeholder='事業内容や社風、現状について自由にご記入ください。'
-                              className='w-full px-4 py-2 resize-none h-[120px]'
-                              value={attraction.content}
-                              onChange={e => {
-                                const newAttractions = [
-                                  ...formData['attractions'],
-                                ];
-                                const current = newAttractions[index] ?? {
-                                  title: '',
-                                  content: '',
-                                };
-                                newAttractions[index] = {
-                                  ...current,
-                                  content: e.target.value,
-                                };
-                                setFormData({
-                                  ...formData,
-                                  attractions: newAttractions,
-                                });
-                              }}
-                            />
+                              <textarea
+                                placeholder='事業内容や社風、現状について自由にご記入ください。'
+                                className='w-full px-4 py-2 resize-none h-[120px]'
+                                value={attraction.content}
+                                onChange={e => {
+                                  const newAttractions = [
+                                    ...formData['attractions'],
+                                  ];
+                                  const current = newAttractions[index] ?? {
+                                    title: '',
+                                    content: '',
+                                  };
+                                  newAttractions[index] = {
+                                    ...current,
+                                    content: e.target.value,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    attractions: newAttractions,
+                                  });
+                                }}
+                              />
                             </div>
                             {formData.attractions.length > 1 && (
                               <button
@@ -1118,7 +1151,11 @@ export default function EditClient() {
               className='min-w-[160px] px-10'
               disabled={saving || uploading || loading}
             >
-              {saving ? '保存中...' : uploading ? 'アップロード中...' : '保存する'}
+              {saving
+                ? '保存中...'
+                : uploading
+                  ? 'アップロード中...'
+                  : '保存する'}
             </Button>
           </div>
         </div>

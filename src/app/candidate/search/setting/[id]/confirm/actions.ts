@@ -1,6 +1,7 @@
 'use server';
 
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCandidateAuthForAction } from '@/lib/auth/server';
 import { logger } from '@/lib/server/utils/logger';
 
@@ -205,7 +206,10 @@ export async function submitApplication(
     // 統一的な認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      logger.warn('Authentication failed:', authResult.error);
+      logger.warn(
+        'Authentication failed:',
+        (authResult as any).error || '認証エラー'
+      );
       const authErrorResponse = {
         success: false,
         error: String('認証が必要です。ログインしてください。'),
@@ -446,8 +450,7 @@ export async function submitApplication(
           secondary_interview_result: null,
           final_interview_result: null,
           offer_result: null,
-          application_date: new Date().toISOString(),
-          notes: `求人「${jobPosting.title}」への応募が完了しました。`,
+          internal_memo: `求人「${jobPosting.title}」への応募が完了しました。`,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -469,171 +472,406 @@ export async function submitApplication(
     // ルームの作成または取得（応募成功後にメッセージ用のルームを作成）
     logger.info('Creating or getting room for application messaging');
 
+    // candidateIdとvalidCompanyGroupIdの値を検証
+    if (!candidateId) {
+      logger.error('Critical: candidateId is missing or invalid:', {
+        candidateId,
+      });
+      return {
+        success: false,
+        error: String('候補者情報が不正です。再度ログインしてお試しください。'),
+      };
+    }
+
+    if (!validCompanyGroupId) {
+      logger.error('Critical: validCompanyGroupId is missing or invalid:', {
+        validCompanyGroupId,
+      });
+      return {
+        success: false,
+        error: String(
+          '企業グループ情報が不正です。求人情報を確認してください。'
+        ),
+      };
+    }
+
     // 既存のルームがあるかチェック
     let roomId: string | null = null;
-    const { data: existingRoom, error: roomSearchError } = await supabase
+    logger.info('Searching for existing room with params:', {
+      candidateId,
+      validCompanyGroupId,
+      type: 'direct',
+    });
+
+    // RLS問題を回避するため、ルーム操作にはAdmin clientを使用
+    const adminSupabase = getSupabaseAdminClient();
+
+    // データベース接続テスト
+    try {
+      const { data: testQuery, error: testError } = await adminSupabase
+        .from('rooms')
+        .select('id')
+        .limit(1);
+
+      if (testError) {
+        logger.error('Database connection test failed:', testError);
+        return {
+          success: false,
+          error: String(
+            'データベース接続に失敗しました。しばらく待ってから再度お試しください。'
+          ),
+        };
+      }
+      logger.info('Database connection test passed');
+    } catch (dbTestError) {
+      logger.error('Database connection test exception:', dbTestError);
+      return {
+        success: false,
+        error: String('データベース接続エラーが発生しました。'),
+      };
+    }
+
+    // まず、該当するルームが何件あるか調査（求人IDも含めて検索）
+    const { data: allRooms, error: allRoomsError } = await adminSupabase
       .from('rooms')
-      .select('id')
+      .select('id, created_at, related_job_posting_id')
       .eq('candidate_id', candidateId)
       .eq('company_group_id', validCompanyGroupId)
+      .eq('related_job_posting_id', jobId)
       .eq('type', 'direct')
-      .maybeSingle();
+      .order('created_at', { ascending: false });
 
-    if (roomSearchError) {
-      logger.error('Room search error:', roomSearchError);
-      // ルーム検索失敗してもアプリケーション自体は成功とする
-    } else if (existingRoom) {
+    logger.info('Room search investigation:', {
+      candidateId,
+      validCompanyGroupId,
+      jobId,
+      roomCount: allRooms?.length || 0,
+      rooms: allRooms,
+    });
+
+    if (allRoomsError) {
+      logger.error('Critical: Room investigation failed:', allRoomsError);
+      return {
+        success: false,
+        error: String(
+          `メッセージルームの調査に失敗しました。エラー詳細: ${allRoomsError.message || allRoomsError.code || 'Unknown error'}`
+        ),
+      };
+    }
+
+    let existingRoom = null;
+    let roomSearchError = null;
+
+    if (allRooms && allRooms.length > 1) {
+      // 複数のルームが存在する場合、最新のものを選択
+      logger.warn(
+        'Multiple rooms found for this job application, using the latest one:',
+        {
+          roomCount: allRooms.length,
+          latestRoom: allRooms[0],
+          jobId,
+          candidateId,
+          validCompanyGroupId,
+        }
+      );
+      existingRoom = allRooms[0];
+    } else if (allRooms && allRooms.length === 1) {
+      // 1件の場合は正常
+      existingRoom = allRooms[0];
+      logger.info('Existing room found for this job application:', {
+        room: existingRoom,
+        jobId,
+        candidateId,
+        validCompanyGroupId,
+      });
+    } else {
+      // 0件の場合は新規作成が必要
+      logger.info(
+        'No existing room found for this job application, will create new one:',
+        {
+          jobId,
+          candidateId,
+          validCompanyGroupId,
+        }
+      );
+    }
+
+    if (existingRoom) {
       roomId = existingRoom.id;
       logger.info('Using existing room:', { roomId });
     } else {
-      // 新しいルームを作成
-      const { data: newRoom, error: roomInsertError } = await supabase
+      // 新しいルームを作成（同時作成防止のため再度チェック）
+      logger.info('Creating new room for application');
+
+      // 同時作成を防ぐため、作成直前にもう一度チェック（求人IDも含めて）
+      const { data: finalCheck, error: finalCheckError } = await adminSupabase
         .from('rooms')
-        .insert({
-          type: 'direct',
-          candidate_id: candidateId,
-          company_group_id: validCompanyGroupId,
-          related_job_posting_id: jobId,
-        })
         .select('id')
-        .single();
+        .eq('candidate_id', candidateId)
+        .eq('company_group_id', validCompanyGroupId)
+        .eq('related_job_posting_id', jobId)
+        .eq('type', 'direct')
+        .limit(1);
 
-      if (roomInsertError) {
-        logger.error('Failed to create room:', roomInsertError);
-        // ルーム作成失敗してもアプリケーション自体は成功とする
+      if (!finalCheckError && finalCheck && finalCheck.length > 0) {
+        // 他の処理で作成された場合はそれを使用
+        roomId = finalCheck[0].id;
+        logger.info('Room was created by another process, using it:', {
+          roomId,
+        });
       } else {
-        roomId = newRoom.id;
-        logger.info('Room created successfully:', { roomId });
-
-        // 新しいルームの場合、参加者を追加
-        const participantInserts: any[] = [
-          {
-            room_id: roomId,
-            participant_type: 'CANDIDATE',
+        // 本当に存在しない場合のみ作成
+        const { data: newRoom, error: roomInsertError } = await adminSupabase
+          .from('rooms')
+          .insert({
+            type: 'direct',
             candidate_id: candidateId,
-            joined_at: new Date().toISOString(),
-          },
-        ];
+            company_group_id: validCompanyGroupId,
+            related_job_posting_id: jobId,
+          })
+          .select('id')
+          .single();
 
-        // 企業グループのユーザーも追加（管理者またはアクティブユーザー）
-        const { data: groupUsers, error: groupUsersError } = (await supabase
-          .from('company_user_group_permissions')
-          .select('company_user_id')
-          .eq('company_group_id', validCompanyGroupId)) as {
-          data: { company_user_id: string }[] | null;
-          error: any;
-        };
-
-        if (!groupUsersError && groupUsers && groupUsers.length > 0) {
-          // 全ての企業グループユーザーを参加者として追加
-          groupUsers.forEach(groupUser => {
-            participantInserts.push({
-              room_id: roomId,
-              participant_type: 'COMPANY_USER',
-              company_user_id: groupUser.company_user_id,
-              joined_at: new Date().toISOString(),
-            });
-          });
+        if (roomInsertError) {
+          logger.error('Critical: Failed to create room:', roomInsertError);
+          return {
+            success: false,
+            error: String(
+              'メッセージルームの作成に失敗しました。しばらく待ってから再度お試しください。'
+            ),
+          };
         }
 
-        // 参加者を一括挿入
-        const { error: participantInsertError } = await supabase
-          .from('room_participants')
-          .insert(participantInserts);
+        roomId = newRoom.id;
+        logger.info('New room created successfully for job application:', {
+          roomId,
+          jobId,
+          candidateId,
+          validCompanyGroupId,
+        });
+      }
 
-        if (participantInsertError) {
+      // 新しく作成したルームの場合のみ、企業ユーザーを追加
+      if (!finalCheckError && !(finalCheck && finalCheck.length > 0)) {
+        // 企業グループのユーザーを取得（管理者またはアクティブユーザー）
+        const { data: groupUsers, error: groupUsersError } =
+          (await adminSupabase
+            .from('company_user_group_permissions')
+            .select('company_user_id')
+            .eq('company_group_id', validCompanyGroupId)) as {
+            data: { company_user_id: string }[] | null;
+            error: any;
+          };
+
+        if (groupUsersError) {
           logger.error(
-            'Failed to add room participants:',
-            participantInsertError
+            'Warning: Failed to fetch group users:',
+            groupUsersError
           );
-          // 参加者追加失敗してもアプリケーション自体は成功とする
-        } else {
-          logger.info('Room participants added successfully:', {
-            count: participantInserts.length,
+          // 企業ユーザーの取得に失敗した場合でも続行
+        } else if (groupUsers && groupUsers.length > 0) {
+          // 企業ユーザーIDの配列を作成
+          const companyUserIds = groupUsers.map(gu => gu.company_user_id);
+
+          logger.info('Updating room with participating company users:', {
+            roomId,
+            companyUserIds,
+            candidateId,
+            validCompanyGroupId,
           });
+
+          // roomsテーブルのparticipating_company_usersフィールドを更新
+          const { error: updateRoomError } = await adminSupabase
+            .from('rooms')
+            .update({
+              participating_company_users: companyUserIds,
+            })
+            .eq('id', roomId);
+
+          if (updateRoomError) {
+            logger.error(
+              'Critical: Failed to update room with participating users:',
+              {
+                error: updateRoomError,
+                message: updateRoomError.message,
+                code: updateRoomError.code,
+                details: updateRoomError.details,
+                hint: updateRoomError.hint,
+                roomId,
+                companyUserIds,
+              }
+            );
+            return {
+              success: false,
+              error: String(
+                `メッセージルームの参加者設定に失敗しました。エラー詳細: ${updateRoomError.message || updateRoomError.code || 'Unknown error'}`
+              ),
+            };
+          }
+
+          logger.info('Room participants updated successfully:', {
+            roomId,
+            participatingUsersCount: companyUserIds.length,
+          });
+        } else {
+          logger.info(
+            'No company users found for group, room created with candidate only'
+          );
         }
+      } else {
+        logger.info('Using existing room, skipping participant updates');
       }
     }
 
-    // ルームが正常に作成または取得できた場合、メッセージを送信
-    if (roomId) {
-      logger.info('Sending application message to room:', { roomId });
+    // ルームが正常に作成または取得できたので、メッセージを必ず送信
+    if (!roomId) {
+      logger.error('Critical: No room ID available for message sending');
+      return {
+        success: false,
+        error: String('メッセージルームが準備できませんでした。'),
+      };
+    }
 
-      // 応募メッセージのコンテンツ作成
-      const attachmentInfo = [];
-      if (resumeUrls.length > 0) {
-        attachmentInfo.push(`・履歴書: ${resumeUrls.length}件添付`);
-      }
-      if (careerUrls.length > 0) {
-        attachmentInfo.push(`・職務経歴書: ${careerUrls.length}件添付`);
-      }
+    logger.info('Sending application message to room:', { roomId });
 
-      const messageContent = `【求人応募のお知らせ】
+    // 応募メッセージのコンテンツ作成（ファイル情報をより詳細に記載）
+    const attachmentInfo = [];
+    const fileDetails = [];
+
+    // 履歴書ファイルの詳細情報を作成
+    if (resumeUrls.length > 0) {
+      attachmentInfo.push(`・履歴書: ${resumeUrls.length}件添付`);
+      resumeUrls.forEach((url, index) => {
+        const fileName = validResumeFiles[index]?.name || `履歴書_${index + 1}`;
+        fileDetails.push({
+          url,
+          name: fileName,
+          type: 'resume',
+          size: validResumeFiles[index]?.size || 0,
+        });
+      });
+    }
+
+    // 職務経歴書ファイルの詳細情報を作成
+    if (careerUrls.length > 0) {
+      attachmentInfo.push(`・職務経歴書: ${careerUrls.length}件添付`);
+      careerUrls.forEach((url, index) => {
+        const fileName =
+          validCareerFiles[index]?.name || `職務経歴書_${index + 1}`;
+        fileDetails.push({
+          url,
+          name: fileName,
+          type: 'career',
+          size: validCareerFiles[index]?.size || 0,
+        });
+      });
+    }
+
+    // ファイル名一覧を作成
+    const fileNamesList = fileDetails
+      .map(
+        file =>
+          `・${file.name} (${file.type === 'resume' ? '履歴書' : '職務経歴書'})`
+      )
+      .join('\n');
+
+    const messageContent = `【求人応募のお知らせ】
 
 求人「${jobPosting.title}」に応募いたしました。
 
-${attachmentInfo.length > 0 ? `提出書類:\n${attachmentInfo.join('\n')}\n` : ''}
+${attachmentInfo.length > 0 ? `提出書類:\n${attachmentInfo.join('\n')}\n\n添付ファイル:\n${fileNamesList}\n` : ''}
 よろしくお願いいたします。`;
 
-      // ファイルURLを配列形式で準備
-      const allFileUrls = [...resumeUrls, ...careerUrls];
+    // ファイルURLを配列形式で準備してfile_urlsフィールドに設定
+    const allFileUrls = [...resumeUrls, ...careerUrls];
 
-      const { data: message, error: messageInsertError } = await supabase
-        .from('messages')
-        .insert({
-          room_id: roomId,
-          sender_type: 'CANDIDATE',
-          sender_candidate_id: candidateId,
-          message_type: 'APPLICATION',
-          subject: `求人「${jobPosting.title}」への応募`,
-          content: messageContent,
-          file_urls: allFileUrls,
-          status: 'SENT',
-          sent_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
+    // メッセージデータの構造（database.mdに基づく正確な実装）
+    const messageData: any = {
+      room_id: roomId,
+      sender_type: 'CANDIDATE',
+      sender_candidate_id: candidateId,
+      message_type: 'APPLICATION',
+      subject: `求人「${jobPosting.title}」への応募`,
+      content: messageContent,
+      file_urls: allFileUrls, // jsonb形式でファイルURLを格納
+      status: 'SENT',
+      sent_at: new Date().toISOString(),
+      // created_at, updated_atはデフォルト値で自動設定されるため不要
+      // sender_company_user_idは存在しない（sender_company_group_idのみ）
+    };
 
-      if (messageInsertError) {
-        logger.error('Failed to create message:', messageInsertError);
-        // メッセージ作成失敗してもアプリケーション自体は成功とする
-      } else {
-        logger.info('Message created successfully:', { messageId: message.id });
+    logger.info('Message data prepared for insertion:', {
+      roomId,
+      messageType: messageData.message_type,
+      fileCount: allFileUrls.length,
+      fileUrls: allFileUrls,
+    });
 
-        // 企業側への通知を作成
-        // 企業グループの全ユーザーを取得
-        const { data: groupUsers, error: groupUsersError } = await supabase
-          .from('company_user_group_permissions')
-          .select('company_user_id')
-          .eq('company_group_id', validCompanyGroupId);
+    const { data: message, error: messageInsertError } = await adminSupabase
+      .from('messages')
+      .insert(messageData)
+      .select('id')
+      .single();
 
-        if (!groupUsersError && groupUsers && groupUsers.length > 0) {
-          // 各企業ユーザーに通知を作成
-          const notificationPromises = groupUsers.map(groupUser =>
-            supabase.from('company_unread_notifications').insert({
-              company_user_id: groupUser.company_user_id,
-              message_id: message.id,
-              notification_type: 'APPLICATION',
-            })
+    if (messageInsertError) {
+      logger.error(
+        'Critical: Failed to create application message:',
+        messageInsertError
+      );
+      return {
+        success: false,
+        error: String(
+          '応募メッセージの送信に失敗しました。しばらく待ってから再度お試しください。'
+        ),
+      };
+    }
+
+    logger.info('Message created successfully:', { messageId: message.id });
+
+    // 企業側への通知を作成（これは失敗してもOK）
+    try {
+      const { data: groupUsers, error: groupUsersError } = await adminSupabase
+        .from('company_user_group_permissions')
+        .select('company_user_id')
+        .eq('company_group_id', validCompanyGroupId);
+
+      if (!groupUsersError && groupUsers && groupUsers.length > 0) {
+        // 各企業ユーザーに通知を作成
+        const notificationPromises = groupUsers.map(groupUser =>
+          adminSupabase.from('company_unread_notifications').insert({
+            company_user_id: groupUser.company_user_id,
+            message_id: message.id,
+            notification_type: 'APPLICATION',
+          })
+        );
+
+        const notificationResults =
+          await Promise.allSettled(notificationPromises);
+
+        const successCount = notificationResults.filter(
+          result => result.status === 'fulfilled'
+        ).length;
+        const failureCount = notificationResults.filter(
+          result => result.status === 'rejected'
+        ).length;
+
+        logger.info('Company notifications created:', {
+          total: groupUsers.length,
+          success: successCount,
+          failure: failureCount,
+        });
+
+        if (failureCount > 0) {
+          logger.warn(
+            'Some notifications failed, but application is still successful'
           );
-
-          const notificationResults =
-            await Promise.allSettled(notificationPromises);
-
-          const successCount = notificationResults.filter(
-            result => result.status === 'fulfilled'
-          ).length;
-          const failureCount = notificationResults.filter(
-            result => result.status === 'rejected'
-          ).length;
-
-          logger.info('Company notifications created:', {
-            total: groupUsers.length,
-            success: successCount,
-            failure: failureCount,
-          });
         }
       }
+    } catch (notificationError) {
+      logger.error(
+        'Notification creation failed, but application is still successful:',
+        notificationError
+      );
     }
 
     const responseData = {

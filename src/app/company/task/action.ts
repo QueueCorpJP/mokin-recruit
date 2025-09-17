@@ -1,12 +1,16 @@
 'use server';
 
-import { getCachedCompanyUser, requireCompanyAuthForAction, getCompanySupabaseClient } from '@/lib/auth/server';
+import {
+  getCachedCompanyUser,
+  requireCompanyAuthForAction,
+  getCompanySupabaseClient,
+} from '@/lib/auth/server';
 import { formatCandidateName } from './utils';
 
 export interface TaskData {
   // Task 1: 求人作成が0件
   hasNoJobPostings: boolean;
-  
+
   // Task 2: 新着応募（24時間以内）
   hasNewApplication: boolean;
   newApplications?: Array<{
@@ -16,7 +20,7 @@ export interface TaskData {
     appliedAt: Date;
     groupName?: string;
   }>;
-  
+
   // Task 3: 未確認応募（24時間以上経過）
   hasUnreadApplication: boolean;
   unreadApplications?: Array<{
@@ -26,7 +30,7 @@ export interface TaskData {
     appliedAt: Date;
     groupName?: string;
   }>;
-  
+
   // Task 4: 新着メッセージ（72時間以内）
   hasNewMessage: boolean;
   newMessages?: Array<{
@@ -37,7 +41,7 @@ export interface TaskData {
     messagePreview?: string;
     groupName?: string;
   }>;
-  
+
   // Task 5: 未読メッセージ（72時間以上経過）
   hasUnreadMessage: boolean;
   unreadMessages?: Array<{
@@ -48,7 +52,7 @@ export interface TaskData {
     messagePreview?: string;
     groupName?: string;
   }>;
-  
+
   // Task 6: 選考結果未登録
   hasUnregisteredInterviewResult: boolean;
   unregisteredInterviews?: Array<{
@@ -72,7 +76,7 @@ const FORCE_SHOW_TASKS_FOR_DESIGN_TEST = false;
 
 export async function getCompanyTaskData(): Promise<TaskData> {
   const user = await getCachedCompanyUser();
-  
+
   if (!user) {
     return {
       hasNoJobPostings: false,
@@ -88,7 +92,9 @@ export async function getCompanyTaskData(): Promise<TaskData> {
 
   // requireCompanyAuthForAction で companyUserId / companyAccountId を決定
   let companyUserId = user.user_metadata?.company_user_id || user.id;
-  let companyAccountId = user.user_metadata?.company_account_id as string | undefined;
+  let companyAccountId = user.user_metadata?.company_account_id as
+    | string
+    | undefined;
 
   try {
     const authResult = await requireCompanyAuthForAction();
@@ -122,22 +128,24 @@ export async function getCompanyTaskData(): Promise<TaskData> {
   let hasAdminPermission = false;
 
   if (permissions && permissions.length > 0) {
-    hasAdminPermission = permissions.some(p => p.permission_level === 'ADMINISTRATOR');
-    
+    hasAdminPermission = permissions.some(
+      p => p.permission_level === 'ADMINISTRATOR'
+    );
+
     if (hasAdminPermission) {
       // ADMINの場合は同じcompany_accountの全グループ
       const { data: allGroups } = await supabase
         .from('company_groups')
         .select('id')
         .eq('company_account_id', companyAccountId);
-      
+
       companyGroupIds = allGroups?.map(g => g.id) || [];
     } else {
       // SCOUT_STAFFの場合は所属グループのみ
       companyGroupIds = permissions.map(p => p.company_group_id);
     }
   }
-  
+
   const taskData: TaskData = {
     hasNoJobPostings: false,
     hasNewApplication: false,
@@ -148,33 +156,44 @@ export async function getCompanyTaskData(): Promise<TaskData> {
   };
 
   try {
-    console.log('🔍 Getting task data for company:', companyAccountId, 'groups:', companyGroupIds);
-    
+    console.log(
+      '🔍 Getting task data for company:',
+      companyAccountId,
+      'groups:',
+      companyGroupIds
+    );
+
     // 並列でデータ取得を実行
-    const [
-      jobPostings,
-      applications,
-      messages,
-      interviewResults
-    ] = await Promise.all([
-      getJobPostings(companyAccountId),
-      getApplications(supabase, companyAccountId, companyGroupIds, hasAdminPermission),
-      getMessages(supabase, companyGroupIds),
-      getInterviewResults(supabase, companyAccountId, companyGroupIds, hasAdminPermission)
-    ]);
+    const [jobPostings, applications, messages, interviewResults] =
+      await Promise.all([
+        getJobPostings(companyAccountId),
+        getApplications(
+          supabase,
+          companyAccountId,
+          companyGroupIds,
+          hasAdminPermission
+        ),
+        getMessages(supabase, companyGroupIds),
+        getInterviewResults(
+          supabase,
+          companyAccountId,
+          companyGroupIds,
+          hasAdminPermission
+        ),
+      ]);
 
     console.log('📊 Raw data fetched:', {
       jobPostings: jobPostings.length,
       applications: applications.length,
       messages: messages.length,
-      interviewResults: interviewResults.length
+      interviewResults: interviewResults.length,
     });
 
     console.log('📊 Sample data for debugging:', {
       sampleJobPosting: jobPostings[0] || 'No job postings',
       sampleApplication: applications[0] || 'No applications',
       sampleMessage: messages[0] || 'No messages',
-      sampleInterview: interviewResults[0] || 'No interview results'
+      sampleInterview: interviewResults[0] || 'No interview results',
     });
 
     // Task 1: 求人が0件かチェック
@@ -190,7 +209,10 @@ export async function getCompanyTaskData(): Promise<TaskData> {
     // Task 2 & 3: 応募の処理
     processApplications(applications, taskData);
     console.log('🎯 Task 2 (New applications):', taskData.hasNewApplication);
-    console.log('🎯 Task 3 (Unread applications):', taskData.hasUnreadApplication);
+    console.log(
+      '🎯 Task 3 (Unread applications):',
+      taskData.hasUnreadApplication
+    );
 
     // Task 4 & 5: メッセージの処理
     processMessages(messages, taskData);
@@ -199,7 +221,10 @@ export async function getCompanyTaskData(): Promise<TaskData> {
 
     // Task 6: 面接結果の処理
     processInterviewResults(interviewResults, taskData);
-    console.log('🎯 Task 6 (Interview results):', taskData.hasUnregisteredInterviewResult);
+    console.log(
+      '🎯 Task 6 (Interview results):',
+      taskData.hasUnregisteredInterviewResult
+    );
 
     console.log('🏁 Final task data summary:', {
       hasNoJobPostings: taskData.hasNoJobPostings,
@@ -214,8 +239,8 @@ export async function getCompanyTaskData(): Promise<TaskData> {
         taskData.hasUnreadApplication,
         taskData.hasNewMessage,
         taskData.hasUnreadMessage,
-        taskData.hasUnregisteredInterviewResult
-      ].filter(Boolean).length
+        taskData.hasUnregisteredInterviewResult,
+      ].filter(Boolean).length,
     });
 
     // デザインテスト用の強制表示機能
@@ -229,46 +254,55 @@ export async function getCompanyTaskData(): Promise<TaskData> {
       taskData.hasUnregisteredInterviewResult = true;
 
       // サンプルデータも追加
-      taskData.newApplications = [{
-        id: 'sample-1',
-        candidateName: '田中 太郎',
-        jobTitle: 'フロントエンドエンジニア',
-        appliedAt: new Date()
-      }];
+      taskData.newApplications = [
+        {
+          id: 'sample-1',
+          candidateName: '田中 太郎',
+          jobTitle: 'フロントエンドエンジニア',
+          appliedAt: new Date(),
+        },
+      ];
 
-      taskData.unreadApplications = [{
-        id: 'sample-2',
-        candidateName: '佐藤 花子',
-        jobTitle: 'バックエンドエンジニア',
-        appliedAt: new Date()
-      }];
+      taskData.unreadApplications = [
+        {
+          id: 'sample-2',
+          candidateName: '佐藤 花子',
+          jobTitle: 'バックエンドエンジニア',
+          appliedAt: new Date(),
+        },
+      ];
 
-      taskData.newMessages = [{
-        roomId: 'room-1',
-        candidateName: '山田 一郎',
-        jobTitle: 'デザイナー',
-        sentAt: new Date(),
-        messagePreview: 'ご質問があります'
-      }];
+      taskData.newMessages = [
+        {
+          roomId: 'room-1',
+          candidateName: '山田 一郎',
+          jobTitle: 'デザイナー',
+          sentAt: new Date(),
+          messagePreview: 'ご質問があります',
+        },
+      ];
 
-      taskData.unreadMessages = [{
-        roomId: 'room-2',
-        candidateName: '鈴木 美香',
-        jobTitle: 'プロダクトマネージャー',
-        sentAt: new Date(),
-        messagePreview: '面接についてご相談です'
-      }];
+      taskData.unreadMessages = [
+        {
+          roomId: 'room-2',
+          candidateName: '鈴木 美香',
+          jobTitle: 'プロダクトマネージャー',
+          sentAt: new Date(),
+          messagePreview: '面接についてご相談です',
+        },
+      ];
 
-      taskData.unregisteredInterviews = [{
-        id: 'interview-1',
-        candidateName: '高橋 健太',
-        jobTitle: 'データサイエンティスト',
-        interviewDate: new Date()
-      }];
+      taskData.unregisteredInterviews = [
+        {
+          id: 'interview-1',
+          candidateName: '高橋 健太',
+          jobTitle: 'データサイエンティスト',
+          interviewDate: new Date(),
+        },
+      ];
 
       console.log('🎨 Sample data added for design testing');
     }
-
   } catch (error) {
     console.error('❌ Failed to fetch task data:', error);
   }
@@ -299,7 +333,12 @@ async function getJobPostings(companyAccountId: string) {
 /**
  * 応募情報を取得
  */
-async function getApplications(supabase: any, companyAccountId: string, companyGroupIds: string[], hasAdminPermission: boolean) {
+async function getApplications(
+  supabase: any,
+  companyAccountId: string,
+  companyGroupIds: string[],
+  hasAdminPermission: boolean
+) {
   // 権限がなくグループが取得できなかった場合は0件
   if (!hasAdminPermission && companyGroupIds.length === 0) {
     return [];
@@ -307,7 +346,8 @@ async function getApplications(supabase: any, companyAccountId: string, companyG
 
   const query = supabase
     .from('application')
-    .select(`
+    .select(
+      `
       id,
       status,
       created_at,
@@ -330,7 +370,8 @@ async function getApplications(supabase: any, companyAccountId: string, companyG
           company_name
         )
       )
-    `)
+    `
+    )
     .eq('company_account_id', companyAccountId)
     .order('created_at', { ascending: false });
 
@@ -363,7 +404,8 @@ async function getMessages(supabase: any, companyGroupIds: string[]) {
   // 候補者からの未読メッセージを取得（所属グループのルームに限定）
   const { data, error } = await supabase
     .from('messages')
-    .select(`
+    .select(
+      `
       id,
       content,
       status,
@@ -392,7 +434,8 @@ async function getMessages(supabase: any, companyGroupIds: string[]) {
           )
         )
       )
-    `)
+    `
+    )
     .eq('sender_type', 'CANDIDATE')
     .eq('status', 'SENT')
     .in('rooms.company_group_id', companyGroupIds)
@@ -402,14 +445,14 @@ async function getMessages(supabase: any, companyGroupIds: string[]) {
     data,
     error,
     messagesCount: data?.length || 0,
-    sampleMessages: data?.slice(0, 2).map(msg => ({
+    sampleMessages: data?.slice(0, 2).map((msg: any) => ({
       id: msg.id,
       status: msg.status,
       sender_type: msg.sender_type,
       sent_at: msg.sent_at,
       room_id: msg.room_id,
-      groupName: msg.rooms?.company_groups?.group_name
-    }))
+      groupName: msg.rooms?.company_groups?.group_name,
+    })),
   });
 
   if (error) {
@@ -418,18 +461,18 @@ async function getMessages(supabase: any, companyGroupIds: string[]) {
   }
 
   // 追加の検証：実際に SENT ステータスのみを返すように二重チェック
-  const filteredMessages = (data || []).filter(msg => 
-    msg.status === 'SENT' && msg.sender_type === 'CANDIDATE'
+  const filteredMessages = (data || []).filter(
+    (msg: any) => msg.status === 'SENT' && msg.sender_type === 'CANDIDATE'
   );
-  
+
   console.log('✅ [TASK DEBUG] Filtered SENT messages only:', {
     originalCount: data?.length || 0,
     filteredCount: filteredMessages.length,
-    filteredSample: filteredMessages.slice(0, 2).map(msg => ({
+    filteredSample: filteredMessages.slice(0, 2).map((msg: any) => ({
       id: msg.id,
       status: msg.status,
-      room_id: msg.room_id
-    }))
+      room_id: msg.room_id,
+    })),
   });
 
   return filteredMessages;
@@ -439,7 +482,12 @@ async function getMessages(supabase: any, companyGroupIds: string[]) {
  * 面接結果情報を取得
  * ※実際のテーブル構造に応じて調整が必要
  */
-async function getInterviewResults(supabase: any, companyAccountId: string, companyGroupIds: string[], hasAdminPermission: boolean) {
+async function getInterviewResults(
+  supabase: any,
+  companyAccountId: string,
+  companyGroupIds: string[],
+  hasAdminPermission: boolean
+) {
   if (!hasAdminPermission && companyGroupIds.length === 0) {
     return [];
   }
@@ -447,7 +495,8 @@ async function getInterviewResults(supabase: any, companyAccountId: string, comp
   // statusがRESPONDED（企業が返信済み、面接設定済み）で、72時間以上経過したものを探す
   const query = supabase
     .from('application')
-    .select(`
+    .select(
+      `
       id,
       status,
       updated_at,
@@ -470,7 +519,8 @@ async function getInterviewResults(supabase: any, companyAccountId: string, comp
           company_name
         )
       )
-    `)
+    `
+    )
     .eq('company_account_id', companyAccountId)
     .eq('status', 'RESPONDED') // 面接設定済みのステータス
     .order('updated_at', { ascending: false });
@@ -490,9 +540,11 @@ async function getInterviewResults(supabase: any, companyAccountId: string, comp
 
   // 72時間以上経過しているものをフィルタリング（実際のプラットフォームでは面接完了から72時間）
   const seventyTwoHoursAgo = new Date();
-  seventyTwoHoursAgo.setTime(seventyTwoHoursAgo.getTime() - 72 * 60 * 60 * 1000);
+  seventyTwoHoursAgo.setTime(
+    seventyTwoHoursAgo.getTime() - 72 * 60 * 60 * 1000
+  );
 
-  const overdueInterviews = (data || []).filter(item => {
+  const overdueInterviews = (data || []).filter((item: any) => {
     const respondedAt = new Date(item.updated_at);
     return respondedAt <= seventyTwoHoursAgo;
   });
@@ -527,7 +579,7 @@ function processApplications(applications: any[], taskData: TaskData) {
         candidateName,
         jobTitle,
         appliedAt,
-        groupName
+        groupName,
       };
 
       if (appliedAt >= twentyFourHoursAgo) {
@@ -585,7 +637,7 @@ function processMessages(messages: any[], taskData: TaskData) {
         jobTitle,
         sentAt,
         messagePreview: msg.content?.substring(0, 50) || '',
-        groupName
+        groupName,
       };
 
       console.log('📝 [MSG DEBUG] Processing message:', {
@@ -598,8 +650,10 @@ function processMessages(messages: any[], taskData: TaskData) {
         timeChecks: {
           isWithin24h: sentAt >= twentyFourHoursAgo,
           isOver48h: sentAt <= fortyEightHoursAgo,
-          hoursAgo: Math.floor((now.getTime() - sentAt.getTime()) / (1000 * 60 * 60))
-        }
+          hoursAgo: Math.floor(
+            (now.getTime() - sentAt.getTime()) / (1000 * 60 * 60)
+          ),
+        },
       });
 
       if (sentAt >= twentyFourHoursAgo) {
@@ -621,14 +675,22 @@ function processMessages(messages: any[], taskData: TaskData) {
   if (newMessages.length > 0) {
     taskData.hasNewMessage = true;
     taskData.newMessages = newMessages.slice(0, 5);
-    console.log('✅ New message task triggered with', newMessages.length, 'messages');
+    console.log(
+      '✅ New message task triggered with',
+      newMessages.length,
+      'messages'
+    );
   }
 
   // Task 5: 遅延メッセージ（48時間以上）
   if (overdueMessages.length > 0) {
     taskData.hasUnreadMessage = true;
     taskData.unreadMessages = overdueMessages.slice(0, 5);
-    console.log('⚠️ Overdue message task triggered with', overdueMessages.length, 'messages');
+    console.log(
+      '⚠️ Overdue message task triggered with',
+      overdueMessages.length,
+      'messages'
+    );
   }
 }
 
@@ -644,22 +706,26 @@ function processInterviewResults(interviews: any[], taskData: TaskData) {
       const candidateName = formatCandidateName(interview.candidates);
       const jobTitle = interview.job_postings?.title || '求人タイトル未設定';
       const groupName = interview.company_groups?.group_name || '';
-      const interviewDate = interview.updated_at ? new Date(interview.updated_at) : undefined;
+      const interviewDate = interview.updated_at
+        ? new Date(interview.updated_at)
+        : undefined;
 
       return {
         id: interview.id,
         candidateName,
         jobTitle,
         interviewDate,
-        groupName
+        groupName,
       };
     });
-    
+
     console.log('✅ Interview result task triggered');
-    console.log('📋 Overdue interviews:', taskData.unregisteredInterviews.length);
+    console.log(
+      '📋 Overdue interviews:',
+      taskData.unregisteredInterviews.length
+    );
   }
 }
-
 
 /**
  * タスクをバッチで既読にする
@@ -683,7 +749,9 @@ export async function markTasksAsRead(taskIds: string[], taskType: string) {
       .select('company_group_id, permission_level')
       .eq('company_user_id', companyUserId);
 
-    const isAdmin = (permissions || []).some(p => p.permission_level === 'ADMINISTRATOR');
+    const isAdmin = (permissions || []).some(
+      p => p.permission_level === 'ADMINISTRATOR'
+    );
     let accessibleGroupIds: string[] = [];
     if (isAdmin) {
       const { data: allGroups } = await supabase
@@ -697,37 +765,53 @@ export async function markTasksAsRead(taskIds: string[], taskType: string) {
 
     switch (taskType) {
       case 'APPLICATION':
-        if (!isAdmin && accessibleGroupIds.length === 0) throw new Error('No access groups');
+        if (!isAdmin && accessibleGroupIds.length === 0)
+          throw new Error('No access groups');
         // 応募を既読（READ）に更新（スコープ制限）
         const { error: appError } = await supabase
           .from('application')
           .update({ status: 'READ', updated_at: new Date().toISOString() })
           .in('id', taskIds)
           .eq('company_account_id', companyAccountId)
-          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds);
-        
+          .in(
+            'company_group_id',
+            isAdmin
+              ? accessibleGroupIds.length
+                ? accessibleGroupIds
+                : ['__all__']
+              : accessibleGroupIds
+          );
+
         if (appError) throw appError;
         break;
-      
+
       case 'MESSAGE':
-        if (!isAdmin && accessibleGroupIds.length === 0) throw new Error('No access groups');
+        if (!isAdmin && accessibleGroupIds.length === 0)
+          throw new Error('No access groups');
         // アクセス可能なルームIDを取得
         const { data: rooms } = await supabase
           .from('rooms')
           .select('id, company_group_id')
-          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds);
+          .in(
+            'company_group_id',
+            isAdmin
+              ? accessibleGroupIds.length
+                ? accessibleGroupIds
+                : ['__all__']
+              : accessibleGroupIds
+          );
         const accessibleRoomIds = (rooms || []).map(r => r.id);
         // メッセージを既読に更新（スコープ制限）
         const { error: msgError } = await supabase
           .from('messages')
-          .update({ 
-            status: 'READ', 
+          .update({
+            status: 'READ',
             read_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .in('id', taskIds)
           .in('room_id', accessibleRoomIds);
-        
+
         if (msgError) throw msgError;
         break;
     }
@@ -761,7 +845,9 @@ export async function getTaskDetails(taskId: string, taskType: string) {
       .select('company_group_id, permission_level')
       .eq('company_user_id', companyUserId);
 
-    const isAdmin = (permissions || []).some(p => p.permission_level === 'ADMINISTRATOR');
+    const isAdmin = (permissions || []).some(
+      p => p.permission_level === 'ADMINISTRATOR'
+    );
     let accessibleGroupIds: string[] = [];
     if (isAdmin) {
       const { data: allGroups } = await supabase
@@ -777,35 +863,53 @@ export async function getTaskDetails(taskId: string, taskType: string) {
       case 'APPLICATION':
         const { data: appData } = await supabase
           .from('application')
-          .select(`
+          .select(
+            `
             *,
             candidates!candidate_id (*),
             job_postings!job_posting_id (*)
-          `)
+          `
+          )
           .eq('id', taskId)
           .eq('company_account_id', companyAccountId)
-          .in('company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds)
+          .in(
+            'company_group_id',
+            isAdmin
+              ? accessibleGroupIds.length
+                ? accessibleGroupIds
+                : ['__all__']
+              : accessibleGroupIds
+          )
           .single();
-        
+
         return appData;
-      
+
       case 'MESSAGE':
         const { data: msgData } = await supabase
           .from('messages')
-          .select(`
+          .select(
+            `
             *,
             rooms!inner (
               *,
               candidates!candidate_id (*),
               job_postings!related_job_posting_id (*)
             )
-          `)
+          `
+          )
           .eq('id', taskId)
-          .in('rooms.company_group_id', isAdmin ? (accessibleGroupIds.length ? accessibleGroupIds : ['__all__']) : accessibleGroupIds)
+          .in(
+            'rooms.company_group_id',
+            isAdmin
+              ? accessibleGroupIds.length
+                ? accessibleGroupIds
+                : ['__all__']
+              : accessibleGroupIds
+          )
           .single();
-        
+
         return msgData;
-      
+
       default:
         return null;
     }

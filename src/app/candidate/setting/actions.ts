@@ -18,7 +18,7 @@ export interface UserSettings {
 export async function getUserSettings(): Promise<UserSettings | null> {
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('認証エラー:', authResult.error);
+    console.error('認証エラー:', (authResult as any).error || '認証が必要です');
     return null;
   }
 

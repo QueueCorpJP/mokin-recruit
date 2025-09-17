@@ -10,7 +10,7 @@ interface SelectOption {
 }
 
 interface SelectInputProps {
-  options: readonly SelectOption[];
+  options?: readonly SelectOption[];
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;
@@ -18,8 +18,10 @@ interface SelectInputProps {
   className?: string;
   style?: React.CSSProperties;
   radius?: number;
-  onChange?: (selectedValue: string) => void;
-  onBlur?: () => void;
+  onChange?:
+    | ((selectedValue: string) => void)
+    | ((event: { target: { value: string } }) => void);
+  onBlur?: (() => void) | ((event: { target: { value: string } }) => void);
   onFocus?: () => void;
   onOpen?: () => void;
   onClose?: () => void;
@@ -28,6 +30,8 @@ interface SelectInputProps {
   value?: string;
   'data-testid'?: string;
   forcePosition?: 'top' | 'bottom'; // ドロップダウンの位置を強制指定
+  children?: React.ReactNode;
+  id?: string;
   // NOTE: 元に戻すため、borderlessは撤回（呼び出し局所で制御する）
 }
 
@@ -67,6 +71,59 @@ const DropdownIcon = ({
   </svg>
 );
 
+// Helper to call onChange with the appropriate signature
+const callOnChange = (
+  onChange:
+    | ((selectedValue: string) => void)
+    | ((event: { target: { value: string } }) => void)
+    | undefined,
+  value: string
+) => {
+  if (!onChange) return;
+  // Check parameter count - react-hook-form onChange expects an event object (1 param)
+  // while custom onChange expects just the value (1 param too, but different type)
+  // We'll check if the function looks like it expects an event by testing for common patterns
+  const funcString = onChange.toString();
+  if (
+    funcString.includes('target') ||
+    funcString.includes('event') ||
+    onChange.length === 0
+  ) {
+    // Likely expects an event object
+    (onChange as (event: { target: { value: string } }) => void)({
+      target: { value },
+    });
+  } else {
+    // Likely expects just the value
+    (onChange as (selectedValue: string) => void)(value);
+  }
+};
+
+// Helper to call onBlur with the appropriate signature
+const callOnBlur = (
+  onBlur:
+    | (() => void)
+    | ((event: { target: { value: string } }) => void)
+    | undefined,
+  value: string
+) => {
+  if (!onBlur) return;
+  const funcString = onBlur.toString();
+  if (
+    funcString.includes('target') ||
+    funcString.includes('event') ||
+    onBlur.length === 1
+  ) {
+    // Likely expects an event object
+    (onBlur as (event: { target: { value: string } }) => void)({
+      target: { value },
+    });
+  } else {
+    // No parameters expected
+    (onBlur as () => void)();
+  }
+};
+
 export function SelectInput({
   options = [],
   placeholder = '選択してください',
@@ -86,6 +143,8 @@ export function SelectInput({
   value = '',
   forcePosition,
   'data-testid': testId,
+  children,
+  id,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value);
@@ -126,7 +185,7 @@ export function SelectInput({
           onClose?.();
         }
         setIsOpen(false);
-        onBlur?.();
+        callOnBlur(onBlur, selectedValue);
       }
     };
 
@@ -168,8 +227,8 @@ export function SelectInput({
     setSelectedValue(optionValue);
     setIsOpen(false);
     onClose?.();
-    onChange?.(optionValue);
-    onBlur?.();
+    callOnChange(onChange, optionValue);
+    callOnBlur(onBlur, optionValue);
   };
 
   // トグル処理
@@ -212,7 +271,7 @@ export function SelectInput({
       case 'Escape':
         setIsOpen(false);
         onClose?.();
-        onBlur?.();
+        callOnBlur(onBlur, selectedValue);
         break;
       case 'ArrowDown':
         event.preventDefault();

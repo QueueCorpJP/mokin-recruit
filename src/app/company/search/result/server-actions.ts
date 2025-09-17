@@ -329,7 +329,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         const { badgeType, badgeText } = calculateCandidateBadge({
           recent_job_types: candidate.recent_job_types,
           desired_job_types: candidate.desired_job_types,
-          selectionCompanies: selectionCompanies.map(company => ({
+          selectionCompanies: selectionCompanies.map((company: any) => ({
             jobTypes: [], // 既存のselectionCompaniesにjobTypesがない場合は空配列
           })),
         });

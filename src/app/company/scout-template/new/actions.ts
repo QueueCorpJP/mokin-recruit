@@ -29,10 +29,16 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
     console.log('📋 Getting company groups...');
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
-    console.log('👤 Auth result for getCompanyGroups:', authResult.success ? 'success' : 'failed');
-    
+    console.log(
+      '👤 Auth result for getCompanyGroups:',
+      authResult.success ? 'success' : 'failed'
+    );
+
     if (!authResult.success) {
-      console.log('❌ getCompanyGroups - Auth failed:', authResult.error);
+      console.log(
+        '❌ getCompanyGroups - Auth failed:',
+        (authResult as any).error || '認証が必要です'
+      );
       throw new Error('認証が必要です');
     }
 
@@ -42,12 +48,14 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
     // ユーザーが権限を持つグループのみ取得
     const { data: userPermissions, error } = await supabase
       .from('company_user_group_permissions')
-      .select(`
+      .select(
+        `
         company_group:company_groups (
           id,
           group_name
         )
-      `)
+      `
+      )
       .eq('company_user_id', companyUserId);
 
     if (error) {
@@ -61,13 +69,10 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
       .filter((group: any) => group && group.id && group.group_name)
       .map((group: any) => ({
         value: group.id,
-        label: group.group_name
+        label: group.group_name,
       }));
 
-    return [
-      { value: '', label: '未選択' },
-      ...formattedGroups
-    ];
+    return [{ value: '', label: '未選択' }, ...formattedGroups];
   } catch (error) {
     console.error('Error in getCompanyGroups:', error);
     return [{ value: '', label: '未選択' }];
@@ -75,7 +80,9 @@ export async function getCompanyGroups(): Promise<GroupOption[]> {
 }
 
 // グループに関連する求人一覧を取得
-export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[]> {
+export async function getJobPostingsByGroup(
+  groupId: string
+): Promise<JobOption[]> {
   if (!groupId) {
     return [{ value: '', label: '未選択' }];
   }
@@ -83,12 +90,15 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.log('❌ getJobPostingsByGroup - Auth failed:', authResult.error);
+      console.log(
+        '❌ getJobPostingsByGroup - Auth failed:',
+        (authResult as any).error || '認証が必要です'
+      );
       throw new Error('認証が必要です');
     }
 
     const supabase = createServerActionClient();
-    
+
     const { data: jobPostings, error } = await supabase
       .from('job_postings')
       .select('id, title')
@@ -107,12 +117,12 @@ export async function getJobPostingsByGroup(groupId: string): Promise<JobOption[
       { value: '', label: '未選択' },
       ...(jobPostings?.map(job => ({
         value: job.id,
-        label: job.title
-      })) || [])
+        label: job.title,
+      })) || []),
     ];
 
     console.log('🔍 Formatted job options:', formattedJobs);
-    
+
     return formattedJobs;
   } catch (error) {
     console.error('Error in getJobPostingsByGroup:', error);
@@ -188,20 +198,26 @@ export async function createScoutTemplate(data: ScoutTemplateData) {
         template_name: data.templateName.trim(),
         target_job_posting_id: data.targetJobPostingId,
         subject: data.subject.trim(),
-        body: data.body.trim()
+        body: data.body.trim(),
       });
 
     if (insertError) {
       console.error('Error creating scout template:', insertError);
-      return { success: false, error: 'スカウトテンプレートの作成に失敗しました' };
+      return {
+        success: false,
+        error: 'スカウトテンプレートの作成に失敗しました',
+      };
     }
 
     // キャッシュを更新
     revalidatePath('/company/scout-template');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error in createScoutTemplate:', error);
-    return { success: false, error: 'スカウトテンプレートの作成に失敗しました' };
+    return {
+      success: false,
+      error: 'スカウトテンプレートの作成に失敗しました',
+    };
   }
 }

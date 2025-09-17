@@ -14,14 +14,14 @@ import { toDbPermission } from '@/lib/company/permissions';
 
 interface CreateGroupPayload {
   groupName: string;
-  members: { email: string; role: 'admin' | 'member' | 'viewer' }[];
+  members: { email: string; role: 'admin' | 'scout' | 'recruiter' }[];
 }
 
 export async function createGroupAndInvite(payload: CreateGroupPayload) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return fail(authResult.error || 'Unauthorized');
+      return fail((authResult as any).error || '認証が必要です');
     }
 
     const { companyAccountId } = authResult.data;
@@ -95,9 +95,7 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
       }
 
       // 権限付与（viewerはSCOUT_STAFFにマップ）
-      const permission = toDbPermission(
-        member.role === 'member' ? 'scout' : (member.role as any)
-      );
+      const permission = toDbPermission(member.role);
       const { error: permErr } = await supabase
         .from('company_user_group_permissions')
         .upsert({
@@ -113,8 +111,8 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
     }
 
     // 3) SendGrid 招待メール送信
-    if (isSendgridConfigured()) {
-      const from = getFromAddress() as string;
+    if (await isSendgridConfigured()) {
+      const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
       const setPasswordUrl = `${baseUrl}/signup/set-password`;
 
@@ -144,7 +142,7 @@ export async function removeGroupMember(
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return fail(authResult.error || 'Unauthorized');
+      return fail((authResult as any).error || '認証が必要です');
     }
 
     const supabase = getSupabaseAdminClient();
@@ -174,7 +172,7 @@ export async function updateMemberPermission(
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return fail(authResult.error || 'Unauthorized');
+      return fail((authResult as any).error || '認証が必要です');
     }
 
     // UIロール → DB permission_level 変換
@@ -207,7 +205,7 @@ export async function updateGroupName(groupId: string, newGroupName: string) {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return fail(authResult.error || 'Unauthorized');
+      return fail((authResult as any).error || '認証が必要です');
     }
 
     const supabase = getSupabaseAdminClient();
@@ -238,7 +236,7 @@ export async function inviteMembersToGroup(
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return fail(authResult.error || 'Unauthorized');
+      return fail((authResult as any).error || '認証が必要です');
     }
 
     const { companyAccountId } = authResult.data;
@@ -320,8 +318,8 @@ export async function inviteMembersToGroup(
     }
 
     // SendGrid通知
-    if (isSendgridConfigured()) {
-      const from = getFromAddress() as string;
+    if (await isSendgridConfigured()) {
+      const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
       const setPasswordUrl = `${baseUrl}/signup/set-password`;
 

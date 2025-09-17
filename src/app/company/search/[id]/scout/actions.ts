@@ -47,8 +47,14 @@ export async function sendScout(
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('スカウト送信の認証エラー:', authResult.error);
-      return { success: false, error: authResult.error };
+      console.error(
+        'スカウト送信の認証エラー:',
+        (authResult as any).error || '認証が必要です'
+      );
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const companyUser = authResult.data;
@@ -181,7 +187,7 @@ export async function sendScout(
       type: 'direct',
     });
 
-    let roomId = null;
+    let roomId: string | null = null;
     const { data: existingRoom, error: roomSearchError } = await supabase
       .from('rooms')
       .select('id')
@@ -246,7 +252,7 @@ export async function sendScout(
           participantInserts.push({
             room_id: roomId,
             participant_type: 'COMPANY_USER',
-            company_user_id: groupUser.company_user_id,
+            candidate_id: formData.candidateId,
             joined_at: new Date().toISOString(),
           });
         });
@@ -331,7 +337,11 @@ export async function sendScout(
       '/company/search/scout/complete'
     );
 
-    return { success: true, scoutSendId: scoutSend.id, roomId };
+    return {
+      success: true,
+      scoutSendId: scoutSend.id,
+      roomId: roomId || undefined,
+    };
   } catch (error) {
     console.error('スカウト送信処理中のエラー:', error);
     return {
@@ -348,7 +358,10 @@ export async function getCompanyGroupOptions() {
     // 企業ユーザー認証の確認
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('グループ取得の認証エラー:', authResult.error);
+      console.error(
+        'グループ取得の認証エラー:',
+        (authResult as any).error || '認証が必要です'
+      );
       return [];
     }
 
@@ -484,7 +497,10 @@ export async function getScoutTicketsRemaining(): Promise<number> {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.error('チケット残数取得の認証エラー:', authResult.error);
+      console.error(
+        'チケット残数取得の認証エラー:',
+        (authResult as any).error || '認証が必要です'
+      );
       return 0;
     }
 

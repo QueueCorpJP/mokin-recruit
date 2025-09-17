@@ -1,6 +1,7 @@
 import React from 'react';
 import { SearchIcon, Star } from 'lucide-react';
 import { getJobSearchData, JobSearchResult } from './actions';
+import { JobSearchResultUI } from '@/types/job';
 import { getFavoriteStatusAction } from '@/lib/actions/favoriteActions';
 import CandidateSearchClient from './CandidateSearchClient';
 
@@ -40,7 +41,7 @@ export default async function CandidateSearchServerComponent({
     limit: 10,
   };
 
-  let jobsWithFavorites: JobSearchResult[] = [];
+  let jobsWithFavorites: JobSearchResultUI[] = [];
   let pagination = {
     page: searchConditions.page,
     limit: searchConditions.limit,
@@ -68,9 +69,9 @@ export default async function CandidateSearchServerComponent({
         jobsWithFavorites = jobs.map(job => ({
           ...job,
           starred: favoriteResponse.data?.[job.id] || false,
-        })) as JobSearchResult[];
+        })) as JobSearchResultUI[];
       } else {
-        jobsWithFavorites = jobs as JobSearchResult[];
+        jobsWithFavorites = jobs as JobSearchResultUI[];
       }
     } else {
       console.error('Failed to get jobs:', jobSearchResponse.error);

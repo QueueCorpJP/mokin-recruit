@@ -58,7 +58,7 @@ export function LoginClient({ userType }: LoginClientProps) {
         });
 
         if (!result.success) {
-          setError(result.error || 'ログインに失敗しました');
+          setError((result as any).error || 'ログインに失敗しました');
           return;
         }
 

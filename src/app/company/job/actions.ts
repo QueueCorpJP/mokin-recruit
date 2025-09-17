@@ -11,19 +11,22 @@ export async function checkUserPermission(groupId: string) {
 
   try {
     const supabase = createClient();
-    const { user, companyAccountId } = await requireCompanyAuthForAction();
+    const authResult = await requireCompanyAuthForAction();
 
-    if (!user) {
-      return { success: false, error: '認証が必要です' };
+    if (!authResult.success) {
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
-    const actualUserId = user.id;
+    const { companyUserId, companyAccountId } = authResult.data;
 
     // 選択されたグループでの権限を確認
     const { data: userPermission, error: permissionError } = await supabase
       .from('company_user_group_permissions')
       .select('permission_level')
-      .eq('company_user_id', actualUserId)
+      .eq('company_user_id', companyUserId)
       .eq('company_group_id', groupId)
       .single();
 
@@ -175,7 +178,7 @@ async function _getCompanyJobs(
     }
 
     // レスポンス用にデータを整形（JOINされたグループ情報を使用）
-    const formattedJobs = (jobs || []).map(job => ({
+    const formattedJobs = (jobs || []).map((job: any) => ({
       id: job.id,
       title: job.title,
       jobDescription: job.job_description,
@@ -225,7 +228,10 @@ export async function createJob(data: any) {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const { companyUserId: actualUserId, companyAccountId: companyAccountId } =
@@ -428,7 +434,10 @@ export async function getJobForEdit(jobId: string) {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const supabase = await createClient();
@@ -459,7 +468,10 @@ export async function getJobDetail(jobId: string) {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const { companyUserId, companyAccountId } = authResult.data;
@@ -563,7 +575,10 @@ export async function updateJob(jobId: string, updateData: any) {
     // 統一的な認証チェック
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const supabase = await createClient();
@@ -1053,7 +1068,10 @@ export async function getCompanyJobs(params: {
     // 認証チェック（キャッシュ外で実行）
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const { companyAccountId } = authResult.data;
@@ -1103,7 +1121,10 @@ export async function getCompanyGroups() {
   try {
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      return { success: false, error: authResult.error };
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
     }
 
     const { companyUserId, companyAccountId } = authResult.data;

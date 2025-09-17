@@ -85,7 +85,23 @@ export default function SignupCareerStatusPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await saveCareerStatusAction(formData, userId);
+      const result = await saveCareerStatusAction(
+        {
+          hasCareerChange: formData.hasCareerChange || 'なし',
+          jobChangeTiming: formData.jobChangeTiming || '',
+          currentActivityStatus: formData.currentActivityStatus || '',
+          selectionEntries: (formData.selectionEntries || []).map(entry => ({
+            id: entry.id || '',
+            isPrivate: entry.isPrivate || false,
+            industries: entry.industries || [],
+            companyName: entry.companyName || '',
+            department: entry.department || '',
+            progressStatus: entry.progressStatus || '',
+            declineReason: entry.declineReason,
+          })),
+        },
+        userId
+      );
 
       if (result.success) {
         router.push('/signup/recent-job');

@@ -19,7 +19,7 @@ export default async function TemplatePage() {
   }
 
   // サーバーサイドでメッセージテンプレートを取得
-  let initialMessageTemplates = [];
+  let initialMessageTemplates: any[] = [];
   let error = null;
 
   try {
@@ -31,8 +31,11 @@ export default async function TemplatePage() {
       initialMessageTemplates = result.data;
       console.log('✅ Templates loaded:', initialMessageTemplates.length);
     } else {
-      error = result.error;
-      console.error('❌ Failed to fetch message templates:', result.error);
+      error = (result as any).error || 'エラーが発生しました';
+      console.error(
+        '❌ Failed to fetch message templates:',
+        (result as any).error || 'エラーが発生しました'
+      );
     }
   } catch (err) {
     error = 'サーバーエラーが発生しました';
@@ -42,7 +45,7 @@ export default async function TemplatePage() {
   return (
     <TemplateClient
       initialMessageTemplates={initialMessageTemplates}
-      initialError={error}
+      initialError={error || null}
       companyUserId={auth.data.companyUserId}
     />
   );

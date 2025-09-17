@@ -34,8 +34,8 @@ export default function MailVerifyPage() {
     try {
       const result = await verifyCode(verificationCode);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '認証が必要です');
       } else {
         if (typeof window !== 'undefined') {
           sessionStorage.removeItem('verificationEmail');
@@ -59,8 +59,8 @@ export default function MailVerifyPage() {
     try {
       const result = await sendVerificationCode(email);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '認証が必要です');
       } else {
         setError('');
         alert('新しい認証コードを送信しました');

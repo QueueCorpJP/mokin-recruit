@@ -23,10 +23,13 @@ export default async function SearchHistoryPage() {
   try {
     const result = await getSearchHistory(undefined, 50, 0);
     if (result.success) {
-      initialSearchHistory = result.data;
+      initialSearchHistory = result.data || [];
     } else {
-      error = result.error;
-      console.error('Failed to fetch search history:', result.error);
+      error = (result as any).error || 'エラーが発生しました';
+      console.error(
+        'Failed to fetch search history:',
+        (result as any).error || 'エラーが発生しました'
+      );
     }
   } catch (err) {
     error = 'サーバーエラーが発生しました';
@@ -36,7 +39,7 @@ export default async function SearchHistoryPage() {
   return (
     <SearchHistoryClient
       initialSearchHistory={initialSearchHistory}
-      initialError={error}
+      initialError={error || null}
       companyUserId={auth.data.companyUserId}
     />
   );

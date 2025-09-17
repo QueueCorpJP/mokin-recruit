@@ -848,8 +848,7 @@ export default function SearchClient({
     }
   }, [isHydrated, allCandidates]); // 依存関係を最小限に
 
-  const togglePickup = async (id: string | number) => {
-    const candidateId = String(id);
+  const togglePickup = async (candidateId: string) => {
     const currentGroupId = searchStore.searchGroup;
 
     console.log('[DEBUG] togglePickup called with:', {
@@ -863,7 +862,9 @@ export default function SearchClient({
     }
 
     try {
-      const currentCandidate = candidates.find(c => c?.id === candidateId);
+      const currentCandidate = candidates.find(
+        c => c?.id.toString() === candidateId
+      );
       const isSaved = savedCandidateIds.includes(candidateId);
 
       if (isSaved) {
@@ -871,7 +872,10 @@ export default function SearchClient({
         if (result.success) {
           setSavedCandidateIds(prev => prev.filter(id => id !== candidateId));
         } else {
-          console.error('Failed to unsave candidate:', result.error);
+          console.error(
+            'Failed to unsave candidate:',
+            (result as any).error || 'エラーが発生しました'
+          );
         }
       } else {
         const result = await saveCandidateAction(candidateId, currentGroupId);
@@ -879,14 +883,17 @@ export default function SearchClient({
           setSavedCandidateIds(prev => [...prev, candidateId]);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          console.error('Failed to save candidate:', result.error);
+          console.error(
+            'Failed to save candidate:',
+            (result as any).error || 'エラーが発生しました'
+          );
           console.log('[DEBUG] Full save result:', result);
         }
       }
 
       setCandidates(prev =>
         prev.map(candidate =>
-          candidate.id === candidateId
+          candidate.id.toString() === candidateId
             ? { ...candidate, isPickup: !candidate.isPickup }
             : candidate
         )
@@ -925,7 +932,10 @@ export default function SearchClient({
         } else {
           setHiddenCandidateIds(prev => [...prev, candidateId]);
         }
-        console.error('Failed to toggle hidden status:', result.error);
+        console.error(
+          'Failed to toggle hidden status:',
+          (result as any).error || 'エラーが発生しました'
+        );
       }
     } catch (error) {
       // Revert on error
@@ -1006,7 +1016,7 @@ export default function SearchClient({
         currentUrl.searchParams.set('saved', 'true');
         window.location.href = currentUrl.toString();
       } else {
-        alert(result.error || '保存に失敗しました');
+        alert((result as any).error || '保存に失敗しました');
       }
     } catch (error) {
       alert('保存に失敗しました');
@@ -1650,45 +1660,59 @@ export default function SearchClient({
                         </button>
                         {searchStore.desiredLocations.length > 0 && (
                           <div className='flex flex-wrap gap-2'>
-                            {searchStore.desiredLocations.map(location => (
-                              <div
-                                key={location.id}
-                                className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
-                              >
+                            {searchStore.desiredLocations
+                              .slice(0, 6)
+                              .map(location => (
+                                <div
+                                  key={location.id}
+                                  className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'
+                                >
+                                  <span
+                                    className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'
+                                    style={{
+                                      fontFamily: 'Noto Sans JP, sans-serif',
+                                    }}
+                                  >
+                                    {location.name}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      searchStore.setDesiredLocations(
+                                        searchStore.desiredLocations.filter(
+                                          l => l.id !== location.id
+                                        )
+                                      )
+                                    }
+                                    className='w-3 h-3'
+                                  >
+                                    <svg
+                                      width='12'
+                                      height='12'
+                                      viewBox='0 0 12 12'
+                                      fill='none'
+                                    >
+                                      <path
+                                        d='M1 1L11 11M1 11L11 1'
+                                        stroke='#0f9058'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            {searchStore.desiredLocations.length > 6 && (
+                              <div className='bg-[#d2f1da] px-6 py-[10px] rounded-[10px] flex items-center gap-2.5'>
                                 <span
                                   className='text-[#0f9058] text-[14px] font-medium tracking-[1.4px]'
                                   style={{
                                     fontFamily: 'Noto Sans JP, sans-serif',
                                   }}
                                 >
-                                  {location.name}
+                                  +{searchStore.desiredLocations.length - 6}件
                                 </span>
-                                <button
-                                  onClick={() =>
-                                    searchStore.setDesiredLocations(
-                                      searchStore.desiredLocations.filter(
-                                        l => l.id !== location.id
-                                      )
-                                    )
-                                  }
-                                  className='w-3 h-3'
-                                >
-                                  <svg
-                                    width='12'
-                                    height='12'
-                                    viewBox='0 0 12 12'
-                                    fill='none'
-                                  >
-                                    <path
-                                      d='M1 1L11 11M1 11L11 1'
-                                      stroke='#0f9058'
-                                      strokeWidth='2'
-                                      strokeLinecap='round'
-                                    />
-                                  </svg>
-                                </button>
                               </div>
-                            ))}
+                            )}
                           </div>
                         )}
                       </div>
@@ -2251,7 +2275,7 @@ export default function SearchClient({
                     {/* Actions */}
                     <div className='flex flex-col gap-6 w-8'>
                       <button
-                        onClick={() => togglePickup(candidate.id)}
+                        onClick={() => togglePickup(candidate.id.toString())}
                         className='w-8 h-8 flex items-center justify-center'
                       >
                         {savedCandidateIds.includes(candidate.id.toString()) ? (

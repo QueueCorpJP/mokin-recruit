@@ -38,10 +38,14 @@ export default function TaskList({ initialTaskData, tasks }: TaskListProps) {
   const checkProfileIncomplete = () => userState.profileIncomplete;
   const checkNewScout = () => false;
   const checkUnreadScout = () => false;
-  const checkNewMessage = () =>
-    userState.hasNewMessage && isWithin72Hours(userState.newMessageDate);
-  const checkUnreadMessage = () =>
-    userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate);
+  const checkNewMessage = (): boolean =>
+    Boolean(
+      userState.hasNewMessage && isWithin72Hours(userState.newMessageDate)
+    );
+  const checkUnreadMessage = (): boolean =>
+    Boolean(
+      userState.hasUnreadMessage && is72HoursPassed(userState.unreadMessageDate)
+    );
 
   const generateSubText = (companyName?: string, jobTitle?: string): string => {
     if (companyName && jobTitle) {

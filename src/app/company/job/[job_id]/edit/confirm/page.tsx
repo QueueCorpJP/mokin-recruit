@@ -13,14 +13,9 @@ export default async function JobEditConfirmPage({ params }: PageProps) {
   // 求人データを取得
   const jobResult = await getJobDetail(jobId);
 
-  if (!jobResult.success) {
-    throw new Error(jobResult.error);
+  if (!jobResult.success || !jobResult.data) {
+    throw new Error(jobResult.error || 'Job data not found');
   }
 
-  return (
-    <JobEditConfirmPageClient 
-      jobData={jobResult.data}
-      jobId={jobId}
-    />
-  );
+  return <JobEditConfirmPageClient jobData={jobResult.data} jobId={jobId} />;
 }

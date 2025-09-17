@@ -21,10 +21,10 @@ export default async function JobDetailPage({ params }: PageProps) {
     );
   }
   const result = await getJobDetail(params.job_id);
-  
+
   if (!result.success) {
     notFound();
   }
 
-  return <JobDetailClient jobData={result.data} />;
+  return <JobDetailClient jobData={result.data!} />;
 }

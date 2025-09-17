@@ -1,6 +1,9 @@
 'use server';
 
-import { requireCandidateAuth, requireCandidateAuthForAction } from '@/lib/auth/server';
+import {
+  requireCandidateAuth,
+  requireCandidateAuthForAction,
+} from '@/lib/auth/server';
 import { getCandidateData } from '@/lib/server/candidate/candidateData';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { INDUSTRY_GROUPS } from '@/constants/industry-data';
@@ -19,7 +22,10 @@ export async function getRecentJobData() {
     }
 
     // 複数職歴データをrecent_job_industriesフィールドから読み取り
-    if (candidateData.recent_job_industries && Array.isArray(candidateData.recent_job_industries)) {
+    if (
+      candidateData.recent_job_industries &&
+      Array.isArray(candidateData.recent_job_industries)
+    ) {
       // recent_job_industriesが職歴配列データか業種配列データかを判定
       const firstItem = candidateData.recent_job_industries[0];
       if (firstItem && typeof firstItem === 'object' && firstItem.companyName) {
@@ -33,14 +39,14 @@ export async function getRecentJobData() {
             endYear: job.endYear || '',
             endMonth: job.endMonth || '',
             isCurrentlyWorking: job.isCurrentlyWorking || false,
-            industries: Array.isArray(job.industries) 
+            industries: Array.isArray(job.industries)
               ? job.industries.filter(Boolean)
               : [],
-            jobTypes: Array.isArray(job.jobTypes) 
+            jobTypes: Array.isArray(job.jobTypes)
               ? job.jobTypes.filter(Boolean)
               : [],
             jobDescription: job.jobDescription || '',
-          }))
+          })),
         };
       }
     }
@@ -50,19 +56,27 @@ export async function getRecentJobData() {
       jobHistories: [
         {
           companyName: candidateData.recent_job_company_name || '',
-          departmentPosition: candidateData.recent_job_department_position || '',
+          departmentPosition:
+            candidateData.recent_job_department_position || '',
           startYear: candidateData.recent_job_start_year || '',
           startMonth: candidateData.recent_job_start_month || '',
           endYear: candidateData.recent_job_end_year || '',
           endMonth: candidateData.recent_job_end_month || '',
-          isCurrentlyWorking: candidateData.recent_job_is_currently_working || false,
-          industries: Array.isArray(candidateData.recent_job_industries) 
-            ? candidateData.recent_job_industries.map((item: any) => 
-                typeof item === 'string' ? item : item.name || item.id || item).filter(Boolean)
+          isCurrentlyWorking:
+            candidateData.recent_job_is_currently_working || false,
+          industries: Array.isArray(candidateData.recent_job_industries)
+            ? candidateData.recent_job_industries
+                .map((item: any) =>
+                  typeof item === 'string' ? item : item.name || item.id || item
+                )
+                .filter(Boolean)
             : [],
-          jobTypes: Array.isArray(candidateData.recent_job_types) 
-            ? candidateData.recent_job_types.map((item: any) => 
-                typeof item === 'string' ? item : item.name || item.id || item).filter(Boolean)
+          jobTypes: Array.isArray(candidateData.recent_job_types)
+            ? candidateData.recent_job_types
+                .map((item: any) =>
+                  typeof item === 'string' ? item : item.name || item.id || item
+                )
+                .filter(Boolean)
             : [],
           jobDescription: candidateData.recent_job_description || '',
         },
@@ -79,7 +93,7 @@ export async function updateRecentJobData(formData: FormData) {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
     if (!authResult.success) {
-      throw new Error(authResult.error);
+      throw new Error((authResult as any).error || '認証が必要です');
     }
 
     const { candidateId } = authResult.data;
@@ -87,7 +101,7 @@ export async function updateRecentJobData(formData: FormData) {
     // 職歴データをパース
     const jobHistoriesJson = formData.get('jobHistories')?.toString();
     let jobHistories: any[] = [];
-    
+
     if (jobHistoriesJson) {
       try {
         jobHistories = JSON.parse(jobHistoriesJson);
@@ -99,26 +113,34 @@ export async function updateRecentJobData(formData: FormData) {
 
     // 各職歴の業種・職種IDを日本語名に変換
     const processedJobHistories = jobHistories.map(job => {
-      const industries = (job.industries || []).map((id: string) => {
-        const industry = INDUSTRY_GROUPS.flatMap(g => g.industries).find(i => i.id === id);
-        return industry ? industry.name : id; // 日本語名のみ保存
-      }).filter(Boolean);
-      
-      const jobTypes = (job.jobTypes || []).map((id: string) => {
-        const jobType = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(jt => jt.id === id);
-        return jobType ? jobType.name : id; // 日本語名のみ保存
-      }).filter(Boolean);
+      const industries = (job.industries || [])
+        .map((id: string) => {
+          const industry = INDUSTRY_GROUPS.flatMap(g => g.industries).find(
+            i => i.id === id
+          );
+          return industry ? industry.name : id; // 日本語名のみ保存
+        })
+        .filter(Boolean);
+
+      const jobTypes = (job.jobTypes || [])
+        .map((id: string) => {
+          const jobType = JOB_TYPE_GROUPS.flatMap(g => g.jobTypes).find(
+            jt => jt.id === id
+          );
+          return jobType ? jobType.name : id; // 日本語名のみ保存
+        })
+        .filter(Boolean);
 
       return {
         ...job,
         industries,
-        jobTypes
+        jobTypes,
       };
     });
 
     console.log('Updating job histories data:', {
       candidateId,
-      jobHistories: processedJobHistories
+      jobHistories: processedJobHistories,
     });
 
     const supabase = await getSupabaseServerClient();
@@ -127,36 +149,50 @@ export async function updateRecentJobData(formData: FormData) {
     // - 最初の職歴の基本情報を既存のフィールドに保存（互換性維持）
     // - 全職歴をJSONBフィールドに保存（複数職歴対応）
     const firstJobHistory = processedJobHistories[0];
-    
-    // 複数企業名を結合（例：「A社 | B社 | C社」）
-    const allCompanyNames = processedJobHistories.map(job => job.companyName).filter(Boolean).join(' | ');
-    
-    // 複数業務内容を結合
-    const allJobDescriptions = processedJobHistories.map((job, index) => {
-      if (!job.jobDescription) return '';
-      return processedJobHistories.length > 1 
-        ? `【${job.companyName || `企業${index + 1}`}】${job.jobDescription}`
-        : job.jobDescription;
-    }).filter(Boolean).join('\n\n');
 
-    const updateData = firstJobHistory ? {
-      // 最初の職歴の基本情報（互換性維持）
-      recent_job_company_name: firstJobHistory.companyName || null,
-      recent_job_department_position: firstJobHistory.departmentPosition || null,
-      recent_job_start_year: firstJobHistory.startYear || null,
-      recent_job_start_month: firstJobHistory.startMonth || null,
-      recent_job_end_year: firstJobHistory.endYear || null,
-      recent_job_end_month: firstJobHistory.endMonth || null,
-      recent_job_is_currently_working: firstJobHistory.isCurrentlyWorking || false,
-      // 複数職歴の場合は全職歴を保存、単一の場合は業種・職種を保存
-      recent_job_industries: processedJobHistories.length > 1 ? processedJobHistories : firstJobHistory.industries,
-      recent_job_types: processedJobHistories.length > 1 ? null : firstJobHistory.jobTypes,
-      recent_job_description: allJobDescriptions || null,
-      recent_job_updated_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    } : {
-      updated_at: new Date().toISOString(),
-    };
+    // 複数企業名を結合（例：「A社 | B社 | C社」）
+    const allCompanyNames = processedJobHistories
+      .map(job => job.companyName)
+      .filter(Boolean)
+      .join(' | ');
+
+    // 複数業務内容を結合
+    const allJobDescriptions = processedJobHistories
+      .map((job, index) => {
+        if (!job.jobDescription) return '';
+        return processedJobHistories.length > 1
+          ? `【${job.companyName || `企業${index + 1}`}】${job.jobDescription}`
+          : job.jobDescription;
+      })
+      .filter(Boolean)
+      .join('\n\n');
+
+    const updateData = firstJobHistory
+      ? {
+          // 最初の職歴の基本情報（互換性維持）
+          recent_job_company_name: firstJobHistory.companyName || null,
+          recent_job_department_position:
+            firstJobHistory.departmentPosition || null,
+          recent_job_start_year: firstJobHistory.startYear || null,
+          recent_job_start_month: firstJobHistory.startMonth || null,
+          recent_job_end_year: firstJobHistory.endYear || null,
+          recent_job_end_month: firstJobHistory.endMonth || null,
+          recent_job_is_currently_working:
+            firstJobHistory.isCurrentlyWorking || false,
+          // 複数職歴の場合は全職歴を保存、単一の場合は業種・職種を保存
+          recent_job_industries:
+            processedJobHistories.length > 1
+              ? processedJobHistories
+              : firstJobHistory.industries,
+          recent_job_types:
+            processedJobHistories.length > 1 ? null : firstJobHistory.jobTypes,
+          recent_job_description: allJobDescriptions || null,
+          recent_job_updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      : {
+          updated_at: new Date().toISOString(),
+        };
 
     // candidatesテーブルの既存フィールドに保存
     const { error: candidateError } = await supabase
@@ -171,12 +207,11 @@ export async function updateRecentJobData(formData: FormData) {
 
     console.log('Recent job update success:', { candidateId });
     return { success: true };
-
   } catch (error) {
     console.error('Job history update failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '更新に失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '更新に失敗しました',
     };
   }
 }

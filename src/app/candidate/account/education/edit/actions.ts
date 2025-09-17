@@ -102,8 +102,8 @@ export async function updateEducationData(formData: FormData) {
     if (!validation.success) {
       return {
         success: false,
-        errors: validation.errors,
-        message: validation.message,
+        errors: (validation as any).errors || {},
+        message: (validation as any).message || 'バリデーションエラー',
       };
     }
     const {

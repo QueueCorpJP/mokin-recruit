@@ -19,8 +19,8 @@ export default function ProfilePage() {
       try {
         const currentSettings = await getCompanyUserSettings();
         if (currentSettings) {
-          setDisplayName(currentSettings.display_name || '');
-          setDepartment(currentSettings.department || '');
+          setDisplayName((currentSettings as any).display_name || '');
+          setDepartment((currentSettings as any).department || '');
         }
         setIsDataLoaded(true);
       } catch (error) {
@@ -40,8 +40,8 @@ export default function ProfilePage() {
     try {
       const result = await updateCompanyProfile(displayName, department);
 
-      if (result.error) {
-        setError(result.error);
+      if ((result as any).error) {
+        setError((result as any).error || '更新に失敗しました');
       } else {
         router.push('/company/setting/profile/complete');
       }

@@ -16,7 +16,7 @@ export async function sendContactForm(formData: {
 
     const authResult = await requireCompanyAuthForAction();
     if (!authResult.success) {
-      console.log('認証エラー:', authResult.error);
+      console.log('認証エラー:', (authResult as any).error || '認証が必要です');
       return { error: 'Unauthorized' };
     }
     console.log('認証成功 - ユーザーID:', authResult.data.companyUserId);

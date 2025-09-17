@@ -3,6 +3,7 @@ import { SearchIcon, Star, X } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getJobSearchData, JobSearchResult } from './actions';
+import { JobSearchResultUI } from '@/types/job';
 import { getFavoriteStatusAction } from '@/lib/actions/favoriteActions';
 import { BaseInput } from '@/components/ui/base-input';
 import { SelectInput } from '@/components/ui/select-input';
@@ -48,7 +49,7 @@ export default async function CandidateSearchFullServerComponent({
     limit: 10,
   };
 
-  let jobsWithFavorites: JobSearchResult[] = [];
+  let jobsWithFavorites: JobSearchResultUI[] = [];
   let pagination = {
     page: searchConditions.page,
     limit: 10,
@@ -74,9 +75,9 @@ export default async function CandidateSearchFullServerComponent({
         jobsWithFavorites = jobs.map(job => ({
           ...job,
           starred: favoriteResponse.data?.[job.id] || false,
-        })) as JobSearchResult[];
+        })) as JobSearchResultUI[];
       } else {
-        jobsWithFavorites = jobs as JobSearchResult[];
+        jobsWithFavorites = jobs as JobSearchResultUI[];
       }
     } else {
       console.error('Failed to get jobs:', jobSearchResponse.error);
@@ -255,7 +256,7 @@ export default async function CandidateSearchFullServerComponent({
                             {job.companyName}
                           </p>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            {job.tags.map((tag, index) => (
+                            {job.tags.map((tag: string, index: number) => (
                               <span
                                 key={index}
                                 className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm'
@@ -265,7 +266,7 @@ export default async function CandidateSearchFullServerComponent({
                             ))}
                           </div>
                           <div className='flex flex-wrap gap-2 mb-2'>
-                            {job.location.map((loc, index) => (
+                            {job.location.map((loc: string, index: number) => (
                               <span
                                 key={index}
                                 className='bg-green-100 text-green-800 px-2 py-1 rounded text-sm'
@@ -278,7 +279,7 @@ export default async function CandidateSearchFullServerComponent({
                             {job.salary}
                           </p>
                           <div className='flex flex-wrap gap-2 mt-2'>
-                            {job.apell.map((appeal, index) => (
+                            {job.apell.map((appeal: string, index: number) => (
                               <span
                                 key={index}
                                 className='bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm'

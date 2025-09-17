@@ -10,10 +10,12 @@ interface JobServerComponentProps {
   }>;
 }
 
-export default async function JobServerComponent({ searchParams }: JobServerComponentProps) {
+export default async function JobServerComponent({
+  searchParams,
+}: JobServerComponentProps) {
   // searchParamsをawait
   const params = await searchParams;
-  
+
   // パラメータ解析
   const conditions = {
     status: params.status || 'すべて',
@@ -25,7 +27,7 @@ export default async function JobServerComponent({ searchParams }: JobServerComp
   // データ取得
   const [jobsResponse, groupsResponse] = await Promise.all([
     getCompanyJobs(conditions),
-    getCompanyGroups()
+    getCompanyGroups(),
   ]);
 
   // エラーハンドリング
@@ -41,11 +43,13 @@ export default async function JobServerComponent({ searchParams }: JobServerComp
   }
 
   // 停止状態の求人を除外（「すべて」選択時でも停止状態は非表示）
-  const filteredJobs = (jobsResponse.data || []).filter((job: any) => job.status !== 'CLOSED');
+  const filteredJobs = ((jobsResponse as any).data || []).filter(
+    (job: any) => job.status !== 'CLOSED'
+  );
 
   // クライアントコンポーネントに渡す
   return (
-    <JobClient 
+    <JobClient
       initialJobs={filteredJobs}
       initialGroups={groupsResponse.data || []}
       initialConditions={conditions}

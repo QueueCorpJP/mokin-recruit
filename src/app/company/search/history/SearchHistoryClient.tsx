@@ -221,7 +221,10 @@ export function SearchHistoryClient({
             )
           );
         } else {
-          console.error('Failed to update search title:', result.error);
+          console.error(
+            'Failed to update search title:',
+            (result as any).error || 'エラーが発生しました'
+          );
           // エラーハンドリング - ユーザーに通知したい場合
         }
       });
@@ -252,7 +255,10 @@ export function SearchHistoryClient({
           setDeleteModalOpen(false);
           setDeletingItem(null);
         } else {
-          console.error('Failed to delete search history:', result.error);
+          console.error(
+            'Failed to delete search history:',
+            (result as any).error || 'エラーが発生しました'
+          );
           // エラーハンドリング - ユーザーに通知したい場合
           // モーダルは開いたままにして、ユーザーに再試行の機会を与える
         }

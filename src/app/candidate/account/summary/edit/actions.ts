@@ -38,13 +38,18 @@ export async function updateSummaryData(
   try {
     // 認証チェック
     const authResult = await requireCandidateAuthForAction();
-    if (!authResult.success) return fail(authResult.error);
+    if (!authResult.success)
+      return fail((authResult as any).error || '認証が必要です');
 
     const { candidateId } = authResult.data;
 
     // 共通ユーティリティでバリデーション・型変換
     const validation = await validateFormDataWithZod(summarySchema, formData);
-    if (!validation.success) return fail(validation.message, validation.errors);
+    if (!validation.success)
+      return fail(
+        (validation as any).message || 'バリデーションエラー',
+        (validation as any).errors || {}
+      );
     const { jobSummary, selfPr } = validation.data;
 
     const supabase = await getSupabaseServerClient();

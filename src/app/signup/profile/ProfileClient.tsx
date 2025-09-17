@@ -186,7 +186,13 @@ export default function SignupProfilePage() {
         console.log('Save result:', result);
 
         if (result.success) {
-          localStorage.setItem('signupProfile', encryptData(formData, ENC_KEY));
+          localStorage.setItem(
+            'signupProfile',
+            encryptData(
+              formData,
+              process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'default-key'
+            )
+          );
           router.push('/signup/career-status');
         } else {
           console.error('Profile save error:', result.error);
@@ -194,7 +200,13 @@ export default function SignupProfilePage() {
         }
       } else {
         console.log('No userId, saving to localStorage only');
-        localStorage.setItem('signupProfile', encryptData(formData, ENC_KEY));
+        localStorage.setItem(
+          'signupProfile',
+          encryptData(
+            formData,
+            process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'default-key'
+          )
+        );
         router.push('/signup/career-status');
       }
     } catch (error) {
@@ -433,7 +445,10 @@ export default function SignupProfilePage() {
                             onClick={() =>
                               setFormData(prev => ({
                                 ...prev,
-                                gender: option.value,
+                                gender: option.value as
+                                  | '男性'
+                                  | '女性'
+                                  | '未回答',
                               }))
                             }
                             className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
@@ -821,7 +836,10 @@ export default function SignupProfilePage() {
                             onClick={() =>
                               setFormData(prev => ({
                                 ...prev,
-                                gender: option.value,
+                                gender: option.value as
+                                  | '男性'
+                                  | '女性'
+                                  | '未回答',
                               }))
                             }
                             className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${

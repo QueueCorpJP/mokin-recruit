@@ -20,7 +20,7 @@ export async function saveScoutSettings(formData: FormData) {
 
   const result = await upsertByCandidateId('scout_settings', settings);
   if (!result.success) {
-    throw new Error(result.error);
+    throw new Error((result as any).error || '更新に失敗しました');
   }
 
   revalidatePath('/candidate/setting/scout');

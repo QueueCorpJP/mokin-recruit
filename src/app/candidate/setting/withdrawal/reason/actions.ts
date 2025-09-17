@@ -19,7 +19,10 @@ export async function processWithdrawal(withdrawalReason: string) {
   // 認証確認
   const authResult = await requireCandidateAuthForAction();
   if (!authResult.success) {
-    console.error('退会処理の認証エラー:', authResult.error);
+    console.error(
+      '退会処理の認証エラー:',
+      (authResult as any).error || '認証が必要です'
+    );
     throw new Error('認証に失敗しました。');
   }
 
