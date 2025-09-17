@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Input } from '@/components/admin/ui/input';
@@ -120,7 +120,7 @@ export default function EditNoticeForm({
     }
   };
 
-  const handlePreview = async () => {
+  const handlePreview = useCallback(async () => {
     // バリデーションエラーをクリア
     setTitleError('');
     setCategoryError('');
@@ -170,7 +170,16 @@ export default function EditNoticeForm({
     } else {
       router.push('/admin/notice/edit/preview');
     }
-  };
+  }, [
+    title,
+    selectedCategoryIds,
+    content,
+    thumbnailPreview,
+    thumbnail,
+    status,
+    noticeId,
+    router,
+  ]);
 
   const handleCancel = () => {
     if (title || content || thumbnail) {
@@ -182,72 +191,89 @@ export default function EditNoticeForm({
     }
   };
 
-  const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
-    // バリデーションエラーをクリア
-    setTitleError('');
-    setCategoryError('');
-    setContentError('');
+  const handleSubmit = useCallback(
+    async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
+      // バリデーションエラーをクリア
+      setTitleError('');
+      setCategoryError('');
+      setContentError('');
 
-    let hasError = false;
+      let hasError = false;
 
-    if (!title.trim()) {
-      setTitleError('タイトルを入力してください');
-      hasError = true;
-    } else if (title.length > 60) {
-      setTitleError('タイトルは60文字以内で入力してください');
-      hasError = true;
-    }
-
-    if (selectedCategoryIds.length === 0) {
-      setCategoryError('カテゴリを選択してください');
-      hasError = true;
-    }
-
-    if (!content.trim() || content === '<p></p>') {
-      setContentError('お知らせ内容を入力してください');
-      hasError = true;
-    }
-
-    if (hasError) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData();
-      if (noticeId) {
-        formData.append('id', noticeId);
-      }
-      formData.append('title', title);
-      formData.append('categoryId', selectedCategoryIds[0] || '');
-      formData.append(
-        'content',
-        content || '<p>お知らせ内容がここに表示されます</p>'
-      );
-      formData.append('status', submitStatus);
-      if (thumbnail) {
-        formData.append('thumbnail', thumbnail);
-      } else if (thumbnailUrl) {
-        formData.append('thumbnail_url', thumbnailUrl);
+      if (!title.trim()) {
+        setTitleError('タイトルを入力してください');
+        hasError = true;
+      } else if (title.length > 60) {
+        setTitleError('タイトルは60文字以内で入力してください');
+        hasError = true;
       }
 
-      await saveNotice(formData);
-    } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
-      if (error instanceof Error && error.message.includes('title')) {
-        setTitleError('タイトルの保存に失敗しました');
-      } else if (error instanceof Error && error.message.includes('category')) {
-        setCategoryError('カテゴリの保存に失敗しました');
-      } else if (error instanceof Error && error.message.includes('content')) {
-        setContentError('お知らせ内容の保存に失敗しました');
-      } else {
-        setTitleError('お知らせの保存に失敗しました');
+      if (selectedCategoryIds.length === 0) {
+        setCategoryError('カテゴリを選択してください');
+        hasError = true;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      if (!content.trim() || content === '<p></p>') {
+        setContentError('お知らせ内容を入力してください');
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const formData = new FormData();
+        if (noticeId) {
+          formData.append('id', noticeId);
+        }
+        formData.append('title', title);
+        formData.append('categoryId', selectedCategoryIds[0] || '');
+        formData.append(
+          'content',
+          content || '<p>お知らせ内容がここに表示されます</p>'
+        );
+        formData.append('status', submitStatus);
+        if (thumbnail) {
+          formData.append('thumbnail', thumbnail);
+        } else if (thumbnailUrl) {
+          formData.append('thumbnail_url', thumbnailUrl);
+        }
+
+        await saveNotice(formData);
+      } catch (error) {
+        console.error('お知らせの保存に失敗:', error);
+        if (error instanceof Error && error.message.includes('title')) {
+          setTitleError('タイトルの保存に失敗しました');
+        } else if (
+          error instanceof Error &&
+          error.message.includes('category')
+        ) {
+          setCategoryError('カテゴリの保存に失敗しました');
+        } else if (
+          error instanceof Error &&
+          error.message.includes('content')
+        ) {
+          setContentError('お知らせ内容の保存に失敗しました');
+        } else {
+          setTitleError('お知らせの保存に失敗しました');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      title,
+      selectedCategoryIds,
+      content,
+      noticeId,
+      thumbnail,
+      thumbnailUrl,
+      saveNotice,
+    ]
+  );
 
   // AdminPageTitleからのイベントリスナーを追加
   useEffect(() => {
@@ -266,7 +292,15 @@ export default function EditNoticeForm({
       window.removeEventListener('draft-save', handleDraftSave);
       window.removeEventListener('preview-click', handlePreviewClick);
     };
-  }, [title, selectedCategoryIds, content, thumbnail, thumbnailUrl]);
+  }, [
+    title,
+    selectedCategoryIds,
+    content,
+    thumbnail,
+    thumbnailUrl,
+    handlePreview,
+    handleSubmit,
+  ]);
 
   return (
     <div className='min-h-screen'>

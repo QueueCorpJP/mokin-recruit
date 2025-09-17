@@ -469,7 +469,7 @@ export default function TaskList({ initialTaskData }: TaskListProps) {
                   transform: 'translateY(-50%)',
                 }}
               >
-                <img
+                <Image
                   src='/images/list.svg'
                   alt=''
                   width={120}

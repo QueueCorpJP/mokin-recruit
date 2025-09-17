@@ -21,15 +21,15 @@ import { useScoutSendStore } from '@/stores/scoutSendStore';
 // Mail Icon Component
 const MailIcon = () => (
   <svg
-    width="32"
-    height="32"
-    viewBox="0 0 32 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    width='32'
+    height='32'
+    viewBox='0 0 32 32'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
   >
     <path
-      d="M13.4625 6H9H6.7375H6V6.55V9V11.525V17.0875L0.0125 12.6563C0.1125 11.525 0.69375 10.475 1.61875 9.79375L3 8.76875V6C3 4.34375 4.34375 3 6 3H10.7875L13.9063 0.69375C14.5125 0.24375 15.2438 0 16 0C16.7563 0 17.4875 0.24375 18.0938 0.6875L21.2125 3H26C27.6563 3 29 4.34375 29 6V8.76875L30.3813 9.79375C31.3063 10.475 31.8875 11.525 31.9875 12.6563L26 17.0875V11.525V9V6.55V6H25.2625H23H18.5375H13.4563H13.4625ZM0 28V15.1313L13.6 25.2063C14.2938 25.7188 15.1375 26 16 26C16.8625 26 17.7063 25.725 18.4 25.2063L32 15.1313V28C32 30.2063 30.2063 32 28 32H4C1.79375 32 0 30.2063 0 28ZM11 10H21C21.55 10 22 10.45 22 11C22 11.55 21.55 12 21 12H11C10.45 12 10 11.55 10 11C10 10.45 10.45 10 11 10ZM11 14H21C21.55 14 22 14.45 22 15C22 15.55 21.55 16 21 16H11C10.45 16 10 15.55 10 15C10 14.45 10.45 14 11 14Z"
-      fill="white"
+      d='M13.4625 6H9H6.7375H6V6.55V9V11.525V17.0875L0.0125 12.6563C0.1125 11.525 0.69375 10.475 1.61875 9.79375L3 8.76875V6C3 4.34375 4.34375 3 6 3H10.7875L13.9063 0.69375C14.5125 0.24375 15.2438 0 16 0C16.7563 0 17.4875 0.24375 18.0938 0.6875L21.2125 3H26C27.6563 3 29 4.34375 29 6V8.76875L30.3813 9.79375C31.3063 10.475 31.8875 11.525 31.9875 12.6563L26 17.0875V11.525V9V6.55V6H25.2625H23H18.5375H13.4563H13.4625ZM0 28V15.1313L13.6 25.2063C14.2938 25.7188 15.1375 26 16 26C16.8625 26 17.7063 25.725 18.4 25.2063L32 15.1313V28C32 30.2063 30.2063 32 28 32H4C1.79375 32 0 30.2063 0 28ZM11 10H21C21.55 10 22 10.45 22 11C22 11.55 21.55 12 21 12H11C10.45 12 10 11.55 10 11C10 10.45 10.45 10 11 10ZM11 14H21C21.55 14 22 14.45 22 15C22 15.55 21.55 16 21 16H11C10.45 16 10 15.55 10 15C10 14.45 10.45 14 11 14Z'
+      fill='white'
     />
   </svg>
 );
@@ -37,15 +37,15 @@ const MailIcon = () => (
 // Right Arrow Icon Component
 const RightArrowIcon = () => (
   <svg
-    width="8"
-    height="8"
-    viewBox="0 0 8 8"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    width='8'
+    height='8'
+    viewBox='0 0 8 8'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
   >
     <path
-      d="M6.11804 3.59656C6.34118 3.8197 6.34118 4.18208 6.11804 4.40522L2.69061 7.83264C2.46747 8.05579 2.10509 8.05579 1.88195 7.83264C1.65881 7.60951 1.65881 7.24713 1.88195 7.02399L4.90594 4L1.88374 0.976012C1.6606 0.752873 1.6606 0.390494 1.88374 0.167355C2.10688 -0.0557849 2.46926 -0.0557849 2.6924 0.167355L6.11982 3.59478L6.11804 3.59656Z"
-      fill="white"
+      d='M6.11804 3.59656C6.34118 3.8197 6.34118 4.18208 6.11804 4.40522L2.69061 7.83264C2.46747 8.05579 2.10509 8.05579 1.88195 7.83264C1.65881 7.60951 1.65881 7.24713 1.88195 7.02399L4.90594 4L1.88374 0.976012C1.6606 0.752873 1.6606 0.390494 1.88374 0.167355C2.10688 -0.0557849 2.46926 -0.0557849 2.6924 0.167355L6.11982 3.59478L6.11804 3.59656Z'
+      fill='white'
     />
   </svg>
 );
@@ -57,14 +57,14 @@ interface ScoutSendFormProps {
 export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setDraft = useScoutSendStore((s) => s.setDraft);
-  const getDraft = useScoutSendStore((s) => s.getDraft);
-  
+  const setDraft = useScoutSendStore(s => s.setDraft);
+  const getDraft = useScoutSendStore(s => s.getDraft);
+
   // 動的セグメントから候補者IDを取得 (/search/[id]/scout形式)
   const candidateIdFromProps = candidateId || 'CND-2024-00123';
   const searchQuery = searchParams.get('query');
   const [candidateName, setCandidateName] = useState<string>('');
-  
+
   const [formData, setFormData] = useState({
     group: '',
     recruitmentTarget: '',
@@ -95,11 +95,19 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
   // 動的データ管理
   // const [isLoading, setIsLoading] = useState(false);
-  const [groupOptions, setGroupOptions] = useState([{ value: '', label: '未選択' }]);
-  const [jobPostingOptions, setJobPostingOptions] = useState([{ value: '', label: '未選択' }]);
-  const [companyUserOptions, setCompanyUserOptions] = useState([{ value: '', label: '未選択' }]);
-  const [templateOptions, setTemplateOptions] = useState([{ value: '', label: '未選択' }]);
-  
+  const [groupOptions, setGroupOptions] = useState([
+    { value: '', label: '未選択' },
+  ]);
+  const [jobPostingOptions, setJobPostingOptions] = useState([
+    { value: '', label: '未選択' },
+  ]);
+  const [companyUserOptions, setCompanyUserOptions] = useState([
+    { value: '', label: '未選択' },
+  ]);
+  const [templateOptions, setTemplateOptions] = useState([
+    { value: '', label: '未選択' },
+  ]);
+
   // チケット管理
   const [scoutTicketsRemaining, setScoutTicketsRemaining] = useState(0);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -114,14 +122,14 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       try {
         // setIsLoading(true);
         // setIsTicketLoading(true);
-        
+
         // 並行してデータを取得
         const [groups, ticketsRemaining, name] = await Promise.all([
           getCompanyGroupOptions(),
           getScoutTicketsRemaining(),
           getCandidateName(candidateIdFromProps),
         ]);
-        
+
         setGroupOptions([{ value: '', label: '未選択' }, ...groups]);
         setScoutTicketsRemaining(ticketsRemaining);
         setCandidateName(name || '');
@@ -134,13 +142,13 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     };
 
     loadInitialData();
-  }, []);
+  }, [candidateIdFromProps]);
 
   // sessionStorage に保存してあるドラフトから初期値を復元
   useEffect(() => {
     const saved = getDraft(candidateIdFromProps);
     if (saved) {
-      setFormData((prev) => ({ ...prev, ...saved }));
+      setFormData(prev => ({ ...prev, ...saved }));
     }
   }, [candidateIdFromProps, getDraft]);
 
@@ -148,10 +156,10 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      candidateId: candidateIdFromProps
+      candidateId: candidateIdFromProps,
     }));
     setDraft(candidateIdFromProps, { candidateId: candidateIdFromProps });
-  }, [candidateIdFromProps]);
+  }, [candidateIdFromProps, setDraft]);
 
   // グループ選択時の動的データ更新
   useEffect(() => {
@@ -171,7 +179,10 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         ]);
 
         setJobPostingOptions([{ value: '', label: '未選択' }, ...jobs]);
-        setCompanyUserOptions([{ value: currentUserName, label: currentUserName }, ...users]);
+        setCompanyUserOptions([
+          { value: currentUserName, label: currentUserName },
+          ...users,
+        ]);
         setTemplateOptions([{ value: '', label: '未選択' }, ...templates]);
       } catch (error) {
         console.error('グループ関連データの読み込みに失敗:', error);
@@ -183,7 +194,7 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
   // フィールド変更時の処理
   const handleSelectChange = (field: string) => (value: string) => {
-    setFormData((prev) => {
+    setFormData(prev => {
       const newData = { ...prev, [field]: value };
 
       // グループ変更時は依存フィールドをリセット
@@ -204,35 +215,38 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     });
 
     // バリデーションをクリア
-    setErrors((prev) => ({ ...prev, [field]: '' }));
-    setTouched((prev) => ({ ...prev, [field]: true }));
+    setErrors(prev => ({ ...prev, [field]: '' }));
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   const handleInputChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => {
+      setFormData(prev => {
         const newData = { ...prev, [field]: e.target.value };
         setDraft(candidateIdFromProps, newData);
         return newData;
       });
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-      setTouched((prev) => ({ ...prev, [field]: true }));
+      setErrors(prev => ({ ...prev, [field]: '' }));
+      setTouched(prev => ({ ...prev, [field]: true }));
     };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData((prev) => {
+    setFormData(prev => {
       const newData = { ...prev, message: e.target.value };
       setDraft(candidateIdFromProps, newData);
       return newData;
     });
-    setErrors((prev) => ({ ...prev, message: '' }));
-    setTouched((prev) => ({ ...prev, message: true }));
+    setErrors(prev => ({ ...prev, message: '' }));
+    setTouched(prev => ({ ...prev, message: true }));
   };
 
   // バリデーション
   const validateForm = () => {
     const newErrors = {
-      group: (!formData.group || formData.group === '') ? 'グループを選択してください。' : '',
+      group:
+        !formData.group || formData.group === ''
+          ? 'グループを選択してください。'
+          : '',
       recruitmentTarget:
         formData.recruitmentTarget === ''
           ? '添付する求人を選択してください。'
@@ -246,18 +260,18 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     };
 
     setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error !== '');
+    return !Object.values(newErrors).some(error => error !== '');
   };
 
   // フォーカスアウト時のバリデーション (入力フィールド用)
   const handleBlur = (field: string) => () => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
+    setTouched(prev => ({ ...prev, [field]: true }));
 
     // タッチ済みで空の値の場合のみエラーを表示
     if (field === 'title' && formData.title === '') {
-      setErrors((prev) => ({ ...prev, title: '件名を入力してください。' }));
+      setErrors(prev => ({ ...prev, title: '件名を入力してください。' }));
     } else if (field === 'message' && formData.message === '') {
-      setErrors((prev) => ({ ...prev, message: '本文を入力してください。' }));
+      setErrors(prev => ({ ...prev, message: '本文を入力してください。' }));
     }
   };
 
@@ -280,9 +294,14 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     if (!validateForm()) return;
 
     // 選択中のラベルを取得
-    const selectedGroupLabel = groupOptions.find(o => o.value === formData.group)?.label || '';
-    const selectedJobLabel = jobPostingOptions.find(o => o.value === formData.recruitmentTarget)?.label || '';
-    const selectedTemplateLabel = templateOptions.find(o => o.value === formData.scoutTemplate)?.label || '';
+    const selectedGroupLabel =
+      groupOptions.find(o => o.value === formData.group)?.label || '';
+    const selectedJobLabel =
+      jobPostingOptions.find(o => o.value === formData.recruitmentTarget)
+        ?.label || '';
+    const selectedTemplateLabel =
+      templateOptions.find(o => o.value === formData.scoutTemplate)?.label ||
+      '';
 
     // 確認ページに遷移（フォームデータと表示用ラベルをクエリパラメータで渡す）
     const params = new URLSearchParams({
@@ -299,7 +318,9 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       ...(searchQuery && { searchQuery }),
     });
 
-    router.push(`/company/search/${candidateIdFromProps}/scout/confirm?${params.toString()}`);
+    router.push(
+      `/company/search/${candidateIdFromProps}/scout/confirm?${params.toString()}`
+    );
   };
 
   // テンプレート選択時の処理
@@ -310,36 +331,52 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
         template => template.value === formData.scoutTemplate
       );
 
-      if (selectedTemplate && 'subject' in selectedTemplate && 'body' in selectedTemplate) {
-        setFormData((prev) => {
+      if (
+        selectedTemplate &&
+        'subject' in selectedTemplate &&
+        'body' in selectedTemplate
+      ) {
+        setFormData(prev => {
           const updated = {
             ...prev,
-            title: typeof (selectedTemplate as any).subject === 'string' ? (selectedTemplate as any).subject : '',
-            message: typeof (selectedTemplate as any).body === 'string' ? (selectedTemplate as any).body : '',
+            title:
+              typeof (selectedTemplate as any).subject === 'string'
+                ? (selectedTemplate as any).subject
+                : '',
+            message:
+              typeof (selectedTemplate as any).body === 'string'
+                ? (selectedTemplate as any).body
+                : '',
           };
           setDraft(candidateIdFromProps, updated);
           return updated;
         });
         // テンプレート適用時はエラーをクリア
-        setErrors((prev) => ({
+        setErrors(prev => ({
           ...prev,
           title: '',
           message: '',
         }));
       }
     }
-  }, [formData.scoutTemplate, templateOptions]);
+  }, [formData.scoutTemplate, templateOptions, candidateIdFromProps, setDraft]);
 
   // グループ選択時に送信者名をデフォルト設定
   useEffect(() => {
     if (formData.group && !formData.scoutSenderName) {
-      setFormData((prev) => {
+      setFormData(prev => {
         const updated = { ...prev, scoutSenderName: currentUserName };
         setDraft(candidateIdFromProps, updated);
         return updated;
       });
     }
-  }, [formData.group, formData.scoutSenderName, currentUserName]);
+  }, [
+    formData.group,
+    formData.scoutSenderName,
+    currentUserName,
+    candidateIdFromProps,
+    setDraft,
+  ]);
 
   // チケット購入処理
   const handleTicketPurchase = () => {
@@ -367,32 +404,32 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
     <>
       {/* Hero Section with Gradient Background */}
       <div
-        className="bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10"
+        className='bg-gradient-to-t from-[#17856f] to-[#229a4e] px-20 py-10'
         style={{
           background: 'linear-gradient(to top, #17856f, #229a4e)',
         }}
       >
-        <div className="w-full max-w-[1200px] mx-auto">
+        <div className='w-full max-w-[1200px] mx-auto'>
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 mb-4">
+          <div className='flex items-center gap-2 mb-4'>
             <Link
-              href="/company/search"
-              className="text-white text-[14px] font-bold tracking-[1.4px]"
+              href='/company/search'
+              className='text-white text-[14px] font-bold tracking-[1.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               候補者検索
             </Link>
             <RightArrowIcon />
             <Link
-              href="/company/search/result"
-              className="text-white text-[14px] font-bold tracking-[1.4px]"
+              href='/company/search/result'
+              className='text-white text-[14px] font-bold tracking-[1.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               検索結果
             </Link>
             <RightArrowIcon />
             <span
-              className="text-white text-[14px] font-bold tracking-[1.4px]"
+              className='text-white text-[14px] font-bold tracking-[1.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               スカウト送信
@@ -400,10 +437,10 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
           </div>
 
           {/* Page Title */}
-          <div className="flex items-center gap-4">
+          <div className='flex items-center gap-4'>
             <MailIcon />
             <h1
-              className="text-white text-[24px] font-bold tracking-[2.4px]"
+              className='text-white text-[24px] font-bold tracking-[2.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
               スカウト送信
@@ -413,57 +450,57 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
       </div>
 
       {/* Main Content */}
-      <div className="bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20">
-        <div className="w-full max-w-[1200px] mx-auto">
+      <div className='bg-[#f9f9f9] flex-1 px-20 pt-10 pb-20'>
+        <div className='w-full max-w-[1200px] mx-auto'>
           {/* Form Card */}
-          <div className="bg-white rounded-[10px] p-10">
-            <div className="flex flex-col gap-2">
+          <div className='bg-white rounded-[10px] p-10'>
+            <div className='flex flex-col gap-2'>
               {/* グループ */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     グループ
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <SelectInput
                     options={groupOptions}
                     value={formData.group}
-                    placeholder="未選択"
+                    placeholder='未選択'
                     onChange={handleSelectChange('group')}
-                    className="max-w-[400px]"
+                    className='max-w-[400px]'
                   />
                   {touched.group && errors.group && (
-                    <p className="mt-2 text-red-500 text-sm">{errors.group}</p>
+                    <p className='mt-2 text-red-500 text-sm'>{errors.group}</p>
                   )}
                 </div>
               </div>
 
               {/* 添付する求人 */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     添付する求人
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <SelectInput
                     options={jobPostingOptions}
                     value={formData.recruitmentTarget}
-                    placeholder="未選択"
+                    placeholder='未選択'
                     onChange={handleSelectChange('recruitmentTarget')}
                     onBlur={handleBlur('recruitmentTarget')}
                     disabled={!formData.group}
-                    className="max-w-[400px]"
+                    className='max-w-[400px]'
                   />
                   {touched.recruitmentTarget && errors.recruitmentTarget && (
-                    <p className="mt-2 text-red-500 text-sm">
+                    <p className='mt-2 text-red-500 text-sm'>
                       {errors.recruitmentTarget}
                     </p>
                   )}
@@ -471,27 +508,27 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
               </div>
 
               {/* スカウト送信者名 */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     スカウト送信者名
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <SelectInput
                     options={companyUserOptions}
                     value={formData.scoutSenderName}
-                    placeholder="未選択"
+                    placeholder='未選択'
                     onChange={handleSelectChange('scoutSenderName')}
                     onBlur={handleBlur('scoutSenderName')}
                     disabled={!formData.group}
-                    className="max-w-[400px]"
+                    className='max-w-[400px]'
                   />
                   {touched.scoutSenderName && errors.scoutSenderName && (
-                    <p className="mt-2 text-red-500 text-sm">
+                    <p className='mt-2 text-red-500 text-sm'>
                       {errors.scoutSenderName}
                     </p>
                   )}
@@ -499,18 +536,18 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
               </div>
 
               {/* 送信先候補者ID */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     送信先候補者
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     {candidateName || searchQuery || formData.candidateId}
@@ -519,76 +556,76 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
               </div>
 
               {/* スカウトテンプレート */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     スカウトテンプレート
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <SelectInput
                     options={templateOptions}
                     value={formData.scoutTemplate}
-                    placeholder="未選択"
+                    placeholder='未選択'
                     onChange={handleSelectChange('scoutTemplate')}
                     disabled={!formData.group || !formData.scoutSenderName}
-                    className="max-w-[400px]"
+                    className='max-w-[400px]'
                   />
                 </div>
               </div>
 
               {/* 件名 */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start min-h-[102px]'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     件名
                   </span>
                 </div>
-                <div className="flex-1">
+                <div className='flex-1'>
                   <input
-                    type="text"
+                    type='text'
                     value={formData.title}
                     onChange={handleInputChange('title')}
                     onBlur={handleBlur('title')}
-                    placeholder="件名を入力"
-                    className="w-full max-w-[400px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]"
+                    placeholder='件名を入力'
+                    className='w-full max-w-[400px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   />
                   {touched.title && errors.title && (
-                    <p className="mt-2 text-red-500 text-sm">{errors.title}</p>
+                    <p className='mt-2 text-red-500 text-sm'>{errors.title}</p>
                   )}
                 </div>
               </div>
 
               {/* 本文 */}
-              <div className="flex gap-6 items-center">
-                <div className="w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start self-stretch">
+              <div className='flex gap-6 items-center'>
+                <div className='w-[201px] bg-[#f9f9f9] rounded-[5px] px-6 py-0 flex items-center justify-start self-stretch'>
                   <span
-                    className="text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]"
+                    className='text-[#323232] text-[16px] font-bold tracking-[1.6px] leading-[32px]'
                     style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                   >
                     本文
                   </span>
                 </div>
-                <div className="flex-1">
-                  <div className="border border-[#999999] rounded-[5px] focus-within:border-[#4FC3A1] focus-within:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]">
-                  <textarea
-                    value={formData.message}
-                    onChange={handleTextareaChange}
-                    onBlur={handleBlur('message')}
-                    placeholder="本文を入力"
-                    className="w-full h-[300px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] resize-none"
-                    style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
-                  />
+                <div className='flex-1'>
+                  <div className='border border-[#999999] rounded-[5px] focus-within:border-[#4FC3A1] focus-within:shadow-[0_0_0_2px_rgba(79,195,161,0.2)]'>
+                    <textarea
+                      value={formData.message}
+                      onChange={handleTextareaChange}
+                      onBlur={handleBlur('message')}
+                      placeholder='本文を入力'
+                      className='w-full h-[300px] bg-white border border-[#999999] rounded-[5px] px-[11px] py-[11px] text-[16px] font-medium tracking-[1.6px] placeholder:text-[#999999] focus:outline-none focus:border-[#4FC3A1] focus:shadow-[0_0_0_2px_rgba(79,195,161,0.2)] resize-none'
+                      style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                    />
                   </div>
                   {touched.message && errors.message && (
-                    <p className="mt-2 text-red-500 text-sm">
+                    <p className='mt-2 text-red-500 text-sm'>
                       {errors.message}
                     </p>
                   )}
@@ -598,12 +635,12 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center mt-10">
+          <div className='flex justify-center mt-10'>
             <Button
               onClick={handleSubmit}
-              variant="green-gradient"
-              size="figma-default"
-              className="min-w-[160px]"
+              variant='green-gradient'
+              size='figma-default'
+              className='min-w-[160px]'
               disabled={isSubmitDisabled}
             >
               送信内容の確認

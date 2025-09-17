@@ -146,7 +146,7 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
     } finally {
       setIsLoading(false);
     }
-  }, [jobPostingIds.join(',')]); // 配列の内容で比較するよう変更
+  }, [jobPostingIds]); // 配列の内容で比較するよう変更
 
   useEffect(() => {
     refetch();

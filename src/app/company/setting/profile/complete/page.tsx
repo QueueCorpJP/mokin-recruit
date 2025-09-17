@@ -4,6 +4,7 @@ import React from 'react';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function ProfileCompletePage() {
   return (
@@ -15,7 +16,7 @@ export default function ProfileCompletePage() {
         ]}
         title='プロフィール変更完了'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

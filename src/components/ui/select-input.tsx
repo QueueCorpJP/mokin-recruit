@@ -191,7 +191,7 @@ export function SelectInput({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onBlur, onClose, isOpen]);
+  }, [onBlur, onClose, isOpen, selectedValue]);
 
   // ドロップダウンの位置を計算
   useEffect(() => {

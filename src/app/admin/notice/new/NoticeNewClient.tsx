@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // --- Encryption helper using Web Crypto API ---
 // These helpers encrypt/decrypt with AES-GCM using a key stored in session
@@ -106,6 +106,121 @@ export default function NoticeNewClient({
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
 
+  const handlePreview = useCallback(() => {
+    // バリデーションエラーをクリア
+    setTitleError('');
+    setCategoryError('');
+    setContentError('');
+
+    let hasError = false;
+
+    if (!title.trim()) {
+      setTitleError('タイトルを入力してください');
+      hasError = true;
+    } else if (title.length > 60) {
+      setTitleError('タイトルは60文字以内で入力してください');
+      hasError = true;
+    }
+
+    if (selectedCategoryIds.length === 0) {
+      setCategoryError('カテゴリを選択してください');
+      hasError = true;
+    }
+
+    if (!content.trim() || content === '<p></p>') {
+      setContentError('記事内容を入力してください');
+      hasError = true;
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    const noticeData = {
+      title,
+      categoryIds: selectedCategoryIds,
+      content: content || '<p>記事内容がここに表示されます</p>',
+      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
+      thumbnailName: thumbnail?.name || null,
+    };
+
+    (async () => {
+      try {
+        const encrypted = await encryptString(JSON.stringify(noticeData));
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('previewNotice', encrypted);
+        }
+        router.push('/admin/notice/preview');
+      } catch (error) {
+        console.error('暗号化に失敗:', error);
+        router.push('/admin/notice/preview');
+      }
+    })();
+  }, [title, selectedCategoryIds, content, thumbnail, router]);
+
+  const handleSubmit = useCallback(
+    async (status: 'DRAFT' | 'PUBLISHED') => {
+      // バリデーションエラーをクリア
+      setTitleError('');
+      setCategoryError('');
+      setContentError('');
+
+      let hasError = false;
+
+      if (!title.trim()) {
+        setTitleError('タイトルを入力してください');
+        hasError = true;
+      } else if (title.length > 60) {
+        setTitleError('タイトルは60文字以内で入力してください');
+        hasError = true;
+      }
+
+      if (selectedCategoryIds.length === 0) {
+        setCategoryError('カテゴリを選択してください');
+        hasError = true;
+      }
+
+      if (!content.trim() || content === '<p></p>') {
+        setContentError('記事内容を入力してください');
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('categoryId', selectedCategoryIds[0] || '');
+        formData.append(
+          'content',
+          content || '<p>記事内容がここに表示されます</p>'
+        );
+        formData.append('status', status);
+        if (thumbnail) {
+          formData.append('thumbnail', thumbnail);
+        }
+
+        const result = await saveNotice(formData);
+
+        if (status === 'PUBLISHED' && result?.success) {
+          router.push('/admin/notice');
+        } else if (status === 'DRAFT' && result?.success) {
+          router.push('/admin/notice');
+        }
+      } catch (error) {
+        console.error('お知らせの保存に失敗:', error);
+        alert('お知らせの保存に失敗しました');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [title, selectedCategoryIds, content, thumbnail, router, saveNotice]
+  );
+
   // プレビューからの戻り時にデータを復元
   useEffect(() => {
     // クライアントサイドでのみ実行
@@ -152,7 +267,7 @@ export default function NoticeNewClient({
       window.removeEventListener('draft-save', handleDraftSave);
       window.removeEventListener('preview-click', handlePreviewClick);
     };
-  }, []);
+  }, [handlePreview, handleSubmit]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -200,127 +315,6 @@ export default function NoticeNewClient({
       if (fileInput) {
         fileInput.value = '';
       }
-    }
-  };
-
-  const handlePreview = () => {
-    // バリデーションエラーをクリア
-    setTitleError('');
-    setCategoryError('');
-    setContentError('');
-
-    let hasError = false;
-
-    if (!title.trim()) {
-      setTitleError('タイトルを入力してください');
-      hasError = true;
-    } else if (title.length > 60) {
-      setTitleError('タイトルは60文字以内で入力してください');
-      hasError = true;
-    }
-
-    if (selectedCategoryIds.length === 0) {
-      setCategoryError('カテゴリを選択してください');
-      hasError = true;
-    }
-
-    if (!content.trim() || content === '<p></p>') {
-      setContentError('お知らせ内容を入力してください');
-      hasError = true;
-    }
-
-    if (hasError) {
-      return;
-    }
-
-    const noticeData = {
-      title,
-      categoryIds: selectedCategoryIds,
-      content: content || '<p>お知らせ内容がここに表示されます</p>',
-      thumbnail: thumbnail ? URL.createObjectURL(thumbnail) : null,
-      thumbnailName: thumbnail?.name || null,
-    };
-
-    if (typeof window !== 'undefined') {
-      encryptString(JSON.stringify(noticeData))
-        .then(encrypted => {
-          sessionStorage.setItem('previewNotice', encrypted);
-        })
-        .then(() => {
-          router.push('/admin/notice/preview');
-        });
-      return; // prevent double navigation
-    }
-    // router.push is now called after encryption async step above
-  };
-
-  const handleSubmit = async (status: 'DRAFT' | 'PUBLISHED') => {
-    // バリデーションエラーをクリア
-    setTitleError('');
-    setCategoryError('');
-    setContentError('');
-
-    let hasError = false;
-
-    if (!title.trim()) {
-      setTitleError('タイトルを入力してください');
-      hasError = true;
-    } else if (title.length > 60) {
-      setTitleError('タイトルは60文字以内で入力してください');
-      hasError = true;
-    }
-
-    if (selectedCategoryIds.length === 0) {
-      setCategoryError('カテゴリを選択してください');
-      hasError = true;
-    }
-
-    if (!content.trim() || content === '<p></p>') {
-      setContentError('お知らせ内容を入力してください');
-      hasError = true;
-    }
-
-    if (hasError) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('categoryId', selectedCategoryIds[0] || ''); // actions.tsはcategoryIdを期待している
-      formData.append(
-        'content',
-        content || '<p>お知らせ内容がここに表示されます</p>'
-      );
-      formData.append('status', status);
-      if (thumbnail) {
-        formData.append('thumbnail', thumbnail);
-      }
-
-      const result = await saveNotice(formData);
-
-      if (status === 'PUBLISHED' && result?.success) {
-        // 公開時は成功後にリダイレクト
-        router.push('/admin/notice');
-      } else if (status === 'DRAFT' && result?.success) {
-        // 下書き保存時もリダイレクト
-        router.push('/admin/notice');
-      }
-    } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
-      if (error instanceof Error && error.message.includes('title')) {
-        setTitleError('タイトルの保存に失敗しました');
-      } else if (error instanceof Error && error.message.includes('category')) {
-        setCategoryError('カテゴリの保存に失敗しました');
-      } else if (error instanceof Error && error.message.includes('content')) {
-        setContentError('お知らせ内容の保存に失敗しました');
-      } else {
-        setTitleError('お知らせの保存に失敗しました');
-      }
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ export default function PasswordCompletePage() {
         ]}
         title='パスワード変更完了'
         icon={
-          <img src='/images/setting.svg' alt='設定' width={32} height={32} />
+          <Image src='/images/setting.svg' alt='設定' width={32} height={32} />
         }
       />
 

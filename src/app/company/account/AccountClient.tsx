@@ -609,6 +609,7 @@ export default function AccountClient({
                 <div className='flex items-start py-6'>
                   {company?.iconUrl ? (
                     <div className='w-[100px] h-[100px] rounded-full overflow-hidden border-2 border-gray-300'>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={company.iconUrl}
                         alt='企業アイコン'
@@ -890,10 +891,12 @@ export default function AccountClient({
                           key={index}
                           className='w-[200px] h-[133px] rounded-[5px] border-2 border-gray-300 overflow-hidden'
                         >
-                          <img
+                          <Image
                             src={url}
                             alt={`企業画像${index + 1}`}
                             className='w-full h-full object-cover'
+                            width={200}
+                            height={133}
                           />
                         </div>
                       ))

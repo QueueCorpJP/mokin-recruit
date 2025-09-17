@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
@@ -38,12 +38,11 @@ const publicationTypeMap: Record<string, string> = {
 
 function formatDateTime(iso: string): { date: string; time: string } {
   const d = new Date(iso);
-  const date = d
-    .toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+  const date = d.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
   const time = d.toLocaleTimeString('ja-JP', {
     hour: '2-digit',
     minute: '2-digit',
@@ -108,11 +107,11 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
     setSelectedJobs(newSelected);
   };
 
-  const handleBulkApprove = () => {
+  const handleBulkApprove = useCallback(() => {
     if (selectedJobs.size > 0) {
       setApproveModalJobIds(Array.from(selectedJobs));
     }
-  };
+  }, [selectedJobs]);
 
   const handleApprove = async (reason: string, comment: string) => {
     if (!approveModalJobIds) return;
@@ -176,7 +175,64 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
     }
   };
 
-  const handleCSVDownload = () => {
+  const filteredJobs = jobs.filter(job => {
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      switch (searchCategory) {
+        case '企業名':
+          return job.company_accounts?.company_name
+            ?.toLowerCase()
+            .includes(searchLower);
+        case '求人タイトル':
+          return job.title.toLowerCase().includes(searchLower);
+        case '職種':
+          return job.job_type?.some(type =>
+            type.toLowerCase().includes(searchLower)
+          );
+        case '求人ID':
+          return job.id.toLowerCase().includes(searchLower);
+        default:
+          return false;
+      }
+    }
+    return true;
+  });
+
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+
+    let aValue: string;
+    let bValue: string;
+
+    switch (sortColumn) {
+      case 'status':
+        aValue = statusMap[a.status] || a.status;
+        bValue = statusMap[b.status] || b.status;
+        break;
+      case 'publicPeriod':
+        aValue = a.updated_at;
+        bValue = b.updated_at;
+        break;
+      case 'company':
+        aValue = a.company_accounts?.company_name || '';
+        bValue = b.company_accounts?.company_name || '';
+        break;
+      case 'publicStatus':
+        aValue = publicationTypeMap[a.publication_type] || a.publication_type;
+        bValue = publicationTypeMap[b.publication_type] || b.publication_type;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortDirection === 'asc') {
+      return aValue.localeCompare(bValue, 'ja');
+    } else {
+      return bValue.localeCompare(aValue, 'ja');
+    }
+  });
+
+  const handleCSVDownload = useCallback(() => {
     const headers = [
       '求人ID',
       '求人タイトル',
@@ -222,7 +278,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [sortedJobs]);
 
   // AdminPageTitleからのイベントリスナー
   useEffect(() => {
@@ -251,64 +307,6 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
       );
     };
   }, [handleCSVDownload, handleBulkApprove]);
-
-  const filteredJobs = jobs.filter(job => {
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      switch (searchCategory) {
-        case '企業名':
-          return job.company_accounts?.company_name
-            ?.toLowerCase()
-            .includes(searchLower);
-        case '求人タイトル':
-          return job.title.toLowerCase().includes(searchLower);
-        case '職種':
-          return job.job_type?.some(type =>
-            type.toLowerCase().includes(searchLower)
-          );
-        case '求人ID':
-          return job.id.toLowerCase().includes(searchLower);
-        default:
-          return false; // セレクトで選択されていない場合は何も表示しない
-      }
-    }
-    return true;
-  });
-
-  // ソート処理
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    if (!sortColumn || !sortDirection) return 0;
-
-    let aValue: string;
-    let bValue: string;
-
-    switch (sortColumn) {
-      case 'status':
-        aValue = statusMap[a.status] || a.status;
-        bValue = statusMap[b.status] || b.status;
-        break;
-      case 'publicPeriod':
-        aValue = a.updated_at;
-        bValue = b.updated_at;
-        break;
-      case 'company':
-        aValue = a.company_accounts?.company_name || '';
-        bValue = b.company_accounts?.company_name || '';
-        break;
-      case 'publicStatus':
-        aValue = publicationTypeMap[a.publication_type] || a.publication_type;
-        bValue = publicationTypeMap[b.publication_type] || b.publication_type;
-        break;
-      default:
-        return 0;
-    }
-
-    if (sortDirection === 'asc') {
-      return aValue.localeCompare(bValue, 'ja');
-    } else {
-      return bValue.localeCompare(aValue, 'ja');
-    }
-  });
 
   const columns = [
     {

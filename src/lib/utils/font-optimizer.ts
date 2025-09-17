@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 export const fontOptimizer = {
   preloadFonts: () => {
     if (typeof window === 'undefined') return;

@@ -34,7 +34,7 @@ export default function IndustrySelectModal({
     if (isOpen) {
       setSelectedIndustries([...initialSelected]);
     }
-  }, [isOpen]);
+  }, [isOpen, initialSelected]);
 
   const handleCheckboxChange = (industryName: string) => {
     if (selectedIndustries.includes(industryName)) {
@@ -127,44 +127,50 @@ export default function IndustrySelectModal({
         {!isDesktop && (
           <div className='mb-4'>
             <div className='flex flex-wrap items-center'>
-              {industryCategories.slice(
-                0,
-                showAllCategories ? industryCategories.length : 6
-              ).map((category, index) => (
-                <React.Fragment key={category.name}>
-                  <button
-                    className={`py-2 px-2 transition-colors ${
-                      selectedCategory === category.name
-                        ? 'text-[#0F9058] font-medium'
-                        : 'text-[var(--3,#999)] hover:text-[#0F9058]'
-                    }`}
-                    style={{
-                      fontFamily: '"Noto Sans JP"',
-                      fontSize: '14px',
-                      fontWeight:
-                        selectedCategory === category.name ? 600 : 500,
-                      lineHeight: '160%',
-                      letterSpacing: '1.4px',
-                    }}
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    {category.name}
-                  </button>
-                  {index <
-                    (showAllCategories ? industryCategories.length - 1 : 5) && (
-                    <div className='mx-2'>
-                      <svg width='2' height='24' viewBox='0 0 2 24' fill='none'>
-                        <path
-                          d='M1 1V23'
-                          stroke='var(--3,#999)'
-                          strokeLinecap='round'
-                          strokeWidth='1'
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
+              {industryCategories
+                .slice(0, showAllCategories ? industryCategories.length : 6)
+                .map((category, index) => (
+                  <React.Fragment key={category.name}>
+                    <button
+                      className={`py-2 px-2 transition-colors ${
+                        selectedCategory === category.name
+                          ? 'text-[#0F9058] font-medium'
+                          : 'text-[var(--3,#999)] hover:text-[#0F9058]'
+                      }`}
+                      style={{
+                        fontFamily: '"Noto Sans JP"',
+                        fontSize: '14px',
+                        fontWeight:
+                          selectedCategory === category.name ? 600 : 500,
+                        lineHeight: '160%',
+                        letterSpacing: '1.4px',
+                      }}
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      {category.name}
+                    </button>
+                    {index <
+                      (showAllCategories
+                        ? industryCategories.length - 1
+                        : 5) && (
+                      <div className='mx-2'>
+                        <svg
+                          width='2'
+                          height='24'
+                          viewBox='0 0 2 24'
+                          fill='none'
+                        >
+                          <path
+                            d='M1 1V23'
+                            stroke='var(--3,#999)'
+                            strokeLinecap='round'
+                            strokeWidth='1'
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
               {!showAllCategories && industryCategories.length > 6 && (
                 <>
                   <div className='mx-2'>

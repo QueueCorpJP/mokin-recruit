@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal } from './mo-dal';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './candidate-profile-modal.module.css';
 
 interface CandidateProfileModalProps {
@@ -71,10 +72,11 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                     <span className={styles.profileContainerText}>
                       {item.text}
                     </span>
-                    <img
+                    <Image
                       src='/images/arrow.svg'
                       alt='arrow'
-                      style={{ width: '8px', height: '13px' }}
+                      width={8}
+                      height={13}
                     />
                   </a>
                 </Link>

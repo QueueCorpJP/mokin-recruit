@@ -146,7 +146,7 @@ export default function CompanyNewClient() {
     if (formData.companyId === '') {
       setFormData(prev => ({ ...prev, companyId: generateCompanyId() }));
     }
-  }, []);
+  }, [formData.companyId]);
 
   // 業種選択モーダルの状態管理
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
@@ -369,6 +369,7 @@ export default function CompanyNewClient() {
             onClick={() => document.getElementById('icon-file-input')?.click()}
           >
             {formData.iconImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={URL.createObjectURL(formData.iconImage)}
                 alt='アイコン画像'
@@ -642,6 +643,7 @@ export default function CompanyNewClient() {
                 }
               >
                 {formData.images[index] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={URL.createObjectURL(formData.images[index])}
                     alt={`イメージ画像 ${index + 1}`}

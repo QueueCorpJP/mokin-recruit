@@ -93,7 +93,7 @@ export function HeroSection() {
     tracking-[1.6px]
   "
                 >
-                  志向・選考状況・比較企業を可視化し、"今"だから届く即戦力へアプローチ。
+                  志向・選考状況・比較企業を可視化し、&quot;今&quot;だから届く即戦力へアプローチ。
                 </p>
               </div>
             </div>
@@ -112,7 +112,7 @@ export function HeroSection() {
     transition-all duration-200 hover:bg-[linear-gradient(to_right_top,#EEAB02,#E1CA11)]
   "
               >
-                <img
+                <Image
                   src='/images/files.svg'
                   alt='files'
                   width={20}

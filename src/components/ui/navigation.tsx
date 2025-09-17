@@ -2,6 +2,7 @@
 
 import { useState, useCallback, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { X, User } from 'lucide-react';
 import { Logo } from './logo';
@@ -23,7 +24,7 @@ const DownIcon = memo(
           className
         )}
       >
-        <img
+        <Image
           width={mobile ? 14 : 10}
           height={mobile ? 14 : 10}
           className='object-contain w-full h-full'

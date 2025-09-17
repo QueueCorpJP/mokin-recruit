@@ -159,12 +159,11 @@ export default function NewsDetailClient({ article }: NewsDetailClientProps) {
                 <div className='flex flex-col lg:flex-row lg:justify-between'>
                   <div className='flex-1'>
                     <div className='flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]'>
-                      <img
+                      <Image
                         src='/images/new.svg'
                         alt='new'
                         width={24}
                         height={24}
-                        loading='lazy'
                       />
                       <h2 className='text-[20px] font-bold text-[#323232] Noto_Sans_JP'>
                         関連ニュース
@@ -283,12 +282,11 @@ export default function NewsDetailClient({ article }: NewsDetailClientProps) {
                 <div className='flex flex-col lg:flex-row lg:justify-between'>
                   <div className='flex-1'>
                     <div className='flex flex-row gap-[12px] justify-start items-center border-b-[2px] border-[#DCDCDC] pb-[8px] mb-[32px]'>
-                      <img
+                      <Image
                         src='/images/new.svg'
                         alt='new'
                         width={24}
                         height={24}
-                        loading='lazy'
                       />
                       <h2 className='text-[20px] font-bold text-[#323232] Noto_Sans_JP'>
                         新着ニュース

@@ -90,7 +90,7 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
     setFormData(restored);
     // 確認画面に直接アクセスした場合でもドラフトへ反映
     setDraft(candidateId, restored);
-  }, [candidateId, searchParams]);
+  }, [candidateId, searchParams, setDraft]);
 
   const handleSend = async () => {
     if (!formData) return;

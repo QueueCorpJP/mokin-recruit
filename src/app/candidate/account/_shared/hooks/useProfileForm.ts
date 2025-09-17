@@ -100,10 +100,11 @@ export function useProfileForm(candidateData: CandidateData) {
   // 年月日の選択肢（既存PC/SP実装で参照されているため後方互換で提供）
   const yearOptions = useMemo(() => generateYearOptions(), []);
   const monthOptions = useMemo(() => generateMonthOptions(), []);
+  const birthYear = watch('birthYear');
+  const birthMonth = watch('birthMonth');
   const dayOptions = useMemo(
-    () =>
-      generateDayOptions(watch('birthYear') || '', watch('birthMonth') || ''),
-    [watch('birthYear'), watch('birthMonth')]
+    () => generateDayOptions(birthYear || '', birthMonth || ''),
+    [birthYear, birthMonth]
   );
 
   // フォーム送信ハンドラ

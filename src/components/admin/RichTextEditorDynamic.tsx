@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useEditor } from '@tiptap/react';
 import dynamic from 'next/dynamic';
 
 // 必要なものだけを動的 import し、型は利用側で付与
@@ -21,7 +22,9 @@ export function RichTextEditorDynamic({
   placeholder = '',
 }: RichTextEditorDynamicProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [editor, setEditor] = useState<any>(null);
+  const [editorConfig, setEditorConfig] = useState<any>(null);
+
+  const editor = useEditor(editorConfig, [editorConfig]);
 
   useEffect(() => {
     // 動的インポートが完了するまで待つ
@@ -198,7 +201,7 @@ export function RichTextEditorDynamic({
           },
         });
 
-        const editorInstance = useEditor({
+        const editorConfig = {
           extensions: [
             StarterKit,
             HardBreak.configure({
@@ -252,9 +255,9 @@ export function RichTextEditorDynamic({
             const html = editor.getHTML();
             onChange(html);
           },
-        });
+        };
 
-        setEditor(editorInstance);
+        setEditorConfig(editorConfig);
         setIsLoaded(true);
       } catch (error) {
         console.error('TipTap editor initialization failed:', error);
@@ -262,7 +265,7 @@ export function RichTextEditorDynamic({
     };
 
     initializeEditor();
-  }, []);
+  }, [content, onChange]);
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
