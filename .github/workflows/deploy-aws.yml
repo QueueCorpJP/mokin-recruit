@@ -18,6 +18,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          timeout: 20m
+          command_timeout: 20m
+          script_stop: true
           script: |
             set -e
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
