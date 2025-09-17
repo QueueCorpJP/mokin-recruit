@@ -47,19 +47,28 @@ jobs:
 
             ensure_pkg
 
-            # Install NVM/Node if npm is missing
-            if ! command -v npm >/dev/null 2>&1; then
-              if [ ! -d "$HOME/.nvm" ]; then
-                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+            # Ensure curl present for NVM installer if missing
+            if ! command -v curl >/dev/null 2>&1; then
+              if command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y curl --allowerasing || true
+              elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y curl || true
+              elif command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get install -y curl || true
               fi
+            fi
+
+            # Install NVM/Node if npm is missing (single-line guard to avoid -e exit)
+            command -v npm >/dev/null 2>&1 || {
+              [ -d "$HOME/.nvm" ] || curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            else
-              # npm exists but still export NVM if installed for version pinning
-              if [ -d "$HOME/.nvm" ]; then
-                export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-              fi
+            }
+
+            # If npm already exists, still expose NVM if available (for version pinning later)
+            if [ -d "$HOME/.nvm" ]; then
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             fi
 
             # Prepare directory and fetch code
