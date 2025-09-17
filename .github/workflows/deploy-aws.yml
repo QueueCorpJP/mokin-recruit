@@ -18,16 +18,19 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          timeout: 20m
-          command_timeout: 20m
+          timeout: 60m
+          command_timeout: 60m
+          pty: true
           script_stop: true
           script: |
-            set -e
+            set -euxo pipefail
+            echo "[INFO] Starting deploy on $(hostname)"
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
 
             # Detect package manager and install prerequisites if missing
             ensure_pkg() {
               if command -v apt-get >/dev/null 2>&1; then
+                export DEBIAN_FRONTEND=noninteractive
                 sudo apt-get update -y
                 # avoid curl install unless strictly needed
                 sudo apt-get install -y git build-essential
@@ -87,7 +90,9 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NODE_ENV=production
             EOF
-            npm ci
+            echo "[INFO] Installing dependencies..."
+            npm ci --no-audit --fund=false
+            echo "[INFO] Building Next.js..."
             npm run build
 
             # Ensure pm2 and restart/start app
