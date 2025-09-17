@@ -21,10 +21,9 @@ jobs:
           timeout: 60m
           command_timeout: 60m
           request_pty: true
-          debug: true
           script_stop: true
           script: |
-            set -euxo pipefail
+            set -euo pipefail
             echo "[INFO] Starting deploy on $(hostname)"
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
 
@@ -84,15 +83,23 @@ jobs:
               cd "$TARGET_DIR"
             fi
 
-            # Use Node version from .nvmrc if available
-            if [ -n "$NVM_DIR" ] && [ -f .nvmrc ]; then
+            # Use Node version from .nvmrc if available (avoid reinstall)
+            if [ -n "${NVM_DIR:-}" ] && [ -f .nvmrc ]; then
               NODE_VERSION=$(cat .nvmrc)
-              nvm install "$NODE_VERSION"
-              nvm use "$NODE_VERSION"
+              if [ -d "$NVM_DIR/versions/node/v$NODE_VERSION" ]; then
+                nvm use "$NODE_VERSION"
+              else
+                nvm install "$NODE_VERSION"
+                nvm use "$NODE_VERSION"
+              fi
             else
               # Fallback to required version for Vite engines
-              nvm install 20.19.0
-              nvm use 20.19.0
+              if [ -n "${NVM_DIR:-}" ] && [ -d "$NVM_DIR/versions/node/v20.19.0" ]; then
+                nvm use 20.19.0
+              else
+                nvm install 20.19.0
+                nvm use 20.19.0
+              fi
             fi
 
             # Write production env from GitHub Secrets
@@ -105,7 +112,8 @@ jobs:
             NODE_ENV=production
             EOF
             echo "[INFO] Installing dependencies..."
-            npm ci --no-audit --fund=false
+            mkdir -p .npm
+            npm ci --no-audit --fund=false --cache .npm --prefer-offline
             echo "[INFO] Building Next.js..."
             npm run build
 
