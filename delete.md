@@ -231,3 +231,7 @@ src/stores内の全3ファイル + プロジェクト直下の全30ファイル
 signup/candidate
 
 /signup/company
+
+/test-email
+
+/auth/reset-password
