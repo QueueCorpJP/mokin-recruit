@@ -3,7 +3,8 @@ import type { PermissionLevelDb, UiRole } from '@/types/company';
 const uiToDbMap: Record<UiRole, PermissionLevelDb> = {
   admin: 'ADMINISTRATOR',
   scout: 'SCOUT_STAFF',
-  recruiter: 'RECRUITER_STAFF',
+  // DBスキーマは 'RECRUITER_STAFF' を許容しないため、'recruiter' も 'SCOUT_STAFF' にマップする
+  recruiter: 'SCOUT_STAFF',
 };
 
 const dbToUiMap: Record<PermissionLevelDb, UiRole> = {

@@ -1,4 +1,6 @@
-name: Deploy to AWS EC2 (scp)
+name: Deploy to AWS EC2
+permissions:
+  contents: read
 
 on:
   push:
@@ -10,56 +12,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.19.0'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund --prefer-offline --ignore-scripts
-
-      - name: Build Next.js
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NODE_ENV: production
-        run: npm run build
-
-      - name: Create build archive
-        run: tar -czf build.tar.gz .next node_modules public package.json
-
-      - name: Upload build via scp
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          port: 22
-          source: "build.tar.gz"
-          target: "/home/${{ secrets.EC2_USER }}/"
-
-      - name: Deploy on EC2
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
+          timeout: 15m
+          command_timeout: 15m
+          debug: true
           script: |
-            set -e
+            set -euo pipefail
+            echo "[INFO] Starting deploy on $(hostname)"
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
-            BUILD_TARBALL="/home/${{ secrets.EC2_USER }}/build.tar.gz"
 
+            # Setup NVM environment if available
+            if [ -d "$HOME/.nvm" ]; then
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            fi
+
+            # Prepare directory and fetch code
             mkdir -p "$TARGET_DIR"
-            tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
-            rm -f "$BUILD_TARBALL"
+            if [ -d "$TARGET_DIR/.git" ]; then
+              cd "$TARGET_DIR"
+              git fetch origin
+              git reset --hard origin/main
+              git clean -fd
+            else
+              rm -rf "$TARGET_DIR"
+              git clone https://github.com/${{ github.repository }}.git "$TARGET_DIR"
+              cd "$TARGET_DIR"
+            fi
 
-            # envファイル生成
-            cat > "$TARGET_DIR/.env.production" << 'EOF'
+            # Write production env from GitHub Secrets
+            cat > .env.production << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -68,10 +56,31 @@ jobs:
             NODE_ENV=production
             EOF
 
-            cd "$TARGET_DIR"
+            # Check if dependencies need updating
+            if [ -f package-lock.json.md5 ]; then
+              OLD_MD5=$(cat package-lock.json.md5)
+              NEW_MD5=$(md5sum package-lock.json | awk '{print $1}')
+              if [ "$OLD_MD5" = "$NEW_MD5" ]; then
+                echo "[INFO] Dependencies unchanged, skipping npm ci"
+              else
+                echo "[INFO] Dependencies changed, running npm ci..."
+                npm ci --no-audit --no-fund --prefer-offline
+                echo "$NEW_MD5" > package-lock.json.md5
+              fi
+            else
+              echo "[INFO] First deployment, installing dependencies..."
+              npm ci --no-audit --no-fund --prefer-offline
+              md5sum package-lock.json | awk '{print $1}' > package-lock.json.md5
+            fi
 
-            # pm2 restart
+            echo "[INFO] Building Next.js application..."
+            export NEXT_TELEMETRY_DISABLED=1
+            NODE_OPTIONS='--max-old-space-size=4096' npm run build
+
+            echo "[INFO] Build completed successfully"
+
+            # Ensure pm2 and restart/start app
             if ! command -v pm2 >/dev/null 2>&1; then
-              npm install -g pm2
+              npm i -g pm2
             fi
             pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
