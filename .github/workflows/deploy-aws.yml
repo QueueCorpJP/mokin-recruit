@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Install deps (runner)
-        run: npm ci --omit=dev --no-audit --no-fund --prefer-offline --ignore-scripts
+        run: npm ci --no-audit --no-fund --prefer-offline --ignore-scripts
 
       - name: Build (runner)
         env:
