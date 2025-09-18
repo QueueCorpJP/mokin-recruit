@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 
 interface PreviewData {
   title: string;
@@ -254,7 +255,9 @@ export default function PreviewClient({
               <div
                 className='prose prose-lg max-w-none mb-[60px]'
                 style={{ paddingLeft: '0', paddingRight: '0' }}
-                dangerouslySetInnerHTML={{ __html: previewData.content }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(previewData.content),
+                }}
               />
 
               <div className='flex justify-center gap-4 mt-8 mb-8'>

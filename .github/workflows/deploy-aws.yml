@@ -12,6 +12,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use Node 20.19.0 on runner
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      - name: Install deps (runner)
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Build (runner)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_ENV: production
+        run: |
+          echo "[INFO] runner build start $(date -Is)"
+          NODE_OPTIONS='--max-old-space-size=4096' npm run build --silent
+          echo "[INFO] runner build end $(date -Is)"
+
+      - name: Archive build artifacts
+        run: |
+          tar -czf build.tar.gz .next public package.json package-lock.json next.config.js .nvmrc
+
+      - name: Upload build to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "build.tar.gz"
+          target: "/home/${{ secrets.EC2_USER }}"
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -19,13 +55,29 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          timeout: 15m
-          command_timeout: 15m
+          timeout: 45m
+          command_timeout: 45m
           debug: true
           script: |
             set -euo pipefail
             echo "[INFO] Starting deploy on $(hostname)"
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
+            BUILD_TARBALL="/home/${{ secrets.EC2_USER }}/build.tar.gz"
+
+            echo "[INFO] Checking swap..."
+            if ! sudo swapon --show | grep -q '^'; then
+              echo "[INFO] No swap detected. Creating 2G swapfile..."
+              sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              if ! grep -q "/swapfile" /etc/fstab; then
+                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              fi
+              echo "[INFO] Swap enabled"
+            else
+              echo "[INFO] Swap already present"
+            fi
 
             # Detect package manager and install prerequisites if missing
             ensure_pkg() {
@@ -71,16 +123,12 @@ jobs:
               [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             fi
 
-            # Prepare directory and fetch code
+            # Prepare directory and unpack uploaded build
             mkdir -p "$TARGET_DIR"
-            if [ -d "$TARGET_DIR/.git" ]; then
-              cd "$TARGET_DIR"
-              git fetch origin
-              git reset --hard origin/main
-            else
-              rm -rf "$TARGET_DIR"
-              git clone https://github.com/${{ github.repository }}.git "$TARGET_DIR"
-              cd "$TARGET_DIR"
+            cd "$TARGET_DIR"
+            if [ -f "$BUILD_TARBALL" ]; then
+              tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
+              rm -f "$BUILD_TARBALL"
             fi
 
             # Use Node version from .nvmrc if available (avoid reinstall)
@@ -114,26 +162,26 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NODE_ENV=production
             EOF
-            # Check if dependencies need updating
+             # Check if dependencies need updating
+             echo "[INFO] npm ci check started at $(date -Is)"
             if [ -f package-lock.json.md5 ]; then
               OLD_MD5=$(cat package-lock.json.md5)
               NEW_MD5=$(md5sum package-lock.json | awk '{print $1}')
               if [ "$OLD_MD5" = "$NEW_MD5" ]; then
                 echo "[INFO] Dependencies unchanged, skipping npm ci"
               else
-                echo "[INFO] Dependencies changed, running npm ci..."
-                npm ci --no-audit --no-fund --prefer-offline
+                 echo "[INFO] Dependencies changed, running npm ci..."
+                 npm ci --no-audit --no-fund --prefer-offline --no-progress
                 echo "$NEW_MD5" > package-lock.json.md5
               fi
             else
               echo "[INFO] First deployment, installing dependencies..."
-              npm ci --no-audit --no-fund --prefer-offline
+               npm ci --no-audit --no-fund --prefer-offline --no-progress
               md5sum package-lock.json | awk '{print $1}' > package-lock.json.md5
             fi
+             echo "[INFO] npm ci finished at $(date -Is)"
 
-            echo "[INFO] Building Next.js application with optimizations..."
-            export NEXT_TELEMETRY_DISABLED=1
-            NODE_OPTIONS='--max-old-space-size=4096' npm run build
+            echo "[INFO] Skipping build on EC2 (runner-built artifacts used)"
 
             echo "[INFO] Build completed successfully"
 
