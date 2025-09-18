@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Install deps (runner)
-        run: npm ci --no-audit --no-fund --prefer-offline --ignore-scripts
+        run: npm ci --omit=dev --no-audit --no-fund --prefer-offline --ignore-scripts
 
       - name: Build (runner)
         env:
@@ -29,27 +29,25 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_ENV: production
-          OUTPUT: standalone
         run: |
           echo "[INFO] runner build start $(date -Is)"
           NODE_OPTIONS='--max-old-space-size=4096' npm run build --silent
           echo "[INFO] runner build end $(date -Is)"
 
-      - name: Prune dev deps (runner)
-        run: npm prune --omit=dev
-
       - name: Create build archive
-        run: tar -czf build.tar.gz .next node_modules public package.json next.config.js
+        run: tar -czf build.tar.gz .next node_modules public package.json
 
-      - name: Upload build to EC2
-        uses: appleboy/scp-action@v0.1.7
+      - name: Upload build to EC2 (rsync)
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          source: "build.tar.gz"
-          target: "/home/${{ secrets.EC2_USER }}"
+          script: |
+            set -e
+            echo "[INFO] Uploading build.tar.gz via rsync"
+            rsync -avz --progress build.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
@@ -67,97 +65,12 @@ jobs:
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
             BUILD_TARBALL="/home/${{ secrets.EC2_USER }}/build.tar.gz"
 
-            echo "[INFO] Checking swap..."
-            if ! sudo swapon --show | grep -q '^'; then
-              echo "[INFO] No swap detected. Creating 2G swapfile..."
-              sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-              sudo chmod 600 /swapfile
-              sudo mkswap /swapfile
-              sudo swapon /swapfile
-              if ! grep -q "/swapfile" /etc/fstab; then
-                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-              fi
-              echo "[INFO] Swap enabled"
-            else
-              echo "[INFO] Swap already present"
-            fi
-
-            # Detect package manager and install prerequisites if missing
-            ensure_pkg() {
-              if command -v apt-get >/dev/null 2>&1; then
-                export DEBIAN_FRONTEND=noninteractive
-                sudo apt-get update -y
-                # avoid curl install unless strictly needed
-                sudo apt-get install -y git build-essential
-              elif command -v yum >/dev/null 2>&1; then
-                # avoid curl install to prevent conflicts
-                sudo yum install -y git gcc-c++ make
-              elif command -v dnf >/dev/null 2>&1; then
-                # Amazon Linux 2023: exclude curl-minimal to avoid conflicts with curl
-                sudo dnf install -y git gcc-c++ make --exclude=curl-minimal
-              else
-                echo "No supported package manager found (apt-get/yum/dnf)." >&2
-              fi
-            }
-
-            ensure_pkg
-
-            # Ensure curl present for NVM installer if missing
-            if ! command -v curl >/dev/null 2>&1; then
-              if command -v dnf >/dev/null 2>&1; then
-                sudo dnf install -y curl --allowerasing || true
-              elif command -v yum >/dev/null 2>&1; then
-                sudo yum install -y curl || true
-              elif command -v apt-get >/dev/null 2>&1; then
-                sudo apt-get install -y curl || true
-              fi
-            fi
-
-            # Install NVM/Node if npm is missing (single-line guard to avoid -e exit)
-            command -v npm >/dev/null 2>&1 || {
-              [ -d "$HOME/.nvm" ] || curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            }
-
-            # If npm already exists, still expose NVM if available (for version pinning later)
-            if [ -d "$HOME/.nvm" ]; then
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            fi
-
-            # Prepare directory and unpack uploaded build
             mkdir -p "$TARGET_DIR"
-            cd "$TARGET_DIR"
-            if [ -f "$BUILD_TARBALL" ]; then
-              tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
-              rm -f "$BUILD_TARBALL"
-            fi
+            tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
+            rm -f "$BUILD_TARBALL"
 
-            # Use Node version from .nvmrc if available (avoid reinstall)
-            if [ -n "${NVM_DIR:-}" ] && [ -f .nvmrc ]; then
-              NODE_VERSION=$(cat .nvmrc)
-              if [ -d "$NVM_DIR/versions/node/v$NODE_VERSION" ]; then
-                nvm use "$NODE_VERSION" || true
-              else
-                nvm install "$NODE_VERSION" || true
-                nvm use "$NODE_VERSION" || true
-              fi
-            else
-              # Fallback to required version for Vite engines
-              if [ -n "${NVM_DIR:-}" ] && [ -d "$NVM_DIR/versions/node/v20.19.0" ]; then
-                nvm use 20.19.0 || true
-              else
-                nvm install 20.19.0 || true
-                nvm use 20.19.0 || true
-              fi
-            fi
-
-            echo "[INFO] Node version: $(node --version)"
-            echo "[INFO] NPM version: $(npm --version)"
-
-            # Write production env from GitHub Secrets
-            cat > .env.production << 'EOF'
+            # .env.production を生成
+            cat > "$TARGET_DIR/.env.production" << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -165,13 +78,10 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NODE_ENV=production
             EOF
-            echo "[INFO] Skipping npm ci on EC2 (node_modules shipped from runner)"
 
-            echo "[INFO] Skipping build on EC2 (runner-built artifacts used)"
+            cd "$TARGET_DIR"
 
-            echo "[INFO] Build completed successfully"
-
-            # Ensure pm2 and restart/start app
+            # PM2 でリスタート
             if ! command -v pm2 >/dev/null 2>&1; then
               npm i -g pm2
             fi
