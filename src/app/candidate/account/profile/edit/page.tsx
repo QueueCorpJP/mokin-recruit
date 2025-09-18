@@ -3,6 +3,8 @@ import { getCachedCandidateUser } from '@/lib/auth/server';
 import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import ProfileEditForm from './ProfileEditForm';
 
+export const dynamic = 'force-dynamic';
+
 // 候補者データの型定義
 interface CandidateData {
   id: string;

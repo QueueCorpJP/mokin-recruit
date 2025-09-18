@@ -59,7 +59,7 @@ export async function sendVerificationCode(email: string) {
     console.log('現在のメールアドレスを取得中...');
     const { data: currentUser, error: userError } = await supabase
       .from('company_users')
-      .select('email')
+      .select('email, full_name')
       .eq('id', user.id)
       .single();
 
@@ -131,18 +131,40 @@ export async function sendVerificationCode(email: string) {
     console.log('メール送信中...');
     console.log('送信先:', currentUser.email);
 
+    const displayName = (currentUser as any).full_name || 'ユーザー';
+
     const emailResult = await sendEmailViaSendGrid({
       to: currentUser.email,
       subject: 'メールアドレス変更の認証コード',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0f9058;">メールアドレス変更の認証コード</h2>
-          <p>以下の認証コードを入力してください：</p>
-          <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0;">
-            <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 4px;">${verificationCode}</h3>
-          </div>
-          <p style="color: #666;">このコードは10分間有効です。</p>
-          <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8; color: #323232;">
+          <p>【${displayName}】様</p>
+
+          <p>
+            CuePointをご利用いただきありがとうございます。<br/>
+            メールアドレスの変更は、下記ページにて認証コードをご入力ください。
+          </p>
+
+          <p><strong>■認証コード:</strong> ${verificationCode}</p>
+          <p><strong>■認証コード入力ページ:</strong> https://cuepoint.jp/company/setting/mail/verify</p>
+
+          <p>※認証コードの有効期限は10分です。</p>
+
+          <div style="border-top: 1px solid #e5e7eb; margin: 24px 0;"></div>
+
+          <p>
+            CuePoint<br/>
+            <a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a>
+          </p>
+
+          <p>
+            【お問い合わせ先】info@cuepoint.jp
+          </p>
+
+          <p>
+            運営会社：メルセネール株式会社<br/>
+            東京都千代田区神田須田町1丁目32番地 クレスト不動産神田ビル
+          </p>
         </div>
       `,
     });

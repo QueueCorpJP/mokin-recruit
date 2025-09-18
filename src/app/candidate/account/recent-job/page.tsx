@@ -5,6 +5,8 @@ import { getRecentJobData } from './edit/actions';
 import EditButton from '@/components/candidate/account/EditButton';
 import Breadcrumb from '@/components/candidate/account/Breadcrumb';
 
+export const dynamic = 'force-dynamic';
+
 // 候補者_職務経歴確認ページ
 export default async function CandidateRecentJobPage() {
   // レイアウトで認証済みのため、キャッシュされた結果を使用

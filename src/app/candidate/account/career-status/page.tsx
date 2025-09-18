@@ -15,6 +15,8 @@ import {
   PROGRESS_STATUS_OPTIONS,
 } from '@/constants/career-status';
 
+export const dynamic = 'force-dynamic';
+
 // 選考状況データを取得
 async function getCareerStatusEntries(candidateId: string) {
   try {
