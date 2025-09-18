@@ -16,6 +16,7 @@ export type PendingJobListItem = {
   updated_at: string;
   status: string;
   publication_type: string;
+  image_urls?: string[] | null;
   company_accounts: {
     company_name: string;
   } | null;
@@ -64,7 +65,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
   const router = useRouter();
   const [jobs, setJobs] = useState<PendingJobListItem[]>(initialJobs);
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
-  const [statusFilter, _setStatusFilter] = useState<string>('すべて');
+  const [selectedStatus, setSelectedStatus] = useState<string>('すべて');
   const [publicationFilter, _setPublicationFilter] = useState<string>('');
   const [searchCategory, setSearchCategory] = useState<string>('企業名');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -195,6 +196,16 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
           return false;
       }
     }
+    // ステータスフィルター
+    if (selectedStatus && selectedStatus !== 'すべて') {
+      const map: Record<string, string> = {
+        '掲載待ち（承認待ち）': 'PENDING_APPROVAL',
+        掲載済: 'PUBLISHED',
+      };
+      const expected = map[selectedStatus];
+      if (expected && job.status !== expected) return false;
+    }
+
     return true;
   });
 
@@ -217,9 +228,19 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
         aValue = a.company_accounts?.company_name || '';
         bValue = b.company_accounts?.company_name || '';
         break;
+      case 'title':
+        aValue = a.title || '';
+        bValue = b.title || '';
+        break;
       case 'publicStatus':
         aValue = publicationTypeMap[a.publication_type] || a.publication_type;
         bValue = publicationTypeMap[b.publication_type] || b.publication_type;
+        break;
+      case 'jobType':
+        aValue =
+          a.job_type && a.job_type.length > 0 ? a.job_type.join(', ') : '';
+        bValue =
+          b.job_type && b.job_type.length > 0 ? b.job_type.join(', ') : '';
         break;
       default:
         return 0;
@@ -310,12 +331,6 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
 
   const columns = [
     {
-      key: 'checkbox',
-      label: '',
-      sortable: false,
-      width: 'w-[40px]',
-    },
-    {
       key: 'status',
       label: '確認状況',
       sortable: true,
@@ -335,9 +350,9 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
     },
     {
       key: 'company',
-      label: '企業名・お仕事タイトル',
+      label: '企業名',
       sortable: true,
-      width: 'flex-1',
+      width: 'w-[200px]',
     },
     {
       key: 'publicStatus',
@@ -346,10 +361,22 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
       width: 'w-[120px]',
     },
     {
+      key: 'jobType',
+      label: '職種',
+      sortable: true,
+      width: 'w-[150px]',
+    },
+    {
       key: 'actions',
       label: '操作',
       sortable: false,
-      width: 'w-[180px]',
+      width: 'w-[120px]',
+    },
+    {
+      key: 'title',
+      label: 'お仕事タイトル',
+      sortable: true,
+      width: 'flex-1',
     },
   ];
 
@@ -362,8 +389,29 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
     : null;
 
   return (
-    <div className='bg-gray-50 flex flex-col overflow-x-hidden'>
-      <div className='mb-6 flex flex-wrap items-center gap-4 max-w-full'>
+    <div className='bg-gray-50 flex flex-col overflow-x-auto'>
+      {/* ステータスタブ（会社側のUI準拠） - 検索バーの上 */}
+      <div className='flex items-center gap-[16px] mb-4'>
+        <div className="text-[#323232] font-bold text-[16px] font-['Noto_Sans_JP'] min-w-[90px] tracking-[1.6px] leading-[32px]">
+          ステータス
+        </div>
+        <div className='flex border border-[#EFEFEF]'>
+          {(['すべて', '掲載待ち（承認待ち）', '掲載済'] as const).map(
+            (status, idx) => (
+              <button
+                key={status}
+                type='button'
+                onClick={() => setSelectedStatus(status)}
+                className={`py-[4px] px-[16px] text-[14px] font-['Noto_Sans_JP'] transition-colors whitespace-nowrap font-bold tracking-[1.4px] leading-[24px] ${idx > 0 ? 'border-l border-[#EFEFEF]' : ''} ${selectedStatus === status ? 'bg-[#D2F1DA] text-[#0F9058]' : 'bg-transparent text-[#999999] hover:bg-gray-50'}`}
+              >
+                {status}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
+      <div className='mb-2 flex flex-wrap items-center gap-4 max-w-full'>
         <div className='flex gap-2 items-center flex-shrink-0'>
           <SelectInput
             options={searchCategoryOptions}
@@ -411,131 +459,8 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
         </div>
       </div>
 
-      <div className='bg-white rounded-lg w-[900px] overflow-x-auto'>
-        <div className='w-[1600px]'>
-          {/* 統計情報ヘッダー */}
-          <div className='flex items-center px-5 py-3 bg-[#F0F8FF] border-b border-[#E5E5E5]'>
-            <div className='w-[40px]'></div> {/* checkbox */}
-            <div className='w-[120px]'></div> {/* 確認状況 */}
-            <div className='w-[140px]'></div> {/* 掲載申請日時 */}
-            <div className='w-[120px]'></div> {/* 求人確認 */}
-            <div className='flex-1'></div> {/* 企業名・お仕事タイトル */}
-            <div className='w-[120px]'></div> {/* 公開範囲 */}
-            <div className='w-[180px]'></div> {/* 操作 */}
-            <div className='w-[120px] text-center'>
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                スカウト送信数
-              </span>
-            </div>
-            <div className='w-[100px] text-center'>
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                開封数
-              </span>
-            </div>
-            <div className='w-[120px] text-center'>
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                返信数(返信率)
-              </span>
-            </div>
-            <div className='w-[120px] text-center'>
-              <span className="font-['Noto_Sans_JP'] text-[12px] font-bold text-[#323232] leading-[1.6] tracking-[1.2px]">
-                応募数(応募率)
-              </span>
-            </div>
-          </div>
-
-          {/* 統計データ行 */}
-          <div className='px-5 py-2 bg-[#FAFAFA] border-b border-[#E5E5E5]'>
-            <div className='flex items-center mb-1'>
-              <div className='w-[40px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[140px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='flex-1'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[180px]'></div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  過去7日合計
-                </span>
-              </div>
-              <div className='w-[100px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-            </div>
-
-            <div className='flex items-center mb-1'>
-              <div className='w-[40px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[140px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='flex-1'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[180px]'></div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  過去30日合計
-                </span>
-              </div>
-              <div className='w-[100px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-            </div>
-
-            <div className='flex items-center'>
-              <div className='w-[40px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[140px]'></div>
-              <div className='w-[120px]'></div>
-              <div className='flex-1'></div>
-              <div className='w-[120px]'></div>
-              <div className='w-[180px]'></div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  累計
-                </span>
-              </div>
-              <div className='w-[100px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-              <div className='w-[120px] text-center'>
-                <span className="font-['Noto_Sans_JP'] text-[11px] font-medium text-[#666666]">
-                  0 (0%)
-                </span>
-              </div>
-            </div>
-          </div>
+      <div className='bg-white rounded-lg overflow-x-auto'>
+        <div className='min-w-[1200px]'>
           <MediaTableHeader
             columns={columns}
             sortColumn={sortColumn}
@@ -552,21 +477,14 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
                     columns={[
                       {
                         content: (
-                          <input
-                            type='checkbox'
-                            checked={selectedJobs.has(job.id)}
-                            onChange={e =>
-                              handleSelectJob(job.id, e.target.checked)
-                            }
-                            className='w-4 h-4 accent-[#0F9058] cursor-pointer'
-                          />
-                        ),
-                        width: 'w-[40px]',
-                      },
-                      {
-                        content: (
-                          <span className="inline-block px-3 py-1 rounded-full font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] bg-yellow-500 text-white">
-                            承認待ち
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full font-['Noto_Sans_JP'] text-[14px] font-bold leading-[1.6] tracking-[1.4px] ${
+                              job.status === 'PUBLISHED'
+                                ? 'bg-[#D2F1DA] text-[#0F9058]'
+                                : 'bg-yellow-500 text-white'
+                            }`}
+                          >
+                            {statusMap[job.status] || job.status}
                           </span>
                         ),
                         width: 'w-[120px]',
@@ -599,19 +517,14 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
                       },
                       {
                         content: (
-                          <div>
-                            <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                              {truncateText(
-                                job.company_accounts?.company_name || '不明',
-                                20
-                              )}
-                            </div>
-                            <div className="font-['Noto_Sans_JP'] text-[12px] text-gray-600">
-                              {truncateText(job.title, 30)}
-                            </div>
+                          <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                            {truncateText(
+                              job.company_accounts?.company_name || '不明',
+                              20
+                            )}
                           </div>
                         ),
-                        width: 'flex-1',
+                        width: 'w-[200px]',
                       },
                       {
                         content: (
@@ -624,6 +537,16 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
                       },
                       {
                         content: (
+                          <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                            {job.job_type && job.job_type.length > 0
+                              ? truncateText(job.job_type.join(', '), 25)
+                              : '未設定'}
+                          </div>
+                        ),
+                        width: 'w-[150px]',
+                      },
+                      {
+                        content: (
                           <div className='flex gap-2'>
                             <ActionButton
                               text='承認'
@@ -633,48 +556,15 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
                             />
                           </div>
                         ),
-                        width: 'w-[180px]',
-                      },
-                      // 統計情報カラムを追加
-                      {
-                        content: (
-                          <div className='text-center'>
-                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
-                              0
-                            </span>
-                          </div>
-                        ),
                         width: 'w-[120px]',
                       },
                       {
                         content: (
-                          <div className='text-center'>
-                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
-                              0
-                            </span>
+                          <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                            {truncateText(job.title, 40)}
                           </div>
                         ),
-                        width: 'w-[100px]',
-                      },
-                      {
-                        content: (
-                          <div className='text-center'>
-                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
-                              0 (0%)
-                            </span>
-                          </div>
-                        ),
-                        width: 'w-[120px]',
-                      },
-                      {
-                        content: (
-                          <div className='text-center'>
-                            <span className="font-['Noto_Sans_JP'] text-[12px] font-medium text-[#323232]">
-                              0 (0%)
-                            </span>
-                          </div>
-                        ),
-                        width: 'w-[120px]',
+                        width: 'flex-1',
                       },
                     ]}
                   />

@@ -171,6 +171,20 @@ export async function updateJob(jobId: string, jobData: any) {
 
     console.log('Updating job:', jobId, 'with data:', Object.keys(jobData));
 
+    // 雇用形態の日本語→英語マッピング（DB制約準拠）
+    const employmentTypeMapping: Record<string, string> = {
+      正社員: 'FULL_TIME',
+      契約社員: 'CONTRACT',
+      派遣社員: 'CONTRACT',
+      'アルバイト・パート': 'PART_TIME',
+      業務委託: 'CONTRACT',
+      インターン: 'INTERN',
+    };
+    const mappedEmploymentType = jobData.employment_type
+      ? employmentTypeMapping[jobData.employment_type] ||
+        jobData.employment_type
+      : undefined;
+
     const { data, error } = await supabase
       .from('job_postings')
       .update({
@@ -183,7 +197,7 @@ export async function updateJob(jobId: string, jobData: any) {
         salary_min: jobData.salary_min,
         salary_max: jobData.salary_max,
         salary_note: jobData.salary_note,
-        employment_type: jobData.employment_type,
+        employment_type: mappedEmploymentType ?? jobData.employment_type,
         employment_type_note: jobData.employment_type_note,
         work_location: jobData.work_locations,
         location_note: jobData.location_note,
@@ -243,6 +257,18 @@ export async function createJob(jobData: any) {
       images: jobData.images ? jobData.images.length : 0,
     });
 
+    // 雇用形態の日本語→英語マッピング（DB制約準拠）
+    const employmentTypeMapping: Record<string, string> = {
+      正社員: 'FULL_TIME',
+      契約社員: 'CONTRACT',
+      派遣社員: 'CONTRACT',
+      'アルバイト・パート': 'PART_TIME',
+      業務委託: 'CONTRACT',
+      インターン: 'INTERN',
+    };
+    const mappedEmploymentType =
+      employmentTypeMapping[jobData.employment_type] || 'FULL_TIME';
+
     const { data, error } = await supabase
       .from('job_postings')
       .insert({
@@ -255,7 +281,7 @@ export async function createJob(jobData: any) {
         salary_min: jobData.salary_min ? parseInt(jobData.salary_min) : null,
         salary_max: jobData.salary_max ? parseInt(jobData.salary_max) : null,
         salary_note: jobData.salary_note,
-        employment_type: jobData.employment_type,
+        employment_type: mappedEmploymentType,
         employment_type_note: jobData.employment_type_note,
         work_location: jobData.work_locations,
         location_note: jobData.location_note,

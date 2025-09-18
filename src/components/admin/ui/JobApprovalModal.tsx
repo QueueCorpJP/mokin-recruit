@@ -32,7 +32,7 @@ export function JobApprovalModal({
   onApprove,
   onReject,
   isProcessing = false,
-  jobTitle = '求人'
+  jobTitle = '求人',
 }: JobApprovalModalProps) {
   const [selectedReason, setSelectedReason] = useState('');
   const [comment, setComment] = useState('');
@@ -62,44 +62,47 @@ export function JobApprovalModal({
   };
 
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-50"
+    <div
+      className='fixed inset-0 flex items-center justify-center z-50'
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+      onClick={handleClose}
     >
-      <div 
-        className="bg-white border border-[#323232] flex flex-col"
+      <div
+        className='bg-white border border-[#323232] flex flex-col'
         style={{
           width: '604px',
           height: 'auto',
           borderRadius: '16px',
-          padding: '40px 80px 40px 80px'
+          padding: '40px 80px 40px 80px',
         }}
+        onClick={e => e.stopPropagation()}
       >
         {/* タイトル */}
-        <div className="text-center mb-4">
+        <div className='text-center mb-4'>
           <h2 className="font-['Inter'] font-bold text-[24px] text-[#323232] leading-[1.6]">
-          求人の掲載を承認しますか？          </h2>
+            求人の掲載を承認しますか？{' '}
+          </h2>
         </div>
 
         {/* 説明文 */}
-        <div className="text-center mb-6 ">
+        <div className='text-center mb-6 '>
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
-          求人の承認をした場合、即時掲載がされます。
+            求人の承認をした場合、即時掲載がされます。
           </p>
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6]">
-          非承認の場合は、求人企業に非承認通知が届きます。
+            非承認の場合は、求人企業に非承認通知が届きます。
           </p>
         </div>
-        <div className="text-center mb-6 ">
+        <div className='text-center mb-6 '>
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
-          非承認の場合は、理由を選択の上、詳細をお書きください。
+            非承認の場合は、理由を選択の上、詳細をお書きください。
           </p>
           <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6]">
-          （承認の場合は、必要ありません）
+            （承認の場合は、必要ありません）
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* 理由選択 */}
           <div>
             <label className="block font-['Inter'] text-[16px] font-medium text-[#323232] mb-2">
@@ -109,8 +112,8 @@ export function JobApprovalModal({
               options={reasonOptions}
               value={selectedReason}
               onChange={setSelectedReason}
-              placeholder="理由を選択してください"
-              className="w-[300px]"
+              placeholder='理由を選択してください'
+              className='w-[300px]'
               disabled={isProcessing}
             />
           </div>
@@ -120,34 +123,36 @@ export function JobApprovalModal({
             <label className="block font-['Inter'] text-[16px] font-medium text-[#323232] mb-2">
               コメント（任意）
             </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="詳細なコメントがあれば入力してください..."
-              className="w-full px-3 py-2 border border-[#999999] rounded-[8px] resize-none focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent font-['Inter'] text-[16px] leading-[1.6]"
-              rows={4}
-              disabled={isProcessing}
-            />
+            <div className='border border-[#999999] rounded-[8px] p-1'>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder='詳細なコメントがあれば入力してください...'
+                className="w-full px-3 py-2 border-none rounded-none resize-none focus:outline-none font-['Inter'] text-[16px] leading-[1.6]"
+                rows={4}
+                disabled={isProcessing}
+              />
+            </div>
           </div>
         </div>
 
         {/* ボタン */}
-        <div className="flex gap-4 justify-center mt-8">
+        <div className='flex gap-4 justify-center mt-8'>
           <button
             onClick={handleReject}
             disabled={!selectedReason || isProcessing}
             className="w-[180px] bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-[32px] transition-colors font-['Inter']"
           >
-            {isProcessing ? "処理中..." : "非承認にする"}
+            {isProcessing ? '処理中...' : '非承認にする'}
           </button>
           <Button
-            variant="green-gradient"
-            size="figma-default"
+            variant='green-gradient'
+            size='figma-default'
             onClick={handleApprove}
             disabled={!selectedReason || isProcessing}
-            className="w-[180px]"
+            className='w-[180px]'
           >
-            {isProcessing ? "処理中..." : "承認する"}
+            {isProcessing ? '処理中...' : '承認する'}
           </Button>
         </div>
       </div>

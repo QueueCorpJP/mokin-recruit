@@ -824,60 +824,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
               </div>
             </div>
 
-            {/* 基本情報 */}
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-8'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  基本情報
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-8 items-start justify-start px-0 py-6'>
-                {/* 作成日時 */}
-                <div className='w-full'>
-                  <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
-                    作成日時
-                  </label>
-                  <DisplayValue
-                    value={new Date(jobDetail.created_at).toLocaleString(
-                      'ja-JP'
-                    )}
-                  />
-                </div>
-                {/* 更新日時 */}
-                <div className='w-full'>
-                  <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
-                    更新日時
-                  </label>
-                  <DisplayValue
-                    value={new Date(jobDetail.updated_at).toLocaleString(
-                      'ja-JP'
-                    )}
-                  />
-                </div>
-                {/* 雇用形態 */}
-                <div className='w-full'>
-                  <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
-                    雇用形態
-                  </label>
-                  <DisplayValue value={jobDetail.employment_type} />
-                </div>
-                {/* 勤務地 */}
-                <div className='w-full'>
-                  <label className="font-['Noto_Sans_JP'] font-bold text-[16px] text-[#323232] mb-2 block">
-                    勤務地
-                  </label>
-                  <DisplayValue
-                    value={
-                      jobDetail.work_location &&
-                      jobDetail.work_location.length > 0
-                        ? jobDetail.work_location.join('、')
-                        : '未設定'
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* アクション（企業一覧に戻る ＋ 承認/非承認モーダル） */}
             {(() => {
               const JobDetailActions = dynamic(

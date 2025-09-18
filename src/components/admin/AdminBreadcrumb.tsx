@@ -36,7 +36,7 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/admin/company/user': '企業ユーザー',
   '/admin/company/withdraw': '企業退会',
   '/admin/job': '求人一覧',
-  '/admin/job/new': '求人新規作成',
+  '/admin/job/new': '新規求人作成',
   '/admin/job/new/confirm': '求人作成確認',
   '/admin/job/pending': '求人承認待ち',
   '/admin/job/pending/complete': '承認完了',
@@ -90,27 +90,37 @@ export function AdminBreadcrumb() {
     for (let i = 0; i < pathSegments.length; i++) {
       currentPath += `/${pathSegments[i]}`;
       const isLast = i === pathSegments.length - 1;
-      let title = breadcrumbConfig[currentPath] || pathSegments[i];
+      let title: string;
+      const hasMapping = Object.prototype.hasOwnProperty.call(
+        breadcrumbConfig,
+        currentPath
+      );
 
-      // 動的ルートのラベルを日本語化
-      if (pathSegments[i] === 'block') {
-        title = 'ブロック企業';
-      } else if (pathSegments[i] === 'edit') {
-        title = '編集';
-      } else if (pathSegments[i] === 'confirm') {
-        title = '確認';
-      } else if (pathSegments[i] === 'new') {
-        title = '新規登録';
-      } else if (
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          pathSegments[i]
-        )
-      ) {
-        // UUID形式で求人詳細ページの場合は求人タイトルを表示
-        if (currentPath.startsWith('/admin/job/') && jobTitle) {
-          title = jobTitle;
+      if (hasMapping) {
+        title = breadcrumbConfig[currentPath];
+      } else {
+        // 動的ルートのラベルを日本語化（マッピングがない場合のみ適用）
+        if (pathSegments[i] === 'block') {
+          title = 'ブロック企業';
+        } else if (pathSegments[i] === 'edit') {
+          title = '編集';
+        } else if (pathSegments[i] === 'confirm') {
+          title = '確認';
+        } else if (pathSegments[i] === 'new') {
+          title = '新規登録';
+        } else if (
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            pathSegments[i]
+          )
+        ) {
+          // UUID形式で求人詳細ページの場合は求人タイトルを表示
+          if (currentPath.startsWith('/admin/job/') && jobTitle) {
+            title = jobTitle;
+          } else {
+            title = '詳細';
+          }
         } else {
-          title = '詳細';
+          title = pathSegments[i];
         }
       }
 

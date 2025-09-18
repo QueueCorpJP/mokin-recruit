@@ -19,12 +19,13 @@ async function fetchPendingJobList(
       publication_type,
       job_type,
       title,
+      image_urls,
       company_accounts (
         company_name
       )
     `
     )
-    .eq('status', 'PENDING_APPROVAL')
+    .in('status', ['PENDING_APPROVAL', 'PUBLISHED'])
     .order('updated_at', { ascending: false })
     .range(from, to);
   if (error) {

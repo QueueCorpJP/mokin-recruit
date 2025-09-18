@@ -321,7 +321,7 @@ export function SelectInput({
           // 基本スタイル（Figma準拠）
           'flex items-center justify-between w-full',
           'bg-white border border-[#999999] rounded-[8px] text-left',
-          'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
+          'font-["Noto_Sans_JP"] text-[16px] font-bold leading-normal tracking-[1.6px]',
           'transition-all duration-200 ease-in-out',
           'appearance-none outline-none focus:outline-none',
 
@@ -350,13 +350,21 @@ export function SelectInput({
           !className?.includes('text-[') &&
             (selectedValue ? 'text-[#323232]' : 'text-[#323232]')
         )}
-        style={{
-          padding: '8px 8px',
-          alignItems: 'center',
-          gap: '8px',
-          borderRadius: `${radius}px`,
-          ...style,
-        }}
+        style={(() => {
+          const sanitized = { ...(style || {}) } as React.CSSProperties;
+          // 呼び出し側からの lineHeight 指定は無視して、縦の見た目を一定に保つ
+          if ('lineHeight' in sanitized) {
+            delete (sanitized as any).lineHeight;
+          }
+          return {
+            padding: '8px',
+            alignItems: 'center',
+            gap: '8px',
+            borderRadius: `${radius}px`,
+            lineHeight: 'normal',
+            ...sanitized,
+          } as React.CSSProperties;
+        })()}
         aria-expanded={isOpen}
         aria-haspopup='listbox'
         aria-label={placeholder}
@@ -404,7 +412,7 @@ export function SelectInput({
               className={cn(
                 // 基本スタイル
                 'px-4 py-2 cursor-pointer',
-                'font-["Noto_Sans_JP"] text-[16px] font-bold leading-[32px] tracking-[1.6px]',
+                'font-["Noto_Sans_JP"] text-[16px] font-bold leading-normal tracking-[1.6px]',
                 'transition-colors duration-150',
 
                 // 状態別スタイル
@@ -426,7 +434,7 @@ export function SelectInput({
 
           {/* 選択肢が空の場合 */}
           {options.length === 0 && (
-            <li className="px-4 py-2 text-[#999999] font-['Noto_Sans_JP'] text-[16px] font-bold leading-[32px] tracking-[1.6px]">
+            <li className="px-4 py-2 text-[#999999] font-['Noto_Sans_JP'] text-[16px] font-bold leading-normal tracking-[1.6px]">
               選択肢がありません
             </li>
           )}

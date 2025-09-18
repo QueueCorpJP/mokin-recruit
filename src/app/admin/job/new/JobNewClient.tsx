@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 // import NewJobHeader from '@/app/company/job/NewJobHeader';
@@ -68,6 +68,10 @@ export default function AdminJobNewClient({
   const [isLocationModalOpen, setLocationModalOpen] = useState(false);
   const [isJobTypeModalOpen, setJobTypeModalOpen] = useState(false);
   const [isIndustryModalOpen, setIndustryModalOpen] = useState(false);
+
+  // モーダルのref
+  const jobTypeModalRef = useRef<{ handleConfirm: () => void }>(null);
+  const industryModalRef = useRef<{ handleConfirm: () => void }>(null);
 
   // 確認モードの状態
   const [isConfirmMode, setIsConfirmMode] = useState(false);
@@ -568,8 +572,7 @@ export default function AdminJobNewClient({
       const result = await createJob(data);
 
       if (result && result.success) {
-        alert('求人を承認待ち状態で投稿しました');
-        router.push(`/admin/job/${result.jobId}`);
+        router.push('/admin/job/new/complete');
       } else {
         console.error('API Error:', result);
         alert(`エラー: ${result.error}`);
@@ -647,6 +650,13 @@ export default function AdminJobNewClient({
       window.removeEventListener('job-new-create', handleJobNewCreate);
     };
   }, [isConfirmMode, handleBack, handleSubmit, isFormValid]);
+
+  // 確認モード状態をヘッダーに通知
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('job-new-mode-change', { detail: { isConfirmMode } })
+    );
+  }, [isConfirmMode]);
 
   return (
     <>
@@ -904,7 +914,7 @@ export default function AdminJobNewClient({
                       type='button'
                       variant='green-outline'
                       size='lg'
-                      className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
+                      className="rounded-[32px] min-w-[160px] font-bold px-10 py-3.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
                       onClick={handleBack}
                     >
                       戻る
@@ -919,15 +929,6 @@ export default function AdminJobNewClient({
                   </>
                 ) : (
                   <>
-                    <Button
-                      type='button'
-                      variant='green-outline'
-                      size='lg'
-                      className="rounded-[32px] min-w-[160px] font-bold px-10 py-6.5 bg-white text-[#198D76] font-['Noto_Sans_JP']"
-                      onClick={saveDraft}
-                    >
-                      下書き保存
-                    </Button>
                     <button
                       type='button'
                       disabled={showErrors && !isFormValid()}
@@ -978,11 +979,13 @@ export default function AdminJobNewClient({
                 totalCount={3}
                 primaryButtonText='決定'
                 onPrimaryAction={() => {
+                  jobTypeModalRef.current?.handleConfirm();
                   setJobTypeModalOpen(false);
                   clearFieldError('jobTypes');
                 }}
               >
                 <JobTypeModal
+                  ref={jobTypeModalRef}
                   selectedJobTypes={jobTypes}
                   setSelectedJobTypes={setJobTypes}
                   onClose={() => setJobTypeModalOpen(false)}
@@ -999,11 +1002,13 @@ export default function AdminJobNewClient({
                 primaryButtonText='決定'
                 industries='true'
                 onPrimaryAction={() => {
+                  industryModalRef.current?.handleConfirm();
                   setIndustryModalOpen(false);
                   clearFieldError('industries');
                 }}
               >
                 <IndustryModal
+                  ref={industryModalRef}
                   selectedIndustries={industries}
                   onIndustriesChange={setIndustries}
                   onClose={() => setIndustryModalOpen(false)}
