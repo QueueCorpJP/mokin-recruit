@@ -24,7 +24,7 @@ export default function MessageClient({ messages }: Props) {
   const searchCategoryOptions = [
     { value: '企業名', label: '企業名' },
     { value: '選考状況', label: '選考状況' },
-    { value: '求人タイトル', label: '求人タイトル' },
+    { value: '求人名', label: '求人名' },
   ];
 
   // 検索フィルタリング
@@ -39,7 +39,7 @@ export default function MessageClient({ messages }: Props) {
         case '選考状況':
           const statusText = statusMap[room.application?.status ?? ''] || '';
           return statusText.toLowerCase().includes(searchLower);
-        case '求人タイトル':
+        case '求人名':
           return (room.job_postings?.title || '')
             .toLowerCase()
             .includes(searchLower);
@@ -70,7 +70,7 @@ export default function MessageClient({ messages }: Props) {
           <div className='flex items-center gap-2'>
             <input
               type='text'
-              placeholder='企業名・選考状況・求人タイトルで検索'
+              placeholder='企業名・選考状況・求人名で検索'
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               className='bg-[#ffffff] box-border flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 rounded-[5px] border border-[#999999] border-solid h-10 w-[300px]'

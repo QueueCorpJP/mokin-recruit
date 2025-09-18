@@ -11,7 +11,6 @@ import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
-import { sanitizeHtml } from '@/lib/utils/sanitizer';
 
 // Encryption helpers for sessionStorage.
 async function encrypt(text: string): Promise<string> {
@@ -91,83 +90,13 @@ export default function EditPreviewPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedArticleId, setSavedArticleId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    const fetchData = async () => {
-      const storedData = sessionStorage.getItem('previewArticle');
-      if (storedData) {
-        const data = JSON.parse(storedData);
-
-        if (data.content) {
-          data.content = DOMPurify.sanitize(data.content);
-        }
-
-        // カテゴリデータを取得してカテゴリ名の解決用に使用
-        try {
-          const supabase = createClient();
-          const { data: categoriesData } = await supabase
-            .from('article_categories')
-            .select('*')
-            .order('name');
-
-          if (categoriesData) {
-            setCategories(categoriesData as ArticleCategory[]);
-
-            // カテゴリIDからカテゴリ名を解決
-            if (data.categoryIds && data.categoryIds.length > 0) {
-              const names: { [key: string]: string } = {};
-              for (const categoryId of data.categoryIds) {
-                const category = categoriesData.find(
-                  (cat: any) => cat && cat.id === categoryId
-                ) as any;
-                if (category?.name) {
-                  names[categoryId] = category.name;
-                }
-              }
-              setCategoryNames(names);
-            }
-          }
-        } catch (error) {
-          // カテゴリの取得に失敗
-          console.error('カテゴリの取得に失敗:', error);
-        }
-
-        // プレビューデータを設定（editフォームのデータをそのまま使用）
-        setPreviewData(data);
-        setCurrentStatus(data.status || 'DRAFT');
-      } else {
-        router.push('/admin/media/edit');
-      }
-    };
-
-    fetchData();
-
-    // AdminPageTitleからのイベントリスナーを追加
-    const handleBackToEdit = () => handleBack();
-    const handleSaveArticle = () => handleSave();
-    const handleSaveArticleDirect = () => handleSaveClick();
-
-    window.addEventListener('back-to-edit', handleBackToEdit);
-    window.addEventListener('save-article', handleSaveArticle);
-    window.addEventListener('save-article-direct', handleSaveArticleDirect);
-
-    return () => {
-      window.removeEventListener('back-to-edit', handleBackToEdit);
-      window.removeEventListener('save-article', handleSaveArticle);
-      window.removeEventListener(
-        'save-article-direct',
-        handleSaveArticleDirect
-      );
-    };
-  }, [router, isAdmin, handleBack, handleSave, handleSaveClick]);
-
   const handleBack = useCallback(async () => {
     // Update the status in sessionStorage before going back
     if (previewData) {
       const updatedData = { ...previewData, status: currentStatus };
-      const encryptedData = await encrypt(JSON.stringify(updatedData));
-      sessionStorage.setItem('previewArticle', encryptedData);
+      try {
+        sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
+      } catch {}
     }
     // 編集ページに記事IDと共に戻る
     router.push(`/admin/media/edit?id=${previewData?.id}`);
@@ -251,6 +180,72 @@ export default function EditPreviewPage() {
   const handleSaveClick = useCallback(() => {
     handleSave();
   }, [handleSave]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const fetchData = async () => {
+      const storedData = sessionStorage.getItem('previewArticle');
+      if (storedData) {
+        const data = JSON.parse(storedData);
+
+        if (data.content) {
+          data.content = DOMPurify.sanitize(data.content);
+        }
+
+        try {
+          const supabase = createClient();
+          const { data: categoriesData } = await supabase
+            .from('article_categories')
+            .select('*')
+            .order('name');
+
+          if (categoriesData) {
+            setCategories(categoriesData as ArticleCategory[]);
+
+            if (data.categoryIds && data.categoryIds.length > 0) {
+              const names: { [key: string]: string } = {};
+              for (const categoryId of data.categoryIds) {
+                const category = categoriesData.find(
+                  (cat: any) => cat && cat.id === categoryId
+                ) as any;
+                if (category?.name) {
+                  names[categoryId] = category.name;
+                }
+              }
+              setCategoryNames(names);
+            }
+          }
+        } catch (error) {
+          console.error('カテゴリの取得に失敗:', error);
+        }
+
+        setPreviewData(data);
+        setCurrentStatus(data.status || 'DRAFT');
+      } else {
+        router.push('/admin/media/edit');
+      }
+    };
+
+    fetchData();
+
+    const handleBackToEdit = () => handleBack();
+    const handleSaveArticle = () => handleSave();
+    const handleSaveArticleDirect = () => handleSaveClick();
+
+    window.addEventListener('back-to-edit', handleBackToEdit);
+    window.addEventListener('save-article', handleSaveArticle);
+    window.addEventListener('save-article-direct', handleSaveArticleDirect);
+
+    return () => {
+      window.removeEventListener('back-to-edit', handleBackToEdit);
+      window.removeEventListener('save-article', handleSaveArticle);
+      window.removeEventListener(
+        'save-article-direct',
+        handleSaveArticleDirect
+      );
+    };
+  }, [router, isAdmin, handleBack, handleSave, handleSaveClick]);
 
   const handleBackToList = () => {
     setShowSuccessModal(false);
@@ -400,7 +395,7 @@ export default function EditPreviewPage() {
                 className='prose prose-lg max-w-none mb-[60px]'
                 style={{ paddingLeft: '0', paddingRight: '0' }}
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(previewData.content),
+                  __html: DOMPurify.sanitize(previewData.content),
                 }}
               />
             </article>

@@ -612,29 +612,21 @@ export function CandidateCard({
             <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
             {(() => {
               const progress = selectionProgress;
+              const hasJoiningDate = Boolean(progress?.joining_date);
+              const displayDate = hasJoiningDate
+                ? new Date(progress.joining_date).toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  })
+                : 'yyyy/mm/dd';
 
-              // 内定承諾済みの場合、入社日登録ボタンを表示
-              if (progress?.offer_result === 'accepted') {
-                // 既に入社日が登録されている場合
-                if (progress?.joining_date) {
-                  const joiningDate = new Date(progress.joining_date);
-
-                  const formattedDate = joiningDate.toLocaleDateString(
-                    'ja-JP',
-                    {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                    }
-                  );
-                  return (
-                    <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
-                      {formattedDate}
-                    </div>
-                  );
-                } else {
-                  // 入社日未登録の場合、登録ボタンを表示
-                  return (
+              return (
+                <>
+                  <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
+                    {displayDate}
+                  </div>
+                  {!hasJoiningDate && progress?.offer_result === 'accepted' && (
                     <button
                       className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
                       style={{
@@ -650,15 +642,9 @@ export function CandidateCard({
                     >
                       入社日設定
                     </button>
-                  );
-                }
-              } else {
-                return (
-                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                    -
-                  </div>
-                );
-              }
+                  )}
+                </>
+              );
             })()}
           </div>
         </div>

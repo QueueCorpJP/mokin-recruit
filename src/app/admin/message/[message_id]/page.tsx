@@ -32,6 +32,10 @@ interface MessageDetail {
   rooms: {
     candidate_id: string;
     related_job_posting_id: string;
+    candidates: {
+      first_name: string;
+      last_name: string;
+    } | null;
     job_postings: {
       id: string;
       title: string;
@@ -122,6 +126,10 @@ async function fetchMessageDetail(
       `
       candidate_id,
       related_job_posting_id,
+      candidates:candidate_id (
+        first_name,
+        last_name
+      ),
       job_postings:related_job_posting_id (
         id,
         title
@@ -173,6 +181,9 @@ async function fetchMessageDetail(
     ? {
         candidate_id: roomData.candidate_id,
         related_job_posting_id: roomData.related_job_posting_id,
+        candidates: Array.isArray((roomData as any).candidates)
+          ? (roomData as any).candidates[0] || null
+          : (roomData as any).candidates,
         job_postings: Array.isArray(roomData.job_postings)
           ? roomData.job_postings[0] || null
           : roomData.job_postings,
@@ -408,17 +419,21 @@ export default async function MessageDetailPage({
             </div>
             <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
               <DisplayValue
-                value={`候補者ID: ${messageDetail.rooms?.candidate_id || '不明'}`}
+                value={
+                  messageDetail.rooms?.candidates
+                    ? `${messageDetail.rooms.candidates.last_name}${messageDetail.rooms.candidates.first_name}`
+                    : '不明'
+                }
               />
             </div>
           </div>
 
-          {/* 求人タイトル */}
+          {/* 求人名 */}
           {messageDetail.rooms?.job_postings && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                 <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  求人タイトル
+                  求人名
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
@@ -441,50 +456,6 @@ export default async function MessageDetailPage({
             </div>
           )}
 
-          {/* 転職活動状況 */}
-          {careerStatusEntry && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  転職活動状況
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue
-                  value={careerStatusEntry.progress_status || '未設定'}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* 会社名（転職先） */}
-          {careerStatusEntry && careerStatusEntry.company_name && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  転職先企業
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue value={careerStatusEntry.company_name} />
-              </div>
-            </div>
-          )}
-
-          {/* 部署 */}
-          {careerStatusEntry && careerStatusEntry.department && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  部署
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue value={careerStatusEntry.department} />
-              </div>
-            </div>
-          )}
-
           {/* 選考状況変更 */}
           {applicationDetail && messageDetail.rooms && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
@@ -494,6 +465,16 @@ export default async function MessageDetailPage({
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className='mb-2'>
+                  <div className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px] mb-1">
+                    現在の状況
+                  </div>
+                  <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                    {statusMap[applicationDetail.status] ??
+                      applicationDetail.status ??
+                      '未設定'}
+                  </div>
+                </div>
                 <ApplicationStatusSelect
                   candidateId={messageDetail.rooms.candidate_id}
                   jobPostingId={messageDetail.rooms.related_job_posting_id}
@@ -532,7 +513,10 @@ export default async function MessageDetailPage({
                 const companyLogo = (
                   message.company_groups?.company_accounts as any
                 )?.logo_url;
-                const candidateName = '候補者';
+                const candidateName =
+                  !isCompany && messageDetail.rooms?.candidates
+                    ? `${messageDetail.rooms.candidates.last_name}${messageDetail.rooms.candidates.first_name}`
+                    : '候補者';
 
                 return (
                   <div

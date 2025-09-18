@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoomListItem } from './page';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
 import { PaginationButtons } from '@/components/admin/ui/PaginationButtons';
 
@@ -20,7 +21,9 @@ const statusMap: Record<string, string> = {
 export default function MessageListClient({ messages }: Props) {
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -41,14 +44,14 @@ export default function MessageListClient({ messages }: Props) {
   // ソート処理
   const sortedMessages = [...messages].sort((a, b) => {
     if (!sortColumn || !sortDirection) return 0;
-    
+
     let aValue: string;
     let bValue: string;
-    
+
     switch (sortColumn) {
       case 'updated_at':
-        aValue = a.updated_at || '';
-        bValue = b.updated_at || '';
+        aValue = a.latest_messages?.[0]?.sent_at || a.updated_at || '';
+        bValue = b.latest_messages?.[0]?.sent_at || b.updated_at || '';
         break;
       case 'company_id':
         aValue = a.company_groups?.company_accounts?.id || '';
@@ -63,10 +66,10 @@ export default function MessageListClient({ messages }: Props) {
         bValue = b.company_groups?.group_name || '';
         break;
       case 'candidate_name':
-        aValue = a.candidates 
+        aValue = a.candidates
           ? `${a.candidates.last_name}${a.candidates.first_name}`
           : '';
-        bValue = b.candidates 
+        bValue = b.candidates
           ? `${b.candidates.last_name}${b.candidates.first_name}`
           : '';
         break;
@@ -81,7 +84,7 @@ export default function MessageListClient({ messages }: Props) {
       default:
         return 0;
     }
-    
+
     if (sortDirection === 'asc') {
       return aValue.localeCompare(bValue, 'ja');
     } else {
@@ -97,13 +100,39 @@ export default function MessageListClient({ messages }: Props) {
   const totalPages = Math.ceil(sortedMessages.length / itemsPerPage);
 
   const columns = [
-    { key: 'updated_at', label: '日付', sortable: true, width: 'w-[120px]' },
+    { key: 'detail', label: '詳細', sortable: false, width: 'w-[96px]' },
+    {
+      key: 'updated_at',
+      label: '最新メッセージ日時',
+      sortable: true,
+      width: 'w-[160px]',
+    },
     { key: 'company_id', label: '企業ID', sortable: true, width: 'w-[120px]' },
-    { key: 'company_name', label: '企業名', sortable: true, width: 'w-[200px]' },
-    { key: 'company_group', label: '企業グループ', sortable: true, width: 'w-[200px]' },
-    { key: 'candidate_name', label: '候補者名', sortable: true, width: 'w-[150px]' },
+    {
+      key: 'company_name',
+      label: '企業名',
+      sortable: true,
+      width: 'w-[200px]',
+    },
+    {
+      key: 'company_group',
+      label: '企業グループ',
+      sortable: true,
+      width: 'w-[200px]',
+    },
+    {
+      key: 'candidate_name',
+      label: '候補者名',
+      sortable: true,
+      width: 'w-[150px]',
+    },
     { key: 'status', label: '選考状況', sortable: true, width: 'w-[120px]' },
-    { key: 'job_page', label: '求人ページ', sortable: false, width: 'w-[200px]' },
+    {
+      key: 'job_page',
+      label: '求人ページ',
+      sortable: false,
+      width: 'w-[200px]',
+    },
   ];
 
   return (
@@ -120,18 +149,31 @@ export default function MessageListClient({ messages }: Props) {
             {paginatedMessages.map(room => (
               <AdminTableRow
                 key={room.id}
-                onClick={() => {
-                  const messageId = room.latest_messages[0]?.id || room.id;
-                  router.push(`/admin/message/${messageId}`);
-                }}
                 columns={[
                   {
                     content: (
+                      <AdminButton
+                        text='詳細'
+                        variant='green-outline'
+                        size='figma-small'
+                        onClick={() => {
+                          const messageId =
+                            room.latest_messages?.[0]?.id || room.id;
+                          router.push(`/admin/message/${messageId}`);
+                        }}
+                      />
+                    ),
+                    width: 'w-[96px]',
+                  },
+                  {
+                    content: (
                       <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {new Date(room.updated_at).toLocaleDateString('ja-JP')}
+                        {new Date(
+                          room.latest_messages?.[0]?.sent_at || room.updated_at
+                        ).toLocaleString('ja-JP')}
                       </div>
                     ),
-                    width: 'w-[120px]',
+                    width: 'w-[160px]',
                   },
                   {
                     content: (
@@ -144,7 +186,8 @@ export default function MessageListClient({ messages }: Props) {
                   {
                     content: (
                       <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
-                        {room.company_groups?.company_accounts?.company_name || '不明'}
+                        {room.company_groups?.company_accounts?.company_name ||
+                          '不明'}
                       </div>
                     ),
                     width: 'w-[200px]',
@@ -191,7 +234,7 @@ export default function MessageListClient({ messages }: Props) {
           </div>
         </div>
       </div>
-      
+
       {/* ページネーション */}
       <div className='flex justify-center mt-8'>
         <PaginationButtons

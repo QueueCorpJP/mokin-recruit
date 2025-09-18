@@ -35,7 +35,7 @@ export function LoginClient({ userType }: LoginClientProps) {
       case 'admin':
         return '/admin/auth/reset-password';
       default:
-        return '/auth/reset-password';
+        return '/company/auth/reset-password';
     }
   };
 

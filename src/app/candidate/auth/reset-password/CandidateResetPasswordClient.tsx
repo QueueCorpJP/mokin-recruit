@@ -226,10 +226,9 @@ export function CandidateResetPasswordClient() {
               }}
             >
               {isLoading ? (
-                <>
-                  <Loading inline size='sm' variant='white' />
-                  送信中
-                </>
+                <p className='block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre md:tracking-[1.6px]'>
+                  送信する
+                </p>
               ) : (
                 <p className='block font-bold leading-[1.6] text-[14px] md:text-[16px] whitespace-pre md:tracking-[1.6px]'>
                   送信する

@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailFormField } from '@/components/ui/email-form-field';
 import { PasswordFormField } from '@/components/ui/password-form-field';
 import { Button } from '@/components/ui/button';
@@ -15,7 +13,6 @@ export function CandidateLoginClient() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // フォームバリデーション
@@ -32,7 +29,6 @@ export function CandidateLoginClient() {
     }
 
     setError(null);
-    setSuccess(null);
 
     startTransition(async () => {
       try {
@@ -86,16 +82,6 @@ export function CandidateLoginClient() {
             <div className='mb-6 text-red-600 text-[14px] font-medium text-center'>
               {error}
             </div>
-          )}
-
-          {/* 成功表示 */}
-          {success && (
-            <Alert className='border-green-200 bg-green-50 mb-6'>
-              <CheckCircle className='h-4 w-4 text-green-600' />
-              <AlertDescription className='text-green-800'>
-                {success}
-              </AlertDescription>
-            </Alert>
           )}
 
           {/* フォームフィールド */}

@@ -519,7 +519,7 @@ export default async function MessageDetailPage({
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
                 <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  求人タイトル
+                  求人名
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
@@ -541,47 +541,6 @@ export default async function MessageDetailPage({
             </div>
           )}
 
-          {careerStatusEntry && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  転職活動状況
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue
-                  value={careerStatusEntry.progress_status || '未設定'}
-                />
-              </div>
-            </div>
-          )}
-
-          {careerStatusEntry && careerStatusEntry.company_name && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  転職先企業
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue value={careerStatusEntry.company_name} />
-              </div>
-            </div>
-          )}
-
-          {careerStatusEntry && careerStatusEntry.department && (
-            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
-              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
-                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                  部署
-                </div>
-              </div>
-              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
-                <DisplayValue value={careerStatusEntry.department} />
-              </div>
-            </div>
-          )}
-
           {applicationDetail && messageDetail.rooms && (
             <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-2'>
               <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
@@ -590,6 +549,14 @@ export default async function MessageDetailPage({
                 </div>
               </div>
               <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className='mb-2'>
+                  <div className="font-['Noto_Sans_JP'] text-[14px] font-bold text-[#323232] leading-[1.6] tracking-[1.4px] mb-1">
+                    現在の状況
+                  </div>
+                  <div className="font-['Noto_Sans_JP'] text-[14px] font-medium text-[#323232] leading-[1.6] tracking-[1.4px]">
+                    {applicationDetail.status || '未設定'}
+                  </div>
+                </div>
                 <ApplicationStatusSelect
                   candidateId={messageDetail.rooms.candidate_id}
                   jobPostingId={messageDetail.rooms.related_job_posting_id}

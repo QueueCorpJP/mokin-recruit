@@ -9,7 +9,7 @@ import {
   getNews,
   type Article,
 } from '@/app/candidate/news/actions';
-import { sanitizeHtml } from '@/lib/utils/sanitizer';
+import DOMPurify from 'dompurify';
 
 interface NewsDetailClientProps {
   article: Article;
@@ -120,7 +120,7 @@ export default function NewsDetailClient({ article }: NewsDetailClientProps) {
               <div
                 className='prose prose-lg max-w-none mb-[60px]'
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(
+                  __html: DOMPurify.sanitize(
                     typeof article.content === 'string'
                       ? article.content
                       : JSON.stringify(article.content)

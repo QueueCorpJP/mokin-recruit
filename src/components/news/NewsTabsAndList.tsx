@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/ui/Pagination';
-import { sanitizeHtml } from '@/lib/utils/sanitizer';
+import DOMPurify from 'dompurify';
 
 interface NewsArticle {
   id: string;
@@ -172,7 +172,7 @@ export const NewsTabsAndList: React.FC<NewsTabsAndListProps> = ({
                   className='leading-[1.6] [&_ul]:pl-4 [&_ol]:pl-4 [&_li]:mb-1 [&_ul]:list-disc [&_ol]:list-decimal [&_li]:list-item'
                   style={{ display: 'inline' }}
                   dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(article.title),
+                    __html: DOMPurify.sanitize(article.title),
                   }}
                 />
               </div>

@@ -9,6 +9,7 @@ import { ActionButton } from '@/components/admin/ui/ActionButton';
 import { SelectInput } from '@/components/ui/select-input';
 // import { AdminConfirmModal } from '@/components/admin/ui/AdminConfirmModal';
 import { JobApprovalModal } from '@/components/admin/ui/JobApprovalModal';
+import JobApprovalCompleteModal from '@/components/admin/JobApprovalCompleteModal';
 // import { ArrowIcon } from '@/components/admin/ui/ArrowIcon';
 
 export type PendingJobListItem = {
@@ -77,6 +78,11 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
   );
   const [isApproving, _setIsApproving] = useState(false);
   const [isRejecting, _setIsRejecting] = useState(false);
+  const [completeModal, setCompleteModal] = useState<{
+    open: boolean;
+    action: 'approve' | 'reject';
+    count: number;
+  }>({ open: false, action: 'approve', count: 1 });
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
     null
@@ -84,7 +90,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
 
   const searchCategoryOptions = [
     { value: '企業名', label: '企業名' },
-    { value: '求人タイトル', label: '求人タイトル' },
+    { value: '求人名', label: '求人名' },
     { value: '求人本文', label: '求人本文' },
     { value: '職種', label: '職種' },
     { value: '求人ID', label: '求人ID' },
@@ -134,6 +140,11 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
       );
       setSelectedJobs(new Set());
       setApproveModalJobIds(null);
+      setCompleteModal({
+        open: true,
+        action: 'approve',
+        count: approveModalJobIds.length,
+      });
     } catch (e: any) {
       alert(e.message || '承認に失敗しました');
     } finally {
@@ -155,6 +166,11 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
       setJobs(jobs => jobs.filter(job => !approveModalJobIds.includes(job.id)));
       setSelectedJobs(new Set());
       setApproveModalJobIds(null);
+      setCompleteModal({
+        open: true,
+        action: 'reject',
+        count: approveModalJobIds.length,
+      });
     } catch (e: any) {
       alert(e.message || '却下に失敗しました');
     } finally {
@@ -184,7 +200,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
           return job.company_accounts?.company_name
             ?.toLowerCase()
             .includes(searchLower);
-        case '求人タイトル':
+        case '求人名':
           return job.title.toLowerCase().includes(searchLower);
         case '職種':
           return job.job_type?.some(type =>
@@ -256,7 +272,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
   const handleCSVDownload = useCallback(() => {
     const headers = [
       '求人ID',
-      '求人タイトル',
+      '求人名',
       '企業名',
       'ステータス',
       '公開タイプ',
@@ -429,7 +445,7 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
           <div className='flex items-center gap-2'>
             <input
               type='text'
-              placeholder='企業名・求人タイトル・職種で検索'
+              placeholder='企業名・求人名・職種で検索'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className='bg-[#ffffff] box-border flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 rounded-[5px] border border-[#999999] border-solid h-10 w-[200px]'
@@ -595,6 +611,13 @@ export default function PendingTableClient({ jobs: initialJobs }: Props) {
             ? `${approveTargetJobs.length}件の求人`
             : approveTargetJobs[0]?.title || '求人'
         }
+      />
+
+      <JobApprovalCompleteModal
+        isOpen={completeModal.open}
+        onClose={() => setCompleteModal({ ...completeModal, open: false })}
+        action={completeModal.action}
+        count={completeModal.count}
       />
     </div>
   );

@@ -117,8 +117,8 @@ export async function candidateResetPasswordRequestAction(
     // ステップ5: 既存候補者ユーザーチェック
     try {
       const { data: existingUser, error: checkError } = await supabase
-        .from('candidate_accounts')
-        .select('id, email, email_verified')
+        .from('candidates')
+        .select('id, email')
         .eq('email', email.trim())
         .maybeSingle();
 
@@ -131,19 +131,16 @@ export async function candidateResetPasswordRequestAction(
       }
 
       if (!existingUser) {
-        // セキュリティ上、メールアドレスの存在に関係なく成功レスポンスを返す
-        return {
-          success: true,
-          message:
-            'パスワードリセット用の認証コードをメールで送信しました。メールをご確認ください。',
-        };
-      }
-
-      if (!existingUser.email_verified) {
-        return {
-          success: false,
-          error: 'このアカウントはまだメール認証が完了していません。',
-        };
+        // 開発環境では実際にメール送信を実行、本番環境ではセキュリティ上成功レスポンスのみ
+        if (process.env.NODE_ENV !== 'development') {
+          // 本番環境ではセキュリティ上、メールアドレスの存在に関係なく成功レスポンスを返す
+          return {
+            success: true,
+            message:
+              'パスワードリセット用の認証コードをメールで送信しました。メールをご確認ください。',
+          };
+        }
+        // 開発環境では処理を続行してメール送信する
       }
     } catch (error) {
       logger.error('Error checking existing user:', error);
@@ -174,18 +171,24 @@ export async function candidateResetPasswordRequestAction(
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
     try {
+      // 既存のトークンを削除してから新しいものを挿入
+      await supabase
+        .from('password_reset_tokens')
+        .delete()
+        .eq('email', email.trim())
+        .eq('user_type', 'candidate');
+
       const { error: otpSaveError } = await supabase
-        .from('email_verification_codes')
-        .upsert(
-          {
-            email: email.trim(),
-            code: otp,
-            expires_at: expiresAt.toISOString(),
-            type: 'password-reset',
-            created_at: new Date().toISOString(),
-          },
-          { onConflict: 'email,type' }
-        );
+        .from('password_reset_tokens')
+        .insert({
+          email: email.trim(),
+          user_type: 'candidate',
+          token: otp,
+          expires_at: expiresAt.toISOString(),
+          used: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
       if (otpSaveError) {
         logger.error('Failed to save password reset OTP:', otpSaveError);
         return { success: false, error: '認証コードの保存に失敗しました。' };

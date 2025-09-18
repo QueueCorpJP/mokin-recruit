@@ -38,7 +38,8 @@ export function getBaseUrl(): string {
  */
 export function getPasswordResetRedirectUrl(): string {
   const baseUrl = getBaseUrl();
-  const resetPath = '/auth/reset-password/new';
+  // デフォルトは候補者の新パスワード設定に寄せる（企業は別導線）
+  const resetPath = '/candidate/auth/reset-password/new';
 
   // URLの正規化
   const normalizedBaseUrl = baseUrl.endsWith('/')

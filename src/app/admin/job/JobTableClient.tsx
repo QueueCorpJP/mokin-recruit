@@ -78,7 +78,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
 
   const searchCategoryOptions = [
     { value: '企業名', label: '企業名' },
-    { value: '求人タイトル', label: '求人タイトル' },
+    { value: '求人名', label: '求人名' },
     { value: '求人本文', label: '求人本文' },
     { value: '職種', label: '職種' },
   ];
@@ -189,7 +189,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
           return job.company_accounts?.company_name
             ?.toLowerCase()
             .includes(searchLower);
-        case '求人タイトル':
+        case '求人名':
           return job.title.toLowerCase().includes(searchLower);
         case '職種':
           return job.job_type?.some(type =>
@@ -267,7 +267,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
     },
     { key: 'company', label: '企業名', sortable: true, width: 'w-[100px]' },
     { key: 'position', label: '職種', sortable: true, width: 'w-[150px]' },
-    { key: 'title', label: '求人タイトル', sortable: true, width: 'flex-1' },
+    { key: 'title', label: '求人名', sortable: true, width: 'flex-1' },
     {
       key: 'actions',
       label: 'アクション',
@@ -296,7 +296,7 @@ export default function JobTableClient({ jobs: initialJobs }: Props) {
           <div className='flex items-center gap-2'>
             <input
               type='text'
-              placeholder='企業名・求人タイトル・職種で検索'
+              placeholder='企業名・求人名・職種で検索'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className='bg-[#ffffff] box-border flex flex-row gap-2.5 items-center justify-start px-[11px] py-1 rounded-[5px] border border-[#999999] border-solid h-10 w-[200px]'

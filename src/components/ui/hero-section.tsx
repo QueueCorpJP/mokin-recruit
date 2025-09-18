@@ -255,13 +255,13 @@ export function HeroSection() {
               {/* CTA Buttons */}
               <div className='flex flex-col sm:flex-row gap-4 mt-6'>
                 <Link
-                  href='/auth/register'
+                  href='/signup'
                   className='inline-flex items-center justify-center px-8 py-4 bg-white text-[#198D76] font-bold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 text-lg'
                 >
                   無料で会員登録
                 </Link>
                 <Link
-                  href='/auth/login'
+                  href='/candidate/auth/login'
                   className='inline-flex items-center justify-center px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-[#198D76] transition-all duration-300 text-lg'
                 >
                   ログイン

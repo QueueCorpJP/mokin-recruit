@@ -52,7 +52,7 @@ export function LoginForm({ userType }: LoginFormProps) {
       case 'admin':
         return '/admin/auth/reset-password';
       default:
-        return '/auth/reset-password';
+        return '/candidate/auth/reset-password';
     }
   };
 
