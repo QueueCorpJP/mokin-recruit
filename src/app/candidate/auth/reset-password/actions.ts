@@ -4,8 +4,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
 import { sendEmailViaSendGrid } from '@/lib/email/sender';
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseAdminClient } from '@/lib/supabase/server-client';
-import { getPasswordResetRedirectUrl } from '@/lib/server/utils/url';
+// Supabase recoveryリンク方式は使わない（OTP方式へ戻す）
 
 export interface CandidateResetPasswordFormData {
   email: string;
@@ -22,17 +21,15 @@ const ResetPasswordSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
 });
 
-// 指定フォーマットのHTML生成（リンク方式）
-function generateResetLinkEmailHtml(
-  displayName: string,
-  resetUrl: string
-): string {
+// 指定フォーマットのHTML生成（OTP方式）
+function generateOtpEmailHtml(displayName: string, otp: string): string {
   return `
     <div style="font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232; max-width: 640px; margin: 0 auto;">
       <p>【${displayName}】様</p>
-      <p>CuePointをご利用いただきありがとうございます。<br/>パスワードの再設定は、下記リンクより行ってください。</p>
-      <p><strong>■パスワード再設定ページ：</strong><a href="${resetUrl}" target="_blank" rel="noopener noreferrer">${resetUrl}</a></p>
-      <p>※パスワード再設定ページへのアクセスは発行から24時間のみ有効です。</p>
+      <p>CuePointをご利用いただきありがとうございます。<br/>パスワードの再設定は、下記ページにて認証コードをご入力ください。</p>
+      <p><strong>■認証コード：</strong>${otp}</p>
+      <p><strong>■認証コード入力ページ：</strong><a href="https://cuepoint.jp/auth/reset-password/new" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/auth/reset-password/new</a></p>
+      <p>※認証コードの有効期限は10分です。</p>
       <p>=============================</p>
       <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
       <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
@@ -156,46 +153,7 @@ export async function candidateResetPasswordRequestAction(
       };
     }
 
-    // ステップ6: Supabaseでリセットリンクを生成（リダイレクト先は共通の新パスワード設定ページ）
-    let actionLink = '';
-    try {
-      const admin = getSupabaseAdminClient();
-      const redirectTo = getPasswordResetRedirectUrl();
-      const { data: linkData, error: linkError } =
-        await admin.auth.admin.generateLink({
-          type: 'recovery',
-          email: email.trim(),
-          options: { redirectTo },
-        } as any);
-
-      if (linkError) {
-        logger.error('Failed to generate recovery link:', linkError);
-        return {
-          success: false,
-          error: 'パスワード再設定リンクの発行に失敗しました。',
-        };
-      }
-
-      actionLink =
-        (linkData as any)?.properties?.action_link ||
-        (linkData as any)?.action_link ||
-        '';
-      if (!actionLink) {
-        logger.error('Recovery link not found in response:', linkData);
-        return {
-          success: false,
-          error: 'パスワード再設定リンクの生成に失敗しました。',
-        };
-      }
-    } catch (e) {
-      logger.error('Error generating recovery link:', e);
-      return {
-        success: false,
-        error: 'パスワード再設定リンクの生成に失敗しました。',
-      };
-    }
-
-    // ステップ7: 宛名用の候補者名を取得（なければメールローカル部/ユーザー）
+    // ステップ6: 宛名用の候補者名を取得（なければメールローカル部/ユーザー）
     let displayName = 'ユーザー';
     try {
       const { data: candidateName } = await supabase
@@ -210,12 +168,42 @@ export async function candidateResetPasswordRequestAction(
       }
     } catch {}
 
-    // ステップ8: SendGridでリンクメール送信
+    // ステップ7: OTP生成・保存（10分）
+    const otp = generateOtp();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    try {
+      const { error: otpSaveError } = await supabase
+        .from('email_verification_codes')
+        .upsert(
+          {
+            email: email.trim(),
+            code: otp,
+            expires_at: expiresAt.toISOString(),
+            type: 'password-reset',
+            created_at: new Date().toISOString(),
+          },
+          { onConflict: 'email,type' }
+        );
+      if (otpSaveError) {
+        logger.error('Failed to save password reset OTP:', otpSaveError);
+        return { success: false, error: '認証コードの保存に失敗しました。' };
+      }
+    } catch (error) {
+      logger.error('Error saving password reset OTP:', error);
+      return {
+        success: false,
+        error: '認証コードの保存中にエラーが発生しました。',
+      };
+    }
+
+    // ステップ8: SendGridでOTPメール送信
     try {
       const emailResult = await sendEmailViaSendGrid({
         to: email.trim(),
         subject: 'パスワード再設定のご案内',
-        html: generateResetLinkEmailHtml(displayName, actionLink),
+        html: generateOtpEmailHtml(displayName, otp),
       });
 
       if (!emailResult.success) {
