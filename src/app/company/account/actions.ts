@@ -61,20 +61,22 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
       let companyUserId: string | null = existingUser?.id ?? null;
 
       if (!companyUserId) {
-        // 認証ユーザー作成（パスワード未設定）
-        const { data: authCreated, error: authErr } =
-          await supabase.auth.admin.createUser({
-            email,
-            email_confirm: false,
-            user_metadata: {
-              user_type: 'company_user',
-              company_account_id: companyAccountId,
-            },
-          });
-        if (authErr || !authCreated.user) {
-          // 次のメンバーへ
-          continue;
-        }
+        // 認証ユーザー作成（パスワード未設定）。失敗してもDBレコードは作成して進める
+        let authUserId: string | undefined = undefined;
+        try {
+          const { data: authCreated, error: authErr } =
+            await supabase.auth.admin.createUser({
+              email,
+              email_confirm: false,
+              user_metadata: {
+                user_type: 'company_user',
+                company_account_id: companyAccountId,
+              },
+            });
+          if (!authErr && authCreated?.user?.id) {
+            authUserId = authCreated.user.id;
+          }
+        } catch {}
 
         // company_users レコード作成（password_hash必須のためダミー）
         const { data: newUser, error: cuErr } = await supabase
@@ -86,7 +88,7 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
             full_name: '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            auth_user_id: authCreated.user.id,
+            ...(authUserId ? { auth_user_id: authUserId } : {}),
           })
           .select('id')
           .single();
@@ -429,16 +431,19 @@ export async function inviteMembersToGroup(
       let companyUserId: string | null = existingUser?.id ?? null;
 
       if (!companyUserId) {
-        // Supabase Authユーザー作成（メール確認はしない／パスワード未設定）
-        const { data: authCreated } = await supabase.auth.admin.createUser({
-          email,
-          email_confirm: false,
-          user_metadata: {
-            user_type: 'company_user',
-            company_account_id: companyAccountId,
-          },
-        });
-        if (!authCreated?.user) continue;
+        // Supabase Authユーザー作成（メール確認はしない／パスワード未設定）。失敗してもDBレコードは作成
+        let authUserId: string | undefined = undefined;
+        try {
+          const { data: authCreated } = await supabase.auth.admin.createUser({
+            email,
+            email_confirm: false,
+            user_metadata: {
+              user_type: 'company_user',
+              company_account_id: companyAccountId,
+            },
+          });
+          if (authCreated?.user?.id) authUserId = authCreated.user.id;
+        } catch {}
 
         // company_users作成（password_hashはダミー）
         const { data: newUser, error: cuErr } = await supabase
@@ -450,7 +455,7 @@ export async function inviteMembersToGroup(
             full_name: '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            auth_user_id: authCreated.user.id,
+            ...(authUserId ? { auth_user_id: authUserId } : {}),
           })
           .select('id')
           .single();
