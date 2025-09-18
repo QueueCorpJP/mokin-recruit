@@ -33,11 +33,14 @@ jobs:
         run: tar -czf build.tar.gz .next node_modules public package.json
 
       - name: Upload build via scp
-        run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
-          scp -i private_key.pem -o StrictHostKeyChecking=no \
-            build.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "build.tar.gz"
+          target: "/home/${{ secrets.EC2_USER }}/"
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
