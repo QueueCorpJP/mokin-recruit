@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
 import { sendEmailViaSendGrid } from '@/lib/email/sender';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdminClient } from '@/lib/supabase/server-client';
+import { getPasswordResetRedirectUrl } from '@/lib/server/utils/url';
 
 export interface CandidateResetPasswordFormData {
   email: string;
@@ -20,47 +22,22 @@ const ResetPasswordSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
 });
 
-/**
- * パスワードリセット用OTPメールのHTML生成
- */
-function generateResetPasswordEmailHtml(otp: string): string {
+// 指定フォーマットのHTML生成（リンク方式）
+function generateResetLinkEmailHtml(
+  displayName: string,
+  resetUrl: string
+): string {
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>【Mokin Recruit】パスワードリセット認証コード</title>
-    </head>
-    <body style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.6; color: #333;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0f9058; font-size: 24px; margin: 0;">Mokin Recruit</h1>
-        </div>
-
-        <div style="background: #f9f9f9; padding: 30px; border-radius: 8px;">
-          <h2 style="color: #333; font-size: 18px; margin-top: 0;">パスワードリセット認証コード</h2>
-
-          <p>以下の6桁の認証コードを入力して、パスワードリセットを完了してください：</p>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <div style="background: #fff; border: 2px solid #0f9058; border-radius: 8px; padding: 20px; display: inline-block;">
-              <span style="font-size: 32px; font-weight: bold; color: #0f9058; letter-spacing: 8px;">${otp}</span>
-            </div>
-          </div>
-
-          <p style="color: #666; font-size: 14px;">
-            ※ この認証コードの有効期限は10分間です。<br>
-            ※ 第三者と共有しないでください。
-          </p>
-        </div>
-
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
-          <p>このメールに心当たりがない場合は、このメールを削除してください。</p>
-          <p>© 2024 Mokin Recruit. All rights reserved.</p>
-        </div>
-      </div>
-    </body>
-    </html>
+    <div style="font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232; max-width: 640px; margin: 0 auto;">
+      <p>【${displayName}】様</p>
+      <p>CuePointをご利用いただきありがとうございます。<br/>パスワードの再設定は、下記リンクより行ってください。</p>
+      <p><strong>■パスワード再設定ページ：</strong><a href="${resetUrl}" target="_blank" rel="noopener noreferrer">${resetUrl}</a></p>
+      <p>※パスワード再設定ページへのアクセスは発行から24時間のみ有効です。</p>
+      <p>=============================</p>
+      <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
+      <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
+      <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+    </div>
   `;
 }
 
@@ -179,49 +156,66 @@ export async function candidateResetPasswordRequestAction(
       };
     }
 
-    // ステップ6: OTPコード生成
-    const otp = generateOtp();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10分後
-
-    // ステップ7: OTPをデータベースに保存
+    // ステップ6: Supabaseでリセットリンクを生成（リダイレクト先は共通の新パスワード設定ページ）
+    let actionLink = '';
     try {
-      const { error: otpSaveError } = await supabase
-        .from('email_verification_codes')
-        .upsert(
-          {
-            email: email.trim(),
-            code: otp,
-            expires_at: expiresAt.toISOString(),
-            type: 'password-reset',
-            created_at: new Date().toISOString(),
-          },
-          {
-            onConflict: 'email,type',
-          }
-        );
+      const admin = getSupabaseAdminClient();
+      const redirectTo = getPasswordResetRedirectUrl();
+      const { data: linkData, error: linkError } =
+        await admin.auth.admin.generateLink({
+          type: 'recovery',
+          email: email.trim(),
+          options: { redirectTo },
+        } as any);
 
-      if (otpSaveError) {
-        logger.error('Failed to save password reset OTP:', otpSaveError);
+      if (linkError) {
+        logger.error('Failed to generate recovery link:', linkError);
         return {
           success: false,
-          error: '認証コードの保存に失敗しました。',
+          error: 'パスワード再設定リンクの発行に失敗しました。',
         };
       }
-    } catch (error) {
-      logger.error('Error saving password reset OTP:', error);
+
+      actionLink =
+        (linkData as any)?.properties?.action_link ||
+        (linkData as any)?.action_link ||
+        '';
+      if (!actionLink) {
+        logger.error('Recovery link not found in response:', linkData);
+        return {
+          success: false,
+          error: 'パスワード再設定リンクの生成に失敗しました。',
+        };
+      }
+    } catch (e) {
+      logger.error('Error generating recovery link:', e);
       return {
         success: false,
-        error: '認証コードの保存中にエラーが発生しました。',
+        error: 'パスワード再設定リンクの生成に失敗しました。',
       };
     }
 
-    // ステップ8: SendGridでOTPメール送信
+    // ステップ7: 宛名用の候補者名を取得（なければメールローカル部/ユーザー）
+    let displayName = 'ユーザー';
+    try {
+      const { data: candidateName } = await supabase
+        .from('candidates')
+        .select('first_name, last_name')
+        .eq('email', email.trim())
+        .maybeSingle();
+      if (candidateName) {
+        const name =
+          `${candidateName.last_name || ''} ${candidateName.first_name || ''}`.trim();
+        if (name) displayName = name;
+      }
+    } catch {}
+
+    // ステップ8: SendGridでリンクメール送信
     try {
       const emailResult = await sendEmailViaSendGrid({
         to: email.trim(),
-        subject: '【Mokin Recruit】パスワードリセット認証コード',
-        html: generateResetPasswordEmailHtml(otp),
+        subject: 'パスワード再設定のご案内',
+        html: generateResetLinkEmailHtml(displayName, actionLink),
       });
 
       if (!emailResult.success) {

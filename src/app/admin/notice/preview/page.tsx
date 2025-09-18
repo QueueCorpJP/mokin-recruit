@@ -28,80 +28,93 @@ export default function PreviewPage() {
   const router = useRouter();
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [categories, setCategories] = useState<NoticeCategory[]>([]);
-  const [categoryNames, setCategoryNames] = useState<{[key: string]: string}>({});
+  const [categoryNames, setCategoryNames] = useState<{ [key: string]: string }>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedNoticeId, setSavedNoticeId] = useState<string | null>(null);
 
-  const handleSave = useCallback(async (status: 'DRAFT' | 'PUBLISHED') => {
-    const currentData = sessionStorage.getItem('previewNotice');
-    if (!currentData) return;
-    
-    const data = JSON.parse(currentData);
-    
-    setIsLoading(true);
-    setError('');
+  const handleSave = useCallback(
+    async (status: 'DRAFT' | 'PUBLISHED') => {
+      const currentData = sessionStorage.getItem('previewNotice');
+      if (!currentData) return;
 
-    try {
-      let thumbnailUrl = '';
-      
-      // サムネイルがある場合はアップロード
-      if (data.thumbnailName && data.thumbnail) {
-        try {
-          const thumbnailFile = await fetch(data.thumbnail)
-            .then(res => res.blob())
-            .then(blob => new File([blob], data.thumbnailName!, { type: blob.type }));
-          
-          const formData = new FormData();
-          formData.append('thumbnail', thumbnailFile);
-          
-          const uploadResult = await uploadNoticeThumbnail(formData);
-          if (uploadResult.success && uploadResult.url) {
-            thumbnailUrl = uploadResult.url;
-          }
-        } catch (error) {
-          console.warn('サムネイル画像の処理に失敗しました:', error);
-        }
-      }
+      const data = JSON.parse(currentData);
 
-      // カテゴリ名を取得
-      const categoryNamesList: string[] = [];
-      if (data.categoryIds && data.categoryIds.length > 0) {
-        for (const categoryId of data.categoryIds) {
-          const categoryName = categoryNames[categoryId] || 
-                             categories.find(cat => cat.id === categoryId)?.name;
-          if (categoryName) {
-            categoryNamesList.push(categoryName);
+      setIsLoading(true);
+      setError('');
+
+      try {
+        let thumbnailUrl = '';
+
+        // サムネイルがある場合はアップロード
+        if (data.thumbnailName && data.thumbnail) {
+          try {
+            const thumbnailFile = await fetch(data.thumbnail)
+              .then(res => res.blob())
+              .then(
+                blob =>
+                  new File([blob], data.thumbnailName!, { type: blob.type })
+              );
+
+            const formData = new FormData();
+            formData.append('thumbnail', thumbnailFile);
+
+            const uploadResult = await uploadNoticeThumbnail(formData);
+            if (uploadResult.success && uploadResult.url) {
+              thumbnailUrl = uploadResult.url;
+            }
+          } catch (error) {
+            console.warn('サムネイル画像の処理に失敗しました:', error);
           }
         }
-      }
 
-      // お知らせを作成
-      const result = await createNotice({
-        title: data.title,
-        excerpt: data.title.substring(0, 100), // タイトルから抜粋を生成
-        content: data.content,
-        status: status,
-        thumbnail_url: thumbnailUrl || undefined,
-        categories: categoryNamesList
-      });
+        // カテゴリ名を取得
+        const categoryNamesList: string[] = [];
+        if (data.categoryIds && data.categoryIds.length > 0) {
+          for (const categoryId of data.categoryIds) {
+            const categoryName =
+              categoryNames[categoryId] ||
+              categories.find(cat => cat.id === categoryId)?.name;
+            if (categoryName) {
+              categoryNamesList.push(categoryName);
+            }
+          }
+        }
 
-      if (result.success && result.data) {
-        setSavedNoticeId(result.data.id);
-        sessionStorage.removeItem('previewNotice');
-        // 公開・下書き保存時ともにモーダルを表示
-        setShowSuccessModal(true);
-      } else {
-        throw new Error(result.error || 'お知らせの保存に失敗しました');
+        // お知らせを作成
+        const result = await createNotice({
+          title: data.title,
+          excerpt: data.title.substring(0, 100), // タイトルから抜粋を生成
+          content: data.content,
+          status: status,
+          thumbnail_url: thumbnailUrl || undefined,
+          categories: categoryNamesList,
+        });
+
+        if (result.success && result.data) {
+          setSavedNoticeId(result.data.id);
+          sessionStorage.removeItem('previewNotice');
+          // 公開・下書き保存時ともにモーダルを表示
+          setShowSuccessModal(true);
+        } else {
+          throw new Error(result.error || 'お知らせの保存に失敗しました');
+        }
+      } catch (error) {
+        console.error('お知らせの保存に失敗:', error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'お知らせの保存に失敗しました'
+        );
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('お知らせの保存に失敗:', error);
-      setError(error instanceof Error ? error.message : 'お知らせの保存に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [categories, categoryNames]);
+    },
+    [categories, categoryNames]
+  );
 
   const handleEdit = () => {
     // プレビューデータをそのまま残して編集画面に戻る
@@ -121,7 +134,7 @@ export default function PreviewPage() {
         const data = JSON.parse(storedData);
         console.log('Preview data content:', data.content);
         console.log('Preview data categoryIds:', data.categoryIds);
-        
+
         // カテゴリデータを先に取得
         try {
           const supabase = createClient();
@@ -129,15 +142,15 @@ export default function PreviewPage() {
             .from('notice_categories')
             .select('*')
             .order('name');
-          
+
           if (categoriesData) {
             console.log('Fetched categories:', categoriesData);
             setCategories(categoriesData as unknown as NoticeCategory[]);
           }
-          
+
           // 個別にカテゴリ名を取得
           if (data.categoryIds && data.categoryIds.length > 0) {
-            const names: {[key: string]: string} = {};
+            const names: { [key: string]: string } = {};
             for (const categoryId of data.categoryIds) {
               try {
                 const { data: categoryData } = await supabase
@@ -145,18 +158,25 @@ export default function PreviewPage() {
                   .select('name')
                   .eq('id', categoryId)
                   .single();
-                
+
                 if (categoryData && (categoryData as any).name) {
                   names[categoryId] = (categoryData as any).name as string;
-                  console.log('Individual category fetch:', { categoryId, name: (categoryData as any).name });
+                  console.log('Individual category fetch:', {
+                    categoryId,
+                    name: (categoryData as any).name,
+                  });
                 }
               } catch (err) {
-                console.error('Individual category fetch failed:', categoryId, err);
+                console.error(
+                  'Individual category fetch failed:',
+                  categoryId,
+                  err
+                );
               }
             }
             setCategoryNames(names);
           }
-          
+
           // カテゴリデータ取得後にプレビューデータを設定
           setPreviewData(data);
         } catch (error) {
@@ -168,7 +188,7 @@ export default function PreviewPage() {
         router.push('/admin/notice/new');
       }
     };
-    
+
     fetchData();
   }, [router]);
 
@@ -214,8 +234,8 @@ export default function PreviewPage() {
 
   if (!previewData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">読み込み中...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg'>読み込み中...</div>
       </div>
     );
   }
@@ -223,117 +243,128 @@ export default function PreviewPage() {
   const formattedDate = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
   });
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9]">
-
-
+    <div className='min-h-screen bg-[#F9F9F9]'>
       {error && (
-        <div className="max-w-[800px] mx-auto mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className='max-w-[800px] mx-auto mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded'>
           {error}
         </div>
       )}
 
       {/* メインコンテンツ */}
-      <main className="w-full bg-[#F9F9F9] flex items-start">
-        <div className="">
-          
-          <div className="flex flex-col">
+      <main className='w-full bg-[#F9F9F9] flex items-start'>
+        <div className=''>
+          <div className='flex flex-col'>
             {/* お知らせ本文 */}
-            <article className="w-full max-w-[800px] mx-auto mt-[50px] px-0">
-              
+            <article className='w-full max-w-[800px] mx-auto mt-[50px] px-0'>
               {/* 日時 */}
-              <div className="mb-[16px] px-0">
-                <span className="text-[#323232] text-[14px] font-medium leading-[1.6] tracking-[1.4px] Noto_Sans_JP">
+              <div className='mb-[16px] px-0'>
+                <span className='text-[#323232] text-[14px] font-medium leading-[1.6] tracking-[1.4px] Noto_Sans_JP'>
                   {formattedDate}
                 </span>
               </div>
-              
+
               {/* お知らせタイトルセクション */}
-              <div className="mb-[32px] px-0">
-                <h1 className="text-[32px] text-[#323232] mb-[16px] font-noto-sans-jp leading-[1.5]" style={{ fontWeight: 700, fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+              <div className='mb-[32px] px-0'>
+                <h1
+                  className='text-[32px] text-[#323232] mb-[16px] font-noto-sans-jp leading-[1.5]'
+                  style={{
+                    fontWeight: 700,
+                    fontFamily:
+                      'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  }}
+                >
                   {previewData.title}
                 </h1>
-                <div className="flex items-center gap-[16px] flex-wrap">
+                <div className='flex items-center gap-[16px] flex-wrap'>
                   {/* 選択されたカテゴリを表示 */}
-                  {previewData.categoryIds && previewData.categoryIds.length > 0 && 
-                    previewData.categoryIds.map(categoryId => {
-                      const categoryName = categoryNames[categoryId] || 
-                                         categories.find(cat => cat.id === categoryId)?.name;
-                      
-                      if (!categoryName) {
-                        console.log('No category name found for:', categoryId);
-                        return null;
-                      }
-                      
-                      return (
-                        <span
-                          key={categoryId}
-                          className="bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]"
-                          style={{ 
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                          }}
-                        >
-                          {categoryName}
-                        </span>
-                      );
-                    }).filter(Boolean)
-                  }
+                  {previewData.categoryIds &&
+                    previewData.categoryIds.length > 0 &&
+                    previewData.categoryIds
+                      .map(categoryId => {
+                        const categoryName =
+                          categoryNames[categoryId] ||
+                          categories.find(cat => cat.id === categoryId)?.name;
+
+                        if (!categoryName) {
+                          console.log(
+                            'No category name found for:',
+                            categoryId
+                          );
+                          return null;
+                        }
+
+                        return (
+                          <span
+                            key={categoryId}
+                            className='bg-[#0F9058] text-[#FFF] text-[14px] px-[16px] py-[4px] rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]'
+                            style={{
+                              fontWeight: 700,
+                              fontFamily:
+                                'var(--font-noto-sans-jp), "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                            }}
+                          >
+                            {categoryName}
+                          </span>
+                        );
+                      })
+                      .filter(Boolean)}
                 </div>
               </div>
 
               {/* サムネイル画像 */}
               {previewData.thumbnail && (
-                <div className="relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]" style={{ minWidth: '900px' }}>
+                <div
+                  className='relative w-full aspect-[16/9] bg-gray-200 rounded-[24px] overflow-hidden mb-[40px]'
+                  style={{ minWidth: '900px' }}
+                >
                   <Image
                     src={previewData.thumbnail}
-                    alt="お知らせのサムネイル"
+                    alt='お知らせのサムネイル'
                     fill
-                    className="object-cover"
+                    className='object-cover'
                   />
                 </div>
               )}
 
-
               {/* お知らせ本文（リッチコンテンツ） */}
-              <div 
-                className="prose prose-lg max-w-none mb-[60px]"
+              <div
+                className='prose prose-lg max-w-none mb-[60px]'
                 style={{ paddingLeft: '0', paddingRight: '0' }}
-                dangerouslySetInnerHTML={{ __html: previewData && previewData.content ? DOMPurify.sanitize(previewData.content) : '' }}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    previewData && previewData.content
+                      ? DOMPurify.sanitize(previewData.content)
+                      : '',
+                }}
               />
 
               {/* お知らせ下のボタン */}
-              <div className="flex justify-center gap-4 mt-8 mb-8">
+              <div className='flex justify-center gap-4 mt-8 mb-8'>
                 <AdminButton
                   onClick={handleCancel}
-                  text="編集に戻る"
-                  variant="green-outline"
+                  text='編集に戻る'
+                  variant='green-outline'
                   disabled={isLoading}
                 />
                 <AdminButton
                   onClick={() => handleSave('DRAFT')}
-                  text="お知らせを下書き保存"
-                  variant="green-gradient"
+                  text='お知らせを下書き保存'
+                  variant='green-gradient'
                   disabled={isLoading}
                 />
                 <AdminButton
                   onClick={() => handleSave('PUBLISHED')}
-                  text="お知らせを投稿する"
-                  variant="green-gradient"
+                  text='お知らせを投稿する'
+                  variant='green-gradient'
                   disabled={isLoading}
                 />
               </div>
-
             </article>
-
-
-
-
           </div>
-
         </div>
       </main>
 
@@ -342,10 +373,10 @@ export default function PreviewPage() {
         isOpen={showSuccessModal}
         onConfirm={handleBackToList}
         onSecondaryAction={handleViewNotice}
-        title="お知らせ追加完了"
-        description="お知らせの投稿・保存をしました。"
-        confirmText="お知らせ一覧に戻る"
-        secondaryText="お知らせを確認する"
+        title='お知らせ追加完了'
+        description='お知らせの投稿・保存をしました。'
+        confirmText='お知らせ一覧に戻る'
+        secondaryText='お知らせを確認する'
       />
     </div>
   );
