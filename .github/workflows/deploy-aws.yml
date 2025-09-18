@@ -40,24 +40,63 @@ jobs:
       - name: Clean up zero-byte files and prepare archive
         run: |
           echo "[INFO] Cleaning zero-byte files and preparing archive"
-          # Remove zero-byte files that can cause scp-action to hang
-          find . -type f -size 0 -name "*.js" -o -name "*.ts" -o -name "*.json" | head -10 | xargs -r rm -f
+          echo "[INFO] Current working directory: $(pwd)"
+          echo "[INFO] Directory contents:"
+          ls -la
+          
+          # Remove zero-byte files that can cause scp-action to hang (safer approach)
+          echo "[INFO] Searching for zero-byte files..."
+          ZERO_BYTE_FILES=$(find . -type f -size 0 \( -name "*.js" -o -name "*.ts" -o -name "*.json" \) 2>/dev/null | head -10 || true)
+          if [ -n "$ZERO_BYTE_FILES" ]; then
+            echo "[INFO] Found zero-byte files, removing them:"
+            echo "$ZERO_BYTE_FILES"
+            echo "$ZERO_BYTE_FILES" | while read -r file; do
+              [ -n "$file" ] && rm -f "$file"
+            done
+          else
+            echo "[INFO] No problematic zero-byte files found"
+          fi
+          
+          # Build file list for archive (check existence first)
+          ARCHIVE_FILES=""
+          for file in .next node_modules public package.json next.config.js .nvmrc; do
+            if [ -e "$file" ]; then
+              ARCHIVE_FILES="$ARCHIVE_FILES $file"
+              echo "[INFO] Including: $file"
+            else
+              echo "[WARN] Skipping missing file: $file"
+            fi
+          done
+          
+          # Add package-lock.json if it exists
+          if [ -f "package-lock.json" ]; then
+            ARCHIVE_FILES="$ARCHIVE_FILES package-lock.json"
+            echo "[INFO] Including: package-lock.json"
+          else
+            echo "[WARN] package-lock.json not found, skipping"
+          fi
           
           # Create optimized archive with better compression and exclude problematic files
+          echo "[INFO] Creating archive with files:$ARCHIVE_FILES"
           tar --exclude='*.log' \
               --exclude='*.tmp' \
               --exclude='node_modules/.cache' \
               --exclude='node_modules/.bin' \
               --exclude='.git' \
-              -czf build.tar.gz .next node_modules public package.json package-lock.json next.config.js .nvmrc
+              -czf build.tar.gz $ARCHIVE_FILES
           
           # Verify archive was created and get size
-          ls -lh build.tar.gz
-          echo "[INFO] Archive size: $(du -h build.tar.gz | cut -f1)"
-          
-          # Generate checksum for integrity verification
-          sha256sum build.tar.gz > build.tar.gz.sha256
-          echo "[INFO] Archive checksum: $(cat build.tar.gz.sha256)"
+          if [ -f "build.tar.gz" ]; then
+            ls -lh build.tar.gz
+            echo "[INFO] Archive size: $(du -h build.tar.gz | cut -f1)"
+            
+            # Generate checksum for integrity verification
+            sha256sum build.tar.gz > build.tar.gz.sha256
+            echo "[INFO] Archive checksum: $(cat build.tar.gz.sha256)"
+          else
+            echo "[ERROR] Failed to create build.tar.gz"
+            exit 1
+          fi
 
       - name: Pre-upload connectivity check
         run: |
