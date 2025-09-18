@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { NewArticleButton } from './ui/NewArticleButton';
 import { AdminButton } from './ui/AdminButton';
 
@@ -83,19 +84,10 @@ const pageTitleConfig: PageTitleConfig = {
     buttons: [
       {
         text: '確認する',
-        variant: 'green-outline',
+        variant: 'green-gradient',
         onClick: () => {
           console.log('AdminPageTitle: Dispatching job-new-back event');
           const event = new CustomEvent('job-new-back');
-          window.dispatchEvent(event);
-        },
-      },
-      {
-        text: '保存',
-        variant: 'green-gradient',
-        onClick: () => {
-          console.log('AdminPageTitle: Dispatching job-new-create event');
-          const event = new CustomEvent('job-new-create');
           window.dispatchEvent(event);
         },
       },
@@ -111,15 +103,6 @@ const pageTitleConfig: PageTitleConfig = {
         onClick: () => {
           console.log('AdminPageTitle: Dispatching pending-csv-download event');
           const event = new CustomEvent('pending-csv-download');
-          window.dispatchEvent(event);
-        },
-      },
-      {
-        text: '一括承認',
-        variant: 'green-gradient',
-        onClick: () => {
-          console.log('AdminPageTitle: Dispatching pending-bulk-approve event');
-          const event = new CustomEvent('pending-bulk-approve');
           window.dispatchEvent(event);
         },
       },
@@ -269,11 +252,75 @@ const pageTitleConfig: PageTitleConfig = {
 
 export function AdminPageTitle() {
   const pathname = usePathname();
+  const [isJobNewConfirmMode, setIsJobNewConfirmMode] = useState(false);
+
+  // admin/job/new の確認モード切替を受け取り動的にボタンを変更
+  useEffect(() => {
+    const handleModeChange = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail;
+        if (detail && typeof detail.isConfirmMode === 'boolean') {
+          setIsJobNewConfirmMode(detail.isConfirmMode);
+        }
+      } catch {}
+    };
+    window.addEventListener(
+      'job-new-mode-change',
+      handleModeChange as EventListener
+    );
+    return () => {
+      window.removeEventListener(
+        'job-new-mode-change',
+        handleModeChange as EventListener
+      );
+    };
+  }, []);
 
   // console.log('AdminPageTitle: Current pathname:', pathname);
 
   // 現在のパスに対応する設定を取得
   const getPageConfig = (): PageConfig => {
+    // admin/job/new は確認モードに応じて動的に切替
+    if (pathname === '/admin/job/new') {
+      if (isJobNewConfirmMode) {
+        return {
+          title: '求人作成',
+          buttons: [
+            {
+              text: '戻る',
+              variant: 'green-outline',
+              onClick: () => {
+                const event = new CustomEvent('job-new-back');
+                window.dispatchEvent(event);
+              },
+            },
+            {
+              text: '保存する',
+              variant: 'green-gradient',
+              onClick: () => {
+                const event = new CustomEvent('job-new-create');
+                window.dispatchEvent(event);
+              },
+            },
+          ],
+        };
+      }
+      // 編集モード（確認前）は「確認する」のみ
+      return {
+        title: '求人作成',
+        buttons: [
+          {
+            text: '確認する',
+            variant: 'green-gradient',
+            onClick: () => {
+              const event = new CustomEvent('job-new-back');
+              window.dispatchEvent(event);
+            },
+          },
+        ],
+      };
+    }
+
     // 完全一致を先にチェック
     if (pageTitleConfig[pathname]) {
       return pageTitleConfig[pathname];
