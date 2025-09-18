@@ -114,14 +114,36 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
     if (await isSendgridConfigured()) {
       const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
-      const setPasswordUrl = `${baseUrl}/signup/set-password`;
+      const groupJoinUrl = `${baseUrl}/signup/group?groupId=${newGroup.id}&companyId=${companyAccountId}`;
+
+      // 企業名取得
+      let companyName = '企業名';
+      try {
+        const { data: companyRow } = await supabase
+          .from('company_accounts')
+          .select('company_name')
+          .eq('id', companyAccountId)
+          .single();
+        if (companyRow?.company_name) companyName = companyRow.company_name;
+      } catch {}
 
       const messages = invited.map(m => ({
         to: m.email,
         from,
-        subject: `${payload.groupName} への招待`,
-        text: `mokin recruit に招待されました。以下のリンクからパスワードを設定してログインしてください。\n${setPasswordUrl}`,
-        html: `mokin recruit に招待されました。<br/>以下のリンクからパスワードを設定してログインしてください。<br/><a href="${setPasswordUrl}">${setPasswordUrl}</a>`,
+        subject: `【CuePoint】 ${payload.groupName}に招待されています`,
+        text: `【${companyName}】ご担当者様\n\nCuePointへの招待が届いています。\n招待リンクから企業グループに参加してください。\n\n=============================\n■ 企業名：${companyName}\n■ 企業グループ名：${payload.groupName}\n■ 招待リンク：${groupJoinUrl}\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`,
+        html: `
+          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
+            <p>【${companyName}】ご担当者様</p>
+            <p>CuePointへの招待が届いています。<br/>招待リンクから企業グループに参加してください。</p>
+            <p>=============================</p>
+            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${payload.groupName}<br/>■ 招待リンク：<a href="${groupJoinUrl}" target="_blank" rel="noopener noreferrer">${groupJoinUrl}</a></p>
+            <p>=============================</p>
+            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
+            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
+            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        `,
       }));
 
       await sendBatch(messages);
@@ -154,6 +176,67 @@ export async function removeGroupMember(
 
     if (error) {
       return fail(error.message);
+    }
+
+    // メール通知（企業グループから削除）
+    if (await isSendgridConfigured()) {
+      // 対象ユーザー、グループ名、企業名を取得
+      const [{ data: userRow }, { data: groupRow }] = await Promise.all([
+        supabase
+          .from('company_users')
+          .select('email, full_name, company_account_id')
+          .eq('id', companyUserId)
+          .maybeSingle(),
+        supabase
+          .from('company_groups')
+          .select('id, group_name, company_account_id')
+          .eq('id', groupId)
+          .maybeSingle(),
+      ]);
+
+      let companyName = '企業名';
+      const targetCompanyAccountId =
+        groupRow?.company_account_id || userRow?.company_account_id;
+      if (targetCompanyAccountId) {
+        try {
+          const { data: companyRow } = await supabase
+            .from('company_accounts')
+            .select('company_name')
+            .eq('id', targetCompanyAccountId)
+            .maybeSingle();
+          if (companyRow?.company_name) companyName = companyRow.company_name;
+        } catch {}
+      }
+
+      const to = userRow?.email;
+      const companyUserName = userRow?.full_name || '';
+      const groupName = groupRow?.group_name || '';
+
+      if (to) {
+        const from = (await getFromAddress()) as string;
+        const subject =
+          '【CuePoint】企業グループからアカウントが削除されました';
+
+        const textBody = `【${companyName}】【${companyUserName}】様\n\n所属していた企業グループから、アカウントが削除されました。\n\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n■ 企業名：${companyName}\n■ 企業グループ名：${groupName}\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`;
+
+        const htmlBody = `
+          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
+            <p>【${companyName}】【${companyUserName}】様</p>
+            <p>所属していた企業グループから、アカウントが削除されました。</p>
+            <p>＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝</p>
+            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${groupName}</p>
+            <p>＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝</p>
+            <p>=============================</p>
+            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
+            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
+            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        `;
+
+        await sendBatch([
+          { to, from, subject, text: textBody, html: htmlBody },
+        ]);
+      }
     }
 
     revalidateCompanyPaths('/company/account');
@@ -191,6 +274,80 @@ export async function updateMemberPermission(
 
     if (error) {
       return fail(error.message);
+    }
+
+    // 権限変更通知メール送信（指定フォーマット）
+    if (await isSendgridConfigured()) {
+      // 表示用ロール名マッピング
+      const roleLabel =
+        newRole === 'admin'
+          ? '管理者'
+          : newRole === 'scout'
+            ? 'スカウト'
+            : 'リクルーター';
+
+      // 対象ユーザー、グループ、企業名を取得
+      const [{ data: userRow }, { data: groupRow }] = await Promise.all([
+        supabase
+          .from('company_users')
+          .select('email, full_name, company_account_id')
+          .eq('id', companyUserId)
+          .single(),
+        supabase
+          .from('company_groups')
+          .select('id, group_name, company_account_id')
+          .eq('id', groupId)
+          .single(),
+      ]);
+
+      let companyName = '企業名';
+      const targetCompanyAccountId =
+        groupRow?.company_account_id || userRow?.company_account_id;
+      if (targetCompanyAccountId) {
+        try {
+          const { data: companyRow } = await supabase
+            .from('company_accounts')
+            .select('company_name')
+            .eq('id', targetCompanyAccountId)
+            .single();
+          if (companyRow?.company_name) companyName = companyRow.company_name;
+        } catch {}
+      }
+
+      const companyUserName = userRow?.full_name || '';
+      const to = userRow?.email;
+      const groupName = groupRow?.group_name || '';
+
+      if (to) {
+        const from = (await getFromAddress()) as string;
+
+        const textBody = `【${companyName}】【${companyUserName}】様\n\n所属企業グループ内での権限が変更されました。\n\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n■ 企業名：${companyName}\n■ 企業グループ名：${groupName}\n■ 変更後の権限：${roleLabel}\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n\n権限に応じて、閲覧・編集可能な範囲が変更となりますのでご確認ください。\n\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`;
+
+        const htmlBody = `
+          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
+            <p>【${companyName}】【${companyUserName}】様</p>
+            <p>所属企業グループ内での権限が変更されました。</p>
+            <p>＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝</p>
+            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${groupName}<br/>■ 変更後の権限：${roleLabel}</p>
+            <p>＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝</p>
+            <p>権限に応じて、閲覧・編集可能な範囲が変更となりますのでご確認ください。</p>
+            <p>=============================</p>
+            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
+            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
+            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        `;
+
+        await sendBatch([
+          {
+            to,
+            from,
+            subject: '【CuePoint】企業グループ内での権限が変更されました',
+            text: textBody,
+            html: htmlBody,
+          },
+        ]);
+      }
     }
 
     revalidateCompanyPaths('/company/account');
@@ -321,14 +478,36 @@ export async function inviteMembersToGroup(
     if (await isSendgridConfigured()) {
       const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
-      const setPasswordUrl = `${baseUrl}/signup/set-password`;
+      const groupJoinUrl = `${baseUrl}/signup/group?groupId=${groupRow.id}&companyId=${groupRow.company_account_id}`;
+
+      // 企業名取得
+      let companyName = '企業名';
+      try {
+        const { data: companyRow } = await supabase
+          .from('company_accounts')
+          .select('company_name')
+          .eq('id', groupRow.company_account_id)
+          .single();
+        if (companyRow?.company_name) companyName = companyRow.company_name;
+      } catch {}
 
       const messages = invited.map(m => ({
         to: m.email,
         from,
-        subject: `${groupRow.group_name} への招待`,
-        text: `mokin recruit に招待されました。以下のリンクからパスワードを設定してログインしてください。\n${setPasswordUrl}`,
-        html: `mokin recruit に招待されました。<br/>以下のリンクからパスワードを設定してログインしてください。<br/><a href="${setPasswordUrl}">${setPasswordUrl}</a>`,
+        subject: `【CuePoint】 ${groupRow.group_name}に招待されています`,
+        text: `【${companyName}】ご担当者様\n\nCuePointへの招待が届いています。\n招待リンクから企業グループに参加してください。\n\n=============================\n■ 企業名：${companyName}\n■ 企業グループ名：${groupRow.group_name}\n■ 招待リンク：${groupJoinUrl}\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`,
+        html: `
+          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
+            <p>【${companyName}】ご担当者様</p>
+            <p>CuePointへの招待が届いています。<br/>招待リンクから企業グループに参加してください。</p>
+            <p>=============================</p>
+            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${groupRow.group_name}<br/>■ 招待リンク：<a href="${groupJoinUrl}" target="_blank" rel="noopener noreferrer">${groupJoinUrl}</a></p>
+            <p>=============================</p>
+            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
+            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
+            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        `,
       }));
 
       await sendBatch(messages);
