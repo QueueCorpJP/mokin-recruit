@@ -1,4 +1,5 @@
-name: Deploy to AWS EC2
+name: Deploy to AWS EC2 (Runner build → artifact upload)
+
 permissions:
   contents: read
 
@@ -10,7 +11,48 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to EC2
+      # 1. リポジトリ取得
+      - uses: actions/checkout@v4
+
+      # 2. Node.js セットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      # 3. 依存関係インストール（本番のみ）
+      - name: Install dependencies
+        run: npm ci --omit=dev --no-audit --no-fund --prefer-offline --ignore-scripts
+
+      # 4. Next.js ビルド
+      - name: Build Next.js
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_ENV: production
+        run: |
+          echo "[INFO] Build start $(date -Is)"
+          NODE_OPTIONS='--max-old-space-size=4096' npm run build --silent
+          echo "[INFO] Build end $(date -Is)"
+
+      # 5. 成果物をまとめる
+      - name: Create build archive
+        run: tar -czf build.tar.gz .next node_modules public package.json
+
+      # 6. EC2 にアップロード
+      - name: Upload build.tar.gz to EC2
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem -o StrictHostKeyChecking=no \
+            build.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      # 7. EC2 上でデプロイ
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -20,29 +62,19 @@ jobs:
           timeout: 30m
           command_timeout: 30m
           script: |
-            set -e
+            set -euo pipefail
+            echo "[INFO] Deploy start on $(hostname)"
+
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
+            BUILD_TARBALL="/home/${{ secrets.EC2_USER }}/build.tar.gz"
 
-            # Setup NVM environment if available
-            if [ -d "$HOME/.nvm" ]; then
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            fi
+            # ディレクトリ作成 & 解凍
+            mkdir -p "$TARGET_DIR"
+            tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
+            rm -f "$BUILD_TARBALL"
 
-            # Clone or pull latest code
-            if [ -d "$TARGET_DIR/.git" ]; then
-              cd "$TARGET_DIR"
-              git fetch origin
-              git reset --hard origin/main
-              git clean -fd
-            else
-              rm -rf "$TARGET_DIR"
-              git clone https://github.com/${{ github.repository }}.git "$TARGET_DIR"
-              cd "$TARGET_DIR"
-            fi
-
-            # Write production env
-            cat > .env.production << 'EOF'
+            # .env.production を Secrets から生成
+            cat > "$TARGET_DIR/.env.production" << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -51,15 +83,12 @@ jobs:
             NODE_ENV=production
             EOF
 
-            # Install dependencies
-            npm ci --no-audit --no-fund --prefer-offline
+            cd "$TARGET_DIR"
 
-            # Build application
-            export NEXT_TELEMETRY_DISABLED=1
-            NODE_OPTIONS='--max-old-space-size=4096' npm run build
-
-            # Install PM2 if needed and restart app
+            # pm2 がなければインストール & 再起動
             if ! command -v pm2 >/dev/null 2>&1; then
               npm install -g pm2
             fi
             pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
+
+            echo "[INFO] Deploy completed!"
