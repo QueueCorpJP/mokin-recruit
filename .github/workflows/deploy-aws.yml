@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Install deps (runner)
-        run: npm ci --no-audit --no-fund --prefer-offline
+        run: npm ci --no-audit --no-fund --prefer-offline --omit=dev
 
       - name: Build (runner)
         env:
@@ -36,7 +36,7 @@ jobs:
 
       - name: Archive build artifacts
         run: |
-          tar -czf build.tar.gz .next public package.json package-lock.json next.config.js .nvmrc
+          tar -czf build.tar.gz .next node_modules public package.json package-lock.json next.config.js .nvmrc
 
       - name: Upload build to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -162,24 +162,7 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NODE_ENV=production
             EOF
-             # Check if dependencies need updating
-             echo "[INFO] npm ci check started at $(date -Is)"
-            if [ -f package-lock.json.md5 ]; then
-              OLD_MD5=$(cat package-lock.json.md5)
-              NEW_MD5=$(md5sum package-lock.json | awk '{print $1}')
-              if [ "$OLD_MD5" = "$NEW_MD5" ]; then
-                echo "[INFO] Dependencies unchanged, skipping npm ci"
-              else
-                 echo "[INFO] Dependencies changed, running npm ci..."
-                 npm ci --no-audit --no-fund --prefer-offline --no-progress
-                echo "$NEW_MD5" > package-lock.json.md5
-              fi
-            else
-              echo "[INFO] First deployment, installing dependencies..."
-               npm ci --no-audit --no-fund --prefer-offline --no-progress
-              md5sum package-lock.json | awk '{print $1}' > package-lock.json.md5
-            fi
-             echo "[INFO] npm ci finished at $(date -Is)"
+            echo "[INFO] Skipping npm ci on EC2 (node_modules shipped from runner)"
 
             echo "[INFO] Skipping build on EC2 (runner-built artifacts used)"
 
