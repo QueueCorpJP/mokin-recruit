@@ -10,8 +10,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -19,12 +17,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          timeout: 15m
-          command_timeout: 15m
-          debug: true
+          timeout: 30m
+          command_timeout: 30m
           script: |
-            set -euo pipefail
-            echo "[INFO] Starting deploy on $(hostname)"
+            set -e
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
 
             # Setup NVM environment if available
@@ -33,8 +29,7 @@ jobs:
               [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             fi
 
-            # Prepare directory and fetch code
-            mkdir -p "$TARGET_DIR"
+            # Clone or pull latest code
             if [ -d "$TARGET_DIR/.git" ]; then
               cd "$TARGET_DIR"
               git fetch origin
@@ -46,7 +41,7 @@ jobs:
               cd "$TARGET_DIR"
             fi
 
-            # Write production env from GitHub Secrets
+            # Write production env
             cat > .env.production << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -56,31 +51,15 @@ jobs:
             NODE_ENV=production
             EOF
 
-            # Check if dependencies need updating
-            if [ -f package-lock.json.md5 ]; then
-              OLD_MD5=$(cat package-lock.json.md5)
-              NEW_MD5=$(md5sum package-lock.json | awk '{print $1}')
-              if [ "$OLD_MD5" = "$NEW_MD5" ]; then
-                echo "[INFO] Dependencies unchanged, skipping npm ci"
-              else
-                echo "[INFO] Dependencies changed, running npm ci..."
-                npm ci --no-audit --no-fund --prefer-offline
-                echo "$NEW_MD5" > package-lock.json.md5
-              fi
-            else
-              echo "[INFO] First deployment, installing dependencies..."
-              npm ci --no-audit --no-fund --prefer-offline
-              md5sum package-lock.json | awk '{print $1}' > package-lock.json.md5
-            fi
+            # Install dependencies
+            npm ci --no-audit --no-fund --prefer-offline
 
-            echo "[INFO] Building Next.js application..."
+            # Build application
             export NEXT_TELEMETRY_DISABLED=1
             NODE_OPTIONS='--max-old-space-size=4096' npm run build
 
-            echo "[INFO] Build completed successfully"
-
-            # Ensure pm2 and restart/start app
+            # Install PM2 if needed and restart app
             if ! command -v pm2 >/dev/null 2>&1; then
-              npm i -g pm2
+              npm install -g pm2
             fi
             pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
