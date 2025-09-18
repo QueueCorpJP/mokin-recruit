@@ -10,7 +10,6 @@ import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { Button } from '@/components/ui/button';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
-import { encryptData } from '@/lib/utils/encryption';
 
 interface NoticeCategory {
   id: string;
@@ -162,11 +161,10 @@ export default function EditNoticeForm({
     };
 
     if (typeof window !== 'undefined') {
-      // Encrypt noticeData before storing in sessionStorage
-      encryptData(JSON.stringify(noticeData)).then(enc => {
-        sessionStorage.setItem('previewNotice', enc);
-        router.push('/admin/notice/edit/preview');
-      });
+      try {
+        sessionStorage.setItem('previewNotice', JSON.stringify(noticeData));
+      } catch {}
+      router.push('/admin/notice/edit/preview');
     } else {
       router.push('/admin/notice/edit/preview');
     }

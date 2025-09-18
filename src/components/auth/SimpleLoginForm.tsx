@@ -60,14 +60,14 @@ export function SimpleLoginForm() {
     <div className='flex flex-col items-center relative w-full h-auto bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)]'>
       <div className='flex flex-col gap-10 items-center justify-start relative w-full max-w-[592px] mx-auto px-20 py-20'>
         <div className='space-y-1'>
-        <CardTitle className='text-2xl font-bold text-center'>
-          ログイン
-        </CardTitle>
-        <CardDescription className='text-center'>
-          アカウントにログインしてください
-        </CardDescription>
+          <CardTitle className='text-2xl font-bold text-center'>
+            ログイン
+          </CardTitle>
+          <CardDescription className='text-center'>
+            アカウントにログインしてください
+          </CardDescription>
         </div>
-        
+
         <form onSubmit={handleSubmit} className='space-y-4 w-full'>
           {error && (
             <Alert variant='destructive'>
@@ -99,17 +99,13 @@ export function SimpleLoginForm() {
             />
           </div>
 
-          <Button
-            type='submit'
-            className='w-full'
-            disabled={!isFormValid}
-          >
+          <Button type='submit' className='w-full' disabled={!isFormValid}>
             ログイン
           </Button>
 
           <div className='text-center text-sm'>
             <a
-              href='/auth/reset-password'
+              href='/candidate/auth/reset-password'
               className='text-primary hover:underline'
             >
               パスワードをお忘れですか？
@@ -119,7 +115,7 @@ export function SimpleLoginForm() {
           <div className='text-center text-sm text-muted-foreground'>
             アカウントをお持ちでない方は{' '}
             <a
-              href='/auth/register'
+              href='/signup'
               className='text-primary hover:underline font-medium'
             >
               新規登録

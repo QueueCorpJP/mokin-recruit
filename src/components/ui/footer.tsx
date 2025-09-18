@@ -506,7 +506,7 @@ export function Footer({
         <div className='md:hidden flex items-center gap-2 px-[16px] pb-[40px]'>
           <div className='w-[104px] h-[32px] flex items-center justify-center'>
             <Link
-              href='/auth/register'
+              href='/signup'
               className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',
@@ -533,7 +533,7 @@ export function Footer({
           </span>
           <div className='w-[104px] h-[32px] flex items-center justify-center'>
             <Link
-              href='/auth/login'
+              href='/candidate/auth/login'
               className='w-full h-full flex items-center justify-center text-white font-bold bg-transparent text-center hover:text-[#0F9058] transition-colors'
               style={{
                 fontFamily: 'Noto Sans JP, sans-serif',

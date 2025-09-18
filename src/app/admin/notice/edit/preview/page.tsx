@@ -9,8 +9,7 @@ import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationM
 import { SelectInput } from '@/components/ui/select-input';
 import { FormFieldHeader } from '@/components/admin/ui/FormFieldHeader';
 import { createClient } from '@/lib/supabase/client';
-import { sanitizeHtml } from '@/lib/utils/sanitizer';
-import { encryptString, decryptString } from '@/lib/utils/encryption';
+// Removed custom sanitizer and encryption utilities
 
 interface PreviewData {
   id?: string;
@@ -49,10 +48,9 @@ export default function EditPreviewPage() {
       if (storedData) {
         let data;
         try {
-          const decrypted = await decryptString(storedData);
-          data = JSON.parse(decrypted);
+          data = JSON.parse(storedData);
         } catch (e) {
-          console.error('Failed to decrypt previewNotice', e);
+          console.error('Failed to parse previewNotice', e);
           router.push('/admin/notice/edit');
           return;
         }
@@ -116,9 +114,9 @@ export default function EditPreviewPage() {
     if (previewData) {
       const updatedData = { ...previewData, status: newStatus };
       setPreviewData(updatedData);
-      encryptString(JSON.stringify(updatedData)).then((encrypted: string) => {
-        sessionStorage.setItem('previewNotice', encrypted);
-      });
+      try {
+        sessionStorage.setItem('previewNotice', JSON.stringify(updatedData));
+      } catch {}
     }
   };
 

@@ -49,7 +49,7 @@ export const useLoginMutation = () => {
   const mutate = async (data: LoginData) => {
     setIsPending(true);
     try {
-      const response = await apiClient.post('/auth/login', data);
+      const response = await apiClient.post('/candidate/auth/login', data);
       // Page refresh to update server-side auth state
       window.location.reload();
       return response;
@@ -98,9 +98,7 @@ export const useRegisterMutation = (userType: UserType) => {
     setIsPending(true);
     try {
       const endpoint =
-        userType === 'candidate'
-          ? '/auth/register/candidate'
-          : '/auth/register/company';
+        userType === 'candidate' ? '/signup' : '/company/contact';
 
       const response = await apiClient.post(endpoint, {
         ...data,
@@ -128,7 +126,7 @@ export const useResetPasswordMutation = () => {
     setIsPending(true);
     try {
       const response = await apiClient.post(
-        '/auth/reset-password/request',
+        '/candidate/auth/reset-password/request',
         data
       );
       return response;
@@ -152,7 +150,10 @@ export const useNewPasswordMutation = () => {
   const mutate = async (data: NewPasswordData) => {
     setIsPending(true);
     try {
-      const response = await apiClient.post('/auth/reset-password', data);
+      const response = await apiClient.post(
+        '/candidate/auth/reset-password',
+        data
+      );
       return response;
     } catch (error) {
       logError(error as any, 'useNewPasswordMutation');

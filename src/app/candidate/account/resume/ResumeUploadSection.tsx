@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { uploadResumeFiles } from './actions';
+// Fallback to signup resume action (shared behavior)
+import { uploadResumeFiles } from '@/app/signup/resume/actions';
 
 export default function ResumeUploadSection() {
   const router = useRouter();
@@ -70,15 +71,11 @@ export default function ResumeUploadSection() {
       }
       formData.append('agreement', 'true');
 
-      const result = await uploadResumeFiles(formData);
-
-      if (result.success) {
-        alert(result.message);
-        // ファイルをクリア
-        setResumeFile(null);
-        setCvFile(null);
-        setAgreeToTerms(false);
-      }
+      await uploadResumeFiles(formData);
+      alert('アップロードが完了しました');
+      setResumeFile(null);
+      setCvFile(null);
+      setAgreeToTerms(false);
     } catch (error) {
       console.error('Upload error:', error);
       const errorMessage =
