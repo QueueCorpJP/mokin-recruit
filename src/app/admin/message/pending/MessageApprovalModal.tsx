@@ -11,7 +11,11 @@ import { useRouter } from 'next/navigation';
 interface MessageApprovalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange: (status: '承認' | '非承認', reason: string, comment: string) => void;
+  onStatusChange: (
+    status: '承認' | '非承認',
+    reason: string,
+    comment: string
+  ) => void;
   isProcessing?: boolean;
   messageContent?: string;
   currentStatus?: '未対応' | '承認' | '非承認';
@@ -35,12 +39,14 @@ export default function MessageApprovalModal({
   onStatusChange,
   isProcessing = false,
   messageContent = 'メッセージ',
-  currentStatus = '未対応'
+  currentStatus = '未対応',
 }: MessageApprovalModalProps) {
   const [selectedReason, setSelectedReason] = useState('');
   const [comment, setComment] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [completionStatus, setCompletionStatus] = useState<'承認' | '非承認' | null>(null);
+  const [completionStatus, setCompletionStatus] = useState<
+    '承認' | '非承認' | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   if (!isOpen) return null;
@@ -86,94 +92,94 @@ export default function MessageApprovalModal({
     <>
       {/* メイン選択モーダル */}
       {!showCompletionModal && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center z-50"
+        <div
+          className='fixed inset-0 flex items-center justify-center z-50'
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
         >
-          <div 
-            className="bg-white border border-[#323232] flex flex-col"
+          <div
+            className='bg-white border border-[#323232] flex flex-col'
             style={{
               width: '604px',
               height: 'auto',
               borderRadius: '16px',
-              padding: '40px 80px 40px 80px'
+              padding: '40px 80px 40px 80px',
             }}
           >
             {/* タイトル */}
-            <div className="text-center mb-4">
+            <div className='text-center mb-4'>
               <h2 className="font-['Inter'] font-bold text-[24px] text-[#323232] leading-[1.6]">
-              メッセージを承認しますか？</h2>
+                メッセージを承認しますか？
+              </h2>
             </div>
             {/* 説明文 */}
-            <div className="text-start mb-6 ">
+            <div className='text-start mb-6 '>
               <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
-              メッセージの承認をした場合、即時送信が行われます。
-
+                メッセージの承認をした場合、即時送信が行われます。
               </p>
               <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6]">
-              非承認の場合は該当メッセージ送信者に非承認通知が届きます
-
+                非承認の場合は該当メッセージ送信者に非承認通知が届きます
               </p>
             </div>
 
-            <div className="text-start mb-6 ">
+            <div className='text-start mb-6 '>
               <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
-              非承認の場合は、理由を選択の上、詳細をお書きください。
+                非承認の場合は、理由を選択の上、詳細をお書きください。
               </p>
               <p className="font-['Inter'] text-[16px] font-bold text-[#323232] leading-[1.6] mb-2">
-              （承認の場合は、必要ありません）
-
+                （承認の場合は、必要ありません）
               </p>
             </div>
 
-            <div className="space-y-6">
+            <div className='space-y-6'>
               {/* 理由選択 */}
               <div>
                 <SelectInput
                   options={reasonOptions}
                   value={selectedReason}
                   onChange={setSelectedReason}
-                  placeholder="理由を選択してください"
-                  className="w-[300px]"
+                  placeholder='理由を選択してください'
+                  className='w-[300px]'
                   disabled={isProcessing}
                 />
                 {error && (
-                  <div className="text-red-500 text-sm mt-2">{error}</div>
+                  <div className='text-red-500 text-sm mt-2'>{error}</div>
                 )}
               </div>
 
               {/* コメント入力 */}
               <div>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="詳細なコメントがあれば入力してください..."
-                  className="w-full px-3 py-2 border border-[#999999] rounded-[8px] resize-none focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent font-['Inter'] text-[16px] leading-[1.6]"
-                  rows={4}
-                  disabled={isProcessing}
-                />
+                <div className='border p-1'>
+                  <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    placeholder='詳細なコメントがあれば入力してください...'
+                    className="w-full px-3 py-2 border border-[#999999] rounded-[8px] resize-none focus:outline-none focus:ring-2 focus:ring-[#0F9058] focus:border-transparent font-['Inter'] text-[16px] leading-[1.6]"
+                    rows={4}
+                    disabled={isProcessing}
+                  />
+                </div>
               </div>
             </div>
 
             {/* ボタン */}
-            <div className="flex gap-4 justify-center mt-8">
-              <Button   
+            <div className='flex gap-4 justify-center mt-8'>
+              <Button
                 onClick={handleReject}
                 disabled={isProcessing || currentStatus === '非承認'}
-                variant="green-outline"
-                size="figma-default"
-                className="w-[180px] font-bold"
+                variant='green-outline'
+                size='figma-default'
+                className='w-[180px] font-bold'
               >
-                {isProcessing ? "処理中..." : "非承認にする"}
+                {isProcessing ? '処理中...' : '非承認にする'}
               </Button>
               <Button
                 onClick={handleApprove}
                 disabled={isProcessing || currentStatus === '承認'}
-                variant="green-gradient"
-                size="figma-default"
-                className="w-[180px] font-bold"
+                variant='green-gradient'
+                size='figma-default'
+                className='w-[180px] font-bold'
               >
-                {isProcessing ? "処理中..." : "承認する"}
+                {isProcessing ? '処理中...' : '承認する'}
               </Button>
             </div>
           </div>
@@ -182,48 +188,48 @@ export default function MessageApprovalModal({
 
       {/* 完了通知モーダル */}
       {showCompletionModal && completionStatus && (
-        <div 
-          className="fixed inset-0 flex items-center justify-center z-50"
+        <div
+          className='fixed inset-0 flex items-center justify-center z-50'
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
-          <div 
-            className="bg-white border border-[#323232] flex flex-col"
+          <div
+            className='bg-white border border-[#323232] flex flex-col'
             style={{
               width: '604px',
               height: 'auto',
               borderRadius: '16px',
-              padding: '40px'
+              padding: '40px',
             }}
           >
             {/* タイトル */}
-            <div className="text-center mb-4">
+            <div className='text-center mb-4'>
               <h2 className="font-['Inter'] font-bold text-[24px] text-[#323232] leading-[1.6]">
-              メッセージ承認処理完了
+                メッセージ承認処理完了
               </h2>
             </div>
 
             {/* 説明文 */}
-            <div className="text-center mb-8">
+            <div className='text-center mb-8'>
               <p className="font-['Inter'] text-[16px] text-[#323232] leading-[1.6]">
-              メッセージの承認結果を確定しました。
+                メッセージの承認結果を確定しました。
               </p>
             </div>
             {/* ボタン */}
-            <div className="flex justify-center gap-4">
-            <Button
+            <div className='flex justify-center gap-4'>
+              <Button
                 onClick={() => router.push('/admin/message/pending')}
-                variant="green-outline"
-                size="figma-default"
-                className="w-auto font-bold"
+                variant='green-outline'
+                size='figma-default'
+                className='w-auto font-bold'
               >
-               確認が必要なメッセージ一覧
+                確認が必要なメッセージ一覧
               </Button>
               <Button
                 onClick={() => router.push('/admin/message')}
-                variant="green-gradient"
-                size="figma-default"
-                className="w-auto font-bold"
+                variant='green-gradient'
+                size='figma-default'
+                className='w-auto font-bold'
               >
                 管理画面トップ
               </Button>

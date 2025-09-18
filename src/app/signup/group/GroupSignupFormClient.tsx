@@ -15,15 +15,21 @@ interface GroupSignupFormClientProps {
   currentUser: any;
 }
 
-export function GroupSignupFormClient({ companyData, groupData, currentUser }: GroupSignupFormClientProps) {
+export function GroupSignupFormClient({
+  companyData,
+  groupData,
+  currentUser,
+}: GroupSignupFormClientProps) {
   const [formData, setFormData] = useState({
-    name: currentUser?.full_name || '',
     password: '',
     passwordConfirm: '',
-    agreed: false
+    agreed: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +38,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
     setMessage(null);
 
     // バリデーション
-    if (!formData.name || !formData.password || !formData.passwordConfirm) {
+    if (!formData.password || !formData.passwordConfirm) {
       setMessage({ type: 'error', text: '全ての項目を入力してください。' });
       setIsSubmitting(false);
       return;
@@ -45,30 +51,38 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
     }
 
     if (!formData.agreed) {
-      setMessage({ type: 'error', text: '利用規約・個人情報に同意してください。' });
+      setMessage({
+        type: 'error',
+        text: '利用規約・個人情報に同意してください。',
+      });
       setIsSubmitting(false);
       return;
     }
 
     if (!groupData?.id || !companyData?.id) {
-      setMessage({ type: 'error', text: 'グループ情報を取得できませんでした。' });
+      setMessage({
+        type: 'error',
+        text: 'グループ情報を取得できませんでした。',
+      });
       setIsSubmitting(false);
       return;
     }
 
     try {
       const result = await sendGroupSignupVerification({
-        ...formData,
-        email: currentUser.email, // 認証ユーザーのメールアドレスを使用
+        email: currentUser.email,
+        password: formData.password,
         groupId: groupData.id,
-        companyId: companyData.id
+        companyId: companyData.id,
       });
-      
+
       if (result.error) {
         setMessage({ type: 'error', text: result.error });
       } else {
         // 認証ページに遷移
-        router.push(`/signup/group/verify?email=${encodeURIComponent(currentUser.email)}`);
+        router.push(
+          `/signup/group/verify?email=${encodeURIComponent(currentUser.email)}`
+        );
       }
     } catch (error) {
       console.error('送信エラー:', error);
@@ -79,13 +93,13 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+    <form onSubmit={handleSubmit} className='flex flex-col gap-6 w-full'>
       {/* メッセージ表示 */}
       {message && (
         <div
           className={`p-4 rounded-md ${
-            message.type === 'success' 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}
         >
@@ -93,33 +107,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
         </div>
       )}
 
-
-      {/* お名前 */}
-      <div className='flex w-full justify-end'>
-        <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-          <span
-            className='font-bold text-right'
-            style={{
-              fontSize: '16px',
-              lineHeight: '200%',
-              letterSpacing: '0.1em',
-              display: 'block',
-              width: '160px',
-              minWidth: '160px',
-            }}
-          >
-            お名前
-          </span>
-          <BaseInput
-            id='name'
-            value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})}
-            placeholder='お名前を入力してください'
-            className='w-full'
-            style={{ maxWidth: '400px' }}
-          />
-        </div>
-      </div>
+      {/* お名前入力は廃止 */}
 
       {/* パスワード */}
       <div className='flex w-full justify-end'>
@@ -141,7 +129,9 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
             <PasswordFormField
               id='password'
               value={formData.password}
-              onChange={e => setFormData({...formData, password: e.target.value})}
+              onChange={e =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               label=''
               placeholder='半角英数字・記号のみ、8文字以上'
               showValidation={true}
@@ -172,7 +162,9 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
             <PasswordFormField
               id='passwordConfirm'
               value={formData.passwordConfirm}
-              onChange={e => setFormData({...formData, passwordConfirm: e.target.value})}
+              onChange={e =>
+                setFormData({ ...formData, passwordConfirm: e.target.value })
+              }
               label=''
               placeholder='もう一度パスワードを入力してください'
               showValidation={true}
@@ -189,7 +181,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
       <div className='flex items-center justify-center w-full'>
         <Checkbox
           checked={formData.agreed}
-          onChange={checked => setFormData({...formData, agreed: checked})}
+          onChange={checked => setFormData({ ...formData, agreed: checked })}
           label={
             <span
               style={{
@@ -200,7 +192,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
                 letterSpacing: '0.1em',
               }}
             >
-              <Link 
+              <Link
                 href='/terms'
                 style={{
                   color: '#333',
@@ -214,7 +206,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
                 利用規約
               </Link>
               ・
-              <Link 
+              <Link
                 href='/privacy'
                 style={{
                   color: '#333',
@@ -236,7 +228,7 @@ export function GroupSignupFormClient({ companyData, groupData, currentUser }: G
       {/* 送信ボタン */}
       <div className='flex w-full justify-center mt-10'>
         <Button
-          type="submit"
+          type='submit'
           variant='green-gradient'
           disabled={isSubmitting}
           style={{

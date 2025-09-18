@@ -123,12 +123,14 @@ export default function CandidateNewClientRefactored() {
             <h3 className='text-lg font-semibold text-gray-800 mb-4'>
               運営メモ
             </h3>
-            <textarea
-              value={memo}
-              onChange={e => setMemo(e.target.value)}
-              className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none'
-              placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
-            />
+            <div className='border p-1'>
+              <textarea
+                value={memo}
+                onChange={e => setMemo(e.target.value)}
+                className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none'
+                placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
+              />
+            </div>
           </section>
 
           <form onSubmit={e => e.preventDefault()}>
@@ -218,12 +220,14 @@ export default function CandidateNewClientRefactored() {
                 </label>
                 <div className='w-[400px]'>
                   <div className='flex gap-2 mb-2'>
-                    <textarea
-                      value={skillInput}
-                      onChange={e => setSkillInput(e.target.value)}
-                      placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
-                      className='flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none'
-                    />
+                    <div className='border p-1'>
+                      <textarea
+                        value={skillInput}
+                        onChange={e => setSkillInput(e.target.value)}
+                        placeholder='業務で活かしたスキル・ツール・得意分野を入力してください'
+                        className='flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none'
+                      />
+                    </div>
                     <button
                       type='button'
                       onClick={addSkillTag}

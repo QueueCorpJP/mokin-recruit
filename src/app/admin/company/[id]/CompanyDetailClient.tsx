@@ -586,12 +586,14 @@ export default function CompanyDetailClient({
             <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] mb-2">
               運営メモ
             </label>
-            <textarea
-              value={memoText}
-              onChange={e => setMemoText(e.target.value)}
-              className="w-full h-32 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] resize-none text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-              placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
-            />
+            <div className='border p-1'>
+              <textarea
+                value={memoText}
+                onChange={e => setMemoText(e.target.value)}
+                className="w-full h-32 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] resize-none text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
+                placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
+              />
+            </div>
           </div>
         </div>
 

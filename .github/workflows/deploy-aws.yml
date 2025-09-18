@@ -33,6 +33,20 @@ jobs:
             set -euo pipefail
             echo "[INFO] Deploy start on $(hostname)"
 
+            # Ensure nvm and Node.js 22.12.0 (vite requires ^20.19.0 || >=22.12.0)
+            if [ ! -d "$HOME/.nvm" ]; then
+              echo "[INFO] Installing nvm..."
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+            fi
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+            echo "[INFO] Installing Node 22.12.0..."
+            nvm install 22.12.0
+            nvm use 22.12.0
+            node -v
+            npm -v
+
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
             SOURCE_TARBALL="/home/${{ secrets.EC2_USER }}/source.tar.gz"
 

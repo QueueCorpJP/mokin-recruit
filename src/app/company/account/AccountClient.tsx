@@ -1040,8 +1040,9 @@ export default function AccountClient({
                           {member.name}
                         </div>
                         <div
-                          className='w-60 text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2]'
+                          className='w-60 text-[16px] font-medium text-[#323232] tracking-[1.6px] leading-[2] truncate'
                           style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
+                          title={member.email}
                         >
                           {member.email}
                         </div>

@@ -7,10 +7,12 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 interface GroupSignupParams {
-  searchParams: Promise<{ groupId?: string; companyId?: string; }>
+  searchParams: Promise<{ groupId?: string; companyId?: string }>;
 }
 
-export default async function GroupSignupPage({ searchParams }: GroupSignupParams) {
+export default async function GroupSignupPage({
+  searchParams,
+}: GroupSignupParams) {
   // searchParamsをawaitで解決
   const params = await searchParams;
   // 認証チェック - 認証されていない場合はログインページにリダイレクト
@@ -20,12 +22,13 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
   }
 
   const supabase = getSupabaseAdminClient();
-  
+
   // 認証ユーザーの情報を取得
   const companyUserId = user.user_metadata?.company_user_id || user.id;
   const { data: currentUser, error: userError } = await supabase
     .from('company_users')
-    .select(`
+    .select(
+      `
       email, 
       full_name,
       company_accounts!inner(
@@ -34,7 +37,8 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
         industry,
         headquarters_address
       )
-    `)
+    `
+    )
     .eq('id', companyUserId)
     .single();
 
@@ -42,7 +46,7 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
     console.error('企業ユーザー情報取得エラー:', userError);
     redirect('/company/auth/login');
   }
-  
+
   let companyData: any = null;
   let groupData: any = null;
 
@@ -57,11 +61,13 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
     // グループの情報を取得（認証ユーザーの企業に所属するグループのみ）
     const { data: group, error: groupError } = await supabase
       .from('company_groups')
-      .select(`
+      .select(
+        `
         id,
         group_name,
         description
-      `)
+      `
+      )
       .eq('id', params.groupId)
       .eq('company_account_id', params.companyId)
       .single();
@@ -70,21 +76,25 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
       groupData = {
         id: group.id,
         group_name: group.group_name,
-        description: group.description
+        description: group.description,
       };
     }
   } else if (params.groupId) {
     // companyIdが指定されていない場合は、認証ユーザーの企業IDを使用
     const accounts = currentUser?.company_accounts as any;
-    const userCompanyId = Array.isArray(accounts) ? accounts[0]?.id : accounts?.id;
+    const userCompanyId = Array.isArray(accounts)
+      ? accounts[0]?.id
+      : accounts?.id;
     if (userCompanyId) {
       const { data: group, error: groupError } = await supabase
         .from('company_groups')
-        .select(`
+        .select(
+          `
           id,
           group_name,
           description
-        `)
+        `
+        )
         .eq('id', params.groupId)
         .eq('company_account_id', userCompanyId)
         .single();
@@ -93,7 +103,7 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
         groupData = {
           id: group.id,
           group_name: group.group_name,
-          description: group.description
+          description: group.description,
         };
       }
     }
@@ -187,7 +197,7 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
               登録ボタンを押すと認証メールが送信されます。
             </p>
           </div>
-          
+
           {/* 企業・グループ情報の表示 */}
           <div className='flex flex-col gap-6 w-full'>
             <div className='flex w-full justify-end'>
@@ -253,75 +263,11 @@ export default async function GroupSignupPage({ searchParams }: GroupSignupParam
               </div>
             </div>
           </div>
-          
-          {/* 認証ユーザー情報の表示 */}
-          <div className='flex flex-col gap-6 w-full'>
-            <div className='flex w-full justify-end'>
-              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-                <span
-                  className='font-bold text-right'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    width: '160px',
-                    minWidth: '160px',
-                  }}
-                >
-                  メールアドレス
-                </span>
-                <span
-                  className='font-normal'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    maxWidth: '400px',
-                    width: '100%',
-                    textAlign: 'left',
-                    display: 'block',
-                  }}
-                >
-                  {currentUser.email}
-                </span>
-              </div>
-            </div>
-            <div className='flex w-full justify-end'>
-              <div className='flex flex-row justify-end gap-4 w-full max-w-[620px]'>
-                <span
-                  className='font-bold text-right'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    display: 'block',
-                    width: '160px',
-                    minWidth: '160px',
-                  }}
-                >
-                  現在のお名前
-                </span>
-                <span
-                  className='font-normal'
-                  style={{
-                    fontSize: '16px',
-                    lineHeight: '200%',
-                    letterSpacing: '0.1em',
-                    maxWidth: '400px',
-                    width: '100%',
-                    textAlign: 'left',
-                    display: 'block',
-                  }}
-                >
-                  {currentUser.full_name}
-                </span>
-              </div>
-            </div>
-          </div>
+
+          {/* 認証ユーザー情報は非表示に変更 */}
 
           {/* フォーム部分はクライアントコンポーネントに移管 */}
-          <GroupSignupFormClient 
+          <GroupSignupFormClient
             companyData={companyData}
             groupData={groupData}
             currentUser={currentUser}

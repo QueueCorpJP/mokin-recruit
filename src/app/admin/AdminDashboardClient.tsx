@@ -1,18 +1,37 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/admin/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/admin/ui/card';
 import { Badge } from '@/components/admin/ui/badge';
 import { AdminTextarea } from '@/components/admin/ui/AdminTextarea';
 import { Button } from '@/components/ui/button';
 
-export default function AdminDashboardClient() {
+interface AdminDashboardClientProps {
+  jobPendingCount: number;
+  pendingMessageCount: number;
+  resumePendingCount: number;
+}
+
+export default function AdminDashboardClient({
+  jobPendingCount,
+  pendingMessageCount,
+  resumePendingCount,
+}: AdminDashboardClientProps) {
   const [memo, setMemo] = useState('');
-  
+
   const todoItems = [
-    { label: '求人', href: '/admin/job', count: 21 },
-    { label: 'メッセージ', href: '/admin/message', count: 33 },
-    { label: 'レジュメ', href: '/admin/candidate', count: 5 },
+    { label: '求人', href: '/admin/job/pending', count: jobPendingCount },
+    {
+      label: 'メッセージ',
+      href: '/admin/message/pending',
+      count: pendingMessageCount,
+    },
+    { label: 'レジュメ', href: '/admin/candidate', count: resumePendingCount },
   ];
 
   return (
@@ -26,15 +45,18 @@ export default function AdminDashboardClient() {
         </CardHeader>
         <CardContent className='px-0'>
           <div className='flex gap-4'>
-            {todoItems.map((item) => (
+            {todoItems.map(item => (
               <Link key={item.href} href={item.href}>
                 <Button
-                  variant="default"
+                  variant='default'
                   className='bg-[#0c0c0c] hover:bg-[#333] text-white px-4 py-2'
                 >
                   <div className='flex items-center gap-2'>
                     <span>{item.label}</span>
-                    <Badge variant='secondary' className='bg-white text-[#323232] font-bold'>
+                    <Badge
+                      variant='secondary'
+                      className='bg-white text-[#323232] font-bold'
+                    >
                       {item.count}
                     </Badge>
                   </div>
