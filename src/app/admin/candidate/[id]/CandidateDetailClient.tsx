@@ -440,12 +440,14 @@ export default function CandidateDetailClient({ candidate }: Props) {
         {/* 運営メモ */}
         <section className='mb-12'>
           <h3 className='text-lg font-semibold text-gray-800 mb-4'>運営メモ</h3>
-          <textarea
-            value={memo}
-            onChange={e => setMemo(e.target.value)}
-            className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none mb-4'
-            placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
-          />
+          <div className='border p-1'>
+            <textarea
+              value={memo}
+              onChange={e => setMemo(e.target.value)}
+              className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none mb-4'
+              placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
+            />
+          </div>
           <div className='flex justify-end'>
             <AdminButton
               onClick={handleSaveMemo}

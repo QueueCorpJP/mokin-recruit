@@ -534,15 +534,20 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">
           事業内容
         </label>
-        <textarea
-          value={formData.businessContent}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, businessContent: e.target.value }))
-          }
-          placeholder='当社では、革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。&#10;具体的には、Webアプリケーション開発、コンサルティング、システムインテグレーションなどのサービスを提供しております。'
-          rows={4}
-          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-        />
+        <div className='border p-1'>
+          <textarea
+            value={formData.businessContent}
+            onChange={e =>
+              setFormData(prev => ({
+                ...prev,
+                businessContent: e.target.value,
+              }))
+            }
+            placeholder='当社では、革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。&#10;具体的には、Webアプリケーション開発、コンサルティング、システムインテグレーションなどのサービスを提供しております。'
+            rows={4}
+            className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
+          />
+        </div>
       </div>
 
       <hr className='border-gray-300' />
@@ -655,15 +660,17 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
                 placeholder='ワークライフバランスが充実'
                 className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               />
-              <textarea
-                value={attraction.description}
-                onChange={e =>
-                  updateAttraction(index, 'description', e.target.value)
-                }
-                placeholder='当社では、社員一人ひとりのワークライフバランスを大切に考えています。フレックスタイム制度やリモートワーク制度を導入しており、家庭や個人の時間を大切にしながら働ける環境を整えています。また、年間休日は125日以上と業界トップクラスの水準を確保しています。'
-                rows={5}
-                className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-              />
+              <div className='border p-1'>
+                <textarea
+                  value={attraction.description}
+                  onChange={e =>
+                    updateAttraction(index, 'description', e.target.value)
+                  }
+                  placeholder='当社では、社員一人ひとりのワークライフバランスを大切に考えています。フレックスタイム制度やリモートワーク制度を導入しており、家庭や個人の時間を大切にしながら働ける環境を整えています。また、年間休日は125日以上と業界トップクラスの水準を確保しています。'
+                  rows={5}
+                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
+                />
+              </div>
             </div>
           ))}
           <AdminButton

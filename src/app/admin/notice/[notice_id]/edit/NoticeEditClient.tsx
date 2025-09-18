@@ -165,13 +165,15 @@ export default function NoticeEditClient({ initialNotice }: Props) {
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   抜粋
                 </label>
-                <Textarea
-                  value={formData.excerpt}
-                  onChange={e => handleInputChange('excerpt', e.target.value)}
-                  placeholder='記事の概要を入力（一覧表示時に使用）'
-                  rows={3}
-                  className='w-full'
-                />
+                <div className='border p-1'>
+                  <Textarea
+                    value={formData.excerpt}
+                    onChange={e => handleInputChange('excerpt', e.target.value)}
+                    placeholder='記事の概要を入力（一覧表示時に使用）'
+                    rows={3}
+                    className='w-full'
+                  />
+                </div>
               </div>
 
               <div>
@@ -203,14 +205,16 @@ export default function NoticeEditClient({ initialNotice }: Props) {
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   本文 <span className='text-red-500'>*</span>
                 </label>
-                <Textarea
-                  value={formData.content}
-                  onChange={e => handleInputChange('content', e.target.value)}
-                  required
-                  placeholder='お知らせの本文を入力（HTMLタグ使用可）'
-                  rows={15}
-                  className='w-full font-mono text-sm'
-                />
+                <div className='border p-1'>
+                  <Textarea
+                    value={formData.content}
+                    onChange={e => handleInputChange('content', e.target.value)}
+                    required
+                    placeholder='お知らせの本文を入力（HTMLタグ使用可）'
+                    rows={15}
+                    className='w-full font-mono text-sm'
+                  />
+                </div>
                 <p className='text-xs text-gray-500 mt-1'>
                   HTMLタグを使用して記述できます
                 </p>
@@ -245,15 +249,17 @@ export default function NoticeEditClient({ initialNotice }: Props) {
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   メタディスクリプション
                 </label>
-                <Textarea
-                  value={formData.meta_description}
-                  onChange={e =>
-                    handleInputChange('meta_description', e.target.value)
-                  }
-                  placeholder='検索結果に表示される説明文'
-                  rows={3}
-                  className='w-full'
-                />
+                <div className='border p-1'>
+                  <Textarea
+                    value={formData.meta_description}
+                    onChange={e =>
+                      handleInputChange('meta_description', e.target.value)
+                    }
+                    placeholder='検索結果に表示される説明文'
+                    rows={3}
+                    className='w-full'
+                  />
+                </div>
               </div>
             </div>
           </div>

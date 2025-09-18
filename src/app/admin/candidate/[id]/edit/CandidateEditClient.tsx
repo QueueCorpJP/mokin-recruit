@@ -685,12 +685,14 @@ export default function CandidateEditClient({ candidate }: Props) {
             <h3 className='text-lg font-semibold text-gray-800 mb-4'>
               運営メモ
             </h3>
-            <textarea
-              value={memo}
-              onChange={e => setMemo(e.target.value)}
-              className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none'
-              placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
-            />
+            <div className='border p-1'>
+              <textarea
+                value={memo}
+                onChange={e => setMemo(e.target.value)}
+                className='w-full h-32 p-4 border border-gray-300 rounded-lg resize-none'
+                placeholder='自由にメモを記入できます。同一グループ内の方が閲覧可能です。'
+              />
+            </div>
           </section>
 
           <form onSubmit={e => e.preventDefault()}>
@@ -1801,19 +1803,21 @@ export default function CandidateEditClient({ candidate }: Props) {
                     <label className='text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2'>
                       職務内容
                     </label>
-                    <textarea
-                      value={entry.jobDescription || ''}
-                      onChange={e =>
-                        updateSelectionEntry(
-                          index,
-                          'jobDescription',
-                          e.target.value
-                        )
-                      }
-                      rows={4}
-                      className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
-                      placeholder='職務内容を入力してください'
-                    />
+                    <div className='border p-1'>
+                      <textarea
+                        value={entry.jobDescription || ''}
+                        onChange={e =>
+                          updateSelectionEntry(
+                            index,
+                            'jobDescription',
+                            e.target.value
+                          )
+                        }
+                        rows={4}
+                        className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
+                        placeholder='職務内容を入力してください'
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -2303,13 +2307,15 @@ export default function CandidateEditClient({ candidate }: Props) {
                 </label>
                 <div className='w-[400px]'>
                   <div className='flex gap-2 mb-2'>
-                    <textarea
-                      value={skillInput}
-                      onChange={e => setSkillInput(e.target.value)}
-                      onKeyDown={handleSkillInputKeyDown}
-                      placeholder='業務で活かしたスキル・ツール・得意分野を入力してください（Enterで追加）'
-                      className='flex-1 px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none'
-                    />
+                    <div className='border p-1 flex-1'>
+                      <textarea
+                        value={skillInput}
+                        onChange={e => setSkillInput(e.target.value)}
+                        onKeyDown={handleSkillInputKeyDown}
+                        placeholder='業務で活かしたスキル・ツール・得意分野を入力してください（Enterで追加）'
+                        className='w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[80px] resize-none'
+                      />
+                    </div>
                   </div>
                   <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px] mt-2'>
                     ※最低3つ以上のキーワードを選択/登録してください。
@@ -2356,14 +2362,16 @@ export default function CandidateEditClient({ candidate }: Props) {
                   保有資格
                 </label>
                 <div className='w-[400px]'>
-                  <textarea
-                    value={skills.qualifications}
-                    onChange={e =>
-                      handleSkillsChange('qualifications', e.target.value)
-                    }
-                    placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
-                    className='w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none'
-                  />
+                  <div className='border p-1'>
+                    <textarea
+                      value={skills.qualifications}
+                      onChange={e =>
+                        handleSkillsChange('qualifications', e.target.value)
+                      }
+                      placeholder='例）TOEIC850点、簿記2級、中小企業診断士など'
+                      className='w-full px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] min-h-[147px] resize-none'
+                    />
+                  </div>
                   <p className='text-[#999999] text-[14px] font-medium tracking-[1.4px] mt-2'>
                     ※履歴書・職務経歴書をアップロードした場合、記載内容に追記されます。
                   </p>
@@ -2668,15 +2676,17 @@ export default function CandidateEditClient({ candidate }: Props) {
                 <label className='text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2'>
                   職務要約
                 </label>
-                <textarea
-                  value={formData.job_summary}
-                  onChange={e =>
-                    handleInputChange('job_summary', e.target.value)
-                  }
-                  rows={4}
-                  className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
-                  placeholder='職務要約を入力してください'
-                />
+                <div className='border p-1'>
+                  <textarea
+                    value={formData.job_summary}
+                    onChange={e =>
+                      handleInputChange('job_summary', e.target.value)
+                    }
+                    rows={4}
+                    className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
+                    placeholder='職務要約を入力してください'
+                  />
+                </div>
               </div>
 
               {/* 自己PR・その他 */}
@@ -2684,13 +2694,15 @@ export default function CandidateEditClient({ candidate }: Props) {
                 <label className='text-sm font-medium text-gray-700 w-32 text-right shrink-0 pt-2'>
                   自己PR・その他
                 </label>
-                <textarea
-                  value={formData.self_pr}
-                  onChange={e => handleInputChange('self_pr', e.target.value)}
-                  rows={4}
-                  className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
-                  placeholder='自己PRやその他の情報を入力してください'
-                />
+                <div className='border p-1'>
+                  <textarea
+                    value={formData.self_pr}
+                    onChange={e => handleInputChange('self_pr', e.target.value)}
+                    rows={4}
+                    className='w-[400px] px-[11px] py-[11px] border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999] resize-none'
+                    placeholder='自己PRやその他の情報を入力してください'
+                  />
+                </div>
               </div>
             </section>
 

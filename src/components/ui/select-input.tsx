@@ -351,7 +351,7 @@ export function SelectInput({
             (selectedValue ? 'text-[#323232]' : 'text-[#323232]')
         )}
         style={{
-          padding: '8px 11px',
+          padding: '8px 8px',
           alignItems: 'center',
           gap: '8px',
           borderRadius: `${radius}px`,

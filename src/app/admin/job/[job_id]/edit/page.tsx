@@ -13,7 +13,9 @@ interface JobDetail {
   id: string;
   title: string;
   company_group_id: string;
+  company_account_id: string | null;
   company_accounts?: {
+    id: string;
     company_name: string;
   };
   company_groups?: {
@@ -51,18 +53,21 @@ interface JobDetail {
 
 async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('job_postings')
-    .select(`
+    .select(
+      `
       *,
       company_accounts (
+        id,
         company_name
       ),
       company_groups (
         group_name
       )
-    `)
+    `
+    )
     .eq('id', jobId)
     .single();
 
@@ -76,16 +81,18 @@ async function fetchJobDetail(jobId: string): Promise<JobDetail | null> {
 
 async function fetchCompanyGroups(): Promise<CompanyGroup[]> {
   const supabase = getSupabaseAdminClient();
-  
+
   const { data, error } = await supabase
     .from('company_groups')
-    .select(`
+    .select(
+      `
       id,
       group_name,
       company_accounts (
         company_name
       )
-    `)
+    `
+    )
     .order('group_name');
 
   if (error) {
@@ -98,24 +105,24 @@ async function fetchCompanyGroups(): Promise<CompanyGroup[]> {
 
 export default async function JobEditPage({ params }: JobEditPageProps) {
   const { job_id } = await params;
-  
+
   const [jobDetail, companyGroups] = await Promise.all([
     fetchJobDetail(job_id),
-    fetchCompanyGroups()
+    fetchCompanyGroups(),
   ]);
 
   if (!jobDetail) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">求人が見つかりません</h1>
+      <div className='p-8'>
+        <h1 className='text-2xl font-bold mb-4'>求人が見つかりません</h1>
         <p>指定された求人が見つかりませんでした。</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+    <div className='p-8 bg-gray-50 min-h-screen'>
+      <div className='max-w-6xl mx-auto'>
         <AdminJobEditClient
           jobDetail={jobDetail}
           companyGroups={companyGroups}

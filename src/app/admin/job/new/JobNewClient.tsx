@@ -743,13 +743,15 @@ export default function AdminJobNewClient({
                     {memo || 'メモが入力されていません'}
                   </div>
                 ) : (
-                  <textarea
-                    value={memo}
-                    onChange={e => setMemo(e.target.value)}
-                    rows={4}
-                    className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                    placeholder='選考に関するメモを入力してください'
-                  />
+                  <div className='border p-1'>
+                    <textarea
+                      value={memo}
+                      onChange={e => setMemo(e.target.value)}
+                      rows={4}
+                      className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
+                      placeholder='選考に関するメモを入力してください'
+                    />
+                  </div>
                 )}
               </div>
             </div>

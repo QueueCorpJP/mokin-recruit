@@ -5,7 +5,6 @@ import { sendEmailViaSendGrid } from '@/lib/email/sender';
 
 interface GroupSignupData {
   email: string;
-  name: string;
   password: string;
   groupId: string;
   companyId: string;
@@ -77,7 +76,6 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     );
 
     const userData = {
-      name: formData.name,
       password_hash: passwordHash,
       group_id: formData.groupId,
       company_id: formData.companyId,
@@ -120,7 +118,6 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
           <div style="background-color: #f9f9f9; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
             <h3 style="color: #0f9058; font-size: 32px; margin: 0; letter-spacing: 8px;">${verificationCode}</h3>
           </div>
-          <p><strong>お名前:</strong> ${formData.name}</p>
           <p><strong>グループ:</strong> ${groupCheck.group_name}</p>
           <p style="color: #666;">このコードは10分間有効です。</p>
           <p style="color: #666; font-size: 12px;">このメールに心当たりがない場合は、無視してください。</p>
@@ -189,8 +186,8 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     }
     console.log('認証コードを使用済みにマーク完了');
 
-    // ここでユーザーアカウント作成を実行
-    console.log('ユーザーアカウント作成を開始...');
+    // ここでパスワードを反映し、グループ権限を付与
+    console.log('パスワード反映とグループ権限付与を開始...');
 
     // 保存されたユーザーデータを復元
     let userData;
@@ -209,7 +206,7 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     console.log('認証済みユーザー情報取得中...');
     const { data: currentUser, error: getUserError } = await supabase
       .from('company_users')
-      .select('id, company_account_id')
+      .select('id, company_account_id, auth_user_id')
       .eq('email', email)
       .single();
 
@@ -218,6 +215,31 @@ export async function verifyGroupSignupCode(email: string, code: string) {
       return { error: '認証済みユーザーの情報取得に失敗しました' };
     }
     console.log('認証済みユーザー情報取得完了:', currentUser);
+
+    // パスワードをcompany_usersテーブルに反映
+    console.log('company_usersのパスワードを更新中...');
+    const { error: updatePwdErr } = await supabase
+      .from('company_users')
+      .update({
+        password_hash: userData.password_hash,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', currentUser.id);
+    if (updatePwdErr) {
+      console.error('company_usersパスワード更新エラー:', updatePwdErr);
+      return { error: 'パスワードの更新に失敗しました' };
+    }
+
+    // Supabase Authのパスワードも更新（auth_user_idがある場合のみ）
+    try {
+      if (currentUser.auth_user_id) {
+        // 注意: 管理APIでのパスワード更新にはプレーンな新パスワードが必要だが、ここではハッシュのみ保持しているためスキップ
+        // 必要であれば別フローで設定用リンクを送る
+        console.log(
+          'auth_user_idが存在するため、Authのパスワード更新は別手段が必要（スキップ）'
+        );
+      }
+    } catch {}
 
     // グループ権限を設定
     console.log('グループ権限を設定中...');

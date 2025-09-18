@@ -34,10 +34,10 @@ export default function LoginForm({
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center px-4 flex-col items-start justify-start'>
-      <div className='w-full'>
+    <div className='min-h-screen flex items-start justify-start px-8 pt-16'>
+      <div className='w-full max-w-[500px]'>
         {/* タイトル・説明文 */}
-        <div className='text-center mb-[40px] mt-[100px]'>
+        <div className='text-left mb-[40px]'>
           <h1 className='text-[32px] font-bold text-[#323232] mb-[16px] Noto_Sans_JP'>
             管理画面ログイン
           </h1>
@@ -51,7 +51,7 @@ export default function LoginForm({
         {/* ログインフォーム本体 */}
         <form
           action={loginAction} // サーバーアクションを呼び出す
-          className='space-y-6 flex flex-col items-center'
+          className='space-y-6 flex flex-col items-start'
         >
           {/* エラー表示（サーバーから返却された内容を表示） */}
           {error && <div className='text-red-600 font-bold mb-2'>{error}</div>}

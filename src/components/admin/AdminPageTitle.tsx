@@ -296,7 +296,7 @@ export function AdminPageTitle() {
         title: '求人詳細',
         buttons: [
           {
-            text: '更新する',
+            text: '確認する',
             variant: 'green-gradient',
             onClick: () => {
               console.log('AdminPageTitle: Dispatching job-edit-update event');

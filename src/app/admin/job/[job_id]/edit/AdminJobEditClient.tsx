@@ -14,7 +14,9 @@ interface JobDetail {
   id: string;
   title: string;
   company_group_id: string;
+  company_account_id: string | null;
   company_accounts?: {
+    id: string;
     company_name: string;
   };
   company_groups?: {
@@ -310,13 +312,15 @@ export default function AdminJobEditClient({
               </label>
             </div>
             <div className='flex-1'>
-              <textarea
-                value={memo}
-                onChange={e => setMemo(e.target.value)}
-                rows={4}
-                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                placeholder='選考に関するメモを入力してください'
-              />
+              <div className='border p-1'>
+                <textarea
+                  value={memo}
+                  onChange={e => setMemo(e.target.value)}
+                  rows={4}
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
+                  placeholder='選考に関するメモを入力してください'
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -326,6 +330,75 @@ export default function AdminJobEditClient({
           <div className='w-full mb-6'>
             <div className='h-0.5 bg-gray-300 mb-4'></div>
             <h2 className='text-2xl font-bold text-gray-900'>求人詳細</h2>
+          </div>
+
+          {/* 基本情報（読み取り専用） */}
+          <div className='w-full mb-8'>
+            {/* 求人ID */}
+            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-6'>
+              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  求人ID
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  {jobDetail.id}
+                </div>
+              </div>
+            </div>
+
+            {/* 承認状況 */}
+            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-6'>
+              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  承認状況
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  {jobDetail.status === 'DRAFT'
+                    ? '下書き'
+                    : jobDetail.status === 'PENDING_APPROVAL'
+                      ? '承認待ち'
+                      : jobDetail.status === 'PUBLISHED'
+                        ? '掲載済'
+                        : jobDetail.status === 'CLOSED'
+                          ? '公開停止'
+                          : jobDetail.status}
+                </div>
+              </div>
+            </div>
+
+            {/* 企業ID */}
+            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-6'>
+              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  企業ID
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  {jobDetail.company_account_id ||
+                    jobDetail.company_accounts?.id ||
+                    '不明'}
+                </div>
+              </div>
+            </div>
+
+            {/* 企業名 */}
+            <div className='flex flex-row gap-8 items-stretch justify-start w-full mb-6'>
+              <div className='bg-[#f9f9f9] flex flex-col gap-1 items-start justify-center px-6 rounded-[5px] w-[200px]'>
+                <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  企業名
+                </div>
+              </div>
+              <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
+                <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
+                  {jobDetail.company_accounts?.company_name || '不明'}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 編集フォーム */}
@@ -457,7 +530,7 @@ export default function AdminJobEditClient({
             onClick={handleUpdate}
             disabled={isUpdating}
           >
-            {isUpdating ? '更新中...' : '更新する'}
+            {isUpdating ? '更新中...' : '確認する'}
           </button>
         </div>
       </div>
