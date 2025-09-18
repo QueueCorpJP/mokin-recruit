@@ -37,19 +37,82 @@ jobs:
       - name: Prune dev deps (runner)
         run: npm prune --omit=dev
 
-      - name: Archive build artifacts
+      - name: Clean up zero-byte files and prepare archive
         run: |
-          tar -czf build.tar.gz .next node_modules public package.json package-lock.json next.config.js .nvmrc
+          echo "[INFO] Cleaning zero-byte files and preparing archive"
+          # Remove zero-byte files that can cause scp-action to hang
+          find . -type f -size 0 -name "*.js" -o -name "*.ts" -o -name "*.json" | head -10 | xargs -r rm -f
+          
+          # Create optimized archive with better compression and exclude problematic files
+          tar --exclude='*.log' \
+              --exclude='*.tmp' \
+              --exclude='node_modules/.cache' \
+              --exclude='node_modules/.bin' \
+              --exclude='.git' \
+              -czf build.tar.gz .next node_modules public package.json package-lock.json next.config.js .nvmrc
+          
+          # Verify archive was created and get size
+          ls -lh build.tar.gz
+          echo "[INFO] Archive size: $(du -h build.tar.gz | cut -f1)"
+          
+          # Generate checksum for integrity verification
+          sha256sum build.tar.gz > build.tar.gz.sha256
+          echo "[INFO] Archive checksum: $(cat build.tar.gz.sha256)"
 
-      - name: Upload build to EC2
+      - name: Pre-upload connectivity check
+        run: |
+          echo "[INFO] Testing SSH connectivity..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          
+          # Test SSH connection with timeout
+          timeout 30 ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful'"
+          
+          # Check available disk space on target
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "df -h /home/${{ secrets.EC2_USER }} && echo 'Disk space check completed'"
+
+      - name: Upload build to EC2 (with timeout and retry)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          source: "build.tar.gz"
+          timeout: 30m
+          command_timeout: 30m
+          source: "build.tar.gz,build.tar.gz.sha256"
           target: "/home/${{ secrets.EC2_USER }}"
+          debug: true
+          overwrite: true
+          strip_components: 0
+          use_insecure_cipher: false
+        # Fallback to rsync if scp fails
+        continue-on-error: true
+        id: scp_upload
+
+      - name: Fallback upload with rsync (if scp fails)
+        if: steps.scp_upload.outcome == 'failure'
+        run: |
+          echo "[INFO] SCP upload failed, trying rsync fallback"
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Add host to known_hosts to avoid interactive prompts
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          
+          # Use rsync with compression and timeout
+          rsync -avz --timeout=1800 --progress \
+            -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -p 22" \
+            build.tar.gz build.tar.gz.sha256 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+          
+          echo "[INFO] Rsync upload completed successfully"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
@@ -126,12 +189,29 @@ jobs:
               [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             fi
 
-            # Prepare directory and unpack uploaded build
+            # Prepare directory and verify/unpack uploaded build
             mkdir -p "$TARGET_DIR"
             cd "$TARGET_DIR"
             if [ -f "$BUILD_TARBALL" ]; then
+              # Verify file integrity if checksum exists
+              if [ -f "${BUILD_TARBALL}.sha256" ]; then
+                echo "[INFO] Verifying file integrity..."
+                if sha256sum -c "${BUILD_TARBALL}.sha256"; then
+                  echo "[INFO] File integrity verified successfully"
+                else
+                  echo "[ERROR] File integrity check failed!" >&2
+                  exit 1
+                fi
+                rm -f "${BUILD_TARBALL}.sha256"
+              fi
+              
+              echo "[INFO] Extracting build archive..."
               tar -xzf "$BUILD_TARBALL" -C "$TARGET_DIR"
               rm -f "$BUILD_TARBALL"
+              echo "[INFO] Build archive extracted successfully"
+            else
+              echo "[ERROR] Build tarball not found at $BUILD_TARBALL" >&2
+              exit 1
             fi
 
             # Use Node version from .nvmrc if available (avoid reinstall)
