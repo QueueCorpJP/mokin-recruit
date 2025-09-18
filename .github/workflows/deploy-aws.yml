@@ -20,8 +20,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           timeout: 60m
           command_timeout: 60m
-          request_pty: true
-          script_stop: true
+          request_pty: false
           script: |
             set -euo pipefail
             echo "[INFO] Starting deploy on $(hostname)"
@@ -87,20 +86,23 @@ jobs:
             if [ -n "${NVM_DIR:-}" ] && [ -f .nvmrc ]; then
               NODE_VERSION=$(cat .nvmrc)
               if [ -d "$NVM_DIR/versions/node/v$NODE_VERSION" ]; then
-                nvm use "$NODE_VERSION"
+                nvm use "$NODE_VERSION" || true
               else
-                nvm install "$NODE_VERSION"
-                nvm use "$NODE_VERSION"
+                nvm install "$NODE_VERSION" || true
+                nvm use "$NODE_VERSION" || true
               fi
             else
               # Fallback to required version for Vite engines
               if [ -n "${NVM_DIR:-}" ] && [ -d "$NVM_DIR/versions/node/v20.19.0" ]; then
-                nvm use 20.19.0
+                nvm use 20.19.0 || true
               else
-                nvm install 20.19.0
-                nvm use 20.19.0
+                nvm install 20.19.0 || true
+                nvm use 20.19.0 || true
               fi
             fi
+
+            echo "[INFO] Node version: $(node --version)"
+            echo "[INFO] NPM version: $(npm --version)"
 
             # Write production env from GitHub Secrets
             cat > .env.production << 'EOF'
