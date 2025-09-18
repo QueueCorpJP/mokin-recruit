@@ -16,14 +16,18 @@ interface JobApprovalModalProps {
 
 const reasonOptions = [
   { value: '', label: '理由を選択してください' },
-  { value: 'content_appropriate', label: '内容が適切' },
-  { value: 'minor_adjustments', label: '軽微な修正済み' },
-  { value: 'company_verified', label: '企業情報確認済み' },
-  { value: 'legal_compliant', label: '法令遵守確認済み' },
-  { value: 'content_inappropriate', label: '内容が不適切' },
-  { value: 'information_insufficient', label: '情報不足' },
-  { value: 'legal_violation', label: '法令違反の可能性' },
-  { value: 'company_verification_failed', label: '企業情報未確認' },
+  {
+    value: 'unclear_or_insufficient_info',
+    label: '募集内容が不明確または情報不足',
+  },
+  {
+    value: 'inappropriate_or_discriminatory',
+    label: '不適切な表現や差別的な内容が含まれている',
+  },
+  { value: 'terms_violation', label: '利用規約に違反している' },
+  { value: 'typos_or_unnatural', label: '誤字脱字や不自然な表現がある' },
+  { value: 'duplicate_posting', label: '内容が重複している求人がある' },
+  { value: 'other', label: 'その他' },
 ];
 
 export function JobApprovalModal({
