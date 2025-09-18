@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import { createClient } from '@/lib/supabase/client';
 import { createNotice, uploadNoticeThumbnail } from '../actions';
-
 interface PreviewData {
   title: string;
   categoryIds: string[];
@@ -302,7 +302,7 @@ export default function PreviewPage() {
               <div 
                 className="prose prose-lg max-w-none mb-[60px]"
                 style={{ paddingLeft: '0', paddingRight: '0' }}
-                dangerouslySetInnerHTML={{ __html: previewData.content }}
+                dangerouslySetInnerHTML={{ __html: previewData && previewData.content ? DOMPurify.sanitize(previewData.content) : '' }}
               />
 
               {/* お知らせ下のボタン */}
