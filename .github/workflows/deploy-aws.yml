@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Install deps (runner)
-        run: npm ci --no-audit --no-fund --prefer-offline --ignore-scripts --omit=dev
+        run: npm ci --no-audit --no-fund --prefer-offline --ignore-scripts
 
       - name: Build (runner)
         env:
@@ -33,6 +33,9 @@ jobs:
           echo "[INFO] runner build start $(date -Is)"
           NODE_OPTIONS='--max-old-space-size=4096' npm run build --silent
           echo "[INFO] runner build end $(date -Is)"
+
+      - name: Prune dev deps (runner)
+        run: npm prune --omit=dev
 
       - name: Archive build artifacts
         run: |
