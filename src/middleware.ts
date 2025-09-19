@@ -162,7 +162,12 @@ export async function middleware(request: NextRequest) {
     `report-uri /api/csp-report`,
   ].join('; ');
 
-  response.headers.set('Content-Security-Policy-Report-Only', reportOnlyCsp);
+  // 開発環境では緩いCSP、本番環境ではReport-Onlyモード
+  if (isProd) {
+    response.headers.set('Content-Security-Policy-Report-Only', reportOnlyCsp);
+  } else {
+    response.headers.set('Content-Security-Policy', reportOnlyCsp);
+  }
   // Reporting-Endpoints/Report-To ヘッダを併用（ブラウザ差異対策）
   try {
     const endpoints = [{ url: '/api/csp-report' }];
