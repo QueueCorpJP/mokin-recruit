@@ -358,7 +358,7 @@ export function Navigation({
           },
           {
             label: '送信メッセージ',
-            href: '/company/message/sent',
+            href: '/company/template',
             prefetch: false,
           },
         ],
@@ -484,8 +484,8 @@ export function Navigation({
               ))}
             </div>
 
-            {/* Mobile menu button */}
-            <div className='lg:hidden'>
+            {/* Mobile menu button - 認証していない場合は非表示 */}
+            <div className='lg:hidden' style={{ display: 'none' }}>
               <Button
                 variant='ghost'
                 className='p-3'
@@ -686,10 +686,10 @@ export function Navigation({
                   {openDropdown === 'account' && (
                     <div className='absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50'>
                       <Link
-                        href='/company/accounts'
+                        href='/company/account'
                         className={cn(
                           'block px-4 py-2 text-[16px] font-noto-sans-jp font-bold leading-[200%] tracking-[1.6px]',
-                          pathname === '/company/accounts'
+                          pathname === '/company/account'
                             ? 'text-[#0F9058] bg-[#F3FBF7]'
                             : 'text-[var(--text-primary,#323232)] hover:bg-[#F3FBF7] hover:text-[#0F9058]'
                         )}
@@ -805,7 +805,7 @@ export function Navigation({
                   {openDropdown === 'account' && (
                     <div className='ml-6 mt-1 space-y-1'>
                       <Link
-                        href='/company/setting'
+                        href='/company/account'
                         className={cn(
                           'block px-3 py-2 text-[14px] font-noto-sans-jp text-[var(--text-primary,#323232)] hover:text-[#0F9058] hover:bg-[#F3FBF7] rounded-md'
                         )}
@@ -1268,8 +1268,8 @@ export function Navigation({
             </Button>
           </div>
 
-          {/* Mobile menu button */}
-          <div className='lg:hidden'>
+          {/* Mobile menu button - 認証していない場合は非表示 */}
+          <div className='lg:hidden' style={{ display: 'none' }}>
             <Button
               variant='ghost'
               className='p-3'
