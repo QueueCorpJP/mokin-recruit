@@ -17,8 +17,9 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           // Content Security Policy は middleware 側で nonce を付与して動的に適用
-          // HTTP Strict Transport Security (本番環境のみ)
-          ...(process.env.NODE_ENV === 'production'
+          // HTTP Strict Transport Security (HTTPS環境で有効化)
+          ...(process.env.NODE_ENV === 'production' ||
+          process.env.HTTPS === 'true'
             ? [
                 {
                   key: 'Strict-Transport-Security',

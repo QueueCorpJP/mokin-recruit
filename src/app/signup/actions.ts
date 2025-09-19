@@ -125,8 +125,9 @@ export async function signupRequestAction(
     try {
       supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
-          autoRefreshToken: true,
+          autoRefreshToken: false,
           persistSession: false,
+          detectSessionInUrl: false,
         },
       });
     } catch (clientError) {

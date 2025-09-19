@@ -78,8 +78,9 @@ export async function signupVerifyAction(
     try {
       supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
-          autoRefreshToken: true,
+          autoRefreshToken: false,
           persistSession: false,
+          detectSessionInUrl: false,
         },
       });
     } catch (clientError) {
@@ -134,66 +135,109 @@ export async function signupVerifyAction(
         };
       }
 
-      // ステップ5: 候補者アカウントの作成または更新
-      const { data: existingAccount, error: checkError } = await supabase
-        .from('candidates')
-        .select('id, email')
-        .eq('email', email.trim())
-        .maybeSingle();
+      // ステップ5: 通常のSupabase Authサインアップを使用（一時パスワードで）
+      logger.info(
+        'Creating Supabase Auth user with temporary password for email:',
+        email.substring(0, 3) + '***'
+      );
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        logger.error('Failed to check existing account:', checkError);
+      // 一時的なランダムパスワードを生成（後でユーザーが設定）
+      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'; // 複雑性要件を満たす
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
+          email: email.trim(),
+          password: tempPassword,
+          options: {
+            data: {
+              signup_step: 'password_setting_required',
+              email_verified_at: new Date().toISOString(),
+              temp_password_used: true,
+            },
+          },
+        }
+      );
+
+      if (signUpError) {
+        // 既にユーザーが存在する場合の処理
+        if (signUpError.message.includes('User already registered')) {
+          logger.info('User already exists, proceeding with existing account');
+
+          // 既存ユーザーの場合、candidatesテーブルから情報を取得
+          const { data: existingCandidate, error: candidateError } =
+            await supabase
+              .from('candidates')
+              .select('id')
+              .eq('email', email.trim())
+              .maybeSingle();
+
+          if (candidateError) {
+            logger.error('Failed to find existing candidate:', candidateError);
+            return {
+              success: false,
+              message: '既存ユーザー情報の取得に失敗しました。',
+            };
+          }
+
+          if (existingCandidate) {
+            return {
+              success: true,
+              message: '認証が完了しました。パスワード設定ページに進みます。',
+              userId: existingCandidate.id,
+            };
+          } else {
+            return {
+              success: false,
+              message: '既存ユーザーの情報が見つかりません。',
+            };
+          }
+        } else {
+          logger.error('Failed to create Supabase Auth user:', signUpError);
+          return {
+            success: false,
+            message: 'ユーザー作成中にエラーが発生しました。',
+          };
+        }
+      }
+
+      if (!authData.user) {
+        logger.error('Auth signup succeeded but no user returned');
         return {
           success: false,
-          message: 'アカウント確認中にエラーが発生しました。',
+          message: 'ユーザー作成に失敗しました。',
         };
       }
 
-      let userId: string;
+      const userId = authData.user.id;
+      logger.info('New Supabase Auth user created:', {
+        userId: userId.substring(0, 8) + '***',
+      });
 
-      if (existingAccount) {
-        // 既存候補者の更新
-        const { data: updatedAccount, error: updateError } = await supabase
-          .from('candidates')
-          .update({
-            updated_at: new Date().toISOString(),
-          })
-          .eq('email', email.trim())
-          .select('id')
-          .single();
+      // 候補者テーブルにレコードを作成
+      const { error: createCandidateError } = await supabase
+        .from('candidates')
+        .insert({
+          id: userId, // Supabase AuthのUUIDを使用
+          email: email.trim(),
+          status: 'temporary', // 仮登録状態
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
 
-        if (updateError) {
-          logger.error('Failed to update existing candidate:', updateError);
-          return {
-            success: false,
-            message: '候補者情報更新中にエラーが発生しました。',
-          };
-        }
-
-        userId = updatedAccount.id;
-      } else {
-        // 新規候補者の作成
-        const { data: newCandidate, error: createError } = await supabase
-          .from('candidates')
-          .insert({
-            email: email.trim(),
-            status: 'temporary', // 仮登録状態
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select('id')
-          .single();
-
-        if (createError) {
-          logger.error('Failed to create new candidate:', createError);
-          return {
-            success: false,
-            message: '候補者作成中にエラーが発生しました。',
-          };
-        }
-
-        userId = newCandidate.id;
+      if (createCandidateError) {
+        logger.error(
+          'Failed to create candidate record:',
+          createCandidateError
+        );
+        return {
+          success: false,
+          message: '候補者レコード作成中にエラーが発生しました。',
+        };
       }
+
+      logger.info('New candidate record created:', {
+        userId: userId.substring(0, 8) + '***',
+      });
 
       // ステップ6: 使用済みOTPコードを削除
       const { error: deleteOtpError } = await supabase

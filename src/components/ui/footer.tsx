@@ -49,7 +49,7 @@ export function Footer({
         case '候補者検索':
           return '/company/search';
         case '企業設定':
-          return '/company/account';
+          return '/company/setting';
         case 'サービス紹介':
           return '/about';
         case '企業向け機能':

@@ -1,3 +1,22 @@
+.modalContainer {
+  /* モバイル用のスタイルをメディアクエリで追加 */
+}
+
+.modalContent {
+  width: 640px;
+  height: auto;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.profileGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .profileContainer {
   width: 316px;
   height: 48px;
@@ -23,4 +42,33 @@
   font-weight: bold;
   line-height: 200%;
   color: #0f9058;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .modalContent {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .profileGrid {
+    width: 100%;
+    gap: 12px;
+    padding: 0;
+  }
+
+  .profileContainerInner {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .profileContainer {
+    width: 100%;
+    min-width: auto;
+    height: 48px;
+    flex-shrink: 0;
+  }
 }
