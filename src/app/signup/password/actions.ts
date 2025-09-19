@@ -39,12 +39,12 @@ export async function setPasswordAction(
 
     // ステップ1: 環境変数の確認
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       logger.error('Missing Supabase environment variables:', {
         hasUrl: !!supabaseUrl,
-        hasServiceRoleKey: !!serviceRoleKey,
+        hasAnonKey: !!supabaseAnonKey,
       });
       return {
         success: false,
@@ -68,6 +68,7 @@ export async function setPasswordAction(
 
     logger.info('Password setting request details:', {
       userId: userId.substring(0, 8) + '***',
+      userIdLength: userId.length,
     });
 
     // ステップ3: Supabaseクライアントの動的インポート
@@ -83,91 +84,66 @@ export async function setPasswordAction(
       };
     }
 
-    // ステップ4: 管理者クライアントでパスワード設定
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    // ステップ4: 通常のSupabaseクライアントでパスワード更新
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-      },
-      db: {
-        schema: 'public',
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'mokin-recruit-server-admin',
-        },
+        detectSessionInUrl: false,
       },
     });
 
     try {
-      // まずユーザー情報を取得してメールアドレスを確認
-      const { data: userData, error: userError } =
-        await supabaseAdmin.auth.admin.getUserById(userId);
+      // まず候補者テーブルからユーザー情報を取得
+      logger.info('Attempting to get candidate by ID:', {
+        userId: userId.substring(0, 8) + '***',
+      });
 
-      if (userError || !userData.user) {
-        logger.error('Failed to get user data:', userError);
-        return {
-          success: false,
-          message: 'ユーザー情報の取得に失敗しました。',
-        };
-      }
-
-      const userEmail = userData.user.email;
-      if (!userEmail) {
-        logger.error('User email not found');
-        return {
-          success: false,
-          message: 'ユーザーのメールアドレスが見つかりません。',
-        };
-      }
-
-      // ユーザーのパスワードを更新
-      const { error: updateError } =
-        await supabaseAdmin.auth.admin.updateUserById(userId, {
-          password: password,
-          user_metadata: {
-            signup_step: 'completed',
-            password_set_at: new Date().toISOString(),
-          },
-        });
-
-      if (updateError) {
-        logger.error('Failed to set user password:', updateError);
-        return {
-          success: false,
-          message: 'パスワードの設定に失敗しました。',
-        };
-      }
-
-      // candidatesテーブルにレコードを作成（既存チェック付き）
-      const { data: existingCandidate } = await supabaseAdmin
+      const { data: candidateData, error: candidateError } = await supabase
         .from('candidates')
-        .select('id')
+        .select('id, email')
         .eq('id', userId)
         .single();
 
-      if (!existingCandidate) {
-        const { error: candidateError } = await supabaseAdmin
-          .from('candidates')
-          .insert({
-            id: userId,
-            email: userEmail,
-            status: 'temporary', // 仮登録状態
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (candidateError) {
-          logger.error('Failed to create candidate record:', candidateError);
-          return {
-            success: false,
-            message: '候補者レコードの作成に失敗しました。',
-          };
-        }
-        logger.info(`New candidate record created for user: ${userId}`);
-      } else {
-        logger.info(`Candidate record already exists for user: ${userId}`);
+      if (candidateError || !candidateData) {
+        logger.error('Failed to get candidate data:', candidateError);
+        return {
+          success: false,
+          message: '候補者情報の取得に失敗しました。',
+        };
       }
+
+      logger.info('Candidate found:', {
+        userId: userId.substring(0, 8) + '***',
+        email: candidateData.email.substring(0, 3) + '***',
+      });
+
+      // サーバーサイドではバリデーションのみ行い、
+      // 実際のパスワード設定はクライアントサイドで実行
+
+      // 候補者レコードの状態を更新（パスワード設定準備完了）
+      const { error: updateCandidateError } = await supabase
+        .from('candidates')
+        .update({
+          status: 'password_setting_ready',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (updateCandidateError) {
+        logger.error(
+          'Failed to update candidate status:',
+          updateCandidateError
+        );
+        return {
+          success: false,
+          message: '候補者情報の更新に失敗しました。',
+        };
+      }
+
+      logger.info('Candidate ready for password setting:', {
+        userId: userId.substring(0, 8) + '***',
+      });
 
       // クッキーにユーザーIDを保存（クライアントサイドからも読み取り可能にする）
       const cookieStore = await cookies();
@@ -178,13 +154,11 @@ export async function setPasswordAction(
         maxAge: 60 * 60 * 24 * 7, // 7日間
       });
 
-      logger.info(
-        `Password set and candidate record created successfully for user: ${userId}`
-      );
+      logger.info(`Password setting prepared successfully for user: ${userId}`);
 
       return {
         success: true,
-        message: 'パスワードが設定されました。会員登録が完了しました。',
+        message: 'パスワード設定の準備が完了しました。',
       };
     } catch (passwordError) {
       logger.error('Password setting operation failed:', passwordError);
