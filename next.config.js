@@ -8,7 +8,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  output: 'standalone',
+  // output: 'standalone', // 削除してデフォルトモードを使用
   // セキュリティヘッダー設定
   async headers() {
     return [
@@ -16,30 +16,16 @@ const nextConfig = {
         // すべてのルートに適用
         source: '/(.*)',
         headers: [
-          // Content Security Policy
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https: http:",
-              "connect-src 'self' https://mjhqeagxibsklugikyma.supabase.co https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
-              "frame-src 'self' https://js.stripe.com https://checkout.stripe.com",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'",
-              'upgrade-insecure-requests',
-            ].join('; '),
-          },
-          // Report-Only は middleware 側で nonce を付与して動的に適用
-          // HTTP Strict Transport Security
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
+          // Content Security Policy は middleware 側で nonce を付与して動的に適用
+          // HTTP Strict Transport Security (本番環境のみ)
+          ...(process.env.NODE_ENV === 'production'
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=63072000; includeSubDomains; preload',
+                },
+              ]
+            : []),
           // X-Frame-Options (CSP frame-ancestorsと併用)
           {
             key: 'X-Frame-Options',
@@ -129,7 +115,7 @@ const nextConfig = {
     pagesBufferLength: 5,
   },
   // Code splitting は Next.js のデフォルト挙動を使用
-  webpack: (config) => {
+  webpack: config => {
     return config;
   },
   images: {

@@ -6,6 +6,7 @@
     "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next dev --hostname 0.0.0.0",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=2048 next start --hostname 0.0.0.0",
+    "start:standalone": "cross-env NODE_OPTIONS=--max-old-space-size=2048 node .next/standalone/server.js",
     "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix",
     "clean": "rm -rf .next dist",
