@@ -147,7 +147,6 @@ export function SelectInput({
   id,
 }: SelectInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(value);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>(
     'bottom'
   );
@@ -155,7 +154,7 @@ export function SelectInput({
   const listRef = useRef<HTMLUListElement>(null);
 
   // 選択された項目のラベルを取得
-  const selectedOption = options.find(option => option.value === selectedValue);
+  const selectedOption = options.find(option => option.value === value);
   let displayText = selectedOption ? selectedOption.label : placeholder;
   // 年収・アピールポイントセレクト用途の場合はprefixを付与
   if (
@@ -185,13 +184,13 @@ export function SelectInput({
           onClose?.();
         }
         setIsOpen(false);
-        callOnBlur(onBlur, selectedValue);
+        callOnBlur(onBlur, value);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onBlur, onClose, isOpen, selectedValue]);
+  }, [onBlur, onClose, isOpen, value]);
 
   // ドロップダウンの位置を計算
   useEffect(() => {
@@ -224,7 +223,6 @@ export function SelectInput({
     const selectedOption = options.find(opt => opt.value === optionValue);
     if (selectedOption?.disabled) return;
 
-    setSelectedValue(optionValue);
     setIsOpen(false);
     onClose?.();
     callOnChange(onChange, optionValue);
@@ -271,7 +269,7 @@ export function SelectInput({
       case 'Escape':
         setIsOpen(false);
         onClose?.();
-        callOnBlur(onBlur, selectedValue);
+        callOnBlur(onBlur, value);
         break;
       case 'ArrowDown':
         event.preventDefault();
@@ -280,9 +278,7 @@ export function SelectInput({
           onOpen?.();
         } else {
           // フォーカスを次の選択肢に移動
-          const currentIndex = options.findIndex(
-            opt => opt.value === selectedValue
-          );
+          const currentIndex = options.findIndex(opt => opt.value === value);
           const nextIndex = Math.min(currentIndex + 1, options.length - 1);
           if (nextIndex !== currentIndex && options[nextIndex]) {
             handleSelect(options[nextIndex]!.value);
@@ -292,9 +288,7 @@ export function SelectInput({
       case 'ArrowUp':
         event.preventDefault();
         if (isOpen) {
-          const currentIndex = options.findIndex(
-            opt => opt.value === selectedValue
-          );
+          const currentIndex = options.findIndex(opt => opt.value === value);
           const prevIndex = Math.max(currentIndex - 1, 0);
           if (prevIndex !== currentIndex && options[prevIndex]) {
             handleSelect(options[prevIndex]!.value);
@@ -348,7 +342,7 @@ export function SelectInput({
 
           // テキスト色（classNameで上書き可能）
           !className?.includes('text-[') &&
-            (selectedValue ? 'text-[#323232]' : 'text-[#323232]')
+            (selectedOption ? 'text-[#323232]' : 'text-[#323232]')
         )}
         style={(() => {
           const sanitized = { ...(style || {}) } as React.CSSProperties;
@@ -421,11 +415,11 @@ export function SelectInput({
                   : ['text-[#323232] hover:bg-[#F0F9F2] hover:text-[#0F9058]'],
 
                 // 選択済み
-                option.value === selectedValue &&
+                option.value === value &&
                   !option.disabled && ['bg-[#E8F5E8] text-[#0F9058] font-bold']
               )}
               role='option'
-              aria-selected={option.value === selectedValue}
+              aria-selected={option.value === value}
               aria-disabled={option.disabled}
             >
               {option.label}

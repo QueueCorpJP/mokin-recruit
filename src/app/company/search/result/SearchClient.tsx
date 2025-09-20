@@ -625,7 +625,7 @@ export default function SearchClient({
     if (initialSearchParams && initialSearchParams.searchGroup) {
       searchStore.setSearchGroup(initialSearchParams.searchGroup);
     }
-  }, [initialSearchParams, searchStore]);
+  }, [initialSearchParams, searchStore.setSearchGroup]);
 
   // 保存された候補者を取得
   useEffect(() => {
@@ -796,7 +796,7 @@ export default function SearchClient({
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
     console.log('[DEBUG] URL parameters changed, reloading search params');
-  }, [searchParams, isHydrated, searchStore]);
+  }, [searchParams, isHydrated]);
 
   // 初回のみ外部パラメータで検索実行
   useEffect(() => {

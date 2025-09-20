@@ -93,6 +93,7 @@ export async function saveCareerStatusAction(
 
     logger.info('Career status save request details:', {
       userId: userId.substring(0, 8) + '***',
+      userIdLength: userId.length,
       hasCareerChange,
       entriesCount: selectionEntries.length,
     });
@@ -127,6 +128,30 @@ export async function saveCareerStatusAction(
     });
 
     try {
+      // First verify the candidate exists with the provided ID
+      const { data: existingCandidate, error: candidateCheckError } =
+        await supabaseAdmin
+          .from('candidates')
+          .select('id')
+          .eq('id', userId)
+          .single();
+
+      if (candidateCheckError || !existingCandidate) {
+        logger.error('Candidate not found for career status update:', {
+          userId: userId.substring(0, 8) + '***',
+          userIdFull: userId,
+          userIdLength: userId.length,
+          error: candidateCheckError,
+          errorCode: candidateCheckError?.code,
+          errorMessage: candidateCheckError?.message,
+        });
+        return {
+          success: false,
+          message:
+            '候補者情報が見つかりません。サインアップを最初からやり直してください。',
+        };
+      }
+
       // Update candidates table with career status info
       const { error: candidateUpdateError } = await supabaseAdmin
         .from('candidates')

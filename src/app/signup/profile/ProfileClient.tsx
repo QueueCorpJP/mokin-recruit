@@ -105,6 +105,19 @@ export default function SignupProfilePage() {
 
       if (userIdFromCookie) {
         setUserId(userIdFromCookie);
+        // Also save to localStorage to ensure synchronization
+        localStorage.setItem('signup_user_id', userIdFromCookie);
+        console.log(
+          'User ID synchronized from cookie to localStorage:',
+          userIdFromCookie
+        );
+      } else {
+        // Try to get from localStorage if cookie not found
+        const userIdFromLocalStorage = localStorage.getItem('signup_user_id');
+        if (userIdFromLocalStorage) {
+          setUserId(userIdFromLocalStorage);
+          console.log('User ID from localStorage:', userIdFromLocalStorage);
+        }
       }
     }
 

@@ -4,28 +4,30 @@ import { type ProfileFormData } from '@/lib/schema/profile';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
-export async function saveProfileData(data: ProfileFormData & { userId?: string }) {
+export async function saveProfileData(
+  data: ProfileFormData & { userId?: string }
+) {
   try {
     // クライアントから送信されたユーザーIDを使用
     const userId = data.userId;
-    
+
     if (!userId) {
-      return { 
-        success: false, 
-        error: '登録情報が見つかりません。最初からやり直してください。' 
+      return {
+        success: false,
+        error: '登録情報が見つかりません。最初からやり直してください。',
       };
     }
 
     // Supabaseクライアントを動的にインポート
     const { createClient } = await import('@supabase/supabase-js');
-    
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      return { 
-        success: false, 
-        error: 'サーバー設定エラーが発生しました。' 
+      return {
+        success: false,
+        error: 'サーバー設定エラーが発生しました。',
       };
     }
 
@@ -38,6 +40,22 @@ export async function saveProfileData(data: ProfileFormData & { userId?: string 
 
     // Convert birth date to proper format
     const birthDate = `${data.birthYear}-${data.birthMonth.padStart(2, '0')}-${data.birthDay.padStart(2, '0')}`;
+
+    // First verify the candidate exists with the provided ID
+    const { data: existingCandidate, error: candidateCheckError } =
+      await supabase.from('candidates').select('id').eq('id', userId).single();
+
+    if (candidateCheckError || !existingCandidate) {
+      console.error('Candidate not found for profile update:', {
+        userId: userId?.substring(0, 8) + '***',
+        error: candidateCheckError,
+      });
+      return {
+        success: false,
+        error:
+          '候補者情報が見つかりません。サインアップを最初からやり直してください。',
+      };
+    }
 
     // Update candidates table with profile data using user ID
     const { error: updateError } = await supabase
@@ -52,30 +70,29 @@ export async function saveProfileData(data: ProfileFormData & { userId?: string 
         prefecture: data.prefecture,
         phone_number: data.phoneNumber,
         current_income: data.currentIncome,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
     if (updateError) {
       console.error('Profile update error:', updateError);
-      return { 
-        success: false, 
-        error: 'プロフィール情報の保存に失敗しました。' 
+      return {
+        success: false,
+        error: 'プロフィール情報の保存に失敗しました。',
       };
     }
 
     revalidatePath('/signup/profile');
-    
-    return { 
-      success: true, 
-      message: 'プロフィール情報を保存しました。' 
-    };
 
+    return {
+      success: true,
+      message: 'プロフィール情報を保存しました。',
+    };
   } catch (error) {
     console.error('Save profile error:', error);
-    return { 
-      success: false, 
-      error: 'システムエラーが発生しました。' 
+    return {
+      success: false,
+      error: 'システムエラーが発生しました。',
     };
   }
 }

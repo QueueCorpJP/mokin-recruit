@@ -10,6 +10,51 @@ import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationM
 import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import { createClient } from '@/lib/supabase/client';
 import { createNotice, uploadNoticeThumbnail } from '../actions';
+
+// --- Encryption helper using Web Crypto API ---
+const PREVIEW_NOTICE_KEY_NAME = 'previewNoticeKey';
+
+// Generates and stores/retrieves encryption key from sessionStorage
+async function getCryptoKey() {
+  // Try to get exported key from sessionStorage
+  let keyJwk = sessionStorage.getItem(PREVIEW_NOTICE_KEY_NAME);
+  if (keyJwk) {
+    const jwk = JSON.parse(keyJwk);
+    return await window.crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+  // Create new key
+  const key = await window.crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+  // Export and store
+  const exported = await window.crypto.subtle.exportKey('jwk', key);
+  sessionStorage.setItem(PREVIEW_NOTICE_KEY_NAME, JSON.stringify(exported));
+  return key;
+}
+
+// Decrypts base64(iv+data) string
+async function decryptString(encryptedStr: string) {
+  const raw = atob(encryptedStr);
+  const arr = Uint8Array.from(raw, c => c.charCodeAt(0));
+  const iv = arr.slice(0, 12);
+  const data = arr.slice(12);
+  const key = await getCryptoKey();
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  const decoder = new TextDecoder();
+  return decoder.decode(decrypted);
+}
 interface PreviewData {
   title: string;
   categoryIds: string[];
@@ -41,7 +86,16 @@ export default function PreviewPage() {
       const currentData = sessionStorage.getItem('previewNotice');
       if (!currentData) return;
 
-      const data = JSON.parse(currentData);
+      let data;
+      try {
+        // Decrypt the data first
+        const decrypted = await decryptString(currentData);
+        data = JSON.parse(decrypted);
+      } catch (e) {
+        console.error('Failed to decrypt previewNotice data:', e);
+        setError('プレビューデータの読み込みに失敗しました');
+        return;
+      }
 
       setIsLoading(true);
       setError('');
@@ -131,7 +185,16 @@ export default function PreviewPage() {
     const fetchData = async () => {
       const storedData = sessionStorage.getItem('previewNotice');
       if (storedData) {
-        const data = JSON.parse(storedData);
+        let data;
+        try {
+          // Try to decrypt the data first
+          const decrypted = await decryptString(storedData);
+          data = JSON.parse(decrypted);
+        } catch (e) {
+          console.error('Failed to decrypt previewNotice data:', e);
+          router.push('/admin/notice/new');
+          return;
+        }
         console.log('Preview data content:', data.content);
         console.log('Preview data categoryIds:', data.categoryIds);
 

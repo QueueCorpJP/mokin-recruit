@@ -163,11 +163,62 @@ export async function signupVerifyAction(
         if (signUpError.message.includes('User already registered')) {
           logger.info('User already exists, proceeding with existing account');
 
-          // 既存ユーザーの場合、candidatesテーブルから情報を取得
+          // 既存ユーザーの場合、まずAuth userを取得してそのIDを使用
+          const { data: authUser, error: getAuthUserError } =
+            await supabase.auth.signInWithPassword({
+              email: email.trim(),
+              password: tempPassword, // 一時パスワードでログインを試行
+            });
+
+          let authUserId = null;
+          if (authUser?.user?.id) {
+            authUserId = authUser.user.id;
+            logger.info('Found existing Auth user:', {
+              authUserId: authUserId.substring(0, 8) + '***',
+            });
+          } else {
+            // 一時パスワードでのログインが失敗した場合、Admin APIでユーザーを取得
+            try {
+              const supabaseServiceRoleKey =
+                process.env.SUPABASE_SERVICE_ROLE_KEY;
+              if (supabaseServiceRoleKey) {
+                const supabaseAdmin = createClient(
+                  supabaseUrl,
+                  supabaseServiceRoleKey,
+                  {
+                    auth: {
+                      autoRefreshToken: false,
+                      persistSession: false,
+                    },
+                  }
+                );
+
+                const { data: adminUserData } =
+                  await supabaseAdmin.auth.admin.listUsers();
+                const existingAuthUser = adminUserData.users?.find(
+                  user => user.email === email.trim()
+                );
+
+                if (existingAuthUser) {
+                  authUserId = existingAuthUser.id;
+                  logger.info('Found existing Auth user via admin API:', {
+                    authUserId: authUserId.substring(0, 8) + '***',
+                  });
+                }
+              }
+            } catch (adminError) {
+              logger.warn(
+                'Could not fetch auth user via admin API:',
+                adminError
+              );
+            }
+          }
+
+          // 候補者テーブルから情報を取得
           const { data: existingCandidate, error: candidateError } =
             await supabase
               .from('candidates')
-              .select('id')
+              .select('id, email')
               .eq('email', email.trim())
               .maybeSingle();
 
@@ -179,11 +230,23 @@ export async function signupVerifyAction(
             };
           }
 
+          logger.info('Existing user processing results:', {
+            authUserId: authUserId?.substring(0, 8) + '***' || 'NOT_FOUND',
+            candidateId:
+              existingCandidate?.id?.substring(0, 8) + '***' || 'NOT_FOUND',
+            candidateEmail:
+              existingCandidate?.email?.substring(0, 3) + '***' || 'NOT_FOUND',
+            idsMatch: authUserId === existingCandidate?.id,
+          });
+
           if (existingCandidate) {
+            // Auth user IDを優先して使用（利用可能な場合）
+            const finalUserId = authUserId || existingCandidate.id;
+
             return {
               success: true,
               message: '認証が完了しました。パスワード設定ページに進みます。',
-              userId: existingCandidate.id,
+              userId: finalUserId,
             };
           } else {
             return {
@@ -214,6 +277,16 @@ export async function signupVerifyAction(
       });
 
       // 候補者テーブルにレコードを作成
+      logger.info('Attempting to create candidate record:', {
+        userId: userId.substring(0, 8) + '***',
+        userIdFull: userId,
+        email: email.substring(0, 3) + '***',
+        isValidUUID:
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            userId
+          ),
+      });
+
       const { error: createCandidateError } = await supabase
         .from('candidates')
         .insert({
@@ -235,9 +308,27 @@ export async function signupVerifyAction(
         };
       }
 
-      logger.info('New candidate record created:', {
-        userId: userId.substring(0, 8) + '***',
-      });
+      // 作成後、実際にレコードが存在するか確認
+      const { data: verifyCandidate, error: verifyError } = await supabase
+        .from('candidates')
+        .select('id, email, status')
+        .eq('id', userId)
+        .single();
+
+      if (verifyError || !verifyCandidate) {
+        logger.error('Failed to verify created candidate record:', {
+          userId: userId.substring(0, 8) + '***',
+          userIdFull: userId,
+          verifyError,
+        });
+      } else {
+        logger.info('Candidate record verified successfully:', {
+          userId: userId.substring(0, 8) + '***',
+          userIdFull: userId,
+          email: verifyCandidate.email.substring(0, 3) + '***',
+          status: verifyCandidate.status,
+        });
+      }
 
       // ステップ6: 使用済みOTPコードを削除
       const { error: deleteOtpError } = await supabase
