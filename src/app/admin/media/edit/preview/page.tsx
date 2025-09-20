@@ -96,7 +96,9 @@ export default function EditPreviewPage() {
       const updatedData = { ...previewData, status: currentStatus };
       try {
         sessionStorage.setItem('previewArticle', JSON.stringify(updatedData));
-      } catch {}
+      } catch (e) {
+        console.error('Failed to save previewArticle data:', e);
+      }
     }
     // 編集ページに記事IDと共に戻る
     router.push(`/admin/media/edit?id=${previewData?.id}`);
@@ -187,7 +189,14 @@ export default function EditPreviewPage() {
     const fetchData = async () => {
       const storedData = sessionStorage.getItem('previewArticle');
       if (storedData) {
-        const data = JSON.parse(storedData);
+        let data;
+        try {
+          data = JSON.parse(storedData);
+        } catch (e) {
+          console.error('Failed to parse previewArticle data:', e);
+          router.push('/admin/media/edit');
+          return;
+        }
 
         if (data.content) {
           data.content = DOMPurify.sanitize(data.content);

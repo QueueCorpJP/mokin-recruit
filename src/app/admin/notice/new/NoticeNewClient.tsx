@@ -232,7 +232,13 @@ export default function NoticeNewClient({
         try {
           // decrypt and parse
           const decrypted = await decryptString(storedData);
-          const data = JSON.parse(decrypted);
+          let data;
+          try {
+            data = JSON.parse(decrypted);
+          } catch (e) {
+            console.error('Failed to parse decrypted notice data:', e);
+            return;
+          }
           setTitle(data.title || '');
           setSelectedCategoryIds(data.categoryIds || []);
           setContent(data.content || '');

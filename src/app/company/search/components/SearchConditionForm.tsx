@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SelectInput } from '@/components/ui/select-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import JobTypeSelectModal from '@/components/career-status/JobTypeSelectModal';
@@ -36,39 +36,97 @@ export default function SearchConditionForm({
   isIndustryModalOpen,
   setIsIndustryModalOpen,
 }: SearchConditionFormProps) {
-  const searchStore = useSearchStore();
+  const {
+    searchGroup,
+    keyword,
+    setSearchGroup,
+    setKeyword,
+    experienceJobTypes,
+    setExperienceJobTypes,
+    experienceIndustries,
+    setExperienceIndustries,
+    jobTypeAndSearch,
+    setJobTypeAndSearch,
+    industryAndSearch,
+    setIndustryAndSearch,
+    currentSalaryMin,
+    currentSalaryMax,
+    setCurrentSalaryMin,
+    setCurrentSalaryMax,
+    currentCompany,
+    setCurrentCompany,
+    education,
+    setEducation,
+    updateExperienceJobTypeYears,
+    updateExperienceIndustryYears,
+  } = useSearchStore();
+
   const [openSelectId, setOpenSelectId] = React.useState<string | null>(null);
   const [groupOptions, setGroupOptions] = useState<
     Array<{ value: string; label: string }>
   >([{ value: '', label: '未選択' }]);
   const [loadingGroups, setLoadingGroups] = useState(true);
 
-  console.log('=== SearchConditionForm RENDER START ===');
-  console.log(
-    'SearchConditionForm render - experienceJobTypes:',
-    searchStore.experienceJobTypes
+  // Memoized handlers to prevent infinite loops
+  const handleSearchGroupChange = useCallback(
+    (value: string) => {
+      setSearchGroup(value);
+    },
+    [setSearchGroup]
   );
-  console.log(
-    'SearchConditionForm render - experienceJobTypes length:',
-    searchStore.experienceJobTypes.length
+
+  const handleKeywordChange = useCallback(
+    (value: string) => {
+      setKeyword(value);
+    },
+    [setKeyword]
   );
-  console.log(
-    'SearchConditionForm render - experienceJobTypes JSON:',
-    JSON.stringify(searchStore.experienceJobTypes, null, 2)
+
+  const handleSearchGroupBlur = useCallback(() => {
+    setSearchGroupTouched(true);
+  }, [setSearchGroupTouched]);
+
+  const handleJobTypeAndSearchChange = useCallback(
+    (checked: boolean) => {
+      setJobTypeAndSearch(checked);
+    },
+    [setJobTypeAndSearch]
   );
-  console.log(
-    'SearchConditionForm render - experienceIndustries:',
-    searchStore.experienceIndustries
+
+  const handleIndustryAndSearchChange = useCallback(
+    (checked: boolean) => {
+      setIndustryAndSearch(checked);
+    },
+    [setIndustryAndSearch]
   );
-  console.log(
-    'SearchConditionForm render - experienceIndustries length:',
-    searchStore.experienceIndustries.length
+
+  const handleCurrentSalaryMinChange = useCallback(
+    (value: string) => {
+      setCurrentSalaryMin(value);
+    },
+    [setCurrentSalaryMin]
   );
-  console.log(
-    'SearchConditionForm render - experienceIndustries JSON:',
-    JSON.stringify(searchStore.experienceIndustries, null, 2)
+
+  const handleCurrentSalaryMaxChange = useCallback(
+    (value: string) => {
+      setCurrentSalaryMax(value);
+    },
+    [setCurrentSalaryMax]
   );
-  console.log('=== SearchConditionForm RENDER END ===');
+
+  const handleCurrentCompanyChange = useCallback(
+    (value: string) => {
+      setCurrentCompany(value);
+    },
+    [setCurrentCompany]
+  );
+
+  const handleEducationChange = useCallback(
+    (value: string) => {
+      setEducation(value);
+    },
+    [setEducation]
+  );
 
   // グループ一覧を取得
   useEffect(() => {
@@ -125,13 +183,9 @@ export default function SearchConditionForm({
           <div className='flex-1 py-6 flex items-center'>
             <div>
               <SelectInput
-                value={searchStore.searchGroup}
-                onChange={(value: string) => {
-                  searchStore.setSearchGroup(value);
-                }}
-                onBlur={() => {
-                  setSearchGroupTouched(true);
-                }}
+                value={searchGroup}
+                onChange={handleSearchGroupChange}
+                onBlur={handleSearchGroupBlur}
                 options={groupOptions}
                 placeholder={
                   loadingGroups ? 'グループを読み込み中...' : '未選択'
@@ -139,13 +193,11 @@ export default function SearchConditionForm({
                 className='w-[400px]'
                 disabled={loadingGroups}
               />
-              {searchGroupTouched &&
-                (!searchStore.searchGroup ||
-                  searchStore.searchGroup === '') && (
-                  <p className='text-[#ff0000] text-[12px] mt-2'>
-                    グループを選択してください。
-                  </p>
-                )}
+              {searchGroupTouched && (!searchGroup || searchGroup === '') && (
+                <p className='text-[#ff0000] text-[12px] mt-2'>
+                  グループを選択してください。
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -162,8 +214,8 @@ export default function SearchConditionForm({
           <div className='flex-1 py-6 flex items-center'>
             <input
               type='text'
-              value={searchStore.keyword}
-              onChange={e => searchStore.setKeyword(e.target.value)}
+              value={keyword}
+              onChange={e => handleKeywordChange(e.target.value)}
               placeholder='検索したいワードを入力'
               className='w-[400px] px-4 py-3 border border-[#999] font-medium rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -192,10 +244,8 @@ export default function SearchConditionForm({
               </button>
               <div className='flex items-center gap-2'>
                 <Checkbox
-                  checked={searchStore.jobTypeAndSearch}
-                  onChange={(checked: boolean) =>
-                    searchStore.setJobTypeAndSearch(checked)
-                  }
+                  checked={jobTypeAndSearch}
+                  onChange={handleJobTypeAndSearchChange}
                 />
                 <label
                   className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'
@@ -206,107 +256,73 @@ export default function SearchConditionForm({
               </div>
             </div>
 
-            {(() => {
-              console.log('=== TAG RENDER CHECK - experienceJobTypes ===');
-              console.log(
-                'SearchConditionForm: experienceJobTypes for tag display:',
-                searchStore.experienceJobTypes
-              );
-              console.log(
-                'SearchConditionForm: experienceJobTypes length for tag display:',
-                searchStore.experienceJobTypes.length
-              );
-              console.log(
-                'SearchConditionForm: experienceJobTypes JSON for tag display:',
-                JSON.stringify(searchStore.experienceJobTypes, null, 2)
-              );
-              console.log(
-                'SearchConditionForm: Will render tags?',
-                searchStore.experienceJobTypes.length > 0
-              );
-              return null;
-            })()}
-            {searchStore.experienceJobTypes.length > 0 && (
+            {experienceJobTypes.length > 0 && (
               <div className='flex flex-col items-start gap-2 mt-4'>
-                {searchStore.experienceJobTypes.map(job => {
-                  console.log(
-                    'SearchConditionForm: Rendering tag for job:',
-                    job
-                  );
-                  return (
-                    <div
-                      key={job.id}
-                      className='inline-flex items-center gap-1'
-                    >
-                      <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]'>
-                        <span className='line-clamp-1 break-all'>
-                          {job.name}
-                        </span>
-                      </span>
-                      <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative'>
-                        <select
-                          className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-8 cursor-pointer focus:outline-none border-none w-full'
-                          value={job.experienceYears || ''}
-                          onFocus={() => setOpenSelectId(`job-${job.id}`)}
-                          onBlur={() => setOpenSelectId(null)}
-                          onChange={e => {
-                            searchStore.updateExperienceJobTypeYears(
-                              job.id,
-                              e.target.value
-                            );
-                            setOpenSelectId(null);
-                          }}
-                        >
-                          <option value=''>経験年数：指定なし</option>
-                          <option value='1年以上'>経験年数：1年以上</option>
-                          <option value='3年以上'>経験年数：3年以上</option>
-                          <option value='5年以上'>経験年数：5年以上</option>
-                          <option value='7年以上'>経験年数：7年以上</option>
-                          <option value='10年以上'>経験年数：10年以上</option>
-                          <option value='15年以上'>経験年数：15年以上</option>
-                          <option value='20年以上'>経験年数：20年以上</option>
-                        </select>
-                        <svg
-                          xmlns='http://www.w3.org/2000/svg'
-                          width='14'
-                          height='10'
-                          viewBox='0 0 14 10'
-                          fill='none'
-                          className={`absolute right-2 pointer-events-none transition-transform duration-300 ${openSelectId === `job-${job.id}` ? 'rotate-180' : ''}`}
-                        >
-                          <path
-                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </div>
-                      <button
-                        type='button'
-                        onClick={() => {
-                          searchStore.setExperienceJobTypes(
-                            searchStore.experienceJobTypes.filter(
-                              j => j.id !== job.id
-                            )
-                          );
+                {experienceJobTypes.map(job => (
+                  <div key={job.id} className='inline-flex items-center gap-1'>
+                    <span className='bg-[#d2f1da] text-[#0f9058] text-[14px] font-bold tracking-[1.4px] h-[40px] flex items-center px-6 rounded-l-[10px] overflow-hidden max-w-[200px]'>
+                      <span className='line-clamp-1 break-all'>{job.name}</span>
+                    </span>
+                    <div className='bg-[#d2f1da] h-[40px] flex items-center px-4 relative'>
+                      <select
+                        className='bg-transparent text-[#0f9058] text-[14px] font-medium tracking-[1.4px] appearance-none pr-8 cursor-pointer focus:outline-none border-none w-full'
+                        value={job.experienceYears || ''}
+                        onFocus={() => setOpenSelectId(`job-${job.id}`)}
+                        onBlur={() => setOpenSelectId(null)}
+                        onChange={e => {
+                          updateExperienceJobTypeYears(job.id, e.target.value);
+                          setOpenSelectId(null);
                         }}
-                        className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
                       >
-                        <svg
-                          width='13'
-                          height='12'
-                          viewBox='0 0 13 12'
-                          fill='none'
-                          xmlns='http://www.w3.org/2000/svg'
-                        >
-                          <path
-                            d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
-                            fill='#0F9058'
-                          />
-                        </svg>
-                      </button>
+                        <option value=''>経験年数：指定なし</option>
+                        <option value='1年以上'>経験年数：1年以上</option>
+                        <option value='3年以上'>経験年数：3年以上</option>
+                        <option value='5年以上'>経験年数：5年以上</option>
+                        <option value='7年以上'>経験年数：7年以上</option>
+                        <option value='10年以上'>経験年数：10年以上</option>
+                        <option value='15年以上'>経験年数：15年以上</option>
+                        <option value='20年以上'>経験年数：20年以上</option>
+                      </select>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        width='14'
+                        height='10'
+                        viewBox='0 0 14 10'
+                        fill='none'
+                        className={`absolute right-2 pointer-events-none transition-transform duration-300 ${openSelectId === `job-${job.id}` ? 'rotate-180' : ''}`}
+                      >
+                        <path
+                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                          fill='#0F9058'
+                        />
+                      </svg>
                     </div>
-                  );
-                })}
+                    <button
+                      type='button'
+                      onClick={() => {
+                        searchStore.setExperienceJobTypes(
+                          searchStore.experienceJobTypes.filter(
+                            j => j.id !== job.id
+                          )
+                        );
+                      }}
+                      className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
+                    >
+                      <svg
+                        width='13'
+                        height='12'
+                        viewBox='0 0 13 12'
+                        fill='none'
+                        xmlns='http://www.w3.org/2000/svg'
+                      >
+                        <path
+                          d='M0.707031 0.206055C0.98267 -0.0694486 1.42952 -0.0695749 1.70508 0.206055L6.50098 5.00293L11.2969 0.206055C11.5725 -0.0692376 12.0194 -0.0695109 12.2949 0.206055C12.5705 0.481731 12.5705 0.929373 12.2949 1.20508L7.49902 6.00195L12.291 10.7949L12.3154 10.8213C12.5657 11.0984 12.5579 11.5259 12.291 11.793C12.0241 12.06 11.5964 12.0685 11.3193 11.8184L11.293 11.793L6.50098 7L1.70898 11.7939L1.68262 11.8193C1.40561 12.0697 0.977947 12.0609 0.710938 11.7939C0.443995 11.5269 0.4354 11.0994 0.685547 10.8223L0.710938 10.7959L5.50293 6.00098L0.707031 1.2041C0.431408 0.928409 0.431408 0.481747 0.707031 0.206055Z'
+                          fill='#0F9058'
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -534,97 +550,21 @@ export default function SearchConditionForm({
       {/* 経験職種モーダル */}
       <JobTypeSelectModal
         isOpen={isJobTypeModalOpen}
-        onClose={() => {
-          console.log('🔥 JobType Modal onClose called');
-          setIsJobTypeModalOpen(false);
-        }}
+        onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={jobNames => {
-          try {
-            console.log('🔥 JobType Modal onConfirm CALLED!');
-            console.log('=== JobType Modal onConfirm START ===');
-            console.log(
-              'SearchConditionForm: JobType onConfirm called with:',
-              jobNames
+          const jobTypes = jobNames.map(jobName => {
+            const existing = searchStore.experienceJobTypes.find(
+              j => j.name === jobName
             );
-            console.log(
-              'SearchConditionForm: JobType onConfirm jobNames type:',
-              typeof jobNames
-            );
-            console.log(
-              'SearchConditionForm: JobType onConfirm jobNames length:',
-              jobNames?.length
-            );
-            console.log(
-              'SearchConditionForm: JobType onConfirm jobNames JSON:',
-              JSON.stringify(jobNames, null, 2)
-            );
-            console.log(
-              'SearchConditionForm: Current experienceJobTypes before update:',
-              searchStore.experienceJobTypes
-            );
-            console.log(
-              'SearchConditionForm: Current experienceJobTypes JSON:',
-              JSON.stringify(searchStore.experienceJobTypes, null, 2)
-            );
+            return {
+              id: jobName,
+              name: jobName,
+              experienceYears: existing?.experienceYears || '',
+            };
+          });
 
-            // signup/educationと同じ方式でIDを生成
-            const jobTypes = jobNames.map(jobName => {
-              const existing = searchStore.experienceJobTypes.find(
-                j => j.name === jobName
-              );
-              const newJobType = {
-                id: jobName, // 名前をそのままIDとして使用
-                name: jobName,
-                experienceYears: existing?.experienceYears || '',
-              };
-              console.log('SearchConditionForm: Creating jobType:', newJobType);
-              return newJobType;
-            });
-            console.log('SearchConditionForm: Final jobTypes array:', jobTypes);
-            console.log(
-              'SearchConditionForm: Final jobTypes JSON:',
-              JSON.stringify(jobTypes, null, 2)
-            );
-            console.log(
-              'SearchConditionForm: About to call setExperienceJobTypes...'
-            );
-
-            searchStore.setExperienceJobTypes(jobTypes);
-
-            console.log(
-              'SearchConditionForm: setExperienceJobTypes called, immediate check:',
-              searchStore.experienceJobTypes
-            );
-
-            // モーダルを閉じる
-            console.log('SearchConditionForm: About to close modal...');
-            setIsJobTypeModalOpen(false);
-
-            setTimeout(() => {
-              console.log(
-                'SearchConditionForm: After timeout, experienceJobTypes:',
-                searchStore.experienceJobTypes
-              );
-              console.log(
-                'SearchConditionForm: After timeout, experienceJobTypes JSON:',
-                JSON.stringify(searchStore.experienceJobTypes, null, 2)
-              );
-            }, 100);
-
-            setTimeout(() => {
-              console.log(
-                'SearchConditionForm: After 500ms timeout, experienceJobTypes:',
-                searchStore.experienceJobTypes
-              );
-              console.log(
-                'SearchConditionForm: After 500ms timeout, experienceJobTypes JSON:',
-                JSON.stringify(searchStore.experienceJobTypes, null, 2)
-              );
-            }, 500);
-            console.log('=== JobType Modal onConfirm END ===');
-          } catch (error) {
-            console.error('🚨 Error in JobType Modal onConfirm:', error);
-          }
+          searchStore.setExperienceJobTypes(jobTypes);
+          setIsJobTypeModalOpen(false);
         }}
         initialSelected={searchStore.experienceJobTypes.map(j => j.name)}
         maxSelections={3}

@@ -140,13 +140,29 @@ export default function SignupPasswordPage() {
     setError('');
 
     try {
-      const result = await setPasswordAction({
-        password,
-        confirmPassword,
-        userId,
-      });
+      console.log('=== PASSWORD PAGE DEBUG ===');
+      console.log('About to call setPasswordAction with:');
+      console.log('password length:', password.length);
+      console.log('confirmPassword length:', confirmPassword.length);
+      console.log('userId:', userId);
+      console.log('userId type:', typeof userId);
+      console.log('userId length:', userId.length);
+
+      console.log('Calling setPasswordAction with individual parameters');
+
+      const result = await setPasswordAction(password, confirmPassword, userId);
 
       if (result.success) {
+        // Update user ID if server returned a new one (ID migration/correction)
+        if (result.newUserId && result.newUserId !== userId) {
+          console.log(
+            'Updating localStorage with corrected user ID:',
+            result.newUserId
+          );
+          localStorage.setItem('signup_user_id', result.newUserId);
+          setUserId(result.newUserId);
+        }
+
         // ユーザーIDを保持したままプロフィール入力ページに遷移
         router.push('/signup/profile');
       } else {

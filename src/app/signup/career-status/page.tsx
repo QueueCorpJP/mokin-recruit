@@ -64,16 +64,35 @@ export default function SignupCareerStatusPage() {
         return null;
       };
 
+      // Try to get user ID from cookie first (this should contain the updated Auth user ID)
       const savedUserId = getCookieValue('signup_user_id');
       if (savedUserId) {
         setUserId(savedUserId);
+        console.log('User ID found in cookie:', savedUserId);
+      } else {
+        // Fallback to localStorage if cookie not found
+        const localStorageUserId = localStorage.getItem('signup_user_id');
+        if (localStorageUserId) {
+          setUserId(localStorageUserId);
+          console.log('User ID found in localStorage:', localStorageUserId);
+        } else {
+          console.error('User ID not found in cookie or localStorage');
+          alert(
+            'ユーザー情報が見つかりません。パスワード設定からやり直してください。'
+          );
+          router.push('/signup/password');
+        }
       }
     }
-  }, []);
+  }, [router]);
 
   const handleSubmit = async () => {
     if (!userId) {
       console.error('User ID not found');
+      alert(
+        'ユーザー情報が見つかりません。サインアップを最初からやり直してください。'
+      );
+      router.push('/signup');
       return;
     }
 

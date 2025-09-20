@@ -116,7 +116,9 @@ export default function EditPreviewPage() {
       setPreviewData(updatedData);
       try {
         sessionStorage.setItem('previewNotice', JSON.stringify(updatedData));
-      } catch {}
+      } catch (e) {
+        console.error('Failed to save previewNotice data:', e);
+      }
     }
   };
 

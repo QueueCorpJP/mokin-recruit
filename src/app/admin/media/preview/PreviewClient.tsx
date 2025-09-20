@@ -48,7 +48,14 @@ export default function PreviewClient({
       const currentData = sessionStorage.getItem('previewArticle');
       if (!currentData) return;
 
-      const data = JSON.parse(currentData);
+      let data;
+      try {
+        data = JSON.parse(currentData);
+      } catch (e) {
+        console.error('Failed to parse previewArticle data:', e);
+        setError('プレビューデータの読み込みに失敗しました');
+        return;
+      }
 
       setIsLoading(true);
       setError('');
@@ -116,7 +123,14 @@ export default function PreviewClient({
   useEffect(() => {
     const storedData = sessionStorage.getItem('previewArticle');
     if (storedData) {
-      const data = JSON.parse(storedData);
+      let data;
+      try {
+        data = JSON.parse(storedData);
+      } catch (e) {
+        console.error('Failed to parse previewArticle data:', e);
+        router.push('/admin/media/new');
+        return;
+      }
 
       // カテゴリ名のマップを作成
       if (data.categoryIds && data.categoryIds.length > 0) {

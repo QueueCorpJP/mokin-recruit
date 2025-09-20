@@ -138,7 +138,7 @@ export async function signupRequestAction(
       };
     }
 
-    // ステップ5: 既存ユーザーチェック
+    // ステップ5: 既存ユーザーチェック（candidatesテーブル）
     try {
       const { data: existingUser, error: checkError } = await supabase
         .from('candidates')
@@ -166,6 +166,46 @@ export async function signupRequestAction(
         success: false,
         error: 'ユーザー確認中にエラーが発生しました。',
       };
+    }
+
+    // ステップ5.5: Supabase Authでの既存ユーザーチェック
+    try {
+      const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseServiceRoleKey) {
+        const supabaseAdmin = createClient(
+          supabaseUrl,
+          supabaseServiceRoleKey,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false,
+            },
+          }
+        );
+
+        const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
+        const existingAuthUser = authUsers.users?.find(
+          user => user.email === email.trim()
+        );
+
+        if (existingAuthUser) {
+          logger.warn(
+            'User exists in Supabase Auth but not in candidates table:',
+            {
+              email: email.substring(0, 3) + '***',
+              authUserId: existingAuthUser.id.substring(0, 8) + '***',
+            }
+          );
+          return {
+            success: false,
+            error:
+              'このメールアドレスは既に登録済みです。ログインしてください。',
+          };
+        }
+      }
+    } catch (authCheckError) {
+      logger.warn('Could not check Supabase Auth users:', authCheckError);
+      // Auth チェックに失敗しても処理を続行（candidatesテーブルのチェックは完了している）
     }
 
     // ステップ6: OTPコード生成
