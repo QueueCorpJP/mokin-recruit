@@ -71,16 +71,20 @@ export default function CandidateNewClient() {
     formData,
     education,
     skills,
-    selectionEntries,
+    careerStatusEntries,
+    workHistoryEntries,
     skillInput,
     memo,
     isSubmitting,
     updateFormData,
     updateEducation,
     updateSkills,
-    updateSelectionEntry,
-    addSelectionEntry,
-    removeSelectionEntry,
+    updateCareerStatusEntry,
+    addCareerStatusEntry,
+    removeCareerStatusEntry,
+    updateWorkHistoryEntry,
+    addWorkHistoryEntry,
+    removeWorkHistoryEntry,
     setSkillInput,
     addSkillTag,
     removeSkillTag,
@@ -122,10 +126,12 @@ export default function CandidateNewClient() {
     try {
       const confirmData = prepareConfirmationData();
 
-      // Navigate to confirmation page with data
-      const params = new URLSearchParams();
-      params.set('data', JSON.stringify(confirmData));
-      router.push(`/admin/candidate/new/confirm?${params.toString()}`);
+      // Store data in sessionStorage instead of URL parameters
+      sessionStorage.setItem(
+        'candidateConfirmData',
+        JSON.stringify(confirmData)
+      );
+      router.push('/admin/candidate/new/confirm');
     } catch (error) {
       console.error('Error preparing candidate data:', error);
       alert('データの準備に失敗しました');
@@ -361,7 +367,7 @@ export default function CandidateNewClient() {
                   生年月日
                 </label>
                 <div className='w-[400px] flex gap-4 items-center'>
-                  <div className='relative flex-1'>
+                  <div className='relative w-28'>
                     <select
                       value={formData.birthYear}
                       onChange={e =>
@@ -693,7 +699,7 @@ export default function CandidateNewClient() {
                 formData.currentActivityStatus !== 'researching' &&
                 formData.currentActivityStatus !== '' && (
                   <div className='flex flex-col gap-2 items-center w-[536px]'>
-                    {selectionEntries.map((entry, index) => (
+                    {careerStatusEntries.map((entry, index) => (
                       <div
                         key={entry.id}
                         className='bg-[#f9f9f9] rounded-[10px] p-10 w-full flex flex-col gap-6 items-end relative'
@@ -701,7 +707,7 @@ export default function CandidateNewClient() {
                         {index > 0 && (
                           <div
                             className='absolute top-6 right-6 w-4 h-4 cursor-pointer'
-                            onClick={() => removeSelectionEntry(index)}
+                            onClick={() => removeCareerStatusEntry(index)}
                           >
                             <svg
                               xmlns='http://www.w3.org/2000/svg'
@@ -727,7 +733,7 @@ export default function CandidateNewClient() {
                             <div
                               className='w-5 h-5 mt-1 cursor-pointer'
                               onClick={() =>
-                                updateSelectionEntry(
+                                updateCareerStatusEntry(
                                   index,
                                   'isPrivate',
                                   !entry.isPrivate
@@ -821,7 +827,11 @@ export default function CandidateNewClient() {
                           <CompanyNameInput
                             value={entry.companyName}
                             onChange={value =>
-                              updateSelectionEntry(index, 'companyName', value)
+                              updateCareerStatusEntry(
+                                index,
+                                'companyName',
+                                value
+                              )
                             }
                             placeholder='企業名を入力'
                             className='w-[400px] px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] placeholder:text-[#999999]'
@@ -838,7 +848,7 @@ export default function CandidateNewClient() {
                             placeholder='部署名・役職名を入力'
                             value={entry.department || ''}
                             onChange={e =>
-                              updateSelectionEntry(
+                              updateCareerStatusEntry(
                                 index,
                                 'department',
                                 e.target.value
@@ -858,7 +868,7 @@ export default function CandidateNewClient() {
                               <select
                                 value={entry.progressStatus}
                                 onChange={e =>
-                                  updateSelectionEntry(
+                                  updateCareerStatusEntry(
                                     index,
                                     'progressStatus',
                                     e.target.value
@@ -905,7 +915,7 @@ export default function CandidateNewClient() {
                                 <select
                                   value={entry.declineReason || ''}
                                   onChange={e =>
-                                    updateSelectionEntry(
+                                    updateCareerStatusEntry(
                                       index,
                                       'declineReason',
                                       e.target.value
@@ -946,7 +956,7 @@ export default function CandidateNewClient() {
 
                     <button
                       type='button'
-                      onClick={addSelectionEntry}
+                      onClick={addCareerStatusEntry}
                       className='bg-white border border-[#0f9058] rounded-[32px] px-6 py-2.5 flex items-center gap-2'
                     >
                       <svg
@@ -977,7 +987,7 @@ export default function CandidateNewClient() {
               </h3>
 
               {/* 職務経歴エントリ */}
-              {selectionEntries.map((entry, index) => (
+              {workHistoryEntries.map((entry, index) => (
                 <div
                   key={entry.id}
                   className='bg-[#f9f9f9] rounded-[10px] p-6 mb-6 relative'
@@ -986,7 +996,7 @@ export default function CandidateNewClient() {
                   {index > 0 && (
                     <div
                       className='absolute top-4 right-4 w-4 h-4 cursor-pointer'
-                      onClick={() => removeSelectionEntry(index)}
+                      onClick={() => removeWorkHistoryEntry(index)}
                     >
                       <svg
                         width='16'
@@ -1012,7 +1022,7 @@ export default function CandidateNewClient() {
                     <CompanyNameInput
                       value={entry.companyName}
                       onChange={value =>
-                        updateSelectionEntry(index, 'companyName', value)
+                        updateWorkHistoryEntry(index, 'companyName', value)
                       }
                       placeholder='企業名を入力'
                       className='w-[400px]'
@@ -1028,7 +1038,7 @@ export default function CandidateNewClient() {
                       type='text'
                       value={entry.department}
                       onChange={e =>
-                        updateSelectionEntry(
+                        updateWorkHistoryEntry(
                           index,
                           'department',
                           e.target.value
@@ -1049,7 +1059,7 @@ export default function CandidateNewClient() {
                         <select
                           value={entry.startYear || ''}
                           onChange={e =>
-                            updateSelectionEntry(
+                            updateWorkHistoryEntry(
                               index,
                               'startYear',
                               e.target.value
@@ -1070,7 +1080,7 @@ export default function CandidateNewClient() {
                         <select
                           value={entry.startMonth || ''}
                           onChange={e =>
-                            updateSelectionEntry(
+                            updateWorkHistoryEntry(
                               index,
                               'startMonth',
                               e.target.value
@@ -1096,7 +1106,7 @@ export default function CandidateNewClient() {
                             type='checkbox'
                             checked={entry.isCurrentlyWorking || false}
                             onChange={e =>
-                              updateSelectionEntry(
+                              updateWorkHistoryEntry(
                                 index,
                                 'isCurrentlyWorking',
                                 e.target.checked
@@ -1114,7 +1124,7 @@ export default function CandidateNewClient() {
                           <select
                             value={entry.endYear || ''}
                             onChange={e =>
-                              updateSelectionEntry(
+                              updateWorkHistoryEntry(
                                 index,
                                 'endYear',
                                 e.target.value
@@ -1135,7 +1145,7 @@ export default function CandidateNewClient() {
                           <select
                             value={entry.endMonth || ''}
                             onChange={e =>
-                              updateSelectionEntry(
+                              updateWorkHistoryEntry(
                                 index,
                                 'endMonth',
                                 e.target.value
@@ -1190,7 +1200,7 @@ export default function CandidateNewClient() {
                                       ...(entry.industries || []),
                                     ];
                                     newIndustries.splice(industryIndex, 1);
-                                    updateSelectionEntry(
+                                    updateWorkHistoryEntry(
                                       index,
                                       'industries',
                                       newIndustries
@@ -1251,7 +1261,7 @@ export default function CandidateNewClient() {
                                       ...(entry.jobTypes || []),
                                     ];
                                     newJobTypes.splice(jobTypeIndex, 1);
-                                    updateSelectionEntry(
+                                    updateWorkHistoryEntry(
                                       index,
                                       'jobTypes',
                                       newJobTypes
@@ -1289,7 +1299,7 @@ export default function CandidateNewClient() {
                       <textarea
                         value={entry.jobDescription || ''}
                         onChange={e =>
-                          updateSelectionEntry(
+                          updateWorkHistoryEntry(
                             index,
                             'jobDescription',
                             e.target.value
@@ -1308,7 +1318,7 @@ export default function CandidateNewClient() {
               <div className='flex justify-center mt-6'>
                 <button
                   type='button'
-                  onClick={addSelectionEntry}
+                  onClick={addWorkHistoryEntry}
                   className='px-8 py-3 bg-[#0F9058] text-white rounded-[32px] text-[16px] font-bold tracking-[1.6px] hover:bg-[#0d7a4a] transition-colors'
                 >
                   + 職務経歴を追加
@@ -1940,7 +1950,7 @@ export default function CandidateNewClient() {
             {/* Submit Buttons */}
             <div className='flex justify-center gap-4 pt-8'>
               <AdminButton
-                text={isSubmitting ? '準備中...' : '確認する'}
+                text={isSubmitting ? '確認中...' : '確認する'}
                 variant='green-gradient'
                 onClick={handleSubmit}
                 disabled={isSubmitting}

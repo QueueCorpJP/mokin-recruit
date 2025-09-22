@@ -5,6 +5,7 @@ import { logger } from '@/lib/server/utils/logger';
 import { sendEmailViaSendGrid } from '@/lib/email/sender';
 import { verifyOtp } from '@/lib/auth/otp';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 export interface VerifyFormData {
   verificationCode: string;
@@ -243,6 +244,21 @@ export async function signupVerifyAction(
             // Auth user IDを優先して使用（利用可能な場合）
             const finalUserId = authUserId || existingCandidate.id;
 
+            // 既存ユーザーの場合もクッキーにユーザーIDとメールアドレスを保存
+            const cookieStore = await cookies();
+            cookieStore.set('signup_user_id', finalUserId, {
+              httpOnly: false,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7, // 7日間
+            });
+            cookieStore.set('signup_email', email.trim(), {
+              httpOnly: false,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7, // 7日間
+            });
+
             return {
               success: true,
               message: '認証が完了しました。パスワード設定ページに進みます。',
@@ -341,8 +357,23 @@ export async function signupVerifyAction(
         // エラーは記録するが、成功レスポンスは返す
       }
 
+      // クッキーにユーザーIDとメールアドレスを保存（OTP認証完了済みユーザーとして記録）
+      const cookieStore = await cookies();
+      cookieStore.set('signup_user_id', userId, {
+        httpOnly: false, // クライアントサイドから読み取り可能にする
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7日間
+      });
+      cookieStore.set('signup_email', email.trim(), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7日間
+      });
+
       logger.info(
-        `OTP verification completed successfully for user: ${userId}`
+        `OTP verification completed successfully for user: ${userId}, cookie saved`
       );
 
       return {

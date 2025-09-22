@@ -77,9 +77,12 @@ export default function CandidateNewClientRefactored() {
       const confirmData = prepareConfirmationData();
 
       // Navigate to confirmation page with data
-      const params = new URLSearchParams();
-      params.set('data', JSON.stringify(confirmData));
-      router.push(`/admin/candidate/new/confirm?${params.toString()}`);
+      // Store data in sessionStorage instead of URL parameters
+      sessionStorage.setItem(
+        'candidateConfirmData',
+        JSON.stringify(confirmData)
+      );
+      router.push('/admin/candidate/new/confirm');
     } catch (error) {
       console.error('Error preparing candidate data:', error);
       alert('データの準備に失敗しました');

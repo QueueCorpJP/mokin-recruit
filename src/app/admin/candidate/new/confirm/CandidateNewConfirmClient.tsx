@@ -1,39 +1,60 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { createCandidateData } from '../actions';
 
 export default function CandidateNewConfirmClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>(null);
 
   useEffect(() => {
-    const data = searchParams.get('data');
-    if (data) {
-      try {
+    try {
+      const data = sessionStorage.getItem('candidateConfirmData');
+      if (data) {
         const parsedData = JSON.parse(data);
         setFormData(parsedData);
-      } catch (error) {
-        console.error('Error parsing form data:', error);
+      } else {
         router.push('/admin/candidate/new');
       }
-    } else {
+    } catch (error) {
+      console.error('Error parsing form data:', error);
       router.push('/admin/candidate/new');
     }
-  }, [searchParams, router]);
+  }, [router]);
 
-  // Calculate age from formData birth_date
-  const age = formData?.updateData?.birth_date
-    ? new Date().getFullYear() -
-      new Date(formData.updateData.birth_date).getFullYear()
-    : null;
+  // Calculate age from formData birth fields
+  const calculateAge = () => {
+    if (
+      !formData?.updateData?.birthYear ||
+      !formData?.updateData?.birthMonth ||
+      !formData?.updateData?.birthDay
+    ) {
+      return null;
+    }
+    const birthDate = new Date(
+      parseInt(formData.updateData.birthYear),
+      parseInt(formData.updateData.birthMonth) - 1,
+      parseInt(formData.updateData.birthDay)
+    );
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
+  const age = calculateAge();
 
   const handleConfirmSave = async () => {
     if (isSubmitting || !formData) return;
@@ -45,8 +66,8 @@ export default function CandidateNewConfirmClient() {
       const result = await createCandidateData(
         formData.updateData,
         formData.education,
-        formData.workExperience,
-        formData.jobTypeExperience,
+        [],
+        [],
         formData.skills,
         formData.expectations || {},
         formData.selectionEntries,
@@ -58,6 +79,8 @@ export default function CandidateNewConfirmClient() {
       if (result.success) {
         console.log('Setting candidateId:', result.candidateId);
         console.log('Setting showModal to true');
+        // Clear sessionStorage after successful creation
+        sessionStorage.removeItem('candidateConfirmData');
         setCandidateId(result.candidateId || '');
         setShowModal(true);
       } else {
@@ -74,6 +97,7 @@ export default function CandidateNewConfirmClient() {
 
   const handleViewCandidate = () => {
     setShowModal(false);
+    sessionStorage.removeItem('candidateConfirmData');
     if (candidateId) {
       router.push(`/admin/candidate/${candidateId}`);
     } else {
@@ -83,6 +107,7 @@ export default function CandidateNewConfirmClient() {
 
   const handleBackToAdmin = () => {
     setShowModal(false);
+    sessionStorage.removeItem('candidateConfirmData');
     router.push('/admin');
   };
 
@@ -124,8 +149,8 @@ export default function CandidateNewConfirmClient() {
                   氏名
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.last_name}{' '}
-                  {formData.updateData?.first_name}
+                  {formData.updateData?.lastName}{' '}
+                  {formData.updateData?.firstName}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -133,8 +158,8 @@ export default function CandidateNewConfirmClient() {
                   フリガナ
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.last_name_kana}{' '}
-                  {formData.updateData?.first_name_kana}
+                  {formData.updateData?.lastNameKana}{' '}
+                  {formData.updateData?.firstNameKana}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -142,11 +167,7 @@ export default function CandidateNewConfirmClient() {
                   性別
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.gender === 'male'
-                    ? '男性'
-                    : formData.updateData?.gender === 'female'
-                      ? '女性'
-                      : '回答しない'}
+                  {formData.updateData?.gender || '未選択'}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -154,7 +175,11 @@ export default function CandidateNewConfirmClient() {
                   生年月日
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.birth_date || 'なし'}{' '}
+                  {formData.updateData?.birthYear &&
+                  formData.updateData?.birthMonth &&
+                  formData.updateData?.birthDay
+                    ? `${formData.updateData.birthYear}年${formData.updateData.birthMonth}月${formData.updateData.birthDay}日`
+                    : 'なし'}{' '}
                   {age && `(${age}歳)`}
                 </span>
               </div>
@@ -171,7 +196,7 @@ export default function CandidateNewConfirmClient() {
                   電話番号
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.phone_number || 'なし'}
+                  {formData.updateData?.phoneNumber || 'なし'}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -179,7 +204,7 @@ export default function CandidateNewConfirmClient() {
                   現在の年収
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.current_income || 'なし'}
+                  {formData.updateData?.currentIncome || 'なし'}
                 </span>
               </div>
             </div>
@@ -196,11 +221,7 @@ export default function CandidateNewConfirmClient() {
                   転職経験
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.has_career_change === 'yes'
-                    ? 'あり'
-                    : formData.updateData?.has_career_change === 'no'
-                      ? 'なし'
-                      : 'なし'}
+                  {formData.updateData?.hasCareerChange || 'なし'}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -208,21 +229,7 @@ export default function CandidateNewConfirmClient() {
                   転職希望時期
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.job_change_timing === 'immediately'
-                    ? 'すぐにでも'
-                    : formData.updateData?.job_change_timing ===
-                        'within_3months'
-                      ? '3ヶ月以内'
-                      : formData.updateData?.job_change_timing ===
-                          'within_6months'
-                        ? '6ヶ月以内'
-                        : formData.updateData?.job_change_timing ===
-                            'within_1year'
-                          ? '1年以内'
-                          : formData.updateData?.job_change_timing ===
-                              'undecided'
-                            ? '未定'
-                            : '未選択'}
+                  {formData.updateData?.jobChangeTiming || '未選択'}
                 </span>
               </div>
               <div className='flex gap-8'>
@@ -230,25 +237,18 @@ export default function CandidateNewConfirmClient() {
                   現在の活動状況
                 </span>
                 <span className='text-gray-900 flex-1'>
-                  {formData.updateData?.current_activity_status === 'active'
-                    ? '積極的に活動中'
-                    : formData.updateData?.current_activity_status === 'passive'
-                      ? '良い求人があれば'
-                      : formData.updateData?.current_activity_status ===
-                          'not_active'
-                        ? '活動していない'
-                        : '未選択'}
+                  {formData.updateData?.currentActivityStatus || '未選択'}
                 </span>
               </div>
             </div>
           </section>
 
-          {/* Selection Entries */}
+          {/* Career Status Entries */}
           {formData.selectionEntries &&
             formData.selectionEntries.length > 0 && (
               <section className='mb-8'>
                 <h3 className='text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300'>
-                  経験企業名
+                  転職活動状況エントリ
                 </h3>
                 <div className='px-4 py-4 space-y-4'>
                   {formData.selectionEntries.map(
@@ -261,22 +261,53 @@ export default function CandidateNewConfirmClient() {
                           <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
                             会社名
                           </span>
-                          <div className='flex-1'>{entry.companyName}</div>
+                          <div className='flex-1'>
+                            {entry.companyName || 'なし'}
+                          </div>
+                        </div>
+                        <div className='flex gap-8'>
+                          <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                            部署
+                          </span>
+                          <div className='flex-1'>
+                            {entry.department || 'なし'}
+                          </div>
                         </div>
                         <div className='flex gap-8'>
                           <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
                             業界
                           </span>
                           <div className='flex-1'>
-                            {entry.industries.join(', ') || 'なし'}
+                            {entry.industries && entry.industries.length > 0
+                              ? entry.industries.join(', ')
+                              : 'なし'}
                           </div>
                         </div>
                         <div className='flex gap-8'>
                           <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                            職種
+                            進捗状況
                           </span>
                           <div className='flex-1'>
-                            {entry.jobTypes.join(', ') || 'なし'}
+                            {entry.progressStatus || 'なし'}
+                          </div>
+                        </div>
+                        {entry.progressStatus === '辞退' &&
+                          entry.declineReason && (
+                            <div className='flex gap-8'>
+                              <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                                見送り理由
+                              </span>
+                              <div className='flex-1'>
+                                {entry.declineReason}
+                              </div>
+                            </div>
+                          )}
+                        <div className='flex gap-8'>
+                          <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                            非公開
+                          </span>
+                          <div className='flex-1'>
+                            {entry.isPrivate ? 'はい' : 'いいえ'}
                           </div>
                         </div>
                       </div>
@@ -291,70 +322,87 @@ export default function CandidateNewConfirmClient() {
             <h3 className='text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300'>
               職務経歴
             </h3>
-            <div className='px-4 py-4 space-y-6'>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  会社名
-                </span>
-                <div className='flex-1'>
-                  {formData.updateData?.recent_job_company_name || 'なし'}
-                </div>
-              </div>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  部署・役職
-                </span>
-                <div className='flex-1'>
-                  {formData.updateData?.recent_job_department_position ||
-                    'なし'}
-                </div>
-              </div>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  在籍期間
-                </span>
-                <div className='flex-1'>
-                  {formData.updateData?.recent_job_start_year &&
-                  formData.updateData?.recent_job_start_month
-                    ? `${formData.updateData.recent_job_start_year}年${formData.updateData.recent_job_start_month}月`
-                    : ''}
-                  {!formData.updateData?.recent_job_is_currently_working &&
-                  formData.updateData?.recent_job_end_year &&
-                  formData.updateData?.recent_job_end_month
-                    ? ` 〜 ${formData.updateData.recent_job_end_year}年${formData.updateData.recent_job_end_month}月`
-                    : formData.updateData?.recent_job_is_currently_working
-                      ? ' 〜 現在'
-                      : ''}
-                </div>
-              </div>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  業界
-                </span>
-                <div className='flex-1'>
-                  {formData.updateData?.recent_job_industries?.join(', ') ||
-                    'なし'}
-                </div>
-              </div>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  職種
-                </span>
-                <div className='flex-1'>
-                  {formData.updateData?.recent_job_types?.join(', ') || 'なし'}
-                </div>
-              </div>
-              <div className='flex gap-8'>
-                <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                  職務内容
-                </span>
-                <div className='flex-1'>
-                  <div className='whitespace-pre-wrap'>
-                    {formData.updateData?.recent_job_description || 'なし'}
+            {formData.workHistoryEntries &&
+            formData.workHistoryEntries.length > 0 ? (
+              <div className='space-y-6'>
+                {formData.workHistoryEntries.map((entry, index) => (
+                  <div
+                    key={entry.id || index}
+                    className='border border-gray-200 rounded-lg p-4'
+                  >
+                    <div className='space-y-4'>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          会社名
+                        </span>
+                        <div className='flex-1'>
+                          {entry.companyName || 'なし'}
+                        </div>
+                      </div>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          部署・役職
+                        </span>
+                        <div className='flex-1'>
+                          {entry.department || 'なし'}
+                        </div>
+                      </div>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          在籍期間
+                        </span>
+                        <div className='flex-1'>
+                          {entry.startYear && entry.startMonth
+                            ? `${entry.startYear}年${entry.startMonth}月`
+                            : ''}
+                          {entry.isCurrentlyWorking
+                            ? ' 〜 現在'
+                            : entry.endYear && entry.endMonth
+                              ? ` 〜 ${entry.endYear}年${entry.endMonth}月`
+                              : ''}
+                        </div>
+                      </div>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          業界
+                        </span>
+                        <div className='flex-1'>
+                          {entry.industries && entry.industries.length > 0
+                            ? entry.industries.join(', ')
+                            : 'なし'}
+                        </div>
+                      </div>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          職種
+                        </span>
+                        <div className='flex-1'>
+                          {entry.jobTypes && entry.jobTypes.length > 0
+                            ? entry.jobTypes.join(', ')
+                            : 'なし'}
+                        </div>
+                      </div>
+                      <div className='flex gap-8'>
+                        <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
+                          職務内容
+                        </span>
+                        <div className='flex-1'>
+                          <div className='whitespace-pre-wrap'>
+                            {entry.jobDescription || 'なし'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className='px-4 py-4'>
+                <span className='text-gray-500'>
+                  職務経歴が入力されていません
+                </span>
+              </div>
+            )}
           </section>
 
           {/* 学歴・経験業種/職種 */}
@@ -372,20 +420,7 @@ export default function CandidateNewConfirmClient() {
                       最終学歴
                     </span>
                     <div className='flex-1'>
-                      {formData.education?.final_education === 'high_school'
-                        ? '高校卒'
-                        : formData.education?.final_education === 'vocational'
-                          ? '専門学校卒'
-                          : formData.education?.final_education ===
-                              'junior_college'
-                            ? '短大卒'
-                            : formData.education?.final_education ===
-                                'university'
-                              ? '大学卒'
-                              : formData.education?.final_education ===
-                                  'graduate'
-                                ? '大学院卒'
-                                : 'なし'}
+                      {formData.education?.final_education || 'なし'}
                     </div>
                   </div>
                   <div className='flex gap-8'>
@@ -418,57 +453,37 @@ export default function CandidateNewConfirmClient() {
                 </div>
               </div>
 
-              {/* 業種経験 */}
+              {/* 最新職歴の業種 */}
               <div className='space-y-6'>
-                <h4 className='font-semibold text-gray-700'>業種経験</h4>
+                <h4 className='font-semibold text-gray-700'>業種</h4>
                 <div className='pl-4'>
                   <div className='flex gap-8'>
                     <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                      業種経験
+                      業種
                     </span>
                     <div className='flex-1'>
-                      {formData.workExperience &&
-                      formData.workExperience.length > 0 ? (
-                        <div className='space-y-2'>
-                          {formData.workExperience.map(
-                            (exp: any, index: number) => (
-                              <div key={index} className='text-gray-700'>
-                                {exp.industry_name}: {exp.experience_years}年
-                              </div>
-                            )
-                          )}
-                        </div>
-                      ) : (
-                        <div className='text-gray-700'>なし</div>
-                      )}
+                      {formData.updateData?.recentJobIndustries &&
+                      formData.updateData.recentJobIndustries.length > 0
+                        ? formData.updateData.recentJobIndustries.join(', ')
+                        : 'なし'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* 職種経験 */}
+              {/* 最新職歴の職種 */}
               <div className='space-y-6'>
-                <h4 className='font-semibold text-gray-700'>職種経験</h4>
+                <h4 className='font-semibold text-gray-700'>職種</h4>
                 <div className='pl-4'>
                   <div className='flex gap-8'>
                     <span className='text-sm font-medium text-gray-700 w-[120px] text-right'>
-                      職種経験
+                      職種
                     </span>
                     <div className='flex-1'>
-                      {formData.jobTypeExperience &&
-                      formData.jobTypeExperience.length > 0 ? (
-                        <div className='space-y-2'>
-                          {formData.jobTypeExperience.map(
-                            (exp: any, index: number) => (
-                              <div key={index} className='text-gray-700'>
-                                {exp.job_type_name}: {exp.experience_years}年
-                              </div>
-                            )
-                          )}
-                        </div>
-                      ) : (
-                        <div className='text-gray-700'>なし</div>
-                      )}
+                      {formData.updateData?.recentJobTypes &&
+                      formData.updateData.recentJobTypes.length > 0
+                        ? formData.updateData.recentJobTypes.join(', ')
+                        : 'なし'}
                     </div>
                   </div>
                 </div>
@@ -487,15 +502,17 @@ export default function CandidateNewConfirmClient() {
                   英語レベル
                 </span>
                 <div className='flex-1'>
-                  {formData.skills?.english_level === 'none'
-                    ? 'なし'
-                    : formData.skills?.english_level === 'basic'
-                      ? '日常会話レベル'
-                      : formData.skills?.english_level === 'business'
-                        ? 'ビジネスレベル'
-                        : formData.skills?.english_level === 'native'
-                          ? 'ネイティブレベル'
-                          : '未設定'}
+                  {formData.skills?.english_level === 'native'
+                    ? 'ネイティブ'
+                    : formData.skills?.english_level === 'business'
+                      ? 'ビジネスレベル'
+                      : formData.skills?.english_level === 'conversation'
+                        ? '日常会話'
+                        : formData.skills?.english_level === 'basic'
+                          ? '基礎会話'
+                          : formData.skills?.english_level === 'none'
+                            ? 'なし'
+                            : 'レベルを選択'}
                 </div>
               </div>
               <div className='flex gap-8'>
@@ -533,7 +550,7 @@ export default function CandidateNewConfirmClient() {
                 </span>
                 <div className='flex-1'>
                   <div className='whitespace-pre-wrap'>
-                    {formData.updateData?.job_summary || 'なし'}
+                    {formData.updateData?.jobSummary || 'なし'}
                   </div>
                 </div>
               </div>
@@ -543,7 +560,7 @@ export default function CandidateNewConfirmClient() {
                 </span>
                 <div className='flex-1'>
                   <div className='whitespace-pre-wrap'>
-                    {formData.updateData?.self_pr || 'なし'}
+                    {formData.updateData?.selfPr || 'なし'}
                   </div>
                 </div>
               </div>
