@@ -334,6 +334,7 @@ export async function setPasswordAction(
         .from('candidates')
         .update({
           status: 'password_setting_ready',
+          password_hash: 'set', // パスワード設定済みのマーカー
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
