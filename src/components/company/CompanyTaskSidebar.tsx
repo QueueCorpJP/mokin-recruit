@@ -1034,10 +1034,19 @@ export function CompanyTaskSidebar({
           <div style={sectionTitleStyle}>スカウトがうまくいかない</div>
 
           <div
-            // style={supportBannerStyle}
-
+            style={supportBannerStyle}
             onClick={() => router.push('/company/contact')}
           >
+            <div style={freeTagStyle}>
+              <span style={freeTextStyle}>無料</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={supportTextStyle}>
+                採用担当者が
+                <br />
+                無料でサポート
+              </span>
+            </div>
             <Image
               src='/images/consult.svg'
               alt='お問い合わせ'

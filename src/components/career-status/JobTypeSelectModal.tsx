@@ -21,6 +21,12 @@ export default function JobTypeSelectModal({
   initialSelected = [],
   maxSelections = 3,
 }: JobTypeSelectModalProps) {
+  console.log('[DEBUG] JobTypeSelectModal render:', {
+    isOpen,
+    jobCategoriesLength: jobCategories.length,
+    firstCategory: jobCategories[0],
+    initialSelected,
+  });
   const [selectedJobTypes, setSelectedJobTypes] =
     useState<string[]>(initialSelected);
   const [selectedCategory, setSelectedCategory] = useState(

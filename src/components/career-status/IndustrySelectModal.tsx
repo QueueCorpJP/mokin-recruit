@@ -21,6 +21,12 @@ export default function IndustrySelectModal({
   initialSelected = [],
   maxSelections = 3,
 }: IndustrySelectModalProps) {
+  console.log('[DEBUG] IndustrySelectModal render:', {
+    isOpen,
+    industryCategoriesLength: industryCategories.length,
+    firstCategory: industryCategories[0],
+    initialSelected,
+  });
   const [selectedIndustries, setSelectedIndustries] =
     useState<string[]>(initialSelected);
   const isDesktop = useMediaQuery('(min-width: 1024px)');

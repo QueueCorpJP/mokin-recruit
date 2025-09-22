@@ -247,30 +247,97 @@ export function loadSearchParamsToStore(
   }
 }
 
-// 検索パラメータから初期設定を取得する関数（後方互換性のため残す）
+// 検索パラメータから初期設定を取得する関数
 export function parseSearchParams(searchParams: URLSearchParams) {
   return {
     searchGroup: searchParams.get('search_group') || '',
-    jobTypes:
+    keyword: searchParams.get('keyword') || '',
+
+    // 経験職種・業種
+    experienceJobTypes:
       searchParams
-        .get('job_types')
+        .get('experience_job_types')
         ?.split(',')
+        .filter(Boolean)
         .map((name, index) => ({
           id: `job-${index}`,
           name: name.trim(),
+          experienceYears: '',
         })) || [],
-    industries:
+    experienceIndustries:
       searchParams
-        .get('industries')
+        .get('experience_industries')
         ?.split(',')
+        .filter(Boolean)
         .map((name, index) => ({
           id: `industry-${index}`,
           name: name.trim(),
+          experienceYears: '',
         })) || [],
-    keyword: searchParams.get('keyword') || '',
-    salaryMin: searchParams.get('salary_min') || '',
-    salaryMax: searchParams.get('salary_max') || '',
-    locations: searchParams.get('locations')?.split(',') || [],
-    workStyles: searchParams.get('work_styles')?.split(',') || [],
+
+    // 希望職種・業種
+    desiredJobTypes:
+      searchParams
+        .get('desired_job_types')
+        ?.split(',')
+        .filter(Boolean)
+        .map((name, index) => ({
+          id: `desired-job-${index}`,
+          name: name.trim(),
+          experienceYears: '',
+        })) || [],
+    desiredIndustries:
+      searchParams
+        .get('desired_industries')
+        ?.split(',')
+        .filter(Boolean)
+        .map((name, index) => ({
+          id: `desired-industry-${index}`,
+          name: name.trim(),
+          experienceYears: '',
+        })) || [],
+
+    // 希望勤務地
+    desiredLocations:
+      searchParams
+        .get('desired_locations')
+        ?.split(',')
+        .filter(Boolean)
+        .map((name, index) => ({
+          id: `location-${index}`,
+          name: name.trim(),
+        })) || [],
+
+    // 働き方
+    workStyles:
+      searchParams
+        .get('work_styles')
+        ?.split(',')
+        .filter(Boolean)
+        .map((name, index) => ({
+          id: `style-${index}`,
+          name: name.trim(),
+        })) || [],
+
+    // 年収・年齢
+    currentSalaryMin: searchParams.get('current_salary_min') || '',
+    currentSalaryMax: searchParams.get('current_salary_max') || '',
+    desiredSalaryMin: searchParams.get('desired_salary_min') || '',
+    desiredSalaryMax: searchParams.get('desired_salary_max') || '',
+    ageMin: searchParams.get('age_min') || '',
+    ageMax: searchParams.get('age_max') || '',
+
+    // その他の条件
+    currentCompany: searchParams.get('current_company') || '',
+    education: searchParams.get('education') || '',
+    englishLevel: searchParams.get('english_level') || '',
+    otherLanguage: searchParams.get('other_language') || '',
+    otherLanguageLevel: searchParams.get('other_language_level') || '',
+    qualifications: searchParams.get('qualifications') || '',
+    transferTime: searchParams.get('transfer_time') || '',
+    selectionStatus: searchParams.get('selection_status') || '',
+    similarCompanyIndustry: searchParams.get('similar_company_industry') || '',
+    similarCompanyLocation: searchParams.get('similar_company_location') || '',
+    lastLoginMin: searchParams.get('last_login_min') || '',
   };
 }

@@ -557,7 +557,7 @@ export default function SearchConditionForm({
               j => j.name === jobName
             );
             return {
-              id: jobName,
+              id: jobName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
               name: jobName,
               experienceYears: existing?.experienceYears || '',
             };
@@ -578,7 +578,7 @@ export default function SearchConditionForm({
         }}
         onConfirm={industryNames => {
           const industries = industryNames.map(industryName => ({
-            id: industryName,
+            id: industryName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
             name: industryName,
           }));
           searchStore.setExperienceIndustries(industries);
