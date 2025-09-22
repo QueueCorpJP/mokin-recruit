@@ -2,33 +2,74 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import CryptoJS from 'crypto-js';
 import CompanyRegistrationCompleteModal from '@/components/admin/CompanyRegistrationCompleteModal';
 import { createCompanyData, CompanyFormData } from '../actions';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 
-interface CompanyConfirmClientProps {
-  companyData: CompanyFormData;
+// 拡張された型定義（Base64フィールドを含む）
+interface ExtendedCompanyFormData extends CompanyFormData {
+  iconImageBase64?: string;
+  imagesBase64?: string[];
 }
 
-export default function CompanyConfirmClient({
-  companyData: initialCompanyData,
-}: CompanyConfirmClientProps) {
+export default function CompanyConfirmClient() {
   const router = useRouter();
   const [registrationCompleteModalOpen, setRegistrationCompleteModalOpen] =
     useState(false);
-  const [companyData, setCompanyData] =
-    useState<CompanyFormData>(initialCompanyData);
+  const [companyData, setCompanyData] = useState<ExtendedCompanyFormData>({
+    companyId: '',
+    plan: '',
+    companyName: '',
+    urls: [{ title: '', url: '' }],
+    iconImage: null,
+    iconImageBase64: undefined,
+    representativePosition: '',
+    representativeName: '',
+    establishedYear: '',
+    capital: '',
+    capitalUnit: '万円',
+    employeeCount: '',
+    industries: [],
+    businessContent: '',
+    prefecture: '',
+    address: '',
+    companyPhase: '',
+    images: [],
+    imagesBase64: [],
+    attractions: [
+      { title: '', description: '' },
+      { title: '', description: '' },
+    ],
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // セッションストレージからデータを取得
+  // 復号化関数
+  function decryptData(encryptedData: string, key: string): any {
+    try {
+      const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+      const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+      return JSON.parse(decryptedData);
+    } catch (error) {
+      console.error('Failed to decrypt data:', error);
+      return null;
+    }
+  }
+
+  // セッションストレージからデータを取得（1回のみ）
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !isDataLoaded) {
       const storedData = sessionStorage.getItem('companyFormData');
       if (storedData) {
         try {
-          const parsedData = JSON.parse(storedData);
-          setCompanyData(parsedData);
+          // 暗号化キーは送信元と同じものを使用
+          const encryptionKey = 'company-form-secret-key';
+          const decryptedData = decryptData(storedData, encryptionKey);
+          if (decryptedData) {
+            setCompanyData(decryptedData);
+          }
         } catch (error) {
           console.error(
             'Failed to parse company form data from sessionStorage:',
@@ -36,24 +77,39 @@ export default function CompanyConfirmClient({
           );
         }
       }
+      setIsDataLoaded(true);
     }
-  }, []);
+  }, [isDataLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveError(null);
 
     try {
-      const result = await createCompanyData(companyData);
+      // 保存前にデータを確認
+      console.log('Saving company data:', {
+        companyName: companyData.companyName,
+        plan: companyData.plan,
+        industries: companyData.industries,
+      });
+
+      // Base64画像データを除外したデータを送信（サーバーサイドではFileオブジェクトは処理できない）
+      const dataToSave = {
+        ...companyData,
+        iconImage: null,
+        images: [],
+        // Base64データは現在の実装では使用しないが、将来的にファイルアップロード機能を追加する際に使用
+      };
+
+      const result = await createCompanyData(dataToSave);
+
+      console.log('Save result:', result);
 
       if (result.success) {
-        // 保存成功後にセッションストレージをクリア
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('companyFormData');
-        }
         // 保存完了後に完了モーダルを表示
         setRegistrationCompleteModalOpen(true);
       } else {
+        console.error('Save failed:', result.error, result.validationErrors);
         setSaveError(result.error || '保存に失敗しました');
       }
     } catch (error) {
@@ -88,7 +144,11 @@ export default function CompanyConfirmClient({
           プラン
         </label>
         <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-          {companyData.plan}
+          {companyData.plan === 'basic'
+            ? 'ベーシック'
+            : companyData.plan === 'standard'
+              ? 'スタンダード'
+              : companyData.plan}
         </div>
       </div>
 
@@ -161,11 +221,19 @@ export default function CompanyConfirmClient({
           <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
             アイコン画像
           </label>
-          <div className='w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center'>
-            <div className='text-center'>
-              <div className='text-sm font-bold text-white'>画像を</div>
-              <div className='text-sm font-bold text-white'>変更</div>
-            </div>
+          <div className='w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden'>
+            {companyData.iconImageBase64 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={companyData.iconImageBase64}
+                alt='アイコン画像'
+                className='w-32 h-32 object-cover'
+              />
+            ) : (
+              <div className='text-center'>
+                <div className='text-sm font-bold text-white'>画像なし</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -300,12 +368,20 @@ export default function CompanyConfirmClient({
             {[0, 1, 2].map(index => (
               <div
                 key={index}
-                className='w-48 h-32 bg-gray-400 flex items-center justify-center'
+                className='w-48 h-32 bg-gray-400 flex items-center justify-center overflow-hidden'
               >
-                <div className='text-center'>
-                  <div className='text-sm font-bold text-white'>画像を</div>
-                  <div className='text-sm font-bold text-white'>変更</div>
-                </div>
+                {companyData.imagesBase64 && companyData.imagesBase64[index] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={companyData.imagesBase64[index]}
+                    alt={`イメージ画像 ${index + 1}`}
+                    className='w-48 h-32 object-cover'
+                  />
+                ) : (
+                  <div className='text-center'>
+                    <div className='text-sm font-bold text-white'>画像なし</div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

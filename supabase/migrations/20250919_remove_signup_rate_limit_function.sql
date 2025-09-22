@@ -13,3 +13,4 @@ DROP FUNCTION IF EXISTS public.check_signup_rate_limit(p_email text, p_table_nam
 -- Log the cleanup
 SELECT 'check_signup_rate_limit function removed successfully' as cleanup_result;
 
+

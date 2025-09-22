@@ -17,10 +17,12 @@ export default function CompanyRegistrationCompleteModal({
   const router = useRouter();
 
   const handleGoToAdminTop = () => {
+    onClose();
     router.push('/admin');
   };
 
   const handleAddGroup = () => {
+    onClose();
     // 企業一覧ページに遷移（企業グループ追加機能は別途実装予定）
     router.push('/admin/company');
   };
@@ -28,30 +30,26 @@ export default function CompanyRegistrationCompleteModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
-    >
-      <div
-        className="bg-white border border-black rounded-2xl w-[604px] h-[255px] relative"
-      >
+    <div className='fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40'>
+      <div className='bg-white border border-black rounded-2xl w-[604px] h-[255px] relative'>
         {/* コンテンツ */}
-        <div className="flex flex-col items-center justify-center w-full h-full px-8">
+        <div className='flex flex-col items-center justify-center w-full h-full px-8'>
           {/* タイトル */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-black mb-4">
+          <div className='text-center mb-8'>
+            <h2 className='text-2xl font-bold text-black mb-4'>
               新規企業の追加完了
             </h2>
-            <p className="text-base font-bold text-black">
+            <p className='text-base font-bold text-black'>
               新規企業の追加が完了しました。
             </p>
           </div>
 
           {/* ボタン群 */}
-          <div className="flex gap-4 w-full max-w-[463px]">
+          <div className='flex gap-4 w-full max-w-[463px]'>
             {/* 企業一覧へボタン */}
             <button
               onClick={handleAddGroup}
-              className="flex-1 h-[51px] bg-white border border-black rounded-[35px] text-base font-bold text-black hover:bg-gray-50 transition-colors"
+              className='flex-1 h-[51px] bg-white border border-black rounded-[35px] text-base font-bold text-black hover:bg-gray-50 transition-colors'
             >
               企業一覧へ
             </button>
@@ -59,7 +57,7 @@ export default function CompanyRegistrationCompleteModal({
             {/* 管理画面トップボタン */}
             <button
               onClick={handleGoToAdminTop}
-              className="flex-1 h-[51px] bg-black text-white rounded-[35px] text-base font-bold hover:bg-gray-800 transition-colors"
+              className='flex-1 h-[51px] bg-black text-white rounded-[35px] text-base font-bold hover:bg-gray-800 transition-colors'
             >
               管理画面トップ
             </button>

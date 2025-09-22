@@ -18,6 +18,7 @@ interface CompanyFormData {
     url: string;
   }>;
   iconImage: File | null;
+  iconImageBase64?: string;
   representativePosition: string;
   representativeName: string;
   establishedYear: string;
@@ -30,6 +31,7 @@ interface CompanyFormData {
   address: string;
   companyPhase: string;
   images: File[];
+  imagesBase64?: string[];
   attractions: Array<{
     title: string;
     description: string;
@@ -38,11 +40,10 @@ interface CompanyFormData {
 
 // 業種選択は既存のIndustryModalを使用するため、このオプションは削除
 
-// プランのオプション
+// プランのオプション（データベースの制約に合わせて修正）
 const planOptions = [
-  { value: 'プラン加入なし', label: 'プラン加入なし' },
-  { value: 'スタンダード', label: 'スタンダード' },
-  { value: 'ストラテジック', label: 'ストラテジック' },
+  { value: 'basic', label: 'ベーシック' },
+  { value: 'standard', label: 'スタンダード' },
 ];
 
 // 都道府県のオプション
@@ -247,15 +248,54 @@ export default function CompanyNewClient() {
     return CryptoJS.AES.encrypt(stringData, key).toString();
   }
 
-  const handleSubmit = () => {
+  // ファイルをBase64に変換する関数
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleSubmit = async () => {
     // フォームデータをセッションストレージに保存して確認画面に渡す
     if (typeof window !== 'undefined') {
-      // In production, use a secure key based on authenticated user/session
-      const encryptionKey = 'company-form-secret-key';
-      const encryptedData = encryptData(formData, encryptionKey);
-      sessionStorage.setItem('companyFormData', encryptedData);
+      try {
+        // 画像ファイルをBase64に変換
+        let iconImageBase64: string | undefined;
+        if (formData.iconImage) {
+          iconImageBase64 = await fileToBase64(formData.iconImage);
+        }
+
+        const imagesBase64: string[] = [];
+        for (const image of formData.images) {
+          if (image) {
+            const base64 = await fileToBase64(image);
+            imagesBase64.push(base64);
+          }
+        }
+
+        // ファイルを除外したデータオブジェクトを作成
+        const dataToSave = {
+          ...formData,
+          iconImage: null, // Fileオブジェクトは送らない
+          iconImageBase64,
+          images: [], // Fileオブジェクトは送らない
+          imagesBase64,
+        };
+
+        // In production, use a secure key based on authenticated user/session
+        const encryptionKey = 'company-form-secret-key';
+        const encryptedData = encryptData(dataToSave, encryptionKey);
+        sessionStorage.setItem('companyFormData', encryptedData);
+
+        router.push('/admin/company/new/confirm');
+      } catch (error) {
+        console.error('Failed to process form data:', error);
+        alert('画像の処理中にエラーが発生しました。');
+      }
     }
-    router.push('/admin/company/new/confirm');
   };
 
   return (
@@ -474,8 +514,6 @@ export default function CompanyNewClient() {
           <SelectInput
             options={[
               { value: '万円', label: '万円' },
-              { value: '円', label: '円' },
-              { value: '千円', label: '千円' },
               { value: '億円', label: '億円' },
             ]}
             value={formData.capitalUnit}
