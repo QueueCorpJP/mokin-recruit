@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { logger } from '@/lib/server/utils/logger';
+import { sendEmailViaSendGrid } from '@/lib/email/sender';
 import { cookies } from 'next/headers';
 
 export interface SetPasswordFormData {
@@ -28,6 +29,52 @@ const SetPasswordSchema = z
     message: 'パスワードが一致しません',
     path: ['confirmPassword'],
   });
+
+/**
+ * 仮登録完了メールのHTML生成
+ */
+function generateRegistrationEmailHtml(
+  userName: string,
+  registrationUrl: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>【CuePoint】仮登録完了のお知らせ</title>
+    </head>
+    <body style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.6; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #fff;">
+        <div style="padding: 20px 0;">
+          <p>${userName} 様</p>
+
+          <p>CuePointへの仮登録が完了しました。<br>
+          引き続き、以下のURLより本登録をお願いいたします。</p>
+
+          <div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; margin: 20px 0; padding: 20px 0;">
+            <p style="margin: 0; font-weight: bold;">■ 登録URL：${registrationUrl}</p>
+          </div>
+
+          <p><strong>【次のステップ】</strong><br>
+          本登録を完了すると、スカウトの受信や企業とのやりとりが可能になります。</p>
+
+          <div style="border-top: 1px solid #ccc; margin-top: 40px; padding-top: 20px;">
+            <p><strong>CuePoint</strong><br>
+            <a href="https://cuepoint.jp/candidate" style="color: #0066cc;">https://cuepoint.jp/candidate</a></p>
+
+            <p><strong>【お問い合わせ先】</strong><br>
+            ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}</p>
+
+            <p>運営会社：メルセネール株式会社<br>
+            東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
 
 export async function setPasswordAction(
   password: string,
@@ -446,6 +493,35 @@ export async function setPasswordAction(
               logger.warn(
                 'Failed to update candidate status to active:',
                 statusUpdateError
+              );
+            }
+
+            // 仮登録完了メールを送信
+            try {
+              const userName = candidateData.email.split('@')[0]; // メールアドレスの@より前を名前として使用
+              const registrationUrl = 'https://cuepoint.jp/candidate'; // 本登録ページのURL
+
+              const emailResult = await sendEmailViaSendGrid({
+                to: candidateData.email,
+                subject: '【CuePoint】仮登録完了のお知らせ',
+                html: generateRegistrationEmailHtml(userName, registrationUrl),
+              });
+
+              if (emailResult.success) {
+                logger.info(
+                  `Registration completion email sent successfully to: ${candidateData.email.substring(0, 3)}***`,
+                  { messageId: emailResult.messageId }
+                );
+              } else {
+                logger.error(
+                  'Failed to send registration completion email:',
+                  emailResult.error
+                );
+              }
+            } catch (emailError) {
+              logger.error(
+                'Error sending registration completion email:',
+                emailError
               );
             }
           } else {

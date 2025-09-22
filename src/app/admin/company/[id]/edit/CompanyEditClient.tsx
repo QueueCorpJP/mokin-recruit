@@ -126,25 +126,41 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
     companyId: company.id,
     plan: company.plan || '',
     companyName: company.company_name,
-    urls: [{ title: '', url: '' }],
+    urls:
+      company.company_urls && company.company_urls.length > 0
+        ? company.company_urls.map((url: any) => ({
+            title: url.title || '',
+            url: url.url || '',
+          }))
+        : [{ title: '', url: '' }],
     iconImage: null,
-    representativePosition: company.company_users[0]?.position_title || '',
+    representativePosition:
+      company.representative_position ||
+      company.company_users[0]?.position_title ||
+      '',
     representativeName: company.representative_name || '',
-    establishedYear: '',
-    capital: '',
-    capitalUnit: '万円',
-    employeeCount: '',
-    industries: company.industry ? [company.industry] : [],
-    businessContent: company.company_overview || '',
-    prefecture: '',
-    address: company.headquarters_address || '',
-    companyPhase: '',
+    establishedYear: company.established_year || '',
+    capital: company.capital_amount || '',
+    capitalUnit: company.capital_unit || '万円',
+    employeeCount: company.employees_count || '',
+    industries:
+      company.industries && company.industries.length > 0
+        ? company.industries
+        : company.industry
+          ? [company.industry]
+          : [],
+    businessContent: company.business_content || company.company_overview || '',
+    prefecture: company.prefecture || '',
+    address: company.address || company.headquarters_address || '',
+    companyPhase: company.company_phase || '',
     images: [],
-    attractions: company.appeal_points
-      ? company.appeal_points
-          .split('\n')
-          .map(point => ({ title: point, description: '' }))
-      : [{ title: '', description: '' }],
+    attractions:
+      company.company_attractions && company.company_attractions.length > 0
+        ? company.company_attractions.map((attraction: any) => ({
+            title: attraction.title || '',
+            description: attraction.description || '',
+          }))
+        : [{ title: '', description: '' }],
   });
 
   // URL管理
