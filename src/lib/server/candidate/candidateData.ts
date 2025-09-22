@@ -55,81 +55,93 @@ export interface EducationData {
 }
 
 // 候補者の基本データを取得する関数
-export async function getCandidateData(candidateId: string): Promise<CandidateData | null> {
+export async function getCandidateData(
+  candidateId: string
+): Promise<CandidateData | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    
-    const { data, error } = await supabase
-      .from('candidates')
-      .select(`
-        id,
-        email,
-        last_name,
-        first_name,
-        last_name_kana,
-        first_name_kana,
-        phone_number,
-        current_residence,
-        prefecture,
-        gender,
-        birth_date,
-        current_income,
-        has_career_change,
-        job_change_timing,
-        current_activity_status,
-        recent_job_company_name,
-        recent_job_department_position,
-        recent_job_start_year,
-        recent_job_start_month,
-        recent_job_end_year,
-        recent_job_end_month,
-        recent_job_is_currently_working,
-        recent_job_industries,
-        recent_job_types,
-        recent_job_description,
-        job_summary,
-        self_pr,
-        management_experience_count,
-        interested_work_styles,
-        skills,
-        experience_years,
-        desired_industries,
-        desired_job_types,
-        desired_salary,
-        desired_locations,
-        resume_filename,
-        resume_uploaded_at
-      `)
-      .eq('id', candidateId)
-      .single();
 
-    if (error) {
-      console.error('候補者データの取得に失敗しました:', error);
+    // 全ての関連データを並列で取得（N+1問題解決）
+    const [candidateResult, industriesResult, jobTypesResult] =
+      await Promise.all([
+        supabase
+          .from('candidates')
+          .select(
+            `
+          id,
+          email,
+          last_name,
+          first_name,
+          last_name_kana,
+          first_name_kana,
+          phone_number,
+          current_residence,
+          prefecture,
+          gender,
+          birth_date,
+          current_income,
+          has_career_change,
+          job_change_timing,
+          current_activity_status,
+          recent_job_company_name,
+          recent_job_department_position,
+          recent_job_start_year,
+          recent_job_start_month,
+          recent_job_end_year,
+          recent_job_end_month,
+          recent_job_is_currently_working,
+          recent_job_industries,
+          recent_job_types,
+          recent_job_description,
+          job_summary,
+          self_pr,
+          management_experience_count,
+          interested_work_styles,
+          skills,
+          experience_years,
+          desired_industries,
+          desired_job_types,
+          desired_salary,
+          desired_locations,
+          resume_filename,
+          resume_uploaded_at
+        `
+          )
+          .eq('id', candidateId)
+          .single(),
+        supabase
+          .from('work_experience')
+          .select(
+            `
+          industry_name,
+          experience_years
+        `
+          )
+          .eq('candidate_id', candidateId),
+        supabase
+          .from('job_type_experience')
+          .select(
+            `
+          job_type_name,
+          experience_years
+        `
+          )
+          .eq('candidate_id', candidateId),
+      ]);
+
+    if (candidateResult.error) {
+      console.error('候補者データの取得に失敗しました:', candidateResult.error);
       return null;
     }
 
-    // 業種データを取得
-    const { data: industriesData } = await supabase
-      .from('work_experience')
-      .select(`
-        industry_name,
-        experience_years
-      `)
-      .eq('candidate_id', candidateId);
-
-    // 職種データを取得
-    const { data: jobTypesData } = await supabase
-      .from('job_type_experience')
-      .select(`
-        job_type_name,
-        experience_years
-      `)
-      .eq('candidate_id', candidateId);
-
     // 業種・職種の名前を配列として格納
-    const candidateData = data as CandidateData;
-    candidateData.desired_industries = industriesData?.map(item => item.industry_name).filter(Boolean) || [];
-    candidateData.desired_job_types = jobTypesData?.map(item => item.job_type_name).filter(Boolean) || [];
+    const candidateData = candidateResult.data as CandidateData;
+    candidateData.desired_industries =
+      industriesResult.data?.map(item => item.industry_name).filter(Boolean) ||
+      [];
+    candidateData.desired_job_types =
+      jobTypesResult.data?.map(item => item.job_type_name).filter(Boolean) ||
+      [];
 
     return candidateData;
   } catch (error) {
@@ -149,13 +161,16 @@ export interface SkillsData {
 }
 
 // 学歴データを取得する関数
-export async function getEducationData(candidateId: string): Promise<EducationData | null> {
+export async function getEducationData(
+  candidateId: string
+): Promise<EducationData | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { data, error } = await supabase
       .from('education')
-      .select(`
+      .select(
+        `
         id,
         candidate_id,
         final_education,
@@ -163,7 +178,8 @@ export async function getEducationData(candidateId: string): Promise<EducationDa
         department,
         graduation_year,
         graduation_month
-      `)
+      `
+      )
       .eq('candidate_id', candidateId)
       .single();
 
@@ -184,20 +200,24 @@ export async function getEducationData(candidateId: string): Promise<EducationDa
 }
 
 // スキルデータを取得する関数
-export async function getSkillsData(candidateId: string): Promise<SkillsData | null> {
+export async function getSkillsData(
+  candidateId: string
+): Promise<SkillsData | null> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     const { data, error } = await supabase
       .from('skills')
-      .select(`
+      .select(
+        `
         id,
         candidate_id,
         english_level,
         other_languages,
         skills_list,
         qualifications
-      `)
+      `
+      )
       .eq('candidate_id', candidateId)
       .single();
 

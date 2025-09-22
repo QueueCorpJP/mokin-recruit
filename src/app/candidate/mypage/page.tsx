@@ -6,19 +6,86 @@ import { redirect } from 'next/navigation';
 import { getCandidateNotices } from './actions';
 import { CandidateDashboardClient } from './CandidateDashboardClient';
 
-// 包括的なやることリスト取得関数
+// 包括的なやることリスト取得関数（N+1問題修正版）
 async function getTaskData(candidateId: string) {
   const tasks: unknown[] = [];
   const client = await getSupabaseServerClient();
 
   try {
-    // 1. プロフィール完成度チェック
-    const { data: candidate } = await client
-      .from('candidates')
-      .select('*')
-      .eq('id', candidateId)
-      .single();
+    // 一度のクエリで全ての関連データを取得（N+1問題解決）
+    const seventyTwoHoursAgo = new Date(
+      Date.now() - 72 * 60 * 60 * 1000
+    ).toISOString();
 
+    const [
+      candidateResult,
+      educationResult,
+      skillsResult,
+      workExperienceResult,
+      expectationsResult,
+      scoutsResult,
+      applicationsResult,
+      selectionsResult,
+      notificationResult,
+      rooms,
+    ] = await Promise.all([
+      client.from('candidates').select('*').eq('id', candidateId).single(),
+      client
+        .from('education')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .single(),
+      client
+        .from('skills')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .single(),
+      client
+        .from('work_experience')
+        .select('*')
+        .eq('candidate_id', candidateId),
+      client
+        .from('expectations')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .single(),
+      client
+        .from('scout_sends')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .in('status', ['sent', 'read'])
+        .gte('sent_at', seventyTwoHoursAgo),
+      client
+        .from('application')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .eq('status', 'RESPONDED'),
+      client
+        .from('selection_progress')
+        .select('*, job_postings(title)')
+        .eq('candidate_id', candidateId)
+        .or(
+          'document_screening_result.eq.pending,first_interview_result.eq.pending,secondary_interview_result.eq.pending,final_interview_result.eq.pending'
+        ),
+      client
+        .from('notification_settings')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .single(),
+      getRooms(candidateId, 'candidate'),
+    ]);
+
+    const candidate = candidateResult.data;
+    const education = educationResult.data;
+    const skills = skillsResult.data;
+    const workExperience = workExperienceResult.data;
+    const expectations = expectationsResult.data;
+    const unrepliedScouts = scoutsResult.data;
+    const applications = applicationsResult.data;
+    const selections = selectionsResult.data;
+    const notificationSettings = notificationResult.data;
+
+    // 1. プロフィール完成度チェック
     if (candidate) {
       // 基本情報チェック
       if (!candidate.last_name || !candidate.first_name) {
@@ -80,12 +147,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 2. 学歴情報チェック
-    const { data: education } = await client
-      .from('education')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .single();
-
     if (!education) {
       tasks.push({
         id: 'education-info',
@@ -95,12 +156,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 3. スキル情報チェック
-    const { data: skills } = await client
-      .from('skills')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .single();
-
     if (!skills || skills.skills_list?.length === 0) {
       tasks.push({
         id: 'skills-info',
@@ -110,11 +165,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 4. 職歴経験チェック
-    const { data: workExperience } = await client
-      .from('work_experience')
-      .select('*')
-      .eq('candidate_id', candidateId);
-
     if (!workExperience || workExperience.length === 0) {
       tasks.push({
         id: 'work-experience',
@@ -124,12 +174,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 5. 期待条件テーブルチェック
-    const { data: expectations } = await client
-      .from('expectations')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .single();
-
     if (!expectations) {
       tasks.push({
         id: 'expectations-settings',
@@ -139,16 +183,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 6. 未返信スカウトチェック
-    const seventyTwoHoursAgo = new Date(
-      Date.now() - 72 * 60 * 60 * 1000
-    ).toISOString();
-    const { data: unrepliedScouts } = await client
-      .from('scout_sends')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .in('status', ['sent', 'read'])
-      .gte('sent_at', seventyTwoHoursAgo);
-
     if (unrepliedScouts && unrepliedScouts.length > 0) {
       tasks.push({
         id: 'scout-reply',
@@ -158,12 +192,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 7. 応募後の対応チェック
-    const { data: applications } = await client
-      .from('application')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .eq('status', 'RESPONDED');
-
     if (applications && applications.length > 0) {
       tasks.push({
         id: 'application-response',
@@ -173,14 +201,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 8. 選考中のステータス確認
-    const { data: selections } = await client
-      .from('selection_progress')
-      .select('*, job_postings(title)')
-      .eq('candidate_id', candidateId)
-      .or(
-        'document_screening_result.eq.pending,first_interview_result.eq.pending,secondary_interview_result.eq.pending,final_interview_result.eq.pending'
-      );
-
     if (selections && selections.length > 0) {
       tasks.push({
         id: 'selection-status',
@@ -190,12 +210,6 @@ async function getTaskData(candidateId: string) {
     }
 
     // 9. 通知設定チェック
-    const { data: notificationSettings } = await client
-      .from('notification_settings')
-      .select('*')
-      .eq('candidate_id', candidateId)
-      .single();
-
     if (!notificationSettings) {
       tasks.push({
         id: 'notification-settings',
@@ -204,8 +218,7 @@ async function getTaskData(candidateId: string) {
       });
     }
 
-    // 10. 未読メッセージチェック（既存のロジック）
-    const rooms = await getRooms(candidateId, 'candidate');
+    // 10. 未読メッセージチェック
     const unreadRooms = rooms.filter(
       (room: { unreadCount?: number }) =>
         room.unreadCount && room.unreadCount > 0

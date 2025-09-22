@@ -82,9 +82,11 @@ export function SignupVerifyClient() {
       });
 
       if (result.success) {
-        // ユーザーIDをローカルストレージに保存
+        // ユーザーIDをローカルストレージとクッキーに保存
         if (typeof window !== 'undefined' && result.userId) {
           localStorage.setItem('signup_user_id', result.userId);
+          // クッキーにも保存（ページ間での共有を確実にするため）
+          document.cookie = `signup_user_id=${result.userId}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
         }
 
         // 成功時に直接パスワード設定ページに遷移

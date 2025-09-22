@@ -95,14 +95,31 @@ export default function SignupPasswordPage() {
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
 
-  // ローカルストレージからユーザーIDを取得
+  // ローカルストレージまたはクッキーからユーザーIDを取得
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedUserId = localStorage.getItem('signup_user_id');
+      // まずローカルストレージをチェック
+      let savedUserId = localStorage.getItem('signup_user_id');
+
+      // ローカルストレージにない場合はクッキーをチェック
+      if (!savedUserId) {
+        const signupUserIdCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('signup_user_id='))
+          ?.split('=')[1];
+
+        if (signupUserIdCookie) {
+          savedUserId = signupUserIdCookie;
+          // ローカルストレージにも保存
+          localStorage.setItem('signup_user_id', signupUserIdCookie);
+        }
+      }
+
       if (savedUserId) {
         setUserId(savedUserId);
       } else {
         // ユーザーIDがない場合は最初のページに戻る
+        console.log('No user ID found, redirecting to signup');
         router.push('/signup');
       }
     }

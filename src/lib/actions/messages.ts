@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { ChatMessage } from '@/types/message';
 import { revalidatePath } from 'next/cache';
+import { sendMessageNotificationEmail } from '@/lib/email/sender';
 
 export async function getRoomMessages(roomId: string): Promise<ChatMessage[]> {
   console.log('🔍 [getRoomMessages] Fetching messages for room:', roomId);
@@ -389,6 +390,63 @@ export async function sendCompanyMessage(data: SendCompanyMessageData) {
       console.log(
         '✅ [sendCompanyMessage] Unread notification inserted:',
         notification.id
+      );
+    }
+
+    // 候補者の情報を取得してメール通知を送信
+    const { data: candidate, error: candidateError } = await supabase
+      .from('candidates')
+      .select('email, first_name, last_name')
+      .eq('id', room.candidate_id)
+      .single();
+
+    if (!candidateError && candidate) {
+      // メール通知設定を確認
+      const { data: notificationSettings } = await supabase
+        .from('notification_settings')
+        .select('message_notification')
+        .eq('candidate_id', room.candidate_id)
+        .maybeSingle();
+
+      // メール通知設定が無効でない場合のみ送信
+      if (notificationSettings?.message_notification !== 'not-receive') {
+        try {
+          const messagePageUrl = `${process.env.NEXTAUTH_URL || 'https://cuepoint.jp'}/candidate/message/${data.room_id}`;
+
+          const emailResult = await sendMessageNotificationEmail({
+            candidateEmail: candidate.email,
+            candidateName:
+              `${candidate.last_name || ''} ${candidate.first_name || ''}`.trim(),
+            companyName,
+            messagePageUrl,
+          });
+
+          if (emailResult.success) {
+            console.log(
+              '✅ [sendCompanyMessage] Message notification email sent successfully'
+            );
+          } else {
+            console.error(
+              '❌ [sendCompanyMessage] Failed to send message notification email:',
+              emailResult.error
+            );
+          }
+        } catch (emailError) {
+          console.error(
+            '❌ [sendCompanyMessage] Message notification email error:',
+            emailError
+          );
+        }
+      } else {
+        console.log(
+          '🔇 [sendCompanyMessage] Message notifications disabled for candidate:',
+          room.candidate_id
+        );
+      }
+    } else {
+      console.error(
+        '❌ [sendCompanyMessage] Failed to fetch candidate for email notification:',
+        candidateError
       );
     }
 

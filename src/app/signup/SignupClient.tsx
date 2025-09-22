@@ -12,6 +12,39 @@ interface SignupClientProps {
   onSubmit?: (email: string) => void;
 }
 
+// Check if user has valid Supabase session
+function checkSupabaseSession(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    // Check for various Supabase session cookies
+    const cookies = document.cookie.split('; ');
+
+    // Check for sb-access-token
+    const accessTokenCookie = cookies.find(c =>
+      c.startsWith('sb-access-token=')
+    );
+    if (accessTokenCookie) return true;
+
+    // Check for sb-*-auth-token.0 pattern
+    const authTokenCookie = cookies.find(c => /sb-.*-auth-token\.0=/.test(c));
+    if (authTokenCookie) return true;
+
+    // Check for legacy supabase-auth-token
+    const legacyCookie = cookies.find(c =>
+      c.startsWith('supabase-auth-token=')
+    );
+    if (legacyCookie) {
+      const token = legacyCookie.split('=')[1];
+      return token && token.split('.').length === 3;
+    }
+
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
 export function SignupClient({ onSubmit }: SignupClientProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -27,6 +60,15 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   // Check if user has existing progress on component mount
   useEffect(() => {
     const checkExistingProgress = async () => {
+      // まず認証済みかチェック
+      const hasSupabaseSession = checkSupabaseSession();
+
+      if (hasSupabaseSession) {
+        // 既に認証済みの場合は候補者マイページにリダイレクト
+        router.push('/candidate/mypage');
+        return;
+      }
+
       // クッキーから認証済みユーザーIDを確認
       const signupUserId = document.cookie
         .split('; ')
