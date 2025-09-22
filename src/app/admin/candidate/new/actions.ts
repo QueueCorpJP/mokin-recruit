@@ -4,14 +4,34 @@ import { z } from 'zod';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
 import { revalidatePath } from 'next/cache';
 import type {
-  CreateCandidateData,
-  AdminEducationData as EducationData,
-  AdminWorkExperienceData as WorkExperienceData,
-  AdminJobTypeExperienceData as JobTypeExperienceData,
-  AdminSkillsData as SkillsData,
-  AdminExpectationsData as ExpectationsData,
-  AdminSelectionEntryData as SelectionEntryData,
-} from '@/types/admin';
+  CandidateFormData,
+  EducationFormData as EducationData,
+  SkillsFormData as SkillsData,
+  SelectionEntry as SelectionEntryData,
+} from '@/types/forms';
+
+// Admin-specific types
+interface CreateCandidateData extends CandidateFormData {
+  memo?: string;
+}
+
+interface AdminWorkExperienceData {
+  industry_name: string;
+  experience_years: number;
+}
+
+interface AdminJobTypeExperienceData {
+  job_type_name: string;
+  experience_years: number;
+}
+
+interface AdminExpectationsData {
+  desired_income?: string;
+  desired_industries?: string[];
+  desired_job_types?: string[];
+  desired_work_locations?: string[];
+  desired_work_styles?: string[];
+}
 
 export async function checkEmailDuplication(email: string) {
   try {
@@ -53,19 +73,36 @@ const CreateCandidateSchema = z.object({
     ),
   last_name: z.string().min(1, '姓を入力してください'),
   first_name: z.string().min(1, '名を入力してください'),
-  last_name_kana: z.string().min(1, '姓（カナ）を入力してください'),
-  first_name_kana: z.string().min(1, '名（カナ）を入力してください'),
-  gender: z.enum(['male', 'female', 'unspecified'], {
-    errorMap: () => ({ message: '性別を選択してください' }),
-  }),
+  last_name_kana: z.string().optional(),
+  first_name_kana: z.string().optional(),
+  gender: z.enum(['male', 'female', 'unspecified']).optional(),
   birth_date: z.string().nullable(),
-  prefecture: z.string().min(1, '都道府県を選択してください'),
-  phone_number: z.string().min(1, '電話番号を入力してください'),
-  current_income: z.string().min(1, '現在の年収を入力してください'),
+  prefecture: z.string().optional(),
+  phone_number: z.string().optional(),
+  current_income: z.string().optional(),
 });
 
 export async function validateCandidateData(formData: CreateCandidateData) {
-  const validationResult = CreateCandidateSchema.safeParse(formData);
+  // Convert camelCase form data to snake_case for validation
+  const validationData = {
+    email: formData.email,
+    password: formData.password,
+    last_name: formData.lastName,
+    first_name: formData.firstName,
+    last_name_kana: formData.lastNameKana,
+    first_name_kana: formData.firstNameKana,
+    gender: formData.gender,
+    birth_date:
+      formData.birthYear && formData.birthMonth && formData.birthDay
+        ? `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
+        : null,
+    prefecture: formData.prefecture,
+    phone_number: formData.phoneNumber,
+    current_income: formData.currentIncome,
+  };
+
+  console.log('Validation data:', JSON.stringify(validationData, null, 2));
+  const validationResult = CreateCandidateSchema.safeParse(validationData);
   if (!validationResult.success) {
     const errors = validationResult.error.errors.map(error => ({
       field: error.path.join('.'),
@@ -87,14 +124,38 @@ export async function createCandidateData(
   memo?: string
 ) {
   try {
+    // Debug: Log the received form data
+    console.log('Received formData:', JSON.stringify(formData, null, 2));
+
     // Step 0: Validate input data
     const validation = await validateCandidateData(formData);
+    console.log('Validation result:', validation);
     if (!validation.success) {
+      console.log('Validation errors:', validation.errors);
       return {
         success: false,
         error:
           validation.errors?.[0]?.message || '入力データが正しくありません',
         validationErrors: validation.errors,
+      };
+    }
+
+    // Additional validation for skills and work styles
+    if (!skills.skills_tags || skills.skills_tags.length < 3) {
+      return {
+        success: false,
+        error: 'スキルは最低3つ以上入力してください',
+      };
+    }
+
+    // Only validate work styles if the field exists and is not empty array
+    if (
+      formData.desiredWorkStyles !== undefined &&
+      formData.desiredWorkStyles.length === 0
+    ) {
+      return {
+        success: false,
+        error: '興味のある働き方を選択してください',
       };
     }
 
@@ -161,43 +222,47 @@ export async function createCandidateData(
     }
 
     // Step 2: Create main candidate record
+    // Map camelCase form data to snake_case database fields
     const candidateInsertData: any = {
       email: formData.email,
-      last_name: formData.last_name,
-      first_name: formData.first_name,
-      last_name_kana: formData.last_name_kana,
-      first_name_kana: formData.first_name_kana,
+      last_name: formData.lastName,
+      first_name: formData.firstName,
+      last_name_kana: formData.lastNameKana,
+      first_name_kana: formData.firstNameKana,
       gender: formData.gender,
-      birth_date: formData.birth_date,
+      birth_date:
+        formData.birthYear && formData.birthMonth && formData.birthDay
+          ? `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
+          : null,
       prefecture: formData.prefecture,
-      phone_number: formData.phone_number,
-      current_income: formData.current_income,
-      current_salary: formData.current_salary || null,
-      desired_salary: formData.desired_salary || null,
-      current_company: formData.current_company || null,
-      current_position: formData.current_position || null,
-      current_residence: formData.current_residence || null,
-      has_career_change: formData.has_career_change,
-      job_change_timing: formData.job_change_timing,
-      current_activity_status: formData.current_activity_status,
-      recent_job_company_name: formData.recent_job_company_name,
-      recent_job_department_position: formData.recent_job_department_position,
-      recent_job_start_year: formData.recent_job_start_year,
-      recent_job_start_month: formData.recent_job_start_month,
-      recent_job_end_year: formData.recent_job_end_year,
-      recent_job_end_month: formData.recent_job_end_month,
-      recent_job_is_currently_working: formData.recent_job_is_currently_working,
-      recent_job_description: formData.recent_job_description,
-      recent_job_industries: formData.recent_job_industries,
-      recent_job_types: formData.recent_job_types,
-      job_summary: formData.job_summary,
-      self_pr: formData.self_pr,
+      phone_number: formData.phoneNumber,
+      current_income: formData.currentIncome,
+      current_salary: formData.currentSalary || null,
+      desired_salary: formData.desiredSalary || null,
+      current_company: formData.currentCompany || null,
+      current_position: formData.currentPosition || null,
+      current_residence: formData.currentResidence || null,
+      has_career_change: formData.hasCareerChange,
+      job_change_timing: formData.jobChangeTiming,
+      current_activity_status: formData.currentActivityStatus,
+      recent_job_company_name: formData.recentJobCompanyName,
+      recent_job_department_position: formData.recentJobDepartmentPosition,
+      recent_job_start_year: formData.recentJobStartYear,
+      recent_job_start_month: formData.recentJobStartMonth,
+      recent_job_end_year: formData.recentJobEndYear,
+      recent_job_end_month: formData.recentJobEndMonth,
+      recent_job_is_currently_working: formData.recentJobIsCurrentlyWorking,
+      recent_job_description: formData.recentJobDescription,
+      recent_job_industries: formData.recentJobIndustries,
+      recent_job_types: formData.recentJobTypes,
+      job_summary: formData.jobSummary,
+      self_pr: formData.selfPr,
       skills: formData.skills || null,
-      desired_industries: formData.desired_industries || null,
-      desired_job_types: formData.desired_job_types || null,
-      desired_locations: formData.desired_locations || null,
-      management_experience_count: formData.management_experience_count || 0,
-      interested_work_styles: formData.interested_work_styles || null,
+      desired_industries: formData.desiredIndustries || null,
+      desired_job_types: formData.desiredJobTypes || null,
+      desired_locations: formData.desiredLocations || null,
+      management_experience_count: formData.managementExperienceCount || 0,
+      interested_work_styles: formData.desiredWorkStyles || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -350,9 +415,12 @@ export async function createCandidateData(
         .filter(entry => (entry.companyName || '').trim())
         .map(entry => ({
           candidate_id: candidateId,
+          is_private: entry.isPrivate || false,
           company_name: entry.companyName || '',
+          department: entry.department || null,
           industries: entry.industries || [],
           progress_status: entry.progressStatus || null,
+          decline_reason: entry.declineReason || null,
         }));
 
       if (entriesData.length > 0) {

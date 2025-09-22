@@ -26,11 +26,49 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
   // Check if user has existing progress on component mount
   useEffect(() => {
-    // /signupページではlocalStorageのsignup_emailを削除し、進捗チェックをスキップする
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('signup_email');
-    }
-    // 進捗チェックは行わない
+    const checkExistingProgress = async () => {
+      // クッキーから認証済みユーザーIDを確認
+      const signupUserId = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('signup_user_id='))
+        ?.split('=')[1];
+
+      if (signupUserId) {
+        setIsCheckingProgress(true);
+        try {
+          // クッキーからメールアドレスを取得
+          const cookieEmail = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('signup_email='))
+            ?.split('=')[1];
+
+          // クッキーまたはlocalStorageからメールアドレスを取得
+          const emailToCheck =
+            cookieEmail || localStorage.getItem('signup_email');
+
+          if (emailToCheck) {
+            const progress = await checkRegistrationProgress(emailToCheck);
+            if (progress.exists && progress.nextStep !== '/signup') {
+              // 途中から再開
+              localStorage.setItem('signup_email', emailToCheck); // localStorageにも保存
+              router.push(progress.nextStep);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Progress check error:', error);
+        } finally {
+          setIsCheckingProgress(false);
+        }
+      }
+
+      // 認証済みユーザーでない場合、localStorageをクリア
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('signup_email');
+      }
+    };
+
+    checkExistingProgress();
   }, [router]);
 
   const validateEmail = (email: string): boolean => {
@@ -101,6 +139,22 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
         if (progress.exists && progress.nextStep !== '/signup') {
           localStorage.setItem('signup_email', email.trim());
           router.push(progress.nextStep);
+          return;
+        }
+
+        // クッキーに認証済みユーザーIDがある場合、OTP認証をスキップしてパスワード設定へ
+        const signupUserId = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('signup_user_id='))
+          ?.split('=')[1];
+
+        if (
+          signupUserId &&
+          progress.exists &&
+          !progress.completedSteps.passwordSet
+        ) {
+          localStorage.setItem('signup_email', email.trim());
+          router.push('/signup/password');
           return;
         }
 

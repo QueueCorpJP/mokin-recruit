@@ -11,55 +11,21 @@ export function useCandidateData() {
 
   // フォームデータから確認用データに変換
   const prepareConfirmationData = useCallback(() => {
-    const { formData, education, skills, selectionEntries } = context;
+    const {
+      formData,
+      education,
+      skills,
+      careerStatusEntries,
+      workHistoryEntries,
+    } = context;
 
     return {
-      updateData: {
-        // Basic info (snake_case for API)
-        email: formData.email,
-        password: formData.password,
-        last_name: formData.lastName,
-        first_name: formData.firstName,
-        last_name_kana: formData.lastNameKana,
-        first_name_kana: formData.firstNameKana,
-        gender: formData.gender,
-        birth_date:
-          formData.birthYear && formData.birthMonth && formData.birthDay
-            ? `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
-            : null,
-        prefecture: formData.prefecture,
-        phone_number: formData.phoneNumber,
-        current_income: formData.currentIncome,
-
-        // Career status
-        has_career_change: formData.hasCareerChange,
-        job_change_timing: formData.jobChangeTiming,
-        current_activity_status: formData.currentActivityStatus,
-
-        // Recent job
-        recent_job_company_name: formData.recentJobCompanyName,
-        recent_job_department_position: formData.recentJobDepartmentPosition,
-        recent_job_start_year: formData.recentJobStartYear,
-        recent_job_start_month: formData.recentJobStartMonth,
-        recent_job_end_year: formData.recentJobEndYear,
-        recent_job_end_month: formData.recentJobEndMonth,
-        recent_job_is_currently_working: formData.recentJobIsCurrentlyWorking,
-        recent_job_description: formData.recentJobDescription,
-        recent_job_industries: formData.recentJobIndustries,
-        recent_job_types: formData.recentJobTypes,
-
-        // Summary
-        job_summary: formData.jobSummary,
-        self_pr: formData.selfPr,
-
-        // Desired conditions
-        desired_work_styles: formData.desiredWorkStyles || [],
-      },
+      // Keep original camelCase form data for display
+      updateData: formData,
       education,
-      workExperience: [],
-      jobTypeExperience: [],
       skills,
-      selectionEntries: selectionEntries.filter(entry => entry.companyName),
+      selectionEntries: careerStatusEntries.filter(entry => entry.companyName),
+      workHistoryEntries: workHistoryEntries.filter(entry => entry.companyName),
       memo: context.memo,
       expectations: {
         desired_income: formData.desiredSalary,
@@ -124,15 +90,15 @@ export function useCandidateData() {
         skills_tags: [],
       };
 
-      const selectionEntries = candidateData.selectionEntries || [];
+      const careerStatusEntries = candidateData.careerStatusEntries || [];
 
       context.loadCandidateData({
         formData,
         education,
         skills,
-        selectionEntries:
-          selectionEntries.length > 0
-            ? selectionEntries
+        careerStatusEntries:
+          careerStatusEntries.length > 0
+            ? careerStatusEntries
             : [
                 {
                   id: '1',
@@ -192,8 +158,9 @@ export function useCandidateData() {
     }
 
     // 希望の働き方のバリデーション（VALIDATION_ERRORS.mdに準拠）
+    // Only validate if field exists and is empty array (not undefined)
     if (
-      !formData.desiredWorkStyles ||
+      formData.desiredWorkStyles !== undefined &&
       formData.desiredWorkStyles.length === 0
     ) {
       errors.push('興味のある働き方を選択してください');

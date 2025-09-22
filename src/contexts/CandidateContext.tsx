@@ -22,7 +22,8 @@ interface CandidateState {
   formData: CandidateFormData;
   education: EducationData;
   skills: SkillsData;
-  selectionEntries: SelectionEntry[];
+  careerStatusEntries: SelectionEntry[]; // 転職活動状況
+  workHistoryEntries: SelectionEntry[]; // 職務経歴
   selectedIndustriesMap: { [key: number]: string[] };
   modalState: ModalState;
   skillInput: string;
@@ -34,13 +35,20 @@ type CandidateAction =
   | { type: 'SET_FORM_DATA'; payload: Partial<CandidateFormData> }
   | { type: 'SET_EDUCATION'; payload: Partial<EducationData> }
   | { type: 'SET_SKILLS'; payload: Partial<SkillsData> }
-  | { type: 'SET_SELECTION_ENTRIES'; payload: SelectionEntry[] }
+  | { type: 'SET_CAREER_STATUS_ENTRIES'; payload: SelectionEntry[] }
+  | { type: 'SET_WORK_HISTORY_ENTRIES'; payload: SelectionEntry[] }
   | {
-      type: 'UPDATE_SELECTION_ENTRY';
+      type: 'UPDATE_CAREER_STATUS_ENTRY';
       payload: { index: number; field: keyof SelectionEntry; value: any };
     }
-  | { type: 'ADD_SELECTION_ENTRY' }
-  | { type: 'REMOVE_SELECTION_ENTRY'; payload: number }
+  | {
+      type: 'UPDATE_WORK_HISTORY_ENTRY';
+      payload: { index: number; field: keyof SelectionEntry; value: any };
+    }
+  | { type: 'ADD_CAREER_STATUS_ENTRY' }
+  | { type: 'ADD_WORK_HISTORY_ENTRY' }
+  | { type: 'REMOVE_CAREER_STATUS_ENTRY'; payload: number }
+  | { type: 'REMOVE_WORK_HISTORY_ENTRY'; payload: number }
   | {
       type: 'SET_SELECTED_INDUSTRIES_MAP';
       payload: { [key: number]: string[] };
@@ -113,7 +121,25 @@ const initialState: CandidateState = {
   formData: initialFormData,
   education: initialEducation,
   skills: initialSkills,
-  selectionEntries: [
+  careerStatusEntries: [
+    {
+      id: '1',
+      isPrivate: false,
+      industries: [],
+      companyName: '',
+      department: '',
+      progressStatus: '',
+      declineReason: '',
+      startYear: '',
+      startMonth: '',
+      endYear: '',
+      endMonth: '',
+      isCurrentlyWorking: false,
+      jobDescription: '',
+      jobTypes: [],
+    },
+  ],
+  workHistoryEntries: [
     {
       id: '1',
       isPrivate: false,
@@ -158,27 +184,41 @@ function candidateReducer(
         ...state,
         skills: { ...state.skills, ...action.payload },
       };
-    case 'SET_SELECTION_ENTRIES':
+    case 'SET_CAREER_STATUS_ENTRIES':
       return {
         ...state,
-        selectionEntries: action.payload,
+        careerStatusEntries: action.payload,
       };
-    case 'UPDATE_SELECTION_ENTRY':
+    case 'SET_WORK_HISTORY_ENTRIES':
       return {
         ...state,
-        selectionEntries: state.selectionEntries.map((entry, i) =>
+        workHistoryEntries: action.payload,
+      };
+    case 'UPDATE_CAREER_STATUS_ENTRY':
+      return {
+        ...state,
+        careerStatusEntries: state.careerStatusEntries.map((entry, i) =>
           i === action.payload.index
             ? { ...entry, [action.payload.field]: action.payload.value }
             : entry
         ),
       };
-    case 'ADD_SELECTION_ENTRY':
+    case 'UPDATE_WORK_HISTORY_ENTRY':
       return {
         ...state,
-        selectionEntries: [
-          ...state.selectionEntries,
+        workHistoryEntries: state.workHistoryEntries.map((entry, i) =>
+          i === action.payload.index
+            ? { ...entry, [action.payload.field]: action.payload.value }
+            : entry
+        ),
+      };
+    case 'ADD_CAREER_STATUS_ENTRY':
+      return {
+        ...state,
+        careerStatusEntries: [
+          ...state.careerStatusEntries,
           {
-            id: `${state.selectionEntries.length + 1}`,
+            id: `${state.careerStatusEntries.length + 1}`,
             isPrivate: false,
             industries: [],
             companyName: '',
@@ -195,10 +235,45 @@ function candidateReducer(
           },
         ],
       };
-    case 'REMOVE_SELECTION_ENTRY':
+    case 'ADD_WORK_HISTORY_ENTRY':
       return {
         ...state,
-        selectionEntries: state.selectionEntries.filter(
+        workHistoryEntries: [
+          ...state.workHistoryEntries,
+          {
+            id: `${state.workHistoryEntries.length + 1}`,
+            isPrivate: false,
+            industries: [],
+            companyName: '',
+            department: '',
+            progressStatus: '',
+            declineReason: '',
+            startYear: '',
+            startMonth: '',
+            endYear: '',
+            endMonth: '',
+            isCurrentlyWorking: false,
+            jobDescription: '',
+            jobTypes: [],
+          },
+        ],
+      };
+    case 'REMOVE_CAREER_STATUS_ENTRY':
+      return {
+        ...state,
+        careerStatusEntries: state.careerStatusEntries.filter(
+          (_, i) => i !== action.payload
+        ),
+        selectedIndustriesMap: Object.fromEntries(
+          Object.entries(state.selectedIndustriesMap).filter(
+            ([key]) => parseInt(key) !== action.payload
+          )
+        ),
+      };
+    case 'REMOVE_WORK_HISTORY_ENTRY':
+      return {
+        ...state,
+        workHistoryEntries: state.workHistoryEntries.filter(
           (_, i) => i !== action.payload
         ),
         selectedIndustriesMap: Object.fromEntries(
@@ -278,19 +353,30 @@ function candidateReducer(
 }
 
 interface CandidateContextValue extends CandidateState {
+  // 後方互換性のためのプロパティ（非推奨）
+  selectionEntries: SelectionEntry[];
   // Form data actions
   updateFormData: (field: keyof CandidateFormData, value: any) => void;
   updateEducation: (field: keyof EducationData, value: any) => void;
   updateSkills: (field: keyof SkillsData, value: any) => void;
 
-  // Selection entries actions
-  updateSelectionEntry: (
+  // Career status entries actions
+  updateCareerStatusEntry: (
     index: number,
     field: keyof SelectionEntry,
     value: any
   ) => void;
-  addSelectionEntry: () => void;
-  removeSelectionEntry: (index: number) => void;
+  addCareerStatusEntry: () => void;
+  removeCareerStatusEntry: (index: number) => void;
+
+  // Work history entries actions
+  updateWorkHistoryEntry: (
+    index: number,
+    field: keyof SelectionEntry,
+    value: any
+  ) => void;
+  addWorkHistoryEntry: () => void;
+  removeWorkHistoryEntry: (index: number) => void;
   updateSelectedIndustries: (index: number, industries: string[]) => void;
 
   // Modal actions
@@ -340,23 +426,42 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
     dispatch({ type: 'SET_SKILLS', payload: { [field]: value } });
   }, []);
 
-  // Selection entries actions
-  const updateSelectionEntry = useCallback(
+  // Career status entries actions
+  const updateCareerStatusEntry = useCallback(
     (index: number, field: keyof SelectionEntry, value: any) => {
       dispatch({
-        type: 'UPDATE_SELECTION_ENTRY',
+        type: 'UPDATE_CAREER_STATUS_ENTRY',
         payload: { index, field, value },
       });
     },
     []
   );
 
-  const addSelectionEntry = useCallback(() => {
-    dispatch({ type: 'ADD_SELECTION_ENTRY' });
+  const addCareerStatusEntry = useCallback(() => {
+    dispatch({ type: 'ADD_CAREER_STATUS_ENTRY' });
   }, []);
 
-  const removeSelectionEntry = useCallback((index: number) => {
-    dispatch({ type: 'REMOVE_SELECTION_ENTRY', payload: index });
+  const removeCareerStatusEntry = useCallback((index: number) => {
+    dispatch({ type: 'REMOVE_CAREER_STATUS_ENTRY', payload: index });
+  }, []);
+
+  // Work history entries actions
+  const updateWorkHistoryEntry = useCallback(
+    (index: number, field: keyof SelectionEntry, value: any) => {
+      dispatch({
+        type: 'UPDATE_WORK_HISTORY_ENTRY',
+        payload: { index, field, value },
+      });
+    },
+    []
+  );
+
+  const addWorkHistoryEntry = useCallback(() => {
+    dispatch({ type: 'ADD_WORK_HISTORY_ENTRY' });
+  }, []);
+
+  const removeWorkHistoryEntry = useCallback((index: number) => {
+    dispatch({ type: 'REMOVE_WORK_HISTORY_ENTRY', payload: index });
   }, []);
 
   const updateSelectedIndustries = useCallback(
@@ -425,12 +530,17 @@ export function CandidateProvider({ children }: CandidateProviderProps) {
 
   const contextValue: CandidateContextValue = {
     ...state,
+    // 後方互換性のためのプロパティ（careerStatusEntriesを使用）
+    selectionEntries: state.careerStatusEntries,
     updateFormData,
     updateEducation,
     updateSkills,
-    updateSelectionEntry,
-    addSelectionEntry,
-    removeSelectionEntry,
+    updateCareerStatusEntry,
+    addCareerStatusEntry,
+    removeCareerStatusEntry,
+    updateWorkHistoryEntry,
+    addWorkHistoryEntry,
+    removeWorkHistoryEntry,
     updateSelectedIndustries,
     openModal,
     closeModal,
